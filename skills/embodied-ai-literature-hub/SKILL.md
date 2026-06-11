@@ -28,7 +28,7 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
    - Direct `--query` remains available for narrow one-off searches, but literature mining runs should use a planner-generated query file.
    - Keep candidate papers separate from accepted evidence.
    - Use the official API as the first pass, but do not rely on it as the only candidate source.
-   - If the API returns `429`, timeouts, SSL errors, or query-level errors, do not treat that as zero evidence. Back off, retry sparingly, then use the Browser fallback in `references/browser-fallback.md`.
+   - If the API returns `429`, timeouts, SSL errors, or transient server errors, do not treat that as zero evidence. `search_arxiv.py` waits and retries up to 3 times per query, honoring `Retry-After` for `429` when present; after retries are exhausted, use the Browser fallback in `references/browser-fallback.md`.
    - If the API succeeds but returns fewer than the topic-family minimum candidate count, use the Browser fallback to widen candidate discovery before judging scarcity.
    - Browser/web results are candidate-discovery evidence only. Promote claims only after arXiv HTML正文 verification.
 4. Mine HTML full text:

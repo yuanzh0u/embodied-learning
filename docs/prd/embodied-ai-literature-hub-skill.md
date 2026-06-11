@@ -51,7 +51,7 @@ tags: [prd, skill, embodied-ai, arxiv, literature-mining]
 - Literature aggregation is split across two Skills: `$embodied-ai-query-planner` owns topic-to-query planning, while `$embodied-ai-literature-hub` owns retrieval execution, candidate filtering, HTML正文 mining, and evidence output.
 - OpenAI official materials do not provide an arXiv-specific Skill/tool; the design follows the documented split: Skill for workflow, scripts for deterministic retrieval/extraction, MCP/plugin only for future distribution or external-tool integration.
 - The arXiv interface uses the official arXiv API for first-pass search and metadata retrieval, with API etiquette including one request at a time and request spacing.
-- When the API returns 429/timeouts/SSL errors or an implausibly small candidate pool, Browser/web discovery becomes the candidate fallback. Browser results are not accepted evidence until arXiv HTML正文 is verified.
+- When the API returns 429/timeouts/SSL errors or transient server errors, the search script waits and retries up to 3 times per query, honoring `Retry-After` for 429 when present. If retries are exhausted, or if the API returns an implausibly small candidate pool, Browser/web discovery becomes the candidate fallback. Browser results are not accepted evidence until arXiv HTML正文 is verified.
 - The Skill requires an explicit topic and time range. If the time range is absent, it asks before searching.
 - Topic expansion uses the upstream query planner's static embodied-AI taxonomy, dynamic query suggestions, and family-aware Browser fallback queries with written rationale.
 - Specialized topic families such as UMI use tiered candidate discovery: exact lineage, named variants, citing/derived work, author follow-ups, method-adjacent data papers, and negative/usability papers.
@@ -68,7 +68,7 @@ tags: [prd, skill, embodied-ai, arxiv, literature-mining]
 ## Testing Decisions
 
 - Test at the highest seams: Skill workflow outputs, arXiv API search results, Browser fallback candidate parsing, HTML extraction output, evidence schema validation, and generated brief/source drafts.
-- Search-script tests should cover normal results, zero results, malformed XML, date filtering, sorting, and rate-limit behavior.
+- Search-script tests should cover normal results, zero results, malformed XML, date filtering, sorting, 429 wait/retry behavior, retry caps, and rate-limit fallback behavior.
 - HTML extraction tests should verify section locators, missing HTML handling, reference-section detection, and graceful metadata-only behavior for papers without HTML.
 - Evidence tests should validate required fields, stance labels, confidence labels, author-key format, first-level institution folding, old evidence without institutions, and duplicate paper handling.
 - Knowledge-output tests should verify that source entries, candidate lists, topic-card update blocks, and brief sections follow existing repository conventions.

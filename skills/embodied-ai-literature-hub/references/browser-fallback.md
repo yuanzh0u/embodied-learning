@@ -1,6 +1,6 @@
 # Browser Candidate Fallback
 
-Use this when arXiv API search is rate-limited, times out, returns query-level errors, or produces too small a candidate pool for a named method family.
+Use this after `search_arxiv.py` has exhausted its API retries, or when API search produces too small a candidate pool for a named method family. The search script waits and retries transient API failures, including HTTP `429`, up to 3 times per query before this fallback is needed.
 
 ## Principle
 

@@ -9,12 +9,15 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
 API_URL = "https://export.arxiv.org/api/query"
 ATOM = "{http://www.w3.org/2005/Atom}"
+MAX_RETRIES = 3
+TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
 
 
 def parse_args() -> argparse.Namespace:
@@ -28,7 +31,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sort-order", default="descending", choices=["ascending", "descending"])
     parser.add_argument("--sleep-seconds", type=float, default=3.0, help="Delay between multiple API requests.")
     parser.add_argument("--timeout", type=float, default=20.0, help="Per-request timeout in seconds.")
-    parser.add_argument("--retries", type=int, default=1, help="Retries per query after transient failures.")
+    parser.add_argument("--retries", type=int, default=MAX_RETRIES, help="Retries per query after transient failures. Capped at 3.")
+    parser.add_argument("--retry-base-seconds", type=float, default=5.0, help="Base wait before retrying transient failures.")
+    parser.add_argument("--retry-max-seconds", type=float, default=60.0, help="Maximum wait before a single retry.")
     parser.add_argument("--fail-fast", action="store_true", help="Abort on the first failed query.")
     parser.add_argument(
         "--user-agent",
@@ -68,6 +73,36 @@ def with_date_filter(query: str, start_date: str, end_date: str) -> str:
     return f"({query}) AND submittedDate:[{start} TO {end}]"
 
 
+def bounded_retries(value: int) -> int:
+    return max(0, min(value, MAX_RETRIES))
+
+
+def retry_after_seconds(exc: Exception) -> float | None:
+    if not isinstance(exc, urllib.error.HTTPError):
+        return None
+    retry_after = exc.headers.get("Retry-After") if exc.headers else None
+    if not retry_after:
+        return None
+    try:
+        parsed = float(retry_after)
+    except ValueError:
+        return None
+    return parsed if parsed >= 0 else None
+
+
+def is_retryable(exc: Exception) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in TRANSIENT_HTTP_CODES
+    return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
+
+
+def retry_wait_seconds(exc: Exception, attempt: int, args: argparse.Namespace) -> float:
+    retry_after = retry_after_seconds(exc)
+    if retry_after is not None:
+        return max(0.0, min(retry_after, args.retry_max_seconds))
+    return max(0.0, min(args.retry_base_seconds * (2 ** attempt), args.retry_max_seconds))
+
+
 def fetch(query: str, args: argparse.Namespace) -> bytes:
     params = {
         "search_query": query,
@@ -82,15 +117,20 @@ def fetch(query: str, args: argparse.Namespace) -> bytes:
         headers={"User-Agent": args.user_agent},
     )
     last_error: Exception | None = None
-    for attempt in range(args.retries + 1):
+    attempts = 0
+    retries = bounded_retries(args.retries)
+    for attempt in range(retries + 1):
+        attempts = attempt + 1
         try:
             with urllib.request.urlopen(request, timeout=args.timeout) as response:
                 return response.read()
         except Exception as exc:  # pragma: no cover - network dependent
             last_error = exc
-            if attempt < args.retries:
-                time.sleep(min(2 ** attempt, 8))
-    raise RuntimeError(f"arXiv request failed after {args.retries + 1} attempt(s): {last_error}") from last_error
+            if attempt < retries and is_retryable(exc):
+                time.sleep(retry_wait_seconds(exc, attempt, args))
+                continue
+            break
+    raise RuntimeError(f"arXiv request failed after {attempts} attempt(s): {last_error}") from last_error
 
 
 def text(element: ET.Element, name: str) -> str:
