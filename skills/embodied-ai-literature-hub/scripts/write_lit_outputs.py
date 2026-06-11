@@ -7,6 +7,7 @@ import argparse
 import collections
 import datetime as dt
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -24,6 +25,15 @@ REQUIRED = {
 STANCES = {"support", "limit", "conditional", "gap"}
 CONFIDENCE = {"direct", "citation-supported", "inference"}
 
+PRIMARY_INSTITUTION_RULES = (
+    (("北京大学",), "北京大学", "peking-university"),
+    (("peking university",), "Peking University", "peking-university"),
+    (("google deepmind", "google research", "google"), "Google", "google"),
+    (("stanford ai lab", "stanford university", "stanford"), "Stanford University", "stanford-university"),
+    (("mit csail", "massachusetts institute of technology", "mit"), "MIT", "mit"),
+)
+SUBUNIT_PREFIXES = ("department", "school", "college", "laboratory", "lab", "center", "centre", "institute")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -31,6 +41,75 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--brief-out")
     parser.add_argument("--validate-only", action="store_true")
     return parser.parse_args()
+
+
+def institution_key(name: str) -> str:
+    ascii_name = name.encode("ascii", errors="ignore").decode("ascii")
+    if ascii_name.strip():
+        key = re.sub(r"[^0-9A-Za-z]+", "-", ascii_name.strip().lower()).strip("-")
+    else:
+        key = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff]+", "-", name.strip().lower()).strip("-")
+    return key or "unknown-institution"
+
+
+def institution_rule_matches(name: str, folded_name: str, needle: str) -> bool:
+    if re.search(r"[\u4e00-\u9fff]", needle):
+        return needle in name
+    if " " in needle:
+        return needle in folded_name
+    return re.search(rf"\b{re.escape(needle)}\b", folded_name) is not None
+
+
+def normalize_primary_institution(raw_name: object) -> tuple[str, str]:
+    name = " ".join(str(raw_name).replace("\xa0", " ").split())
+    if not name:
+        return "", ""
+    folded = name.casefold()
+    for needles, canonical_name, canonical_key in PRIMARY_INSTITUTION_RULES:
+        if any(institution_rule_matches(name, folded, needle) for needle in needles):
+            return canonical_name, canonical_key
+
+    chinese_university = re.search(r"([\u4e00-\u9fff]+?大学)", name)
+    if chinese_university:
+        primary = chinese_university.group(1)
+        return primary, institution_key(primary)
+
+    parts = [part.strip() for part in re.split(r"\s*(?:,|;|\|| - )\s*", name) if part.strip()]
+    primary = parts[0] if parts else name
+    if primary.casefold().startswith(SUBUNIT_PREFIXES) and len(parts) > 1:
+        primary = parts[1]
+    primary = re.sub(r"^(Department|School|College|Laboratory|Lab) of .+?\bat\s+", "", primary, flags=re.IGNORECASE)
+    return primary or name, institution_key(primary or name)
+
+
+def normalize_institution_entry(institution: object, *, line_ref: str) -> dict[str, object]:
+    if not isinstance(institution, dict):
+        raise SystemExit(f"{line_ref}: author.institutions entries must be objects")
+    name = institution.get("name")
+    if not name:
+        raise SystemExit(f"{line_ref}: author.institutions[].name is required")
+    canonical_name, canonical_key = normalize_primary_institution(name)
+    normalized = dict(institution)
+    normalized["name"] = canonical_name
+    normalized["institution_key"] = canonical_key
+    return normalized
+
+
+def normalize_author(author: object, *, line_ref: str) -> dict[str, object]:
+    if not isinstance(author, dict):
+        raise SystemExit(f"{line_ref}: authors entries must be objects")
+    if not author.get("name") and not author.get("author_key"):
+        raise SystemExit(f"{line_ref}: authors[].name or authors[].author_key is required")
+    institutions = author.get("institutions", [])
+    if institutions is None:
+        institutions = []
+    if not isinstance(institutions, list):
+        raise SystemExit(f"{line_ref}: authors[].institutions must be a list")
+    normalized = dict(author)
+    normalized["institutions"] = [
+        normalize_institution_entry(institution, line_ref=line_ref) for institution in institutions
+    ]
+    return normalized
 
 
 def load_events(path: Path) -> list[dict[str, object]]:
@@ -56,8 +135,36 @@ def load_events(path: Path) -> list[dict[str, object]]:
             paper = event.get("paper")
             if not isinstance(paper, dict) or not paper.get("arxiv_id") or not paper.get("title"):
                 raise SystemExit(f"{path}:{line_no}: paper.arxiv_id and paper.title are required")
+            authors = event.get("authors")
+            if not isinstance(authors, list) or not authors:
+                raise SystemExit(f"{path}:{line_no}: authors must be a non-empty list")
+            event["authors"] = [normalize_author(author, line_ref=f"{path}:{line_no}") for author in authors]
             events.append(event)
     return events
+
+
+def format_institutions(author: dict[str, object]) -> str:
+    institutions = author.get("institutions", [])
+    if not isinstance(institutions, list) or not institutions:
+        return "unlisted"
+    names = []
+    for institution in institutions:
+        if isinstance(institution, dict) and institution.get("name"):
+            names.append(str(institution["name"]))
+    return "; ".join(dict.fromkeys(names)) if names else "unlisted"
+
+
+def format_authors(authors: object) -> str:
+    if not isinstance(authors, list):
+        return ""
+    formatted = []
+    for author in authors:
+        if not isinstance(author, dict):
+            continue
+        author_label = author.get("author_key", author.get("name", ""))
+        institutions = format_institutions(author)
+        formatted.append(f"{author_label} [{institutions}]")
+    return ", ".join(str(item) for item in formatted)
 
 
 def render_brief(events: list[dict[str, object]]) -> str:
@@ -80,7 +187,7 @@ def render_brief(events: list[dict[str, object]]) -> str:
     for event in events:
         paper = event["paper"]
         evidence = event["evidence"]
-        authors = ", ".join(author.get("author_key", author.get("name", "")) for author in event.get("authors", []))
+        authors = format_authors(event.get("authors", []))
         lines.append(
             "| {topic} | {stance} | {claim} | {evidence} ({locator}) | {paper} | {authors} |".format(
                 topic=event["topic_id"],
@@ -92,7 +199,39 @@ def render_brief(events: list[dict[str, object]]) -> str:
                 authors=authors.replace("|", "/"),
             )
         )
-    lines.extend(["", "## Topic Card Update Suggestions", "", "- Add only high-signal synthesis with source IDs; keep raw evidence in JSONL."])
+    lines.extend(
+        [
+            "",
+            "## Author Stance Events",
+            "",
+            "| Author key | Institutions | Paper | Date | Claim | Stance |",
+            "|---|---|---|---|---|---|",
+        ]
+    )
+    for event in events:
+        paper = event["paper"]
+        for author in event.get("authors", []):
+            if not isinstance(author, dict):
+                continue
+            lines.append(
+                "| {author} | {institutions} | {paper} | {date} | {claim} | {stance} |".format(
+                    author=str(author.get("author_key", author.get("name", ""))).replace("|", "/"),
+                    institutions=format_institutions(author).replace("|", "/"),
+                    paper=str(paper.get("title", "")).replace("|", "/"),
+                    date=str(paper.get("published", "")).replace("|", "/"),
+                    claim=str(event["claim"]).replace("|", "/"),
+                    stance=str(event["stance"]).replace("|", "/"),
+                )
+            )
+    lines.extend(
+        [
+            "",
+            "## Topic Card Update Suggestions",
+            "",
+            "- Add only high-signal synthesis with source IDs; keep raw evidence in JSONL.",
+            "- Treat this as a candidate update list, not an automatic topic-card patch.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 

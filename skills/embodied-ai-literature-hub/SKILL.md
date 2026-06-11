@@ -16,14 +16,16 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
    - `knowledge/index.md`
    - `knowledge/embodied-ai/index.md`
    - relevant topic cards only.
-2. Build a search plan:
-   - Use wide recall plus strong filtering.
-   - Read `references/topic-expansion.md` for static adjacent queries.
-   - Add dynamic query variants only when you can explain why they may expose topic-related discussion.
-   - For UMI-like named methods, do not stop at exact keyword matches. Build a tiered plan that includes named variants, derived systems, author follow-ups, method-adjacent papers, and explicit limitation/usability papers.
-   - If fewer than 12 candidate papers are found for a named method family, expand the search before concluding scarcity unless the run is blocked by API/network limits.
+2. Build a search plan with `$embodied-ai-query-planner`:
+   - Query planning is owned by `$embodied-ai-query-planner`; this Skill only consumes the generated plan.
+   - Use the planner before `search_arxiv.py`, passing topic, knowledge IDs, family hints, time range metadata, and any calibration files.
+   - Review the planner's `queries`, `browser_fallback_queries`, `minimum_candidate_count`, and notes before searching.
+   - The legacy `scripts/build_query_plan.py` path is only a compatibility wrapper that delegates to `../../embodied-ai-query-planner/scripts/build_query_plan.py` relative to the wrapper file.
 3. Search arXiv:
-   - Run `scripts/search_arxiv.py` with explicit date range and one or more query strings.
+   - Run `scripts/search_arxiv.py --query-file <planner-json>` with an explicit date range.
+   - `--query-file` accepts the planner JSON directly by reading top-level `queries` entries with `label` and `query`.
+   - Planner `start_date`/`end_date` fields are scope metadata only; `search_arxiv.py --start-date` and `--end-date` perform the actual arXiv date filtering.
+   - Direct `--query` remains available for narrow one-off searches, but literature mining runs should use a planner-generated query file.
    - Keep candidate papers separate from accepted evidence.
    - Use the official API as the first pass, but do not rely on it as the only candidate source.
    - If the API returns `429`, timeouts, SSL errors, or query-level errors, do not treat that as zero evidence. Back off, retry sparingly, then use the Browser fallback in `references/browser-fallback.md`.
@@ -49,14 +51,39 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
 - Stance labels: `support`, `limit`, `conditional`, `gap`.
 - Confidence labels: `direct`, `citation-supported`, `inference`.
 - Author identity is conservative: normalize names, but do not merge same-name authors unless the paper gives stronger evidence such as ORCID, homepage, or clear affiliation continuity.
+- Author institution tracking is author-level and first-level only: record the top organization such as `北京大学`, `Google`, `Stanford University`, or `MIT`; omit departments, labs, teams, and centers. If author-to-institution mapping is unreliable, leave `institutions: []`.
 - Use short quotes only when useful; prefer precise paraphrase plus page/section locator.
 
 ## Script quick start
 
+From the repository root, prefer the planner Skill path:
+
 ```bash
-python scripts/search_arxiv.py --query 'all:"Universal Manipulation Interface" AND all:data' --start-date 2023-01-01 --end-date 2026-06-06 --max-results 5
-python scripts/build_query_plan.py --topic umi-data-usability --output /tmp/umi-query-plan.json
-python scripts/parse_browser_candidates.py --input /tmp/browser-arxiv-results.json --start-date 2025-12-06 --end-date 2026-06-06 --output /tmp/browser-candidates.json
-python scripts/extract_arxiv_html.py --paper-id 2402.10329 --terms UMI,data,demonstration,teleoperation
-python scripts/write_lit_outputs.py --evidence-jsonl evidence.jsonl --brief-out brief.md
+python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
+  --topic "UMI 数据可用性" \
+  --knowledge-id EA-DATA \
+  --family umi \
+  --start-date 2023-01-01 \
+  --end-date 2026-06-06 \
+  --output /tmp/umi-query-plan.json \
+  --markdown-output /tmp/umi-query-plan.md
+
+python skills/embodied-ai-literature-hub/scripts/search_arxiv.py \
+  --query-file /tmp/umi-query-plan.json \
+  --start-date 2023-01-01 \
+  --end-date 2026-06-06 \
+  --max-results 5 \
+  --output /tmp/umi-arxiv-candidates.json
+
+python skills/embodied-ai-literature-hub/scripts/parse_browser_candidates.py --input /tmp/browser-arxiv-results.json --start-date 2025-12-06 --end-date 2026-06-06 --output /tmp/browser-candidates.json
+python skills/embodied-ai-literature-hub/scripts/extract_arxiv_html.py --paper-id 2402.10329 --terms UMI,data,demonstration,teleoperation
+python skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl evidence.jsonl --brief-out brief.md
 ```
+
+Legacy query-plan callers can still use:
+
+```bash
+python skills/embodied-ai-literature-hub/scripts/build_query_plan.py --list-topics
+```
+
+That command delegates to `$embodied-ai-query-planner` and keeps old `search_arxiv.py --query-file` workflows compatible.

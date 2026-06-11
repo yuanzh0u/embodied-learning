@@ -75,6 +75,7 @@ tags: [prd, skill, embodied-ai, query-planning, arxiv, literature-mining]
 - Treat arXiv, project pages, author pages, Reddit, and X/Twitter as calibration surfaces for query wording, not as accepted literature evidence.
 - Mark Reddit and X/Twitter discoveries as low-confidence social calibration.
 - Keep arXiv API queries, Browser fallback queries, and web calibration queries in separate output channels.
+- Emit family-aware Browser fallback queries for specialized families, especially UMI, VLA, and Sim2Real, so Browser/web candidate discovery does not fall back to literal Chinese topic strings.
 - Preserve a top-level `queries` field compatible with the existing arXiv search script.
 - Do not hard-filter by arXiv category by default; include suggested categories as metadata.
 - Prefer wide recall by default, with a maximum query budget around 50 query entries per generated plan.
@@ -89,6 +90,7 @@ tags: [prd, skill, embodied-ai, query-planning, arxiv, literature-mining]
 
 - Test the highest useful seams: Skill CLI output, query-plan schema, calibration merge behavior, and compatibility with the arXiv search script.
 - Query planner tests should assert observable output: topic mappings, query channels, labels, tiers, rationales, deduplication, and budget limits.
+- Browser fallback tests should verify that key families emit family-specific terms such as UMI-FT/RealDexUMI, OpenVLA/Open X-Embodiment, and synthetic-data/reality-gap wording.
 - Mapping tests should cover representative Chinese and English topics for each `EA-*` theme.
 - Specialized-family tests should cover all ten v1 families and verify that each produces a non-empty, labeled query set.
 - Calibration tests should verify that arXiv/project/author/social sources remain labeled and that social calibration is never promoted to evidence.

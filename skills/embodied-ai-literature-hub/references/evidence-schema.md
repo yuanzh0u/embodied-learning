@@ -19,7 +19,15 @@ Store discussion events as JSONL. One line is one author-attributed stance event
     {
       "name": "Author Name",
       "author_key": "author-name",
-      "role": "paper-author"
+      "role": "paper-author",
+      "institutions": [
+        {
+          "name": "Peking University",
+          "institution_key": "peking-university",
+          "source": "arxiv-html-author-block",
+          "confidence": "direct"
+        }
+      ]
     }
   ],
   "claim": "Precise claim in the agent's words.",
@@ -62,6 +70,19 @@ Store discussion events as JSONL. One line is one author-attributed stance event
 - Lowercase ASCII where possible.
 - Remove punctuation and collapse whitespace to hyphens.
 - Do not merge same-name authors unless there is stronger evidence.
+
+## Author institutions
+
+- `authors[].institutions` is optional and defaults to an empty list for older evidence files.
+- Record institutions at the author level, not only at the paper level.
+- Store only the first-level organization, not departments, schools, labs, teams, or centers.
+- If arXiv HTML does not reliably map an author to an institution, use `institutions: []`; do not assign paper-level institutions to every author.
+- Normalize conservatively:
+  - `北京大学计算机学院` -> `北京大学` / `peking-university`
+  - `Google DeepMind` -> `Google` / `google`
+  - `Stanford AI Lab` -> `Stanford University` / `stanford-university`
+  - `MIT CSAIL` -> `MIT` / `mit`
+- Institution data supports later author/institution viewpoint tracking; it does not change claim confidence.
 
 ## Promotion rule
 

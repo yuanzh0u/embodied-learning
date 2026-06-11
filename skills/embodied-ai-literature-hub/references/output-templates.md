@@ -57,11 +57,13 @@
 
 ## Author Stance Events
 
-| Author key | Paper | Date | Claim | Stance |
-|---|---|---|---|---|
+| Author key | Institutions | Paper | Date | Claim | Stance |
+|---|---|---|---|---|---|
 
 ## Topic Card Update Suggestions
 
 - Add to `<EA-ID>`:
   - Synthesized claim with source ID.
+- Use this section as a candidate update list for topic cards. Do not auto-patch topic cards from it.
+- Include only high-signal synthesis that changes the working memory of the topic card, not single-paper summaries.
 ```

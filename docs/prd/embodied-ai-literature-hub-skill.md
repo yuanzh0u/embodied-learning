@@ -13,7 +13,7 @@ tags: [prd, skill, embodied-ai, arxiv, literature-mining]
 
 ## Solution
 
-构建一个全局 Codex Skill，用于按照给定话题和时间范围从 arXiv 检索潜在相关论文，采用“宽召回 + 强过滤”发现候选论文，再从论文正文中抽取与话题相关的论点、论据、立场、作者和引用来源。Skill 输出双轨产物：一份按论点地图组织的研究简报，以及可长期积累的知识库证据层记录。
+构建一个全局 Codex Skill，用于按照给定话题和时间范围从 arXiv 检索潜在相关论文，采用“宽召回 + 强过滤”发现候选论文，再从论文正文中抽取与话题相关的论点、论据、立场、作者和引用来源。检索项规划由上游 `$embodied-ai-query-planner` 负责；本 Skill 消费 planner 产出的 arXiv API queries、Browser fallback queries 和 web calibration queries，并专注于检索执行、HTML正文挖掘与证据判断。Skill 输出双轨产物：一份按论点地图组织的研究简报，以及可长期积累的知识库证据层记录。
 
 ## User Stories
 
@@ -32,31 +32,34 @@ tags: [prd, skill, embodied-ai, arxiv, literature-mining]
 13. As a researcher, I want stance labels for support, limit, conditional, and gap, so that nuanced positions survive summarization.
 14. As a researcher, I want confidence labels for direct, citation-supported, and inference, so that claim certainty is visible.
 15. As a researcher, I want author identities conservatively normalized, so that same-name authors are not accidentally merged.
-16. As a researcher, I want author stance events, so that later work can track viewpoint changes across papers.
-17. As a future agent, I want topic cards to stay compact, so that working memory remains efficient.
-18. As a future agent, I want detailed evidence stored separately, so that topic cards do not become raw literature dumps.
-19. As a reviewer, I want short evidence excerpts plus paraphrases, so that copyright and context efficiency are respected.
-20. As a reviewer, I want HTML caches kept outside the repo, so that the repo stores evidence rather than full papers.
-21. As a knowledge-base maintainer, I want source entries generated consistently, so that new papers fit existing source rules.
-22. As a knowledge-base maintainer, I want JSONL evidence plus Markdown summaries, so that both scripts and humans can use the output.
-23. As a researcher, I want a 论点地图 brief, so that I see consensus, disagreement, and unresolved gaps quickly.
-24. As a researcher, I want candidate papers that fail filtering listed separately, so that search coverage remains visible.
-25. As a Skill user, I want the Skill to ask for a missing time range, so that default windows do not bias conclusions.
-26. As an implementer, I want deterministic scripts for search and extraction, so that the Skill does not repeatedly improvise tooling.
+16. As a researcher, I want author-level first-level institutions, so that later work can track viewpoint changes across both people and organizations.
+17. As a researcher, I want author stance events, so that later work can track viewpoint changes across papers.
+18. As a future agent, I want topic cards to stay compact, so that working memory remains efficient.
+19. As a future agent, I want detailed evidence stored separately, so that topic cards do not become raw literature dumps.
+20. As a reviewer, I want short evidence excerpts plus paraphrases, so that copyright and context efficiency are respected.
+21. As a reviewer, I want HTML caches kept outside the repo, so that the repo stores evidence rather than full papers.
+22. As a knowledge-base maintainer, I want source entries generated consistently, so that new papers fit existing source rules.
+23. As a knowledge-base maintainer, I want JSONL evidence plus Markdown summaries, so that both scripts and humans can use the output.
+24. As a researcher, I want a 论点地图 brief, so that I see consensus, disagreement, and unresolved gaps quickly.
+25. As a researcher, I want candidate papers that fail filtering listed separately, so that search coverage remains visible.
+26. As a Skill user, I want the Skill to ask for a missing time range, so that default windows do not bias conclusions.
+27. As an implementer, I want deterministic scripts for search and extraction, so that the Skill does not repeatedly improvise tooling.
 
 ## Implementation Decisions
 
 - The feature is a global Codex Skill, not a repo-local Skill, MCP server, or plugin in v1.
+- Literature aggregation is split across two Skills: `$embodied-ai-query-planner` owns topic-to-query planning, while `$embodied-ai-literature-hub` owns retrieval execution, candidate filtering, HTML正文 mining, and evidence output.
 - OpenAI official materials do not provide an arXiv-specific Skill/tool; the design follows the documented split: Skill for workflow, scripts for deterministic retrieval/extraction, MCP/plugin only for future distribution or external-tool integration.
 - The arXiv interface uses the official arXiv API for first-pass search and metadata retrieval, with API etiquette including one request at a time and request spacing.
 - When the API returns 429/timeouts/SSL errors or an implausibly small candidate pool, Browser/web discovery becomes the candidate fallback. Browser results are not accepted evidence until arXiv HTML正文 is verified.
 - The Skill requires an explicit topic and time range. If the time range is absent, it asks before searching.
-- Topic expansion uses a static embodied-AI adjacency graph plus dynamic query suggestions with written rationale.
+- Topic expansion uses the upstream query planner's static embodied-AI taxonomy, dynamic query suggestions, and family-aware Browser fallback queries with written rationale.
 - Specialized topic families such as UMI use tiered candidate discovery: exact lineage, named variants, citing/derived work, author follow-ups, method-adjacent data papers, and negative/usability papers.
 - For narrow topics, a small accepted-evidence set is allowed, but a small candidate set is a search failure unless blocked by API/network limits and clearly reported.
 - Candidate promotion requires at least one topic-relevant discussion record with evidence locator.
-- The evidence model records topic ID, paper ID, author keys, claim, stance, evidence, locator, confidence, and core cited-paper candidates.
+- The evidence model records topic ID, paper ID, author keys, author-level first-level institutions, claim, stance, evidence, locator, confidence, and core cited-paper candidates.
 - Author tracking is event-based rather than author-summary-based.
+- Institution tracking is conservative and first-level only: subunits such as schools, departments, labs, teams, and centers are omitted; unreliable author-to-institution mappings stay empty instead of being inferred from paper-level metadata.
 - HTML full text is the only default正文 source. If HTML full text is unavailable, keep the paper as a metadata candidate and do not perform正文挖掘 for that paper in the default workflow.
 - HTML/PDF and extracted full text are temporary/cache artifacts; the knowledge base stores links, locators, short excerpts, and paraphrased evidence.
 - Topic cards receive only high-signal synthesis; detailed evidence lives in a dedicated evidence layer.
@@ -67,7 +70,7 @@ tags: [prd, skill, embodied-ai, arxiv, literature-mining]
 - Test at the highest seams: Skill workflow outputs, arXiv API search results, Browser fallback candidate parsing, HTML extraction output, evidence schema validation, and generated brief/source drafts.
 - Search-script tests should cover normal results, zero results, malformed XML, date filtering, sorting, and rate-limit behavior.
 - HTML extraction tests should verify section locators, missing HTML handling, reference-section detection, and graceful metadata-only behavior for papers without HTML.
-- Evidence tests should validate required fields, stance labels, confidence labels, author-key format, and duplicate paper handling.
+- Evidence tests should validate required fields, stance labels, confidence labels, author-key format, first-level institution folding, old evidence without institutions, and duplicate paper handling.
 - Knowledge-output tests should verify that source entries, candidate lists, topic-card update blocks, and brief sections follow existing repository conventions.
 - Tests should assert external behavior and generated artifacts, not internal implementation details.
 - Current repo has knowledge indices and topic-card templates but no existing automated test suite, so v1 introduces focused script-level validation fixtures.
