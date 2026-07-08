@@ -4,7 +4,9 @@ Use this reference before drafting or auditing a full embodied-AI literature rev
 
 ## Boundary
 
-`$embodied-ai-literature-review` writes and audits synthesis. Its default path is `planner -> hub -> review packet -> style menu`. It does not own query generation, full-text extraction, or evidence promotion when upstream Skills are available. Use `$embodied-ai-query-planner` for query strategy and `$embodied-ai-literature-hub` for paper mining.
+`$embodied-ai-literature-review` writes and audits synthesis. Its default path is `planner -> hub -> review packet -> style menu -> three-style Markdown bundle`: the packet is the intermediate audit object, and the default final deliverable is three Markdown files stored under `work/literature-review-<topic>-<date>/`: `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, and `xiaohongshu-post_xiaohongshu.md`. It does not own query generation, full-text extraction, or evidence promotion when upstream Skills are available. Use `$embodied-ai-query-planner` for query strategy and `$embodied-ai-literature-hub` for paper mining.
+
+If the user does not specify a time range for paper discovery or fallback collection, use the most recent six months. Preserve the resolved time range in the review packet and final Markdown artifact.
 
 ## Evidence inputs
 
@@ -36,6 +38,26 @@ Prefer `evidence-event` for paper-specific claims and `topic-card-source` for st
 
 Formal style outputs require at least 5 paper-level sources and accepted evidence events. If this threshold is not met, produce a preliminary review packet with coverage gaps and next search recommendations instead of a formal review, explainer, or KOL thread.
 
+When the threshold is met and no style is specified, produce all three final styles. Use a single style only when the user explicitly requests `scientific-memo`, `expert-explainer`, or `kol-thread`. Use `survey` only when the user asks for the intermediate review packet, style menu, source tiers, or audit surface as the final visible artifact.
+
+## Output location
+
+- Default output root: repository `work/`.
+- Create a new review project folder named `literature-review-<topic>-<date>/`.
+- Put generated Markdown artifacts in that project folder: `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`, plus `evidence-appendix.md`, or `review-packet.md` in audit mode.
+- Use inline/stdout output only when the user asks for inline text, piping, or an explicit non-file display.
+- After the run is settled, copy accepted assets into `evidence/literature-review-<topic>-<date>/` with a `run.json` manifest.
+
+## Citation and link contract
+
+Formal outputs (scientific-memo, expert-explainer, kol-thread) must be readable AND clickable:
+
+- Every in-text event ID is a Markdown link into `evidence-appendix.md` anchors: `[EA-…-0001](evidence-appendix.md#ea--0001)`. Bare event IDs in formal prose are non-conforming.
+- Every paper mention in claim maps and references is a Markdown link to its arXiv abs page: `[2606.13877](https://arxiv.org/abs/2606.13877)`. Bare arXiv IDs in formal outputs are non-conforming.
+- Every formal output ends with a `## References` section: deduplicated papers, one line each, with inline links.
+- `evidence-appendix.md` ships with every formal bundle: one `### <event_id>` section per event (claim, stance, confidence, locator, short quote, paper link). Event links resolve to these anchors.
+- The review packet (audit mode) may keep plain IDs; the link contract applies to formal deliverables.
+
 ## Source tiers
 
 - `paper-level`: arXiv, OpenReview, conference pages/proceedings, author-hosted PDFs, and paper records that identify a paper.
@@ -54,12 +76,12 @@ Only `paper-level` sources and accepted evidence events can support scientific c
 
 `expert-explainer`:
 
-- Use for Zhihu/Reddit-style readable explanation.
+- Use for Zhihu/Reddit-style readable explanation. In the default bundle this is saved as `zhihu-explainer_zhihu.md`.
 - Required structure: TL;DR, misconception/debate, mechanisms, evidence and limits, further reading/confidence.
 
 `kol-thread`:
 
-- Use for Xiaohongshu/Weibo/Twitter-style short insight threads.
+- Use for Xiaohongshu/Weibo/Twitter-style short insight threads. In the default bundle this is saved as `xiaohongshu-post_xiaohongshu.md`.
 - Required structure: strong hook, 3-5 evidence-bounded insights or 5-8 thread items, visible caveat, compact source note.
 
 ## Synthesis rules
@@ -76,7 +98,8 @@ Only `paper-level` sources and accepted evidence events can support scientific c
 
 - Each paragraph has at least one event ID, source ID, or explicit `inference` marker.
 - Each cited event includes stance and confidence.
+- In formal outputs, every event ID is an appendix link and every arXiv ID is an abs-page link (see Citation and link contract).
 - Candidate-only papers are not cited as accepted evidence.
 - Claims about consensus name the evidence coverage and its limits.
 - Gaps distinguish "not found in this run" from "the literature says this is open."
-- The final review states scope boundaries such as topic IDs, time range, and search/evidence limitations when known.
+- The final review states scope boundaries such as topic IDs, resolved time range, and search/evidence limitations.

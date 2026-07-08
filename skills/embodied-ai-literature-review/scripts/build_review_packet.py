@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
-"""Build a traceable review packet from embodied-AI evidence artifacts."""
+"""Build traceable embodied-AI review artifacts from accepted evidence."""
 
 from __future__ import annotations
 
 import argparse
+import calendar
 import json
 import re
 import sys
 from collections import Counter, defaultdict
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
 STANCE_ORDER = ["support", "conditional", "limit", "gap"]
 FORMAL_SOURCE_THRESHOLD = 5
+DEFAULT_LOOKBACK_MONTHS = 6
 STANCE_ZH = {
     "support": "支持",
     "conditional": "条件成立",
@@ -44,7 +48,52 @@ STYLE_OUTLINES_ZH = {
     ],
 }
 
-STYLE_CHOICES = sorted(set(STYLE_OUTLINES_ZH) | {"scientific-memo", "expert-explainer", "kol-thread"})
+DEFAULT_OUTPUT_STYLES = ["scientific-memo", "expert-explainer", "kol-thread"]
+STYLE_FILENAME_MAP = {
+    "scientific-memo": "scientific-memo_keyan.md",
+    "expert-explainer": "zhihu-explainer_zhihu.md",
+    "kol-thread": "xiaohongshu-post_xiaohongshu.md",
+    "survey": "review-packet.md",
+}
+STYLE_CHOICES = sorted(set(STYLE_OUTLINES_ZH) | set(DEFAULT_OUTPUT_STYLES) | {"all"})
+APPENDIX_FILENAME = "evidence-appendix.md"
+FORMAL_STYLES = set(DEFAULT_OUTPUT_STYLES)
+
+
+def shift_months(value: date, months: int) -> date:
+    month_index = value.year * 12 + value.month - 1 + months
+    year = month_index // 12
+    month = month_index % 12 + 1
+    day = min(value.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
+
+
+def default_time_range(today: date | None = None) -> str:
+    end = today or date.today()
+    start = shift_months(end, -DEFAULT_LOOKBACK_MONTHS)
+    return f"{start.isoformat()}..{end.isoformat()}"
+
+
+def slugify_topic(topic: str) -> str:
+    slug = re.sub(r"\s+", "-", topic.strip().lower())
+    slug = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff._-]+", "-", slug)
+    slug = re.sub(r"-{2,}", "-", slug).strip("-._")
+    return slug[:72] or "review"
+
+
+def artifact_filename(style: str) -> str:
+    return STYLE_FILENAME_MAP.get(style, f"{slugify_topic(style)}.md")
+
+
+def default_project_dir(work_dir: Path, topic: str, today: date | None = None) -> Path:
+    project_day = (today or date.today()).strftime("%Y%m%d")
+    base_name = f"literature-review-{slugify_topic(topic)}-{project_day}"
+    candidate = work_dir / base_name
+    suffix = 2
+    while candidate.exists():
+        candidate = work_dir / f"{base_name}-{suffix}"
+        suffix += 1
+    return candidate
 
 
 def md_escape(value: Any) -> str:
@@ -208,6 +257,33 @@ def paper_key(event: dict[str, Any]) -> str:
     return str(paper.get("arxiv_id") or paper.get("url") or paper.get("title") or event.get("event_id") or "")
 
 
+def paper_url(paper: dict[str, Any]) -> str:
+    """Canonical paper URL: derive from arxiv_id so link label and target stay consistent."""
+    arxiv_id = str(paper.get("arxiv_id") or "").strip()
+    if arxiv_id:
+        return f"https://arxiv.org/abs/{arxiv_id}"
+    return str(paper.get("url") or "").strip()
+
+
+def paper_link(event: dict[str, Any]) -> str:
+    """Markdown link for a paper: `[arxiv_id](url)`, degrading to plain text without a URL."""
+    paper = paper_info(event)
+    label = md_escape(paper.get("arxiv_id") or paper.get("title") or "unknown-paper")
+    url = paper_url(paper)
+    return f"[{label}]({url})" if url else label
+
+
+def event_anchor(event_id: str) -> str:
+    """GitHub-style anchor for an `### <event_id>` heading in the appendix."""
+    return re.sub(r"[^0-9a-z一-鿿-]", "", event_id.lower().replace(" ", "-"))
+
+
+def event_link(event_id: str) -> str:
+    """Markdown link from an in-text event ID to its appendix entry."""
+    safe_id = md_escape(event_id)
+    return f"[{safe_id}]({APPENDIX_FILENAME}#{event_anchor(event_id)})"
+
+
 def count_paper_level_sources(events: list[dict[str, Any]], fallback_sources: list[dict[str, Any]] | None = None) -> int:
     keys = {paper_key(event) for event in events if paper_key(event)}
     for source in fallback_sources or []:
@@ -266,7 +342,7 @@ def render_stance_distribution(events: list[dict[str, Any]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_evidence_core(events: list[dict[str, Any]], source_ids: list[str]) -> str:
+def render_evidence_core(events: list[dict[str, Any]], source_ids: list[str], linked: bool = False) -> str:
     if not events:
         return "\n".join(
             [
@@ -280,11 +356,16 @@ def render_evidence_core(events: list[dict[str, Any]], source_ids: list[str]) ->
     stances = sorted({str(event.get("stance") or "unknown") for event in events})
     confidences = sorted({str(event.get("confidence") or "unknown") for event in events})
     trace_ids = [str(event.get("event_id") or "missing-event-id") for event in sorted(events, key=event_sort_key)]
+    trace_rendered = (
+        ", ".join(event_link(item) for item in trace_ids[:12])
+        if linked
+        else ", ".join(f"`{item}`" for item in trace_ids[:12])
+    )
     lines = [
         f"- Accepted events: {len(events)}",
         "- Stance labels: " + ", ".join(f"`{item}`" for item in stances),
         "- Confidence labels: " + ", ".join(f"`{item}`" for item in confidences),
-        "- Trace IDs: " + ", ".join(f"`{item}`" for item in trace_ids[:12]),
+        "- Trace IDs: " + trace_rendered,
         "- Registered sources: " + (", ".join(f"`{item}`" for item in source_ids[:12]) if source_ids else "not loaded"),
     ]
     return "\n".join(lines) + "\n"
@@ -321,7 +402,7 @@ def render_source_tiers(fallback_sources: list[dict[str, Any]]) -> str:
     return "\n".join(chunks) + "\n"
 
 
-def render_claim_map(events: list[dict[str, Any]]) -> str:
+def render_claim_map(events: list[dict[str, Any]], linked: bool = False) -> str:
     if not events:
         return "- No evidence events provided. Use topic-card claims only as background, or run `$embodied-ai-literature-hub` first.\n"
     lines = [
@@ -335,18 +416,24 @@ def render_claim_map(events: list[dict[str, Any]]) -> str:
         locator = evidence.get("locator")
         summary = evidence.get("summary") or ""
         evidence_cell = truncate(f"{summary} ({locator})" if locator else summary, 220)
-        paper = paper_info(event)
-        paper_cell = paper.get("arxiv_id") or paper.get("title") or "unknown-paper"
+        event_id = str(event.get("event_id") or "missing-event-id")
+        if linked:
+            event_cell = event_link(event_id)
+            paper_cell = paper_link(event)
+        else:
+            event_cell = md_escape(event_id)
+            paper = paper_info(event)
+            paper_cell = md_escape(paper.get("arxiv_id") or paper.get("title") or "unknown-paper")
         lines.append(
             "| {event_id} | {topic} | `{stance}` | `{confidence}` | {claim} | {evidence} | {authors} | {paper} |".format(
-                event_id=md_escape(event.get("event_id") or "missing-event-id"),
+                event_id=event_cell,
                 topic=md_escape(event.get("topic_id") or event.get("topic") or "unknown-topic"),
                 stance=md_escape(event.get("stance") or "unknown"),
                 confidence=md_escape(event.get("confidence") or "unknown"),
                 claim=truncate(event.get("claim"), 180),
                 evidence=evidence_cell,
                 authors=md_escape(authors_summary(event)),
-                paper=md_escape(paper_cell),
+                paper=paper_cell,
             )
         )
     return "\n".join(lines) + "\n"
@@ -397,7 +484,7 @@ def render_author_events(events: list[dict[str, Any]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_synthesis_slots(events: list[dict[str, Any]]) -> str:
+def render_synthesis_slots(events: list[dict[str, Any]], linked: bool = False) -> str:
     if not events:
         return "- Draft from topic cards only, and mark paper-level claims as missing evidence.\n"
     by_stance: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -409,6 +496,11 @@ def render_synthesis_slots(events: list[dict[str, Any]]) -> str:
         "limit": "限制与失败模式",
         "gap": "开放问题",
     }
+
+    def event_ref(event: dict[str, Any]) -> str:
+        event_id = str(event.get("event_id") or "missing-event-id")
+        return event_link(event_id) if linked else f"`{md_escape(event_id)}`"
+
     chunks: list[str] = []
     for stance in STANCE_ORDER:
         stance_events = by_stance.get(stance, [])
@@ -416,14 +508,12 @@ def render_synthesis_slots(events: list[dict[str, Any]]) -> str:
             continue
         chunks.append(f"### {labels[stance]}")
         for event in stance_events[:8]:
-            chunks.append(
-                f"- `{md_escape(event.get('event_id') or 'missing-event-id')}`: {truncate(event.get('claim'), 220)}"
-            )
+            chunks.append(f"- {event_ref(event)}: {truncate(event.get('claim'), 220)}")
     unknown = [event for stance, values in by_stance.items() if stance not in STANCE_ORDER for event in values]
     if unknown:
         chunks.append("### Unlabeled stance")
         for event in unknown[:8]:
-            chunks.append(f"- `{md_escape(event.get('event_id') or 'missing-event-id')}`: {truncate(event.get('claim'), 220)}")
+            chunks.append(f"- {event_ref(event)}: {truncate(event.get('claim'), 220)}")
     return "\n".join(chunks) + "\n"
 
 
@@ -438,12 +528,71 @@ def top_claims(events: list[dict[str, Any]], limit: int = 3) -> list[str]:
 
 
 def recommend_style(events: list[dict[str, Any]]) -> str:
-    stances = {str(event.get("stance") or "") for event in events}
-    if {"limit", "conditional", "gap"} & stances:
-        return "scientific-memo"
     if len(events) >= FORMAL_SOURCE_THRESHOLD:
-        return "scientific-memo"
+        return "all"
     return "preliminary-packet"
+
+
+def render_references(events: list[dict[str, Any]]) -> str:
+    """Deduplicated reference list with inline Markdown links, sorted by arXiv ID/title."""
+    papers: dict[str, dict[str, Any]] = {}
+    for event in events:
+        paper = paper_info(event)
+        key = paper_key(event)
+        if key and key not in papers:
+            papers[key] = paper
+    if not papers:
+        return "- No paper-level sources loaded.\n"
+    lines = []
+    for key in sorted(papers):
+        paper = papers[key]
+        title = md_escape(paper.get("title") or "Untitled")
+        label = md_escape(paper.get("arxiv_id") or key)
+        url = paper_url(paper)
+        published = md_escape(paper.get("published") or "")
+        suffix = f"({published})" if published else ""
+        if url:
+            lines.append(f"- `{label}` [{title}]({url}) {suffix}".rstrip())
+        else:
+            lines.append(f"- `{label}` {title} {suffix}".rstrip())
+    return "\n".join(lines) + "\n"
+
+
+def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_range: str | None = None) -> str:
+    """Per-event appendix; each `### <event_id>` heading is the anchor target for in-text event links."""
+    lines = [
+        f"# Evidence Appendix: {topic}",
+        "",
+        f"- Time range: {time_range or 'not provided'}",
+        f"- Events: {len(events)}",
+        "- 每个事件一节,标题即锚点;正文中的 event ID 链接跳转到这里。",
+        "",
+    ]
+    for event in sorted(events, key=event_sort_key):
+        event_id = str(event.get("event_id") or "missing-event-id")
+        evidence = event.get("evidence") or {}
+        if not isinstance(evidence, dict):
+            evidence = {}
+        lines.extend(
+            [
+                f"### {event_id}",
+                "",
+                f"- Claim: {md_escape(event.get('claim'))}",
+                f"- Stance: `{md_escape(event.get('stance') or 'unknown')}` | Confidence: `{md_escape(event.get('confidence') or 'unknown')}`",
+                f"- Paper: {paper_link(event)} {md_escape(paper_info(event).get('title') or '')}".rstrip(),
+                f"- Locator: {md_escape(evidence.get('locator') or 'not recorded')}",
+                f"- Evidence: {md_escape(evidence.get('summary') or '')}",
+            ]
+        )
+        quote = str(evidence.get("short_quote") or "").strip()
+        if quote:
+            lines.append(f"- Quote: “{md_escape(quote)}”")
+        authors = authors_summary(event)
+        if authors:
+            lines.append(f"- Authors: {md_escape(authors)}")
+        lines.append("")
+    lines.extend(["## References", "", render_references(events).rstrip(), ""])
+    return "\n".join(lines)
 
 
 def render_style_menu(topic: str, events: list[dict[str, Any]], fallback_sources: list[dict[str, Any]] | None = None) -> str:
@@ -477,10 +626,11 @@ def render_scientific_memo(
     topic_cards: list[dict[str, Any]],
     source_ids: list[str],
     fallback_sources: list[dict[str, Any]] | None = None,
+    time_range: str | None = None,
 ) -> str:
     count = count_paper_level_sources(events)
     if count < FORMAL_SOURCE_THRESHOLD:
-        return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, "scientific-memo", fallback_sources)
+        return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, "scientific-memo", fallback_sources, time_range)
     knowledge = ", ".join(f"`{item}`" for item in knowledge_ids) if knowledge_ids else "unlisted"
     lines = [
         f"# {topic}研究备忘录",
@@ -488,25 +638,32 @@ def render_scientific_memo(
         "## 研究边界与证据范围",
         "",
         f"- Topic: {topic}",
+        f"- Time range: {time_range or 'not provided'}",
         f"- Knowledge IDs: {knowledge}",
         f"- Paper-level sources: {count} / {FORMAL_SOURCE_THRESHOLD}",
         "- Output type: scientific-memo",
         "",
         "## Evidence Core",
         "",
-        render_evidence_core(events, source_ids).rstrip(),
+        render_evidence_core(events, source_ids, linked=True).rstrip(),
         "",
         "## Claim Map",
         "",
-        render_claim_map(events).rstrip(),
+        render_claim_map(events, linked=True).rstrip(),
         "",
         "## 主要综合",
         "",
-        render_synthesis_slots(events).rstrip(),
+        render_synthesis_slots(events, linked=True).rstrip(),
         "",
         "## Source Gaps",
         "",
         render_source_gaps(events, source_ids).rstrip(),
+        "",
+        "## References",
+        "",
+        render_references(events).rstrip(),
+        "",
+        f"完整证据条目见 [{APPENDIX_FILENAME}]({APPENDIX_FILENAME})。",
         "",
         "## 研究启发与开放问题",
         "",
@@ -525,16 +682,23 @@ def render_expert_explainer(
     topic_cards: list[dict[str, Any]],
     source_ids: list[str],
     fallback_sources: list[dict[str, Any]] | None = None,
+    time_range: str | None = None,
 ) -> str:
     count = count_paper_level_sources(events)
     if count < FORMAL_SOURCE_THRESHOLD:
-        return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, "expert-explainer", fallback_sources)
+        return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, "expert-explainer", fallback_sources, time_range)
     lines = [
         f"# {topic}：专家解释帖",
         "",
         "## TL;DR",
         "",
         f"{topic} 不能只看一个漂亮结论，要先看论文级证据、适用条件和失败模式。",
+        "",
+        "## 检索范围",
+        "",
+        f"- Time range: {time_range or 'not provided'}",
+        f"- Paper-level sources: {count} / {FORMAL_SOURCE_THRESHOLD}",
+        "- Output type: expert-explainer",
         "",
         "## 常见误区或争议",
         "",
@@ -543,17 +707,23 @@ def render_expert_explainer(
         "",
         "## 证据与限制",
         "",
-        render_synthesis_slots(events).rstrip(),
+        render_synthesis_slots(events, linked=True).rstrip(),
         "",
         "## Claim Map",
         "",
-        render_claim_map(events).rstrip(),
+        render_claim_map(events, linked=True).rstrip(),
         "",
         "## 延伸阅读与可信度",
         "",
         render_evidence_sufficiency(events).rstrip(),
         "",
         render_source_gaps(events, source_ids).rstrip(),
+        "",
+        "## References",
+        "",
+        render_references(events).rstrip(),
+        "",
+        f"完整证据条目见 [{APPENDIX_FILENAME}]({APPENDIX_FILENAME})。",
         "",
     ]
     return "\n".join(lines)
@@ -566,15 +736,16 @@ def render_kol_thread(
     topic_cards: list[dict[str, Any]],
     source_ids: list[str],
     fallback_sources: list[dict[str, Any]] | None = None,
+    time_range: str | None = None,
 ) -> str:
     count = count_paper_level_sources(events)
     if count < FORMAL_SOURCE_THRESHOLD:
-        return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, "kol-thread", fallback_sources)
+        return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, "kol-thread", fallback_sources, time_range)
     insight_lines: list[str] = []
     for index, event in enumerate(sorted(events, key=event_sort_key)[:5], start=1):
         event_id = str(event.get("event_id") or "missing-event-id")
         stance = str(event.get("stance") or "unknown")
-        insight_lines.append(f"{index}. {truncate(event.get('claim'), 180)} (`{event_id}`; stance: `{stance}`)")
+        insight_lines.append(f"{index}. {truncate(event.get('claim'), 180)} ({event_link(event_id)}; stance: `{stance}`)")
     lines = [
         f"# {topic}：洞察短串",
         "",
@@ -593,9 +764,17 @@ def render_kol_thread(
         "",
         "## 依据来源",
         "",
+        f"- Time range: {time_range or 'not provided'}",
+        "",
         render_evidence_sufficiency(events).rstrip(),
         "",
         render_source_gaps(events, source_ids).rstrip(),
+        "",
+        "## References",
+        "",
+        render_references(events).rstrip(),
+        "",
+        f"完整证据条目见 [{APPENDIX_FILENAME}]({APPENDIX_FILENAME})。",
         "",
     ]
     return "\n".join(lines)
@@ -613,12 +792,45 @@ def render_final_output(
 ) -> str:
     fallback_sources = fallback_sources or []
     if style == "scientific-memo":
-        return render_scientific_memo(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources)
+        return render_scientific_memo(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources, time_range)
     if style == "expert-explainer":
-        return render_expert_explainer(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources)
+        return render_expert_explainer(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources, time_range)
     if style == "kol-thread":
-        return render_kol_thread(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources)
+        return render_kol_thread(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources, time_range)
     return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, style, fallback_sources, time_range)
+
+
+def render_output_artifacts(
+    topic: str,
+    knowledge_ids: list[str],
+    events: list[dict[str, Any]],
+    topic_cards: list[dict[str, Any]],
+    source_ids: list[str],
+    style: str,
+    fallback_sources: list[dict[str, Any]] | None = None,
+    time_range: str | None = None,
+) -> dict[str, str]:
+    styles = DEFAULT_OUTPUT_STYLES if style == "all" else [style]
+    artifacts = {
+        artifact_filename(output_style): render_final_output(
+            topic,
+            knowledge_ids,
+            events,
+            topic_cards,
+            source_ids,
+            output_style,
+            fallback_sources,
+            time_range,
+        )
+        for output_style in styles
+    }
+    # Formal outputs link event IDs into the appendix, so ship it alongside them.
+    formal_emitted = events and any(
+        output_style in FORMAL_STYLES for output_style in styles
+    ) and count_paper_level_sources(events) >= FORMAL_SOURCE_THRESHOLD
+    if formal_emitted:
+        artifacts[APPENDIX_FILENAME] = render_evidence_appendix(topic, events, time_range)
+    return artifacts
 
 
 def render_outline(style: str) -> str:
@@ -722,34 +934,62 @@ def render_packet(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--topic", required=True, help="Review topic or question.")
-    parser.add_argument("--time-range", help="Required when fallback sources represent new paper discovery.")
+    parser.add_argument("--time-range", help="Review/search time range. Defaults to the most recent six months.")
     parser.add_argument("--knowledge-id", action="append", default=[], help="Knowledge ID such as EA-DATA. Repeatable.")
     parser.add_argument("--evidence-jsonl", action="append", default=[], help="Evidence JSONL file. Repeatable.")
     parser.add_argument("--fallback-source-json", action="append", default=[], help="Fallback source-tier JSON file. Repeatable.")
     parser.add_argument("--topic-card", action="append", default=[], help="Topic card Markdown file. Repeatable.")
     parser.add_argument("--source-file", help="Optional knowledge/sources.md file for source ID inventory.")
-    parser.add_argument("--style", choices=STYLE_CHOICES, default="survey", help="Review shape.")
-    parser.add_argument("--output", help="Write Markdown packet to this path; stdout if omitted.")
+    parser.add_argument(
+        "--style",
+        choices=STYLE_CHOICES,
+        default="all",
+        help="Review shape. Defaults to all three final Markdown styles; use survey for an explicit review packet.",
+    )
+    parser.add_argument("--work-dir", default=str(REPO_ROOT / "work"), help="Directory for default review project folders.")
+    parser.add_argument("--output", help="Write Markdown artifact to this path. Use '-' for stdout. Defaults to work/<project>/ when omitted.")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.fallback_source_json and not args.time_range:
-        parser.error("--time-range is required when using --fallback-source-json")
+    time_range = args.time_range or default_time_range()
     events = load_events([Path(path) for path in args.evidence_jsonl])
     fallback_sources = load_fallback_sources([Path(path) for path in args.fallback_source_json])
     cards = load_topic_cards([Path(path) for path in args.topic_card])
     source_ids = load_source_ids(Path(args.source_file)) if args.source_file else []
-    packet = render_final_output(args.topic, args.knowledge_id, events, cards, source_ids, args.style, fallback_sources, args.time_range)
+    artifacts = render_output_artifacts(args.topic, args.knowledge_id, events, cards, source_ids, args.style, fallback_sources, time_range)
 
-    if args.output:
+    if args.output == "-":
+        if len(artifacts) == 1:
+            sys.stdout.write(next(iter(artifacts.values())))
+        else:
+            for filename, content in artifacts.items():
+                sys.stdout.write(f"<!-- {filename} -->\n\n{content}\n\n")
+    elif args.output:
         output = Path(args.output)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(packet, encoding="utf-8")
+        if len(artifacts) == 1:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(next(iter(artifacts.values())), encoding="utf-8")
+        else:
+            output.mkdir(parents=True, exist_ok=True)
+            for filename, content in artifacts.items():
+                (output / filename).write_text(content, encoding="utf-8")
     else:
-        sys.stdout.write(packet)
+        project_dir = default_project_dir(Path(args.work_dir), args.topic)
+        project_dir.mkdir(parents=True, exist_ok=True)
+        outputs: list[Path] = []
+        for filename, content in artifacts.items():
+            output = project_dir / filename
+            output.write_text(content, encoding="utf-8")
+            outputs.append(output)
+        if len(outputs) == 1:
+            sys.stdout.write(f"Wrote Markdown artifact: {outputs[0]}\n")
+        else:
+            sys.stdout.write("Wrote Markdown artifacts:\n")
+            for output in outputs:
+                sys.stdout.write(f"- {output}\n")
     return 0
 
 

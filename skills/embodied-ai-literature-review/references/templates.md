@@ -1,6 +1,17 @@
 # Review Templates
 
-Use these templates when drafting a Chinese embodied-AI literature review or related-work section.
+Use these templates when drafting a Chinese embodied-AI literature review or related-work section. Unless the user specifies one style, produce the final artifact bundle in the review project folder under `work/`:
+
+- `scientific-memo_keyan.md`
+- `zhihu-explainer_zhihu.md`
+- `xiaohongshu-post_xiaohongshu.md`
+- `evidence-appendix.md`（每个 event 一节,正文中的 event ID 链接跳到这里）
+
+Link rules for all formal styles (see review-contract.md "Citation and link contract"):
+
+- In-text event IDs are links: `[EA-…-0001](evidence-appendix.md#ea--0001)`, not bare `EA-…-0001`.
+- Paper mentions are links: `[2606.13877](https://arxiv.org/abs/2606.13877)`.
+- Every formal artifact ends with a `## References` section of deduplicated linked papers.
 
 ## Scientific memo skeleton
 
@@ -44,7 +55,7 @@ Use these templates when drafting a Chinese embodied-AI literature review or rel
 <project-facing synthesis>（inference: connects <event-id> and <source-id>）。
 ```
 
-## Expert explainer pattern
+## Expert explainer pattern (default)
 
 ```md
 # <主题>：专家解释帖
@@ -52,6 +63,12 @@ Use these templates when drafting a Chinese embodied-AI literature review or rel
 ## TL;DR
 
 <direct answer in 2-4 sentences, with caveat>
+
+## 检索范围
+
+- Time range: <explicit range or resolved recent-six-month default>
+- Paper-level sources: <n> / 5
+- Output type: expert-explainer
 
 ## 常见误区或争议
 
@@ -77,9 +94,9 @@ Use these templates when drafting a Chinese embodied-AI literature review or rel
 
 ## 证据约束洞察
 
-1. <claim>（<event-id>; stance: <label>）
-2. <claim>（<event-id>; stance: <label>）
-3. <claim>（<event-id>; stance: <label>）
+1. <claim>（[<event-id>](evidence-appendix.md#<anchor>); stance: <label>）
+2. <claim>（[<event-id>](evidence-appendix.md#<anchor>); stance: <label>）
+3. <claim>（[<event-id>](evidence-appendix.md#<anchor>); stance: <label>）
 
 ## 边界提醒
 

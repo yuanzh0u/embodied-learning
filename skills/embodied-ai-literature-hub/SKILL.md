@@ -33,6 +33,8 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
    - Browser/web results are candidate-discovery evidence only. Promote claims only after arXiv HTML正文 verification.
 4. Mine HTML full text:
    - Prefer arXiv HTML full text. Run `scripts/extract_arxiv_html.py` first for promising candidates.
+   - The extractor is section-aware for LaTeXML pages: read `ranked_sections` to decide which sections to deep-read (pass `--include-section-text` for their full text), use `term_matches` locators (`section path ¶ paragraph id`) as evidence locators, and use `citation_contexts` to capture how the paper discusses its cited works — the primary source for "paper A evaluates dataset B" style evidence.
+   - Non-LaTeXML pages degrade to flat extraction (`structure: "flat"`); locators fall back to nearest headings.
    - If HTML is unavailable, keep the paper as a metadata candidate and do not perform正文挖掘 or promote it to正文-level evidence.
    - Cache HTML outside the repo; do not store full papers or full extracted text in the knowledge base.
    - If HTML download stalls, stop the run and continue with metadata/abstract-level evidence only, clearly marking the confidence and limitation.

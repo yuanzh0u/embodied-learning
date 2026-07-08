@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 
@@ -59,14 +61,39 @@ def event_for_paper(event_id: str, arxiv_id: str) -> dict[str, object]:
 
 
 class BuildReviewPacketTests(unittest.TestCase):
-    def test_skill_docs_describe_review_orchestration_and_styles(self) -> None:
+    def test_skill_docs_describe_default_readable_markdown_and_styles(self) -> None:
         skill_doc = (ROOT / "skills" / "embodied-ai-literature-review" / "SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("planner -> hub -> review packet -> style menu", skill_doc)
+        self.assertIn("Default final deliverable", skill_doc)
+        self.assertIn("readable Markdown", skill_doc)
+        self.assertIn("three Markdown files", skill_doc)
+        self.assertIn("scientific-memo_keyan.md", skill_doc)
+        self.assertIn("zhihu-explainer_zhihu.md", skill_doc)
+        self.assertIn("xiaohongshu-post_xiaohongshu.md", skill_doc)
+        self.assertIn("If no time range is provided, default to the most recent six months.", skill_doc)
+        self.assertIn("work/", skill_doc)
         self.assertIn("5 paper-level sources", skill_doc)
         self.assertIn("scientific-memo", skill_doc)
         self.assertIn("expert-explainer", skill_doc)
         self.assertIn("kol-thread", skill_doc)
+
+    def test_default_time_range_is_recent_half_year(self) -> None:
+        self.assertEqual(
+            "2025-12-12..2026-06-12",
+            build_review_packet.default_time_range(date(2026, 6, 12)),
+        )
+
+    def test_default_time_range_clamps_month_end(self) -> None:
+        self.assertEqual(
+            "2025-09-30..2026-03-31",
+            build_review_packet.default_time_range(date(2026, 3, 31)),
+        )
+
+    def test_style_filenames_use_three_default_deliverable_names(self) -> None:
+        self.assertEqual("scientific-memo_keyan.md", build_review_packet.artifact_filename("scientific-memo"))
+        self.assertEqual("zhihu-explainer_zhihu.md", build_review_packet.artifact_filename("expert-explainer"))
+        self.assertEqual("xiaohongshu-post_xiaohongshu.md", build_review_packet.artifact_filename("kol-thread"))
 
     def test_render_packet_preserves_event_traceability_and_stances(self) -> None:
         events = [sample_event("EA-DATA-2026-0001", "support"), sample_event("EA-DATA-2026-0002", "gap")]
@@ -97,7 +124,7 @@ class BuildReviewPacketTests(unittest.TestCase):
         self.assertIn("数据采集与数据质量", packet)
         self.assertIn("Traceability Checklist", packet)
 
-    def test_cli_writes_packet_from_jsonl_and_topic_card(self) -> None:
+    def test_cli_writes_packet_from_jsonl_and_topic_card_when_survey_is_explicit(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             evidence = tmp / "evidence.jsonl"
@@ -135,6 +162,8 @@ title: 数据采集与数据质量
                     str(evidence),
                     "--topic-card",
                     str(topic_card),
+                    "--style",
+                    "survey",
                     "--output",
                     str(output),
                 ],
@@ -149,6 +178,108 @@ title: 数据采集与数据质量
             self.assertIn("EA-DATA-2026-0001", packet)
             self.assertIn("条件成立", packet)
             self.assertIn("数据质量最终要通过闭环收益验证", packet)
+
+    def test_cli_can_render_readable_expert_explainer_markdown_to_stdout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            evidence = tmp / "evidence.jsonl"
+            events = [
+                event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}")
+                for index in range(1, 6)
+            ]
+            evidence.write_text(
+                "\n".join(json.dumps(event, ensure_ascii=False) for event in events) + "\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--topic",
+                    "UMI 数据可用性",
+                    "--knowledge-id",
+                    "EA-DATA",
+                    "--evidence-jsonl",
+                    str(evidence),
+                    "--style",
+                    "expert-explainer",
+                    "--output",
+                    "-",
+                ],
+                check=True,
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertIn("# UMI 数据可用性：专家解释帖", completed.stdout)
+        self.assertIn("## TL;DR", completed.stdout)
+        self.assertIn("## 常见误区或争议", completed.stdout)
+        self.assertIn("## 证据与限制", completed.stdout)
+        self.assertIn("## 延伸阅读与可信度", completed.stdout)
+        self.assertNotIn("# Review Packet:", completed.stdout)
+
+    def test_cli_default_output_writes_three_markdown_files_into_work_project_folder(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            work_dir = tmp / "work"
+            evidence = tmp / "evidence.jsonl"
+            events = [
+                event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}")
+                for index in range(1, 6)
+            ]
+            evidence.write_text(
+                "\n".join(json.dumps(event, ensure_ascii=False) for event in events) + "\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--topic",
+                    "UMI 数据可用性",
+                    "--knowledge-id",
+                    "EA-DATA",
+                    "--evidence-jsonl",
+                    str(evidence),
+                    "--work-dir",
+                    str(work_dir),
+                ],
+                check=True,
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+
+            prefix = "Wrote Markdown artifacts:"
+            self.assertTrue(completed.stdout.startswith(prefix))
+            artifact_paths = [
+                Path(line[2:])
+                for line in completed.stdout.splitlines()[1:]
+                if line.startswith("- ")
+            ]
+            self.assertEqual(4, len(artifact_paths))
+            for artifact_path in artifact_paths:
+                self.assertTrue(artifact_path.exists())
+                self.assertEqual(work_dir, artifact_path.parent.parent)
+                self.assertTrue(artifact_path.parent.name.startswith("literature-review-umi-数据可用性-"))
+            names = {artifact_path.name for artifact_path in artifact_paths}
+            self.assertEqual(
+                {
+                    "scientific-memo_keyan.md",
+                    "zhihu-explainer_zhihu.md",
+                    "xiaohongshu-post_xiaohongshu.md",
+                    "evidence-appendix.md",
+                },
+                names,
+            )
+            by_name = {artifact_path.name: artifact_path.read_text(encoding="utf-8") for artifact_path in artifact_paths}
+            self.assertIn("# UMI 数据可用性研究备忘录", by_name["scientific-memo_keyan.md"])
+            self.assertIn("# UMI 数据可用性：专家解释帖", by_name["zhihu-explainer_zhihu.md"])
+            self.assertIn("# UMI 数据可用性：洞察短串", by_name["xiaohongshu-post_xiaohongshu.md"])
+            self.assertIn("# Evidence Appendix: UMI 数据可用性", by_name["evidence-appendix.md"])
 
     def test_packet_declares_upstream_orchestration_contract(self) -> None:
         packet = build_review_packet.render_packet(
@@ -226,7 +357,7 @@ title: 数据采集与数据质量
         )
 
         self.assertIn("## Style Menu", packet)
-        self.assertIn("Recommended default: scientific-memo", packet)
+        self.assertIn("Recommended default: all", packet)
         self.assertIn("Scientific memo preview:", packet)
         self.assertIn("Expert explainer preview:", packet)
         self.assertIn("KOL thread preview:", packet)
@@ -256,6 +387,8 @@ title: 数据采集与数据质量
                     str(evidence),
                     "--style",
                     "scientific-memo",
+                    "--output",
+                    "-",
                 ],
                 check=True,
                 cwd=ROOT,
@@ -294,6 +427,8 @@ title: 数据采集与数据质量
                     str(evidence),
                     "--style",
                     "expert-explainer",
+                    "--output",
+                    "-",
                 ],
                 check=True,
                 cwd=ROOT,
@@ -335,6 +470,8 @@ title: 数据采集与数据质量
                     str(evidence),
                     "--style",
                     "kol-thread",
+                    "--output",
+                    "-",
                 ],
                 check=True,
                 cwd=ROOT,
@@ -378,6 +515,8 @@ title: 数据采集与数据质量
                     "2024-01-01..2026-06-11",
                     "--fallback-source-json",
                     str(fallback_sources),
+                    "--output",
+                    "-",
                 ],
                 check=True,
                 cwd=ROOT,
@@ -421,6 +560,8 @@ title: 数据采集与数据质量
                     str(fallback_sources),
                     "--style",
                     "kol-thread",
+                    "--output",
+                    "-",
                 ],
                 check=True,
                 cwd=ROOT,
@@ -432,11 +573,12 @@ title: 数据采集与数据质量
         self.assertIn("### paper-level", completed.stdout)
         self.assertIn("Paper source", completed.stdout)
 
-    def test_fallback_sources_require_time_range(self) -> None:
+    def test_fallback_sources_use_default_recent_half_year_when_time_range_is_absent(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             fallback_sources = tmp / "fallback-sources.json"
             fallback_sources.write_text("[]", encoding="utf-8")
+            expected_time_range = build_review_packet.default_time_range()
 
             completed = subprocess.run(
                 [
@@ -446,14 +588,82 @@ title: 数据采集与数据质量
                     "UMI 数据可用性",
                     "--fallback-source-json",
                     str(fallback_sources),
+                    "--style",
+                    "survey",
+                    "--output",
+                    "-",
                 ],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
             )
 
-        self.assertNotEqual(completed.returncode, 0)
-        self.assertIn("--time-range is required", completed.stderr)
+        self.assertEqual(0, completed.returncode)
+        self.assertIn(f"Time range: {expected_time_range}", completed.stdout)
+
+    def test_formal_outputs_link_event_ids_and_papers(self) -> None:
+        events = [event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}") for index in range(1, 6)]
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            [],
+            "all",
+        )
+
+        self.assertIn("evidence-appendix.md", artifacts)
+        for name in ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"]:
+            content = artifacts[name]
+            # Every in-text event ID must be a link into the appendix.
+            for match in re.finditer(r"EA-DATA-2026-\d{4}", content):
+                start = match.start()
+                self.assertEqual("[", content[start - 1], f"{name}: bare event ID at offset {start}")
+            self.assertIn("(evidence-appendix.md#", content)
+            # References section with https links is mandatory in formal outputs.
+            self.assertIn("## References", content)
+            self.assertIn("https://arxiv.org/abs/2601.00001", content)
+
+    def test_claim_map_paper_column_links_to_arxiv(self) -> None:
+        events = [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
+        claim_map = build_review_packet.render_claim_map(events, linked=True)
+        self.assertIn("[2601.00001](https://arxiv.org/abs/2601.00001)", claim_map)
+        self.assertIn("[EA-DATA-2026-0001](evidence-appendix.md#ea-data-2026-0001)", claim_map)
+
+    def test_appendix_anchors_align_with_event_links(self) -> None:
+        events = [event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}") for index in range(1, 6)]
+        appendix = build_review_packet.render_evidence_appendix("UMI 数据可用性", events)
+        for event in events:
+            event_id = str(event["event_id"])
+            anchor = build_review_packet.event_anchor(event_id)
+            self.assertIn(f"### {event_id}", appendix)
+            self.assertEqual(anchor, build_review_packet.event_anchor(event_id))
+            # GitHub-style anchor derived from the heading must equal the link target.
+            heading_anchor = re.sub(r"[^0-9a-z一-鿿-]", "", event_id.lower().replace(" ", "-"))
+            self.assertEqual(heading_anchor, anchor)
+        self.assertIn("## References", appendix)
+
+    def test_references_deduplicate_papers_across_events(self) -> None:
+        events = [
+            event_for_paper("EA-DATA-2026-0001", "2601.00001"),
+            event_for_paper("EA-DATA-2026-0002", "2601.00001"),
+            event_for_paper("EA-DATA-2026-0003", "2601.00002"),
+        ]
+        references = build_review_packet.render_references(events)
+        self.assertEqual(1, references.count("https://arxiv.org/abs/2601.00001"))
+        self.assertEqual(1, references.count("https://arxiv.org/abs/2601.00002"))
+
+    def test_preliminary_outputs_do_not_emit_appendix(self) -> None:
+        events = [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            [],
+            "all",
+        )
+        self.assertNotIn("evidence-appendix.md", artifacts)
 
 
 if __name__ == "__main__":
