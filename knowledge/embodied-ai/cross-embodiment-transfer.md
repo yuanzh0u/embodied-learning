@@ -3,11 +3,12 @@ id: EA-XEMBODIMENT
 title: 跨本体与数据迁移
 type: topic-card
 domain: embodied-ai
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-EA-QUESTIONS
-    file: ../../具身智能研究问题清单.md
-    locator: lines 246-301
+    status: retired
+    archive: "git show 081e898:具身智能研究问题清单.md"
+    locator: §四 跨本体与数据迁移(Q10-Q12)
 tags: [embodied-ai, cross-embodiment, retargeting, dexterous-hand, gripper, action-space]
 aliases: [跨本体, Retargeting, 人手迁移, 灵巧手, 夹爪, 动作空间]
 load_when:

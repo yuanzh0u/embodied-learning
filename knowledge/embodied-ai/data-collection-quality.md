@@ -3,11 +3,12 @@ id: EA-DATA
 title: 数据采集与数据质量
 type: topic-card
 domain: embodied-ai
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-EA-QUESTIONS
-    file: ../../具身智能研究问题清单.md
-    locator: lines 19-110
+    status: retired
+    archive: "git show 081e898:具身智能研究问题清单.md"
+    locator: §一 数据采集与数据质量(Q1-Q3)
 tags: [embodied-ai, data, collection, quality, scaling, umi, droid, ego4d, occlusion]
 aliases: [数据采集, 数据质量, UMI, DROID, Ego, Scaling Law, 遮挡率]
 load_when:

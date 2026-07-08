@@ -3,11 +3,12 @@ id: EA-BIZ
 title: 产业落地与商业化
 type: topic-card
 domain: embodied-ai
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-EA-QUESTIONS
-    file: ../../具身智能研究问题清单.md
-    locator: lines 411-441
+    status: retired
+    archive: "git show 081e898:具身智能研究问题清单.md"
+    locator: §七 产业落地与商业化(Q18)
 tags: [embodied-ai, commercialization, tob, roi, industrial, reliability, last-centimeter]
 aliases: [商业化, ToB, ROI, 最后一厘米, 工业落地, 节拍, 良率]
 load_when:

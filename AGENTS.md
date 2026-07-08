@@ -19,8 +19,14 @@ This repository is a research knowledge base. Optimize for context efficiency an
 - Keep every synthesized claim traceable to a `source` entry or mark it as an inference.
 - Use stable IDs such as `EA-DATA`, `EA-EVAL`, and `ERR-PATTERN` when referring to knowledge units.
 
+## Research Workflow
+
+- When researching a topic, first use the project skill `embodied-ai-literature-review`; it orchestrates `embodied-ai-query-planner` and `embodied-ai-literature-hub` for search planning, evidence extraction, and final review drafting.
+
 ## Source Of Truth
 
-- Raw source documents are the detailed source of truth.
+- `evidence/` is the source of truth for paper-level evidence and finished literature reviews (versioned, append-only per run).
+- Retired raw documents remain traceable through their registered git archives in [knowledge/sources.md](knowledge/sources.md) (`git show 081e898:<file>`).
 - Topic cards are compressed working memory for agents.
 - The master index is the routing layer.
+- Candidates and intermediate artifacts live in `work/` (gitignored scratch); accepted assets live in `evidence/`.

@@ -3,11 +3,12 @@ id: EA-HARDWARE
 title: 采集硬件与设备路线
 type: topic-card
 domain: embodied-ai
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-EA-QUESTIONS
-    file: ../../具身智能研究问题清单.md
-    locator: lines 170-244
+    status: retired
+    archive: "git show 081e898:具身智能研究问题清单.md"
+    locator: §三 采集硬件与设备路线(Q6-Q9)
 tags: [embodied-ai, hardware, monocular, stereo, arkit, slam, tracking, umi, glove]
 aliases: [采集硬件, 单目, 双目, ARKit, SLAM, Tracking, UMI, 指套, 手套]
 load_when:

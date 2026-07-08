@@ -3,11 +3,12 @@ id: ERR-COMPARE
 title: 测绘误差观与 AI 误差治理对照
 type: topic-card
 domain: error-governance
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-ERR-COMPARE
-    file: ../../测绘误差观与大模型误差治理比较.md
-    locator: lines 5-224
+    status: retired
+    archive: "git show 081e898:测绘误差观与大模型误差治理比较.md"
+    locator: §核心结论、§一 学术角度的差异、§二 实践角度的差异、§三 核心对照表
 tags: [error-governance, surveying, ai-risk, hallucination, quality-control, acceptance]
 aliases: [测绘误差, 大模型误差, 幻觉, 真值, 质量验收]
 load_when:

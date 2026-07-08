@@ -3,11 +3,12 @@ id: EA-MODEL
 title: 模型与预训练
 type: topic-card
 domain: embodied-ai
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-EA-QUESTIONS
-    file: ../../具身智能研究问题清单.md
-    locator: lines 303-359
+    status: retired
+    archive: "git show 081e898:具身智能研究问题清单.md"
+    locator: §五 模型与预训练(Q13-Q15)
 tags: [embodied-ai, model, pretraining, vla, rt-x, octo, openvla, sim2real]
 aliases: [机器人基础模型, Unified Model, VLA, Octo, OpenVLA, RT-X, 预训练, 微调]
 load_when:

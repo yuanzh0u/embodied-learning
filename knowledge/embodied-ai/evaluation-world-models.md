@@ -3,11 +3,12 @@ id: EA-EVAL
 title: 评测体系与世界模型
 type: topic-card
 domain: embodied-ai
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-EA-QUESTIONS
-    file: ../../具身智能研究问题清单.md
-    locator: lines 361-409
+    status: retired
+    archive: "git show 081e898:具身智能研究问题清单.md"
+    locator: §六 评测体系与世界模型(Q16-Q17)
 tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, sim-real]
 aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, Benchmark, Sim2Real]
 load_when:

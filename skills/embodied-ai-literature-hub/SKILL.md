@@ -44,6 +44,9 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
 6. Produce outputs:
    - Source-entry draft for `knowledge/sources.md`.
    - Evidence JSONL plus a Markdown brief, using `references/output-templates.md`.
+   - Allocate event IDs from the repo root with `python3 scripts/next_event_id.py --prefix <topic-prefix>-<year>` so sequences never collide across runs.
+   - Validate the JSONL before settling it: `python skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl <file> --validate-only` must pass.
+   - Settle accepted assets into `evidence/literature-review-<topic>-<date>/` (evidence JSONL, brief, source-entry draft, query plan, `run.json` manifest — see `evidence/README.md`). Candidates, HTML extraction JSON, and other intermediates stay in `work/`.
    - Topic-card update suggestions only for high-signal synthesis.
 
 ## Evidence rules

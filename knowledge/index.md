@@ -2,7 +2,7 @@
 id: KB-INDEX
 title: 智能体主索引
 type: index
-updated: 2026-06-05
+updated: 2026-07-08
 tags: [agent-index, routing, embodied-ai, error-governance]
 ---
 
@@ -14,12 +14,14 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 
 | 任务类型 | 推荐加载 |
 |---|---|
-| 了解项目整体背景 | [../项目背景信息.md](../项目背景信息.md) |
+| 项目语境与 query-planning 术语 | [../CONTEXT.md](../CONTEXT.md) |
+| 了解项目整体背景 | [../CONTEXT.md](../CONTEXT.md)；完整背景经 git 存档读取（见 [sources.md](sources.md) 的 S-PROJECT-CONTEXT） |
 | 查具身智能某个议题 | [embodied-ai/index.md](embodied-ai/index.md) + 对应主题卡 |
 | 查测绘误差观或 AI 误差治理 | [error-governance/index.md](error-governance/index.md) + 对应主题卡 |
+| 查论文级证据或历史文献 run | [../evidence/README.md](../evidence/README.md) + 对应 run 的 `run.json` 与 brief |
 | 新增论文、报告、访谈、素材 | [ingestion-guide.md](ingestion-guide.md) + [templates/topic-card.md](templates/topic-card.md) |
-| 统一术语 | [glossary.md](glossary.md) |
-| 需要完整证据或参考资料 | [sources.md](sources.md) + 原始材料 |
+| 统一术语 | [../CONTEXT.md](../CONTEXT.md) + [glossary.md](glossary.md) |
+| 需要完整证据或参考资料 | [sources.md](sources.md) + `evidence/` 层；退役原文用登记的 `git show` 存档命令读取 |
 
 ## 主题卡路由
 
@@ -52,5 +54,4 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 
 - 低预算：只读本索引 + 1 张主题卡。
 - 中预算：读领域索引 + 2-3 张主题卡。
-- 高预算：读主题卡后，再按 `source` 打开原始材料的对应章节。
-
+- 高预算：读主题卡后，再按 `source` 打开 git 存档的对应章节,或按 `evidence/` run manifest 加载论文级证据。`evidence/` 中的 JSONL 不适合整读,先读 run.json 和 brief 再选择性加载。

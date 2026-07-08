@@ -2,20 +2,20 @@
 id: KB-README
 title: 知识库说明
 type: guide
-updated: 2026-06-05
+updated: 2026-07-08
 tags: [knowledge-base, agent-index, context-efficiency]
 ---
 
 # 知识库说明
 
-`knowledge/` 是面向智能体使用的结构化知识层。它不替代原始材料，而是把长文拆成可快速检索、可低成本加载、可继续扩展的主题卡片。
+`knowledge/` 是面向智能体使用的结构化知识层。它不替代原始材料，而是把长文拆成可快速检索、可低成本加载、可继续扩展的主题卡片。原始材料退役后经 git 存档溯源（见 [sources.md](sources.md)）；论文级证据与文献 run 成品归档在 [../evidence/](../evidence/README.md)。
 
 ## 目录结构
 
 | 路径 | 用途 |
 |---|---|
 | [index.md](index.md) | 全局路由索引，智能体优先读取 |
-| [sources.md](sources.md) | 原始材料登记表和来源行段 |
+| [sources.md](sources.md) | 原始材料登记表（含退役材料的 git 存档引用与章节锚） |
 | [glossary.md](glossary.md) | 术语表 |
 | [ingestion-guide.md](ingestion-guide.md) | 新素材入库规范 |
 | [templates/topic-card.md](templates/topic-card.md) | 新主题卡片模板 |
@@ -35,5 +35,5 @@ tags: [knowledge-base, agent-index, context-efficiency]
 1. 读取 [index.md](index.md) 判断应该加载哪些卡片。
 2. 读取对应领域索引，例如 [embodied-ai/index.md](embodied-ai/index.md)。
 3. 读取 1-3 张最相关主题卡。
-4. 只有在需要证据细节、原始表达或参考链接时，才读取原始材料。
+4. 只有在需要证据细节、原始表达或参考链接时，才读取 git 存档的退役原文或 `evidence/` 层的论文级证据。
 

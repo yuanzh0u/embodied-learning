@@ -3,11 +3,12 @@ id: ERR-PATTERN
 title: 可迁移的误差治理模式
 type: topic-card
 domain: error-governance
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-ERR-COMPARE
-    file: ../../测绘误差观与大模型误差治理比较.md
-    locator: lines 226-419
+    status: retired
+    archive: "git show 081e898:测绘误差观与大模型误差治理比较.md"
+    locator: §四 二者能否互补、§五 测绘方法能补大模型行业的短板、§六 大模型行业能反哺测绘行业
 tags: [error-governance, error-budget, redundancy, residual-analysis, acceptance, risk-grade]
 aliases: [误差预算, 冗余检核, 残差分析, 精度分级, 适用边界, 可信智能]
 load_when:

@@ -3,11 +3,12 @@ id: EA-SENSOR
 title: 传感器与多模态感知
 type: topic-card
 domain: embodied-ai
-updated: 2026-06-05
+updated: 2026-07-08
 source:
   - id: S-EA-QUESTIONS
-    file: ../../具身智能研究问题清单.md
-    locator: lines 112-168
+    status: retired
+    archive: "git show 081e898:具身智能研究问题清单.md"
+    locator: §二 传感器与多模态感知(Q4-Q5)
 tags: [embodied-ai, sensors, multimodal, rgb, point-cloud, tactile, force, proprioception]
 aliases: [传感器, 多模态感知, 触觉, 力控, 点云, 3D, RGB]
 load_when:

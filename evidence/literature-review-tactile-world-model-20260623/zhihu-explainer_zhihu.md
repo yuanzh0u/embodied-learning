@@ -1,0 +1,58 @@
+# 触觉世界模型：为什么机器人需要“会想象接触”的模型？
+
+## TL;DR
+
+触觉世界模型的核心不是“多一个触觉摄像头”，而是让机器人预测：如果我这样动，接下来接触会不会发生、力会不会变大、会不会滑、局部几何会怎样变化。最近 6 个月的论文显示，触觉对遮挡、插入、旋拧、擦拭、抓取恢复这类任务很有价值，但收益强依赖数据同步、触觉表征、跨模态兼容和真实闭环评测（trace: `EA-TWM-2026-0001`, `EA-TWM-2026-0003`, `EA-TWM-2026-0007`, `EA-TWM-2026-0015`）。
+
+## 检索范围
+
+- Time range: 2025-12-23 to 2026-06-23
+- Paper-level sources: 11 / 5
+- Evidence events: 18
+- Output type: expert-explainer
+
+## 常见误区：触觉不是“近距离视觉”
+
+很多人会把 tactile image 理解成另一个摄像头视角，但触觉在机器人里更像“物理交互读数”。视觉能看到外观，却很难判断局部是否真的接触、摩擦是否够、物体是否开始滑、孔和插头是否对齐；触觉、力/力矩和 marker displacement 则直接反映接触状态。Visuo-Tactile World Models 报告触觉 grounding 改善物体持续性和物理一致性，TacForeSight 显示 wrist force/torque 可提前预示未来触觉变化，HapTile 还把触觉图像中的 marker displacement 保存为接触几何和滑移线索（trace: `EA-TWM-2026-0003`, `EA-TWM-2026-0007`, `EA-TWM-2026-0018`）。
+
+## 机制一：预测接触未来，而不是只看当前接触
+
+触觉世界模型最有意思的地方，是它把“现在摸到了什么”变成“接下来会摸到什么”。TacForeSight 用双指触觉观测和高频腕部六维力/力矩预测未来触觉 latent，再把这个未来 latent 作为 anticipatory contact prior 给策略；Dream-Tac 则把未来视觉、未来触觉和动作 chunk 放在同一个世界动作模型里生成。这说明触觉世界模型正在从被动感知走向预测式控制（trace: `EA-TWM-2026-0007`, `EA-TWM-2026-0008`, `EA-TWM-2026-0009`）。
+
+## 机制二：触觉是稀疏事件，不能粗暴拼接
+
+ContactWorld 的结果很提醒人：不是“模态越多越强”，而是空间结构、时间连续性和跨模态兼容性决定规划表现。它的 benchmark 里，点云和 tactile force-field 组合效果最好，但真实机器人实验又显示某些触觉表示会受标定、深度和力推断噪声影响。Dream-Tac 因此使用 contact gate 和 contact-aware attention，让模型只在触觉变化显著、接触状态发生转折时增强触觉影响（trace: `EA-TWM-2026-0001`, `EA-TWM-2026-0002`, `EA-TWM-2026-0010`）。
+
+## 机制三：数据需求比想象中重
+
+如果要训练触觉世界模型，数据不只是视频加 action。Visuo-Tactile World Models 用同步的外部视频、四个 Digit 360 指尖视频、proprioception、成功和失败演示；OmniVTA 做到 21,879 条轨迹、86 个任务、126 个对象和多种触觉传感器；HapTile 把语言、视觉、触觉、机器人状态和动作轨迹以 15Hz 同步；TAMEn 还强调可执行性检查和真实恢复数据。可以说，触觉世界模型吃的是“交互过程数据”，不是互联网视频那种静态数据（trace: `EA-TWM-2026-0004`, `EA-TWM-2026-0005`, `EA-TWM-2026-0013`, `EA-TWM-2026-0014`）。
+
+## 机制四：最终要接进控制回路
+
+只会预测触觉 future 不够，关键是预测能不能改变动作。OmniVTA 把预测和观测触觉偏差接到 60Hz 反射式控制；ViTaL 用视觉-触觉 latent world model 在推理期给候选动作打分；AT-VLA 把低频视觉语言理解和高频触觉反馈拆成慢流和快流。这说明触觉世界模型的落地问题，一半是模型，一半是实时系统工程（trace: `EA-TWM-2026-0006`, `EA-TWM-2026-0011`, `EA-TWM-2026-0016`）。
+
+## 证据与限制
+
+现有论文已经能说明“触觉对接触丰富任务有用”，但还不能说明“触觉世界模型已经通用”。ViTaL 明确提到推理期 steering 依赖 latent world model 保真度，细微接触事件会受预测误差累积影响；HT-Bench 虽有 10M RGB frames、7.8M tactile frames 和 226 个任务，但作者也说当前评测主要是表征级，不能直接证明下游机器人性能；ContactWorld 的真实实验也提醒传感器标定和跨模态兼容会影响增益（trace: `EA-TWM-2026-0002`, `EA-TWM-2026-0012`, `EA-TWM-2026-0015`）。
+
+## 怎么判断一篇“触觉世界模型”论文是否扎实？
+
+我会看四个问题。第一，它预测的是原始触觉图像，还是接触、滑移、力、局部几何这类物理变量或 latent？第二，数据是否同步了视觉、触觉、动作、proprioception，并包含失败和恢复？第三，模型是否接入 MPC、策略验证、动作生成或反射控制，而不是只做离线重建？第四，评测是否覆盖扰动、长时域、跨对象/跨传感器和真实任务成功率。这四点分别对应当前证据里的表征、数据、闭环和评测缺口（trace: `EA-TWM-2026-0001`, `EA-TWM-2026-0004`, `EA-TWM-2026-0008`, `EA-TWM-2026-0015`; inference: checklist synthesized from evidence events）。
+
+## 延伸阅读与可信度
+
+优先读 ContactWorld、TacForeSight、OmniVTA、Visuo-Tactile World Models 和 Dream-Tac；如果关心数据集和评测，再读 HapTile、TAMEn、HT-Bench；如果关心 VLA 部署和推理期修正，读 ViTaL、AT-VLA、HapticVLA。本综述可信度是“近期 arXiv 论文级证据充分，但领域仍处早期”：11 篇论文级来源满足 formal review 阈值，不过多数结果还没有跨实验室复现或统一 benchmark（source-entry: `S-TWM-001` to `S-TWM-011`; gap: `EA-TWM-2026-0015`）。
+
+## 参考来源
+
+- [ContactWorld](https://arxiv.org/abs/2606.13877)
+- [TacForeSight](https://arxiv.org/abs/2606.11184)
+- [OmniVTA](https://arxiv.org/abs/2603.19201)
+- [Visuo-Tactile World Models](https://arxiv.org/abs/2602.06001)
+- [Dream-Tac](https://arxiv.org/abs/2606.08737)
+- [Inference-time Policy Steering via Vision and Touch](https://arxiv.org/abs/2606.14981)
+- [HapTile](https://arxiv.org/abs/2606.04825)
+- [TAMEn](https://arxiv.org/abs/2604.07335)
+- [HT-Bench](https://arxiv.org/abs/2606.19161)
+- [AT-VLA](https://arxiv.org/abs/2605.07308)
+- [HapticVLA](https://arxiv.org/abs/2603.15257)
