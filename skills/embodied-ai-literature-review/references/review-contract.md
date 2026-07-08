@@ -4,7 +4,7 @@ Use this reference before drafting or auditing a full embodied-AI literature rev
 
 ## Boundary
 
-`$embodied-ai-literature-review` writes and audits synthesis. Its default path is `planner -> hub -> review packet -> style menu -> three-style Markdown bundle`: the packet is the intermediate audit object, and the default final deliverable is three Markdown files stored under `work/literature-review-<topic>-<date>/`: `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, and `xiaohongshu-post_xiaohongshu.md`. It does not own query generation, full-text extraction, or evidence promotion when upstream Skills are available. Use `$embodied-ai-query-planner` for query strategy and `$embodied-ai-literature-hub` for paper mining.
+`$embodied-ai-literature-review` writes and audits synthesis. Its default path is `planner -> hub -> briefing bundle -> agent-written three-style Markdown bundle`. **`build_review_packet.py` is a briefing generator, not an author**: it emits `review-packet.md` (audit surface), `writing-brief.md` (thesis-candidate tension pairs, topic-clustered evidence, mandatory caveats, per-style voice notes), and `evidence-appendix.md` (citation anchors). The default final deliverable — `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md` under `work/literature-review-<topic>-<date>/` — is ALWAYS written by the agent from the brief as argument-organized prose. Mechanical renders exist only as bannered `*.scaffold.md` files and are never deliverables. This Skill does not own query generation, full-text extraction, or evidence promotion when upstream Skills are available; use `$embodied-ai-query-planner` for query strategy and `$embodied-ai-literature-hub` for paper mining.
 
 If the user does not specify a time range for paper discovery or fallback collection, use the most recent six months. Preserve the resolved time range in the review packet and final Markdown artifact.
 
@@ -44,15 +44,24 @@ When the threshold is met and no style is specified, produce all three final sty
 
 - Default output root: repository `work/`.
 - Create a new review project folder named `literature-review-<topic>-<date>/`.
-- Put generated Markdown artifacts in that project folder: `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`, plus `evidence-appendix.md`, or `review-packet.md` in audit mode.
+- The script writes the briefing bundle there (`review-packet.md`, `writing-brief.md`, `evidence-appendix.md`); the agent writes the deliverables next to them: `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`.
 - Use inline/stdout output only when the user asks for inline text, piping, or an explicit non-file display.
 - After the run is settled, copy accepted assets into `evidence/literature-review-<topic>-<date>/` with a `run.json` manifest.
+
+## Cross-run evidence
+
+Combining evidence from prior runs is supported and encouraged (it is the accumulation payoff of the evidence layer), with three hard rules:
+
+- Load prior evidence explicitly via repeated `--evidence-jsonl`; `load_events` deduplicates by `event_id`.
+- Settle **every** evidence file the articles drew from into the run folder, and record the prior runs in `run.json` `source_runs`; `event_count` is the deduplicated count of events available to the articles.
+- An article may only cite events in the settled evidence set — `scripts/audit_citations.py` enforces this, plus dead-anchor and manifest-drift checks, and must pass before settling.
 
 ## Citation and link contract
 
 Formal outputs (scientific-memo, expert-explainer, kol-thread) must be readable AND clickable:
 
 - Every in-text event ID is a Markdown link into `evidence-appendix.md` anchors: `[EA-…-0001](evidence-appendix.md#ea--0001)`. Bare event IDs in formal prose are non-conforming.
+- Link targets are relative to the article's own folder: exactly `evidence-appendix.md#<anchor>`, never an invented subdirectory path.
 - Every paper mention in claim maps and references is a Markdown link to its arXiv abs page: `[2606.13877](https://arxiv.org/abs/2606.13877)`. Bare arXiv IDs in formal outputs are non-conforming.
 - Every formal output ends with a `## References` section: deduplicated papers, one line each, with inline links.
 - `evidence-appendix.md` ships with every formal bundle: one `### <event_id>` section per event (claim, stance, confidence, locator, short quote, paper link). Event links resolve to these anchors.

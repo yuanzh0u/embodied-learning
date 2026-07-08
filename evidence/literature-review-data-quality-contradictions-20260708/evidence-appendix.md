@@ -1,0 +1,528 @@
+# Evidence Appendix: 具身智能数据质量的主要矛盾
+
+- Time range: 2026-01-08..2026-07-08
+- Events: 54
+- 每个事件一节,标题即锚点;正文中的 event ID 链接跳转到这里。
+
+### EA-DATA-2026-4DDATA-0001
+
+- Claim: 4D时空推理若要从人类视频迁移到机器人控制，不能只收动作标签；它需要能描述物体如何在3D中随时间运动的密集点轨迹，并配少量机器人动作示教完成可执行落地。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2603.08485](https://arxiv.org/abs/2603.08485) 3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos
+- Locator: Abstract; 1 Introduction; 4.1 Data collection; 4.4 Results
+- Evidence: 3PoinTr先从无动作人类视频学习非 embodiment 点的密集3D点轨迹，再用20条机器人动作示教训练闭环策略；论文报告真实任务平均成功率相对最强基线提高25.0个百分点。
+- Authors: adam-hung; bardienus-pieter-duisterhof; jeffrey-ichnowski
+
+### EA-DATA-2026-4DDATA-0005
+
+- Claim: 面向4D生成式仿真的数据应把抽象动作展开成可控的机器人4D几何轨迹，并同时监督环境响应的RGB/pointmap序列。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2603.16669](https://arxiv.org/abs/2603.16669) Kinema4D: Kinematic 4D World Modeling for Spatiotemporal Embodied Simulation
+- Locator: Abstract; 1 Introduction; 3.1 Kinematics Control; 3.2 4D Generative Modeling; 3.3 Robo4D-200k
+- Evidence: Kinema4D用URDF/重建机器人经正逆运动学产生4D robot pointmap控制信号，再训练模型生成同步RGB和pointmap未来；其Robo4D-200k包含201,426个带高质量4D标注的交互episode。
+- Authors: mutian-xu; tianbao-zhang; tianqi-liu
+
+### EA-TWM-2026-0005
+
+- Claim: 可训练的触觉世界模型需要跨任务、跨物体、跨传感器的接触轨迹，而不是少量单任务触觉演示。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2603.19201](https://arxiv.org/abs/2603.19201) OmniVTA: Visuo-Tactile World Modeling for Contact-Rich Robotic Manipulation
+- Locator: Figure 2; Section III The OmniViTac Dataset; Section III-A Hardware Setup and Data Collection System
+- Evidence: OmniVTA 提出 OmniViTac 数据集，包含 21,879 条轨迹、86 个任务、126 个对象，覆盖擦拭、剥离、切割、抓取、装配、手内调整等六类物理接触模式，并使用 RGB-D、高频触觉和动作数据；系统支持多种触觉传感器并做时间对齐、可视化和人工核验。
+- Authors: yuhang-zheng
+
+### EA-TWM-2026-0014
+
+- Claim: 触觉世界模型的数据需求包括可执行性检查和真实失败恢复数据，因为成功演示不足以覆盖接触临界状态。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2604.07335](https://arxiv.org/abs/2604.07335) TAMEn: Tactile-Aware Manipulation Engine for Closed-Loop Data Collection in Contact-Rich Tasks
+- Locator: Abstract; Section III-C Feasibility-Aware Data Acquisition Pipeline; Section III-D Pyramid-Structured Data Regime; Section IV Experiments
+- Evidence: TAMEn 提出双模式采集管线：MoCap 精准模式和 VR in-the-wild 模式，并引入 feasibility-aware acquisition、触觉可视化 recovery teleoperation 和金字塔数据 regime；论文报告平均任务成功率从 34% 提升到 75%，且 tactile pretraining 从 55% 进一步到 65%。
+- Authors: longyan-wu
+
+### EA-DATA-2026-4DDATA-0008
+
+- Claim: 4D世界模型的数据需求可以转化为“几何教师监督”：用预训练4D几何模型产生对应结构，让视频骨干在训练期学习深度、相机运动和物体运动。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2605.22882](https://arxiv.org/abs/2605.22882) GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation
+- Locator: 2.2 Feed-Forward 3D and 4D Geometry Models; 3.2.3 Correspondence Distillation via Geometry Flow; 5 Conclusion
+- Evidence: GEM-4D冻结几何基础模型，提取稠密几何表示作为correspondence teacher，并通过geometry flow把监督蒸馏进视频backbone；训练后几何分支丢弃，推理仍是单流视频生成。
+- Authors: kaichen-zhou; yuzhen-chen; fangneng-zhan
+
+### EA-DATA-2026-4DDATA-0009
+
+- Claim: 可部署的4D世界-动作模型需要异构数据混合，而不是单一robot demo：真实机器人远程操作、UMI式交互、第一视角人类视频、rollout/失败轨迹分别提供不同监督。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.01027](https://arxiv.org/abs/2606.01027) $τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation
+- Locator: Abstract; III Data Sources for Predictive Robot Learning; A Training Configuration
+- Evidence: τ0-WM构建27.3K小时语料：17.8K小时真实机器人远程操作、6.5K小时UMI式示教、3.0K小时开源第一视角人类交互视频，并用rollout或失败轨迹训练任务进度/低质量结果评估。
+- Authors: pengfei-zhou; shengcong-chen; di-chen
+
+### EA-DATA-2026-4DDATA-0017
+
+- Claim: 接触导向的4D数据集应同步记录语言目标、第三视角/腕部视觉、双指触觉、机器人状态和动作轨迹，并把触觉反馈接入示教过程。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.04825](https://arxiv.org/abs/2606.04825) HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning
+- Locator: Abstract; 3.1 Dataset Statistics; 4 Data Collection Platform; 4.3 Haptic Feedback to the Operator
+- Evidence: HapTile提供1,726条示教、38个任务、9类技能，15Hz同步语言、视觉、触觉、机器人状态和动作；其teleoperation平台还将触觉marker motion转成操作者侧haptic feedback。
+- Authors: amirhosein-alian; yongqiang-zhao; shiyi-gu
+
+### EA-TWM-2026-0013
+
+- Claim: 面向触觉世界模型的数据集应同时包含语言、动作、视觉、触觉、机器人状态和操作者接触反馈，而不是只保存触觉图像。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.04825](https://arxiv.org/abs/2606.04825) HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning
+- Locator: Abstract; Section 3.1 Dataset Statistics; Section 3.2 Synchronization and Data Quality Control; Section 4 Data Collection Platform
+- Evidence: HapTile 包含 1,726 条演示、38 个任务、9 类操作技能，由 9 名操作者通过带 haptic feedback 的遥操作接口采集；每条演示含语言指令、同步视觉、触觉、机器人状态和动作轨迹，15Hz 采样，总交互时长 750.33 分钟。
+- Authors: amirhosein-alian
+
+### EA-DATA-2026-DQ-0002
+
+- Claim: 物理操作中的高质量数据需要显式承载 3D 几何和时间动态；只依赖 2D 视觉预训练会在几何约束、遮挡、接触和动态一致性上丢信息。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2607.06564](https://arxiv.org/abs/2607.06564) Lift3D-VLA: Lifting VLA Models to 3D Geometry and Dynamics-Aware Manipulation
+- Locator: Abstract; I Introduction; IV-C Geometry-Centric Masked Autoencoding; V-B Multi-Task on MetaWorld and RLBench
+- Evidence: 论文将 2D VLA 的困难归因于几何理解和空间推理不足、3D 数据和强 3D encoder 稀缺、跨模态 lifting/projection 损失几何 fidelity；其 GC-MAE 用伪点云监督当前点云重建和未来几何演化，并在仿真与真实任务中提升成功率。
+- Authors: jiaming-liu; qingpo-wuwu; nuowei-han; et al.
+
+### EA-TWM-2026-0004
+
+- Claim: 触觉世界模型至少需要时间同步的视觉、动作、机器人状态和多指触觉序列；但当前结果仍受传感器、场景和对象分布限制。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2602.06001](https://arxiv.org/abs/2602.06001) Visuo-Tactile World Models
+- Locator: Appendix B.0.1 Training Dataset; Appendix E Limitations
+- Evidence: 该论文训练数据包含 124 条遥操作演示、约 112k datapoints、8 个接触丰富任务、成功与失败演示、proprioception、外部视频和四个 Digit 360 指尖视频，并通过时间戳同步后降采样到 6 FPS；限制部分说明评测主要在同场景同对象，触觉模态限于 Digit 360，CEM 规划成本高且以开环 action chunk 执行。
+- Authors: carolina-higuera
+
+### EA-DATA-2026-4DDATA-0004
+
+- Claim: 4D监督数据需要时间密集、度量空间对齐且有足够点密度；过少点、只给2D轨迹、目标点集或静态/稠密深度都不等价。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2603.01549](https://arxiv.org/abs/2603.01549) Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation
+- Locator: IV-B Why 3D Point Tracks as Privileged Supervision; S.III-A Additional Analysis on input; S.III-C Additional Ablations
+- Evidence: Pri4R比较多种监督目标，认为3D点轨迹兼具时间密集、几何度量和空间稀疏；附录中1024个点优于256/512点，且没有当前点云输入会退化，因为模型必须凭空生成而非预测给定场景演化。
+- Authors: jisoo-kim; jungbin-cho; sanghyeok-chu
+
+### EA-DATA-2026-4DDATA-0002
+
+- Claim: 点轨迹数据的瓶颈不是只在采集量，而在可见性、遮挡、深度和 embodiment 分割；真实操作中暂时被遮挡的关键物体点仍应保留监督信号。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2603.08485](https://arxiv.org/abs/2603.08485) 3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos
+- Locator: 4.3 Results: 3D Point Track Prediction; Appendix D Data Collection Details; Appendix G Future Work
+- Evidence: 论文用可见性mask保留部分遮挡轨迹并逐点逐时刻mask损失，认为这比丢弃含不可见点的轨迹能提供更多任务关键监督；附录说明真实视频需2D跟踪、深度提升到3D、SAM3分割人手并移除embodiment点。
+- Authors: adam-hung; bardienus-pieter-duisterhof; jeffrey-ichnowski
+
+### EA-DATA-2026-4DDATA-0006
+
+- Claim: 4D数据生产可以接受伪标注噪声，但要明确目标是学习相对空间约束和运动先验；同时应合成失败轨迹，让模型区分成功和近失误。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2603.16669](https://arxiv.org/abs/2603.16669) Kinema4D: Kinematic 4D World Modeling for Spatiotemporal Embodied Simulation
+- Locator: Supplementary G.2 Dataset; Acquisition of LIBERO simulated data; The underlying logic behind 4D pseudo annotation
+- Evidence: Kinema4D补充材料说明ST-v2生成的4D伪标注未必达到绝对亚毫米真值，但足以学习相对几何；LIBERO数据生成中还从成功轨迹注入不同强度动作噪声，合成九种失败轨迹。
+- Authors: mutian-xu; tianbao-zhang; tianqi-liu
+
+### EA-DATA-2026-4DDATA-0010
+
+- Claim: 异构4D数据必须保留监督可靠性层级：机器人数据给可执行动作，人类/第一视角视频给视觉动态，UMI式数据给较弱的动作式信号，缺失模态不能强行当真值。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2606.01027](https://arxiv.org/abs/2606.01027) $τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation
+- Locator: I Introduction; III Data Sources for Predictive Robot Learning; Unified supervision; IV-C Joint Flow-Matching Objective
+- Evidence: 论文把真实robot data、UMI-style data和egocentric videos划分为不同监督等级，并用modality-specific supervision masks让每条样本只参与其实际拥有的视觉、状态、动作和进度损失。
+- Authors: pengfei-zhou; shengcong-chen; di-chen
+
+### EA-DATA-2026-4DDATA-0018
+
+- Claim: 多模态4D示教数据必须做同步、时间戳、动作-状态一致性、触觉标记跟踪和episode级切分；否则模型会混淆动作真值、接触信号和评测泄漏。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2606.04825](https://arxiv.org/abs/2606.04825) HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning
+- Locator: 3.2 Synchronization and Data Quality Control; A.1 Data Formatting; A.2 Tactile Sensor Data Processing
+- Evidence: HapTile说明所有模态通过机器人控制循环同步，检查空/损坏轨迹和timestamp gaps，验证action-state consistency；附录还要求episode-level split避免temporal leakage，并保留raw/rectified tactile images。
+- Authors: amirhosein-alian; yongqiang-zhao; shiyi-gu
+
+### EA-DATA-2026-4DDATA-0016
+
+- Claim: 触觉4D数据不仅要记录，还要有事件强度或等价的时序结构，帮助模型区分静默期与接触活跃期。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2606.08737](https://arxiv.org/abs/2606.08737) Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation
+- Locator: 3.3 Contact-Aware Self Attention; A.6 Contact Gate Statistics
+- Evidence: Dream-Tac的contact gate直接从左右指尖触觉RGB的帧间平均绝对差得到，经过鲁棒归一化后在接触变化时提高触觉token注意力；附录统计显示大多数变化很小，较大变化对应关键交互事件。
+- Authors: yunfan-lou; yifan-ye; yankai-fu
+
+### EA-DATA-2026-4DDATA-0014
+
+- Claim: 如果目标包含扰动恢复，数据集必须显式收集nominal demonstrations和recovery interaction data；否则模型很难学习接触丢失后的再建立。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2606.11184](https://arxiv.org/abs/2606.11184) TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation
+- Locator: IV-B 2 Perturbation-Aware Evaluation; IV-C Main Results; Table I
+- Evidence: TacForeSight在perturbation-aware设置中额外收集恢复示教，让外部扰动发生在执行中并要求示教者重新建立稳定接触；完整模型在三个扰动任务上报告90%、85%、85%平均完成/成功分数。
+- Authors: yujie-zang; yuhang-zheng; xian-nie
+
+### EA-DATA-2026-DQ-0003
+
+- Claim: 扩展机器人数据的瓶颈正在从真实机器人示教转向可验证的生成式数据引擎：数字遥操作能降低硬件和场景约束，但仍要面对复杂物理、形变和本体微调限制。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2607.06558](https://arxiv.org/abs/2607.06558) RynnWorld-Teleop: An Action-Conditioned World Model for Digital Teleoperation
+- Locator: Abstract; 1 Introduction; 4 RynnWorld-Teleop as a Digital Teleoperation System; 6 Conclusion
+- Evidence: 论文认为物理遥操作把每条示教绑定到操作者、硬件和固定 workspace，难覆盖长尾交互；RynnWorld-Teleop 用动作条件世界模型从手姿流生成机器人中心视频和可 retarget 的动作标签，作为模仿学习数据。但作者也列出细粒度液体/高形变物体和 per-platform fine-tuning 等限制。
+- Authors: haoyu-zhao; xingyue-zhao; hangyu-li; et al.
+
+### EA-DATA-2026-4DDATA-0019
+
+- Claim: 示教数据质量受采集硬件的人体工学和接触力分布强烈影响；“更多UMI/手持夹爪示教”不自动等于更好的4D交互数据。
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2603.17189](https://arxiv.org/abs/2603.17189) Influence of Gripper Design on Human Demonstration Quality for Robot Learning
+- Locator: Abstract; II-A Performance and Usability Limitations; V Discussion; VI Conclusion
+- Evidence: 该研究在医用绷带打开任务中比较不同UMI夹爪条件和裸手，发现集中载荷夹爪优于分布载荷夹爪，但仍明显慢于手；作者强调力分布、刚度和人体工学会影响示教质量和工作负荷。
+- Authors: gina-l-georgadarellis; natalija-beslic; seonhun-lee
+
+### EA-DATA-2026-DQ-0001
+
+- Claim: VLA 示教数据质量的关键不只是数量，而是减少冗余、噪声和覆盖不均，并保留可复用的行为结构；结构感知筛选能让更少数据优于全量训练。
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2607.06442](https://arxiv.org/abs/2607.06442) SIEVE: Structure-Aware Data Selection for Imitation Learning with VLA Models
+- Locator: Abstract; Introduction; SIEVE; Conclusion
+- Evidence: 论文指出大规模机器人示教池常含轨迹冗余、噪声示教、次优行为和任务覆盖不均；SIEVE 按可复用 primitive 与 transition 选择中心、稳定、适合模仿的轨迹，在多数据集和 VLA 模型上可用 50% 示教与 50% 训练步数超过全量训练。
+- Authors: changti-wu; bin-yu; zhaolong-shen; et al.
+
+### EA-DATA-2026-4DDATA-0020
+
+- Claim: 面向4D时空推理的数据采集应把采集设备本身当成被优化对象：如果夹爪无法表达任务所需的接触和力，算法很难从示教中补回来。
+- Stance: `gap` | Confidence: `direct`
+- Paper: [2603.17189](https://arxiv.org/abs/2603.17189) Influence of Gripper Design on Human Demonstration Quality for Robot Learning
+- Locator: II-A Performance and Usability Limitations; V Discussion; VI Conclusion
+- Evidence: 作者指出UMI完整学习流程通常至少需要200条固定环境任务示教，手持夹爪仍可能比裸手慢；研究中的夹爪未集成完整传感/marker pipeline，后续需把传感和跟踪能力纳入完整示教到机器人流程评估。
+- Authors: gina-l-georgadarellis; natalija-beslic; seonhun-lee
+
+### EA-TWM-2026-0008
+
+- Claim: 触觉世界模型必须在扰动与恢复数据上评估，否则会高估接触丰富任务的稳定性。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.11184](https://arxiv.org/abs/2606.11184) TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation
+- Locator: Section IV-B Experimental Setup; Section IV-C Results; Section IV-D Ablation
+- Evidence: TacForeSight 在五个任务和三类 in-process perturbation 上评测，并纳入 recovery demonstrations；完整模型平均成功率 79.0%，扰动设置平均 86.7%，去掉预测触觉或简单拼接力触觉都会削弱表现。
+- Authors: yujie-zang
+
+### EA-EVAL-2026-4DDATA-0011
+
+- Claim: 用于评估、改进和规划的4D世界模型需要多视角视觉、机器人本体状态、动作chunk、历史/记忆状态，以及可在latent中评估的奖励/价值监督。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.13672](https://arxiv.org/abs/2606.13672) $\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation
+- Locator: 3 WEAVER; 3.1 Key Design Decisions; 3.3 Accurate and Efficient Value Estimation; 4 Experimental Setup
+- Evidence: WEAVER在DROID上预训练并在真实任务数据上微调，输入右侧外部相机和腕部相机、proprioceptive state、action plan、memory/history latents，并蒸馏奖励/critic头来快速评分候选动作。
+- Authors: arnav-kumar-jain; yilin-wu; jesse-farebrother
+
+### EA-TWM-2026-0001
+
+- Claim: 在接触丰富操作中，触觉世界模型的关键不是简单增加模态，而是让表征同时具备空间结构、时间连续性和跨模态兼容性。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.13877](https://arxiv.org/abs/2606.13877) ContactWorld: What Matters in Vision-Tactile World Models for Contact-Rich Manipulation
+- Locator: Abstract; Section 2.2 Sensory Modalities and Representation Structure; Section 3 What Representation Properties Matter
+- Evidence: ContactWorld 在 12 个接触丰富任务上比较视觉与触觉表征；点云把平均规划成功率从腕部视角 20.7% 和前视 22.0% 提升到 32.1%，点云加触觉力场进一步到 36.1%。作者强调触觉效果取决于跨模态表征兼容，而非模态数量本身。
+- Authors: zhiyuan-zhang
+
+### EA-EVAL-2026-DQ-0004
+
+- Claim: 数据质量必须经闭环评估定义；对机器人世界模型来说，短期视觉真实感不如长程、动作忠实的 rollout 一致性更能决定其作为策略评估器的可靠性。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2607.02642](https://arxiv.org/abs/2607.02642) GigaWorld-1: A Roadmap to Build World Models for Robot Policy Evaluation
+- Locator: Abstract; 1 Introduction; 4.2 Evaluation Protocol; 5.2 How Do Pretraining and Training Data Matter?; 7 Discussion and Conclusion
+- Evidence: 论文指出真实机器人策略评估受硬件和人工监督限制，是基础模型迭代瓶颈；WMBench 用真实 teleoperation 数据和匹配 policy rollouts 构造评估，并分析 7 个视频世界模型、4 种动作表示和 324,000 余次模拟 rollout。其结论强调 evaluator 质量由长程 action-faithful rollout consistency、可迁移物理先验、动作编码、记忆和评估导向 post-training 共同决定。
+- Authors: gigaworld-team; angyuan-ma; boyuan-wang; et al.
+
+### EA-TWM-2026-0010
+
+- Claim: 在触觉世界动作模型中，触觉融合需要对接触事件做门控，否则会把稀疏、事件驱动的触觉信号当作持续视觉信号处理。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2606.08737](https://arxiv.org/abs/2606.08737) Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation
+- Locator: Abstract; Section 4.2 Performance on Real-World Experiments; Section 4.4 Contact Gate Behavior
+- Evidence: Dream-Tac 的接触门控和 contact-aware attention 只在触觉变化明显时增强跨模态作用；作者报告六个真实接触丰富任务平均成功率 83.3%，高于 Cosmos-Policy 51.7%、ForceVLA 50.8% 等，并报告训练最高 2.9 倍、推理最高 1.8 倍加速。
+- Authors: yunfan-lou
+
+### EA-TWM-2026-0002
+
+- Claim: 触觉在长时域规划中更重要，但在真实机器人上会受到触觉标定、深度与力推断噪声、预训练编码器兼容性等条件限制。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2606.13877](https://arxiv.org/abs/2606.13877) ContactWorld: What Matters in Vision-Tactile World Models for Contact-Rich Manipulation
+- Locator: Abstract; Appendix F.2 Tactile Representation Ablation; Appendix G Real-World Experiment
+- Evidence: ContactWorld 报告触觉在长时域规划下更能缓解接触不确定性积累；真实阀门旋拧实验中，点云达到 90% 成功率，TacRGB 对图像视角有帮助，但 TacDepth/TacFF 不稳定，作者把差异归因于标记跟踪、深度、力推断和触觉标定噪声。
+- Authors: zhiyuan-zhang
+
+### EA-TWM-2026-0012
+
+- Claim: 把触觉世界模型用于推理期修正时，预测误差会累积，且触觉编码器预训练规模仍明显小于现代视觉语言模型。
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2606.14981](https://arxiv.org/abs/2606.14981) Inference-time Policy Steering via Vision and Touch
+- Locator: Section 6 Conclusion and Limitations
+- Evidence: ViTaL 的限制部分指出，latent world model 的保真度会影响验证，尤其是细微接触事件；触觉 verifier 受限于较小规模触觉编码器预训练，作者认为更大规模触觉预训练可能提升接触推理。
+- Authors: yilin-wu
+
+### EA-TWM-2026-0015
+
+- Claim: 触觉表征评测正在扩展到大规模全手触觉和自我中心视觉，但多数评测仍停留在表征层，不能直接证明下游机器人性能。
+- Stance: `gap` | Confidence: `direct`
+- Paper: [2606.19161](https://arxiv.org/abs/2606.19161) HT-Bench: Benchmarking and Learning Dexterous Full-Hand Tactile Representations with Egocentric Vision
+- Locator: Abstract; Section 3 HT-Bench; Section 6 Limitations and Future Work
+- Evidence: HT-Bench 含 10M RGB frames、7.8M tactile frames、226 个任务，评估接触几何、视觉-触觉对齐和未见任务泛化，包括触觉检索、inpainting、vision-to-tactile synthesis 和 multimodal tactile prediction；限制部分说明当前评测不直接测量下游机器人表现。
+- Authors: yuzhe-huang
+
+### EA-TWM-2026-0003
+
+- Claim: 把触觉作为接触 grounding 信号注入世界模型，可以改善被遮挡或视觉混淆场景中的物体持续性、物理一致性和零样本接触规划。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2602.06001](https://arxiv.org/abs/2602.06001) Visuo-Tactile World Models
+- Locator: Abstract; Section 3.1 What vision does not see; Section 3.2 Visuo-Tactile World Model
+- Evidence: Visuo-Tactile World Models 使用外部视觉 latent、Digit 360 触觉 latent 和动作条件 transformer 预测未来；论文报告触觉 grounding 带来物体持续性 +33%、物理规律符合度 +29%，并在真实机器人接触丰富规划中最高提升 +35% 成功率。
+- Authors: carolina-higuera
+
+### EA-MODEL-2026-4DDATA-0003
+
+- Claim: 动作标签本身不足以教会VLA“动作之后世界会怎样变”；4D时空推理需要与动作时域对齐的3D点轨迹作为训练期特权监督。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2603.01549](https://arxiv.org/abs/2603.01549) Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation
+- Locator: I Introduction; IV Pri4R: Learning World Dynamics via Privileged 4D Representations; IV-C Construction of 3D Point Track Supervision
+- Evidence: Pri4R指出动作标签主要鼓励模仿示教动作，但不给出世界动态；它给VLA添加点轨迹头，监督未来3D位移，训练后丢弃辅助头而不增加推理输入和计算。
+- Authors: jisoo-kim; jungbin-cho; sanghyeok-chu
+
+### EA-TWM-2026-0006
+
+- Claim: 触觉世界模型的落地形态正在从被动观测转向预测接触演化并驱动快速反射式控制。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2603.19201](https://arxiv.org/abs/2603.19201) OmniVTA: Visuo-Tactile World Modeling for Contact-Rich Robotic Manipulation
+- Locator: Abstract; Section I Introduction; Section IV Method; Section VI Conclusion
+- Evidence: OmniVTA 由自监督触觉编码器、双流视觉-触觉世界模型、接触感知融合策略和 60Hz reflexive latent tactile controller 组成；作者称模型预测短时域接触演化，并在预测与观测触觉信号偏离时修正动作。
+- Authors: yuhang-zheng
+
+### EA-TWM-2026-0009
+
+- Claim: 触觉世界模型可以被扩展为同时生成未来视觉、未来触觉和动作 chunk 的世界动作模型。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.08737](https://arxiv.org/abs/2606.08737) Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation
+- Locator: Abstract; Section 3.2 Dream-Tac Architecture; Section 3.4 Training Objective
+- Evidence: Dream-Tac 把 world action model 扩展到触觉，联合建模当前视觉、触觉、语言指令下的未来视觉观测、未来触觉观测和动作 chunk，并加入 contact-gated visuotactile fusion 与 contact-aware attention bias。
+- Authors: yunfan-lou
+
+### EA-TWM-2026-0007
+
+- Claim: 腕部六维力/力矩可作为未来触觉 latent 的先行条件，用于预测短时域接触变化。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.11184](https://arxiv.org/abs/2606.11184) TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation
+- Locator: Abstract; Section III-A TacForceWM; Section IV-D Ablation
+- Evidence: TacForeSight 的 TacForceWM 从双指触觉观测出发，以高频腕部 force/torque 为条件预测短时域触觉 latent dynamics；ablation 中 wrist wrench 条件的未来触觉预测优于无条件版本，MSE 从 0.027 降到 0.017，cosine 从 0.954 提升到 0.992。
+- Authors: yujie-zang
+
+### EA-TWM-2026-0011
+
+- Claim: 触觉世界模型也可以在推理期作为候选动作验证器，而不只是训练期的动态模型。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.14981](https://arxiv.org/abs/2606.14981) Inference-time Policy Steering via Vision and Touch
+- Locator: Abstract; Section 4 ViTaL; Section 5 Experiments
+- Evidence: ViTaL 学习 visuo-tactile latent world model，结合视觉和文本条件触觉 verifier，对候选动作进行长时域视觉模式选择和短时域触觉 refinement；真实机器人任务包括 wiping、insertion 和 pipette transfer。
+- Authors: yilin-wu
+
+### EA-ALIGN-2026-0008
+
+- Claim: In standard VLA pretraining, dense visual-action supervision can dominate the comparatively sparse language-action signal, encouraging visual shortcuts and underdeveloped language-action grounding.
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.27295](https://arxiv.org/abs/2606.27295) LA4VLA: Learning to Act without Seeing via Language-Action Pretraining
+- Locator: Abstract; Section 1 Introduction; Section 4 LA4VLA Dataset Construction; Section 5 LA4VLA Pretraining
+- Evidence: LA4VLA removes visual observations during pretraining and pairs atomic action segments with low-level language descriptions to strengthen language-conditioned action priors before or alongside VLA training.
+- Authors: tao-lin
+
+### EA-ALIGN-2026-0001
+
+- Claim: Cross-embodiment VLA alignment is difficult partly because shared high-level task cognition must be connected to platform-specific low-level state and action spaces.
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.30552](https://arxiv.org/abs/2606.30552) Training Vision-Language-Action Models with Dense Embodied Chain-of-Thought Supervision
+- Locator: Abstract; Introduction; Section 3.1 Model Architecture
+- Evidence: The paper frames low-level state/action heterogeneity as a core cross-embodiment challenge, then uses dense embodied chain-of-thought supervision in the VLM stream and a flow-matching action expert that outputs continuous action chunks.
+- Authors: haoyang-li
+
+### EA-TWM-2026-0017
+
+- Claim: 并非所有触觉能力都必须在推理期依赖触觉传感器；一条替代路线是离线学习安全接触奖励并蒸馏为可部署的触觉 token。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2603.15257](https://arxiv.org/abs/2603.15257) HapticVLA: Contact-Rich Manipulation via Vision-Language-Action Model without Inference-Time Tactile Sensing
+- Locator: Abstract; Section III Method; Section IV Experiments
+- Evidence: HapticVLA 提出 Safety-Aware Reward-Weighted Flow Matching 和 Tactile Distillation，把惩罚过大抓取力和不良抓取轨迹的触觉奖励编码进 VLA；论文报告不使用推理期力传感器也达到 86.7% 平均成功率，并优于若干直接使用触觉反馈的 VLA 基线。
+- Authors: konstantin-gubernatorov
+
+### EA-TWM-2026-0016
+
+- Claim: 触觉信息用于 VLA 或世界模型时，低频视觉语言理解和高频触觉反馈应在架构上分离。
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2605.07308](https://arxiv.org/abs/2605.07308) AT-VLA: Adaptive Tactile Injection for Enhanced Feedback Reaction in Vision-Language-Action Models
+- Locator: Abstract; Section 3.3 Effective Tactile Reaction Dual-Stream; Section 4.4 Ablation Study
+- Evidence: AT-VLA 把系统分为慢速视觉语言流和快速触觉流，慢速流负责任务理解和视觉定位，快速流以高频处理触觉反馈；作者采用 3:1 的快慢流频率比，并在真实接触丰富任务中验证 adaptive tactile injection、tactile gate、adaptive cross-attention 和 reaction dual-stream 的作用。
+- Authors: xiaoqi-li
+
+### EA-ALIGN-2026-0007
+
+- Claim: Scaling VLA data is not analogous to scaling text/image data because robot datasets are heterogeneous in embodiment, sensing, control frequency, and action space; naive data mixing can cause negative transfer.
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2602.09722](https://arxiv.org/abs/2602.09722) Rethinking Visual-Language-Action Model Scaling: Alignment, Mixture, and Regularization
+- Locator: Abstract; Section I Introduction; Section V Experiments
+- Evidence: The paper reports that unified end-effector-relative action representation is critical for cross-embodiment transfer, while indiscriminate pooling of heterogeneous robot datasets can degrade performance.
+- Authors: ye-wang
+
+### EA-MODEL-2026-4DDATA-0007
+
+- Claim: 只用视频重建损失训练世界模型会让4D推理停留在“看起来像”，但机器人需要的是跨帧同一3D表面点的一致对应。
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2605.22882](https://arxiv.org/abs/2605.22882) GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation
+- Locator: Abstract; 1 Introduction; 3.1 Problem Formulation; 3.2.1 What Governs Inter-Frame Correspondence
+- Evidence: GEM-4D指出像素或latent重建损失不能保证对应一致，可能出现接触漂移、深度不一致和非刚性变形；这些视觉上微妙的错误会破坏从视频rollout提取动作。
+- Authors: kaichen-zhou; yuzhen-chen; fangneng-zhan
+
+### EA-ALIGN-2026-0002
+
+- Claim: Offline VLA indicators can fail to transfer to stable real-robot behavior when action semantics, coordinate frames, temporal modality alignment, image preprocessing, and dataset coverage are not controlled together.
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2606.30456](https://arxiv.org/abs/2606.30456) Vision-Language-Action Models: Experimental Insights from a Real-World UR5 Platform
+- Locator: Abstract; Section 1.1 Project Motivation; Section 2.1 Background
+- Evidence: The UR5 study reports a gap between offline indicators and unstable closed-loop physical behavior, attributing it to data-model-control pipeline consistency rather than model capacity alone.
+- Authors: mathilde-hochedel
+
+### EA-ALIGN-2026-0004
+
+- Claim: Discrete action tokenization is a compact interface for autoregressive VLA policies, but decoding fixed tokens back into continuous robot controls is a bottleneck when the same token must mean different controls under different robot states and contacts.
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2606.30113](https://arxiv.org/abs/2606.30113) SA-VLA: State-aware tokenizer for improving Vision-Language-Action Models' performance
+- Locator: Abstract; Section 1 Introduction; Section 2.2 Discrete Action Tokenizers
+- Evidence: SA-VLA conditions action-token decoding on proprioceptive state via adapters or cross-attention, reporting improved RoboTwin and zero-shot sim-to-real success over tokenizer baselines.
+- Authors: tengyue-jiang
+
+### EA-TWM-2026-0018
+
+- Claim: 触觉数据的有效形态不止原始 tactile image，还包括 marker displacement 等显式接触几何与滑移特征。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.04825](https://arxiv.org/abs/2606.04825) HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning
+- Locator: Section 4.2 Vision-Based Tactile Sensing and Marker Tracking; Section 5.2 Results and Discussion
+- Evidence: HapTile 的每个夹爪手指安装视觉触觉传感器，接触会带来图像变化和 marker displacement；论文把 marker-motion 信号保存进数据集并用于 haptic feedback，实验也比较 vision-only、vision+tactile image 与 vision+tactile+marker 表征。
+- Authors: amirhosein-alian
+
+### EA-SENSOR-2026-4DDATA-0015
+
+- Claim: 对接触任务，世界-动作模型的数据目标应联合包含未来视觉、未来触觉和动作；只预测未来图像会丢掉触发式、稀疏且短暂的接触事件。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.08737](https://arxiv.org/abs/2606.08737) Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation
+- Locator: Abstract; 3.1 Problem Formulation; 3.2 Dream-Tac Architecture; 3.3 Contact-Aware Self Attention
+- Evidence: Dream-Tac把当前视觉/触觉/语言作为条件，联合去噪未来视觉、未来触觉和动作chunk；其contact-aware self-attention用相邻触觉帧变化计算事件门控，强调接触发生、滑移或释放等时刻。
+- Authors: yunfan-lou; yifan-ye; yankai-fu
+
+### EA-SENSOR-2026-4DDATA-0013
+
+- Claim: 接触丰富任务的4D推理需要把高频腕部力/力矩和双指触觉场作为时间序列数据，而不只是把触觉当作当前帧的被动反馈。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.11184](https://arxiv.org/abs/2606.11184) TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation
+- Locator: Abstract; III-A Force-conditioned Tactile World Model; IV-D 1 World Model Conditioning; Table II
+- Evidence: TacForeSight训练force-conditioned tactile world model，用高频wrist force/torque条件预测短时未来触觉latent；作者报告wrist wrench条件在MSE、cosine similarity和KL上优于无条件、RGB和机器人状态条件。
+- Authors: yujie-zang; yuhang-zheng; xian-nie
+
+### EA-ALIGN-2026-0005
+
+- Claim: Dense or sparse visual geometry becomes more useful for manipulation when it is explicitly aligned to task-space actions rather than learned only through downstream policy losses.
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.12759](https://arxiv.org/abs/2606.12759) Sparse2Act: Learning Action-Aligned Sparse 3D Representations for Cross-Domain Robot Manipulation
+- Locator: Abstract; Figure 1 caption; Section 1 Introduction
+- Evidence: Sparse2Act uses task-space end-effector actions as geometric supervision for masked sparse 3D tokens, arguing that point-cloud observations and motions share a metric workspace.
+- Authors: yu-guo
+
+### EA-SENSOR-2026-DQ-0005
+
+- Claim: 软物体和形变场景中的数据质量主要受可观测性约束：必须同时记录多视角全局运动、触觉局部形变和可用于评测的 3D 轨迹。
+- Stance: `support` | Confidence: `direct`
+- Paper: [2607.05390](https://arxiv.org/abs/2607.05390) Deform360: A Massive Multi-view Visuotactile Dataset for Deformable World Models
+- Locator: Abstract; 1 Introduction; 2 Related Work; 5 Experiments; 7 Conclusion
+- Evidence: 论文认为形变物体有高维状态和复杂材料属性，接触诱发的局部形变常被末端执行器或物体遮挡；已有数据集常缺对象多样性、依赖合成数据，或缺高保真标注与接触形变。Deform360 采集 198 个日常物体、1,980 个交互序列、215 小时以上数据、41 个环视相机和双臂触觉 UMI gripper，并用 markerless 3D tracking 提取稠密几何与运动。
+- Authors: hongyu-li; wanjia-fu; xiaoyan-cong; et al.
+
+### EA-ALIGN-2026-0006
+
+- Claim: A structured intermediate visual interface can reduce the alignment burden by separating RGB-based geometric/task grounding from embodiment-specific action control.
+- Stance: `conditional` | Confidence: `direct`
+- Paper: [2606.26800](https://arxiv.org/abs/2606.26800) SSI-Policy: Learning Structured Scene Interfaces for Vision-Language Robotic Manipulation
+- Locator: Abstract; Section III-B Framework Overview; Section IV-H Failure Cases; Section V Conclusion
+- Evidence: SSI-Policy builds an RGB-only structured scene interface encoding monocular depth features, language-grounded layouts, and instruction-conditioned 2D motion trajectories; it reports few-shot gains but notes failures from perception noise and contact limitations.
+- Authors: kaijun-wang
+
+### EA-ALIGN-2026-0009
+
+- Claim: For dexterous manipulation, aligning motion alone is insufficient; contact loading and force feedback must be made comparable across hands, especially when visual evidence is self-occluded.
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2606.15516](https://arxiv.org/abs/2606.15516) Transferring Contact, Not Just Motion: Compliant Grasping Across Dexterous Hands
+- Locator: Abstract; Section 1 Introduction; Contributions list
+- Evidence: The paper introduces a force-position interface that maps hand-specific effort signals into calibrated torques, fingertip forces, and load descriptors, and trains a mask-aware flow-matching policy to rely on force/proprioception when vision is occluded.
+- Authors: soofiyan-atar
+
+### EA-SENSOR-2026-DQ-0006
+
+- Claim: 接触丰富任务里的失败常是视觉不可见的局部接触扰动；仅用视觉世界模型会产生看似合理但接触不一致的轨迹，因此纠错数据需要触觉/力反馈参与。
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2607.02840](https://arxiv.org/abs/2607.02840) TACO: TActile World Model as a Self-COrrector forScalable VLA Post-Training
+- Locator: Abstract; 1 Introduction; 2 Related Work; 3 Method; 5 Conclusion and Limitations
+- Evidence: 论文指出 VLA 在接触丰富任务中会因轻微接触扰动产生不可恢复失败，这些失败难以从视觉单独检测；TACO 用 tactile-aware world model 将真实 rollout 中的失败邻近状态转成想象的视触觉纠正片段和可执行纠正动作，在真实接触任务中相对 base policy 提升 44 个百分点成功率。
+- Authors: shengbang-liu; yueru-jia; yuyang-yan; et al.
+
+### EA-SENSOR-2026-4DDATA-0012
+
+- Claim: 纯视觉4D世界模型在接触、抓取稳定性、力、被遮挡几何、形变和颗粒动态上状态不可观；数据扩展应补触觉、力矩、深度、更多embodiment和失败/奖励监督。
+- Stance: `gap` | Confidence: `direct`
+- Paper: [2606.13672](https://arxiv.org/abs/2606.13672) $\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation
+- Locator: A5 Limitations; A5.1 Partial Observability; A5.2 Complex Deformable and Dynamic Interactions; A5.4 Data Coverage and Embodiment Diversity; A5.5 Noisy Reward Supervision
+- Evidence: WEAVER限制部分指出视觉只给部分物理状态，任务相关的接触、力和遮挡几何可能不可见；形变/动态物体、有限规划时域、DROID embodiment覆盖、以及reward labels噪声都是剩余瓶颈。
+- Authors: arnav-kumar-jain; yilin-wu; jesse-farebrother
+
+### EA-ALIGN-2026-0003
+
+- Claim: A VLA that inherits visual and linguistic priors from a VLM still lacks an explicit physical motion prior; pretraining the action module on unconditioned trajectories can reduce the burden of learning temporal action dynamics and cross-modal alignment simultaneously.
+- Stance: `support` | Confidence: `direct`
+- Paper: [2606.26095](https://arxiv.org/abs/2606.26095) Learning Action Priors for Cross-embodiment Robot Manipulation
+- Locator: Abstract; Section III Learning Action Prior; Section III-D VLA Training with Action Prior Distillation
+- Evidence: The method first trains a flow-matching encoder-decoder action module on action trajectories without visual/language tokens, then transfers this prior into VLA training through decoder reuse and latent distillation.
+- Authors: dong-jing
+
+### EA-ALIGN-2026-0010
+
+- Claim: A recorded robot action is not a universal supervision signal: the same command can produce different motions across controllers, embodiments, hardware units, and deployment-time dynamics.
+- Stance: `limit` | Confidence: `direct`
+- Paper: [2606.24049](https://arxiv.org/abs/2606.24049) SPACE: Enabling Learning from Cross-Robot Data Toward Generalist Policies
+- Locator: Abstract; Section 1 Introduction; Section 3.2 Inconsistency of Control Commands across Robots; Section 4 SPACE
+- Evidence: SPACE predicts Cartesian state deltas as a shared end-effector-space representation and uses an action adapter to convert them into robot-specific control commands, improving cross-robot and dynamics-shift robustness.
+- Authors: haeone-lee
+
+## References
+
+- `2602.06001` [Visuo-Tactile World Models](https://arxiv.org/abs/2602.06001) (2026-02-05)
+- `2602.09722` [Rethinking Visual-Language-Action Model Scaling: Alignment, Mixture, and Regularization](https://arxiv.org/abs/2602.09722) (2026-02-10)
+- `2603.01549` [Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation](https://arxiv.org/abs/2603.01549) (2026-03-02)
+- `2603.08485` [3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos](https://arxiv.org/abs/2603.08485) (2026-03-09)
+- `2603.15257` [HapticVLA: Contact-Rich Manipulation via Vision-Language-Action Model without Inference-Time Tactile Sensing](https://arxiv.org/abs/2603.15257) (2026-03-16)
+- `2603.16669` [Kinema4D: Kinematic 4D World Modeling for Spatiotemporal Embodied Simulation](https://arxiv.org/abs/2603.16669) (2026-03-17)
+- `2603.17189` [Influence of Gripper Design on Human Demonstration Quality for Robot Learning](https://arxiv.org/abs/2603.17189) (2026-03-17)
+- `2603.19201` [OmniVTA: Visuo-Tactile World Modeling for Contact-Rich Robotic Manipulation](https://arxiv.org/abs/2603.19201) (2026-03-19)
+- `2604.07335` [TAMEn: Tactile-Aware Manipulation Engine for Closed-Loop Data Collection in Contact-Rich Tasks](https://arxiv.org/abs/2604.07335) (2026-04-08)
+- `2605.07308` [AT-VLA: Adaptive Tactile Injection for Enhanced Feedback Reaction in Vision-Language-Action Models](https://arxiv.org/abs/2605.07308) (2026-05-08)
+- `2605.22882` [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882) (2026-05-20)
+- `2606.01027` [$τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027) (2026-05-31)
+- `2606.04825` [HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning](https://arxiv.org/abs/2606.04825) (2026-06-03)
+- `2606.08737` [Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation](https://arxiv.org/abs/2606.08737) (2026-06-07)
+- `2606.11184` [TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation](https://arxiv.org/abs/2606.11184) (2026-06-09)
+- `2606.12759` [Sparse2Act: Learning Action-Aligned Sparse 3D Representations for Cross-Domain Robot Manipulation](https://arxiv.org/abs/2606.12759) (2026-06-10)
+- `2606.13672` [$\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation](https://arxiv.org/abs/2606.13672) (2026-06-11)
+- `2606.13877` [ContactWorld: What Matters in Vision-Tactile World Models for Contact-Rich Manipulation](https://arxiv.org/abs/2606.13877) (2026-06-11)
+- `2606.14981` [Inference-time Policy Steering via Vision and Touch](https://arxiv.org/abs/2606.14981) (2026-06-12)
+- `2606.15516` [Transferring Contact, Not Just Motion: Compliant Grasping Across Dexterous Hands](https://arxiv.org/abs/2606.15516) (2026-06-17)
+- `2606.19161` [HT-Bench: Benchmarking and Learning Dexterous Full-Hand Tactile Representations with Egocentric Vision](https://arxiv.org/abs/2606.19161) (2026-06-17)
+- `2606.24049` [SPACE: Enabling Learning from Cross-Robot Data Toward Generalist Policies](https://arxiv.org/abs/2606.24049) (2026-06-23)
+- `2606.26095` [Learning Action Priors for Cross-embodiment Robot Manipulation](https://arxiv.org/abs/2606.26095) (2026-06-24)
+- `2606.26800` [SSI-Policy: Learning Structured Scene Interfaces for Vision-Language Robotic Manipulation](https://arxiv.org/abs/2606.26800) (2026-06-25)
+- `2606.27295` [LA4VLA: Learning to Act without Seeing via Language-Action Pretraining](https://arxiv.org/abs/2606.27295) (2026-06-25)
+- `2606.30113` [SA-VLA: State-aware tokenizer for improving Vision-Language-Action Models' performance](https://arxiv.org/abs/2606.30113) (2026-06-29)
+- `2606.30456` [Vision-Language-Action Models: Experimental Insights from a Real-World UR5 Platform](https://arxiv.org/abs/2606.30456) (2026-06-29)
+- `2606.30552` [Training Vision-Language-Action Models with Dense Embodied Chain-of-Thought Supervision](https://arxiv.org/abs/2606.30552) (2026-06-29)
+- `2607.02642` [GigaWorld-1: A Roadmap to Build World Models for Robot Policy Evaluation](https://arxiv.org/abs/2607.02642) (2026-07-02)
+- `2607.02840` [TACO: TActile World Model as a Self-COrrector forScalable VLA Post-Training](https://arxiv.org/abs/2607.02840) (2026-07-03)
+- `2607.05390` [Deform360: A Massive Multi-view Visuotactile Dataset for Deformable World Models](https://arxiv.org/abs/2607.05390) (2026-07-06)
+- `2607.06442` [SIEVE: Structure-Aware Data Selection for Imitation Learning with VLA Models](https://arxiv.org/abs/2607.06442) (2026-07-07)
+- `2607.06558` [RynnWorld-Teleop: An Action-Conditioned World Model for Digital Teleoperation](https://arxiv.org/abs/2607.06558) (2026-07-07)
+- `2607.06564` [Lift3D-VLA: Lifting VLA Models to 3D Geometry and Dynamics-Aware Manipulation](https://arxiv.org/abs/2607.06564) (2026-07-07)

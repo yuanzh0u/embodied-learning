@@ -29,15 +29,25 @@
   "time_range": "2025-12-23..2026-06-23",
   "rounds": 1,
   "event_count": 18,
+  "source_runs": ["literature-review-<prior-topic>-<date>"],
   "files": {
     "evidence": "evidence.jsonl",
+    "reused_evidence": ["reused/<prior-run>-evidence.jsonl"],
     "query_plan": "query-plan.json",
     "outputs": ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"],
+    "appendix": "evidence-appendix.md",
     "source_entry_draft": "source-entry-draft.md"
   },
   "notes": "可选:检索限制、API 故障、覆盖缺口"
 }
 ```
+
+跨 run 证据规则:综述可以组合历史 run 的证据(这是证据层积累的意义),但必须满足:
+
+- `source_runs` 列出全部被复用的历史 run;本 run 只新挖证据时省略该字段。
+- `event_count` = 文章**实际可引用**的去重后事件总数(新挖 + 复用),不是只数新挖的。
+- 复用的 evidence.jsonl 一并拷入 run 文件夹(如 `reused/` 子目录)或在 `files.reused_evidence` 中登记相对路径,保证 run 文件夹自含可审计。
+- 结算前 `python3 scripts/audit_citations.py --article <各成稿> --appendix evidence-appendix.md --evidence-jsonl <各证据文件> --run-json run.json` 必须通过(无死锚、无越界引用、manifest 一致)。
 
 ## Agent 加载方式
 

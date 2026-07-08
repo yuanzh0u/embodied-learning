@@ -1,110 +1,115 @@
 # Review Templates
 
-Use these templates when drafting a Chinese embodied-AI literature review or related-work section. Unless the user specifies one style, produce the final artifact bundle in the review project folder under `work/`:
+Use these templates when drafting a Chinese embodied-AI literature review or related-work section. The script emits the writing inputs (`review-packet.md` + `writing-brief.md` + `evidence-appendix.md`); **the agent writes the deliverables** in the review project folder under `work/`:
 
 - `scientific-memo_keyan.md`
 - `zhihu-explainer_zhihu.md`
 - `xiaohongshu-post_xiaohongshu.md`
-- `evidence-appendix.md`（每个 event 一节,正文中的 event ID 链接跳到这里）
 
 Link rules for all formal styles (see review-contract.md "Citation and link contract"):
 
 - In-text event IDs are links: `[EA-…-0001](evidence-appendix.md#ea--0001)`, not bare `EA-…-0001`.
+- **Link targets are relative to the article's own folder.** The appendix sits next to the articles, so the target is always exactly `evidence-appendix.md#<anchor>` — never an invented subdirectory (a real run once linked into a nonexistent `review-bundle/`, producing six dead links in an otherwise good article).
 - Paper mentions are links: `[2606.13877](https://arxiv.org/abs/2606.13877)`.
 - Every formal artifact ends with a `## References` section of deduplicated linked papers.
+- Before settling: `python3 scripts/audit_citations.py --article <each> --appendix evidence-appendix.md --evidence-jsonl <each>` must pass.
 
-## Scientific memo skeleton
+## What a deliverable is NOT
+
+A draft with any of these is a packet render, not an article — rewrite it:
+
+- Claim-map tables as body text; one-event-per-line or one-event-per-paragraph enumerations.
+- Stance buckets (`### 共识/正向证据` lists) presented as the synthesis.
+- The three styles sharing the same canned sentences or differing only in section order.
+- Topic-agnostic filler ("不能只看一个漂亮结论""真正值钱的信息藏在证据条件里").
+
+## Scientific memo skeleton (thesis-first)
+
+The proven shape: 中心论点 → 派生矛盾 → 可操作框架 → 最短结论. Each derived tension is a **prose subsection** that names the tension, walks the evidence on both sides, and closes with a one-line takeaway.
 
 ```md
-# <主题>研究备忘录
+# <主题>
 
-## 研究边界
+## 研究范围
 
-本文聚焦 <topic>，主要覆盖 <EA-ID 列表>。证据来自 <evidence files/source IDs>；未完成正文核验的候选论文只用于说明检索覆盖，不作为结论依据。
+- 时间范围:<resolved range>。证据范围:<n> 篇 paper-level 来源,<m> 条 evidence events。
+- 覆盖知识单元:`EA-…`。完整证据条目见 [evidence-appendix.md](evidence-appendix.md)。
 
-## Evidence Core
+## 中心判断
 
-- Evidence sufficiency: formal-ready/preliminary
-- Paper-level sources: <n> / 5
-- Stance labels: <support/conditional/limit/gap>
+<主题>的主要矛盾是:**<一句话中心论点,直接回答题目>**。
 
-## Claim Map
+这不是"<常见的浅层归因>"一个问题,而是<把中心论点拆成 N 个层面的一句话预告>。
 
-| Claim | Trace | Stance | Confidence | Implication |
-|---|---|---|---|---|
-| <claim in agent words> | <event-id/source-id> | support/limit/conditional/gap | direct/citation-supported/inference | <why it matters> |
+## <N> 个派生矛盾
 
-## 问题结构
+### 1. <张力名,例:规模数量 vs 有效结构>
 
-从现有证据看，<topic> 不是单点技术问题，而是由 <机制 A>、<机制 B>、<评测/落地约束> 共同决定。
+<正方证据的 prose 陈述,带内联引用>([EA-…-0001](evidence-appendix.md#ea--0001))。<反方/条件证据的 prose 陈述>([EA-…-0002](evidence-appendix.md#ea--0002))。
 
-## 主要共识
+结论:<一句可操作的 takeaway>。
 
-<共识 1>（evidence-event: <event-id>; confidence: <label>）。
+### 2. <下一个张力>…
 
-## 条件与分歧
+## 可操作框架
 
-<限制/条件>（evidence-event: <event-id>; stance: limit/conditional）。
+| 维度 | 核心问题 | 典型指标 |
+|---|---|---|
+| <维度> | <一句话问题> | <2-4 个指标> |
 
-## 未解决问题
+## 最短结论
 
-<gap>（evidence-event: <event-id>; stance: gap）或 <inference: reason>。
+<主题>的主要矛盾,不是"<浅层说法>",而是**<中心论点的强化重述>**。解决路径是<一段收束性 prose>。
 
-## 对后续研究的启发
+## References
 
-<project-facing synthesis>（inference: connects <event-id> and <source-id>）。
+- `<arxiv_id>` [<title>](https://arxiv.org/abs/<id>) (<published>)
 ```
 
-## Expert explainer pattern (default)
+## Zhihu expert explainer (misconception-first)
+
+Voice: 懂行的朋友给技术读者拆解。先破一个**具体的**误区(不是"大家都想错了"这种空话),再讲机制,再给边界。可以用比喻,不可以升级 stance。
 
 ```md
-# <主题>：专家解释帖
+# <主题>:为什么"<流行的错误说法>"是错的
 
 ## TL;DR
 
-<direct answer in 2-4 sentences, with caveat>
+<两三句话直接回答:错在哪、真实机制是什么、什么条件下例外。>
 
-## 检索范围
+## 误区从哪来
 
-- Time range: <explicit range or resolved recent-six-month default>
-- Paper-level sources: <n> / 5
-- Output type: expert-explainer
+很多人以为<具体误区>。这个直觉的来源是<为什么人们会这么想>。但 <SIEVE 式的具体反例>([EA-…](evidence-appendix.md#…))直接推翻了它:<论文实际发现>。
 
-## 常见误区或争议
+## 真实机制
 
-<what people usually get wrong>
+<用 2-4 段 prose 讲清楚机制。每段一个机制点,内联引用。可以打比方:"就像…"。>
 
-## 证据与限制
+## 什么时候这个结论不成立
 
-<mechanism-oriented synthesis with event/source IDs>
+<把 conditional/limit 事件转成"边界条款":在<条件>下,<结论会反转/失效>([EA-…](evidence-appendix.md#…))。>
 
-## 延伸阅读与可信度
+## 延伸阅读
 
-<source list and confidence note>
+<3-5 条,每条一句"为什么值得读"+ 论文链接。>
 ```
 
-## KOL thread pattern
+## Xiaohongshu insight post (hook-first)
+
+Voice: 给泛兴趣读者的 5 条反常识卡片。每条 = 一句话洞察 + 一个链接。钩子必须来自证据,不是标题党。
 
 ```md
-# <主题>：洞察短串
+# <一个具体的反常识钩子,例:机器人数据,越多可能越差?>
 
-## Hook
+<一两句展开钩子:最新论文发现<最强的一条反常识证据>。>
 
-<sharp but evidence-bounded hook>
+💡 <洞察 1 一句话>([EA-…](evidence-appendix.md#…))
+💡 <洞察 2 一句话>([EA-…](evidence-appendix.md#…))
+💡 <洞察 3-5…>
 
-## 证据约束洞察
+⚠️ 但要注意:<一句 caveat,来自 limit/conditional 事件,不许省略>
 
-1. <claim>（[<event-id>](evidence-appendix.md#<anchor>); stance: <label>）
-2. <claim>（[<event-id>](evidence-appendix.md#<anchor>); stance: <label>）
-3. <claim>（[<event-id>](evidence-appendix.md#<anchor>); stance: <label>）
-
-## 边界提醒
-
-<visible caveat, especially for conditional/limit/gap>
-
-## 依据来源
-
-<compact source note>
+📚 依据:<n> 篇 2026 年 arXiv 论文,完整清单见 [evidence-appendix.md](evidence-appendix.md)
 ```
 
 ## Gap language
