@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Build traceable embodied-AI review artifacts from accepted evidence."""
+"""Build the review packet, evidence appendix, and writing brief from accepted evidence.
+
+This script is a briefing generator, not an author: it renders the audit
+packet, the citation-anchor appendix, and a writing brief. The three prose
+deliverables (scientific-memo_keyan.md / zhihu-explainer_zhihu.md /
+xiaohongshu-post_xiaohongshu.md) are written by the agent from these inputs
+and must never be mechanical dumps of the claim map.
+"""
 
 from __future__ import annotations
 
@@ -57,7 +64,19 @@ STYLE_FILENAME_MAP = {
 }
 STYLE_CHOICES = sorted(set(STYLE_OUTLINES_ZH) | set(DEFAULT_OUTPUT_STYLES) | {"all"})
 APPENDIX_FILENAME = "evidence-appendix.md"
+BRIEF_FILENAME = "writing-brief.md"
 FORMAL_STYLES = set(DEFAULT_OUTPUT_STYLES)
+SCAFFOLD_BANNER = (
+    "<!-- SCAFFOLD: 机械渲染的证据脚手架,非成稿。 -->\n"
+    "> **警告:本文件不是综述成稿。** 它是 claim map 与 stance 分桶的机械渲染,\n"
+    "> 仅供对照检查。成稿必须由 LLM 依 `writing-brief.md` 撰写为按论证组织的 prose,\n"
+    "> 并保存为不带 `.scaffold` 后缀的正式文件名。\n\n"
+)
+
+
+def scaffold_filename(style: str) -> str:
+    base = artifact_filename(style)
+    return base[: -len(".md")] + ".scaffold.md" if base.endswith(".md") else base + ".scaffold"
 
 
 def shift_months(value: date, months: int) -> date:
@@ -110,7 +129,14 @@ def truncate(value: Any, limit: int = 180) -> str:
 
 
 def load_events(paths: list[Path]) -> list[dict[str, Any]]:
+    """Load and concatenate evidence JSONL from one or more runs.
+
+    De-duplicates by `event_id` so combining several runs' evidence.jsonl does
+    not double-count an event that appears in more than one file. The first
+    occurrence wins; later duplicates are dropped.
+    """
     events: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
     for path in paths:
         with path.open(encoding="utf-8") as handle:
             for lineno, line in enumerate(handle, start=1):
@@ -122,6 +148,11 @@ def load_events(paths: list[Path]) -> list[dict[str, Any]]:
                     raise ValueError(f"{path}:{lineno}: invalid JSONL: {exc}") from exc
                 if not isinstance(event, dict):
                     raise ValueError(f"{path}:{lineno}: expected a JSON object")
+                event_id = str(event.get("event_id") or "")
+                if event_id and event_id in seen_ids:
+                    continue
+                if event_id:
+                    seen_ids.add(event_id)
                 event["_input_file"] = str(path)
                 event["_input_line"] = lineno
                 events.append(event)
@@ -558,6 +589,121 @@ def render_references(events: list[dict[str, Any]]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def tension_pairs(events: list[dict[str, Any]], limit: int = 8) -> list[str]:
+    """Surface support-vs-limit/conditional tensions inside each topic group.
+
+    These pairs are thesis candidates: a real review's central argument usually
+    lives where the literature pushes in both directions at once.
+    """
+    by_topic: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    for event in events:
+        topic_id = str(event.get("topic_id") or "unknown")
+        by_topic[topic_id][str(event.get("stance") or "unknown")].append(event)
+    pairs: list[str] = []
+    for topic_id in sorted(by_topic):
+        stances = by_topic[topic_id]
+        positives = stances.get("support", [])
+        negatives = stances.get("limit", []) + stances.get("conditional", [])
+        for pos in positives:
+            if not negatives:
+                break
+            neg = negatives[len(pairs) % len(negatives)]
+            pairs.append(
+                f"- `{topic_id}`: {truncate(pos.get('claim'), 120)} ({event_link(str(pos.get('event_id') or ''))}) "
+                f"⟷ {truncate(neg.get('claim'), 120)} ({event_link(str(neg.get('event_id') or ''))})"
+            )
+            if len(pairs) >= limit:
+                return pairs
+    return pairs
+
+
+def render_writing_brief(
+    topic: str,
+    knowledge_ids: list[str],
+    events: list[dict[str, Any]],
+    source_ids: list[str],
+    time_range: str | None = None,
+    fallback_sources: list[dict[str, Any]] | None = None,
+) -> str:
+    """The writer-facing brief: raw material organized for prose, not for audit."""
+    count = count_paper_level_sources(events, fallback_sources)
+    caveats = [
+        event
+        for event in sorted(events, key=event_sort_key)
+        if str(event.get("stance")) in {"limit", "conditional", "gap"}
+    ]
+    by_topic: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for event in sorted(events, key=event_sort_key):
+        by_topic[str(event.get("topic_id") or "unknown")].append(event)
+    lines = [
+        f"# Writing Brief: {topic}",
+        "",
+        "> 本文件是写作输入,不是交付物。三篇成稿由 LLM 依此撰写:",
+        "> 正文必须是按论证组织的连续 prose;禁止把 claim map 表格当正文;",
+        "> 禁止一事件一行/一段;三种风格必须是三个真实读者声音。",
+        "",
+        "## 范围",
+        "",
+        f"- Topic: {topic}",
+        f"- Time range: {time_range or 'not provided'}",
+        f"- Knowledge IDs: {', '.join(f'`{item}`' for item in knowledge_ids) if knowledge_ids else 'unlisted'}",
+        f"- Paper-level sources: {count} / {FORMAL_SOURCE_THRESHOLD}"
+        + (" (formal-ready)" if count >= FORMAL_SOURCE_THRESHOLD else " (preliminary — 不足以支撑正式综述)"),
+        f"- Accepted events: {len(events)}",
+        "",
+        "## 中心论点候选(从张力对中提炼,不要照抄)",
+        "",
+        "综述的中心论点应回答:这批证据合在一起说明了什么矛盾/机制/转变?",
+        "以下 support ⟷ limit/conditional 张力对是论点候选的原料:",
+        "",
+    ]
+    pairs = tension_pairs(events)
+    lines.extend(pairs if pairs else ["- 证据中没有明显的 stance 张力;考虑以共识+边界作为组织轴。"])
+    lines.extend(["", "## 按主题聚类的证据(写作时按论证重组,不要按此顺序罗列)", ""])
+    for topic_id in sorted(by_topic):
+        group = by_topic[topic_id]
+        lines.append(f"### {topic_id} ({len(group)} events)")
+        for event in group:
+            event_id = str(event.get("event_id") or "missing-event-id")
+            stance = str(event.get("stance") or "unknown")
+            lines.append(f"- [`{stance}`] {truncate(event.get('claim'), 200)} ({event_link(event_id)})")
+        lines.append("")
+    lines.extend(
+        [
+            "## 必须保留的 caveat(任何风格都不得丢失或升级)",
+            "",
+        ]
+    )
+    if caveats:
+        for event in caveats:
+            event_id = str(event.get("event_id") or "missing-event-id")
+            lines.append(
+                f"- `{md_escape(event.get('stance'))}` {truncate(event.get('claim'), 200)} ({event_link(event_id)})"
+            )
+    else:
+        lines.append("- 无 limit/conditional/gap 事件;声明证据一致性本身即是 caveat。")
+    lines.extend(
+        [
+            "",
+            "## 三种风格的读者与语气",
+            "",
+            "- `scientific-memo_keyan.md` 研究者读:中心论点 → 派生矛盾/机制(prose 小节) → 可操作框架 → 最短结论。引用密集,每个实质论断带 event 链接。",
+            "- `zhihu-explainer_zhihu.md` 技术公众读:先破一个具体误区 → 讲机制(用比喻可以,升级 stance 不可以) → 给适用边界 → 延伸阅读。",
+            "- `xiaohongshu-post_xiaohongshu.md` 泛兴趣读者:一个钩子 → 3-5 条反常识洞察(每条一句话+链接) → 一句可见的 caveat → 一行来源说明。",
+            "",
+            "## 引用速查",
+            "",
+            f"- 事件锚点:`[EA-…-0001]({APPENDIX_FILENAME}#ea--0001)`(锚 = event_id 小写)。appendix 与成稿同目录。",
+            "- 论文链接:`[2606.13877](https://arxiv.org/abs/2606.13877)`。",
+            "- 成稿末尾必须有 `## References` 节;完整证据条目在 " + f"[{APPENDIX_FILENAME}]({APPENDIX_FILENAME})。",
+            "- Registered sources: "
+            + (", ".join(f"`{item}`" for item in source_ids[:12]) if source_ids else "not loaded"),
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_range: str | None = None) -> str:
     """Per-event appendix; each `### <event_id>` heading is the anchor target for in-text event links."""
     lines = [
@@ -809,27 +955,48 @@ def render_output_artifacts(
     style: str,
     fallback_sources: list[dict[str, Any]] | None = None,
     time_range: str | None = None,
+    emit_scaffold: bool = False,
 ) -> dict[str, str]:
-    styles = DEFAULT_OUTPUT_STYLES if style == "all" else [style]
-    artifacts = {
-        artifact_filename(output_style): render_final_output(
-            topic,
-            knowledge_ids,
-            events,
-            topic_cards,
-            source_ids,
-            output_style,
-            fallback_sources,
-            time_range,
+    """Assemble the briefing bundle.
+
+    Default (`style == "all"`): review-packet.md + writing-brief.md +
+    evidence-appendix.md — writing inputs, not deliverables. The three prose
+    articles are written by the agent from the brief. Mechanical style renders
+    are only available as clearly-bannered `*.scaffold.md` files, either via
+    emit_scaffold or by requesting a formal style explicitly.
+    """
+
+    def brief() -> str:
+        return render_writing_brief(topic, knowledge_ids, events, source_ids, time_range, fallback_sources)
+
+    def scaffold(output_style: str) -> str:
+        rendered = render_final_output(
+            topic, knowledge_ids, events, topic_cards, source_ids, output_style, fallback_sources, time_range
         )
-        for output_style in styles
-    }
-    # Formal outputs link event IDs into the appendix, so ship it alongside them.
-    formal_emitted = events and any(
-        output_style in FORMAL_STYLES for output_style in styles
-    ) and count_paper_level_sources(events) >= FORMAL_SOURCE_THRESHOLD
-    if formal_emitted:
-        artifacts[APPENDIX_FILENAME] = render_evidence_appendix(topic, events, time_range)
+        return SCAFFOLD_BANNER + rendered
+
+    artifacts: dict[str, str] = {}
+    if style == "all":
+        artifacts["review-packet.md"] = render_packet(
+            topic, knowledge_ids, events, topic_cards, source_ids, "survey", fallback_sources, time_range
+        )
+        artifacts[BRIEF_FILENAME] = brief()
+        if events:
+            artifacts[APPENDIX_FILENAME] = render_evidence_appendix(topic, events, time_range)
+        if emit_scaffold:
+            for output_style in DEFAULT_OUTPUT_STYLES:
+                artifacts[scaffold_filename(output_style)] = scaffold(output_style)
+    elif style in FORMAL_STYLES:
+        # Explicit formal style: never emit a file that looks like a finished article.
+        artifacts[scaffold_filename(style)] = scaffold(style)
+        artifacts[BRIEF_FILENAME] = brief()
+        if events:
+            artifacts[APPENDIX_FILENAME] = render_evidence_appendix(topic, events, time_range)
+    else:
+        # survey / related-work / positioning keep their packet-flavored artifact.
+        artifacts[artifact_filename(style)] = render_final_output(
+            topic, knowledge_ids, events, topic_cards, source_ids, style, fallback_sources, time_range
+        )
     return artifacts
 
 
@@ -944,7 +1111,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--style",
         choices=STYLE_CHOICES,
         default="all",
-        help="Review shape. Defaults to all three final Markdown styles; use survey for an explicit review packet.",
+        help=(
+            "Review shape. Default 'all' emits the briefing bundle "
+            "(review-packet.md + writing-brief.md + evidence-appendix.md); "
+            "formal styles emit a *.scaffold.md render, never a finished article."
+        ),
+    )
+    parser.add_argument(
+        "--emit-scaffold",
+        action="store_true",
+        help="With --style all, additionally emit *.scaffold.md mechanical renders of the three formal styles.",
     )
     parser.add_argument("--work-dir", default=str(REPO_ROOT / "work"), help="Directory for default review project folders.")
     parser.add_argument("--output", help="Write Markdown artifact to this path. Use '-' for stdout. Defaults to work/<project>/ when omitted.")
@@ -959,7 +1135,17 @@ def main(argv: list[str] | None = None) -> int:
     fallback_sources = load_fallback_sources([Path(path) for path in args.fallback_source_json])
     cards = load_topic_cards([Path(path) for path in args.topic_card])
     source_ids = load_source_ids(Path(args.source_file)) if args.source_file else []
-    artifacts = render_output_artifacts(args.topic, args.knowledge_id, events, cards, source_ids, args.style, fallback_sources, time_range)
+    artifacts = render_output_artifacts(
+        args.topic,
+        args.knowledge_id,
+        events,
+        cards,
+        source_ids,
+        args.style,
+        fallback_sources,
+        time_range,
+        emit_scaffold=args.emit_scaffold,
+    )
 
     if args.output == "-":
         if len(artifacts) == 1:
@@ -990,6 +1176,11 @@ def main(argv: list[str] | None = None) -> int:
             sys.stdout.write("Wrote Markdown artifacts:\n")
             for output in outputs:
                 sys.stdout.write(f"- {output}\n")
+        if args.style == "all":
+            sys.stdout.write(
+                "NEXT: 这些是写作输入,不是综述成稿。请依 writing-brief.md 撰写三篇 prose:\n"
+                "scientific-memo_keyan.md / zhihu-explainer_zhihu.md / xiaohongshu-post_xiaohongshu.md\n"
+            )
     return 0
 
 

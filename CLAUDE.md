@@ -70,10 +70,15 @@ boundary is deliberate — do not blur them:
   `search_arxiv.py --start-date/--end-date` — always pass those explicitly.
 - `skills/embodied-ai-literature-hub/scripts/build_query_plan.py` is a **compat wrapper** that delegates
   to the planner's copy; new work should call the planner script directly.
-- `build_review_packet.py` defaults to writing three Markdown style files into a new
-  `work/literature-review-<topic>-<date>/` folder. Use `--style survey` for the intermediate review
-  packet + style menu instead. Formal styles require ≥5 paper-level sources, else they degrade to a
-  preliminary packet with source gaps.
+- `build_review_packet.py` is a **briefing generator, not an author**: by default it writes
+  `review-packet.md` + `writing-brief.md` + `evidence-appendix.md` into a new
+  `work/literature-review-<topic>-<date>/` folder. The three prose deliverables
+  (`scientific-memo_keyan.md` / `zhihu-explainer_zhihu.md` / `xiaohongshu-post_xiaohongshu.md`)
+  are ALWAYS written by the agent from `writing-brief.md` as argument-organized prose — never
+  ship the script's mechanical renders (`--emit-scaffold` produces bannered `*.scaffold.md` only).
+  Use `--style survey` for the packet alone. Before settling a run, articles must pass
+  `python3 scripts/audit_citations.py` (dead anchors, citations outside the loaded evidence,
+  run.json drift).
 
 ## Knowledge base model
 

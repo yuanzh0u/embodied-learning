@@ -260,26 +260,23 @@ title: 数据采集与数据质量
                 for line in completed.stdout.splitlines()[1:]
                 if line.startswith("- ")
             ]
-            self.assertEqual(4, len(artifact_paths))
+            self.assertEqual(3, len(artifact_paths))
             for artifact_path in artifact_paths:
                 self.assertTrue(artifact_path.exists())
                 self.assertEqual(work_dir, artifact_path.parent.parent)
                 self.assertTrue(artifact_path.parent.name.startswith("literature-review-umi-数据可用性-"))
             names = {artifact_path.name for artifact_path in artifact_paths}
-            self.assertEqual(
-                {
-                    "scientific-memo_keyan.md",
-                    "zhihu-explainer_zhihu.md",
-                    "xiaohongshu-post_xiaohongshu.md",
-                    "evidence-appendix.md",
-                },
-                names,
-            )
+            # Briefing bundle only: the prose articles are written by the agent, not the script.
+            self.assertEqual({"review-packet.md", "writing-brief.md", "evidence-appendix.md"}, names)
             by_name = {artifact_path.name: artifact_path.read_text(encoding="utf-8") for artifact_path in artifact_paths}
-            self.assertIn("# UMI 数据可用性研究备忘录", by_name["scientific-memo_keyan.md"])
-            self.assertIn("# UMI 数据可用性：专家解释帖", by_name["zhihu-explainer_zhihu.md"])
-            self.assertIn("# UMI 数据可用性：洞察短串", by_name["xiaohongshu-post_xiaohongshu.md"])
+            self.assertIn("# Review Packet: UMI 数据可用性", by_name["review-packet.md"])
+            self.assertIn("# Writing Brief: UMI 数据可用性", by_name["writing-brief.md"])
+            self.assertIn("写作输入,不是交付物", by_name["writing-brief.md"])
             self.assertIn("# Evidence Appendix: UMI 数据可用性", by_name["evidence-appendix.md"])
+            # The script must remind the agent that prose writing is still pending.
+            self.assertIn("NEXT", completed.stdout)
+            for legacy_name in ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"]:
+                self.assertNotIn(legacy_name, names)
 
     def test_packet_declares_upstream_orchestration_contract(self) -> None:
         packet = build_review_packet.render_packet(
@@ -601,7 +598,7 @@ title: 数据采集与数据质量
         self.assertEqual(0, completed.returncode)
         self.assertIn(f"Time range: {expected_time_range}", completed.stdout)
 
-    def test_formal_outputs_link_event_ids_and_papers(self) -> None:
+    def test_default_bundle_is_briefing_not_articles(self) -> None:
         events = [event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}") for index in range(1, 6)]
         artifacts = build_review_packet.render_output_artifacts(
             "UMI 数据可用性",
@@ -612,17 +609,71 @@ title: 数据采集与数据质量
             "all",
         )
 
-        self.assertIn("evidence-appendix.md", artifacts)
-        for name in ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"]:
+        self.assertEqual({"review-packet.md", "writing-brief.md", "evidence-appendix.md"}, set(artifacts))
+        brief = artifacts["writing-brief.md"]
+        self.assertIn("写作输入,不是交付物", brief)
+        self.assertIn("中心论点候选", brief)
+        self.assertIn("(evidence-appendix.md#", brief)
+        self.assertIn("## References", artifacts["evidence-appendix.md"])
+
+    def test_emit_scaffold_adds_bannered_scaffold_files(self) -> None:
+        events = [event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}") for index in range(1, 6)]
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            [],
+            "all",
+            emit_scaffold=True,
+        )
+
+        for name in [
+            "scientific-memo_keyan.scaffold.md",
+            "zhihu-explainer_zhihu.scaffold.md",
+            "xiaohongshu-post_xiaohongshu.scaffold.md",
+        ]:
+            self.assertIn(name, artifacts)
             content = artifacts[name]
-            # Every in-text event ID must be a link into the appendix.
-            for match in re.finditer(r"EA-DATA-2026-\d{4}", content):
-                start = match.start()
-                self.assertEqual("[", content[start - 1], f"{name}: bare event ID at offset {start}")
+            self.assertIn("本文件不是综述成稿", content)
+            # Scaffold keeps the link contract: linked event IDs and References.
             self.assertIn("(evidence-appendix.md#", content)
-            # References section with https links is mandatory in formal outputs.
             self.assertIn("## References", content)
-            self.assertIn("https://arxiv.org/abs/2601.00001", content)
+        # Finished-article filenames must never be produced by the script.
+        for legacy_name in ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"]:
+            self.assertNotIn(legacy_name, artifacts)
+
+    def test_explicit_formal_style_emits_scaffold_not_article(self) -> None:
+        events = [event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}") for index in range(1, 6)]
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            [],
+            "scientific-memo",
+        )
+        self.assertIn("scientific-memo_keyan.scaffold.md", artifacts)
+        self.assertNotIn("scientific-memo_keyan.md", artifacts)
+        self.assertIn("writing-brief.md", artifacts)
+        self.assertIn("evidence-appendix.md", artifacts)
+
+    def test_load_events_deduplicates_across_files_by_event_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            run_a = tmp / "run-a.jsonl"
+            run_b = tmp / "run-b.jsonl"
+            shared = event_for_paper("EA-DATA-2026-0001", "2601.00001")
+            only_b = event_for_paper("EA-DATA-2026-0002", "2601.00002")
+            run_a.write_text(json.dumps(shared, ensure_ascii=False) + "\n", encoding="utf-8")
+            run_b.write_text(
+                json.dumps(shared, ensure_ascii=False) + "\n" + json.dumps(only_b, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            events = build_review_packet.load_events([run_a, run_b])
+        self.assertEqual(["EA-DATA-2026-0001", "EA-DATA-2026-0002"], [event["event_id"] for event in events])
+        # First occurrence wins: the shared event keeps run-a provenance.
+        self.assertEqual(str(run_a), events[0]["_input_file"])
 
     def test_claim_map_paper_column_links_to_arxiv(self) -> None:
         events = [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
@@ -653,7 +704,8 @@ title: 数据采集与数据质量
         self.assertEqual(1, references.count("https://arxiv.org/abs/2601.00001"))
         self.assertEqual(1, references.count("https://arxiv.org/abs/2601.00002"))
 
-    def test_preliminary_outputs_do_not_emit_appendix(self) -> None:
+    def test_appendix_emitted_whenever_events_exist(self) -> None:
+        # Appendix is a citation-anchor scaffold, tied to evidence presence, not the formal-source gate.
         events = [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
         artifacts = build_review_packet.render_output_artifacts(
             "UMI 数据可用性",
@@ -663,7 +715,20 @@ title: 数据采集与数据质量
             [],
             "all",
         )
+        self.assertIn("evidence-appendix.md", artifacts)
+
+    def test_no_events_no_appendix(self) -> None:
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            [],
+            [],
+            [],
+            "all",
+        )
         self.assertNotIn("evidence-appendix.md", artifacts)
+        self.assertIn("writing-brief.md", artifacts)
+        self.assertIn("review-packet.md", artifacts)
 
 
 if __name__ == "__main__":
