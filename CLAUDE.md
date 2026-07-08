@@ -32,6 +32,8 @@ Knowledge-base integrity and ID allocation (top-level `scripts/`):
 ```bash
 python3 scripts/check_kb_links.py            # broken links, unregistered source IDs, line-number locators
 python3 scripts/next_event_id.py --prefix EA-TWM-2026   # next collision-free evidence event ID
+python3 scripts/check_run_bundle.py <run-dir>           # bundle completeness gate (pre-settle)
+python3 scripts/audit_citations.py --article ... --appendix ... --evidence-jsonl ...   # citation gate
 ```
 
 Note: repo-wide `unittest discover -s skills` finds **0 tests** — the hyphenated skill directories
@@ -76,9 +78,13 @@ boundary is deliberate — do not blur them:
   (`scientific-memo_keyan.md` / `zhihu-explainer_zhihu.md` / `xiaohongshu-post_xiaohongshu.md`)
   are ALWAYS written by the agent from `writing-brief.md` as argument-organized prose — never
   ship the script's mechanical renders (`--emit-scaffold` produces bannered `*.scaffold.md` only).
-  Use `--style survey` for the packet alone. Before settling a run, articles must pass
-  `python3 scripts/audit_citations.py` (dead anchors, citations outside the loaded evidence,
-  run.json drift).
+  Use `--style survey` for the packet alone; `--select-event`/`--select-events-file` +
+  `--consolidate-evidence` for targeted reuse of prior runs' evidence. Before settling a run into
+  `evidence/`, two gates must pass: `scripts/check_run_bundle.py` (three styles or declared
+  `style`+`scope_note` in run.json; self-contained evidence; standard manifest fields) and
+  `scripts/audit_citations.py` (dead anchors, citations outside the loaded evidence, run.json drift).
+  The `literature-review-<topic>-<date>` folder name IS the bundle contract trigger — non-review
+  artifacts use a different naming.
 
 ## Knowledge base model
 

@@ -48,11 +48,21 @@ When the threshold is met and no style is specified, produce all three final sty
 - Use inline/stdout output only when the user asks for inline text, piping, or an explicit non-file display.
 - After the run is settled, copy accepted assets into `evidence/literature-review-<topic>-<date>/` with a `run.json` manifest.
 
+## Bundle completeness
+
+**The folder name is the contract trigger.** Anything named `literature-review-<topic>-<date>` owes the full bundle; non-review artifacts (research outlines, experiment designs, synthesis notes) must use a different name (e.g. `research-outline-<topic>-<date>`).
+
+- Default deliverables: all three styles (`scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`) plus `evidence-appendix.md`.
+- Reduced scope is legal only when declared: `run.json` records `"style": "<formal-style>"` and `"scope_note": "<why — the user's explicit ask>"`. An undeclared missing style is a contract violation, not a judgment call.
+- The run folder must be self-contained: `files.evidence` (fresh) and/or `files.reused_evidence` (copied from prior runs) exist inside the folder; `event_count` equals the deduplicated local evidence.
+- `run.json` uses the standard schema (see `evidence/README.md`); invented field names (`selected_event_count`, `files.memo`, …) are rejected by the checker.
+- Gate: `python3 scripts/check_run_bundle.py <run-dir>` must pass before settling, alongside `audit_citations.py`.
+
 ## Cross-run evidence
 
 Combining evidence from prior runs is supported and encouraged (it is the accumulation payoff of the evidence layer), with three hard rules:
 
-- Load prior evidence explicitly via repeated `--evidence-jsonl`; `load_events` deduplicates by `event_id`.
+- Load prior evidence explicitly via repeated `--evidence-jsonl`; `load_events` deduplicates by `event_id`. For targeted syntheses, select the relevant events with `--select-event`/`--select-events-file` instead of hand-curating an appendix, and pass `--consolidate-evidence` so the working set lands as the run's own `evidence.jsonl`.
 - Settle **every** evidence file the articles drew from into the run folder, and record the prior runs in `run.json` `source_runs`; `event_count` is the deduplicated count of events available to the articles.
 - An article may only cite events in the settled evidence set — `scripts/audit_citations.py` enforces this, plus dead-anchor and manifest-drift checks, and must pass before settling.
 

@@ -33,6 +33,7 @@ Formal style outputs require at least 5 paper-level sources. If fewer are availa
 
 ## Workflow
 
+0. **Decide the deliverable shape (before any writing).** Default is the full three-style bundle. A single style is allowed ONLY when the user explicitly asks for it — record that decision in `run.json` as `"style": "<formal-style>"` plus `"scope_note": "<the user's ask, in their words>"`. Non-review artifacts (research outlines, experiment designs, synthesis notes) must NOT use a `literature-review-<topic>-<date>` folder name — that name IS the bundle contract trigger; use e.g. `work/research-outline-<topic>-<date>/` instead.
 1. Load the repository routing layer:
    - `knowledge/index.md`
    - `knowledge/embodied-ai/index.md`
@@ -42,7 +43,7 @@ Formal style outputs require at least 5 paper-level sources. If fewer are availa
    - `knowledge/sources.md` for stable source IDs.
    - Candidate lists only for search coverage, not accepted claims.
    - Fallback source-tier JSON only as review-packet context, not Hub evidence JSONL.
-3. Generate the briefing bundle. By default the script creates a new project folder under `work/` and writes `review-packet.md` + `writing-brief.md` + `evidence-appendix.md` — these are writing inputs, not deliverables:
+3. Generate the briefing bundle. By default the script creates a new project folder under `work/` and writes `review-packet.md` + `writing-brief.md` + `evidence-appendix.md` — these are writing inputs, not deliverables. **Never hand-write the appendix or skip this step**: even when reusing prior runs' evidence, run the script — selective reuse is built in:
 
 ```bash
 python skills/embodied-ai-literature-review/scripts/build_review_packet.py \
@@ -52,6 +53,20 @@ python skills/embodied-ai-literature-review/scripts/build_review_packet.py \
   --topic-card knowledge/embodied-ai/data-collection-quality.md \
   --source-file knowledge/sources.md
 ```
+
+Selective reuse from prior runs (pick specific events, and settle the working set as this run's own evidence.jsonl):
+
+```bash
+python skills/embodied-ai-literature-review/scripts/build_review_packet.py \
+  --topic "感知误差溯源" \
+  --knowledge-id EA-DATA --knowledge-id EA-SENSOR \
+  --evidence-jsonl evidence/literature-review-<prior-run-a>/evidence.jsonl \
+  --evidence-jsonl evidence/literature-review-<prior-run-b>/evidence.jsonl \
+  --select-events-file /tmp/selected-ids.txt \
+  --consolidate-evidence
+```
+
+`--select-event`/`--select-events-file` filter to named event IDs (unknown IDs error out); `--consolidate-evidence` writes the working set as the run's local `evidence.jsonl`, so the folder is self-contained. Always pass `--consolidate-evidence` when reusing prior evidence.
 
 Explicit review packet/style-menu output:
 
@@ -92,7 +107,9 @@ Use `--output -` only when the user explicitly wants inline Markdown or stdout f
    - Validate the evidence JSONL: `python3 skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl <file> --validate-only`.
    - Copy accepted assets into `evidence/literature-review-<topic>-<date>/` with a `run.json` manifest (see `evidence/README.md`): **every** evidence JSONL the articles drew from (fresh and reused), the final Markdown articles, `evidence-appendix.md`, source-entry draft, and query plan. Intermediates stay in `work/`.
    - Cross-run evidence is supported but must be recorded: `run.json` lists `source_runs` (the prior runs whose evidence was combined) and `event_count` equals the deduplicated count actually available to the articles. Never cite an event that is not in the settled evidence set.
-   - Audit before settling: `python3 scripts/audit_citations.py --article <each article> --appendix <appendix> --evidence-jsonl <each evidence file>` must pass (no dead anchors, no citations outside the loaded evidence).
+   - Audit before settling — both gates must pass:
+     - `python3 scripts/check_run_bundle.py <run-dir>` (bundle completeness: three styles or a declared `style`+`scope_note`, self-contained evidence, standard run.json schema).
+     - `python3 scripts/audit_citations.py --article <each article> --appendix <appendix> --evidence-jsonl <each evidence file> --run-json <run.json>` (no dead anchors, no citations outside the loaded evidence).
 
 ## Review rules
 

@@ -675,6 +675,75 @@ title: 数据采集与数据质量
         # First occurrence wins: the shared event keeps run-a provenance.
         self.assertEqual(str(run_a), events[0]["_input_file"])
 
+    def test_select_events_filters_and_rejects_unknown_ids(self) -> None:
+        events = [event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}") for index in range(1, 4)]
+        picked = build_review_packet.select_events(events, ["EA-DATA-2026-0003", "EA-DATA-2026-0001"])
+        self.assertEqual(["EA-DATA-2026-0003", "EA-DATA-2026-0001"], [event["event_id"] for event in picked])
+        with self.assertRaises(ValueError) as ctx:
+            build_review_packet.select_events(events, ["EA-DATA-2026-9999"])
+        self.assertIn("EA-DATA-2026-9999", str(ctx.exception))
+
+    def test_selection_file_accepts_lines_and_json_array(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            lines_file = tmp / "ids.txt"
+            lines_file.write_text("EA-DATA-2026-0001\n\nEA-DATA-2026-0002\n", encoding="utf-8")
+            json_file = tmp / "ids.json"
+            json_file.write_text('["EA-DATA-2026-0002", "EA-DATA-2026-0003"]', encoding="utf-8")
+            ids = build_review_packet.load_selection_ids(["EA-DATA-2026-0000"], [lines_file, json_file])
+        self.assertEqual(
+            ["EA-DATA-2026-0000", "EA-DATA-2026-0001", "EA-DATA-2026-0002", "EA-DATA-2026-0003"],
+            ids,
+        )
+
+    def test_cli_select_and_consolidate_writes_local_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            evidence = tmp / "prior-run.jsonl"
+            events = [event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}") for index in range(1, 7)]
+            evidence.write_text(
+                "\n".join(json.dumps(event, ensure_ascii=False) for event in events) + "\n",
+                encoding="utf-8",
+            )
+            out_dir = tmp / "out"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--topic",
+                    "感知误差溯源",
+                    "--knowledge-id",
+                    "EA-DATA",
+                    "--evidence-jsonl",
+                    str(evidence),
+                    "--select-event",
+                    "EA-DATA-2026-0002",
+                    "--select-event",
+                    "EA-DATA-2026-0005",
+                    "--consolidate-evidence",
+                    "--output",
+                    str(out_dir),
+                ],
+                check=True,
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(0, completed.returncode)
+            local = out_dir / "evidence.jsonl"
+            self.assertTrue(local.exists())
+            records = [json.loads(line) for line in local.read_text(encoding="utf-8").splitlines() if line]
+            self.assertEqual(["EA-DATA-2026-0002", "EA-DATA-2026-0005"], [r["event_id"] for r in records])
+            # Internal provenance fields must not leak into the consolidated file.
+            self.assertTrue(all("_input_file" not in r and "_input_line" not in r for r in records))
+            # Brief and appendix only contain the selected events.
+            brief = (out_dir / "writing-brief.md").read_text(encoding="utf-8")
+            self.assertIn("EA-DATA-2026-0002", brief)
+            self.assertNotIn("EA-DATA-2026-0001", brief)
+            appendix = (out_dir / "evidence-appendix.md").read_text(encoding="utf-8")
+            self.assertIn("### EA-DATA-2026-0005", appendix)
+            self.assertNotIn("### EA-DATA-2026-0003", appendix)
+
     def test_claim_map_paper_column_links_to_arxiv(self) -> None:
         events = [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
         claim_map = build_review_packet.render_claim_map(events, linked=True)

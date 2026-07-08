@@ -159,6 +159,53 @@ def load_events(paths: list[Path]) -> list[dict[str, Any]]:
     return events
 
 
+def load_selection_ids(select_events: list[str], select_files: list[Path]) -> list[str]:
+    """Merge --select-event values and --select-events-file contents, preserving order."""
+    ids: list[str] = []
+    seen: set[str] = set()
+
+    def add(value: str) -> None:
+        value = value.strip()
+        if value and value not in seen:
+            seen.add(value)
+            ids.append(value)
+
+    for value in select_events:
+        add(value)
+    for path in select_files:
+        text = path.read_text(encoding="utf-8").strip()
+        if text.startswith("["):
+            data = json.loads(text)
+            if not isinstance(data, list):
+                raise ValueError(f"{path}: expected a JSON array of event IDs")
+            for item in data:
+                add(str(item))
+        else:
+            for line in text.splitlines():
+                add(line)
+    return ids
+
+
+def select_events(events: list[dict[str, Any]], selected_ids: list[str]) -> list[dict[str, Any]]:
+    """Filter events to the selected IDs; unknown IDs are an error (typo guard)."""
+    by_id = {str(event.get("event_id") or ""): event for event in events}
+    missing = [event_id for event_id in selected_ids if event_id not in by_id]
+    if missing:
+        raise ValueError(
+            "selected event IDs not found in loaded evidence: " + ", ".join(missing)
+        )
+    return [by_id[event_id] for event_id in selected_ids]
+
+
+def consolidated_evidence_lines(events: list[dict[str, Any]]) -> str:
+    """Serialize the working event set as this run's own evidence.jsonl (internal fields stripped)."""
+    lines = []
+    for event in events:
+        record = {key: value for key, value in event.items() if not key.startswith("_")}
+        lines.append(json.dumps(record, ensure_ascii=False))
+    return "\n".join(lines) + "\n" if lines else ""
+
+
 def load_fallback_sources(paths: list[Path]) -> list[dict[str, Any]]:
     sources: list[dict[str, Any]] = []
     for path in paths:
@@ -1112,6 +1159,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--time-range", help="Review/search time range. Defaults to the most recent six months.")
     parser.add_argument("--knowledge-id", action="append", default=[], help="Knowledge ID such as EA-DATA. Repeatable.")
     parser.add_argument("--evidence-jsonl", action="append", default=[], help="Evidence JSONL file. Repeatable.")
+    parser.add_argument(
+        "--select-event",
+        action="append",
+        default=[],
+        help="Keep only this event ID from the loaded evidence (repeatable). Unknown IDs are an error.",
+    )
+    parser.add_argument(
+        "--select-events-file",
+        action="append",
+        default=[],
+        help="File of event IDs to keep: one per line, or a JSON array. Repeatable.",
+    )
+    parser.add_argument(
+        "--consolidate-evidence",
+        action="store_true",
+        help="Write the working (deduplicated/selected) event set as evidence.jsonl next to the artifacts, so the run folder is self-contained. Recommended whenever reusing prior runs' evidence.",
+    )
     parser.add_argument("--fallback-source-json", action="append", default=[], help="Fallback source-tier JSON file. Repeatable.")
     parser.add_argument("--topic-card", action="append", default=[], help="Topic card Markdown file. Repeatable.")
     parser.add_argument("--source-file", help="Optional knowledge/sources.md file for source ID inventory.")
@@ -1140,6 +1204,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     time_range = args.time_range or default_time_range()
     events = load_events([Path(path) for path in args.evidence_jsonl])
+    selected_ids = load_selection_ids(args.select_event, [Path(path) for path in args.select_events_file])
+    if selected_ids:
+        events = select_events(events, selected_ids)
     fallback_sources = load_fallback_sources([Path(path) for path in args.fallback_source_json])
     cards = load_topic_cards([Path(path) for path in args.topic_card])
     source_ids = load_source_ids(Path(args.source_file)) if args.source_file else []
@@ -1154,6 +1221,8 @@ def main(argv: list[str] | None = None) -> int:
         time_range,
         emit_scaffold=args.emit_scaffold,
     )
+    if args.consolidate_evidence and events:
+        artifacts["evidence.jsonl"] = consolidated_evidence_lines(events)
 
     if args.output == "-":
         if len(artifacts) == 1:

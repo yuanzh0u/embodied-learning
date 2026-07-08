@@ -29,6 +29,8 @@
   "time_range": "2025-12-23..2026-06-23",
   "rounds": 1,
   "event_count": 18,
+  "style": "scientific-memo",
+  "scope_note": "用户明确只要求科研备忘录(缩减交付时必填;全量三风格 bundle 时省略 style/scope_note 两字段)",
   "source_runs": ["literature-review-<prior-topic>-<date>"],
   "files": {
     "evidence": "evidence.jsonl",
@@ -47,7 +49,9 @@
 - `source_runs` 列出全部被复用的历史 run;本 run 只新挖证据时省略该字段。
 - `event_count` = 文章**实际可引用**的去重后事件总数(新挖 + 复用),不是只数新挖的。
 - 复用的 evidence.jsonl 一并拷入 run 文件夹(如 `reused/` 子目录)或在 `files.reused_evidence` 中登记相对路径,保证 run 文件夹自含可审计。
-- 结算前 `python3 scripts/audit_citations.py --article <各成稿> --appendix evidence-appendix.md --evidence-jsonl <各证据文件> --run-json run.json` 必须通过(无死锚、无越界引用、manifest 一致)。
+- 结算前两道闸门都必须通过:
+  - `python3 scripts/check_run_bundle.py <run-dir>`:bundle 完整性(默认三风格 + appendix,或已声明 `style`+`scope_note` 的缩减交付)、证据自含、run.json 标准字段(`selected_event_count`、`files.memo` 等自创字段会被拒)。
+  - `python3 scripts/audit_citations.py --article <各成稿> --appendix evidence-appendix.md --evidence-jsonl <各证据文件> --run-json run.json`:无死锚、无越界引用、manifest 一致。
 
 ## Agent 加载方式
 
