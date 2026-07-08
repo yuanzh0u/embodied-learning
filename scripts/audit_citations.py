@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Audit review articles against their evidence appendix and loaded evidence set.
 
-Checks three failure classes seen in real runs:
-1. Dead anchors — in-text event links whose target file or `### <event_id>`
-   heading does not exist (e.g. links into an invented `review-bundle/` path).
+Checks four failure classes seen in real runs:
+1. Dead anchors — event links whose target file or `### <event_id>` heading
+   does not exist (e.g. links into an invented `review-bundle/` path).
 2. Out-of-set citations — event IDs cited in an article that are not present
    in the loaded evidence JSONL set (e.g. citing 54 events while only 6 were
    settled into the run folder).
-3. Manifest drift — run.json listing missing files, or an `event_count` that
+3. Uncovered paper links — arxiv.org/abs links in an article whose paper has
+   no event in the loaded evidence set (body citations are paper links under
+   the citation contract, so paper-level coverage is what readers rely on).
+4. Manifest drift — run.json listing missing files, or an `event_count` that
    does not match the deduplicated loaded evidence.
 
 Exit code is non-zero when any problem is found.
@@ -23,6 +26,7 @@ from pathlib import Path
 
 EVENT_ID_RE = re.compile(r"\b(?:EA|ERR)-[A-Z0-9]+(?:-[A-Z0-9]+)*-\d{4}\b")
 EVENT_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)#\s]*)#([^)\s]+)\)")
+ARXIV_LINK_RE = re.compile(r"\(https?://arxiv\.org/abs/(\d{4}\.\d{4,5})(?:v\d+)?\)")
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,8 +43,10 @@ def anchor_for(event_id: str) -> str:
     return re.sub(r"[^0-9a-z一-鿿-]", "", event_id.lower().replace(" ", "-"))
 
 
-def load_event_ids(paths: list[Path]) -> tuple[set[str], list[str]]:
+def load_event_ids(paths: list[Path]) -> tuple[set[str], set[str], list[str]]:
+    """Return (event IDs, paper arXiv IDs, problems) from the loaded evidence set."""
     ids: set[str] = set()
+    paper_ids: set[str] = set()
     problems: list[str] = []
     for path in paths:
         if not path.is_file():
@@ -58,7 +64,12 @@ def load_event_ids(paths: list[Path]) -> tuple[set[str], list[str]]:
             event_id = str(event.get("event_id") or "")
             if event_id:
                 ids.add(event_id)
-    return ids, problems
+            paper = event.get("paper") or {}
+            if isinstance(paper, dict):
+                arxiv_id = re.sub(r"v\d+$", "", str(paper.get("arxiv_id") or "").strip())
+                if arxiv_id:
+                    paper_ids.add(arxiv_id)
+    return ids, paper_ids, problems
 
 
 def appendix_anchors(appendix: Path) -> tuple[set[str], list[str]]:
@@ -76,6 +87,7 @@ def audit_article(
     appendix: Path | None,
     anchors: set[str],
     evidence_ids: set[str],
+    paper_ids: set[str] | None = None,
 ) -> list[str]:
     problems: list[str] = []
     if not article.is_file():
@@ -107,6 +119,11 @@ def audit_article(
     if evidence_ids:
         for event_id in sorted(cited_ids - evidence_ids):
             problems.append(f"{rel}: cites event outside loaded evidence set: {event_id}")
+
+    if paper_ids:
+        linked_papers = {match.group(1) for match in ARXIV_LINK_RE.finditer(text)}
+        for arxiv_id in sorted(linked_papers - paper_ids):
+            problems.append(f"{rel}: links paper with no event in loaded evidence set: {arxiv_id}")
 
     for event_id in sorted(cited_ids - linked_ids):
         # Bare (unlinked) event IDs violate the citation/link contract in formal outputs.
@@ -143,14 +160,14 @@ def audit_run_json(run_json: Path, evidence_ids: set[str]) -> list[str]:
 
 def main() -> int:
     args = parse_args()
-    evidence_ids, problems = load_event_ids([Path(path) for path in args.evidence_jsonl])
+    evidence_ids, paper_ids, problems = load_event_ids([Path(path) for path in args.evidence_jsonl])
     appendix = Path(args.appendix) if args.appendix else None
     anchors: set[str] = set()
     if appendix is not None:
         anchors, appendix_problems = appendix_anchors(appendix)
         problems.extend(appendix_problems)
     for article in [Path(path) for path in args.article]:
-        problems.extend(audit_article(article, appendix, anchors, evidence_ids))
+        problems.extend(audit_article(article, appendix, anchors, evidence_ids, paper_ids))
     if args.run_json:
         problems.extend(audit_run_json(Path(args.run_json), evidence_ids))
     if problems:

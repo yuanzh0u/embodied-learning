@@ -8,10 +8,10 @@ Use these templates when drafting a Chinese embodied-AI literature review or rel
 
 Link rules for all formal styles (see review-contract.md "Citation and link contract"):
 
-- In-text event IDs are links: `[EA-…-0001](evidence-appendix.md#ea--0001)`, not bare `EA-…-0001`.
-- **Link targets are relative to the article's own folder.** The appendix sits next to the articles, so the target is always exactly `evidence-appendix.md#<anchor>` — never an invented subdirectory (a real run once linked into a nonexistent `review-bundle/`, producing six dead links in an otherwise good article).
-- Paper mentions are links: `[2606.13877](https://arxiv.org/abs/2606.13877)`.
-- Every formal artifact ends with a `## References` section of deduplicated linked papers.
+- **Body citations are arXiv paper links**: `[SIEVE](https://arxiv.org/abs/2607.06442)` — 读者在阅读综述时一次点击即达论文。正文不放 `evidence-appendix.md#...` 事件锚点,也不放裸 event ID。
+- Event-level provenance lives in `## References` and the appendix: each reference line pairs the paper link with its event anchors, so 溯源不丢、正文不乱。
+- **Reference/appendix link targets are relative to the article's own folder.** The appendix sits next to the articles, so the target is always exactly `evidence-appendix.md#<anchor>` — never an invented subdirectory (a real run once linked into a nonexistent `review-bundle/`, producing six dead links in an otherwise good article).
+- Only cite papers covered by the loaded evidence set — the audit rejects citations outside it.
 - Before settling: `python3 scripts/audit_citations.py --article <each> --appendix evidence-appendix.md --evidence-jsonl <each>` must pass.
 
 ## What a deliverable is NOT
@@ -45,7 +45,7 @@ The proven shape: 中心论点 → 派生矛盾 → 可操作框架 → 最短�
 
 ### 1. <张力名,例:规模数量 vs 有效结构>
 
-<正方证据的 prose 陈述,带内联引用>([EA-…-0001](evidence-appendix.md#ea--0001))。<反方/条件证据的 prose 陈述>([EA-…-0002](evidence-appendix.md#ea--0002))。
+<正方证据的 prose 陈述,带论文链接>([SIEVE](https://arxiv.org/abs/2607.06442))。<反方/条件证据的 prose 陈述>([Lift3D-VLA](https://arxiv.org/abs/2607.06564))。
 
 结论:<一句可操作的 takeaway>。
 
@@ -63,7 +63,7 @@ The proven shape: 中心论点 → 派生矛盾 → 可操作框架 → 最短�
 
 ## References
 
-- `<arxiv_id>` [<title>](https://arxiv.org/abs/<id>) (<published>)
+- [<title>](https://arxiv.org/abs/<id>) (<published>) — 证据: [EA-…-0001](evidence-appendix.md#ea--0001), [EA-…-0002](evidence-appendix.md#ea--0002)
 ```
 
 ## Zhihu expert explainer (misconception-first)
@@ -79,15 +79,15 @@ Voice: 懂行的朋友给技术读者拆解。先破一个**具体的**误区(�
 
 ## 误区从哪来
 
-很多人以为<具体误区>。这个直觉的来源是<为什么人们会这么想>。但 <SIEVE 式的具体反例>([EA-…](evidence-appendix.md#…))直接推翻了它:<论文实际发现>。
+很多人以为<具体误区>。这个直觉的来源是<为什么人们会这么想>。但 <SIEVE 式的具体反例>([SIEVE](https://arxiv.org/abs/2607.06442))直接推翻了它:<论文实际发现>。
 
 ## 真实机制
 
-<用 2-4 段 prose 讲清楚机制。每段一个机制点,内联引用。可以打比方:"就像…"。>
+<用 2-4 段 prose 讲清楚机制。每段一个机制点,内联论文链接。可以打比方:"就像…"。>
 
 ## 什么时候这个结论不成立
 
-<把 conditional/limit 事件转成"边界条款":在<条件>下,<结论会反转/失效>([EA-…](evidence-appendix.md#…))。>
+<把 conditional/limit 事件转成"边界条款":在<条件>下,<结论会反转/失效>([TACO](https://arxiv.org/abs/2607.02840))。>
 
 ## 延伸阅读
 
@@ -103,8 +103,8 @@ Voice: 给泛兴趣读者的 5 条反常识卡片。每条 = 一句话洞察 + �
 
 <一两句展开钩子:最新论文发现<最强的一条反常识证据>。>
 
-💡 <洞察 1 一句话>([EA-…](evidence-appendix.md#…))
-💡 <洞察 2 一句话>([EA-…](evidence-appendix.md#…))
+💡 <洞察 1 一句话>([论文短名](https://arxiv.org/abs/<id>))
+💡 <洞察 2 一句话>([论文短名](https://arxiv.org/abs/<id>))
 💡 <洞察 3-5…>
 
 ⚠️ 但要注意:<一句 caveat,来自 limit/conditional 事件,不许省略>

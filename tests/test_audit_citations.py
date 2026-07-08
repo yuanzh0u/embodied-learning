@@ -16,8 +16,13 @@ assert SPEC and SPEC.loader
 SPEC.loader.exec_module(audit_citations)
 
 
-def write_evidence(path: Path, event_ids: list[str]) -> None:
-    lines = [json.dumps({"event_id": event_id, "claim": "x"}) for event_id in event_ids]
+def write_evidence(path: Path, event_ids: list[str], arxiv_by_event: dict[str, str] | None = None) -> None:
+    lines = []
+    for event_id in event_ids:
+        record: dict[str, object] = {"event_id": event_id, "claim": "x"}
+        if arxiv_by_event and event_id in arxiv_by_event:
+            record["paper"] = {"arxiv_id": arxiv_by_event[event_id]}
+        lines.append(json.dumps(record))
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -44,10 +49,10 @@ class AuditCitationsTest(unittest.TestCase):
         self._tmp.cleanup()
 
     def run_audit(self) -> list[str]:
-        ids, problems = audit_citations.load_event_ids([self.evidence])
+        ids, paper_ids, problems = audit_citations.load_event_ids([self.evidence])
         anchors, appendix_problems = audit_citations.appendix_anchors(self.appendix)
         problems.extend(appendix_problems)
-        problems.extend(audit_citations.audit_article(self.article, self.appendix, anchors, ids))
+        problems.extend(audit_citations.audit_article(self.article, self.appendix, anchors, ids, paper_ids))
         return problems
 
     def test_clean_article_passes(self) -> None:
@@ -98,6 +103,33 @@ class AuditCitationsTest(unittest.TestCase):
         problems = self.run_audit()
         self.assertTrue(any("bare event ID" in p for p in problems))
 
+    def test_paper_link_style_body_passes(self) -> None:
+        # New citation contract: body cites arXiv paper links; References carries event anchors.
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"], {"EA-DATA-2026-0001": "2607.06442"})
+        write_appendix(self.appendix, ["EA-DATA-2026-0001"])
+        self.article.write_text(
+            "论点来自([SIEVE](https://arxiv.org/abs/2607.06442))。\n\n"
+            f"## References\n\n- [SIEVE](https://arxiv.org/abs/2607.06442) — 证据: {linked('EA-DATA-2026-0001')}\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(self.run_audit(), [])
+
+    def test_paper_link_without_evidence_coverage_reported(self) -> None:
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"], {"EA-DATA-2026-0001": "2607.06442"})
+        write_appendix(self.appendix, ["EA-DATA-2026-0001"])
+        self.article.write_text(
+            "论点([SIEVE](https://arxiv.org/abs/2607.06442)),但还有([幽灵论文](https://arxiv.org/abs/2699.99999))。\n",
+            encoding="utf-8",
+        )
+        problems = self.run_audit()
+        self.assertTrue(any("no event in loaded evidence set: 2699.99999" in p for p in problems))
+
+    def test_versioned_arxiv_link_normalized(self) -> None:
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"], {"EA-DATA-2026-0001": "2607.06442"})
+        write_appendix(self.appendix, ["EA-DATA-2026-0001"])
+        self.article.write_text("论点([SIEVE](https://arxiv.org/abs/2607.06442v2))。\n", encoding="utf-8")
+        self.assertEqual(self.run_audit(), [])
+
     def test_run_json_event_count_mismatch_reported(self) -> None:
         write_evidence(self.evidence, ["EA-DATA-2026-0001", "EA-DATA-2026-0002"])
         run_json = self.tmp / "run.json"
@@ -105,7 +137,7 @@ class AuditCitationsTest(unittest.TestCase):
             json.dumps({"event_count": 54, "files": {"evidence": "evidence.jsonl"}}),
             encoding="utf-8",
         )
-        ids, _ = audit_citations.load_event_ids([self.evidence])
+        ids, _, _ = audit_citations.load_event_ids([self.evidence])
         problems = audit_citations.audit_run_json(run_json, ids)
         self.assertTrue(any("event_count=54" in p and "2 deduplicated" in p for p in problems))
 

@@ -58,14 +58,14 @@ Combining evidence from prior runs is supported and encouraged (it is the accumu
 
 ## Citation and link contract
 
-Formal outputs (scientific-memo, expert-explainer, kol-thread) must be readable AND clickable:
+Formal outputs (scientific-memo, expert-explainer, kol-thread) must be readable AND clickable, with **paper links in the body and event-level traceability in the appendix**:
 
-- Every in-text event ID is a Markdown link into `evidence-appendix.md` anchors: `[EA-…-0001](evidence-appendix.md#ea--0001)`. Bare event IDs in formal prose are non-conforming.
-- Link targets are relative to the article's own folder: exactly `evidence-appendix.md#<anchor>`, never an invented subdirectory path.
-- Every paper mention in claim maps and references is a Markdown link to its arXiv abs page: `[2606.13877](https://arxiv.org/abs/2606.13877)`. Bare arXiv IDs in formal outputs are non-conforming.
-- Every formal output ends with a `## References` section: deduplicated papers, one line each, with inline links.
-- `evidence-appendix.md` ships with every formal bundle: one `### <event_id>` section per event (claim, stance, confidence, locator, short quote, paper link). Event links resolve to these anchors.
-- The review packet (audit mode) may keep plain IDs; the link contract applies to formal deliverables.
+- **Body citations are arXiv paper links**: `[SIEVE](https://arxiv.org/abs/2607.06442)` or `[2607.06442](https://arxiv.org/abs/2607.06442)` — the reader lands on the paper, not on an internal ID. Bare paper names, bare arXiv IDs, and bare event IDs in formal prose are all non-conforming.
+- **Do not put `evidence-appendix.md#...` event links in body prose.** Event anchors are the traceability layer: they live in the References section, the appendix itself, and the review packet. A reader skimming the article should only ever be one click from arXiv.
+- Every cited paper must be in the loaded evidence set (audit-enforced); citing a paper that no settled event covers is non-conforming.
+- Every formal output ends with a `## References` section: deduplicated papers, one line each, format `- [<title>](https://arxiv.org/abs/<id>) — 证据: [EA-…-0001](evidence-appendix.md#ea--0001), [EA-…-0002](…)` so event-level provenance stays reachable without cluttering the body.
+- `evidence-appendix.md` ships with every formal bundle: one `### <event_id>` section per event (claim, stance, confidence, locator, short quote, paper link). Reference-section event links resolve to these anchors, relative to the article's own folder — never an invented subdirectory path.
+- The review packet (audit mode) keeps event-ID-first linking; the paper-first rule applies to formal deliverables.
 
 ## Source tiers
 

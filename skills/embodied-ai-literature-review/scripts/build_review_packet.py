@@ -315,6 +315,13 @@ def event_link(event_id: str) -> str:
     return f"[{safe_id}]({APPENDIX_FILENAME}#{event_anchor(event_id)})"
 
 
+def citation_pair(event: dict[str, Any]) -> str:
+    """Brief-facing citation: arXiv paper link first (what articles cite in body text),
+    appendix event link second (locator for the writer)."""
+    event_id = str(event.get("event_id") or "missing-event-id")
+    return f"{paper_link(event)} / {event_link(event_id)}"
+
+
 def count_paper_level_sources(events: list[dict[str, Any]], fallback_sources: list[dict[str, Any]] | None = None) -> int:
     keys = {paper_key(event) for event in events if paper_key(event)}
     for source in fallback_sources or []:
@@ -609,8 +616,8 @@ def tension_pairs(events: list[dict[str, Any]], limit: int = 8) -> list[str]:
                 break
             neg = negatives[len(pairs) % len(negatives)]
             pairs.append(
-                f"- `{topic_id}`: {truncate(pos.get('claim'), 120)} ({event_link(str(pos.get('event_id') or ''))}) "
-                f"⟷ {truncate(neg.get('claim'), 120)} ({event_link(str(neg.get('event_id') or ''))})"
+                f"- `{topic_id}`: {truncate(pos.get('claim'), 120)} ({citation_pair(pos)}) "
+                f"⟷ {truncate(neg.get('claim'), 120)} ({citation_pair(neg)})"
             )
             if len(pairs) >= limit:
                 return pairs
@@ -641,6 +648,7 @@ def render_writing_brief(
         "> 本文件是写作输入,不是交付物。三篇成稿由 LLM 依此撰写:",
         "> 正文必须是按论证组织的连续 prose;禁止把 claim map 表格当正文;",
         "> 禁止一事件一行/一段;三种风格必须是三个真实读者声音。",
+        "> 正文引用一律用 arXiv 论文链接(读者点开即达论文);事件锚点只用于 References/appendix 溯源。",
         "",
         "## 范围",
         "",
@@ -664,9 +672,8 @@ def render_writing_brief(
         group = by_topic[topic_id]
         lines.append(f"### {topic_id} ({len(group)} events)")
         for event in group:
-            event_id = str(event.get("event_id") or "missing-event-id")
             stance = str(event.get("stance") or "unknown")
-            lines.append(f"- [`{stance}`] {truncate(event.get('claim'), 200)} ({event_link(event_id)})")
+            lines.append(f"- [`{stance}`] {truncate(event.get('claim'), 200)} ({citation_pair(event)})")
         lines.append("")
     lines.extend(
         [
@@ -676,9 +683,8 @@ def render_writing_brief(
     )
     if caveats:
         for event in caveats:
-            event_id = str(event.get("event_id") or "missing-event-id")
             lines.append(
-                f"- `{md_escape(event.get('stance'))}` {truncate(event.get('claim'), 200)} ({event_link(event_id)})"
+                f"- `{md_escape(event.get('stance'))}` {truncate(event.get('claim'), 200)} ({citation_pair(event)})"
             )
     else:
         lines.append("- 无 limit/conditional/gap 事件;声明证据一致性本身即是 caveat。")
@@ -687,15 +693,17 @@ def render_writing_brief(
             "",
             "## 三种风格的读者与语气",
             "",
-            "- `scientific-memo_keyan.md` 研究者读:中心论点 → 派生矛盾/机制(prose 小节) → 可操作框架 → 最短结论。引用密集,每个实质论断带 event 链接。",
+            "- `scientific-memo_keyan.md` 研究者读:中心论点 → 派生矛盾/机制(prose 小节) → 可操作框架 → 最短结论。引用密集,每个实质论断带论文链接。",
             "- `zhihu-explainer_zhihu.md` 技术公众读:先破一个具体误区 → 讲机制(用比喻可以,升级 stance 不可以) → 给适用边界 → 延伸阅读。",
-            "- `xiaohongshu-post_xiaohongshu.md` 泛兴趣读者:一个钩子 → 3-5 条反常识洞察(每条一句话+链接) → 一句可见的 caveat → 一行来源说明。",
+            "- `xiaohongshu-post_xiaohongshu.md` 泛兴趣读者:一个钩子 → 3-5 条反常识洞察(每条一句话+论文链接) → 一句可见的 caveat → 一行来源说明。",
             "",
             "## 引用速查",
             "",
-            f"- 事件锚点:`[EA-…-0001]({APPENDIX_FILENAME}#ea--0001)`(锚 = event_id 小写)。appendix 与成稿同目录。",
-            "- 论文链接:`[2606.13877](https://arxiv.org/abs/2606.13877)`。",
-            "- 成稿末尾必须有 `## References` 节;完整证据条目在 " + f"[{APPENDIX_FILENAME}]({APPENDIX_FILENAME})。",
+            "- **正文引用 = arXiv 论文链接**:`[2606.13877](https://arxiv.org/abs/2606.13877)` 或 `[SIEVE](https://arxiv.org/abs/2607.06442)`。读者点开即达论文。",
+            f"- 事件级溯源留给 appendix:成稿正文不放 `{APPENDIX_FILENAME}#...` 事件锚点;需要精确定位(章节/立场/置信)时,读者从 References 或 appendix 查。",
+            "- 本简报中每条证据给出 `论文链接 / 事件链接` 对:写作时**取前者入正文**,后者供你核对 locator 与 stance。",
+            "- 成稿末尾必须有 `## References` 节(去重论文清单,含链接);"
+            + f"完整证据条目在 [{APPENDIX_FILENAME}]({APPENDIX_FILENAME})。",
             "- Registered sources: "
             + (", ".join(f"`{item}`" for item in source_ids[:12]) if source_ids else "not loaded"),
             "",

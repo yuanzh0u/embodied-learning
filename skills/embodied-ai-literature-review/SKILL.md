@@ -81,8 +81,8 @@ Use `--output -` only when the user explicitly wants inline Markdown or stdout f
    - Save them under the same project folder with the exact deliverable filenames (`scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`), next to `evidence-appendix.md` so event links resolve.
    - Anti-patterns (a draft with any of these is NOT a deliverable): claim-map tables as body text; one-event-per-line/paragraph enumerations; stance-bucket lists presented as synthesis; the three styles sharing the same canned sentences; topic-agnostic filler ("不能只看一个漂亮结论"). If it reads like the review packet, rewrite it.
    - Organize by argument, mechanism, disagreement, and gap; do not write one paragraph per paper unless the user asks.
-   - Cite event IDs such as `EA-DATA-2026-0001` and stable source IDs such as `S-ARXIV-2402.10329`.
-   - In formal outputs, event IDs and arXiv IDs must be Markdown links (appendix anchors and abs pages); see the citation and link contract in [review-contract.md](references/review-contract.md). Link targets are relative to the article's own folder (`evidence-appendix.md#...`, never an invented path).
+   - Traceability stays event-based: every substantive claim maps to an event ID such as `EA-DATA-2026-0001` (surfaced in References/appendix) or a stable source ID such as `S-ARXIV-2402.10329`.
+   - **Body citations are arXiv paper links** (`[SIEVE](https://arxiv.org/abs/2607.06442)`), so the reader reaches the paper in one click. Event anchors (`evidence-appendix.md#...`) belong in the References section and appendix only — see the citation and link contract in [review-contract.md](references/review-contract.md). Link targets are relative to the article's own folder, never an invented path.
    - Mark inferences explicitly when a paragraph combines evidence across events.
 5. Audit traceability:
    - Every substantive claim has an evidence event, topic-card source, or `inference` marker.
