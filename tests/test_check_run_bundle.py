@@ -129,6 +129,21 @@ class CheckRunBundleTest(unittest.TestCase):
         problems = check_run_bundle.check_run_bundle(run_dir)
         self.assertTrue(any("not listed in files.outputs" in p for p in problems))
 
+    def test_in_progress_status_fails(self) -> None:
+        # A birth-certificate run that was never settled must be reported as unfinished.
+        run_dir = make_run(self.tmp, manifest_extra={"status": "in-progress"})
+        problems = check_run_bundle.check_run_bundle(run_dir)
+        self.assertTrue(any("run not settled" in p for p in problems))
+
+    def test_settled_status_passes(self) -> None:
+        run_dir = make_run(self.tmp, manifest_extra={"status": "settled"})
+        self.assertEqual(check_run_bundle.check_run_bundle(run_dir), [])
+
+    def test_unknown_status_reported(self) -> None:
+        run_dir = make_run(self.tmp, manifest_extra={"status": "done"})
+        problems = check_run_bundle.check_run_bundle(run_dir)
+        self.assertTrue(any("unknown status" in p for p in problems))
+
     def test_reused_evidence_counts_toward_self_containment(self) -> None:
         run_dir = make_run(self.tmp, event_ids=[])
         (run_dir / "evidence.jsonl").unlink()

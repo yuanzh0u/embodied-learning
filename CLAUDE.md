@@ -32,6 +32,7 @@ Knowledge-base integrity and ID allocation (top-level `scripts/`):
 ```bash
 python3 scripts/check_kb_links.py            # broken links, unregistered source IDs, line-number locators
 python3 scripts/next_event_id.py --prefix EA-TWM-2026   # next collision-free evidence event ID
+python3 scripts/init_run.py --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
 python3 scripts/check_run_bundle.py <run-dir>           # bundle completeness gate (pre-settle)
 python3 scripts/audit_citations.py --article ... --appendix ... --evidence-jsonl ...   # citation gate
 ```
@@ -48,6 +49,9 @@ python3 skills/embodied-ai-query-planner/scripts/build_query_plan.py --topic "..
 python3 skills/embodied-ai-literature-hub/scripts/search_arxiv.py --query-file /tmp/plan.json \
   --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/candidates.json
 python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_html.py --paper-id 2402.10329 --terms UMI,data
+python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py --paper-id 2402.10329 \
+  --topic "..." --topic-id EA-DATA --id-prefix EA-XXX-2026 --terms UMI,data \
+  --output-skeleton /tmp/skeleton.jsonl --output-digest /tmp/digest.md   # candidate→evidence promotion
 python3 skills/embodied-ai-literature-review/scripts/build_review_packet.py --topic "..." \
   --knowledge-id EA-DATA --evidence-jsonl /tmp/evidence.jsonl
 ```

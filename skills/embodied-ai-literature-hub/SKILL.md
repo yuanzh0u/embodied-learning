@@ -40,8 +40,21 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
    - If HTML download stalls, stop the run and continue with metadata/abstract-level evidence only, clearly marking the confidence and limitation.
 5. Extract discussion events:
    - Use `references/evidence-schema.md`.
+   - **Preferred path — `scripts/promote_candidates.py`**: one command per batch of confirmed-relevant candidates pulls API metadata + section-aware extraction, and emits a reading digest plus an evidence skeleton JSONL (event IDs, paper metadata, authors, locator prefilled; `claim`/`stance`/`evidence.summary` left as TODO). Fill the TODO fields from the digest, then validate. The validator rejects unfilled skeletons, so promotion cannot be silently skipped:
+
+```bash
+python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py \
+  --paper-id 2606.03784 --paper-id 2607.00673 \
+  --topic "..." --topic-id EA-MODEL \
+  --id-prefix EA-XXX-2026 --start-seq 1 \
+  --terms reasoning,planning,failure \
+  --output-skeleton work/<run>/evidence-skeleton.jsonl \
+  --output-digest work/<run>/promotion-digest.md
+```
+
    - Capture positive, negative, conditional, and gap discussions.
    - Every accepted paper needs at least one topic-relevant claim with locator evidence.
+   - **Downstream articles may only cite promoted events.** A candidate that was searched or browsed but never promoted cannot appear in a review; promotion is not optional effort, it is the boundary between candidate and evidence.
    - If a claim's evidence depends on a cited paper, enqueue only that core citation as a candidate paper.
 6. Produce outputs:
    - Source-entry draft for `knowledge/sources.md`.

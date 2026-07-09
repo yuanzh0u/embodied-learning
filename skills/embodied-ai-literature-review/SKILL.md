@@ -33,8 +33,10 @@ Formal style outputs require at least 5 paper-level sources. If fewer are availa
 
 ## Workflow
 
-0. **Decide the deliverable shape (before any writing).** Default is the full three-style bundle. A single style is allowed ONLY when the user explicitly asks for it — record that decision in `run.json` as `"style": "<formal-style>"` plus `"scope_note": "<the user's ask, in their words>"`. Non-review artifacts (research outlines, experiment designs, synthesis notes) must NOT use a `literature-review-<topic>-<date>` folder name — that name IS the bundle contract trigger; use e.g. `work/research-outline-<topic>-<date>/` instead.
-1. Load the repository routing layer:
+0. **Decide the deliverable shape (before any writing).** Default is the full three-style bundle. A single style is allowed ONLY when the user explicitly asks for it — record that decision in `run.json` as `"style": "<formal-style>"` plus `"scope_note": "<the user's ask, in their words>"`. The ONLY recognized deliverable filenames are `scientific-memo_keyan.md` / `zhihu-explainer_zhihu.md` / `xiaohongshu-post_xiaohongshu.md` — an invented filename (research-memo.md, main-*.md, …) is not a deliverable, whatever its quality. Non-review artifacts (research outlines, experiment designs, synthesis notes) must NOT use a `literature-review-<topic>-<date>` folder name — that name IS the bundle contract trigger; use e.g. `work/research-outline-<topic>-<date>/` instead.
+1. Initialize the run, then load the repository routing layer:
+   - `python3 scripts/init_run.py --topic "..." --knowledge-id EA-… --time-range "..."` creates the run folder with a `status: in-progress` run.json. Every artifact of this run goes into that folder; the status flips to `settled` only at step 6.
+   - **If you stop for any reason before settling** (search failed, evidence insufficient, out of time), leave the run `in-progress` in `work/` and TELL THE USER explicitly that the run is unfinished, listing the missing steps. A silently abandoned run that looks like a deliverable is a contract violation; an honestly declared partial run is fine.
    - `knowledge/index.md`
    - `knowledge/embodied-ai/index.md`
    - only the relevant topic cards.
@@ -43,6 +45,7 @@ Formal style outputs require at least 5 paper-level sources. If fewer are availa
    - `knowledge/sources.md` for stable source IDs.
    - Candidate lists only for search coverage, not accepted claims.
    - Fallback source-tier JSON only as review-packet context, not Hub evidence JSONL.
+   - **Articles cite promoted evidence only.** If the synthesis needs papers that are still candidates (found via search/browsing but never mined), promote them first via the Hub's `promote_candidates.py` path — digest + skeleton + fill claims + `--validate-only`. Writing an article that cites unpromoted candidates is the exact failure this contract exists to prevent.
 3. Generate the briefing bundle. By default the script creates a new project folder under `work/` and writes `review-packet.md` + `writing-brief.md` + `evidence-appendix.md` — these are writing inputs, not deliverables. **Never hand-write the appendix or skip this step**: even when reusing prior runs' evidence, run the script — selective reuse is built in:
 
 ```bash
@@ -105,6 +108,7 @@ Use `--output -` only when the user explicitly wants inline Markdown or stdout f
    - Exact quotes come only from opened raw sources and stay short.
 6. Settle the run:
    - Validate the evidence JSONL: `python3 skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl <file> --validate-only`.
+   - Flip `run.json` `status` from `in-progress` to `settled`.
    - Copy accepted assets into `evidence/literature-review-<topic>-<date>/` with a `run.json` manifest (see `evidence/README.md`): **every** evidence JSONL the articles drew from (fresh and reused), the final Markdown articles, `evidence-appendix.md`, source-entry draft, and query plan. Intermediates stay in `work/`.
    - Cross-run evidence is supported but must be recorded: `run.json` lists `source_runs` (the prior runs whose evidence was combined) and `event_count` equals the deduplicated count actually available to the articles. Never cite an event that is not in the settled evidence set.
    - Audit before settling — both gates must pass:

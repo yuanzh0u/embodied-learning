@@ -97,6 +97,16 @@ def check_run_bundle(run_dir: Path) -> list[str]:
     except json.JSONDecodeError as exc:
         return [f"run.json: invalid JSON ({exc})"]
 
+    # Lifecycle: an in-progress run is by definition not a settled bundle.
+    status = str(manifest.get("status") or "").strip()
+    if status and status not in {"in-progress", "settled"}:
+        problems.append(f"run.json: unknown status `{status}` (use `in-progress` or `settled`)")
+    if status == "in-progress":
+        problems.append(
+            "run not settled: status is `in-progress` — finish the bundle (promote evidence, "
+            "write the three articles, pass both gates) and flip status to `settled`"
+        )
+
     # Standard schema: required fields present, drifted names rejected.
     for drifted, standard in FIELD_DRIFT.items():
         if drifted in manifest:

@@ -24,6 +24,7 @@
 {
   "run": "literature-review-<topic>-<date>",
   "topic": "话题原文",
+  "status": "settled",
   "topic_id_prefix": "EA-TWM",
   "knowledge_ids": ["EA-EVAL"],
   "time_range": "2025-12-23..2026-06-23",
@@ -45,6 +46,8 @@
 ```
 
 跨 run 证据规则:综述可以组合历史 run 的证据(这是证据层积累的意义),但必须满足:
+
+- run 用 `python3 scripts/init_run.py` 创建,出生即带 `status: in-progress` 的 run.json;结算时翻为 `settled`。`in-progress` 的 run 是未完成品,不得当作交付物展示,也不得迁入 `evidence/`。
 
 - `source_runs` 列出全部被复用的历史 run;本 run 只新挖证据时省略该字段。
 - `event_count` = 文章**实际可引用**的去重后事件总数(新挖 + 复用),不是只数新挖的。
