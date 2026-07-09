@@ -1,0 +1,75 @@
+# Query Plan: 具身数据感知误差与认知误差区别
+
+## Scope
+
+- Knowledge IDs: EA-DATA, EA-SENSOR, EA-EVAL, EA-MODEL
+- Families: vla, world-model, tactile-force, teleoperation-demo-quality
+- Suggested categories: cs.AI, cs.CV, cs.HC, cs.LG, cs.RO, eess.SY
+- Minimum candidate count: 12
+
+## arXiv API Queries
+
+| Label | Tier | Query | Why |
+|---|---|---|---|
+| dynamic-vla-reasoning-planning | dynamic-association | `all:"vision-language-action" AND (all:reasoning OR all:planning OR all:grounding)` | Cognitive errors in VLA systems usually appear as reasoning, planning, or grounding failures rather than under the exact phrase cognitive error. |
+| dynamic-robot-spatial-temporal-reasoning | dynamic-association | `all:"robot manipulation" AND (all:"spatial reasoning" OR all:"temporal reasoning" OR all:"long-horizon")` | Task-level cognition in manipulation often depends on spatial-temporal abstraction and long-horizon task structure. |
+| dynamic-language-action-grounding | dynamic-association | `all:"language-conditioned" AND all:"robot manipulation" AND (all:grounding OR all:instruction OR all:reasoning)` | Instruction grounding is a common source of cognitive/task-understanding errors. |
+| dynamic-world-model-planning-evaluation | dynamic-association | `all:"world model" AND all:robot AND (all:planning OR all:evaluation OR all:rollout OR all:reasoning)` | World models mediate between perception and cognition by turning observations into imagined futures and evaluation signals. |
+| dynamic-robot-failure-diagnosis | dynamic-association | `all:robot AND (all:"failure diagnosis" OR all:"error analysis" OR all:"failure recovery") AND (all:perception OR all:planning OR all:reasoning)` | Papers that diagnose robot failures can expose whether failures come from perception, planning, or execution. |
+| dynamic-cognitive-error-embodied | dynamic-association | `all:embodied AND (all:"cognitive error" OR all:"reasoning error" OR all:"planning error")` | Direct phrasing smoke test for the user's term. |
+| vla-core | core | `all:"vision-language-action" AND all:robot` | Find VLA papers that directly model robot actions from vision and language. |
+| vla-named-models | named-method | `(all:RT-X OR all:Octo OR all:OpenVLA) AND all:"robot learning"` | Catch named robot foundation model families and comparative work. |
+| vla-open-x-embodiment | data-source | `(all:"Open X-Embodiment" OR all:"Open X Embodiment") AND all:robot` | Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids. |
+| vla-large-scale-robot-data | data-scaling | `all:"large-scale" AND all:"robot data"` | Surface scaling and dataset-layer discussions for robot foundation models. |
+| vla-robot-foundation-action | foundation-model | `all:"robot foundation model" AND all:action` | Find broader foundation-model papers whose metadata may not use VLA. |
+| vla-finetuning-policy | transfer | `all:"fine-tuning" AND all:"robot policy"` | Surface evidence about target-task adaptation and data requirements. |
+| vla-data-mixture | data-mixture | `all:"data mixture" AND all:"robot foundation model"` | Find mixture and dataset composition papers that explain scaling behavior. |
+| vla-negative-transfer | limitation | `all:"negative transfer" AND all:robot AND all:policy` | Search for failure cases where broad pretraining hurts target deployment. |
+| world-model-robot | core | `all:"world model" AND all:robot` | Find robot papers that explicitly use world-model terminology. |
+| world-model-video-prediction | prediction | `all:"video prediction" AND all:"robot manipulation"` | Capture predictive visual models used for planning or offline rollout. |
+| world-model-planning | planning | `all:planning AND all:"world model" AND all:robot` | Find papers where a predictive model is used to choose actions. |
+| world-model-contact | physical-limitation | `all:contact AND all:"world model" AND all:manipulation` | Search for contact realism and physical executability limitations. |
+| world-model-long-horizon | limitation | `all:"long-horizon" AND all:prediction AND all:robot` | Find long-horizon consistency and compounding-error discussions. |
+| tactile-force-tactile-manipulation | core | `all:tactile AND all:"robot manipulation"` | Find tactile sensing papers tied to manipulation policies or control. |
+| tactile-force-force-torque | force | `all:force AND all:torque AND all:robot` | Cover force/torque observability and low-dimensional contact feedback. |
+| tactile-force-slip-detection | contact-state | `all:"slip detection" AND all:robot` | Find tactile and force cues for grasp stability and material interaction. |
+| tactile-force-contact-rich | task-family | `all:"contact-rich" AND all:manipulation` | Surface high-contact tasks where vision-only policies often fail. |
+| tactile-force-sensor-fusion | fusion | `all:"sensor fusion" AND all:tactile AND all:robot` | Find multimodal policies combining tactile, force, vision, or proprioception. |
+
+## Browser Fallback Queries
+
+| Label | Query | Why |
+|---|---|---|
+| dynamic-vla-reasoning-planning-browser | `site:arxiv.org/abs "vision-language-action" reasoning planning robot after:2026-01-09 before:2026-07-10` | Fallback candidate discovery for VLA cognitive/task-reasoning papers. |
+| dynamic-robot-perception-planning-error-browser | `site:arxiv.org/abs robot manipulation perception planning failure analysis after:2026-01-09 before:2026-07-10` | Fallback candidate discovery for papers separating perception and planning failures. |
+| browser-vla-named-models | `site:arxiv.org/abs ("vision-language-action" OR OpenVLA OR "RT-X" OR Octo) robot` | Find VLA and named robot foundation model papers when acronym or model names are sparse in API results. |
+| browser-vla-data-mixtures | `site:arxiv.org/abs ("Open X-Embodiment" OR "robot foundation model" OR VLA) ("data mixture" OR "fine-tuning" OR "large-scale robot data")` | Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits. |
+| browser-vla-transfer-limits | `site:arxiv.org/abs (VLA OR "vision-language-action" OR OpenVLA) ("negative transfer" OR embodiment OR "action representation" OR "closed-loop")` | Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment. |
+
+## Web Calibration Queries
+
+| Label | Source | Query | Why |
+|---|---|---|---|
+| dynamic-cognitive-error-vocabulary-web | llm | `"robot manipulation" "reasoning error" "planning error"` | Calibrate whether the exact wording appears in current public paper metadata. |
+
+## Dynamic Suggestions
+
+| Label | Channel | Source | Confidence | Query | Why |
+|---|---|---|---|---|---|
+| dynamic-vla-reasoning-planning | arxiv_api | llm | medium | `all:"vision-language-action" AND (all:reasoning OR all:planning OR all:grounding)` | Cognitive errors in VLA systems usually appear as reasoning, planning, or grounding failures rather than under the exact phrase cognitive error. |
+| dynamic-robot-spatial-temporal-reasoning | arxiv_api | llm | medium | `all:"robot manipulation" AND (all:"spatial reasoning" OR all:"temporal reasoning" OR all:"long-horizon")` | Task-level cognition in manipulation often depends on spatial-temporal abstraction and long-horizon task structure. |
+| dynamic-language-action-grounding | arxiv_api | llm | medium | `all:"language-conditioned" AND all:"robot manipulation" AND (all:grounding OR all:instruction OR all:reasoning)` | Instruction grounding is a common source of cognitive/task-understanding errors. |
+| dynamic-world-model-planning-evaluation | arxiv_api | llm | medium | `all:"world model" AND all:robot AND (all:planning OR all:evaluation OR all:rollout OR all:reasoning)` | World models mediate between perception and cognition by turning observations into imagined futures and evaluation signals. |
+| dynamic-robot-failure-diagnosis | arxiv_api | llm | medium | `all:robot AND (all:"failure diagnosis" OR all:"error analysis" OR all:"failure recovery") AND (all:perception OR all:planning OR all:reasoning)` | Papers that diagnose robot failures can expose whether failures come from perception, planning, or execution. |
+| dynamic-cognitive-error-embodied | arxiv_api | llm | low | `all:embodied AND (all:"cognitive error" OR all:"reasoning error" OR all:"planning error")` | Direct phrasing smoke test for the user's term. |
+| dynamic-vla-reasoning-planning-browser | browser_fallback | llm | medium | `site:arxiv.org/abs "vision-language-action" reasoning planning robot after:2026-01-09 before:2026-07-10` | Fallback candidate discovery for VLA cognitive/task-reasoning papers. |
+| dynamic-robot-perception-planning-error-browser | browser_fallback | llm | medium | `site:arxiv.org/abs robot manipulation perception planning failure analysis after:2026-01-09 before:2026-07-10` | Fallback candidate discovery for papers separating perception and planning failures. |
+| dynamic-cognitive-error-vocabulary-web | web_calibration | llm | low | `"robot manipulation" "reasoning error" "planning error"` | Calibrate whether the exact wording appears in current public paper metadata. |
+
+## Calibration Notes
+
+- No live web calibration was provided; generated offline baseline query plan.
+
+## Planner Notes
+
+- llm dynamic expansion (medium): Map the user's Chinese framing of cognitive error to recent embodied-AI vocabulary: VLA reasoning, language-action grounding, task planning, spatial-temporal reasoning, world-model evaluation, and failure recovery.
