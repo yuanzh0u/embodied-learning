@@ -1,0 +1,1854 @@
+{
+  "generated_at": "2026-06-11T13:45:51.306063+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "世界模型需要什么样的训练数据？",
+  "start_date": "2025-12-11",
+  "end_date": "2026-06-11",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-MODEL",
+    "EA-EVAL"
+  ],
+  "families": [
+    "world-model",
+    "sim2real",
+    "vla",
+    "droid-ego4d"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "minimum_candidate_count": 20,
+  "notes": [
+    "agent dynamic expansion (medium): The topic asks what training data robot world models need, so add data-composition and data-quality queries beyond the static world-model taxonomy."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-world-model-training-data",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"world model\" AND all:\"training data\" AND all:robot",
+      "why": "Directly target papers that discuss training data for robot world models."
+    },
+    {
+      "label": "dynamic-world-model-robot-interaction-data",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"robot interaction\" AND all:\"world model\"",
+      "why": "Find world models trained on embodied interaction rather than generic video only."
+    },
+    {
+      "label": "dynamic-world-model-action-conditioned-video-data",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"action-conditioned\" AND all:video AND all:\"robot manipulation\"",
+      "why": "Find papers where actions are explicit conditioning signals for video/world-model training."
+    },
+    {
+      "label": "dynamic-world-model-failure-trajectories",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"failure trajectories\" AND all:robot AND (all:\"world model\" OR all:\"video-action\")",
+      "why": "Search for failure or recovery trajectories used to train useful predictive models."
+    },
+    {
+      "label": "dynamic-world-model-corrective-trajectories",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"corrective trajectories\" AND all:robot AND all:\"world model\"",
+      "why": "Capture human-in-the-world-model or post-training data generated from corrective interventions."
+    },
+    {
+      "label": "dynamic-world-model-physics-aware-annotation",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"physics-aware\" AND all:annotation AND all:\"world model\"",
+      "why": "Find papers adding physical annotations or preference signals to world-model data."
+    },
+    {
+      "label": "dynamic-world-model-synthetic-demonstrations",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"synthetic demonstrations\" AND all:robot AND all:\"world model\"",
+      "why": "Search for synthetic or generated demonstrations used for robot policy/world-model training."
+    },
+    {
+      "label": "dynamic-world-model-event-preserving-data",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:\"event-preserving\" AND all:robot AND all:\"world model\"",
+      "why": "Find work arguing that sparse manipulation events like contact or grasp must be preserved in data."
+    },
+    {
+      "label": "dynamic-world-model-training-data-browser",
+      "channel": "browser_fallback",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs (\"world model\" OR \"video-action world model\") robot \"training data\"",
+      "why": "Browser fallback for robot world-model training-data papers."
+    },
+    {
+      "label": "dynamic-world-model-training-data-web",
+      "channel": "web_calibration",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "\"robot world model\" \"training data\" \"arXiv\"",
+      "why": "Calibrate wording for current robot world-model training-data discussions."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv-search calibration (high): Interactive World Simulator uses terms such as moderate-sized robot interaction dataset, world-model-generated data, and sim-real correlation.",
+    "arxiv-search calibration (high): ABot-PhysWorld uses terms such as physics-aware annotation and manipulation clips.",
+    "arxiv-search calibration (high): Hi-WM uses terms such as corrective trajectories, rollback, branching, and failure-targeted policy improvement.",
+    "arxiv-search calibration (high): tau0-WM uses terms such as real-robot teleoperation, UMI-style interaction, egocentric human videos, and rollout or failure trajectories.",
+    "arxiv-search calibration (high): SKIP uses terms such as event-preserving keyframes and task-relevant events."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-world-model-training-data",
+      "tier": "dynamic-data-composition",
+      "query": "all:\"world model\" AND all:\"training data\" AND all:robot",
+      "why": "Directly target papers that discuss training data for robot world models.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-training-data"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-robot-interaction-data",
+      "tier": "dynamic-data-source",
+      "query": "all:\"robot interaction\" AND all:\"world model\"",
+      "why": "Find world models trained on embodied interaction rather than generic video only.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-robot-interaction-data"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-action-conditioned-video-data",
+      "tier": "dynamic-action-grounding",
+      "query": "all:\"action-conditioned\" AND all:video AND all:\"robot manipulation\"",
+      "why": "Find papers where actions are explicit conditioning signals for video/world-model training.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-action-conditioned-video-data"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-failure-trajectories",
+      "tier": "dynamic-failure-data",
+      "query": "all:\"failure trajectories\" AND all:robot AND (all:\"world model\" OR all:\"video-action\")",
+      "why": "Search for failure or recovery trajectories used to train useful predictive models.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-failure-trajectories"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-corrective-trajectories",
+      "tier": "dynamic-human-correction",
+      "query": "all:\"corrective trajectories\" AND all:robot AND all:\"world model\"",
+      "why": "Capture human-in-the-world-model or post-training data generated from corrective interventions.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-corrective-trajectories"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-physics-aware-annotation",
+      "tier": "dynamic-physics-labels",
+      "query": "all:\"physics-aware\" AND all:annotation AND all:\"world model\"",
+      "why": "Find papers adding physical annotations or preference signals to world-model data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-physics-aware-annotation"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-synthetic-demonstrations",
+      "tier": "dynamic-synthetic-data",
+      "query": "all:\"synthetic demonstrations\" AND all:robot AND all:\"world model\"",
+      "why": "Search for synthetic or generated demonstrations used for robot policy/world-model training.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-synthetic-demonstrations"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-event-preserving-data",
+      "tier": "dynamic-event-fidelity",
+      "query": "all:\"event-preserving\" AND all:robot AND all:\"world model\"",
+      "why": "Find work arguing that sparse manipulation events like contact or grasp must be preserved in data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-event-preserving-data"
+      ]
+    },
+    {
+      "label": "calibrated-world-model-generated-data",
+      "tier": "calibrated-term",
+      "query": "all:\"world-model-generated data\"",
+      "why": "Names synthetic policy-training data generated by a learned world model.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-world-model-generated-data"
+      ]
+    },
+    {
+      "label": "calibrated-moderate-sized-robot-interaction-dataset",
+      "tier": "calibrated-term",
+      "query": "all:\"moderate-sized robot interaction dataset\"",
+      "why": "Useful wording for real interaction data scale in world-model training.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-moderate-sized-robot-interaction-dataset"
+      ]
+    },
+    {
+      "label": "calibrated-physics-aware-annotation",
+      "tier": "calibrated-term",
+      "query": "all:\"physics-aware annotation\"",
+      "why": "Find papers that improve world-model data with physical labels or preference signals.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-physics-aware-annotation"
+      ]
+    },
+    {
+      "label": "calibrated-corrective-trajectories",
+      "tier": "calibrated-term",
+      "query": "all:\"corrective trajectories\"",
+      "why": "Find data generated by human corrections in or around a world model.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-corrective-trajectories"
+      ]
+    },
+    {
+      "label": "calibrated-event-preserving-keyframes",
+      "tier": "calibrated-term",
+      "query": "all:\"event-preserving keyframes\"",
+      "why": "Find sparse data formulations preserving contact/grasp/release events.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-event-preserving-keyframes"
+      ]
+    },
+    {
+      "label": "calibration-interactive-world-simulator",
+      "tier": "calibrated-query",
+      "query": "all:\"Interactive World Simulator\" OR (all:\"world-model-generated data\" AND all:robot)",
+      "why": "Capture IWS and related world-model-generated data papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-interactive-world-simulator"
+      ]
+    },
+    {
+      "label": "calibration-abot-physworld",
+      "tier": "calibrated-query",
+      "query": "all:\"ABot-PhysWorld\" OR (all:\"physics-aware\" AND all:\"manipulation clips\")",
+      "why": "Capture physics-aligned manipulation-clip training data papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-abot-physworld"
+      ]
+    },
+    {
+      "label": "calibration-hi-wm",
+      "tier": "calibrated-query",
+      "query": "all:\"Human-in-the-World-Model\" OR all:\"Hi-WM\" OR (all:\"corrective trajectories\" AND all:robot)",
+      "why": "Capture corrective human intervention data inside world models.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-hi-wm"
+      ]
+    },
+    {
+      "label": "calibration-tau0-wm-data-mixture",
+      "tier": "calibrated-query",
+      "query": "all:\"egocentric human videos\" AND all:\"failure trajectories\" AND all:robot",
+      "why": "Capture data-mixture language around tau0-WM-style video-action world models.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-tau0-wm-data-mixture"
+      ]
+    },
+    {
+      "label": "calibration-skip-event-keyframes",
+      "tier": "calibrated-query",
+      "query": "all:\"event-preserving keyframes\" AND all:robot",
+      "why": "Capture task-event preservation in embodied world-model rollouts.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-skip-event-keyframes"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-world-model-training-data",
+      "tier": "dynamic-data-composition",
+      "query": "all:\"world model\" AND all:\"training data\" AND all:robot",
+      "why": "Directly target papers that discuss training data for robot world models.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-training-data"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-robot-interaction-data",
+      "tier": "dynamic-data-source",
+      "query": "all:\"robot interaction\" AND all:\"world model\"",
+      "why": "Find world models trained on embodied interaction rather than generic video only.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-robot-interaction-data"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-action-conditioned-video-data",
+      "tier": "dynamic-action-grounding",
+      "query": "all:\"action-conditioned\" AND all:video AND all:\"robot manipulation\"",
+      "why": "Find papers where actions are explicit conditioning signals for video/world-model training.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-action-conditioned-video-data"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-failure-trajectories",
+      "tier": "dynamic-failure-data",
+      "query": "all:\"failure trajectories\" AND all:robot AND (all:\"world model\" OR all:\"video-action\")",
+      "why": "Search for failure or recovery trajectories used to train useful predictive models.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-failure-trajectories"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-corrective-trajectories",
+      "tier": "dynamic-human-correction",
+      "query": "all:\"corrective trajectories\" AND all:robot AND all:\"world model\"",
+      "why": "Capture human-in-the-world-model or post-training data generated from corrective interventions.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-corrective-trajectories"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-physics-aware-annotation",
+      "tier": "dynamic-physics-labels",
+      "query": "all:\"physics-aware\" AND all:annotation AND all:\"world model\"",
+      "why": "Find papers adding physical annotations or preference signals to world-model data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-physics-aware-annotation"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-synthetic-demonstrations",
+      "tier": "dynamic-synthetic-data",
+      "query": "all:\"synthetic demonstrations\" AND all:robot AND all:\"world model\"",
+      "why": "Search for synthetic or generated demonstrations used for robot policy/world-model training.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-synthetic-demonstrations"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-event-preserving-data",
+      "tier": "dynamic-event-fidelity",
+      "query": "all:\"event-preserving\" AND all:robot AND all:\"world model\"",
+      "why": "Find work arguing that sparse manipulation events like contact or grasp must be preserved in data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-event-preserving-data"
+      ]
+    },
+    {
+      "label": "calibrated-world-model-generated-data",
+      "tier": "calibrated-term",
+      "query": "all:\"world-model-generated data\"",
+      "why": "Names synthetic policy-training data generated by a learned world model.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-world-model-generated-data"
+      ]
+    },
+    {
+      "label": "calibrated-moderate-sized-robot-interaction-dataset",
+      "tier": "calibrated-term",
+      "query": "all:\"moderate-sized robot interaction dataset\"",
+      "why": "Useful wording for real interaction data scale in world-model training.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-moderate-sized-robot-interaction-dataset"
+      ]
+    },
+    {
+      "label": "calibrated-physics-aware-annotation",
+      "tier": "calibrated-term",
+      "query": "all:\"physics-aware annotation\"",
+      "why": "Find papers that improve world-model data with physical labels or preference signals.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-physics-aware-annotation"
+      ]
+    },
+    {
+      "label": "calibrated-corrective-trajectories",
+      "tier": "calibrated-term",
+      "query": "all:\"corrective trajectories\"",
+      "why": "Find data generated by human corrections in or around a world model.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-corrective-trajectories"
+      ]
+    },
+    {
+      "label": "calibrated-event-preserving-keyframes",
+      "tier": "calibrated-term",
+      "query": "all:\"event-preserving keyframes\"",
+      "why": "Find sparse data formulations preserving contact/grasp/release events.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-event-preserving-keyframes"
+      ]
+    },
+    {
+      "label": "calibration-interactive-world-simulator",
+      "tier": "calibrated-query",
+      "query": "all:\"Interactive World Simulator\" OR (all:\"world-model-generated data\" AND all:robot)",
+      "why": "Capture IWS and related world-model-generated data papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-interactive-world-simulator"
+      ]
+    },
+    {
+      "label": "calibration-abot-physworld",
+      "tier": "calibrated-query",
+      "query": "all:\"ABot-PhysWorld\" OR (all:\"physics-aware\" AND all:\"manipulation clips\")",
+      "why": "Capture physics-aligned manipulation-clip training data papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-abot-physworld"
+      ]
+    },
+    {
+      "label": "calibration-hi-wm",
+      "tier": "calibrated-query",
+      "query": "all:\"Human-in-the-World-Model\" OR all:\"Hi-WM\" OR (all:\"corrective trajectories\" AND all:robot)",
+      "why": "Capture corrective human intervention data inside world models.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-hi-wm"
+      ]
+    },
+    {
+      "label": "calibration-tau0-wm-data-mixture",
+      "tier": "calibrated-query",
+      "query": "all:\"egocentric human videos\" AND all:\"failure trajectories\" AND all:robot",
+      "why": "Capture data-mixture language around tau0-WM-style video-action world models.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-tau0-wm-data-mixture"
+      ]
+    },
+    {
+      "label": "calibration-skip-event-keyframes",
+      "tier": "calibrated-query",
+      "query": "all:\"event-preserving keyframes\" AND all:robot",
+      "why": "Capture task-event preservation in embodied world-model rollouts.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-skip-event-keyframes"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-world-model-training-data-browser",
+      "query": "site:arxiv.org/abs (\"world model\" OR \"video-action world model\") robot \"training data\"",
+      "why": "Browser fallback for robot world-model training-data papers.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-core",
+      "query": "site:arxiv.org/abs (sim2real OR \"sim-to-real\" OR \"simulation-to-real\") robot",
+      "why": "Find sim-to-real papers through web/arXiv pages when API search under-recovers variants.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-synthetic-validation",
+      "query": "site:arxiv.org/abs (\"synthetic data\" OR \"domain randomization\" OR simulation) (\"real robot\" OR validation) manipulation",
+      "why": "Find synthetic-data and domain-randomization papers that discuss whether simulated data transfers to real robots.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-eval-gap",
+      "query": "site:arxiv.org/abs (\"sim-real\" OR \"reality gap\" OR \"simulation gap\") (correlation OR evaluation OR benchmark) robot",
+      "why": "Find simulation evaluation and reality-gap discussions that may not use the sim2real keyword.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-world-model-training-data-web",
+      "query": "\"robot world model\" \"training data\" \"arXiv\"",
+      "why": "Calibrate wording for current robot world-model training-data discussions.",
+      "source_key": "dynamic",
+      "source_type": "agent",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-world-model-generated-data",
+      "query": "\"world-model-generated data\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: world-model-generated data.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-moderate-sized-robot-interaction-dataset",
+      "query": "\"moderate-sized robot interaction dataset\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: moderate-sized robot interaction dataset.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-physics-aware-annotation",
+      "query": "\"physics-aware annotation\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: physics-aware annotation.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-corrective-trajectories",
+      "query": "\"corrective trajectories\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: corrective trajectories.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-event-preserving-keyframes",
+      "query": "\"event-preserving keyframes\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: event-preserving keyframes.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    }
+  ]
+}

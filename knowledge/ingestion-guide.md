@@ -2,7 +2,7 @@
 id: KB-INGEST
 title: 新素材入库规范
 type: workflow
-updated: 2026-06-05
+updated: 2026-07-10
 tags: [ingestion, workflow, agent-process]
 ---
 
@@ -31,8 +31,11 @@ tags: [ingestion, workflow, agent-process]
 - 跨本体迁移：EA-XEMBODIMENT
 - 模型与预训练：EA-MODEL
 - 评测与世界模型：EA-EVAL
+- 4D 时空推理、世界动态、跨帧几何：EA-4D
+- VLA 语言—视觉—动作接口：EA-ALIGN
 - 商业化：EA-BIZ
 - 误差治理：ERR-COMPARE / ERR-PATTERN
+- 具身失败归因、感知/认知/控制误差：ERR-EMBODIED
 
 如果没有合适主题，复制 [templates/topic-card.md](templates/topic-card.md) 创建新卡。
 
@@ -48,6 +51,8 @@ tags: [ingestion, workflow, agent-process]
 
 避免把整段论文摘要直接粘进主题卡。长摘要应放到单独 source note 或保留在原文。
 
+论文级材料优先结算到 `evidence/literature-review-<topic>-<date>/`；主题卡的 `source` 可直接登记 run 路径与 event locator，不在 `sources.md` 重复登记论文。
+
 ## 4. 更新索引
 
 新增主题卡后必须更新：
@@ -59,4 +64,3 @@ tags: [ingestion, workflow, agent-process]
 ## 5. 标记不确定性
 
 快速变化信息必须写明日期，例如模型版本、产品规格、行业规模、政策、benchmark 排名。判断来自推断时，在卡片中标记 `inference`。
-

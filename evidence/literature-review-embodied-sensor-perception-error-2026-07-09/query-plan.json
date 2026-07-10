@@ -1,0 +1,1202 @@
+{
+  "generated_at": "2026-07-09T09:24:21.573358+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "具身传感器感知误差",
+  "start_date": "2026-01-09",
+  "end_date": "2026-07-09",
+  "knowledge_ids": [
+    "EA-SENSOR",
+    "EA-DATA",
+    "EA-EVAL"
+  ],
+  "families": [
+    "tactile-force",
+    "last-centimeter",
+    "sim2real"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 40,
+  "minimum_candidate_count": 20,
+  "notes": [
+    "agent dynamic expansion (medium): The user topic combines embodied sensor perception with error analysis; static EA-SENSOR/tactile-force terms need added recall for noise, uncertainty, calibration, occlusion, drift, and closed-loop state estimation failure."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-sensor-noise-robot-perception",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "(all:\"sensor noise\" OR all:\"perception error\" OR all:\"calibration error\") AND (all:robot OR all:\"robot manipulation\")",
+      "why": "Directly targets papers that frame embodied perception as sensor or calibration error."
+    },
+    {
+      "label": "dynamic-uncertainty-state-estimation-manipulation",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "(all:uncertainty OR all:\"state estimation\") AND all:\"robot manipulation\" AND (all:vision OR all:tactile OR all:force)",
+      "why": "Captures uncertainty-aware perception and state-estimation errors in manipulation."
+    },
+    {
+      "label": "dynamic-occlusion-depth-pose-error",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "(all:occlusion OR all:\"depth noise\" OR all:\"pose error\") AND all:\"robot manipulation\"",
+      "why": "Targets visual and 3D perception failure modes that affect embodied control."
+    },
+    {
+      "label": "dynamic-slip-contact-error",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "(all:slip OR all:\"contact state\" OR all:\"contact estimation\") AND (all:tactile OR all:force) AND all:robot",
+      "why": "Targets contact-rich perception errors that RGB cannot directly observe."
+    },
+    {
+      "label": "dynamic-multimodal-robustness-sensor-failure",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "(all:\"sensor fusion\" OR all:multimodal) AND (all:robustness OR all:\"sensor failure\" OR all:\"missing modality\") AND all:robot",
+      "why": "Covers multimodal robustness and degradation under unreliable or missing sensor inputs."
+    },
+    {
+      "label": "dynamic-browser-sensor-perception-error",
+      "channel": "browser_fallback",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs robot manipulation sensor perception error tactile force occlusion 2026",
+      "why": "Fallback discovery if API recall is weak for the combined framing."
+    },
+    {
+      "label": "dynamic-web-sensor-error-terms",
+      "channel": "web_calibration",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "\"robot manipulation\" \"sensor noise\" \"tactile\" \"uncertainty\"",
+      "why": "Calibrate current wording around embodied sensor error discussions."
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-sensor-noise-robot-perception",
+      "tier": "dynamic-association",
+      "query": "(all:\"sensor noise\" OR all:\"perception error\" OR all:\"calibration error\") AND (all:robot OR all:\"robot manipulation\")",
+      "why": "Directly targets papers that frame embodied perception as sensor or calibration error.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-sensor-noise-robot-perception"
+      ]
+    },
+    {
+      "label": "dynamic-uncertainty-state-estimation-manipulation",
+      "tier": "dynamic-association",
+      "query": "(all:uncertainty OR all:\"state estimation\") AND all:\"robot manipulation\" AND (all:vision OR all:tactile OR all:force)",
+      "why": "Captures uncertainty-aware perception and state-estimation errors in manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-uncertainty-state-estimation-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-occlusion-depth-pose-error",
+      "tier": "dynamic-association",
+      "query": "(all:occlusion OR all:\"depth noise\" OR all:\"pose error\") AND all:\"robot manipulation\"",
+      "why": "Targets visual and 3D perception failure modes that affect embodied control.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-occlusion-depth-pose-error"
+      ]
+    },
+    {
+      "label": "dynamic-slip-contact-error",
+      "tier": "dynamic-association",
+      "query": "(all:slip OR all:\"contact state\" OR all:\"contact estimation\") AND (all:tactile OR all:force) AND all:robot",
+      "why": "Targets contact-rich perception errors that RGB cannot directly observe.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slip-contact-error"
+      ]
+    },
+    {
+      "label": "dynamic-multimodal-robustness-sensor-failure",
+      "tier": "dynamic-association",
+      "query": "(all:\"sensor fusion\" OR all:multimodal) AND (all:robustness OR all:\"sensor failure\" OR all:\"missing modality\") AND all:robot",
+      "why": "Covers multimodal robustness and degradation under unreliable or missing sensor inputs.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multimodal-robustness-sensor-failure"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "last-centimeter-exact",
+      "tier": "core",
+      "query": "all:\"last centimeter\" AND all:robot",
+      "why": "Catch papers that explicitly name the deployment bottleneck.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-exact"
+      ]
+    },
+    {
+      "label": "last-centimeter-visual-servoing",
+      "tier": "pre-contact",
+      "query": "all:\"visual servoing\" AND all:\"robot manipulation\"",
+      "why": "Find close-range pose correction before contact closure.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "last-centimeter-visual-servoing"
+      ]
+    },
+    {
+      "label": "last-centimeter-force-insertion",
+      "tier": "contact",
+      "query": "all:\"force control\" AND all:insertion AND all:robot",
+      "why": "Surface insertion and compliant-contact methods for final alignment.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-force-insertion"
+      ]
+    },
+    {
+      "label": "last-centimeter-failure-recovery",
+      "tier": "recovery",
+      "query": "all:\"failure recovery\" AND all:\"robot manipulation\"",
+      "why": "Find retry, recovery, and takeover strategies after near-goal failures.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-failure-recovery"
+      ]
+    },
+    {
+      "label": "last-centimeter-fixture",
+      "tier": "deployment-adjacent",
+      "query": "(all:fixture OR all:fixturing) AND all:robot AND all:insertion",
+      "why": "Capture fixture and workcell design that reduces contact uncertainty.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-fixture"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-sensor-noise-robot-perception",
+      "tier": "dynamic-association",
+      "query": "(all:\"sensor noise\" OR all:\"perception error\" OR all:\"calibration error\") AND (all:robot OR all:\"robot manipulation\")",
+      "why": "Directly targets papers that frame embodied perception as sensor or calibration error.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-sensor-noise-robot-perception"
+      ]
+    },
+    {
+      "label": "dynamic-uncertainty-state-estimation-manipulation",
+      "tier": "dynamic-association",
+      "query": "(all:uncertainty OR all:\"state estimation\") AND all:\"robot manipulation\" AND (all:vision OR all:tactile OR all:force)",
+      "why": "Captures uncertainty-aware perception and state-estimation errors in manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-uncertainty-state-estimation-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-occlusion-depth-pose-error",
+      "tier": "dynamic-association",
+      "query": "(all:occlusion OR all:\"depth noise\" OR all:\"pose error\") AND all:\"robot manipulation\"",
+      "why": "Targets visual and 3D perception failure modes that affect embodied control.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-occlusion-depth-pose-error"
+      ]
+    },
+    {
+      "label": "dynamic-slip-contact-error",
+      "tier": "dynamic-association",
+      "query": "(all:slip OR all:\"contact state\" OR all:\"contact estimation\") AND (all:tactile OR all:force) AND all:robot",
+      "why": "Targets contact-rich perception errors that RGB cannot directly observe.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slip-contact-error"
+      ]
+    },
+    {
+      "label": "dynamic-multimodal-robustness-sensor-failure",
+      "tier": "dynamic-association",
+      "query": "(all:\"sensor fusion\" OR all:multimodal) AND (all:robustness OR all:\"sensor failure\" OR all:\"missing modality\") AND all:robot",
+      "why": "Covers multimodal robustness and degradation under unreliable or missing sensor inputs.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multimodal-robustness-sensor-failure"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "last-centimeter-exact",
+      "tier": "core",
+      "query": "all:\"last centimeter\" AND all:robot",
+      "why": "Catch papers that explicitly name the deployment bottleneck.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-exact"
+      ]
+    },
+    {
+      "label": "last-centimeter-visual-servoing",
+      "tier": "pre-contact",
+      "query": "all:\"visual servoing\" AND all:\"robot manipulation\"",
+      "why": "Find close-range pose correction before contact closure.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "last-centimeter-visual-servoing"
+      ]
+    },
+    {
+      "label": "last-centimeter-force-insertion",
+      "tier": "contact",
+      "query": "all:\"force control\" AND all:insertion AND all:robot",
+      "why": "Surface insertion and compliant-contact methods for final alignment.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-force-insertion"
+      ]
+    },
+    {
+      "label": "last-centimeter-failure-recovery",
+      "tier": "recovery",
+      "query": "all:\"failure recovery\" AND all:\"robot manipulation\"",
+      "why": "Find retry, recovery, and takeover strategies after near-goal failures.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-failure-recovery"
+      ]
+    },
+    {
+      "label": "last-centimeter-fixture",
+      "tier": "deployment-adjacent",
+      "query": "(all:fixture OR all:fixturing) AND all:robot AND all:insertion",
+      "why": "Capture fixture and workcell design that reduces contact uncertainty.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-fixture"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-browser-sensor-perception-error",
+      "query": "site:arxiv.org/abs robot manipulation sensor perception error tactile force occlusion 2026",
+      "why": "Fallback discovery if API recall is weak for the combined framing.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-core",
+      "query": "site:arxiv.org/abs (sim2real OR \"sim-to-real\" OR \"simulation-to-real\") robot",
+      "why": "Find sim-to-real papers through web/arXiv pages when API search under-recovers variants.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-synthetic-validation",
+      "query": "site:arxiv.org/abs (\"synthetic data\" OR \"domain randomization\" OR simulation) (\"real robot\" OR validation) manipulation",
+      "why": "Find synthetic-data and domain-randomization papers that discuss whether simulated data transfers to real robots.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-eval-gap",
+      "query": "site:arxiv.org/abs (\"sim-real\" OR \"reality gap\" OR \"simulation gap\") (correlation OR evaluation OR benchmark) robot",
+      "why": "Find simulation evaluation and reality-gap discussions that may not use the sim2real keyword.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-web-sensor-error-terms",
+      "query": "\"robot manipulation\" \"sensor noise\" \"tactile\" \"uncertainty\"",
+      "why": "Calibrate current wording around embodied sensor error discussions.",
+      "source_key": "dynamic",
+      "source_type": "agent",
+      "channel": "web_calibration"
+    }
+  ]
+}

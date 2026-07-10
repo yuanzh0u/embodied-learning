@@ -3,12 +3,15 @@ id: ERR-PATTERN
 title: 可迁移的误差治理模式
 type: topic-card
 domain: error-governance
-updated: 2026-07-08
+updated: 2026-07-10
 source:
   - id: S-ERR-COMPARE
     status: retired
     archive: "git show 081e898:测绘误差观与大模型误差治理比较.md"
     locator: §四 二者能否互补、§五 测绘方法能补大模型行业的短板、§六 大模型行业能反哺测绘行业
+  - id: RUN-PERCEPTION-COGNITION-20260709
+    file: ../../evidence/literature-review-perception-vs-cognitive-error-20260709/evidence.jsonl
+    locator: EA-PVC-2026-0001..0007 and reused perception evidence
 tags: [error-governance, error-budget, redundancy, residual-analysis, acceptance, risk-grade]
 aliases: [误差预算, 冗余检核, 残差分析, 精度分级, 适用边界, 可信智能]
 load_when:
@@ -20,12 +23,12 @@ confidence: working
 
 ## Agent Load Hints
 
-- Usually pair with: ERR-COMPARE, EA-EVAL, EA-BIZ.
+- Usually pair with: ERR-COMPARE, ERR-EMBODIED, EA-EVAL, EA-BIZ.
 - Raw source needed when: 需要红利、不能机械照搬或最终判断的完整论述。
 
 ## 30 秒摘要
 
-测绘方法对 AI 的价值不是公式照搬，而是工程精神迁移：误差预算、冗余检核、精度分级、误差传播、残差分析和成果验收。AI 系统可以把错误来源拆成训练数据、标注、检索、推理、工具调用、评测、用户提示和上下文管理等环节，避免把所有问题笼统归因于“幻觉”。最终目标是让可信智能系统说明自己的误差来源、适用边界、可信等级和风险后果。
+测绘方法对 AI 的价值不是公式照搬，而是工程精神迁移：误差预算、冗余检核、精度分级、误差传播、残差分析和成果验收。具身系统还应寻找“第一处可证伪偏离点”，按世界到表征、表征到计划、计划到控制、控制到物理后果分账，避免把所有失败都归因于感知或模型。最终目标是让可信系统说明误差来源、传播路径、适用边界、可信等级和风险后果。
 
 ## 关键模式
 
@@ -37,6 +40,7 @@ confidence: working
 | 误差传播 | 追踪上游数据或工具错误如何影响最终输出/动作 |
 | 残差分析 | 分析输出与证据、约束、工具结果、任务目标之间的偏离 |
 | 成果验收 | 上线前后 eval、监控、回归、复核和降级策略 |
+| 第一偏离点 | 找到世界→表征→计划→控制→后果链中最早可被证据否定的环节 |
 
 ## 具身智能应用
 
@@ -45,6 +49,7 @@ confidence: working
 - 闭环评测：记录成功率之外的失败类型、接管、过力、碰撞和恢复能力。
 - 工业落地：给出适用工况、节拍边界、安全边界和维护要求。
 - 智能体工具链：对关键工具调用结果做交叉验证和反向验证。
+- 失败溯源：用 probing、遥测和对照实验确认第一偏离点，再决定补传感、改推理或修控制。
 
 ## 指标与检核
 
@@ -68,9 +73,10 @@ confidence: working
 - S-ERR-COMPARE:232-298 覆盖误差预算、冗余检核、适用范围、误差传播和残差分析。
 - S-ERR-COMPARE:300-391 覆盖大模型反哺测绘和可能红利。
 - S-ERR-COMPARE:393-419 覆盖不能机械照搬和最终判断。
+- RUN-PERCEPTION-COGNITION-20260709：`EA-PVC-2026-0002..0005`, `0007` 支持感知/认知解耦、阶段验证、失败恢复和 what-if 规划；分层账本为跨事件 `inference`。
 
 ## 待补问题
 
-- 建立“AI 系统误差账本”模板。
 - 建立“具身智能 PoC 验收报告”模板。
 - 将误差治理模式嵌入新素材入库时的证据等级字段。
+- 将第一偏离点、传播路径和恢复验证纳入统一事故回放格式。

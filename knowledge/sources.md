@@ -8,9 +8,44 @@ tags: [sources, provenance]
 
 # 原始材料登记表
 
-登记规则:`status: active` 的来源存在于工作树;`status: retired` 的来源已从工作树移除,唯一存档是 git 历史,用登记的 `archive` 命令恢复(见 [ADR-0002](../docs/adr/0002-retire-raw-sources-promote-evidence-layer.md))。锚点一律使用章节标题或编号(语义锚),不使用行号。
+登记规则:`status: active` 的来源存在于工作树;`status: external-local` 的来源来自本机其他项目路径,已被本知识库卡片吸收但原文不在当前工作树;`status: retired` 的来源已从工作树移除,唯一存档是 git 历史,用登记的 `archive` 命令恢复(见 [ADR-0002](../docs/adr/0002-retire-raw-sources-promote-evidence-layer.md))。锚点一律使用章节标题或编号(语义锚),不使用行号。
 
 论文级证据与文献 run 成品不在本表登记,见 [../evidence/README.md](../evidence/README.md)。
+
+## S-EMBODIED-DATA-FRAMEWORK
+
+- 状态:external-local(2026-07-08 从 `/Users/ryan/Documents/具身数据` 迁移登记;源项目当前无 git commit)
+- 本地来源:
+  - 压缩卡:`/Users/ryan/Documents/具身数据/docs/knowledge/data-collection-framework.md`
+  - 压缩卡:`/Users/ryan/Documents/具身数据/docs/knowledge/data-schema-quality-compliance.md`
+  - 原始长文:`/Users/ryan/Documents/具身数据/materials/source/embodied_robot_no_body_data_collection_research.md`
+- 类型:项目研究长文 / 数据采集框架 / 数据 schema 与合规规范
+- 时间标记:原始素材登记日期 2026-06-01;迁移日期 2026-07-08
+- 主题范围(章节锚):
+  - 无目标机器人本体与无本体感觉数据:§数据采集框架卡/两种“无本体”含义
+  - L0-L3 数据金字塔:§数据采集框架卡/L0-L3 数据金字塔
+  - 技术路线优先级与规模参考:§数据采集框架卡/技术路线优先级、§快速规模参考
+  - episode schema、存储、标注、质量、合规:§数据 Schema、质量与合规卡
+- 适用:需要设计无目标机器人本体阶段的数据资产、episode schema、标注质量、授权合规或 L0/L1/L2/L3 路线时读取。
+
+## S-LOGISTICS-HUB-SURVEY
+
+- 状态:external-local(2026-07-08 从 `/Users/ryan/Documents/具身数据` 迁移登记;源项目当前无 git commit)
+- 本地来源:
+  - 压缩卡:`/Users/ryan/Documents/具身数据/docs/knowledge/logistics-hub-survey.md`
+  - 压缩卡:`/Users/ryan/Documents/具身数据/docs/knowledge/field-evidence-checklist.md`
+  - 压缩卡:`/Users/ryan/Documents/具身数据/docs/knowledge/scoring-and-acceptance.md`
+  - 原始长文:`/Users/ryan/Documents/具身数据/materials/source/logistics_sorting_factory_embodied_data_survey_sop.md`
+  - 交付表:`/Users/ryan/Documents/具身数据/deliverables/物流分拣工厂具身数据采集考察填写表.xlsx`
+  - 演示版:`/Users/ryan/Documents/具身数据/deliverables/物流分拣工厂具身数据采集Hub考察SOP.pptx`
+- 类型:现场考察 SOP / 项目经验 / 交付模板
+- 时间标记:原始素材登记日期 2026-06-02;迁移日期 2026-07-08
+- 主题范围(章节锚):
+  - 物流 Hub 考察目标、必拍区域、岗位编号、考察节奏、当天交付:§物流 Hub 考察卡
+  - 六类视频、访谈对象、尺寸测量、补拍触发、文件命名:§现场证据检查卡
+  - 远程验收、Hub 条件评分、一票否决、岗位机器人替代优先级:§评分与验收卡
+  - 完整执行细节、口播模板、最终报告模板:原始长文对应章节
+- 适用:需要规划物流分拣现场考察、审核现场证据、给 Hub 或岗位评分、写考察报告或设计试采时读取。
 
 ## S-EA-QUESTIONS
 

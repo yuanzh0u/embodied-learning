@@ -1,108 +1,73 @@
-# 语言稀疏性、动作连续性与稠密视觉造成的多模态对齐难题研究备忘录
+# 语言、视觉与连续动作对齐研究备忘录
 
-## 摘要
+## 研究边界与证据范围
 
-本文综述一个正在 VLA / 机器人基础模型中变得清晰的问题：语言、视觉和动作并不是三种可直接拼接的 token 流。语言通常以任务级或阶段级指令出现，语义稀疏、时间标注粗；图像/视频是高维稠密信号，容易主导训练；动作是连续、闭环、受本体和控制器约束的物理量。近六个月的论文显示，失败常不是某个 backbone 不够大，而是语言-动作、视觉-动作、动作-控制器三条接口没有被显式对齐。
+- Topic: 语言、视觉与连续动作对齐
+- Time range: 2025-12-30..2026-06-30
+- Knowledge IDs: `EA-MODEL`, `EA-SENSOR`, `EA-XEMBODIMENT`
+- Paper-level sources: 10 / 5
+- Output type: scientific-memo
 
-## 研究边界
+## Evidence Core
 
-- 检索时间：2025-12-30..2026-06-30；另以经典论文作背景基线，不把旧论文当作最新发现。
-- 知识路由：`EA-SENSOR`, `EA-MODEL`, `EA-DATA`, `EA-XEMBODIMENT`。
-- 证据层：10 篇 arXiv HTML 正文级论文，10 条 evidence events，全部 `confidence: direct`。
-- 限制：本综述聚焦机器人/VLA，不覆盖一般多模态大模型的全量图文对齐文献；2026 年论文多为预印本，结论应按“当前证据”而非领域共识处理。
-
-## 背景脉络
-
-RT-1 把大规模真实机器人数据、语言指令和视觉观测接到 Transformer 控制策略上，提出机器人也可能走 scaling 路线。RT-2 进一步把 VLM/VQA 风格的互联网语义知识迁移到机器人动作输出。Open X-Embodiment / RT-X、Octo、OpenVLA 则把跨机器人数据、通用策略和开源 VLA 推向主流。与此同时，Diffusion Policy 和 `π0` 代表了另一条线：用扩散或 flow matching 处理连续、高维、可多峰的动作分布。
-
-这条历史脉络解释了为什么 2026 年的新论文开始集中处理“接口”问题：VLM 提供语义和视觉先验，但机器人动作不是语言 token，也不是图像 patch；动作要通过本体、控制器、状态估计和接触反馈落到物理世界。
-
-## 问题结构
-
-### 语言稀疏
-
-语言在机器人数据中常是每条轨迹一个任务描述，或每个阶段一个低频标签。它表达“目标、约束、子任务”，但很少逐帧标注“此刻为什么这么动”。LA4VLA 直接指出，标准 VLA 预训练中，密集的 visual-action supervision 会压过相对稀疏的 language-action signal，导致策略学到视觉捷径而不是语言如何约束动作（`EA-ALIGN-2026-0008`）。
-
-这带来一个重要推论：如果语言只在输入端作为 prompt 出现，而没有阶段级、动作级或因果级监督，它很容易成为装饰性条件。ZR-0 的 dense embodied chain-of-thought 方向可以理解为把稀疏语言“加密”：把场景描述、任务进度、未来计划、原子子任务、目标框和离散动作 token 作为 dense supervision，使高层认知过程更细粒度地对齐到动作专家（`EA-ALIGN-2026-0001`）。
-
-### 动作连续
-
-动作不是自然语言词表。离散 action token 对 autoregressive VLA 很友好，但会带来压缩和解码问题：同一个 token 在不同关节状态、物体位姿、接触条件下不应解码成同一个连续控制量。SA-VLA 因此把机器人状态注入 action tokenizer，试图缩小离散 token 到连续控制之间的 compression gap（`EA-ALIGN-2026-0004`）。
-
-另一类论文绕开“先离散再还原”的瓶颈，用 flow matching / diffusion 直接学习连续动作流。Learning Action Priors for Cross-embodiment Robot Manipulation 的关键判断是：VLA 从 VLM 继承了视觉和语言先验，但 action module 往往从零学习物理运动；先用无视觉、无语言的动作轨迹预训练 motion prior，再把它迁移到 VLA 对齐阶段，可以减轻早期训练同时学习 temporal action dynamics 和 cross-modal alignment 的负担（`EA-ALIGN-2026-0003`）。
-
-### 视觉稠密
-
-图像/视频在 token 数量和时序密度上天然强势。它们携带几何、纹理、遮挡、对象状态和背景相关性，但也容易让模型用 spurious visual correlation 代替语言条件。LA4VLA 把这个问题表述得很直接：视觉-动作监督时间上更稠密、更动态，而语言-动作监督语义变化少、缺少局部阶段对齐（`EA-ALIGN-2026-0008`）。
-
-近期论文的一个共同策略不是“少用视觉”，而是让视觉变得更结构化、更动作相关。Sparse2Act 用 task-space end-effector actions 监督 sparse 3D tokens，把视觉几何组织到可执行的工作空间运动上（`EA-ALIGN-2026-0005`）。SSI-Policy 则构造 RGB-only structured scene interface，把 monocular depth、language-grounded object layout 和 instruction-conditioned 2D motion trajectory 放到中间层，再交给 diffusion action planner；这等于在视觉和控制之间加了一个可解释、任务对齐的空间接口（`EA-ALIGN-2026-0006`）。
-
-### 物理闭环
-
-真实机器人中的 action 不是抽象标签，而是控制器输入。SPACE 指出，不同机器人甚至同一型号不同硬件单元中，同一 action command 都可能产生不同 motion；因此它用 Cartesian state delta 做共享动作表示，再用 Action Adapter 转成具体机器人控制命令（`EA-ALIGN-2026-0010`）。
-
-接触任务进一步暴露了视觉的边界。Transferring Contact, Not Just Motion 说明，灵巧操作中只对齐 motion 不够，稳定抓取还要对齐 contact loading 和 force feedback；视觉在手指自遮挡下恢复接触状态很弱，需要力/触觉/本体感受补充（`EA-ALIGN-2026-0009`）。
+- Accepted events: 10
+- Stance labels: `conditional`, `limit`, `support`
+- Confidence labels: `direct`
+- Trace IDs: [EA-ALIGN-2026-0008](evidence-appendix.md#ea-align-2026-0008), [EA-ALIGN-2026-0001](evidence-appendix.md#ea-align-2026-0001), [EA-ALIGN-2026-0007](evidence-appendix.md#ea-align-2026-0007), [EA-ALIGN-2026-0002](evidence-appendix.md#ea-align-2026-0002), [EA-ALIGN-2026-0004](evidence-appendix.md#ea-align-2026-0004), [EA-ALIGN-2026-0005](evidence-appendix.md#ea-align-2026-0005), [EA-ALIGN-2026-0006](evidence-appendix.md#ea-align-2026-0006), [EA-ALIGN-2026-0009](evidence-appendix.md#ea-align-2026-0009), [EA-ALIGN-2026-0003](evidence-appendix.md#ea-align-2026-0003), [EA-ALIGN-2026-0010](evidence-appendix.md#ea-align-2026-0010)
+- Registered sources: not loaded
 
 ## Claim Map
 
-| 结论 | 证据 | 立场 | 含义 |
-|---|---|---|---|
-| 稠密 visual-action 信号会压过稀疏 language-action 信号 | `EA-ALIGN-2026-0008` | support | 需要阶段级/动作级语言监督，或独立 language-action pretraining |
-| 高层认知共享，但低层状态/动作空间跨本体异构 | `EA-ALIGN-2026-0001` | support | VLM 表征和 action expert 之间需要显式桥接 |
-| VLA 继承语义/视觉先验，但不自动继承 motion prior | `EA-ALIGN-2026-0003` | support | 动作模块预训练、flow/diffusion action prior 是关键方向 |
-| 离散 action token 到连续控制的解码是性能瓶颈 | `EA-ALIGN-2026-0004` | limit | tokenizer 需要状态、接触和本体条件 |
-| 视觉表征应与 task-space action 显式对齐 | `EA-ALIGN-2026-0005` | support | action 可作为几何表征学习的监督信号 |
-| 结构化视觉接口可降低对齐负担，但受感知噪声和接触信息不足限制 | `EA-ALIGN-2026-0006` | conditional | 中间表示有用，但不能替代触觉/力反馈 |
-| 跨机器人数据 scaling 不能照搬文本/图像 scaling | `EA-ALIGN-2026-0007` | limit | 数据混合要处理 embodiment、sensor、action space 的兼容性 |
-| 实机 VLA 失败常来自 data-model-control pipeline 不一致 | `EA-ALIGN-2026-0002` | limit | 评测必须覆盖 action semantics、坐标系、时间同步、图像预处理 |
-| motion 对齐不等于 contact 对齐 | `EA-ALIGN-2026-0009` | limit | 接触丰富任务需要可迁移的 force/contact 表示 |
-| action command 不是跨机器人通用监督信号 | `EA-ALIGN-2026-0010` | limit | 需要共享状态变化表示和机器人特定 adapter |
+| Event | Topic | Stance | Confidence | Claim | Evidence | Authors | Paper |
+|---|---|---|---|---|---|---|---|
+| [EA-ALIGN-2026-0008](evidence-appendix.md#ea-align-2026-0008) | EA-MODEL | `support` | `direct` | In standard VLA pretraining, dense visual-action supervision can dominate the comparatively sparse language-action signal, encouraging visual shortcuts and underdeveloped language... | LA4VLA removes visual observations during pretraining and pairs atomic action segments with low-level language descriptions to strengthen language-conditioned action priors before or alongside VLA training. (Abstract; S... | tao-lin | [2606.27295](https://arxiv.org/abs/2606.27295) |
+| [EA-ALIGN-2026-0001](evidence-appendix.md#ea-align-2026-0001) | EA-MODEL | `support` | `direct` | Cross-embodiment VLA alignment is difficult partly because shared high-level task cognition must be connected to platform-specific low-level state and action spaces. | The paper frames low-level state/action heterogeneity as a core cross-embodiment challenge, then uses dense embodied chain-of-thought supervision in the VLM stream and a flow-matching action expert that outputs continuo... | haoyang-li | [2606.30552](https://arxiv.org/abs/2606.30552) |
+| [EA-ALIGN-2026-0007](evidence-appendix.md#ea-align-2026-0007) | EA-MODEL | `limit` | `direct` | Scaling VLA data is not analogous to scaling text/image data because robot datasets are heterogeneous in embodiment, sensing, control frequency, and action space; naive data mixin... | The paper reports that unified end-effector-relative action representation is critical for cross-embodiment transfer, while indiscriminate pooling of heterogeneous robot datasets can degrade performance. (Abstract; Sect... | ye-wang | [2602.09722](https://arxiv.org/abs/2602.09722) |
+| [EA-ALIGN-2026-0002](evidence-appendix.md#ea-align-2026-0002) | EA-MODEL | `limit` | `direct` | Offline VLA indicators can fail to transfer to stable real-robot behavior when action semantics, coordinate frames, temporal modality alignment, image preprocessing, and dataset c... | The UR5 study reports a gap between offline indicators and unstable closed-loop physical behavior, attributing it to data-model-control pipeline consistency rather than model capacity alone. (Abstract; Section 1.1 Proje... | mathilde-hochedel | [2606.30456](https://arxiv.org/abs/2606.30456) |
+| [EA-ALIGN-2026-0004](evidence-appendix.md#ea-align-2026-0004) | EA-MODEL | `limit` | `direct` | Discrete action tokenization is a compact interface for autoregressive VLA policies, but decoding fixed tokens back into continuous robot controls is a bottleneck when the same to... | SA-VLA conditions action-token decoding on proprioceptive state via adapters or cross-attention, reporting improved RoboTwin and zero-shot sim-to-real success over tokenizer baselines. (Abstract; Section 1 Introduction;... | tengyue-jiang | [2606.30113](https://arxiv.org/abs/2606.30113) |
+| [EA-ALIGN-2026-0005](evidence-appendix.md#ea-align-2026-0005) | EA-SENSOR | `support` | `direct` | Dense or sparse visual geometry becomes more useful for manipulation when it is explicitly aligned to task-space actions rather than learned only through downstream policy losses. | Sparse2Act uses task-space end-effector actions as geometric supervision for masked sparse 3D tokens, arguing that point-cloud observations and motions share a metric workspace. (Abstract; Figure 1 caption; Section 1 In... | yu-guo | [2606.12759](https://arxiv.org/abs/2606.12759) |
+| [EA-ALIGN-2026-0006](evidence-appendix.md#ea-align-2026-0006) | EA-SENSOR | `conditional` | `direct` | A structured intermediate visual interface can reduce the alignment burden by separating RGB-based geometric/task grounding from embodiment-specific action control. | SSI-Policy builds an RGB-only structured scene interface encoding monocular depth features, language-grounded layouts, and instruction-conditioned 2D motion trajectories; it reports few-shot gains but notes failures fro... | kaijun-wang | [2606.26800](https://arxiv.org/abs/2606.26800) |
+| [EA-ALIGN-2026-0009](evidence-appendix.md#ea-align-2026-0009) | EA-SENSOR | `limit` | `direct` | For dexterous manipulation, aligning motion alone is insufficient; contact loading and force feedback must be made comparable across hands, especially when visual evidence is self... | The paper introduces a force-position interface that maps hand-specific effort signals into calibrated torques, fingertip forces, and load descriptors, and trains a mask-aware flow-matching policy to rely on force/propr... | soofiyan-atar | [2606.15516](https://arxiv.org/abs/2606.15516) |
+| [EA-ALIGN-2026-0003](evidence-appendix.md#ea-align-2026-0003) | EA-XEMBODIMENT | `support` | `direct` | A VLA that inherits visual and linguistic priors from a VLM still lacks an explicit physical motion prior; pretraining the action module on unconditioned trajectories can reduce t... | The method first trains a flow-matching encoder-decoder action module on action trajectories without visual/language tokens, then transfers this prior into VLA training through decoder reuse and latent distillation. (Ab... | dong-jing | [2606.26095](https://arxiv.org/abs/2606.26095) |
+| [EA-ALIGN-2026-0010](evidence-appendix.md#ea-align-2026-0010) | EA-XEMBODIMENT | `limit` | `direct` | A recorded robot action is not a universal supervision signal: the same command can produce different motions across controllers, embodiments, hardware units, and deployment-time... | SPACE predicts Cartesian state deltas as a shared end-effector-space representation and uses an action adapter to convert them into robot-specific control commands, improving cross-robot and dynamics-shift robustness. (... | haeone-lee | [2606.24049](https://arxiv.org/abs/2606.24049) |
 
 ## 主要综合
 
-### 1. 对齐难题本质上是粒度错配
+### 共识/正向证据
+- [EA-ALIGN-2026-0008](evidence-appendix.md#ea-align-2026-0008): In standard VLA pretraining, dense visual-action supervision can dominate the comparatively sparse language-action signal, encouraging visual shortcuts and underdeveloped language-action grounding.
+- [EA-ALIGN-2026-0001](evidence-appendix.md#ea-align-2026-0001): Cross-embodiment VLA alignment is difficult partly because shared high-level task cognition must be connected to platform-specific low-level state and action spaces.
+- [EA-ALIGN-2026-0005](evidence-appendix.md#ea-align-2026-0005): Dense or sparse visual geometry becomes more useful for manipulation when it is explicitly aligned to task-space actions rather than learned only through downstream policy losses.
+- [EA-ALIGN-2026-0003](evidence-appendix.md#ea-align-2026-0003): A VLA that inherits visual and linguistic priors from a VLM still lacks an explicit physical motion prior; pretraining the action module on unconditioned trajectories can reduce the burden of learning temporal action dy...
+### 条件成立
+- [EA-ALIGN-2026-0006](evidence-appendix.md#ea-align-2026-0006): A structured intermediate visual interface can reduce the alignment burden by separating RGB-based geometric/task grounding from embodiment-specific action control.
+### 限制与失败模式
+- [EA-ALIGN-2026-0007](evidence-appendix.md#ea-align-2026-0007): Scaling VLA data is not analogous to scaling text/image data because robot datasets are heterogeneous in embodiment, sensing, control frequency, and action space; naive data mixing can cause negative transfer.
+- [EA-ALIGN-2026-0002](evidence-appendix.md#ea-align-2026-0002): Offline VLA indicators can fail to transfer to stable real-robot behavior when action semantics, coordinate frames, temporal modality alignment, image preprocessing, and dataset coverage are not controlled together.
+- [EA-ALIGN-2026-0004](evidence-appendix.md#ea-align-2026-0004): Discrete action tokenization is a compact interface for autoregressive VLA policies, but decoding fixed tokens back into continuous robot controls is a bottleneck when the same token must mean different controls under d...
+- [EA-ALIGN-2026-0009](evidence-appendix.md#ea-align-2026-0009): For dexterous manipulation, aligning motion alone is insufficient; contact loading and force feedback must be made comparable across hands, especially when visual evidence is self-occluded.
+- [EA-ALIGN-2026-0010](evidence-appendix.md#ea-align-2026-0010): A recorded robot action is not a universal supervision signal: the same command can produce different motions across controllers, embodiments, hardware units, and deployment-time dynamics.
 
-语言粒度粗，视觉粒度细，动作粒度连续。把它们统一成 token 后，表面上进入同一个模型，实际上仍有三个未解决的 mapping：语言目标如何落到动作阶段，视觉几何如何落到可执行位姿，连续控制如何适配本体和控制器。当前论文的共同趋势是为每个 mapping 引入更强的中间约束，例如 dense ECoT、language-action pretraining、state-aware action tokenizer、action prior、structured scene interface、Cartesian state delta。
+## Source Gaps
 
-### 2. 视觉不是越稠密越好，关键是稠密信号是否被动作约束
+- No registered source file was loaded; cite event IDs and mark source-entry gaps before final knowledge-base updates.
 
-图像 patch、视频帧和多视角输入可以提供大量信息，但也会制造捷径。Sparse2Act 和 SSI-Policy 的价值在于把视觉压缩成 action-aligned geometry 或 task-aligned scene interface，而不是让视觉 token 自己决定什么重要。换句话说，机器人视觉表征的目标不只是识别对象，而是把对象、空间关系和动作可达性放到同一坐标系里。
+## References
 
-### 3. 动作空间是 VLA 与普通 VLM 的最大分水岭
+- `2602.09722` [Rethinking Visual-Language-Action Model Scaling: Alignment, Mixture, and Regularization](https://arxiv.org/abs/2602.09722) (2026-02-10)
+- `2606.12759` [Sparse2Act: Learning Action-Aligned Sparse 3D Representations for Cross-Domain Robot Manipulation](https://arxiv.org/abs/2606.12759) (2026-06-10)
+- `2606.15516` [Transferring Contact, Not Just Motion: Compliant Grasping Across Dexterous Hands](https://arxiv.org/abs/2606.15516) (2026-06-17)
+- `2606.24049` [SPACE: Enabling Learning from Cross-Robot Data Toward Generalist Policies](https://arxiv.org/abs/2606.24049) (2026-06-23)
+- `2606.26095` [Learning Action Priors for Cross-embodiment Robot Manipulation](https://arxiv.org/abs/2606.26095) (2026-06-24)
+- `2606.26800` [SSI-Policy: Learning Structured Scene Interfaces for Vision-Language Robotic Manipulation](https://arxiv.org/abs/2606.26800) (2026-06-25)
+- `2606.27295` [LA4VLA: Learning to Act without Seeing via Language-Action Pretraining](https://arxiv.org/abs/2606.27295) (2026-06-25)
+- `2606.30113` [SA-VLA: State-aware tokenizer for improving Vision-Language-Action Models' performance](https://arxiv.org/abs/2606.30113) (2026-06-29)
+- `2606.30456` [Vision-Language-Action Models: Experimental Insights from a Real-World UR5 Platform](https://arxiv.org/abs/2606.30456) (2026-06-29)
+- `2606.30552` [Training Vision-Language-Action Models with Dense Embodied Chain-of-Thought Supervision](https://arxiv.org/abs/2606.30552) (2026-06-29)
 
-普通 VLM 可以用文本 token 作为输出；VLA 的输出必须被控制器执行。动作可以被离散化，但离散 token 最后仍要还原到连续控制；动作可以直接用 flow/diffusion 生成，但还要匹配本体、频率、延迟、坐标系和安全约束。SA-VLA、Action Prior、SPACE、Rethinking VLA Scaling 都在从不同角度回答同一个问题：动作表征应该以物理状态变化和控制可执行性为中心，而不是以模型输出便利性为中心。
+完整证据条目见 [evidence-appendix.md](evidence-appendix.md)。
 
-### 4. 跨本体 scaling 的瓶颈不是数据量，而是数据兼容性
+## 研究启发与开放问题
 
-Open X-Embodiment/RT-X 让“跨机器人大数据”成为可能，但 2026 年的证据明显更谨慎。Rethinking VLA Scaling 指出，机器人数据在本体、传感器、频率和动作空间上异构，朴素混合可能负迁移；SPACE 进一步说明 action command 本身不是通用标签。由此可推断：未来的数据 scaling 需要 metadata、action adapter、坐标系统一、质量审计和任务族分层，而不是简单合并轨迹。
-
-### 5. 接触状态是视觉-语言-动作三元组的盲区
-
-对于开放空间抓放，RGB + language + action 可能足够；但对滑移、柔顺贴合、灵巧抓握、插入和易碎物，关键状态常在视觉遮挡后发生。Transferring Contact, Not Just Motion 的证据说明，motion latent 或 pose retargeting 不能替代 force/contact 表示。EA-SENSOR 的主题卡判断也支持这一点：视觉负责全局语义和接触前规划，触觉/力负责接触后的局部闭环。
-
-## 争议与条件
-
-- Dense ECoT 和 language-action pretraining 都试图增强语言监督，但前者保留视觉并增加 dense reasoning，后者刻意拿掉视觉以避免捷径；两者不是互斥，而是分别处理“语言太粗”和“视觉太强”。
-- Action tokenizer 与 continuous action expert 不是简单优劣关系。tokenizer 方便接入 LLM/VLM 的自回归范式，continuous expert 更贴近控制分布；关键取决于是否保留状态、接触和本体条件。
-- Structured RGB interface 能缓解视觉对齐，但论文也报告失败来自感知噪声、单目深度不稳定和接触不足。因此它适合做 perception-control interface，不应被当作万能替代触觉/力控。
-- 大数据混合只有在动作表示、坐标系、采样频率、质量和任务语义可比时才可能带来正迁移；否则扩数据会扩噪声。
-
-## 对后续研究的启发
-
-1. 数据采集应增加阶段级语言、关键动作片段、失败恢复、坐标系、控制频率、接触/力状态等元数据，减少“语言只在轨迹头部出现”的稀疏监督。
-2. 模型结构上可考虑三层接口：语言/任务层负责 goal 与 subtask，结构化视觉层负责 object/geometry/affordance，动作层负责 continuous trajectory、controller adapter 和 safety constraint。
-3. 评测不应只看 open-loop action prediction。需要闭环成功率、action-token 解码误差、时序对齐误差、坐标系错误、模态 dropout、接触遮挡恢复、跨本体 transfer matrix。
-4. 对工业或接触丰富任务，应把触觉/力控从“附加模态”提升为对齐对象：视觉看不见的接触状态必须有独立监督和闭环接口。
-5. 未来 topic-card 可加入一条工作记忆：VLA 对齐难题主要来自信号粒度、物理动作空间和系统闭环接口不一致，而不是单纯缺少更大 VLM。
-
-## 主要来源
-
-近六个月正文级证据：LA4VLA ([2606.27295](https://arxiv.org/abs/2606.27295)); ZR-0 dense ECoT ([2606.30552](https://arxiv.org/abs/2606.30552)); Rethinking VLA Scaling ([2602.09722](https://arxiv.org/abs/2602.09722)); UR5 VLA deployment ([2606.30456](https://arxiv.org/abs/2606.30456)); SA-VLA ([2606.30113](https://arxiv.org/abs/2606.30113)); Sparse2Act ([2606.12759](https://arxiv.org/abs/2606.12759)); SSI-Policy ([2606.26800](https://arxiv.org/abs/2606.26800)); Transferring Contact, Not Just Motion ([2606.15516](https://arxiv.org/abs/2606.15516)); Learning Action Priors ([2606.26095](https://arxiv.org/abs/2606.26095)); SPACE ([2606.24049](https://arxiv.org/abs/2606.24049)).
-
-背景基线：RT-1 ([2212.06817](https://arxiv.org/abs/2212.06817)); RT-2 ([2307.15818](https://arxiv.org/abs/2307.15818)); Open X-Embodiment / RT-X ([2310.08864](https://arxiv.org/abs/2310.08864)); Octo ([2405.12213](https://arxiv.org/abs/2405.12213)); OpenVLA ([2406.09246](https://arxiv.org/abs/2406.09246)); Diffusion Policy ([2303.04137](https://arxiv.org/abs/2303.04137)); `π0` ([2410.24164](https://arxiv.org/abs/2410.24164)).
-
-## 审计说明
-
-- 证据事件：见 `evidence.jsonl`。
-- 候选检索：arXiv API 返回 51 篇候选；10 篇升级为正文级证据。
-- 未升级材料：`2606.15021` 的 HTML 抽取中断，仅作为候选背景，不作为本文 claim 证据。
+- Treat support, conditional, limit, and gap events as separate signals before writing topic-card updates.
+- Mark cross-event synthesis as `inference` unless a claim is directly backed by an event/source ID.
+- Use topic-card update suggestions only after checking source gaps.

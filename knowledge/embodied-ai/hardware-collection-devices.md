@@ -3,12 +3,15 @@ id: EA-HARDWARE
 title: 采集硬件与设备路线
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-08
+updated: 2026-07-10
 source:
   - id: S-EA-QUESTIONS
     status: retired
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §三 采集硬件与设备路线(Q6-Q9)
+  - id: RUN-UMI-QUALITY-20260606
+    file: ../../evidence/literature-review-umi-data-quality-six-month-20260606/evidence.jsonl
+    locator: 5 accepted UMI events
 tags: [embodied-ai, hardware, monocular, stereo, arkit, slam, tracking, umi, glove]
 aliases: [采集硬件, 单目, 双目, ARKit, SLAM, Tracking, UMI, 指套, 手套]
 load_when:
@@ -25,7 +28,7 @@ confidence: working
 
 ## 30 秒摘要
 
-采集硬件不会收敛到单一设备，而会收敛到少数数据协议和接口范式。单目方案因成本、标定和维护优势适合规模化起步；双目/多目适合几何精度、插入、堆叠和遮挡严重任务；ARKit/SLAM/Tracking 设备适合低成本位姿与遥操作输入，但不能当工业真值。UMI 类设备的价值来自硬件约束下的软件化数据闭环，指套/手套适合人手技能和灵巧操作数据。
+采集硬件不会收敛到单一设备，而会收敛到少数数据协议和接口范式。单目适合规模化起步，双目/多目和 LiDAR 适合几何、遮挡、动态或弱纹理场景；ARKit/SLAM/Tracking 可作低成本位姿输入但不能当工业真值。UMI 的数据质量从采集器设计开始：人体工学、力分布、重量、刚度、传感器组合和部署端同构程度会直接改变示教速度、损伤、负担和可执行性。
 
 ## 关键判断
 
@@ -35,6 +38,9 @@ confidence: working
 - ARKit 可用于低成本 VIO、位姿跟踪和快速原型，但不适合作唯一计量真值。
 - VR/AR tracking 是低成本人机输入，需记录置信度、丢踪事件和时间戳质量。
 - UMI 的核心价值是把自然场景人类示教转成机器人可学习的数据闭环。
+- 视觉/轨迹型 UMI 对接触丰富任务通常缺力、触觉、内部抓力和外部 wrench，应按任务补充物理模态。
+- 单目 SLAM 型 UMI 在遮挡、动态、弱纹理和 tracking failure 场景风险高，LiDAR-centric 3D sensing 可扩展可采任务分布。
+- 灵巧操作若采集端和部署端共享末端、传感器与动作空间，可减少 retargeting 失真。
 
 ## 指标与检核
 
@@ -44,12 +50,15 @@ confidence: working
 | ARKit/SLAM | 轨迹漂移、重定位次数、低纹理失败率、时间同步误差 |
 | Tracking | 抖动、延迟、丢踪率、姿态跳变、操作者负担 |
 | UMI/指套 | 轨迹重建质量、动作表示可迁移性、佩戴漂移、接触事件可观测性 |
+| 人体工学 | 任务时间、操作者负担、损伤率、握持力分布、连续采集时长 |
+| 物理模态 | force/torque、抓力、触觉、深度、外部 wrench 的同步完整性 |
 
 ## 适用边界
 
 - 单目适合低成本、大规模、开放空间任务。
 - 双目/多目适合孔位、薄片、插入、堆叠、狭窄空间和局部 3D 重建。
 - 指套/手套适合采人手细粒度技能，但最终仍需机器人本体数据校准。
+- 增加传感器会提高标定、同步、重量和维护成本，必须以单位有效轨迹收益验证。
 
 ## 证据锚点
 
@@ -57,9 +66,11 @@ confidence: working
 - S-EA-QUESTIONS:34-37 覆盖 ARKit、SLAM、全景相机。
 - S-EA-QUESTIONS:38-40 覆盖 Tracking 设备。
 - S-EA-QUESTIONS:41-45 覆盖 UMI 和指套式设备。
+- RUN-UMI-QUALITY-20260606：UMI-FT、gripper ergonomics、OmniUMI、UMI-3D 与 RealDexUMI 分别覆盖力觉、人体工学、多模态、3D tracking 和同构末端。
 
 ## 待补问题
 
 - 建立采集硬件选型矩阵。
 - 补充不同设备的单位有效轨迹成本模型。
 - 明确设备数据协议：pose、timestamp、confidence、frame、calibration metadata。
+- 将人体工学和连续采集负担纳入采集器验收，而不是只看位姿精度。
