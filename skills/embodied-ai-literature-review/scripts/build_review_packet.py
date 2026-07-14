@@ -4,8 +4,8 @@
 This script is a briefing generator, not an author: it renders the audit
 packet, the citation-anchor appendix, and a writing brief. The three prose
 deliverables (scientific-memo_keyan.md / zhihu-explainer_zhihu.md /
-xiaohongshu-post_xiaohongshu.md) are written by the agent from these inputs
-and must never be mechanical dumps of the claim map.
+xiaohongshu-post_xiaohongshu.md) are written and editorially audited by
+$embodied-ai-review-writer and must never be mechanical dumps of the claim map.
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 STANCE_ORDER = ["support", "conditional", "limit", "gap"]
 FORMAL_SOURCE_THRESHOLD = 5
+REVIEW_MODE_SOURCE_FLOORS = {"rapid": 8, "scoping": 15, "systematic": 30}
 DEFAULT_LOOKBACK_MONTHS = 6
 STANCE_ZH = {
     "support": "支持",
@@ -69,7 +70,7 @@ FORMAL_STYLES = set(DEFAULT_OUTPUT_STYLES)
 SCAFFOLD_BANNER = (
     "<!-- SCAFFOLD: 机械渲染的证据脚手架,非成稿。 -->\n"
     "> **警告:本文件不是综述成稿。** 它是 claim map 与 stance 分桶的机械渲染,\n"
-    "> 仅供对照检查。成稿必须由 LLM 依 `writing-brief.md` 撰写为按论证组织的 prose,\n"
+    "> 仅供对照检查。成稿必须由 `$embodied-ai-review-writer` 依 `writing-brief.md` 撰写,\n"
     "> 并保存为不带 `.scaffold` 后缀的正式文件名。\n\n"
 )
 
@@ -217,6 +218,115 @@ def load_fallback_sources(paths: list[Path]) -> list[dict[str, Any]]:
                 raise ValueError(f"{path}:{index}: expected a JSON object")
             sources.append(item)
     return sources
+
+
+def load_coverage_report(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: expected a JSON object")
+    return data
+
+
+def load_reading_summary(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: expected a JSON object")
+    return data
+
+
+def apply_reading_gate(
+    events: list[dict[str, Any]],
+    review_mode: str,
+    coverage_report: dict[str, Any] | None,
+    reading_summary: dict[str, Any],
+) -> dict[str, Any]:
+    """Combine paper-reading readiness with the existing coverage gate.
+
+    The gate is opt-in during the workflow-v2 migration: passing
+    ``--reading-summary`` activates it. Existing historical runs remain
+    readable without being mislabeled as newly deep-read.
+    """
+    report = json.loads(json.dumps(coverage_report or {}))
+    stop = report.get("stop_assessment")
+    if not isinstance(stop, dict):
+        stop = {"ready_to_stop": False, "unresolved": ["coverage-report-missing"]}
+        report["stop_assessment"] = stop
+    unresolved = list(stop.get("unresolved") or [])
+    problems: list[str] = []
+    floor = REVIEW_MODE_SOURCE_FLOORS[review_mode]
+    accepted = int(reading_summary.get("accepted_evidence_paper_count") or 0)
+    verified = int(reading_summary.get("claim_verified_paper_count") or 0)
+    event_papers = {
+        str((event.get("paper") or {}).get("arxiv_id") or "")
+        for event in events
+        if isinstance(event.get("paper"), dict) and (event.get("paper") or {}).get("arxiv_id")
+    }
+    missing_reading = [
+        str(event.get("event_id") or "missing-event-id")
+        for event in events
+        if not isinstance(event.get("paper_reading"), dict)
+        or (event.get("paper_reading") or {}).get("claim_support_audit") != "pass"
+    ]
+    if accepted < floor:
+        problems.append(f"paper-reading-accepted-floor:{accepted}/{floor}")
+    if verified < accepted:
+        problems.append(f"paper-reading-summary-inconsistent:verified-{verified}<accepted-{accepted}")
+    if accepted < len(event_papers):
+        problems.append(f"paper-reading-ledger-mismatch:accepted-{accepted}<event-papers-{len(event_papers)}")
+    if missing_reading:
+        problems.append(f"unverified-paper-reading-events:{len(missing_reading)}")
+    for problem in problems:
+        if problem not in unresolved:
+            unresolved.append(problem)
+    stop["unresolved"] = unresolved
+    stop["ready_to_stop"] = bool(stop.get("ready_to_stop")) and not problems
+    report["paper_reading"] = {
+        "required": True,
+        "ready": not problems,
+        "full_text_recovered_count": int(reading_summary.get("full_text_recovered_count") or 0),
+        "map_read_count": int(reading_summary.get("map_read_count") or 0),
+        "deep_read_count": int(reading_summary.get("deep_read_count") or 0),
+        "claim_verified_paper_count": verified,
+        "accepted_evidence_paper_count": accepted,
+        "event_paper_count": len(event_papers),
+        "unverified_event_ids": missing_reading,
+    }
+    return report
+
+
+def sufficiency_state(
+    events: list[dict[str, Any]],
+    fallback_sources: list[dict[str, Any]] | None = None,
+    review_mode: str | None = None,
+    coverage_report: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    count = count_paper_level_sources(events, fallback_sources)
+    threshold = REVIEW_MODE_SOURCE_FLOORS.get(review_mode or "", FORMAL_SOURCE_THRESHOLD)
+    if review_mode:
+        coverage_ready = bool(
+            coverage_report
+            and (coverage_report.get("stop_assessment") or {}).get("ready_to_stop")
+        )
+    else:
+        # Compatibility for direct function callers and historical packet migrations.
+        coverage_ready = True
+    ready = bool(events) and count >= threshold and coverage_ready
+    return {
+        "status": "formal-ready" if ready else "preliminary",
+        "paper_count": count,
+        "paper_floor": threshold,
+        "review_mode": review_mode or "legacy",
+        "coverage_ready": coverage_ready,
+        "unresolved": (
+            (coverage_report.get("stop_assessment") or {}).get("unresolved", [])
+            if coverage_report
+            else (["coverage-report-missing"] if review_mode else [])
+        ),
+    }
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -379,17 +489,37 @@ def count_paper_level_sources(events: list[dict[str, Any]], fallback_sources: li
     return len(keys)
 
 
-def render_evidence_sufficiency(events: list[dict[str, Any]], fallback_sources: list[dict[str, Any]] | None = None) -> str:
-    count = count_paper_level_sources(events, fallback_sources)
-    status = "formal-ready" if events and count >= FORMAL_SOURCE_THRESHOLD else "preliminary"
+def render_evidence_sufficiency(
+    events: list[dict[str, Any]],
+    fallback_sources: list[dict[str, Any]] | None = None,
+    review_mode: str | None = None,
+    coverage_report: dict[str, Any] | None = None,
+) -> str:
+    state = sufficiency_state(events, fallback_sources, review_mode, coverage_report)
     lines = [
-        f"- Evidence sufficiency: {status}",
-        f"- Paper-level sources: {count} / {FORMAL_SOURCE_THRESHOLD}",
+        f"- Evidence sufficiency: {state['status']}",
+        f"- Review mode: {state['review_mode']}",
+        f"- Paper-level sources: {state['paper_count']} / {state['paper_floor']} floor (not a cap)",
+        f"- Coverage and saturation gate: {'passed' if state['coverage_ready'] else 'blocked'}",
     ]
-    if status == "preliminary":
-        lines.append(f"- Formal outputs are blocked until at least {FORMAL_SOURCE_THRESHOLD} paper-level sources are available.")
+    reading = coverage_report.get("paper_reading") if isinstance(coverage_report, dict) else None
+    if isinstance(reading, dict):
+        lines.extend(
+            [
+                f"- Full text recovered: {reading.get('full_text_recovered_count', 0)}",
+                f"- Structure mapped: {reading.get('map_read_count', 0)}",
+                f"- Deep-read papers: {reading.get('deep_read_count', 0)}",
+                f"- Claim-verified papers: {reading.get('claim_verified_paper_count', 0)}",
+                f"- Accepted evidence papers: {reading.get('accepted_evidence_paper_count', 0)}",
+                f"- Paper-reading gate: {'passed' if reading.get('ready') else 'blocked'}",
+            ]
+        )
+    if state["status"] == "preliminary":
+        lines.append("- Formal outputs are blocked until the paper floor and every coverage/saturation check pass.")
+        if state["unresolved"]:
+            lines.append("- Unresolved checks: " + ", ".join(str(item) for item in state["unresolved"]))
     else:
-        lines.append("- Formal scientific, expert-explainer, and KOL outputs are allowed by the source-count gate.")
+        lines.append("- Formal writing is allowed; continue reading if new batches still add material claim clusters.")
     return "\n".join(lines) + "\n"
 
 
@@ -678,9 +808,11 @@ def render_writing_brief(
     source_ids: list[str],
     time_range: str | None = None,
     fallback_sources: list[dict[str, Any]] | None = None,
+    review_mode: str | None = None,
+    coverage_report: dict[str, Any] | None = None,
 ) -> str:
     """The writer-facing brief: raw material organized for prose, not for audit."""
-    count = count_paper_level_sources(events, fallback_sources)
+    state = sufficiency_state(events, fallback_sources, review_mode, coverage_report)
     caveats = [
         event
         for event in sorted(events, key=event_sort_key)
@@ -692,18 +824,21 @@ def render_writing_brief(
     lines = [
         f"# Writing Brief: {topic}",
         "",
-        "> 本文件是写作输入,不是交付物。三篇成稿由 LLM 依此撰写:",
+        "> 本文件是写作输入,不是交付物。三篇成稿交由 `$embodied-ai-review-writer` 独立撰写:",
         "> 正文必须是按论证组织的连续 prose;禁止把 claim map 表格当正文;",
         "> 禁止一事件一行/一段;三种风格必须是三个真实读者声音。",
-        "> 正文引用一律用 arXiv 论文链接(读者点开即达论文);事件锚点只用于 References/appendix 溯源。",
+        "> 正文引用一律用 arXiv 论文链接(读者点开即达论文);事件锚点只用于 trace-map/appendix 溯源。",
         "",
         "## 范围",
         "",
         f"- Topic: {topic}",
         f"- Time range: {time_range or 'not provided'}",
         f"- Knowledge IDs: {', '.join(f'`{item}`' for item in knowledge_ids) if knowledge_ids else 'unlisted'}",
-        f"- Paper-level sources: {count} / {FORMAL_SOURCE_THRESHOLD}"
-        + (" (formal-ready)" if count >= FORMAL_SOURCE_THRESHOLD else " (preliminary — 不足以支撑正式综述)"),
+        f"- Review mode: {state['review_mode']}",
+        f"- Paper-level sources: {state['paper_count']} / {state['paper_floor']} floor (not a cap)",
+        f"- Coverage and saturation gate: {'passed' if state['coverage_ready'] else 'blocked'}",
+        f"- Writing readiness: {state['status']}",
+        "- Unresolved checks: " + (", ".join(str(item) for item in state["unresolved"]) or "none"),
         f"- Accepted events: {len(events)}",
         "",
         "## 中心论点候选(从张力对中提炼,不要照抄)",
@@ -738,19 +873,19 @@ def render_writing_brief(
     lines.extend(
         [
             "",
-            "## 三种风格的读者与语气",
+            "## Writer handoff",
             "",
-            "- `scientific-memo_keyan.md` 研究者读:中心论点 → 派生矛盾/机制(prose 小节) → 可操作框架 → 最短结论。引用密集,每个实质论断带论文链接。",
-            "- `zhihu-explainer_zhihu.md` 技术公众读:先破一个具体误区 → 讲机制(用比喻可以,升级 stance 不可以) → 给适用边界 → 延伸阅读。",
-            "- `xiaohongshu-post_xiaohongshu.md` 泛兴趣读者:一个钩子 → 3-5 条反常识洞察(每条一句话+论文链接) → 一句可见的 caveat → 一行来源说明。",
+            "- Use `$embodied-ai-review-writer` with this brief, the accepted evidence JSONL, and `evidence-appendix.md`.",
+            "- The writer loads only the requested style reference and drafts each style independently from this evidence model.",
+            "- Generate `trace-map.json`, then pass the writer's editorial quality audit before settlement.",
             "",
             "## 引用速查",
             "",
             "- **正文引用 = arXiv 论文链接**:`[2606.13877](https://arxiv.org/abs/2606.13877)` 或 `[SIEVE](https://arxiv.org/abs/2607.06442)`。读者点开即达论文。",
             f"- 事件级溯源留给 appendix:成稿正文不放 `{APPENDIX_FILENAME}#...` 事件锚点;需要精确定位(章节/立场/置信)时,读者从 References 或 appendix 查。",
             "- 本简报中每条证据给出 `论文链接 / 事件链接` 对:写作时**取前者入正文**,后者供你核对 locator 与 stance。",
-            "- 成稿末尾必须有 `## References` 节(去重论文清单,含链接);"
-            + f"完整证据条目在 [{APPENDIX_FILENAME}]({APPENDIX_FILENAME})。",
+            "- Citation density and visible source format are style-specific; do not force a full bibliography into Xiaohongshu prose.",
+            f"- 完整证据条目在 [{APPENDIX_FILENAME}]({APPENDIX_FILENAME});事件映射由 `trace-map.json` 保存。",
             "- Registered sources: "
             + (", ".join(f"`{item}`" for item in source_ids[:12]) if source_ids else "not loaded"),
             "",
@@ -766,7 +901,7 @@ def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_rang
         "",
         f"- Time range: {time_range or 'not provided'}",
         f"- Events: {len(events)}",
-        "- 每个事件一节,标题即锚点;正文中的 event ID 链接跳转到这里。",
+        "- 每个事件一节,标题即锚点;trace-map 中的 event 链接跳转到这里。",
         "",
     ]
     for event in sorted(events, key=event_sort_key):
@@ -796,14 +931,19 @@ def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_rang
     return "\n".join(lines)
 
 
-def render_style_menu(topic: str, events: list[dict[str, Any]], fallback_sources: list[dict[str, Any]] | None = None) -> str:
-    count = count_paper_level_sources(events, fallback_sources)
-    status = "formal-ready" if events and count >= FORMAL_SOURCE_THRESHOLD else "preliminary"
+def render_style_menu(
+    topic: str,
+    events: list[dict[str, Any]],
+    fallback_sources: list[dict[str, Any]] | None = None,
+    review_mode: str | None = None,
+    coverage_report: dict[str, Any] | None = None,
+) -> str:
+    state = sufficiency_state(events, fallback_sources, review_mode, coverage_report)
     claims = top_claims(events)
     lines = [
-        f"- Evidence sufficiency: {status}",
-        f"- Paper-level sources: {count} / {FORMAL_SOURCE_THRESHOLD}",
-        f"- Recommended default: {recommend_style(events)}",
+        f"- Evidence sufficiency: {state['status']}",
+        f"- Paper-level sources: {state['paper_count']} / {state['paper_floor']} floor (not a cap)",
+        f"- Recommended default: {'all' if state['status'] == 'formal-ready' else 'preliminary-packet'}",
         "- Core claims:",
     ]
     if claims:
@@ -1011,6 +1151,8 @@ def render_output_artifacts(
     fallback_sources: list[dict[str, Any]] | None = None,
     time_range: str | None = None,
     emit_scaffold: bool = False,
+    review_mode: str | None = None,
+    coverage_report: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     """Assemble the briefing bundle.
 
@@ -1022,7 +1164,16 @@ def render_output_artifacts(
     """
 
     def brief() -> str:
-        return render_writing_brief(topic, knowledge_ids, events, source_ids, time_range, fallback_sources)
+        return render_writing_brief(
+            topic,
+            knowledge_ids,
+            events,
+            source_ids,
+            time_range,
+            fallback_sources,
+            review_mode,
+            coverage_report,
+        )
 
     def scaffold(output_style: str) -> str:
         rendered = render_final_output(
@@ -1033,7 +1184,16 @@ def render_output_artifacts(
     artifacts: dict[str, str] = {}
     if style == "all":
         artifacts["review-packet.md"] = render_packet(
-            topic, knowledge_ids, events, topic_cards, source_ids, "survey", fallback_sources, time_range
+            topic,
+            knowledge_ids,
+            events,
+            topic_cards,
+            source_ids,
+            "survey",
+            fallback_sources,
+            time_range,
+            review_mode,
+            coverage_report,
         )
         artifacts[BRIEF_FILENAME] = brief()
         if events:
@@ -1069,6 +1229,8 @@ def render_packet(
     style: str,
     fallback_sources: list[dict[str, Any]] | None = None,
     time_range: str | None = None,
+    review_mode: str | None = None,
+    coverage_report: dict[str, Any] | None = None,
 ) -> str:
     fallback_sources = fallback_sources or []
     event_topics = sorted({str(event.get("topic_id")) for event in events if event.get("topic_id")})
@@ -1088,9 +1250,10 @@ def render_packet(
         "",
         "## Orchestration Contract",
         "",
-        "- Main path: planner -> hub -> review packet -> style menu.",
+        "- Main path: review mode -> planner -> candidate registry -> coverage/saturation -> complete HTML/PDF recovery -> paper reader -> review packet -> writer.",
         "- Use `$embodied-ai-query-planner` for topic mapping and query planning.",
-        "- Use `$embodied-ai-literature-hub` for retrieval, HTML mining, and evidence promotion.",
+        "- Use `$embodied-ai-literature-hub` for multi-round retrieval and complete HTML/text-layer-PDF recovery.",
+        "- Use `$embodied-ai-paper-reader` for deep reading, critical appraisal, claim verification, and evidence projection.",
         "- This review packet is not a replacement for either upstream Skill.",
         "",
         "## Evidence Core",
@@ -1099,7 +1262,7 @@ def render_packet(
         "",
         "## Evidence Sufficiency",
         "",
-        render_evidence_sufficiency(events, fallback_sources).rstrip(),
+        render_evidence_sufficiency(events, fallback_sources, review_mode, coverage_report).rstrip(),
         "",
         "## Source Tiers",
         "",
@@ -1135,7 +1298,7 @@ def render_packet(
         "",
         "## Style Menu",
         "",
-        render_style_menu(topic, events, fallback_sources).rstrip(),
+        render_style_menu(topic, events, fallback_sources, review_mode, coverage_report).rstrip(),
         "",
         "## Draft Outline",
         "",
@@ -1157,6 +1320,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--topic", required=True, help="Review topic or question.")
     parser.add_argument("--time-range", help="Review/search time range. Defaults to the most recent six months.")
+    parser.add_argument(
+        "--review-mode",
+        choices=sorted(REVIEW_MODE_SOURCE_FLOORS),
+        default="scoping",
+        help="Evidence-depth contract for this run; scoping is the default.",
+    )
+    parser.add_argument(
+        "--coverage-report",
+        help="assess_review_coverage.py JSON. Required for formal-ready status in a new workflow run.",
+    )
+    parser.add_argument(
+        "--reading-summary",
+        help="paper-reader reading-summary.json. When provided, activate deep-reading and claim-verification gates.",
+    )
     parser.add_argument("--knowledge-id", action="append", default=[], help="Knowledge ID such as EA-DATA. Repeatable.")
     parser.add_argument("--evidence-jsonl", action="append", default=[], help="Evidence JSONL file. Repeatable.")
     parser.add_argument(
@@ -1208,6 +1385,10 @@ def main(argv: list[str] | None = None) -> int:
     if selected_ids:
         events = select_events(events, selected_ids)
     fallback_sources = load_fallback_sources([Path(path) for path in args.fallback_source_json])
+    coverage_report = load_coverage_report(Path(args.coverage_report)) if args.coverage_report else None
+    reading_summary = load_reading_summary(Path(args.reading_summary)) if args.reading_summary else None
+    if reading_summary is not None:
+        coverage_report = apply_reading_gate(events, args.review_mode, coverage_report, reading_summary)
     cards = load_topic_cards([Path(path) for path in args.topic_card])
     source_ids = load_source_ids(Path(args.source_file)) if args.source_file else []
     artifacts = render_output_artifacts(
@@ -1220,6 +1401,8 @@ def main(argv: list[str] | None = None) -> int:
         fallback_sources,
         time_range,
         emit_scaffold=args.emit_scaffold,
+        review_mode=args.review_mode,
+        coverage_report=coverage_report,
     )
     if args.consolidate_evidence and events:
         artifacts["evidence.jsonl"] = consolidated_evidence_lines(events)
@@ -1255,8 +1438,8 @@ def main(argv: list[str] | None = None) -> int:
                 sys.stdout.write(f"- {output}\n")
         if args.style == "all":
             sys.stdout.write(
-                "NEXT: 这些是写作输入,不是综述成稿。请依 writing-brief.md 撰写三篇 prose:\n"
-                "scientific-memo_keyan.md / zhihu-explainer_zhihu.md / xiaohongshu-post_xiaohongshu.md\n"
+                "NEXT: 这些是写作输入,不是综述成稿。请调用 $embodied-ai-review-writer 独立撰写并审计:\n"
+                "scientific-memo_keyan.md / zhihu-explainer_zhihu.md / xiaohongshu-post_xiaohongshu.md / trace-map.json\n"
             )
     return 0
 

@@ -95,6 +95,26 @@ class CheckKbLinksTest(unittest.TestCase):
         problems = check_kb_links.check_topic_cards(self.tmp)
         self.assertTrue(any("not registered" in p for p in problems))
 
+    def test_evidence_run_source_is_validated_by_file_not_sources_registry(self) -> None:
+        write_sources(self.tmp, self.ref)
+        evidence = self.tmp / "evidence" / "literature-review-test-20260714"
+        evidence.mkdir(parents=True)
+        (evidence / "evidence.jsonl").write_text("", encoding="utf-8")
+        card = self.tmp / "knowledge" / "embodied-ai" / "test-card.md"
+        card.write_text(
+            "---\n"
+            "id: EA-TEST\n"
+            "title: Test\n"
+            "type: topic-card\n"
+            "source:\n"
+            "  - id: RUN-TEST-20260714\n"
+            "    file: ../../evidence/literature-review-test-20260714/evidence.jsonl\n"
+            "    locator: EA-TEST-2026-0001\n"
+            "---\n\n# Test\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(check_kb_links.check_topic_cards(self.tmp), [])
+
     def test_line_number_locator_reported(self) -> None:
         write_sources(self.tmp, self.ref)
         write_card(self.tmp, self.ref, locator="lines 19-110")

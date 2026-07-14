@@ -1,43 +1,19 @@
-# 语言、视觉与连续动作对齐：洞察短串
+# VLA 最难的不是“多模态”，是三种信号根本不同频
 
-## Hook
+机器人模型里，语言像任务单，图像像监控流，动作像电机控制。把它们都塞进 Transformer，不等于它们自动对齐。
 
-语言、视觉与连续动作对齐 最容易被讲成一句口号，但真正值钱的信息藏在证据条件里。
+💡 语言太稀疏：很多轨迹只有一个任务指令，视觉-动作信号却逐帧出现，所以模型容易学视觉捷径。证据：LA4VLA [相关研究](https://arxiv.org/abs/2606.27295)。
 
-## 证据约束洞察
+💡 动作不是文字：动作标记 最后必须变成连续控制，同一个 表征单元 在不同状态下不能含义固定。证据：SA-VLA [相关研究](https://arxiv.org/abs/2606.30113)。
 
-1. In standard VLA pretraining, dense visual-action supervision can dominate the comparatively sparse language-action signal, encouraging visual shortcuts and underdeveloped language... ([EA-ALIGN-2026-0008](evidence-appendix.md#ea-align-2026-0008); stance: `support`)
-2. Cross-embodiment VLA alignment is difficult partly because shared high-level task cognition must be connected to platform-specific low-level state and action spaces. ([EA-ALIGN-2026-0001](evidence-appendix.md#ea-align-2026-0001); stance: `support`)
-3. Scaling VLA data is not analogous to scaling text/image data because robot datasets are heterogeneous in embodiment, sensing, control frequency, and action space; naive data mixin... ([EA-ALIGN-2026-0007](evidence-appendix.md#ea-align-2026-0007); stance: `limit`)
-4. Offline VLA indicators can fail to transfer to stable real-robot behavior when action semantics, coordinate frames, temporal modality alignment, image preprocessing, and dataset c... ([EA-ALIGN-2026-0002](evidence-appendix.md#ea-align-2026-0002); stance: `limit`)
-5. Discrete action tokenization is a compact interface for autoregressive VLA policies, but decoding fixed tokens back into continuous robot controls is a bottleneck when the same to... ([EA-ALIGN-2026-0004](evidence-appendix.md#ea-align-2026-0004); stance: `limit`)
+💡 视觉太强也会坏事：真正有用的是 action-aligned 3D 或 structured scene interface，而不是无限堆图像 表征单元。证据：Sparse2Act / SSI-Policy [相关研究](https://arxiv.org/abs/2606.12759), 相关研究。
 
-## 边界提醒
+💡 VLM 不自带 运动先验：视觉语言先验强，不代表模型天然懂轨迹、速度、接触和控制。证据：Learning Action Priors [相关研究](https://arxiv.org/abs/2606.26095)。
 
-- Strong hook is allowed; stance/confidence cannot be upgraded.
-- Any `conditional`, `limit`, or `gap` claim must stay visible in the thread.
+💡 接触是盲区：灵巧操作里 motion 对齐不等于 contact 对齐，视觉遮挡后需要力/触觉/本体感受。证据：Transferring Contact, Not Just Motion [相关研究](https://arxiv.org/abs/2606.15516)。
 
-## 依据来源
+⚠️ 这些结论主要来自 2025-12-30 到 2026-06-30 的机器人/VLA 论文。它们支持一个方向：VLA 要从“统一 表征单元 输入输出”走向“语言、视觉、动作、接触各自有接口，再做显式对齐”。
 
-- Time range: 2025-12-30..2026-06-30
+判断对齐是否成功，最后要看语言约束有没有真实改变连续动作。
 
-- Evidence sufficiency: formal-ready
-- Paper-level sources: 10 / 5
-- Formal scientific, expert-explainer, and KOL outputs are allowed by the source-count gate.
-
-- No registered source file was loaded; cite event IDs and mark source-entry gaps before final knowledge-base updates.
-
-## References
-
-- `2602.09722` [Rethinking Visual-Language-Action Model Scaling: Alignment, Mixture, and Regularization](https://arxiv.org/abs/2602.09722) (2026-02-10)
-- `2606.12759` [Sparse2Act: Learning Action-Aligned Sparse 3D Representations for Cross-Domain Robot Manipulation](https://arxiv.org/abs/2606.12759) (2026-06-10)
-- `2606.15516` [Transferring Contact, Not Just Motion: Compliant Grasping Across Dexterous Hands](https://arxiv.org/abs/2606.15516) (2026-06-17)
-- `2606.24049` [SPACE: Enabling Learning from Cross-Robot Data Toward Generalist Policies](https://arxiv.org/abs/2606.24049) (2026-06-23)
-- `2606.26095` [Learning Action Priors for Cross-embodiment Robot Manipulation](https://arxiv.org/abs/2606.26095) (2026-06-24)
-- `2606.26800` [SSI-Policy: Learning Structured Scene Interfaces for Vision-Language Robotic Manipulation](https://arxiv.org/abs/2606.26800) (2026-06-25)
-- `2606.27295` [LA4VLA: Learning to Act without Seeing via Language-Action Pretraining](https://arxiv.org/abs/2606.27295) (2026-06-25)
-- `2606.30113` [SA-VLA: State-aware tokenizer for improving Vision-Language-Action Models' performance](https://arxiv.org/abs/2606.30113) (2026-06-29)
-- `2606.30456` [Vision-Language-Action Models: Experimental Insights from a Real-World UR5 Platform](https://arxiv.org/abs/2606.30456) (2026-06-29)
-- `2606.30552` [Training Vision-Language-Action Models with Dense Embodied Chain-of-Thought Supervision](https://arxiv.org/abs/2606.30552) (2026-06-29)
-
-完整证据条目见 [evidence-appendix.md](evidence-appendix.md)。
+📚 依据：[论文1](https://arxiv.org/abs/2606.27295) · [论文2](https://arxiv.org/abs/2606.30113) · [论文3](https://arxiv.org/abs/2606.12759) · [论文4](https://arxiv.org/abs/2606.26095) · [论文5](https://arxiv.org/abs/2606.15516)。

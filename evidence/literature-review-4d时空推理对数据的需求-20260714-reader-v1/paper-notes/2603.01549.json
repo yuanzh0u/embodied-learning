@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.01549",
+    "title": "Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation",
+    "published": "2026-03-02",
+    "url": "https://arxiv.org/abs/2603.01549",
+    "authors": [
+      "Jisoo Kim",
+      "Jungbin Cho",
+      "Sanghyeok Chu",
+      "Ananya Bal",
+      "Jinhyung Kim",
+      "Gunhee Lee",
+      "Sihaeng Lee",
+      "Seung Hwan Kim",
+      "Bohyung Han",
+      "Hyunmin Lee",
+      "Laszlo A. Jeni",
+      "Seungryong Kim"
+    ]
+  },
+  "review": {
+    "question": "4D时空推理对数据的需求",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 4D时空推理对数据的需求."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "V-D Ablations on Design Choices",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "V Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "VI Discussion, Limitations, and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '4D时空推理对数据的需求', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "Pri4R leaves open whether 4D point-track supervision should be used at larger pretraining scale or with explicit test-time geometric inputs."
+  ],
+  "method": {
+    "summary": "Effect of input. A key design choice in Pri4R is to feed the current point set only to the point track head , rather than to the backbone [ 6 ] or the action head [ 49 , 30 ] . This has two practical advantages: (1) it requires no 3D observations at inference time, and (2) it mitigates distribution shift from pretraining, where consists only of images and language. As shown in Table IV , appending to the backbone can improve several suites by injecting explicit 3D cues, but it reduces performance on Pick-and-Place, where language plays a larger role [ 35 ] . We attribute this drop to introducing a new token type into the VLM embedding space, which can perturb the pretrained representation [",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate Pri4R’s ability to inject knowledge about world dynamics during fine-tuning by using 3D point tracks as privileged supervision. Specifically, we seek to answer the following questions: 1. Does Pri4R improve state-of-the-art VLAs across diverse robot tasks? 2. Which characteristics of 3D point tracks are critical for world-dynamics learning and downstream control performance? 3. How do Pri4R design choices affect the performance of the fine-tuned policy? 4. Does Pri4R improve performance on real world tasks that require awareness about world dynamics?",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Pri4R leaves open whether 4D point-track supervision should be used at larger pretraining scale or with explicit test-time geometric inputs.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "VI Discussion, Limitations, and Future Work"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "We presented Pri4R, a framework that enhances the world dynamics understanding of VLA models through privileged 4D representations. By supervising the model to predict 3D point tracks during training, we demonstrated that VLA backbones can develop a more physically-aware context, leading to improved control performance without any inference-time overhead. Our results across various benchmarks suggest that capturing the spatiotemporal evolution of a scene is a critical component for robust robot manipulation. Despite its effectiveness, Pri4R makes no changes at inference time. While this simpli",
+        "locator": "VI Discussion, Limitations, and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (V-D Ablations on Design Choices) and evaluation (V Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.01549-C01",
+      "claim": "Pri4R leaves open whether 4D point-track supervision should be used at larger pretraining scale or with explicit test-time geometric inputs.",
+      "stance": "gap",
+      "relation": "Evidence relevant to the review question: 4D时空推理对数据的需求",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The conclusion says Pri4R was evaluated mainly as fine-tuning on demonstrations and small real-world rollouts, and suggests that pretraining-scale 3D point-track supervision or explicit test-time computation could further improve robustness.",
+      "locator": "VI Discussion, Limitations, and Future Work",
+      "source_context": "We presented Pri4R, a framework that enhances the world dynamics understanding of VLA models through privileged 4D representations. By supervising the model to predict 3D point tracks during training, we demonstrated that VLA backbones can develop a more physically-aware context, leading to improved control performance without any inference-time overhead. Our results across various benchmarks suggest that capturing the spatiotemporal evolution of a scene is a critical component for robust robot manipulation. Despite its effectiveness, Pri4R makes no changes at inference time. While this simplicity is a strength, it may also limit performance: additional test-time computation or explicit geometric inputs could further improve robustness. Moreover, we evaluate Pri4R primarily in the fine-tuning setting on demonstration benchmarks and a small set of real-world rollouts, rather than in large-scale pretraining regimes (e.g., Embodiment X). We believe incorporating 3D point-track supervision during pretraining would have an even larger impact on learning action–world dynamics than using it",
+      "evidence_type": "author-stated-gap",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in VI Discussion, Limitations, and Future Work contains the paper-specific concepts used by the claim (3d, 4d, at, computation, could, explicit, fine-tuning, further). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Gap is author-stated; it should not be read as a negative result."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

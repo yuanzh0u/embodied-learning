@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.06001",
+    "title": "Visuo-Tactile World Models",
+    "published": "2026-02-05",
+    "url": "https://arxiv.org/abs/2602.06001",
+    "authors": [
+      "Carolina Higuera",
+      "Sergio Arnaud",
+      "Byron Boots",
+      "Mustafa Mukadam",
+      "Francois Robert Hogan",
+      "Franziska Meier"
+    ]
+  },
+  "review": {
+    "question": "触觉世界模型",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 触觉世界模型."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 World Models that Understand Contact",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Discussion and Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '触觉世界模型', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "VT-WM 的训练序列同步记录腕部位姿、关节位置、外部视觉和两个指尖触觉视频，并使用时间戳对齐后降采样训练。"
+  ],
+  "method": {
+    "summary": "Vision-only world models have shown promising capabilities in action steerability and spatial reasoning (Assran et al., 2025 ; Agarwal et al., 2025 ) , generating plausible rollouts with reasonable robot kinematics and high-quality visuals. These properties make them useful for planning free-space motions. However, simulating object interactions comes with some challenges. Object motion depends on forces invisible to exocentric cameras, and occlusions during grasping, pushing, or placing often cause artifacts such as teleportation, disappearance, or implausible dynamics. We introduce Visuo-Tactile World Model (VT-WM), which uses tactile sensing to complement vision to overcome these limitati",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Our experimental framework evaluates the advantages of visuo-tactile world model (VT-WM) for robot manipulation by addressing the key questions: • Contact Perception: Do VT-WMs better capture object permanence and plausible physics than vision-only WMs, and generate futures consistent with action conditioning? • Zero-shot Planning: Does improved contact perception lead to more reliable zero-shot plan transfer in open-loop execution? • Downstream Versatility: How effective is the world model at zero-shot or few-shot planning when fine-tuned on a limited number of demonstrations for a novel task? Causal Compliance: This metric evaluates whether predicted changes in object state are physically",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "VT-WM 的训练序列同步记录腕部位姿、关节位置、外部视觉和两个指尖触觉视频，并使用时间戳对齐后降采样训练。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "B.0.1 Training dataset"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "While our results demonstrate clear benefits of visuo-tactile world model, following limitations point to promising directions for future research. First, our tactile modality is limited to vision-based tactile sensing, specifically the Digit 360 sensor. However, the VT-WM framework applies to other tactile modalities as well, provided that an appropriate pretrained tactile encoder is available. Second, evaluation of contact perception uses unseen robot trajectories but only within tasks from the training distribution, leaving open the question of how well the model generalizes to entirely nov",
+        "locator": "Appendix E Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 World Models that Understand Contact) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.06001-C01",
+      "claim": "VT-WM 的训练序列同步记录腕部位姿、关节位置、外部视觉和两个指尖触觉视频，并使用时间戳对齐后降采样训练。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 触觉世界模型",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "训练数据段明确列出了同步的本体状态、外部视频与双指触觉视频数据流。",
+      "locator": "B.0.1 Training dataset",
+      "source_context": "Each sequence contains multimodal data streams: proprioceptive information (wrist pose, joint positions), exocentric video from the camera, and video from each Digit 360 fingertip sensor. All data streams were synchronized using timestamps and downsampled to 6 FPS for training the world model. Our training dataset for V-WM and VT-WM consists of 124 demonstrations totaling 112k datapoints, with each demonstration averaging 40 seconds. For validation, we use 26 demonstrations spanning all tasks, comprising 17k datapoints.",
+      "evidence_type": "dataset_and_limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in B.0.1 Training dataset contains the paper-specific concepts used by the claim (vt-wm). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Useful for data-requirement discussion."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

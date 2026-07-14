@@ -71,6 +71,30 @@ def fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
     return DummyResponse(LATEXML_HTML.encode("utf-8"))
 
 
+def fake_extract_content(args):  # type: ignore[no-untyped-def]
+    return {
+        "available": True,
+        "evidence_eligible": True,
+        "source_format": "html",
+        "extraction_method": "html-latexml",
+        "quality": {"grade": "high"},
+        "needs_visual_validation": False,
+        "visual_validation_pages": [],
+        "attempts": [{"method": "html-latexml", "available": True, "quality": "high"}],
+        "selected_passages": [
+            {
+                "path": "3 Method",
+                "score": 4.2,
+                "matched_terms": ["reasoning", "planning"],
+                "text": "Reasoning must ground into executable action guidance. Chain-of-thought as action prefix causes compounding errors in planning.",
+            }
+        ],
+        "citation_contexts": [
+            {"arxiv_ids": ["2301.00001"], "section": "3 Method", "sentence": "Prior work causes compounding errors."}
+        ],
+    }
+
+
 class PromoteCandidatesTest(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -97,7 +121,7 @@ class PromoteCandidatesTest(unittest.TestCase):
         ]
         with mock.patch.object(promote_candidates.urllib.request, "urlopen", side_effect=fake_urlopen):
             with mock.patch.object(
-                promote_candidates.extract_arxiv_html.urllib.request, "urlopen", side_effect=fake_urlopen
+                promote_candidates.extract_arxiv_content, "extract_content", side_effect=fake_extract_content
             ):
                 with mock.patch.object(promote_candidates.time, "sleep"):
                     with mock.patch.object(promote_candidates.sys, "argv", argv):
@@ -127,6 +151,8 @@ class PromoteCandidatesTest(unittest.TestCase):
         self.assertTrue(first["evidence"]["summary"].startswith("TODO("))
         # Locator prefilled from the top ranked section.
         self.assertEqual("3 Method", first["evidence"]["locator"])
+        self.assertEqual("html-latexml", first["evidence"]["extraction"]["method"])
+        self.assertEqual("not-required", first["evidence"]["extraction"]["visual_validation"])
 
     def test_validator_rejects_unfilled_skeleton(self) -> None:
         events, _ = self.run_main()
@@ -145,6 +171,20 @@ class PromoteCandidatesTest(unittest.TestCase):
         self.assertIn("compounding errors", digest)
         self.assertIn("Citation contexts", digest)
         self.assertIn("2301.00001", digest)
+
+    def test_load_paper_ids_accepts_files_comments_urls_and_deduplicates(self) -> None:
+        ids = self.tmp / "paper-ids.txt"
+        ids.write_text(
+            "# selected papers\n"
+            "2606.03784v2\n"
+            "https://arxiv.org/abs/2607.00673\n"
+            "2606.03784  # duplicate\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(
+            ["2607.00673", "2606.03784"],
+            promote_candidates.load_paper_ids(["2607.00673v1"], [str(ids)]),
+        )
 
 
 if __name__ == "__main__":

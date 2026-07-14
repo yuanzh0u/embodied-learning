@@ -3,14 +3,14 @@ id: EA-HARDWARE
 title: 采集硬件与设备路线
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
   - id: S-EA-QUESTIONS
     status: retired
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §三 采集硬件与设备路线(Q6-Q9)
-  - id: RUN-UMI-QUALITY-20260606
-    file: ../../evidence/literature-review-umi-data-quality-six-month-20260606/evidence.jsonl
+  - id: RUN-UMI-QUALITY-20260714
+    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v1/evidence.jsonl
     locator: 5 accepted UMI events
 tags: [embodied-ai, hardware, monocular, stereo, arkit, slam, tracking, umi, glove]
 aliases: [采集硬件, 单目, 双目, ARKit, SLAM, Tracking, UMI, 指套, 手套]
@@ -66,7 +66,7 @@ confidence: working
 - S-EA-QUESTIONS:34-37 覆盖 ARKit、SLAM、全景相机。
 - S-EA-QUESTIONS:38-40 覆盖 Tracking 设备。
 - S-EA-QUESTIONS:41-45 覆盖 UMI 和指套式设备。
-- RUN-UMI-QUALITY-20260606：UMI-FT、gripper ergonomics、OmniUMI、UMI-3D 与 RealDexUMI 分别覆盖力觉、人体工学、多模态、3D tracking 和同构末端。
+- RUN-UMI-QUALITY-20260714：UMI-FT、gripper ergonomics、OmniUMI、UMI-3D 与 RealDexUMI 分别覆盖力觉、人体工学、多模态、3D tracking 和同构末端。
 
 ## 待补问题
 

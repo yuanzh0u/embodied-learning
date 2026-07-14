@@ -1,0 +1,33 @@
+# 机器人抓错东西,居然大部分不是"眼神"的问题?
+
+## Hook
+
+最近一年的机器人论文里藏着一个反直觉结论:机器人"看走眼"导致的失败,追查下去大多不是视觉模型的锅——而是数据链路上游早就埋了雷（inference；综合 [EA-SENSOR-2026-DQ-0006](evidence-appendix.md#ea-sensor-2026-dq-0006), [EA-DATA-2026-4DDATA-0018](evidence-appendix.md#ea-data-2026-4ddata-0018), [EA-ALIGN-2026-0010](evidence-appendix.md#ea-align-2026-0010)）。
+
+## 证据约束洞察
+
+💡 接触失败常常是**视觉不可见**的:轻微的接触扰动图像里根本看不出来,纯视觉世界模型会生成"看着很对、摸上去全错"的动作([TACO](https://arxiv.org/abs/2607.02840); [EA-SENSOR-2026-DQ-0006](evidence-appendix.md#ea-sensor-2026-dq-0006))
+
+💡 示教数据**一半是可以扔的**:按可复用动作结构筛选后,50% 的数据 + 50% 的训练量反而超过全量训练——坏数据不是中性的,是拖后腿的([SIEVE](https://arxiv.org/abs/2607.06442); [EA-DATA-2026-DQ-0001](evidence-appendix.md#ea-data-2026-dq-0001))
+
+💡 "成功"的示教也可能是坏数据:停顿、振荡、过度纠正都会教坏模型,光看成功/失败标签根本发现不了([DQAF](https://arxiv.org/abs/2605.26349); [EA-DATA-2026-LY-0002](evidence-appendix.md#ea-data-2026-ly-0002))
+
+💡 同一个"动作命令"在不同机器人身上**不是同一个动作**:坐标系、控制频率、控制器约定差一点,学到的就是错位因果——表象和"没看准"一模一样([SPACE](https://arxiv.org/abs/2606.24049); [EA-ALIGN-2026-0010](evidence-appendix.md#ea-align-2026-0010))
+
+💡 世界模型画面越逼真 ≠ 评估越可靠:决定它能不能当"考官"的是长程动作忠实度,不是画质([GigaWorld-1](https://arxiv.org/abs/2607.02642); [EA-EVAL-2026-DQ-0004](evidence-appendix.md#ea-eval-2026-dq-0004))
+
+## 边界提醒
+
+⚠️ 注意边界:开放空间的简单抓放、数据又干净的场景,升级视觉模型仍然是对的;这套"误差账本"思路针对的是接触密集、多模态、要真机部署的任务。
+
+## 依据来源
+
+📚 15 条正文级证据事件,来自 2025-07 至 2026-07 的 arXiv 论文;完整清单和每条证据的立场/定位见 [evidence-appendix.md](evidence-appendix.md)
+
+## References
+
+- [TACO](https://arxiv.org/abs/2607.02840)
+- [SIEVE](https://arxiv.org/abs/2607.06442)
+- [Closing the Loop in Teleoperation (DQAF)](https://arxiv.org/abs/2605.26349)
+- [SPACE](https://arxiv.org/abs/2606.24049)
+- [GigaWorld-1](https://arxiv.org/abs/2607.02642)

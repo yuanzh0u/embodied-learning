@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2604.21741",
+    "title": "Hi-WM: Human-in-the-World-Model for Scalable Robot Post-Training",
+    "published": "2026-04-23",
+    "url": "https://arxiv.org/abs/2604.21741",
+    "authors": [
+      "Yaxuan Li",
+      "Zhongyi Zhou",
+      "Yefei Chen",
+      "Yanjiang Guo",
+      "Jiaming Liu",
+      "Shanghang Zhang",
+      "Jianyu Chen",
+      "Yichen Zhu"
+    ]
+  },
+  "review": {
+    "question": "世界模型需要什么样的训练数据",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 世界模型需要什么样的训练数据."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3.1 The Human-in-the-World-Model Paradigm",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '世界模型需要什么样的训练数据', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "World-model training and post-training data should include dense corrective trajectories around failure-prone states, not only successful demonstrations."
+  ],
+  "method": {
+    "summary": "We formalize Human-in-the-World-Model (Hi-WM) as a novel post-training paradigm that shifts the human intervention loop from physical execution to an interactive world model. Unlike standard physical deployment, which is constrained by sequential and hardware-bound data collection, the Hi-WM paradigm has three practical properties that make this post-training loop scalable: • State caching and trajectory branching. Because the rollout happens inside the world model, intermediate states can be cached throughout the interaction. This allows for a direct rollback to any previously failed timestep, from which the system can execute new actions to form alternative recovery branches. • Reset-free",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "In this section, we conduct extensive real-robot experiments to demonstrate the effectiveness and scalability of our proposed method. Specifically, we aim to answer the following core research questions: • RQ1 (Real-World Alignment of Hi-WM): Is Hi-WM sufficiently aligned with real-world execution to support reliable human intervention and data collection? • RQ2 (Effectiveness): Can Hi-WM serve as an effective, policy-agnostic post-training framework? • RQ3 (Scalability): How does the cost advantage of Hi-WM scale with scene coverage? How does real-world policy performance scale with increasing virtual intervention data? • RQ4 (Real-World Generalization): Does Hi-WM intervention on novel sce",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "World-model training and post-training data should include dense corrective trajectories around failure-prone states, not only successful demonstrations.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "3.5 Collecting Corrective Trajectories for Post-Training"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3.1 The Human-in-the-World-Model Paradigm) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2604.21741-C01",
+      "claim": "World-model training and post-training data should include dense corrective trajectories around failure-prone states, not only successful demonstrations.",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 世界模型需要什么样的训练数据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Hi-WM rolls policies inside a world model, lets humans intervene when rollouts become incorrect or failure-prone, caches and branches failure states, and adds corrective trajectories back into the training set for post-training.",
+      "locator": "3.5 Collecting Corrective Trajectories for Post-Training",
+      "source_context": "Within Hi-WM, post-training data are collected in a closed-loop inside the interactive world model. The pre-trained policy first runs in the world model from the current observation and generates a rollout. When the rollout enters unfamiliar or failure-prone states, a human operator intervenes through the hardware-agnostic interface and provides corrective actions. The world model then continues the rollout from the current state using these human actions. Once the rollout has been guided back toward successful behavior, control can be returned to the policy, as shown in Figure 3 . A key advantage of operating in the world model is that the system can cache intermediate states and revisit them when needed. Instead of restarting from the beginning after each failure, the operator can rewind the rollout to an earlier timestep and try a different correction from the same state. Consequently, a single simulated failure can be branched into diverse alternative futures, systematically yielding a high-density set of corrective trajectories. This makes data collection more efficient and also",
+      "evidence_type": "human-correction-data",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 3.5 Collecting Corrective Trajectories for Post-Training contains the paper-specific concepts used by the claim (back, corrective, data, failure, failure-prone, hi-wm, inside, or). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "HTML extraction available in /tmp/wm-data-2604.21741-html.json."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

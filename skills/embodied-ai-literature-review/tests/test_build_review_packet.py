@@ -64,25 +64,46 @@ class BuildReviewPacketTests(unittest.TestCase):
     def test_skill_docs_describe_default_readable_markdown_and_styles(self) -> None:
         skill_doc = (ROOT / "skills" / "embodied-ai-literature-review" / "SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("planner -> hub -> review packet -> style menu", skill_doc)
+        self.assertIn("review mode -> planner -> candidate registry -> coverage/saturation", skill_doc)
+        self.assertIn("HTML/PDF recovery -> $embodied-ai-paper-reader -> review packet -> writing brief -> $embodied-ai-review-writer", skill_doc)
         self.assertIn("Default final deliverable", skill_doc)
-        self.assertIn("readable Markdown", skill_doc)
+        self.assertIn("validated writing inputs", skill_doc)
         self.assertIn("three Markdown files", skill_doc)
         self.assertIn("scientific-memo_keyan.md", skill_doc)
         self.assertIn("zhihu-explainer_zhihu.md", skill_doc)
         self.assertIn("xiaohongshu-post_xiaohongshu.md", skill_doc)
         self.assertIn("If no time range is provided, default to the most recent six months.", skill_doc)
         self.assertIn("work/", skill_doc)
-        self.assertIn("5 paper-level sources", skill_doc)
+        self.assertIn("`rapid` 8, `scoping` 15, `systematic` 30", skill_doc)
         self.assertIn("scientific-memo", skill_doc)
         self.assertIn("expert-explainer", skill_doc)
         self.assertIn("kol-thread", skill_doc)
+        self.assertIn("$embodied-ai-review-writer", skill_doc)
+        self.assertIn("audit_article_quality.py", skill_doc)
 
     def test_default_time_range_is_recent_half_year(self) -> None:
         self.assertEqual(
             "2025-12-12..2026-06-12",
             build_review_packet.default_time_range(date(2026, 6, 12)),
         )
+
+    def test_reading_summary_gate_requires_verified_projected_events(self) -> None:
+        events = [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
+        coverage = {"stop_assessment": {"ready_to_stop": True, "unresolved": []}}
+        summary = {
+            "full_text_recovered_count": 8,
+            "map_read_count": 8,
+            "deep_read_count": 8,
+            "claim_verified_paper_count": 8,
+            "accepted_evidence_paper_count": 8,
+        }
+        blocked = build_review_packet.apply_reading_gate(events, "rapid", coverage, summary)
+        self.assertFalse(blocked["stop_assessment"]["ready_to_stop"])
+        self.assertIn("unverified-paper-reading-events:1", blocked["stop_assessment"]["unresolved"])
+        events[0]["paper_reading"] = {"claim_support_audit": "pass"}
+        passed = build_review_packet.apply_reading_gate(events, "rapid", coverage, summary)
+        self.assertTrue(passed["stop_assessment"]["ready_to_stop"])
+        self.assertTrue(passed["paper_reading"]["ready"])
 
     def test_default_time_range_clamps_month_end(self) -> None:
         self.assertEqual(
@@ -288,7 +309,9 @@ title: 数据采集与数据质量
             "survey",
         )
 
-        self.assertIn("planner -> hub -> review packet -> style menu", packet)
+        self.assertIn("review mode -> planner -> candidate registry -> coverage/saturation", packet)
+        self.assertIn("complete HTML/text-layer-PDF recovery", packet)
+        self.assertIn("$embodied-ai-paper-reader", packet)
         self.assertIn("$embodied-ai-query-planner", packet)
         self.assertIn("$embodied-ai-literature-hub", packet)
         self.assertIn("not a replacement", packet)
@@ -336,7 +359,7 @@ title: 数据采集与数据质量
 
         self.assertIn("Evidence sufficiency: preliminary", packet)
         self.assertIn("Paper-level sources: 3 / 5", packet)
-        self.assertIn("Formal outputs are blocked until at least 5 paper-level sources are available.", packet)
+        self.assertIn("Formal outputs are blocked until the paper floor and every coverage/saturation check pass.", packet)
 
     def test_packet_includes_style_menu_when_sources_are_sufficient(self) -> None:
         events = [
@@ -358,6 +381,37 @@ title: 数据采集与数据质量
         self.assertIn("Scientific memo preview:", packet)
         self.assertIn("Expert explainer preview:", packet)
         self.assertIn("KOL thread preview:", packet)
+
+    def test_new_cli_flow_requires_coverage_report_not_only_paper_count(self) -> None:
+        events = [
+            event_for_paper(f"EA-DATA-2026-{index:04d}", f"2601.{index:05d}")
+            for index in range(1, 16)
+        ]
+        blocked = build_review_packet.render_writing_brief(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            "2025-01-01..2026-01-01",
+            [],
+            "scoping",
+            None,
+        )
+        ready = build_review_packet.render_writing_brief(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            "2025-01-01..2026-01-01",
+            [],
+            "scoping",
+            {"stop_assessment": {"ready_to_stop": True, "unresolved": []}},
+        )
+
+        self.assertIn("Writing readiness: preliminary", blocked)
+        self.assertIn("coverage-report-missing", blocked)
+        self.assertIn("Writing readiness: formal-ready", ready)
+        self.assertIn("15 / 15 floor (not a cap)", ready)
 
     def test_cli_can_render_scientific_memo_from_sufficient_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -528,7 +582,7 @@ title: 数据采集与数据质量
         self.assertIn("### social-calibration", completed.stdout)
         self.assertIn("Discussion thread", completed.stdout)
         self.assertIn("Fallback sources are review-packet context, not Hub evidence JSONL.", completed.stdout)
-        self.assertIn("Paper-level sources: 1 / 5", completed.stdout)
+        self.assertIn("Paper-level sources: 1 / 15 floor (not a cap)", completed.stdout)
         self.assertNotIn("Paper-level sources: 0 / 5", completed.stdout)
 
     def test_style_request_with_only_fallback_sources_still_degrades_to_packet_with_tiers(self) -> None:

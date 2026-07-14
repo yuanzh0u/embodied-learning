@@ -47,6 +47,42 @@ class QueryPlannerTests(unittest.TestCase):
         self.assertGreaterEqual(len(plan["queries"]), 10)
         self.assertTrue(all({"label", "tier", "query", "why"} <= set(item) for item in plan["queries"]))
         self.assertEqual(plan["queries"], plan["arxiv_api_queries"])
+        self.assertEqual("scoping", plan["review_mode"])
+        self.assertGreaterEqual(plan["search_targets"]["candidate_floor"], 100)
+        self.assertEqual(plan["minimum_candidate_count"], plan["search_targets"]["candidate_floor"])
+        self.assertTrue(plan["coverage_dimensions"])
+        self.assertEqual(2, plan["stopping_rule"]["saturation_rounds"])
+
+    def test_systematic_mode_scales_candidate_floor_with_query_surface(self) -> None:
+        plan = run_json(
+            "--topic", "VLA的数据金字塔",
+            "--review-mode", "systematic",
+            "--max-queries", "50",
+        )
+
+        self.assertEqual("systematic", plan["review_mode"])
+        self.assertGreaterEqual(plan["search_targets"]["candidate_floor"], 200)
+        self.assertGreaterEqual(
+            plan["search_targets"]["candidate_floor"],
+            len(plan["queries"]) * 6,
+        )
+        self.assertEqual(30, plan["search_targets"]["accepted_paper_floor"])
+        self.assertAlmostEqual(0.05, plan["stopping_rule"]["max_new_unique_rate"])
+
+    def test_mode_targets_can_be_overridden_without_becoming_caps(self) -> None:
+        plan = run_json(
+            "--topic", "UMI 数据可用性",
+            "--review-mode", "rapid",
+            "--target-candidates", "75",
+            "--target-full-text", "24",
+            "--target-evidence", "12",
+        )
+
+        self.assertEqual(
+            {"candidate_floor": 75, "full_text_floor": 24, "accepted_paper_floor": 12},
+            plan["search_targets"],
+        )
+        self.assertIn("never establish coverage", plan["stopping_rule"]["note"])
 
     def test_maps_simulation_data_limits_to_sim2real(self) -> None:
         plan = run_json("--topic", "仿真数据的局限", "--max-queries", "12")

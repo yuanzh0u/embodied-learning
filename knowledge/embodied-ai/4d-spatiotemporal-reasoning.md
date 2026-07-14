@@ -3,13 +3,13 @@ id: EA-4D
 title: 4D 时空推理与世界动态
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
-  - id: RUN-4D-REASONING-20260612
-    file: ../../evidence/literature-review-4d-spatiotemporal-reasoning-20260612/evidence.jsonl
+  - id: RUN-4D-REASONING-20260714
+    file: ../../evidence/literature-review-4d时空推理-20260714-reader-v1/evidence.jsonl
     locator: EA-MODEL-2026-4D-0001..0010; EA-EVAL-2026-4D-0002..0020; EA-SENSOR-2026-4D-0015..0019
-  - id: RUN-4D-DATA-20260612
-    file: ../../evidence/literature-review-4d-data-requirements-20260612/evidence.jsonl
+  - id: RUN-4D-DATA-20260714
+    file: ../../evidence/literature-review-4d时空推理对数据的需求-20260714-reader-v1/evidence.jsonl
     locator: EA-DATA-2026-4DDATA-0001..0020
 tags: [embodied-ai, 4d, spatiotemporal, point-tracks, world-model, geometry, dynamics]
 aliases: [4D 时空推理, 4D 世界模型, 3D point tracks, 时空场景图, 动态世界]
@@ -67,9 +67,9 @@ confidence: working
 
 ## 证据锚点
 
-- RUN-4D-REASONING-20260612：`EA-MODEL-2026-4D-0003` 支持 4D point-track privileged supervision；`EA-MODEL-2026-4D-0008..0010` 覆盖几何一致和部署时世界模型。
-- RUN-4D-REASONING-20260612：`EA-EVAL-2026-4D-0013..0014` 覆盖 fidelity、长程一致、效率与视觉盲区；`EA-EVAL-2026-4D-0020` 覆盖时空交互评测缺口。
-- RUN-4D-DATA-20260612：`EA-DATA-2026-4DDATA-0009..0010` 覆盖异构监督分级；`EA-DATA-2026-4DDATA-0014..0020` 覆盖恢复、接触和采集质控。
+- RUN-4D-REASONING-20260714：`EA-MODEL-2026-4D-0003` 支持 4D point-track privileged supervision；`EA-MODEL-2026-4D-0008..0010` 覆盖几何一致和部署时世界模型。
+- RUN-4D-REASONING-20260714：`EA-EVAL-2026-4D-0013..0014` 覆盖 fidelity、长程一致、效率与视觉盲区；`EA-EVAL-2026-4D-0020` 覆盖时空交互评测缺口。
+- RUN-4D-DATA-20260714：`EA-DATA-2026-4DDATA-0009..0010` 覆盖异构监督分级；`EA-DATA-2026-4DDATA-0014..0020` 覆盖恢复、接触和采集质控。
 
 ## 待补问题
 

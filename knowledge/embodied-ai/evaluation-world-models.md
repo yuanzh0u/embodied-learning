@@ -3,20 +3,20 @@ id: EA-EVAL
 title: 评测体系与世界模型
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
   - id: S-EA-QUESTIONS
     status: retired
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §六 评测体系与世界模型(Q16-Q17)
-  - id: RUN-WMEVAL-20260710
-    file: ../../evidence/literature-review-world-model-evaluation-boundaries-20260710/
+  - id: RUN-WMEVAL-20260714
+    file: ../../evidence/literature-review-世界模型评测边界-20260714-reader-v1/evidence.jsonl
     locator: 6 events; evidence-appendix.md
-  - id: RUN-WMDATA-20260611
-    file: ../../evidence/literature-review-world-model-training-data-20260611/evidence.jsonl
+  - id: RUN-WMDATA-20260714
+    file: ../../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v1/evidence.jsonl
     locator: EA-EVAL-2026-WMDATA-0013 and model/data events
-  - id: RUN-SENSOR-ERROR-20260709
-    file: ../../evidence/literature-review-embodied-sensor-perception-error-2026-07-09/evidence.jsonl
+  - id: RUN-SENSOR-ERROR-20260714
+    file: ../../evidence/literature-review-具身传感器感知误差-20260714-reader-v1/evidence.jsonl
     locator: EA-EVAL-2026-0007,0012
 tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, sim-real, admissibility, action-fidelity]
 aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, Benchmark, Sim2Real, 动作忠实, 世界模型可采信性]
@@ -75,9 +75,9 @@ confidence: working
 
 - S-EA-QUESTIONS:67-70 覆盖具身智能评测。
 - S-EA-QUESTIONS:71-75 覆盖世界模型。
-- RUN-WMEVAL-20260710：六条事件覆盖动作/物理忠实、约束和反事实测试、关键事件保留、外部验证和部署限制。
-- RUN-WMDATA-20260611：`EA-EVAL-2026-WMDATA-0013` 支持以下游动作质量而非最终视频去噪质量优化训练目标。
-- RUN-SENSOR-ERROR-20260709：`EA-EVAL-2026-0007`, `0012` 支持 Safety Success 和 world-model admissibility。
+- RUN-WMEVAL-20260714：六条事件覆盖动作/物理忠实、约束和反事实测试、关键事件保留、外部验证和部署限制。
+- RUN-WMDATA-20260714：`EA-EVAL-2026-WMDATA-0013` 支持以下游动作质量而非最终视频去噪质量优化训练目标。
+- RUN-SENSOR-ERROR-20260714：`EA-EVAL-2026-0007`, `0012` 支持 Safety Success 和 world-model admissibility。
 
 ## 待补问题
 

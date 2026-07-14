@@ -24,9 +24,11 @@
 
 | Status | arXiv ID | Title | Why candidate | Evidence found |
 |---|---|---|---|---|
-| accepted-html | 2402.10329 | ... | UMI/data direct hit | HTML evidence |
+| full-text-recovered | 2402.10329 | ... | UMI/data direct hit | complete structured HTML text |
+| full-text-recovered | 2402.10330 | ... | HTML unavailable | complete text-layer PDF pages |
+| needs-visual-validation | 2402.10331 | ... | medium PDF text | cited pages not yet verified |
 | candidate | 2501.00000 | ... | VLA data adjacent | not inspected |
-| no-html | 2501.00001 | ... | metadata hit | held out of正文 mining |
+| unavailable | 2501.00001 | ... | metadata hit | HTML/PDF text did not yield usable text; no OCR |
 | rejected | 2502.00000 | ... | metadata hit only | no topic discussion |
 ```
 

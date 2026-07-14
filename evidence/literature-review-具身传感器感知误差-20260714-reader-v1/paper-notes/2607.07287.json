@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.07287",
+    "title": "TouchWorld: A Predictive and Reactive Tactile Foundation Model for Dexterous Manipulation",
+    "published": "2026-07-08",
+    "url": "https://arxiv.org/abs/2607.07287",
+    "authors": [
+      "Jianyi Zhou",
+      "Feiyang Hong",
+      "Yunhao Li",
+      "Yicheng Zhao",
+      "Yongjue Cen",
+      "Zirui Liu",
+      "Jiakang Huang",
+      "Zirui Chen",
+      "Ruiyang Zhang",
+      "Weizhuo Zhu",
+      "Xuhua Song",
+      "Shuo Yang"
+    ]
+  },
+  "review": {
+    "question": "具身传感器感知误差",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身传感器感知误差."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "2 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Discussion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身传感器感知误差', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "触觉在灵巧操作中补足视觉/语言无法稳定观测的接触隐变量；滑移、力不匹配、接触稳定性等局部误差需要比语义规划更快的反馈通道。"
+  ],
+  "method": {
+    "summary": "Given a task instruction , current multi-view images , proprioceptive state , tactile observations , and high-level memory , TouchWorld predicts the executed action through the High-Level Planning Layer and two action policies. The High-Level Planning Layer contains the Subtask Planner and Tactile World Model: (1) (2) (3) (4) Here , , , and denote the Subtask Planner, Tactile World Model, Visuo-Tactile Goal-Conditioned Policy, and Tactile-Conditioned Refinement Policy, respectively. The variable is the executable subtask at time , and is the predicted visual-tactile subgoal for that subtask. The memory stores previous subtasks, predicted tactile subgoals, and execution status. The nominal po",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate TouchWorld on real-robot manipulation tasks that require long-horizon reasoning, contact-aware action generation, and recovery from local contact disturbances. The experiments answer four questions: (1) whether TouchWorld improves task success over strong generalist and tactile-policy baselines; (2) which predictive and reactive components contribute most to robustness; (3) whether the Tactile World Model predicts tactile subgoals that match real contact outcomes; and (4) whether the Subtask Planner produces subtasks that are executable by the downstream policy.",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "触觉在灵巧操作中补足视觉/语言无法稳定观测的接触隐变量；滑移、力不匹配、接触稳定性等局部误差需要比语义规划更快的反馈通道。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "TouchWorld demonstrates that tactile prediction and tactile feedback refinement can be combined in a practical manipulation policy, but several limitations remain. First, our real-robot evaluation focuses on six representative contact-rich tasks. These tasks cover planning, insertion, wiping, and soft-object handling, but they do not yet exhaust the diversity of household manipulation or deformable-object interactions. Scaling the benchmark to more objects, workspaces, and task compositions is an important next step. Second, the Tactile World Model currently predicts short-horizon visual-tacti",
+        "locator": "5 Discussion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (2 Method) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.07287-C01",
+      "claim": "触觉在灵巧操作中补足视觉/语言无法稳定观测的接触隐变量；滑移、力不匹配、接触稳定性等局部误差需要比语义规划更快的反馈通道。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 具身传感器感知误差",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者把日常灵巧操作的误差来源明确落在滑移、错位、不稳定抓取和力不匹配上，并指出视觉/语言不能可靠揭示力、滑移和接触稳定性；其分层策略将视觉语言子任务规划、触觉世界模型预测和高频触觉残差修正分开。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Vision and language provide semantic and geometric guidance, but they cannot reliably reveal hidden contact states such as force, slip, and contact stability.",
+      "evidence_type": "method-and-framing",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (as, contact, force, hidden, slip, stability, states, such). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Evidence extracted from arXiv HTML; model performance claims were not independently replicated. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

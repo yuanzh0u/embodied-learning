@@ -120,7 +120,8 @@ def check_topic_cards(root: Path) -> list[str]:
         for source in front.get("source", []) or []:
             sid = source.get("id", "")
             rel = card.relative_to(root)
-            if sid and sid not in known_ids:
+            evidence_run = sid.startswith("RUN-") and bool(source.get("file"))
+            if sid and sid not in known_ids and not evidence_run:
                 problems.append(f"{rel}: source id `{sid}` not registered in sources.md")
             archive = source.get("archive", "")
             if source.get("status") == "retired":

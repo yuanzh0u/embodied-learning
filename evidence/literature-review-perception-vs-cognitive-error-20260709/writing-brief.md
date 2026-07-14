@@ -1,9 +1,9 @@
 # Writing Brief: 具身数据感知误差与认知误差区别
 
-> 本文件是写作输入,不是交付物。三篇成稿由 LLM 依此撰写:
+> 本文件是写作输入,不是交付物。三篇成稿交由 `$embodied-ai-review-writer` 独立撰写:
 > 正文必须是按论证组织的连续 prose;禁止把 claim map 表格当正文;
 > 禁止一事件一行/一段;三种风格必须是三个真实读者声音。
-> 正文引用一律用 arXiv 论文链接(读者点开即达论文);事件锚点只用于 References/appendix 溯源。
+> 正文引用一律用 arXiv 论文链接(读者点开即达论文);事件锚点只用于 trace-map/appendix 溯源。
 
 ## 范围
 
@@ -63,16 +63,17 @@
 - `limit` 接触丰富任务里的失败常是视觉不可见的局部接触扰动；仅用视觉世界模型会产生看似合理但接触不一致的轨迹，因此纠错数据需要触觉/力反馈参与。 ([2607.02840](https://arxiv.org/abs/2607.02840) / [EA-SENSOR-2026-DQ-0006](evidence-appendix.md#ea-sensor-2026-dq-0006))
 - `limit` A recorded robot action is not a universal supervision signal: the same command can produce different motions across controllers, embodiments, hardware units, and deployment-time dynamics. ([2606.24049](https://arxiv.org/abs/2606.24049) / [EA-ALIGN-2026-0010](evidence-appendix.md#ea-align-2026-0010))
 
-## 三种风格的读者与语气
+## Writer handoff
 
-- `scientific-memo_keyan.md` 研究者读:中心论点 → 派生矛盾/机制(prose 小节) → 可操作框架 → 最短结论。引用密集,每个实质论断带论文链接。
-- `zhihu-explainer_zhihu.md` 技术公众读:先破一个具体误区 → 讲机制(用比喻可以,升级 stance 不可以) → 给适用边界 → 延伸阅读。
-- `xiaohongshu-post_xiaohongshu.md` 泛兴趣读者:一个钩子 → 3-5 条反常识洞察(每条一句话+论文链接) → 一句可见的 caveat → 一行来源说明。
+- Use `$embodied-ai-review-writer` with this brief, the accepted evidence JSONL, and `evidence-appendix.md`.
+- The writer loads only the requested style reference and drafts each style independently from this evidence model.
+- Generate `trace-map.json`, then pass the writer's editorial quality audit before settlement.
 
 ## 引用速查
 
 - **正文引用 = arXiv 论文链接**:`[2606.13877](https://arxiv.org/abs/2606.13877)` 或 `[SIEVE](https://arxiv.org/abs/2607.06442)`。读者点开即达论文。
 - 事件级溯源留给 appendix:成稿正文不放 `evidence-appendix.md#...` 事件锚点;需要精确定位(章节/立场/置信)时,读者从 References 或 appendix 查。
 - 本简报中每条证据给出 `论文链接 / 事件链接` 对:写作时**取前者入正文**,后者供你核对 locator 与 stance。
-- 成稿末尾必须有 `## References` 节(去重论文清单,含链接);完整证据条目在 [evidence-appendix.md](evidence-appendix.md)。
+- Citation density and visible source format are style-specific; do not force a full bibliography into Xiaohongshu prose.
+- 完整证据条目在 [evidence-appendix.md](evidence-appendix.md);事件映射由 `trace-map.json` 保存。
 - Registered sources: `S-EMBODIED-DATA-FRAMEWORK`, `S-LOGISTICS-HUB-SURVEY`, `S-EA-QUESTIONS`, `S-ERR-COMPARE`, `S-PROJECT-CONTEXT`

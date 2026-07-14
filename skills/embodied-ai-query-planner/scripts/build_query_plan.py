@@ -18,6 +18,38 @@ except ImportError as exc:  # pragma: no cover - import path failure is surfaced
 
 SOCIAL_SOURCES = {"reddit", "x", "twitter", "x-twitter", "x/twitter"}
 DEFAULT_MAX_QUERIES = 50
+REVIEW_MODES: dict[str, dict[str, object]] = {
+    "rapid": {
+        "candidate_floor": 30,
+        "full_text_floor": 12,
+        "evidence_floor": 8,
+        "query_multiplier": 2,
+        "minimum_batches": 2,
+        "saturation_rounds": 1,
+        "max_new_unique_rate": 0.10,
+        "minimum_per_dimension": 1,
+    },
+    "scoping": {
+        "candidate_floor": 100,
+        "full_text_floor": 35,
+        "evidence_floor": 15,
+        "query_multiplier": 4,
+        "minimum_batches": 3,
+        "saturation_rounds": 2,
+        "max_new_unique_rate": 0.10,
+        "minimum_per_dimension": 3,
+    },
+    "systematic": {
+        "candidate_floor": 200,
+        "full_text_floor": 80,
+        "evidence_floor": 30,
+        "query_multiplier": 6,
+        "minimum_batches": 4,
+        "saturation_rounds": 2,
+        "max_new_unique_rate": 0.05,
+        "minimum_per_dimension": 5,
+    },
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,6 +61,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--end-date", help="Optional YYYY-MM-DD scope metadata.")
     parser.add_argument("--dynamic-file", action="append", default=[], help="JSON file with LLM/agent dynamic query suggestions. May be repeated.")
     parser.add_argument("--calibration-file", action="append", default=[], help="JSON calibration file. May be repeated.")
+    parser.add_argument(
+        "--review-mode",
+        choices=sorted(REVIEW_MODES),
+        default="scoping",
+        help="Search-depth contract. Targets are floors, never caps.",
+    )
+    parser.add_argument("--target-candidates", type=int, help="Override the mode's candidate floor.")
+    parser.add_argument("--target-full-text", type=int, help="Override the mode's full-text screening floor.")
+    parser.add_argument("--target-evidence", type=int, help="Override the mode's accepted-paper floor.")
     parser.add_argument("--max-queries", type=int, default=DEFAULT_MAX_QUERIES, help="Max arXiv API query entries.")
     parser.add_argument("--output", help="Write JSON plan to this path instead of stdout.")
     parser.add_argument("--markdown-output", help="Write a Markdown review view to this path.")
@@ -163,6 +204,50 @@ def dedupe_queries(entries: list[dict[str, Any]], max_queries: int) -> list[dict
         if entry.get("source_key") and entry["source_key"] not in str(existing.get("source_key", "")).split(","):
             existing["source_key"] = ",".join(filter(None, [str(existing.get("source_key", "")), str(entry["source_key"])]))
     return [by_query[query] for query in order[:max_queries]]
+
+
+def coverage_group(tier: str) -> str:
+    """Collapse query tiers into review-level coverage dimensions."""
+    normalized = normalize_key(tier)
+    if any(token in normalized for token in ("limit", "failure", "gap", "risk", "burden", "latency")):
+        return "limits-and-counterevidence"
+    if any(token in normalized for token in ("eval", "benchmark", "validation", "sim-real", "closed-loop")):
+        return "evaluation-and-validation"
+    if any(token in normalized for token in ("deploy", "production", "recovery", "industrial", "business")):
+        return "deployment-and-operations"
+    if any(token in normalized for token in ("core", "exact", "named", "quality")):
+        return "direct-topic"
+    if any(token in normalized for token in ("method", "representation", "interface", "tracking", "sensor")):
+        return "mechanisms-and-interfaces"
+    return "adjacent-and-transfer"
+
+
+def build_coverage_dimensions(queries: list[dict[str, Any]], minimum_per_dimension: int) -> list[dict[str, Any]]:
+    grouped: dict[str, list[str]] = {}
+    for item in queries:
+        group = coverage_group(str(item.get("tier") or "baseline"))
+        grouped.setdefault(group, []).append(str(item["label"]))
+    return [
+        {
+            "dimension": dimension,
+            "query_labels": labels,
+            "minimum_unique_candidates": minimum_per_dimension,
+        }
+        for dimension, labels in grouped.items()
+    ]
+
+
+def search_targets(args: argparse.Namespace, query_count: int) -> dict[str, int]:
+    mode = REVIEW_MODES[args.review_mode]
+    candidate_floor = max(
+        int(mode["candidate_floor"]),
+        query_count * int(mode["query_multiplier"]),
+    )
+    return {
+        "candidate_floor": max(1, args.target_candidates or candidate_floor),
+        "full_text_floor": max(1, args.target_full_text or int(mode["full_text_floor"])),
+        "accepted_paper_floor": max(1, args.target_evidence or int(mode["evidence_floor"])),
+    }
 
 
 def suggested_categories(topic_keys: list[str], family_keys: list[str]) -> list[str]:
@@ -474,9 +559,12 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
             )
         )
 
-    minimum_candidate_count = 12 if family_keys else 8
-    if len(arxiv_queries) >= 30:
-        minimum_candidate_count = max(minimum_candidate_count, 20)
+    mode = REVIEW_MODES[args.review_mode]
+    targets = search_targets(args, len(arxiv_queries))
+    coverage_dimensions = build_coverage_dimensions(
+        arxiv_queries,
+        int(mode["minimum_per_dimension"]),
+    )
 
     return {
         "generated_at": stable_now(),
@@ -488,7 +576,21 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         "families": family_keys,
         "suggested_categories": suggested_categories(topic_keys, family_keys),
         "query_budget": args.max_queries,
-        "minimum_candidate_count": minimum_candidate_count,
+        "review_mode": args.review_mode,
+        "search_targets": targets,
+        # Compatibility field for older Hub callers. This is a floor, never a stopping cap.
+        "minimum_candidate_count": targets["candidate_floor"],
+        "coverage_dimensions": coverage_dimensions,
+        "stopping_rule": {
+            "minimum_batches": int(mode["minimum_batches"]),
+            "saturation_rounds": int(mode["saturation_rounds"]),
+            "max_new_unique_rate": float(mode["max_new_unique_rate"]),
+            "requires_candidate_floor": True,
+            "requires_full_text_floor": True,
+            "requires_accepted_paper_floor": True,
+            "requires_all_coverage_dimensions": True,
+            "note": "Stop only when every requirement passes; source-count floors alone never establish coverage.",
+        },
         "notes": plan_notes,
         "dynamic_suggestions": dynamic_suggestions,
         "calibration_notes": calibration_notes,
@@ -508,7 +610,10 @@ def render_markdown(plan: dict[str, Any]) -> str:
         f"- Knowledge IDs: {', '.join(plan['knowledge_ids']) or 'none'}",
         f"- Families: {', '.join(plan['families']) or 'none'}",
         f"- Suggested categories: {', '.join(plan['suggested_categories']) or 'none'}",
-        f"- Minimum candidate count: {plan['minimum_candidate_count']}",
+        f"- Review mode: {plan['review_mode']}",
+        f"- Candidate floor (not a cap): {plan['search_targets']['candidate_floor']}",
+        f"- Full-text floor: {plan['search_targets']['full_text_floor']}",
+        f"- Accepted-paper floor: {plan['search_targets']['accepted_paper_floor']}",
         "",
         "## arXiv API Queries",
         "",
@@ -517,6 +622,23 @@ def render_markdown(plan: dict[str, Any]) -> str:
     ]
     for item in plan["arxiv_api_queries"]:
         lines.append(f"| {item['label']} | {item['tier']} | `{item['query']}` | {item.get('why', '')} |")
+    lines.extend(["", "## Coverage Dimensions", "", "| Dimension | Minimum candidates | Query labels |", "|---|---:|---|"])
+    for item in plan["coverage_dimensions"]:
+        lines.append(
+            f"| {item['dimension']} | {item['minimum_unique_candidates']} | {', '.join(item['query_labels'])} |"
+        )
+    rule = plan["stopping_rule"]
+    lines.extend(
+        [
+            "",
+            "## Stopping Rule",
+            "",
+            f"- Minimum batches: {rule['minimum_batches']}",
+            f"- Consecutive saturation rounds: {rule['saturation_rounds']}",
+            f"- Maximum new-unique rate at saturation: {rule['max_new_unique_rate']:.0%}",
+            "- Candidate, full-text, accepted-paper, and dimension floors must all pass.",
+        ]
+    )
     lines.extend(["", "## Browser Fallback Queries", "", "| Label | Query | Why |", "|---|---|---|"])
     for item in plan["browser_fallback_queries"]:
         lines.append(f"| {item['label']} | `{item['query']}` | {item.get('why', '')} |")

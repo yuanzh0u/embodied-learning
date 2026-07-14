@@ -1,60 +1,67 @@
-# 世界模型评测边界研究备忘录
+# 世界模型评测边界：从“像真的”到“值得信任”
 
-## 研究边界与证据范围
+## 研究边界
 
-- Topic: 世界模型评测边界
-- Time range: 2025-12-11..2026-06-11
-- Knowledge IDs: `EA-EVAL`
-- Paper-level sources: 5 / 5
-- Output type: scientific-memo
+本文综合 2025 年 12 月 11 日至 2026 年 6 月 11 日的六条论文证据，讨论机器人世界模型能否用于动作筛选、规划验证和策略评估。样本覆盖动作条件可靠性、对抗测试、外部状态验证和高效关键帧预测，足以识别评测维度，但不足以宣布某个基准已成为统一标准。
 
-## Evidence Core
+## 中心判断
 
-- Accepted events: 6
-- Stance labels: `conditional`, `gap`, `limit`
-- Confidence labels: `direct`
-- Trace IDs: [EA-EVAL-2026-SMOKE-0004](evidence-appendix.md#ea-eval-2026-smoke-0004), [EA-EVAL-2026-MEMO-0006](evidence-appendix.md#ea-eval-2026-memo-0006), [EA-EVAL-2026-SMOKE-0003](evidence-appendix.md#ea-eval-2026-smoke-0003), [EA-EVAL-2026-SMOKE-0005](evidence-appendix.md#ea-eval-2026-smoke-0005), [EA-EVAL-2026-SMOKE-0002](evidence-appendix.md#ea-eval-2026-smoke-0002), [EA-EVAL-2026-SMOKE-0001](evidence-appendix.md#ea-eval-2026-smoke-0001)
-- Registered sources: `S-EMBODIED-DATA-FRAMEWORK`, `S-LOGISTICS-HUB-SURVEY`, `S-EA-QUESTIONS`, `S-ERR-COMPARE`, `S-PROJECT-CONTEXT`
+世界模型的评测边界不在生成画面是否逼真，而在它何时足以改变真实动作。一个模型要成为规划器或评估器，必须同时满足动作忠实、物理约束、长程校准、时效性和失败可拒绝；视觉连贯只覆盖其中最表面的一层。评测若不包含反事实与危险候选，容易把一个会“顺着输入讲故事”的模型误判为可靠模拟器。
 
-## Claim Map
+## 边界一：视觉保真不能替代动作忠实
 
-| Event | Topic | Stance | Confidence | Claim | Evidence | Authors | Paper |
-|---|---|---|---|---|---|---|---|
-| [EA-EVAL-2026-SMOKE-0004](evidence-appendix.md#ea-eval-2026-smoke-0004) | EA-EVAL | `conditional` | `direct` | For dynamic manufacturing, an external queryable world model can make VLM planning more verifiable by separating persistent state management from semantic reasoning and checking d... | VLM-DEWM validates each VLM decision against a persistent world model and uses discrepancy analysis for targeted recovery, with reported gains in state tracking and recovery success in long-horizon manufacturing tasks.... | guoqin-tang | [2602.15549](https://arxiv.org/abs/2602.15549) |
-| [EA-EVAL-2026-MEMO-0006](evidence-appendix.md#ea-eval-2026-memo-0006) | EA-EVAL | `conditional` | `direct` | Efficient embodied world-model rollouts must preserve sparse task-relevant manipulation events such as approach, contact, grasp, and release; reducing inference cost by generic fr... | The paper argues that pixel-space rollout is expensive, but indiscriminate frame dropping is misaligned with embodied manipulation because critical task events may involve only small visual changes and become unrecovera... | ziheng-he | [2606.00664](https://arxiv.org/abs/2606.00664) |
-| [EA-EVAL-2026-SMOKE-0003](evidence-appendix.md#ea-eval-2026-smoke-0003) | EA-EVAL | `conditional` | `direct` | A video-action world model can support pre-execution action evaluation by imagining candidate futures, scoring task progress, and rectifying low-quality action candidates. | The paper presents a unified video-action world model that combines policy learning, video prediction, and action evaluation, using test-time sampling, ranking, and simulator-based rectification before execution. (Abstr... | pengfei-zhou | [2606.01027](https://arxiv.org/abs/2606.01027) |
-| [EA-EVAL-2026-SMOKE-0005](evidence-appendix.md#ea-eval-2026-smoke-0005) | EA-EVAL | `limit` | `direct` | External world-model verification has explicit deployment boundaries: corrupted perception can pollute the world model, closed-world assumptions fail on novel objects, and geometr... | The limitations section identifies upstream perception errors, open-vocabulary failures under closed-world assumptions, and a dynamics gap in the physical verification scope. (4.4.2 Limitations and Failure Mode Analysis... | guoqin-tang | [2602.15549](https://arxiv.org/abs/2602.15549) |
-| [EA-EVAL-2026-SMOKE-0002](evidence-appendix.md#ea-eval-2026-smoke-0002) | EA-EVAL | `limit` | `direct` | Trustworthy robotic video world-model evaluation needs constraint-sensitive, counterfactual, and adversarial scenarios because visual coherence and surface instruction following d... | RoboTrustBench evaluates video world models with four scenario types and a six-dimensional protocol, reporting failures in constraint reasoning, counterfactual grounding, physical interaction, and unsafe-instruction sup... | huiqiong-li | [2606.01600](https://arxiv.org/abs/2606.01600) |
-| [EA-EVAL-2026-SMOKE-0001](evidence-appendix.md#ea-eval-2026-smoke-0001) | EA-EVAL | `gap` | `direct` | Robotic world-model evaluation should move beyond visual fidelity toward action-conditioned reliability, including physical adherence, action-following fidelity, and optimism-bias... | The paper frames existing evaluations as weak evidence for whether action-conditioned predictions are reliable, then defines MiraBench around physics adherence, action fidelity, and failure-case optimism bias. (Abstract... | tianzhuo-yang | [2605.29360](https://arxiv.org/abs/2605.29360) |
+[MiraBench](https://arxiv.org/abs/2605.29360) 将评测焦点从像素质量移向动作条件可靠性，包括物理遵循、动作跟随和乐观偏差。原因很简单：若给定“向左推”，模型却生成一个看起来合理的向右移动，画面再真实也无法用于比较动作。
 
-## 主要综合
+动作忠实还要求变化幅度与控制量相符。模型可能正确识别任务目标，却系统性低估碰撞、滑移和失败概率，从而对候选动作过度乐观。这类偏差在普通成功案例中不明显，必须用接近约束边界的动作才能暴露。
 
-### 条件成立
-- [EA-EVAL-2026-SMOKE-0004](evidence-appendix.md#ea-eval-2026-smoke-0004): For dynamic manufacturing, an external queryable world model can make VLM planning more verifiable by separating persistent state management from semantic reasoning and checking decisions before execution.
-- [EA-EVAL-2026-MEMO-0006](evidence-appendix.md#ea-eval-2026-memo-0006): Efficient embodied world-model rollouts must preserve sparse task-relevant manipulation events such as approach, contact, grasp, and release; reducing inference cost by generic frame dropping can remove exactly the even...
-- [EA-EVAL-2026-SMOKE-0003](evidence-appendix.md#ea-eval-2026-smoke-0003): A video-action world model can support pre-execution action evaluation by imagining candidate futures, scoring task progress, and rectifying low-quality action candidates.
-### 限制与失败模式
-- [EA-EVAL-2026-SMOKE-0005](evidence-appendix.md#ea-eval-2026-smoke-0005): External world-model verification has explicit deployment boundaries: corrupted perception can pollute the world model, closed-world assumptions fail on novel objects, and geometry-only checks do not verify dynamics or...
-- [EA-EVAL-2026-SMOKE-0002](evidence-appendix.md#ea-eval-2026-smoke-0002): Trustworthy robotic video world-model evaluation needs constraint-sensitive, counterfactual, and adversarial scenarios because visual coherence and surface instruction following do not establish robotic trustworthiness.
-### 开放问题
-- [EA-EVAL-2026-SMOKE-0001](evidence-appendix.md#ea-eval-2026-smoke-0001): Robotic world-model evaluation should move beyond visual fidelity toward action-conditioned reliability, including physical adherence, action-following fidelity, and optimism-bias detection.
+## 边界二：常规样本无法证明可信
 
-## Source Gaps
+[RoboTrustBench](https://arxiv.org/abs/2606.01600) 强调约束敏感、反事实和对抗场景。若评测只输入训练分布内的顺利动作，模型可以依靠外观先验生成合理视频；当动作违反几何限制、指令互相冲突或环境出现分布外物体时，模型是否拒绝或暴露不确定性才真正重要。
 
-- No immediate source gaps detected from loaded packet inputs.
+因此，可信评测需要成对问题：可行动作与不可行动作、轻微扰动前后、相同目标下不同控制强度。只有比较模型是否对干预敏感，才能判断它学到了动作因果还是视觉共现。
+
+## 边界三：验证器本身也会继承错误状态
+
+[VLM-DEWM](https://arxiv.org/abs/2602.15549) 把持续状态管理与语义推理解耦，让制造规划在执行前查询外部世界模型。这种设计增强了可核验性，却有明确前提：进入世界模型的感知必须足够可靠，封闭世界假设不能频繁失效，几何检查也不能替代动力学与运动学验证。
+
+换言之，增加验证器并不会自动增加真值。如果相机把零件识别错，外部状态会把错误长期保存；如果模型只检查位置，却不检查速度、力和可达性，它只能证明几何表面合理。评测必须把输入污染和验证盲区单独列出。
+
+## 边界四：推演收益必须扣除延迟与事件丢失
+
+[τ0-WM](https://arxiv.org/abs/2606.01027) 展示了世界模型在执行前想象候选未来、评分任务进度并修正动作的潜力。但部署价值取决于净收益：纠正了多少错误，额外花了多少时间，长程滚动误差是否让后半段判断失真。
+
+[SKIP](https://arxiv.org/abs/2606.00664) 从效率侧提出另一条边界。稀疏关键帧可以减少计算，但接近、接触、抓取和释放往往只是短暂事件；通用丢帧策略可能恰好删掉策略最需要的证据。高效评测要保留任务事件，而不是平均保留时间片。
+
+## 条件、分歧与验收框架
+
+现有研究支持世界模型充当动作前置评估器，却没有证明它能替代真实闭环。短时、刚体、视野完整的任务更容易满足条件；柔性物、颗粒物、遮挡和长时接触会放大不可观测状态与滚动误差。外部验证适合规则明确的制造场景，在开放世界中则需要异常检测与人工兜底。
+
+建议将验收拆成五层：生成是否遵循给定动作，结果是否满足物理与任务约束，长时概率是否校准，推演是否快于决策窗口，模型遇到未知状态时是否拒绝。任何一层失败，都不应把它当成独立的安全裁判。
+
+## 研究空白与下一步
+
+下一步需要把评测分数与真实机器人决策后果对齐。应记录世界模型排序、实际执行结果和错误代价，测量它是否减少危险尝试，而不仅是预测视频更接近数据集。还需要统一乐观偏差、反事实敏感度和推演延迟的报告方式，使不同模型可以在同一风险预算下比较。
+
+## 结论
+
+世界模型从生成器走向评估器，需要跨过一条明确边界：它必须对动作干预敏感，对物理约束诚实，对未知状态保守，并在控制截止时间前给出判断。画面逼真可以是入口，却不是信任依据。真正值得部署的评测，不问模型能否讲出一个未来，而问它能否稳定排除不该执行的未来。
+
+## 风险分级与部署建议
+
+世界模型是否可用，应随动作风险分级。可逆、低代价动作可以允许模型直接排序；接近碰撞、可能损坏物体或涉及人机协作的动作，应要求多个模型一致、显式约束检查或真实传感确认。评测报告需要说明模型被授权到哪一级，而不是只给一个总体分数。
+
+还应测量错误方向。世界模型偶尔过度保守，会降低效率；系统性过度乐观，则会把危险动作排到前面。两种错误即使准确率相同，部署代价也完全不同。校准曲线、拒绝率与危险动作漏检率应和成功率一起报告。
+
+评测数据必须避免只包含单一成功未来。对每个初始状态，可以生成多种动作强度、方向和时机，并记录真实结果，使模型面对真正的反事实选择。若只能评价观测到的一条轨迹，就难以判断模型是在模拟干预，还是记住数据分布中的典型续写。
+
+最后，世界模型评测本身也需定期更新。机器人策略变强后会访问新的状态，旧基准覆盖的动作边界可能失效。部署日志中的新颖失败应进入下一轮对抗集，形成模型、评测与真实系统共同演化的闭环。
+
+对外报告时还应区分“能预测”“能排序”和“能安全否决”三个等级。预测准确并不保证候选排序稳定，排序有效也不代表模型具备独立否决危险动作的资格。分级能阻止单一分数被过度解释，也便于为不同风险任务设置准入门槛。
 
 ## References
 
-- `2602.15549` [VLM-DEWM: Dynamic External World Model for Verifiable and Resilient Vision-Language Planning in Manufacturing](https://arxiv.org/abs/2602.15549) (2026-02-17)
-- `2605.29360` [MiraBench: Evaluating Action-Conditioned Reliability in Robotic World Models](https://arxiv.org/abs/2605.29360) (2026-05-28)
-- `2606.00664` [SKIP: Sparse Keyframe Interpolation Paradigm for Efficient Embodied World Models](https://arxiv.org/abs/2606.00664) (2026-05-30)
-- `2606.01027` [τ0-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027) (2026-05-31)
-- `2606.01600` [RoboTrustBench: Benchmarking the Trustworthiness of Video World Models for Robotic Manipulation](https://arxiv.org/abs/2606.01600) (2026-06-01)
-
-完整证据条目见 [evidence-appendix.md](evidence-appendix.md)。
-
-## 研究启发与开放问题
-
-- Treat support, conditional, limit, and gap events as separate signals before writing topic-card updates.
-- Mark cross-event synthesis as `inference` unless a claim is directly backed by an event/source ID.
-- Use topic-card update suggestions only after checking source gaps.
+- [MiraBench](https://arxiv.org/abs/2605.29360)
+- [RoboTrustBench](https://arxiv.org/abs/2606.01600)
+- [τ0-WM](https://arxiv.org/abs/2606.01027)
+- [VLM-DEWM](https://arxiv.org/abs/2602.15549)
+- [SKIP](https://arxiv.org/abs/2606.00664)

@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.26800",
+    "title": "SSI-Policy: Learning Structured Scene Interfaces for Vision-Language Robotic Manipulation",
+    "published": "2026-06-25",
+    "url": "https://arxiv.org/abs/2606.26800",
+    "authors": [
+      "Kaijun Wang",
+      "Zikai Ouyang",
+      "Xuping Wu",
+      "Jinyi Hong",
+      "Wei Pan",
+      "Haibo Lu",
+      "Jia Pan",
+      "Wei Zhang",
+      "Linfang Zheng"
+    ]
+  },
+  "review": {
+    "question": "Sparse language, dense vision, and continuous action alignment in VLA systems",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-SENSOR",
+      "EA-XEMBODIMENT",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to Sparse language, dense vision, and continuous action alignment in VLA systems."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "III Methodology",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "IV Experiment Results",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question 'Sparse language, dense vision, and continuous action alignment in VLA systems', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "A structured intermediate visual interface can reduce the alignment burden by separating RGB-based geometric/task grounding from embodiment-specific action control."
+  ],
+  "method": {
+    "summary": "Language-Guided Object Localization Module (LGOL) To highlight task-relevant regions, this module detects objects and manipulators based on the instruction . A language-conditioned object detector proposes bounding boxes, which are aggregated into a dense layout map by filling each region with its confidence score (overlapping areas retain the maximum), yielding a spatial salience map that guides policy attention. An example layout map is shown as an inset in Figure 3 . We use Grounding DINO [ 33 ] off the shelf; the formulation is detector-agnostic and compatible with finetuned alternatives.",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Real-world Setup We use a 6-DoF ARX-5 arm with two RGB cameras (side-view and eye-in-hand), deployed via ROS at 10 Hz (Figure 4 ) on a single NVIDIA GeForce RTX 4090. The action space consists of absolute joint and gripper positions, and diffusion inference is performed using 16 denoising steps. We evaluate across 13 tasks covering diverse manipulation capabilities, including spatial reasoning (e.g. directional and relational reasoning), deformable object handling (e.g., sponge, tissue), contact-rich operations (e.g., wiping, drawer closing), multi-stage manipulation, pick-and-place, and cross-embodiment transfer (e.g., human-hand video pretraining). Following ATM [ 48 ] , we collect 50 tele",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "A structured intermediate visual interface can reduce the alignment burden by separating RGB-based geometric/task grounding from embodiment-specific action control.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (III Methodology) and evaluation (IV Experiment Results)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.26800-C01",
+      "claim": "A structured intermediate visual interface can reduce the alignment burden by separating RGB-based geometric/task grounding from embodiment-specific action control.",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: Sparse language, dense vision, and continuous action alignment in VLA systems",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "SSI-Policy builds an RGB-only structured scene interface encoding monocular depth features, language-grounded layouts, and instruction-conditioned 2D motion trajectories; it reports few-shot gains but notes failures from perception noise and contact limitations.",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Real-world robotic manipulation demands spatial grounding, task-aware reasoning, and precise control. Learning such capabilities becomes particularly challenging in the low-data regime. Prior methods often trade off scalable task-level reasoning and explicit physical structure: video-based approaches can drift geometrically over long horizons, 3D approaches often require depth sensing, and many flow/trajectory interfaces emphasize motion without an explicit RGB-only geometric representation. We introduce SSI-Policy, a modular framework built around a Structured Scene Interface (SSI)—a unified, RGB-only intermediate representation that jointly encodes monocular depth features, language-grounded object layouts, and instruction-conditioned 2D motion trajectories. Critically, SSI is robot-agnostic and trainable from action-free video, decoupling perception from control so that the downstream policy can learn from few demonstrations. On the LIBERO benchmark with only 10 demonstrations per task, SSI-Policy improves over the strongest prior method by nearly 15% and remains competit",
+      "evidence_type": "method+experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (2d, an, by, control, depth, features, geometric, grounding). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "The paper also marks a boundary: structured RGB interfaces do not solve tactile/contact observability."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

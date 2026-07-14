@@ -3,17 +3,17 @@ id: EA-XEMBODIMENT
 title: 跨本体与数据迁移
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
   - id: S-EA-QUESTIONS
     status: retired
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §四 跨本体与数据迁移(Q10-Q12)
-  - id: RUN-VLA-ALIGN-20260630
-    file: ../../evidence/literature-review-language-action-vision-alignment-20260630/evidence.jsonl
+  - id: RUN-VLA-ALIGN-20260714
+    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v1/evidence.jsonl
     locator: EA-ALIGN-2026-0007,0009,0010
-  - id: RUN-UMI-QUALITY-20260606
-    file: ../../evidence/literature-review-umi-data-quality-six-month-20260606/evidence.jsonl
+  - id: RUN-UMI-QUALITY-20260714
+    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v1/evidence.jsonl
     locator: RealDexUMI accepted event
 tags: [embodied-ai, cross-embodiment, retargeting, dexterous-hand, gripper, action-space]
 aliases: [跨本体, Retargeting, 人手迁移, 灵巧手, 夹爪, 动作空间]
@@ -66,8 +66,8 @@ confidence: working
 - S-EA-QUESTIONS:46-48 覆盖人手数据到不同机器人本体的映射。
 - S-EA-QUESTIONS:49-52 覆盖跨本体预训练和迁移上限。
 - S-EA-QUESTIONS:53-55 覆盖 retargeting 瓶颈和优化方向。
-- RUN-VLA-ALIGN-20260630：`EA-ALIGN-2026-0007`, `0010` 支持动作兼容与机器人 adapter；`0009` 支持 contact transfer。
-- RUN-UMI-QUALITY-20260606：RealDexUMI 事件支持同构末端和传感器减少灵巧操作转换损失。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0007`, `0010` 支持动作兼容与机器人 adapter；`0009` 支持 contact transfer。
+- RUN-UMI-QUALITY-20260714：RealDexUMI 事件支持同构末端和传感器减少灵巧操作转换损失。
 
 ## 待补问题
 

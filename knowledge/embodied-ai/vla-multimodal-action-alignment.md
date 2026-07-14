@@ -3,10 +3,10 @@ id: EA-ALIGN
 title: VLA 多模态与动作对齐
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
-  - id: RUN-VLA-ALIGN-20260630
-    file: ../../evidence/literature-review-language-action-vision-alignment-20260630/evidence.jsonl
+  - id: RUN-VLA-ALIGN-20260714
+    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v1/evidence.jsonl
     locator: EA-ALIGN-2026-0001..0010
 tags: [embodied-ai, vla, alignment, language, vision, action, controller, action-token]
 aliases: [多模态对齐, 语言动作对齐, 视觉动作对齐, 动作 token, action adapter]
@@ -65,9 +65,9 @@ VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处�
 
 ## 证据锚点
 
-- RUN-VLA-ALIGN-20260630：`EA-ALIGN-2026-0008` 覆盖语言稀疏与视觉捷径；`EA-ALIGN-2026-0001` 覆盖 dense reasoning 桥接。
-- RUN-VLA-ALIGN-20260630：`EA-ALIGN-2026-0003..0006` 覆盖 action prior、state-aware tokenizer 和动作对齐视觉接口。
-- RUN-VLA-ALIGN-20260630：`EA-ALIGN-2026-0007`, `EA-ALIGN-2026-0010` 覆盖跨本体兼容与 action adapter；`EA-ALIGN-2026-0009` 覆盖 contact transfer。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0008` 覆盖语言稀疏与视觉捷径；`EA-ALIGN-2026-0001` 覆盖 dense reasoning 桥接。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0003..0006` 覆盖 action prior、state-aware tokenizer 和动作对齐视觉接口。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0007`, `EA-ALIGN-2026-0010` 覆盖跨本体兼容与 action adapter；`EA-ALIGN-2026-0009` 覆盖 contact transfer。
 
 ## 待补问题
 

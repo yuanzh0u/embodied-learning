@@ -3,20 +3,20 @@ id: EA-MODEL
 title: 模型与预训练
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
   - id: S-EA-QUESTIONS
     status: retired
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §五 模型与预训练(Q13-Q15)
-  - id: RUN-VLA-ALIGN-20260630
-    file: ../../evidence/literature-review-language-action-vision-alignment-20260630/evidence.jsonl
+  - id: RUN-VLA-ALIGN-20260714
+    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v1/evidence.jsonl
     locator: EA-ALIGN-2026-0001..0010
-  - id: RUN-WMDATA-20260611
-    file: ../../evidence/literature-review-world-model-training-data-20260611/evidence.jsonl
+  - id: RUN-WMDATA-20260714
+    file: ../../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v1/evidence.jsonl
     locator: EA-MODEL-2026-WMDATA-0007..0010
-  - id: RUN-4D-REASONING-20260612
-    file: ../../evidence/literature-review-4d-spatiotemporal-reasoning-20260612/evidence.jsonl
+  - id: RUN-4D-REASONING-20260714
+    file: ../../evidence/literature-review-4d时空推理-20260714-reader-v1/evidence.jsonl
     locator: EA-MODEL-2026-4D-0001..0010
 tags: [embodied-ai, model, pretraining, vla, rt-x, octo, openvla, sim2real]
 aliases: [机器人基础模型, Unified Model, VLA, Octo, OpenVLA, RT-X, 预训练, 微调]
@@ -72,9 +72,9 @@ confidence: working
 - S-EA-QUESTIONS:56-58 覆盖 Unified Model 和 scaling 挑战。
 - S-EA-QUESTIONS:59-62 覆盖 benchmark 与真实泛化问题。
 - S-EA-QUESTIONS:63-66 覆盖预训练评估和 Sim2Real。
-- RUN-VLA-ALIGN-20260630：`EA-ALIGN-2026-0003..0008` 覆盖 action prior、tokenizer、结构化视觉接口和语言稀疏性。
-- RUN-WMDATA-20260611：`EA-MODEL-2026-WMDATA-0007..0010` 覆盖关键事件保留、4D 一致和 action-grounded representation。
-- RUN-4D-REASONING-20260612：`EA-MODEL-2026-4D-0003`, `0009`, `0010` 覆盖 4D 监督、几何增强 rollout 和部署时世界模型。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0003..0008` 覆盖 action prior、tokenizer、结构化视觉接口和语言稀疏性。
+- RUN-WMDATA-20260714：`EA-MODEL-2026-WMDATA-0007..0010` 覆盖关键事件保留、4D 一致和 action-grounded representation。
+- RUN-4D-REASONING-20260714：`EA-MODEL-2026-4D-0003`, `0009`, `0010` 覆盖 4D 监督、几何增强 rollout 和部署时世界模型。
 
 ## 待补问题
 

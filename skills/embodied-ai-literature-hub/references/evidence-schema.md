@@ -36,7 +36,14 @@ Store discussion events as JSONL. One line is one author-attributed stance event
     "summary": "Paraphrased evidence.",
     "locator": "page 3, section Method",
     "short_quote": "Optional short quote only.",
-    "evidence_type": "experiment"
+    "evidence_type": "experiment",
+    "extraction": {
+      "source_format": "html",
+      "method": "html-latexml",
+      "quality": "high",
+      "visual_validation": "not-required",
+      "visual_validation_pages": []
+    }
   },
   "confidence": "direct",
   "core_citations": [
@@ -87,3 +94,10 @@ Store discussion events as JSONL. One line is one author-attributed stance event
 ## Promotion rule
 
 A candidate paper enters the evidence layer only if it yields at least one event with a topic-relevant claim and a locator. Metadata-only relevance is not enough.
+
+## Extraction provenance
+
+- Allowed methods: `html-latexml`, `html-flat`, `pdf-text`, `pdf-ocr`.
+- Accepted quality: `high` or `medium`; `low` remains candidate-only.
+- Set `visual_validation` to `required` when the gateway flags OCR or medium-quality pages. Change it to `passed` only after comparing every cited/flagged page with the rendered PDF.
+- Older evidence without `evidence.extraction` remains readable. New workflow-v2 evidence must include it.

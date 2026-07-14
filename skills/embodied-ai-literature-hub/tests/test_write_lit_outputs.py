@@ -110,6 +110,28 @@ class WriteLitOutputsTest(unittest.TestCase):
         self.assertNotIn("Google DeepMind", brief)
         self.assertNotIn("计算机学院", brief)
 
+    def test_rejects_ocr_evidence_until_visual_validation_passes(self) -> None:
+        event = event_with_authors(
+            [{"name": "OCR Author", "author_key": "ocr-author", "role": "paper-author"}]
+        )
+        event["evidence"]["extraction"] = {  # type: ignore[index]
+            "source_format": "pdf",
+            "method": "pdf-ocr",
+            "quality": "medium",
+            "visual_validation": "required",
+            "visual_validation_pages": [2, 3],
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "evidence.jsonl"
+            path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "requires visual validation"):
+                write_lit_outputs.load_events(path)
+
+            event["evidence"]["extraction"]["visual_validation"] = "passed"  # type: ignore[index]
+            path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            events = write_lit_outputs.load_events(path)
+        self.assertEqual("pdf-ocr", events[0]["evidence"]["extraction"]["method"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -56,11 +56,20 @@ class InitRunTest(unittest.TestCase):
         self.assertEqual(1, len(run_dirs))
         manifest = json.loads((run_dirs[0] / "run.json").read_text(encoding="utf-8"))
         self.assertEqual("in-progress", manifest["status"])
+        self.assertEqual(2, manifest["workflow_version"])
+        self.assertEqual("scoping", manifest["review_mode"])
         self.assertEqual(["EA-DATA", "EA-MODEL"], manifest["knowledge_ids"])
         self.assertEqual("2026-01-09..2026-07-09", manifest["time_range"])
         self.assertEqual(0, manifest["event_count"])
         self.assertEqual({}, manifest["files"])
         self.assertEqual(run_dirs[0].name, manifest["run"])
+
+    def test_accepts_systematic_review_mode(self) -> None:
+        completed = self.run_cli("--review-mode", "systematic")
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        run_dir = next(self.tmp.glob("literature-review-*-20260709"))
+        manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual("systematic", manifest["review_mode"])
 
     def test_refuses_to_overwrite_without_force(self) -> None:
         first = self.run_cli()

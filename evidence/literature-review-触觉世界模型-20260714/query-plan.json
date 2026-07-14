@@ -1,0 +1,1165 @@
+{
+  "generated_at": "2026-07-14T04:55:51.180273+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "触觉世界模型",
+  "start_date": "2026-01-14",
+  "end_date": "2026-07-14",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-EVAL",
+    "EA-MODEL",
+    "EA-SENSOR"
+  ],
+  "families": [
+    "tactile-force",
+    "world-model"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 120,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 120,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-visuotactile-world-model",
+        "tactile-force-tactile-manipulation",
+        "world-model-robot",
+        "ea-data-robot-demonstrations",
+        "ea-data-demonstration-quality",
+        "ea-eval-closed-loop",
+        "ea-model-vla",
+        "ea-model-named-foundation",
+        "ea-sensor-multimodal-policy"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-tactile-action-model",
+        "dynamic-contact-prediction",
+        "dynamic-tactile-foundation",
+        "tactile-force-force-torque",
+        "tactile-force-slip-detection",
+        "tactile-force-contact-rich",
+        "tactile-force-sensor-fusion",
+        "world-model-video-prediction",
+        "world-model-planning",
+        "ea-data-in-the-wild",
+        "ea-data-dataset-curation",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model",
+        "ea-eval-sim-real-correlation",
+        "ea-model-finetuning",
+        "ea-sensor-tactile-force",
+        "ea-sensor-point-cloud"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "world-model-contact",
+        "world-model-long-horizon",
+        "ea-sensor-occlusion"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (medium): 区分触觉表征、触觉未来预测和闭环动作使用。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-visuotactile-world-model",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"visuo-tactile\" OR all:visuotactile) AND all:\"world model\" AND all:robot",
+      "why": "直接覆盖视觉—触觉世界模型。"
+    },
+    {
+      "label": "dynamic-tactile-action-model",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:tactile AND (all:\"world action model\" OR all:\"action-conditioned\") AND all:robot",
+      "why": "覆盖动作条件的触觉未来。"
+    },
+    {
+      "label": "dynamic-contact-prediction",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"robot manipulation\" AND (all:\"contact prediction\" OR all:\"force prediction\" OR all:\"slip prediction\")",
+      "why": "覆盖接触状态和物理结果预测。"
+    },
+    {
+      "label": "dynamic-tactile-foundation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:tactile AND (all:\"foundation model\" OR all:pretraining) AND all:robot",
+      "why": "覆盖大规模触觉表征与迁移。"
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-visuotactile-world-model",
+      "tier": "core",
+      "query": "(all:\"visuo-tactile\" OR all:visuotactile) AND all:\"world model\" AND all:robot",
+      "why": "直接覆盖视觉—触觉世界模型。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visuotactile-world-model"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-action-model",
+      "tier": "mechanism",
+      "query": "all:tactile AND (all:\"world action model\" OR all:\"action-conditioned\") AND all:robot",
+      "why": "覆盖动作条件的触觉未来。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-action-model"
+      ]
+    },
+    {
+      "label": "dynamic-contact-prediction",
+      "tier": "mechanism",
+      "query": "all:\"robot manipulation\" AND (all:\"contact prediction\" OR all:\"force prediction\" OR all:\"slip prediction\")",
+      "why": "覆盖接触状态和物理结果预测。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-prediction"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-foundation",
+      "tier": "adjacent",
+      "query": "all:tactile AND (all:\"foundation model\" OR all:pretraining) AND all:robot",
+      "why": "覆盖大规模触觉表征与迁移。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-foundation"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-visuotactile-world-model",
+      "tier": "core",
+      "query": "(all:\"visuo-tactile\" OR all:visuotactile) AND all:\"world model\" AND all:robot",
+      "why": "直接覆盖视觉—触觉世界模型。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visuotactile-world-model"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-action-model",
+      "tier": "mechanism",
+      "query": "all:tactile AND (all:\"world action model\" OR all:\"action-conditioned\") AND all:robot",
+      "why": "覆盖动作条件的触觉未来。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-action-model"
+      ]
+    },
+    {
+      "label": "dynamic-contact-prediction",
+      "tier": "mechanism",
+      "query": "all:\"robot manipulation\" AND (all:\"contact prediction\" OR all:\"force prediction\" OR all:\"slip prediction\")",
+      "why": "覆盖接触状态和物理结果预测。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-prediction"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-foundation",
+      "tier": "adjacent",
+      "query": "all:tactile AND (all:\"foundation model\" OR all:pretraining) AND all:robot",
+      "why": "覆盖大规模触觉表征与迁移。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-foundation"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "browser-topic-arxiv",
+      "query": "site:arxiv.org/abs \"触觉世界模型\" \"robot\"",
+      "why": "Fallback candidate discovery on arXiv pages when API metadata search under-recovers.",
+      "source_key": "generic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "web-topic-calibration",
+      "query": "\"触觉世界模型\" \"robot\" \"arXiv\"",
+      "why": "Find paper-facing terminology for the requested topic.",
+      "source_key": "generic",
+      "source_type": "web",
+      "channel": "web_calibration"
+    }
+  ]
+}

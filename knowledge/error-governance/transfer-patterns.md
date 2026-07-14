@@ -3,14 +3,14 @@ id: ERR-PATTERN
 title: 可迁移的误差治理模式
 type: topic-card
 domain: error-governance
-updated: 2026-07-10
+updated: 2026-07-14
 source:
   - id: S-ERR-COMPARE
     status: retired
     archive: "git show 081e898:测绘误差观与大模型误差治理比较.md"
     locator: §四 二者能否互补、§五 测绘方法能补大模型行业的短板、§六 大模型行业能反哺测绘行业
-  - id: RUN-PERCEPTION-COGNITION-20260709
-    file: ../../evidence/literature-review-perception-vs-cognitive-error-20260709/evidence.jsonl
+  - id: RUN-PERCEPTION-COGNITION-20260714
+    file: ../../evidence/literature-review-具身数据感知误差与认知误差区别-20260714-reader-v1/evidence.jsonl
     locator: EA-PVC-2026-0001..0007 and reused perception evidence
 tags: [error-governance, error-budget, redundancy, residual-analysis, acceptance, risk-grade]
 aliases: [误差预算, 冗余检核, 残差分析, 精度分级, 适用边界, 可信智能]
@@ -73,7 +73,7 @@ confidence: working
 - S-ERR-COMPARE:232-298 覆盖误差预算、冗余检核、适用范围、误差传播和残差分析。
 - S-ERR-COMPARE:300-391 覆盖大模型反哺测绘和可能红利。
 - S-ERR-COMPARE:393-419 覆盖不能机械照搬和最终判断。
-- RUN-PERCEPTION-COGNITION-20260709：`EA-PVC-2026-0002..0005`, `0007` 支持感知/认知解耦、阶段验证、失败恢复和 what-if 规划；分层账本为跨事件 `inference`。
+- RUN-PERCEPTION-COGNITION-20260714：`EA-PVC-2026-0002..0005`, `0007` 支持感知/认知解耦、阶段验证、失败恢复和 what-if 规划；分层账本为跨事件 `inference`。
 
 ## 待补问题
 
