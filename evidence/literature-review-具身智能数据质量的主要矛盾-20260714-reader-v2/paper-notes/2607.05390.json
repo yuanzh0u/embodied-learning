@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.05390",
+    "title": "Deform360: A Massive Multi-view Visuotactile Dataset for Deformable World Models",
+    "published": "2026-07-06",
+    "url": "https://arxiv.org/abs/2607.05390",
+    "authors": [
+      "Hongyu Li",
+      "Wanjia Fu",
+      "Xiaoyan Cong",
+      "Zekun Li",
+      "Binghao Huang",
+      "Hanxiao Jiang",
+      "Xintong He",
+      "Yiqing Liang",
+      "Rao Fu",
+      "Tao Lu",
+      "Srinath Sridhar",
+      "Kevin A. Smith",
+      "George Konidaris",
+      "Yunzhu Li"
+    ]
+  },
+  "review": {
+    "question": "具身智能数据质量的主要矛盾",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身智能数据质量的主要矛盾."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "2.1 Deformable Dataset",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "6 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身智能数据质量的主要矛盾', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "软物体和形变场景中的数据质量主要受可观测性约束：必须同时记录多视角全局运动、触觉局部形变和可用于评测的 3D 轨迹。"
+  ],
+  "method": {
+    "summary": "Existing datasets for deformable objects often focus on specific categories or lack essential modalities for comprehensive world modeling ( Tab. ˜ 1 ). Early benchmarks primarily targeted thin-shell objects such as cloth [ 6 , 12 , 21 ] or linear objects like ropes and cables [ 9 , 69 , 31 ] , but are often limited in object diversity and camera viewpoints. More recent work scales object diversity and sensory richness: Robo360 [ 47 ] offers 86 camera views across categories like bags, food, and ropes but lacks high-fidelity annotations and tactile sensing; PokeFlex [ 52 ] introduces volumetric deformable objects and interaction wrenches for poking and dropping actions; HMDO [ 80 ] and DOT [",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Our experimental evaluation is designed to demonstrate the utility of Deform360 for learning and benchmarking deformable dynamics across multiple scales and modalities. We first assess the fidelity of our markerless perception pipeline ( Sec. ˜ 5.1 ). Next, we investigate the unique visuotactile coupling in our dataset by predicting contacts from visual observations ( Sec. ˜ 5.2 ). Then, we conduct a systematic comparison of state-of-the-art world models [ 30 , 86 , 51 , 27 ] , comparing 3D particle dynamics and action-conditioned video models across three levels of generalization: frame, episode, and object ( Sec. ˜ 5.3 ). Finally, we provide a preliminary demonstration of the potential rea",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "软物体和形变场景中的数据质量主要受可观测性约束：必须同时记录多视角全局运动、触觉局部形变和可用于评测的 3D 轨迹。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Deform360 is designed to cover a broad range of everyday deformable interactions, but several difficult cases remain. Heavy self-occlusion can still reduce tracking quality when large object regions are invisible to most cameras for extended periods. Highly plastic materials may violate the local rigidity and smoothness assumptions used in our particle optimization, and visible slip at contact can make the tactile no-slip regularizer over-constrain nearby particles. Because our tactile sensors measure normal-axis pressure, they cannot directly identify micro-slip, so future extensions should i",
+        "locator": "6 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (2.1 Deformable Dataset) and evaluation (5 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.05390-C01",
+      "claim": "软物体和形变场景中的数据质量主要受可观测性约束：必须同时记录多视角全局运动、触觉局部形变和可用于评测的 3D 轨迹。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 具身智能数据质量的主要矛盾",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文认为形变物体有高维状态和复杂材料属性，接触诱发的局部形变常被末端执行器或物体遮挡；已有数据集常缺对象多样性、依赖合成数据，或缺高保真标注与接触形变。Deform360 采集 198 个日常物体、1,980 个交互序列、215 小时以上数据、41 个环视相机和双臂触觉 UMI gripper，并用 markerless 3D tracking 提取稠密几何与运动。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "To address this, we present Deform360, a large-scale visuotactile dataset featuring 198 daily-life objects, 1,980 interaction sequences, and over 215 hours of observations from 41 surround-view cameras and bimanual tactile grippers to capture both global motion and contact-induced local deformations. Leveraging a novel markerless visuotactile 3D tracking pipeline to extract dense geometry and motion, we systematically evaluate current state-of-the-art world models, comparing 2D video models against 3D particle models.",
+      "evidence_type": "dataset-and-benchmark",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (198, 215, 3d, 41, 980, deform360, markerless, tracking). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Evidence focuses on deformable/contact-rich data; generalization to rigid open-space tasks is conditional. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

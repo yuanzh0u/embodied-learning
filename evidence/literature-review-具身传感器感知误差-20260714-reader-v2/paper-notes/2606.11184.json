@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.11184",
+    "title": "TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation",
+    "published": "2026-06-09",
+    "url": "https://arxiv.org/abs/2606.11184",
+    "authors": [
+      "Yujie Zang",
+      "Yuhang Zheng",
+      "Xian Nie",
+      "Yupeng Zheng",
+      "Shuai Tian",
+      "Songen Gu",
+      "Chen Gao",
+      "Zining Wang",
+      "Shuicheng Yan",
+      "Wenchao Ding"
+    ]
+  },
+  "review": {
+    "question": "具身传感器感知误差",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身传感器感知误差."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "II-B World Model for Robotic Manipulation",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "IV EXPERIMENTS",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身传感器感知误差', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "如果目标包含扰动恢复，数据集必须显式收集nominal demonstrations和recovery interaction data；否则模型很难学习接触丢失后的再建立。"
+  ],
+  "method": {
+    "summary": "World models for robotic manipulation predict future states to support planning or condition policies on anticipated scene and physical evolution [ 31 , 16 , 11 , 24 ] . Recent works mainly focus on visual or video prediction, generating future RGB frames or latent visual features for manipulation and action generation [ 16 , 40 , 39 , 18 ] . These models are also used as learned simulators or policy-conditioning modules, reflecting a shift from reactive perception to predictive control [ 22 , 28 ] . However, contact-rich manipulation requires anticipating not only visual changes, but also contact transitions, force variations, and local deformation. Some methods directly predict future forc",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "In this section, we first describe our experimental setup. We then evaluate the effectiveness of our method on diverse contact-rich manipulation tasks. Finally, we conduct ablation studies to quantify the contribution of each key component.",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "如果目标包含扰动恢复，数据集必须显式收集nominal demonstrations和recovery interaction data；否则模型很难学习接触丢失后的再建立。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "IV-B 2 Perturbation-Aware Evaluation"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (II-B World Model for Robotic Manipulation) and evaluation (IV EXPERIMENTS)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.11184-C01",
+      "claim": "如果目标包含扰动恢复，数据集必须显式收集nominal demonstrations和recovery interaction data；否则模型很难学习接触丢失后的再建立。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 具身传感器感知误差",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "TacForeSight在perturbation-aware设置中额外收集恢复示教，让外部扰动发生在执行中并要求示教者重新建立稳定接触；完整模型在三个扰动任务上报告90%、85%、85%平均完成/成功分数。",
+      "locator": "IV-B 2 Perturbation-Aware Evaluation",
+      "source_context": "Policies in this setting are trained using both nominal demonstrations and recovery interaction data.",
+      "evidence_type": "experiment-and-data-condition",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in IV-B 2 Perturbation-Aware Evaluation contains the paper-specific concepts used by the claim (data, demonstrations, interaction, nominal, recovery). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "这说明失败/恢复数据不是评测附属品，而是训练分布的一部分。 Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

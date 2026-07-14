@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.09740",
+    "title": "ProbeAct: Probe-Guided Training-Free Failure Recovery in Vision-Language-Action Models",
+    "published": "2026-06-08",
+    "url": "https://arxiv.org/abs/2606.09740",
+    "authors": [
+      "Fan Zhang",
+      "Seongbin Park",
+      "Baharan Mirzasoleiman",
+      "Shariar Talebi",
+      "Nader Sehatbakhsh"
+    ]
+  },
+  "review": {
+    "question": "具身数据感知误差与认知误差区别",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-EVAL",
+      "EA-MODEL",
+      "ERR-EMBODIED"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身数据感知误差与认知误差区别."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Limitations and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身数据感知误差与认知误差区别', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "ProbeAct 的探针实验表明，扰动下 VLA 视觉骨干仍保留目标物空间表示，而失败集中在动作头回落到记忆的训练轨迹。"
+  ],
+  "method": {
+    "summary": "Figure 1: Overview of the ProbeAct Framework. Operating entirely at inference time alongside a frozen VLA, the system consists of three modules: (1) an internal probe that extracts stable 3D object tracks from intermediate LLM activations; (2) a kinematic state machine that detects physical execution failures via relative object-robot synchronization; and (3) a hierarchical CBF filter that minimally modifies the nominal action into a safe action to escape failure zones. The framework forms a closed-loop recovery mechanism without requiring external 3D sensors.",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "VLA backbone. We use OpenVLA-OFT [ 13 ] as our baseline policy. Benchmark. We evaluate on LIBERO-plus [ 9 ] , a benchmark covering seven perturbation categories: Background Textures , Lighting condition , Camera Viewpoints , Robot Initial States , Background Textures , Sensor Noise and Language Instructions . Success is measured by LIBERO’s built-in goal predicate. Probe training. We collect 50,000 (hidden-state, object-positions) pairs by rolling out the baseline VLA. Object positions are extracted from the simulator’s obj_of_interest list. The probe trains for 200 epochs (AdamW, batch 512, cosine LR schedule) using the Hungarian loss in Eq. 1 . Compute. All experiments use two NVIDIA RTX P",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "ProbeAct 的探针实验表明，扰动下 VLA 视觉骨干仍保留目标物空间表示，而失败集中在动作头回落到记忆的训练轨迹。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "1 Introduction"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Our empirical validation is currently constrained to a simulated benchmark, where physical interactions are governed by idealized rigid-body dynamics. Consequently, a critical avenue for future work is evaluating the sim-to-real transferability of our kinematic state machine. While the system’s reliance on relative spatial displacements and proprioceptive limits is theoretically agnostic to task semantics, physical hardware introduces stochastic, unmodeled phenomena, such as variable contact friction, soft-body deformation, and high-frequency encoder noise. Validating whether these kinematic s",
+        "locator": "5 Limitations and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 Method) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.09740-C01",
+      "claim": "ProbeAct 的探针实验表明，扰动下 VLA 视觉骨干仍保留目标物空间表示，而失败集中在动作头回落到记忆的训练轨迹。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 具身数据感知误差与认知误差区别",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "引言将该失败定义为 latent perception 与 motor execution 的解耦，并把瓶颈定位到过拟合的 action head。",
+      "locator": "1 Introduction",
+      "source_context": "Critically, this memory trap manifests as a stark decoupling between latent perception and motor execution [ 28 , 8 , 21 ] . As corroborated by our own probing experiments, the VLA’s visual backbone successfully processes the perturbed scene, maintaining accurate spatial representations of the target object. The failure bottleneck lies exclusively within the action head: constrained by an overfitted mapping, the network collapses to the nominal trajectory of its training distribution. We systematically observe this precise failure mode when evaluating OpenVLA-OFT on the LIBERO-plus benchmark [ 9 ] . A complementary line of work mitigates OOD failures at inference time via online corrections [ 27 , 22 , 16 , 18 ] . However, prevailing approaches introduce significant structural overhead by relying on external reasoning modules, additional visual symbols, or explicit 3D reprojection. They often demand supplementary sensing infrastructure",
+      "evidence_type": "probing-analysis-and-method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 1 Introduction contains the paper-specific concepts used by the claim (vla). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Promoted from candidate on 2026-07-09 via promote_candidates.py digest; cognitive-error side of the perception-vs-cognitive comparison. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

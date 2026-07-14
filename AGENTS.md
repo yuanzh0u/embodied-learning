@@ -8,8 +8,9 @@ This repository is a research knowledge base. Optimize for context efficiency an
 2. Load the domain index that matches the task:
    - [knowledge/embodied-ai/index.md](knowledge/embodied-ai/index.md)
    - [knowledge/error-governance/index.md](knowledge/error-governance/index.md)
-3. Load only the topic cards listed in `load_when` or `query_routes`.
-4. Open raw source documents only when exact wording, detailed evidence, or references are needed.
+3. When the task concerns an existing literature review, load [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) and select the current run.
+4. Load only the topic cards listed in `load_when` or `query_routes`.
+5. Open paper notes or raw source documents only when exact wording, detailed evidence, or references are needed.
 
 ## Context Rules
 
@@ -22,13 +23,14 @@ This repository is a research knowledge base. Optimize for context efficiency an
 ## Research Workflow
 
 - When researching a topic, first use the project skill `embodied-ai-literature-review`; it orchestrates `embodied-ai-query-planner` and `embodied-ai-literature-hub` for search planning, evidence extraction, and final review drafting.
+- A paper may enter accepted evidence only after complete non-OCR full text, a validated paper note, and a passing claim-support audit. Scanned-only papers are out of scope.
 
 ## Source Of Truth
 
 - `evidence/` is the source of truth for paper-level evidence and finished literature reviews (versioned, append-only per run).
 - Retired raw documents remain traceable through their registered git archives in [knowledge/sources.md](knowledge/sources.md) (`git show 081e898:<file>`).
 - Topic cards are compressed working memory for agents.
-- The master index is the routing layer.
+- The master index is the topic routing layer; [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) declares the current literature-review versions and evidence loading routes.
 - Candidates and intermediate artifacts live in `work/` (gitignored scratch); accepted assets live in `evidence/`.
 
 ## Cross-Project Knowledge

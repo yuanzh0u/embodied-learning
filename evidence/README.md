@@ -19,6 +19,10 @@
 | `candidate-registry.json` | workflow v2 必备 | 多轮检索去重后的候选库与筛选状态 |
 | `coverage-report.json` | workflow v2 必备 | 规模、维度覆盖、全文、正式证据与饱和度闸门 |
 | `review-packet.md` / `evidence-brief.md` | 可选 | 审计视图 |
+| `reading-ledger.jsonl` / `reading-summary.json` | paper-reader run 必备 | 全文恢复、map read、deep read、审计和接纳状态 |
+| `paper-note-index.json` / `paper-notes/` | paper-reader run 必备 | 单篇论文的结构化精读记录与原文上下文 |
+| `claim-support-audit-index.json` / `claim-support-audits/` | paper-reader run 必备 | 主张是否被完整全文支持的逐篇审计 |
+| `trace-map.json` | 正式三稿 bundle 必备 | 读者文章中的论文引用到 evidence event 的映射 |
 
 ## run.json 字段约定
 
@@ -56,6 +60,7 @@
 - run 用 `python3 scripts/init_run.py` 创建,出生即带 `status: in-progress` 的 run.json;结算时翻为 `settled`。`in-progress` 的 run 是未完成品,不得当作交付物展示,也不得迁入 `evidence/`。
 
 - `source_runs` 列出全部被复用的历史 run;本 run 只新挖证据时省略该字段。
+- 新版本必须创建新的 append-only run 目录；旧版本继续保留。知识卡和 [文献综述成果目录](../knowledge/literature-review-catalog.md) 负责声明当前有效版本。
 - `event_count` = 文章**实际可引用**的去重后事件总数(新挖 + 复用),不是只数新挖的。
 - 复用的 evidence.jsonl 一并拷入 run 文件夹(如 `reused/` 子目录)或在 `files.reused_evidence` 中登记相对路径,保证 run 文件夹自含可审计。
 - 结算前两道闸门都必须通过:
@@ -69,7 +74,8 @@
 1. 先读本 README 与目标 run 的 `run.json`。
 2. 中预算:读 run 的 brief 或 review-packet。
 3. 高预算:按 event_id 选择性读取 `evidence.jsonl` 行,或读综述成品。
+4. 需要核验论文主张时：从 `paper-note-index.json` 定位单篇 note，再读取对应 claim-support audit；不要默认加载全部 15 篇笔记。
 
 ## 事件 ID
 
-事件 ID 全局唯一,分配前用 `python3 scripts/next_event_id.py --prefix <topic_id_prefix>-<year>` 查询下一可用序号,避免跨 run 碰撞。
+事件 ID 在当前有效 run 集合中必须全局唯一。paper-reader 批量迁移应为每个 run 分配独立 `event_id_prefix` 并写入 `run.json`；分配前可用 `python3 scripts/next_event_id.py --prefix <topic_id_prefix>-<year>` 查询下一可用序号，避免跨 run 碰撞。

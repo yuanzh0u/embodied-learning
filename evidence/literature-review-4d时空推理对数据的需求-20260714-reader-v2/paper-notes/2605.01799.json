@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.01799",
+    "title": "Embody4D: A Generalist Data Engine for Embodied 4D World Modeling",
+    "published": "2026-05-03",
+    "url": "https://arxiv.org/abs/2605.01799",
+    "authors": [
+      "Peiyan Tu",
+      "Hanxin Zhu",
+      "Jingwen Sun",
+      "Shaojie Ren",
+      "Cong Wang",
+      "Yuyan Xu",
+      "Jiayi Luo",
+      "Xiaoqian Cheng",
+      "Zhibo Chen"
+    ]
+  },
+  "review": {
+    "question": "4D时空推理对数据的需求",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 4D时空推理对数据的需求."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 Methodology",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Limitation",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '4D时空推理对数据的需求', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "Embody4D targets the sparse-view limitation of robot video data with monocular-to-novel-view video transformation and a 3D-aware compositional synthesis pipeline for training data."
+  ],
+  "method": {
+    "summary": "Preliminary: Video Diffusion Models. Video diffusion models generate videos by learning to reverse a gradual noising process [ 26 ] . Given a clean video , Gaussian noise is progressively injected to obtain noisy samples at different timesteps. To improve efficiency, latent video diffusion models perform this process in the latent space of a pretrained 3D VAE, where the video is encoded as . A denoising network, commonly implemented with a Diffusion Transformer (DiT), is trained to predict the injected noise from the noisy latent : (1) where denotes optional conditional information, such as text tokens, source observations, or camera conditions. During inference, Gaussian latent noise is ite",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Dataset. To train this model, we initially utilize a curated dataset of 23K 4D samples synthesized via foreground-background composition, enabling the model to learn diverse robotic arm morphologies and enhancing its 4D consistency. Subsequently, we leverage 24K monocular embodied data uniformly sampled from five datasets (AGIBOT [ 7 ] , Rh20t [ 39 ] , Robset [ 40 ] , Bc-z [ 41 ] , and Interndata-A1 [ 42 ] ) to learn real-world robotic arm interactive operations. We evaluate our method on a held-out test set of 120 monocular videos that are disjoint from the training data and cover diverse robotic embodiments, scenes, and manipulation scenarios. Implementation. We fine-tune Embody4d based on",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Embody4D targets the sparse-view limitation of robot video data with monocular-to-novel-view video transformation and a 3D-aware compositional synthesis pipeline for training data.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "A limitation of our current framework lies in the limited temporal horizon of existing video generation models, which commonly support only fixed-length generation, such as 49 or 81 frames [ 51 , 34 , 52 ] . As a result, long input videos must be split into multiple clips for novel-view synthesis. Since each clip is generated independently, stitching them into a full sequence may introduce temporal discontinuities at clip boundaries, causing mild jitter and slightly degrading visual quality. Additional failure cases are shown in Fig. 17 .",
+        "locator": "5 Limitation"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 Methodology) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.01799-C01",
+      "claim": "Embody4D targets the sparse-view limitation of robot video data with monocular-to-novel-view video transformation and a 3D-aware compositional synthesis pipeline for training data.",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 4D时空推理对数据的需求",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The abstract ties fixed or sparse viewpoints to partial observations and introduces both novel-view video generation and a compositional synthesis pipeline to address data scarcity.",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Embodied agents require robust and comprehensive 3D spatiotemporal representations to support spatial reasoning, manipulation understanding, and downstream decision making. However, existing robot data are typically captured from fixed or sparse viewpoints, providing only partial and view-dependent observations, which limits multi-view perception and generalization across viewpoints. Given the difficulty of collecting additional viewpoints in real-world settings, we propose Embody4D, a dedicated video-to-video world model for embodied scenarios to bridge this observation gap by transforming a monocular robot video into novel-view videos from flexible target camera viewpoints. First, to tackle training data scarcity, we introduce a 3D-aware compositional synthesis pipeline to curate a heterogeneous dataset compositing cross-embodiment robotic arms with diverse backgrounds, promoting broad generalization. Second, to enforce geometric stability, we devise a latent confidence-aware expert modulation strategy, which estimates the reliability of warped latent priors and adaptively",
+      "evidence_type": "author-claim",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (3d-aware, abstract, compositional, data, embody4d, fixed, novel-view, observations). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Readable-candidate backfill for 4D时空推理对数据的需求 after an old accepted paper failed full-text recovery."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

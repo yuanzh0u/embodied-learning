@@ -116,12 +116,14 @@ python3 skills/embodied-ai-paper-reader/scripts/migrate_review_runs.py \
   --output-root work/paper-reader-migration/draft-runs \
   --diagnostics work/paper-reader-migration/migration-diagnostics.json \
   --override-file work/paper-reader-migration/reviewed-context-overrides.json \
+  --event-prefix-file work/paper-reader-migration/event-prefixes.json \
   --cards-per-paper 1 --minimum-match-score 0.16
 ```
 
 Migration rules:
 
 - Keep prior settled runs immutable; publish a suffixed append-only run.
+- Give every migrated run its own globally unique event prefix. Prefer an audited mapping file; without one, the script appends a deterministic run-name fingerprint and records the result in `run.json`.
 - Count only complete, evidence-eligible, non-OCR full text toward the paper floor.
 - Inspect the lowest-scoring selected matches and every manually narrowed claim.
 - An override must name an exact full-text section and start marker; it may narrow a legacy claim but must never broaden it.

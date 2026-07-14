@@ -6,11 +6,11 @@ domain: embodied-ai
 updated: 2026-07-14
 source:
   - id: RUN-4D-REASONING-20260714
-    file: ../../evidence/literature-review-4d时空推理-20260714-reader-v1/evidence.jsonl
-    locator: EA-MODEL-2026-4D-0001..0010; EA-EVAL-2026-4D-0002..0020; EA-SENSOR-2026-4D-0015..0019
+    file: ../../evidence/literature-review-4d时空推理-20260714-reader-v2/evidence.jsonl
+    locator: EA-4D-READ-0001..0015
   - id: RUN-4D-DATA-20260714
-    file: ../../evidence/literature-review-4d时空推理对数据的需求-20260714-reader-v1/evidence.jsonl
-    locator: EA-DATA-2026-4DDATA-0001..0020
+    file: ../../evidence/literature-review-4d时空推理对数据的需求-20260714-reader-v2/evidence.jsonl
+    locator: EA-4DDATA-READ-0001..0015
 tags: [embodied-ai, 4d, spatiotemporal, point-tracks, world-model, geometry, dynamics]
 aliases: [4D 时空推理, 4D 世界模型, 3D point tracks, 时空场景图, 动态世界]
 load_when:
@@ -25,6 +25,7 @@ confidence: working
 
 - Usually pair with: EA-DATA, EA-MODEL, EA-EVAL, EA-SENSOR.
 - Raw evidence needed when: 需要具体论文结果、消融、数据规模或事件立场。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 进入对应 review packet；只有核验具体主张时才打开 paper note 与 audit。
 
 ## 30 秒摘要
 
@@ -67,9 +68,8 @@ confidence: working
 
 ## 证据锚点
 
-- RUN-4D-REASONING-20260714：`EA-MODEL-2026-4D-0003` 支持 4D point-track privileged supervision；`EA-MODEL-2026-4D-0008..0010` 覆盖几何一致和部署时世界模型。
-- RUN-4D-REASONING-20260714：`EA-EVAL-2026-4D-0013..0014` 覆盖 fidelity、长程一致、效率与视觉盲区；`EA-EVAL-2026-4D-0020` 覆盖时空交互评测缺口。
-- RUN-4D-DATA-20260714：`EA-DATA-2026-4DDATA-0009..0010` 覆盖异构监督分级；`EA-DATA-2026-4DDATA-0014..0020` 覆盖恢复、接触和采集质控。
+- RUN-4D-REASONING-20260714：`EA-4D-READ-0001..0005`, `0008`, `0012..0015` 覆盖 point-track/几何监督、4D 事件、连续表征、遮挡监督和稀疏视角补全；`0006..0007` 记录场景图与 3D Gaussian 路线的限制。
+- RUN-4D-DATA-20260714：`EA-4DDATA-READ-0002`, `0006..0010` 覆盖异构监督、采集器人体工学、同步质控、恢复数据、遮挡点轨迹与视觉—触觉未来。
 
 ## 待补问题
 

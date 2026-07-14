@@ -2,7 +2,7 @@
 id: KB-INDEX
 title: 智能体主索引
 type: index
-updated: 2026-07-10
+updated: 2026-07-14
 tags: [agent-index, routing, embodied-ai, error-governance]
 ---
 
@@ -19,6 +19,7 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | 查具身智能某个议题 | [embodied-ai/index.md](embodied-ai/index.md) + 对应主题卡 |
 | 查测绘误差观或 AI 误差治理 | [error-governance/index.md](error-governance/index.md) + 对应主题卡 |
 | 查论文级证据或历史文献 run | [../evidence/README.md](../evidence/README.md) + 对应 run 的 `run.json` 与 brief |
+| 查已完成综述、论文池规模、精读状态或三类成稿 | [literature-review-catalog.md](literature-review-catalog.md)；再按预算进入主题卡、review packet 或 paper note |
 | 新增论文、报告、访谈、素材 | [ingestion-guide.md](ingestion-guide.md) + [templates/topic-card.md](templates/topic-card.md) |
 | 统一术语 | [../CONTEXT.md](../CONTEXT.md) + [glossary.md](glossary.md) |
 | 需要完整证据或参考资料 | [sources.md](sources.md) + `evidence/` 层；退役原文用登记的 `git show` 存档命令读取 |
@@ -57,9 +58,10 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | ToB、商业化、ROI、行业落地、节拍、良率、最后一厘米 | EA-BIZ |
 | 测绘、大模型误差、幻觉、可信等级、质量验收 | ERR-COMPARE, ERR-PATTERN |
 | 感知误差、认知误差、传感器错误、失败归因、误差溯源、第一偏离点 | ERR-EMBODIED, ERR-PATTERN, EA-SENSOR |
+| 文献综述、论文清单、候选池、全文、精读笔记、科研稿、知乎稿、小红书稿 | [文献综述成果目录](literature-review-catalog.md) |
 
 ## 上下文预算建议
 
 - 低预算：只读本索引 + 1 张主题卡。
 - 中预算：读领域索引 + 2-3 张主题卡。
-- 高预算：读主题卡后，再按 `source` 打开 git 存档的对应章节,或按 `evidence/` run manifest 加载论文级证据。`evidence/` 中的 JSONL 不适合整读,先读 run.json 和 brief 再选择性加载。
+- 高预算：读主题卡后，经 [文献综述成果目录](literature-review-catalog.md) 选择 run，先读 `run.json` 与 `review-packet.md`，再从 `paper-note-index.json` 选择性加载 paper note 和 claim-support audit。`evidence.jsonl` 与候选库都不适合默认整读。

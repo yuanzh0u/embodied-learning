@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.09988",
+    "title": "In-the-Wild Compliant Manipulation with UMI-FT",
+    "published": "2026-01-15",
+    "url": "https://arxiv.org/abs/2601.09988",
+    "authors": [
+      "Hojung Choi",
+      "Yifan Hou",
+      "Chuer Pan",
+      "Seongheon Hong",
+      "Austin Patel",
+      "Xiaomeng Xu",
+      "Mark R. Cutkosky",
+      "Shuran Song"
+    ]
+  },
+  "review": {
+    "question": "近半年 UMI 数据质量",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 近半年 UMI 数据质量."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "III-A UMI-FT Design",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "V Evaluations",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "VI Future Work and Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '近半年 UMI 数据质量', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "UMI-style data is useful for contact-rich manipulation when the collection interface records force/torque, depth, pose, and grasp-force signals; the paper also implies that vision/trajectory-only data is insufficient for force-sensitive tasks."
+  ],
+  "method": {
+    "summary": "UMI-FT is a modified version of the original UMI device, designed to collect multimodal sensory data including vision, pose, and six-axis F/T signals at each finger, during human demonstrations (Fig. LABEL:fig:teaser ). The system integrates CoinFT sensors mounted at both fingers and an iPhone 15 Pro. The iPhone is rigidly attached to the UMI-FT structure with a 15° tilt to better capture the finger workspace and ArUco markers (for measuring gripper width). It provides synchronized main RGB (approximately 80° diagonal FoV), ultrawide RGB (120° FoV), depth, and pose data via ARKit. The main RGB and pose stream are recorded at 60 Hz, ultrawide RGB at 10 Hz, and depth at 30 Hz. Each finger is e",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Figure 4: Whiteboard Wiping policy rollout, test scenarios, and representative baseline failures. We evaluate our approach on three tasks that highlight the benefits of compliance control with grasp force modulation. Experiments are conducted on a UR5e robot equipped with a WSG50 gripper and UMI-FT fingers. We compare our method against three baseline policies: • Diffusion Policy with Force (DP w/ F) : This baseline takes wrench information from the CoinFT sensors as input but does not perform compliance control. The wrench signals are also used for grasp force modulation. • Diffusion Policy (DP) : The original diffusion policy [ 30 ] without force observation. The gripper is commanded purel",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "UMI-style data is useful for contact-rich manipulation when the collection interface records force/torque, depth, pose, and grasp-force signals; the paper also implies that vision/trajectory-only data is insufficient for force-sensitive tasks.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (III-A UMI-FT Design) and evaluation (V Evaluations)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.09988-C01",
+      "claim": "UMI-style data is useful for contact-rich manipulation when the collection interface records force/torque, depth, pose, and grasp-force signals; the paper also implies that vision/trajectory-only data is insufficient for force-sensitive tasks.",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 近半年 UMI 数据质量",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The HTML full text reports that UMI-FT mounts compact six-axis force/torque sensors on each finger, uses multimodal demonstrations to train adaptive compliance policies, and shows diverse in-the-wild data outperforming limited scene-diversity data in a skewer task.",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Many manipulation tasks require careful force modulation. With insufficient force the task may fail, while excessive force could cause damage. The high cost, bulky size and fragility of commercial force/torque (F/T) sensors have limited large-scale, force-aware policy learning. We introduce UMI-FT, a handheld data-collection platform that mounts compact, six-axis force/torque sensors on each finger, enabling finger-level wrench measurements alongside RGB, depth, and pose. Using the multimodal data collected from this device, we train an adaptive compliance policy that predicts position targets, grasp force, and stiffness for execution on standard compliance controllers. In evaluations on three contact-rich, force-sensitive tasks (whiteboard wiping, skewering zucchini, and lightbulb insertion), UMI-FT enables policies that reliably regulate external contact forces and internal grasp forces, outperforming baselines that lack compliance or force sensing. UMI-FT offers a scalable path to learning compliant manipulation from in-the-wild demonstrations. We open-source the hardware",
+      "evidence_type": "full-text statement",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (adaptive, compact, compliance, contact-rich, data, demonstrations, depth, each). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": ""
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

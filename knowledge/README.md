@@ -2,7 +2,7 @@
 id: KB-README
 title: 知识库说明
 type: guide
-updated: 2026-07-08
+updated: 2026-07-14
 tags: [knowledge-base, agent-index, context-efficiency]
 ---
 
@@ -15,6 +15,7 @@ tags: [knowledge-base, agent-index, context-efficiency]
 | 路径 | 用途 |
 |---|---|
 | [index.md](index.md) | 全局路由索引，智能体优先读取 |
+| [literature-review-catalog.md](literature-review-catalog.md) | 已结算文献综述、覆盖规模、精读证据和三类成稿的路由目录 |
 | [sources.md](sources.md) | 原始材料登记表（含退役材料的 git 存档引用与章节锚） |
 | [glossary.md](glossary.md) | 术语表 |
 | [ingestion-guide.md](ingestion-guide.md) | 新素材入库规范 |
@@ -27,6 +28,8 @@ tags: [knowledge-base, agent-index, context-efficiency]
 - 一张卡只服务一个主题，控制上下文体积。
 - 每张卡必须有 `id`、`tags`、`source`、`load_when`。
 - 主题卡优先沉淀判断、指标、适用边界和检索关键词。
+- 文献覆盖分为候选池、可读全文、精读论文和 accepted evidence 四层，不用最终引用数代替检索规模。
+- 论文主张只有在完整全文、paper note 和 claim-support audit 均通过后，才能进入主题卡。
 - 原文保留完整论述，主题卡只做高信噪比压缩。
 - 新素材先登记，再抽取成主题卡，避免资料堆成不可检索长文。
 
@@ -35,5 +38,5 @@ tags: [knowledge-base, agent-index, context-efficiency]
 1. 读取 [index.md](index.md) 判断应该加载哪些卡片。
 2. 读取对应领域索引，例如 [embodied-ai/index.md](embodied-ai/index.md)。
 3. 读取 1-3 张最相关主题卡。
-4. 只有在需要证据细节、原始表达或参考链接时，才读取 git 存档的退役原文或 `evidence/` 层的论文级证据。
-
+4. 如需文献综述，先读 [literature-review-catalog.md](literature-review-catalog.md)，再按预算选择 review packet 或 paper note。
+5. 只有在需要证据细节、原始表达或参考链接时，才读取 git 存档的退役原文或 `evidence/` 层的论文级证据。

@@ -6,14 +6,14 @@ domain: error-governance
 updated: 2026-07-14
 source:
   - id: RUN-PERCEPTION-TRACE-20260714
-    file: ../../evidence/literature-review-具身数据感知误差溯源-20260714-reader-v1/evidence.jsonl
-    locator: 15 selected events; scientific-memo §误差账本模板
+    file: ../../evidence/literature-review-具身数据感知误差溯源-20260714-reader-v2/evidence.jsonl
+    locator: ERR-TRACE-READ-0001..0015
   - id: RUN-PERCEPTION-COGNITION-20260714
-    file: ../../evidence/literature-review-具身数据感知误差与认知误差区别-20260714-reader-v1/evidence.jsonl
-    locator: EA-PVC-2026-0001..0007 and reused perception events
+    file: ../../evidence/literature-review-具身数据感知误差与认知误差区别-20260714-reader-v2/evidence.jsonl
+    locator: ERR-PVC-READ-0001..0015
   - id: RUN-SENSOR-ERROR-20260714
-    file: ../../evidence/literature-review-具身传感器感知误差-20260714-reader-v1/evidence.jsonl
-    locator: EA-SENSOR-2026-0001..0011; EA-EVAL-2026-0007,0012
+    file: ../../evidence/literature-review-具身传感器感知误差-20260714-reader-v2/evidence.jsonl
+    locator: EA-SENSORERR-READ-0001..0015
 tags: [error-governance, embodied-ai, perception-error, cognitive-error, traceability, error-ledger]
 aliases: [具身误差, 感知误差, 认知误差, 误差溯源, 误差账本, 第一偏离点]
 load_when:
@@ -28,6 +28,7 @@ confidence: working
 
 - Usually pair with: ERR-PATTERN, EA-DATA, EA-SENSOR, EA-ALIGN, EA-EVAL.
 - Raw evidence needed when: 需要具体 probing、失败恢复或世界模型 admissibility 实验。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 选择感知误差、感知/认知区分或溯源 run，再沿 paper note → audit 核验第一偏离点。
 
 ## 30 秒摘要
 
@@ -79,9 +80,9 @@ confidence: working
 
 ## 证据锚点
 
-- RUN-PERCEPTION-COGNITION-20260714：`EA-PVC-2026-0002..0005` 覆盖推理—动作转译、感知/动作解耦、失败恢复和阶段验证；`EA-PVC-2026-0007` 覆盖 what-if 规划错误。
-- RUN-PERCEPTION-TRACE-20260714：15 条事件共同支持观测、同步、监督、动作、本体和闭环七层误差账本；该分类为跨事件 `inference`。
-- RUN-SENSOR-ERROR-20260714：`EA-SENSOR-2026-0001..0011` 覆盖接触、几何、置信度和融合误差；`EA-EVAL-2026-0012` 支持世界模型 admissibility 缺口。
+- RUN-PERCEPTION-COGNITION-20260714：`ERR-PVC-READ-0005`, `0009..0013` 覆盖 3D 动作推理、latent reasoning、反应式 VLA 限制、恢复阶段判断、感知/动作 probing 和 what-if 规划错误。
+- RUN-PERCEPTION-TRACE-20260714：`ERR-TRACE-READ-0001..0015` 共同支持观测、同步、片段质量、监督可靠性、动作语义、闭环效用和局部风险走廊；七层误差账本为跨事件 `inference`。
+- RUN-SENSOR-ERROR-20260714：`EA-SENSORERR-READ-0001..0012`, `0014..0015` 覆盖接触、融合、几何、置信度、事件视觉、同步和恢复数据；`0006` 支持世界模型 admissibility 缺口。
 
 ## 待补问题
 

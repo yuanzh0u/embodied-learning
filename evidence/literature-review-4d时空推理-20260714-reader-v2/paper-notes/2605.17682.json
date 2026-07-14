@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.17682",
+    "title": "GEM: Gaussian Evolution Model for Occupancy Forecasting and Motion Planning",
+    "published": "2026-05-17",
+    "url": "https://arxiv.org/abs/2605.17682",
+    "authors": [
+      "Cheng Chen",
+      "Hao Huang",
+      "Saurabh Bagchi"
+    ]
+  },
+  "review": {
+    "question": "4D时空推理",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 4D时空推理."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "2.2 Continuous Decoupled 4D Gaussian World Model",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "3.2 Results and Analysis",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "4 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '4D时空推理', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "GEM represents future driving scenes as explicit continuous 4D Gaussian primitives, enabling arbitrary-time semantic occupancy queries and motion planning without fixed-step autoregressive rollout."
+  ],
+  "method": {
+    "summary": "To obtain a continuous and interpretable representation of future scene evolution, we model the driving world as a set of evolving Gaussian primitives in joint space-time, which is essentially different from autoregressive occupancy world models, which typically predict future voxel grids [ 19 ] , BEV features [ 33 ] , discrete tokens [ 37 , 32 , 21 , 30 , 27 ] , or latent queries [ 7 ] step by step at a fixed set of future timestamps. Such autoregressive designs must generate intermediate states before reaching a target horizon, which restricts temporal flexibility and may accumulate prediction errors over long rollouts. Recent 4D Gaussian representations have shown that continuous space-ti",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "4D Occupancy Forecasting. Table 1 compares GEM with existing vision-centric occupancy world models for 4D occupancy forecasting. GEM achieves the best average mIoU among vision-centric methods, improving over SparseWorld from to . The gain is more clear in IoU, where GEM obtains the best results at all future horizons and improves the average IoU from to . We attribute the stronger IoU to GEM’s explicit continuous geometry: each Gaussian carries physical scene attributes and preserves occupied regions across future horizons through continuous spatiotemporal occupancy. We also observe that SparseWorld [ 7 ] has slightly higher mIoU at the s horizon, while GEM achieves better average mIoU and",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "GEM represents future driving scenes as explicit continuous 4D Gaussian primitives, enabling arbitrary-time semantic occupancy queries and motion planning without fixed-step autoregressive rollout.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "1 Introduction"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "While GEM demonstrates strong performance with an explicit and continuously queryable 4D Gaussian world representation, several directions remain open. First, our current initialization study mainly considers two endpoints: random Gaussian initialization using only camera inputs, and LiDAR-based initialization using an additional geometric modality. A useful next step is to study camera-only initialization strategies between these endpoints, such as depth-guided placement or priors from foundation models, which may improve Gaussian coverage without relying on LiDAR. Second, GEM currently predi",
+        "locator": "Appendix C Limitations and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (2.2 Continuous Decoupled 4D Gaussian World Model) and evaluation (3.2 Results and Analysis)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.17682-C01",
+      "claim": "GEM represents future driving scenes as explicit continuous 4D Gaussian primitives, enabling arbitrary-time semantic occupancy queries and motion planning without fixed-step autoregressive rollout.",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 4D时空推理",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The paper decouples spatial geometry, temporal support, semantics, opacity, and motion in Gaussian primitives, then slices and splats them into future occupancy volumes at arbitrary timestamps and supervises both occupancy and planned ego trajectories.",
+      "locator": "1 Introduction",
+      "source_context": "It also delivers comparable or better motion planning performance, with competitive trajectory accuracy and lower collision rates, while retaining an explicit and continuously queryable Gaussian world representation. We summarize our contributions are as follows: • We introduce GEM , a vision-centric, non-autoregressive occupancy world model that represents dynamic driving scenes as evolving 4D semantic Gaussian primitives. • We propose a structured continuous-time Gaussian formulation that decouples spatial geometry, temporal support, semantics, opacity, and motion, enabling arbitrary-time occupancy querying without sequential rollout over fixed future steps. • We design an ego-conditioned Gaussian world framework that decomposes Gaussian primitive motion into ego-induced and object-level components, and supports ego vehicle motion planning from the same unified Gaussian representation. • We validate GEM on the Occ3D-nuScenes benchmark [ 26 ] , where it achieves state-of-the-art 4D occupancy forecasting and strong motion planning performance compared with existing vision-centric occ",
+      "evidence_type": "representation-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 1 Introduction contains the paper-specific concepts used by the claim (4d, arbitrary-time, as, decouples, driving, ego, enabling, explicit). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "This is autonomous-driving evidence; use as adjacent 4D representation evidence rather than robot manipulation evidence."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

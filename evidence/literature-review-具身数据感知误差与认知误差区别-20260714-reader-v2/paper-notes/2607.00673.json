@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.00673",
+    "title": "Path Planning in Physically Viable World Models",
+    "published": "2026-07-01",
+    "url": "https://arxiv.org/abs/2607.00673",
+    "authors": [
+      "Su Ann Low",
+      "Cheng-Hsi Hsiao",
+      "Xingjian Li",
+      "Adam J. Thorpe",
+      "Ufuk Topcu",
+      "Krishna Kumar"
+    ]
+  },
+  "review": {
+    "question": "具身数据感知误差与认知误差区别",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-EVAL",
+      "EA-MODEL",
+      "ERR-EMBODIED"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身数据感知误差与认知误差区别."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3.1 Scene Reconstruction and Terrain Model",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experimental Environment and Planning Setup",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion & Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身数据感知误差与认知误差区别', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "对依赖历史地图的导航，感知重建本身可以正确，但地形物理变化仍会使原路线失效；物理可行世界模型通过介入前的 what-if 修改场景暴露这类长时程规划失败。"
+  ],
+  "method": {
+    "summary": "We derive a 2D digital elevation model (DEM) from the scene reconstruction, which provides the Gaussian primitives , where is the mean, the covariance, the degree-3 spherical harmonic color coefficients, and the opacity. Classifying Gaussians into ground, obstacle, and floater categories is non-trivial in natural outdoor scenes without semantic labels. Floaters are artifact primitives the reconstruction produced, and standard filters based on opacity or covariance are insufficient because floaters frequently exhibit high opacity and normal covariance in outdoor reconstructions (see Appendix C ). Our filters instead exploit the physical property that ground surfaces produce flat, horizontally",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "A static reconstruction captures scene geometry under the conditions present during data collection and cannot represent how changing environmental conditions affect traversability. The PVWM augments the reconstruction with physical simulation, enabling planners to evaluate route feasibility under alternative conditions before deployment. We evaluate the approach in three settings spanning route replanning, route failure, and counterfactual hazard assessment. In a large-scale field site in the Central Texas Hill Country, flooding alters traversable crossings, forcing rerouting and, in some cases, eliminating all feasible paths to the goal. In an Alaska village scene, flooding renders a cross",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "对依赖历史地图的导航，感知重建本身可以正确，但地形物理变化仍会使原路线失效；物理可行世界模型通过介入前的 what-if 修改场景暴露这类长时程规划失败。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "We presented a physically viable world model for evaluating long-horizon navigation under future terrain change. By combining scene reconstruction, physics-based simulation, and terrain-aware route evaluation, the system measures how environmental changes affect route feasibility, reachability, rerouting cost, and mission feasibility. Our results show that physically modified environments can reveal navigation failures that are not apparent from the original reconstruction alone. Limitations. Nevertheless, several limitations remain. Traversability is estimated primarily from geometry and does",
+        "locator": "5 Conclusion & Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3.1 Scene Reconstruction and Terrain Model) and evaluation (4 Experimental Environment and Planning Setup)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.00673-C01",
+      "claim": "对依赖历史地图的导航，感知重建本身可以正确，但地形物理变化仍会使原路线失效；物理可行世界模型通过介入前的 what-if 修改场景暴露这类长时程规划失败。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 具身数据感知误差与认知误差区别",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "摘要对比了原始重建环境与物理修改场景下的路线可行性，并报告后者能揭示前者不可见的失败。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Robots deployed in unstructured outdoor environments often plan from scene reconstructions collected before deployment because operators cannot remap large or remote sites before every mission. As a result, robots must make long-horizon planning decisions using stale maps that assume the terrain remains unchanged, even though physical changes to the environment may render previously feasible routes unsafe or unreachable at execution time. We present a physically viable world model for evaluating what-if queries for robot navigation under future terrain change. The system augments reconstructed 3D Gaussian splat scenes with physics-based simulation to generate physically modified versions of the same environment without recollecting sensor data or rebuilding the map. We then implement a terrain-aware planner that accounts for physical events, obstacles, and deformations that are simulated by the world model. This allows robots and human operators to evaluate whether planned routes remain feasible before committing to a planned route, particularly in constrained environments where retreat or recovery may become impossible once conditions change. We evaluate the system on a real outdoor field site in Central Texas using simulated flooding across multiple severity levels. We measure route and mission feasibility as terrain conditions deteriorate under physically simulated interventions. Our results show that physically viable world models expose long-horizon route failures and rerouting behavior that are not apparent when planning only on the original reconstructed environment, allowing robots to evaluate how future terrain changes may affect route feasibility before",
+      "evidence_type": "system-and-field-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (what-if). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Promoted from candidate on 2026-07-09 via promote_candidates.py digest; cognitive-error side of the perception-vs-cognitive comparison. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

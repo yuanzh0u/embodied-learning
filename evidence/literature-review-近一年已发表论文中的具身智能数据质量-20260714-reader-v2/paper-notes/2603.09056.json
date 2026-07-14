@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.09056",
+    "title": "Quality over Quantity: Demonstration Curation via Influence Functions for Data-Centric Robot Learning",
+    "published": "2026-03-10",
+    "url": "https://arxiv.org/abs/2603.09056",
+    "authors": [
+      "Haeone Lee",
+      "Taywon Min",
+      "Junsu Kim",
+      "Sinjae Kang",
+      "Fangchen Liu",
+      "Lerrel Pinto",
+      "Kimin Lee"
+    ]
+  },
+  "review": {
+    "question": "近一年已发表论文中的具身智能数据质量",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 近一年已发表论文中的具身智能数据质量."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "I INTRODUCTION",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "V Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "VI CONCLUSIONS",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '近一年已发表论文中的具身智能数据质量', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "示教数据质量不应只用相似度、互信息或人工启发式代理指标定义；QoQ 将高质量轨迹定义为对目标验证示范 loss 降低和策略性能提升有直接贡献的数据。"
+  ],
+  "method": {
+    "summary": "Learning from demonstrations has shown potential in end-to-end robot control, particularly when scaling both the diversity and quantity of demonstration data [ 35 , 30 , 15 , 5 , 4 , 16 , 33 ] . However, the quality of robot demonstration data, commonly collected through human teleoperation, significantly impacts performance when training with supervised learning methods like behavior cloning (BC) [ 3 , 25 ] . Human errors, operational constraints, and varying skill levels of teleoperators introduce noise and suboptimal behaviors into these datasets, making effective curation critical for successful data-driven robot learning. Despite its importance, data curation remains largely manual, exp",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We design our experiments to answer the following questions: • (1) Can QoQ data curation improve policy success rates? (Section V-B ) • (2) How robust is QoQ to in-the-wild robot data under diverse domains? (Section V-C ) • (3) Can QoQ leverage policy rollout as validation set? (Section V-D ) • (3) How does each QoQ component impact performance? (Section V-E ) Figure 2: Success rate for simulation and real robot experiments. QoQ outperforms all baselines in simulation and real robot experiments by detecting helpful trajectories. We report the mean and standard deviation across 5 runs (simulation) and 3 runs (real robot).",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "示教数据质量不应只用相似度、互信息或人工启发式代理指标定义；QoQ 将高质量轨迹定义为对目标验证示范 loss 降低和策略性能提升有直接贡献的数据。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "VI CONCLUSIONS"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (I INTRODUCTION) and evaluation (V Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.09056-C01",
+      "claim": "示教数据质量不应只用相似度、互信息或人工启发式代理指标定义；QoQ 将高质量轨迹定义为对目标验证示范 loss 降低和策略性能提升有直接贡献的数据。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 近一年已发表论文中的具身智能数据质量",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文指出人类遥操作会带来错误、操作约束、技能差异、噪声和次优行为；QoQ 用 influence functions 衡量训练 state-action 对验证示范的贡献，并在轨迹层聚合以降低噪声、保持覆盖，在仿真、真实机器人和 DROID in-the-wild 数据上改善策略成功率。",
+      "locator": "VI CONCLUSIONS",
+      "source_context": "In this work, we propose QoQ, a method that curates robotic datasets based on direct performance contribution to the learned policy. We define a quality scoring mechanism for state-action pairs derived from influence functions.",
+      "evidence_type": "method+experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in VI CONCLUSIONS contains the paper-specific concepts used by the claim (contribution, direct, functions, influence, performance, policy, qoq, state-action). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "arXiv HTML extracted to work/literature-review-embodied-data-quality-last-year-20260708/html-extracts/2603.09056.json Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

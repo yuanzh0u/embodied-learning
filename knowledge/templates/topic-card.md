@@ -22,6 +22,7 @@ confidence: working
 - Load this when:
 - Usually pair with:
 - Raw source only needed when:
+- Evidence route: 先读对应 review packet；只有核验具体主张时才加载 paper note 与 claim-support audit。
 
 ## 30 秒摘要
 
@@ -46,9 +47,9 @@ confidence: working
 
 ## 证据锚点
 
-- SOURCE-ID：来源章节或行段。
+- SOURCE-ID：当前有效 evidence run 中实际存在的 event ID 或连续区间。
+- 跨论文综合判断必须标记为 `synthesis` 或 `inference`，不能伪装成单篇论文结论。
 
 ## 待补问题
 
 - 待补问题。
-

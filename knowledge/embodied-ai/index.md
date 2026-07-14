@@ -3,7 +3,7 @@ id: EA-INDEX
 title: 具身智能领域索引
 type: domain-index
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 tags: [embodied-ai, index]
 ---
 
@@ -11,17 +11,17 @@ tags: [embodied-ai, index]
 
 ## 主题卡
 
-| ID | 主题 | 文件 | 原始来源 |
+| ID | 主题 | 文件 | 主要来源 |
 |---|---|---|---|
-| EA-DATA | 数据采集与数据质量 | [data-collection-quality.md](data-collection-quality.md) | S-EA-QUESTIONS:19-110; S-EMBODIED-DATA-FRAMEWORK |
-| EA-SENSOR | 传感器与多模态感知 | [sensors-multimodal-perception.md](sensors-multimodal-perception.md) | S-EA-QUESTIONS:112-168 |
-| EA-HARDWARE | 采集硬件与设备路线 | [hardware-collection-devices.md](hardware-collection-devices.md) | S-EA-QUESTIONS:170-244 |
+| EA-DATA | 数据采集与数据质量 | [data-collection-quality.md](data-collection-quality.md) | S-EA-QUESTIONS; S-EMBODIED-DATA-FRAMEWORK; LR-DQ-YEAR; LR-DQ-CONTRA; LR-WM-DATA; LR-UMI |
+| EA-SENSOR | 传感器与多模态感知 | [sensors-multimodal-perception.md](sensors-multimodal-perception.md) | S-EA-QUESTIONS; LR-TWM; LR-SENSOR-ERROR; LR-UMI |
+| EA-HARDWARE | 采集硬件与设备路线 | [hardware-collection-devices.md](hardware-collection-devices.md) | S-EA-QUESTIONS; LR-UMI |
 | EA-FIELD | 现场采集 Hub 与物流分拣考察 | [field-data-collection-hubs.md](field-data-collection-hubs.md) | S-LOGISTICS-HUB-SURVEY; S-EMBODIED-DATA-FRAMEWORK |
-| EA-XEMBODIMENT | 跨本体与数据迁移 | [cross-embodiment-transfer.md](cross-embodiment-transfer.md) | S-EA-QUESTIONS:246-301 |
-| EA-MODEL | 模型与预训练 | [models-pretraining.md](models-pretraining.md) | S-EA-QUESTIONS:303-359 |
-| EA-EVAL | 评测体系与世界模型 | [evaluation-world-models.md](evaluation-world-models.md) | S-EA-QUESTIONS:361-409 |
-| EA-4D | 4D 时空推理与世界动态 | [4d-spatiotemporal-reasoning.md](4d-spatiotemporal-reasoning.md) | RUN-4D-REASONING-20260714; RUN-4D-DATA-20260714 |
-| EA-ALIGN | VLA 多模态与动作对齐 | [vla-multimodal-action-alignment.md](vla-multimodal-action-alignment.md) | RUN-VLA-ALIGN-20260714 |
+| EA-XEMBODIMENT | 跨本体与数据迁移 | [cross-embodiment-transfer.md](cross-embodiment-transfer.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-UMI |
+| EA-MODEL | 模型与预训练 | [models-pretraining.md](models-pretraining.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-WM-DATA; LR-4D |
+| EA-EVAL | 评测体系与世界模型 | [evaluation-world-models.md](evaluation-world-models.md) | S-EA-QUESTIONS; LR-WM-EVAL; LR-WM-DATA; LR-SENSOR-ERROR |
+| EA-4D | 4D 时空推理与世界动态 | [4d-spatiotemporal-reasoning.md](4d-spatiotemporal-reasoning.md) | LR-4D; LR-4D-DATA |
+| EA-ALIGN | VLA 多模态与动作对齐 | [vla-multimodal-action-alignment.md](vla-multimodal-action-alignment.md) | LR-VLA-ALIGN |
 | EA-BIZ | 产业落地与商业化 | [commercialization.md](commercialization.md) | S-EA-QUESTIONS:411-441 |
 
 ## 常见组合
@@ -38,3 +38,4 @@ tags: [embodied-ai, index]
 | 工业落地如何验收 | EA-BIZ + EA-EVAL + ERR-PATTERN |
 | 最后一厘米问题 | EA-SENSOR + EA-BIZ + EA-EVAL |
 | 机器人失败是看错还是想错 | ERR-EMBODIED + EA-SENSOR + EA-ALIGN + EA-EVAL |
+| 查 12 项综述的范围、论文池或三类成稿 | [文献综述成果目录](../literature-review-catalog.md) |

@@ -13,14 +13,17 @@ source:
     status: external-local
     locator: docs/knowledge/data-collection-framework.md; docs/knowledge/data-schema-quality-compliance.md
   - id: RUN-DATA-QUALITY-20260714
-    file: ../../evidence/literature-review-近一年已发表论文中的具身智能数据质量-20260714-reader-v1/evidence.jsonl
-    locator: EA-DATA-2026-LY-0001..0012
+    file: ../../evidence/literature-review-近一年已发表论文中的具身智能数据质量-20260714-reader-v2/evidence.jsonl
+    locator: EA-DQ-YEAR-READ-0001..0015
   - id: RUN-DATA-CONTRADICTIONS-20260714
-    file: ../../evidence/literature-review-具身智能数据质量的主要矛盾-20260714-reader-v1/evidence.jsonl
-    locator: 54 deduplicated events; main-contradictions.md §六个派生矛盾
+    file: ../../evidence/literature-review-具身智能数据质量的主要矛盾-20260714-reader-v2/evidence.jsonl
+    locator: EA-DQ-CONTRA-READ-0001..0015
   - id: RUN-WMDATA-20260714
-    file: ../../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v1/evidence.jsonl
-    locator: EA-DATA-2026-WMDATA-0001..0014
+    file: ../../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v2/evidence.jsonl
+    locator: EA-WMDATA-READ-0001..0015
+  - id: RUN-UMI-QUALITY-20260714
+    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/evidence.jsonl
+    locator: EA-UMI-READ-0001..0015
 tags: [embodied-ai, data, collection, quality, scaling, umi, droid, ego4d, occlusion, l0-l3, episode, schema, target-conditioned, recovery]
 aliases: [数据采集, 数据质量, UMI, DROID, Ego, Scaling Law, 遮挡率, L0-L3, 无本体采集, episode, 目标条件效用, 监督可靠性]
 load_when:
@@ -37,6 +40,7 @@ confidence: working
 
 - Usually pair with: EA-HARDWARE, EA-SENSOR, EA-EVAL, EA-FIELD.
 - Raw source needed when: 需要 1-18 个具体 Q&A、L0-L3 90 天路线、原始 schema 或合规条款的完整论述。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 区分候选池、可读全文和 accepted evidence；不要把 15 篇精读上限误解为检索池规模。
 
 ## 30 秒摘要
 
@@ -94,9 +98,10 @@ confidence: working
 - S-EA-QUESTIONS:14-18 覆盖异构数据、遮挡量化和单视角限制。
 - S-EMBODIED-DATA-FRAMEWORK:§数据采集框架卡 覆盖无目标机器人本体、L0-L3 数据金字塔、技术路线优先级和规模参考。
 - S-EMBODIED-DATA-FRAMEWORK:§数据 Schema、质量与合规卡 覆盖最小 episode 字段、存储原则、必标字段、质量指标和合规边界。
-- RUN-DATA-QUALITY-20260714：`EA-DATA-2026-LY-0001`, `0005`, `0006`, `0012` 分别覆盖目标效用、覆盖坍缩、chunk 价值和次优数据利用。
-- RUN-DATA-CONTRADICTIONS-20260714：六个派生矛盾综合规模、可观测性、监督、动作语义、恢复和闭环可验证性；该分类为跨事件 `inference`。
-- RUN-WMDATA-20260714：`EA-DATA-2026-WMDATA-0002`, `0003`, `0014` 覆盖异构交互、失败修正和预测型数据需求。
+- RUN-DATA-QUALITY-20260714：`EA-DQ-YEAR-READ-0001..0010`, `0015` 覆盖采集硬件塑形、任务条件效用、轨迹/chunk 质量、跨本体均衡、任务覆盖和组合式筛选。
+- RUN-DATA-CONTRADICTIONS-20260714：`EA-DQ-CONTRA-READ-0001..0015` 共同支持规模—效用、视觉—可观测性、异构监督—字段可靠性、生成扩展—具身锚定和 episode—片段价值等矛盾；矛盾分类为跨事件 `inference`。
+- RUN-WMDATA-20260714：`EA-WMDATA-READ-0001..0010`, `0015` 覆盖异构交互、监督掩码、关键事件、具身锚定合成数据、几何未来、失败修正和长程动作忠实。
+- RUN-UMI-QUALITY-20260714：`EA-UMI-READ-0001..0004`, `0007..0015` 覆盖人体工学、多物理模态、3D tracking、数字遥操作边界、轨迹筛选和闭环质量定义。
 
 ## 待补问题
 

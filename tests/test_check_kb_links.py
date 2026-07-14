@@ -99,7 +99,9 @@ class CheckKbLinksTest(unittest.TestCase):
         write_sources(self.tmp, self.ref)
         evidence = self.tmp / "evidence" / "literature-review-test-20260714"
         evidence.mkdir(parents=True)
-        (evidence / "evidence.jsonl").write_text("", encoding="utf-8")
+        (evidence / "evidence.jsonl").write_text(
+            json.dumps({"event_id": "EA-TEST-2026-0001"}) + "\n", encoding="utf-8"
+        )
         card = self.tmp / "knowledge" / "embodied-ai" / "test-card.md"
         card.write_text(
             "---\n"
@@ -114,6 +116,29 @@ class CheckKbLinksTest(unittest.TestCase):
             encoding="utf-8",
         )
         self.assertEqual(check_kb_links.check_topic_cards(self.tmp), [])
+
+    def test_missing_evidence_locator_event_reported(self) -> None:
+        write_sources(self.tmp, self.ref)
+        evidence = self.tmp / "evidence" / "literature-review-test-20260714"
+        evidence.mkdir(parents=True)
+        (evidence / "evidence.jsonl").write_text(
+            json.dumps({"event_id": "EA-TEST-READ-0001"}) + "\n", encoding="utf-8"
+        )
+        card = self.tmp / "knowledge" / "embodied-ai" / "test-card.md"
+        card.write_text(
+            "---\n"
+            "id: EA-TEST\n"
+            "title: Test\n"
+            "type: topic-card\n"
+            "source:\n"
+            "  - id: RUN-TEST-20260714\n"
+            "    file: ../../evidence/literature-review-test-20260714/evidence.jsonl\n"
+            "    locator: EA-TEST-READ-0001..0002\n"
+            "---\n\n# Test\n",
+            encoding="utf-8",
+        )
+        problems = check_kb_links.check_topic_cards(self.tmp)
+        self.assertTrue(any("EA-TEST-READ-0002" in problem for problem in problems))
 
     def test_line_number_locator_reported(self) -> None:
         write_sources(self.tmp, self.ref)
@@ -139,6 +164,46 @@ class CheckKbLinksTest(unittest.TestCase):
         problems = check_kb_links.check_evidence_manifests(self.tmp)
         self.assertEqual(len(problems), 1)
         self.assertIn("memo.md", problems[0])
+
+    def test_manifest_event_prefix_must_match_evidence_ids(self) -> None:
+        run_dir = self.tmp / "evidence" / "literature-review-x-20260101-reader-v2"
+        run_dir.mkdir(parents=True)
+        (run_dir / "evidence.jsonl").write_text(
+            json.dumps({"event_id": "EA-WRONG-0001"}) + "\n", encoding="utf-8"
+        )
+        (run_dir / "run.json").write_text(
+            json.dumps(
+                {
+                    "event_id_prefix": "EA-TEST-READ",
+                    "event_count": 1,
+                    "files": {"evidence": "evidence.jsonl"},
+                }
+            ),
+            encoding="utf-8",
+        )
+        problems = check_kb_links.check_evidence_manifests(self.tmp)
+        self.assertTrue(any("do not match event_id_prefix" in problem for problem in problems))
+
+    def test_manifest_event_prefix_must_be_unique(self) -> None:
+        for name in ("one", "two"):
+            run_dir = self.tmp / "evidence" / name
+            run_dir.mkdir(parents=True)
+            (run_dir / "evidence.jsonl").write_text(
+                json.dumps({"event_id": f"EA-TEST-READ-{1 if name == 'one' else 2:04d}"}) + "\n",
+                encoding="utf-8",
+            )
+            (run_dir / "run.json").write_text(
+                json.dumps(
+                    {
+                        "event_id_prefix": "EA-TEST-READ",
+                        "event_count": 1,
+                        "files": {"evidence": "evidence.jsonl"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+        problems = check_kb_links.check_evidence_manifests(self.tmp)
+        self.assertTrue(any("already owned" in problem for problem in problems))
 
 
 if __name__ == "__main__":

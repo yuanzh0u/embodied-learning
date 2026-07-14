@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.29879",
+    "title": "DGSG-Mind: Dynamic 3D Gaussian Scene Graphs for Long-Term Scene Understanding and Grounding",
+    "published": "2026-05-28",
+    "url": "https://arxiv.org/abs/2605.29879",
+    "authors": [
+      "Luzhou Ge",
+      "Xiangyu Zhu",
+      "Jinyan Liu",
+      "Xuesong Li"
+    ]
+  },
+  "review": {
+    "question": "4D时空推理对数据的需求",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 4D时空推理对数据的需求."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "III Methodology",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "IV-A Experimental Setup",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '4D时空推理对数据的需求', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "DGSG-Mind still depends on pose quality for initial reconstruction and faces scalability limits from 3D Gaussian storage and GPU memory."
+  ],
+  "method": {
+    "summary": "An overview of DGSG-Mind is shown in Fig. 1 . Our system builds a hybrid instance-aware 3D Gaussian representation by coupling a sparse probabilistic voxel grid with explicit Gaussians. First, we perform voxel-based instance-aware Gaussian mapping and optimization in Secs. III-B and III-C . The optimized map is then abstracted into a hierarchical scene graph in Sec. III-D . For dynamic environments, Sec. III-E introduces Gaussian-based camera relocalization, localized scene updates, and graph synchronization. Finally, Sec. III-F presents the 3D Gaussian Mind for zero-shot 3D visual grounding and spatial reasoning. Cross-modal Instance Association For each 2D instance observation , we back-pr",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Evaluation Tasks: To comprehensively evaluate DGSG-Mind , we conduct experiments across four key tasks: 1) 3D open-vocabulary semantic segmentation , which assesses instance-level, zero-shot 3D scene understanding; 2) 3D visual grounding , which evaluates the system’s ability to localize target objects given free-form natural language descriptions; 3) scene reconstruction , which measures the photometric fidelity of the optimized 3D Gaussian representation; 4) real-world deployment , which validates its capability to support continuous robot operation, target-oriented navigation, and dynamic scene updates in real-world environments. Datasets: For open-vocabulary semantic segmentation and sce",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "DGSG-Mind still depends on pose quality for initial reconstruction and faces scalability limits from 3D Gaussian storage and GPU memory.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "V Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (III Methodology) and evaluation (IV-A Experimental Setup)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.29879-C01",
+      "claim": "DGSG-Mind still depends on pose quality for initial reconstruction and faces scalability limits from 3D Gaussian storage and GPU memory.",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: 4D时空推理对数据的需求",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The conclusion states that the system relies on SLAM pose accuracy for initial reconstruction and ACE training, and that scaling to large outdoor scenes is limited by 3D Gaussian storage and GPU memory costs.",
+      "locator": "V Conclusion",
+      "source_context": "Nevertheless, the system still relies on SLAM pose accuracy for initial reconstruction and ACE training, and its scalability to large-scale outdoor scenes is limited by the storage and GPU memory costs of 3D Gaussians.",
+      "evidence_type": "author-stated-limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in V Conclusion contains the paper-specific concepts used by the claim (3d, accuracy, ace, by, costs, gpu, initial, is). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "This marks an engineering boundary for dynamic 3D/4D scene representations."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}
