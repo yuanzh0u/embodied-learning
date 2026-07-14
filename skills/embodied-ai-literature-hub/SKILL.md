@@ -1,6 +1,6 @@
 ---
 name: embodied-ai-literature-hub
-description: Mine arXiv literature for embodied AI topics, expanding adjacent paper searches and extracting claim/evidence/stance/author records. Use when the user asks for embodied AI literature aggregation, arXiv paper mining, UMI/data/VLA/simulation/evaluation paper discovery, negative discussion mining, citation chasing, or author viewpoint tracking.
+description: Discover and recover large embodied-AI literature pools through multi-round arXiv/browser search, candidate registries, coverage and saturation checks, HTML-to-text-layer-PDF fallback, and extraction-quality gates. Use for broad or systematic paper discovery, negative-evidence discovery, citation chasing, candidate screening, or when arXiv HTML is unavailable; hand complete readable text to embodied-ai-paper-reader for intellectual reading and evidence creation.
 ---
 
 # Embodied AI Literature Hub
@@ -8,7 +8,8 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
 ## Required inputs
 
 - Topic, preferably mapped to one or more knowledge IDs such as `EA-DATA`, `EA-MODEL`, or `EA-EVAL`.
-- Time range. If absent, ask for it before searching; do not silently default.
+- Time range. In a literature-review run, consume the orchestrator's resolved range; otherwise default to the most recent six months and record it.
+- Review mode from the planner: `rapid`, `scoping`, or `systematic`.
 
 ## Workflow
 
@@ -19,9 +20,9 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
 2. Build a search plan with `$embodied-ai-query-planner`:
    - Query planning is owned by `$embodied-ai-query-planner`; this Skill only consumes the generated plan.
    - Use the planner before `search_arxiv.py`, passing topic, knowledge IDs, family hints, time range metadata, and any calibration files.
-   - Review the planner's `queries`, `browser_fallback_queries`, `minimum_candidate_count`, and notes before searching.
+   - Review `queries`, `search_targets`, `coverage_dimensions`, `stopping_rule`, Browser fallbacks, and notes.
    - The legacy `scripts/build_query_plan.py` path is only a compatibility wrapper that delegates to `../../embodied-ai-query-planner/scripts/build_query_plan.py` relative to the wrapper file.
-3. Search arXiv:
+3. Search arXiv in batches and maintain a registry:
    - Run `scripts/search_arxiv.py --query-file <planner-json>` with an explicit date range.
    - `--query-file` accepts the planner JSON directly by reading top-level `queries` entries with `label` and `query`.
    - Planner `start_date`/`end_date` fields are scope metadata only; `search_arxiv.py --start-date` and `--end-date` perform the actual arXiv date filtering.
@@ -29,39 +30,49 @@ description: Mine arXiv literature for embodied AI topics, expanding adjacent pa
    - Keep candidate papers separate from accepted evidence.
    - Use the official API as the first pass, but do not rely on it as the only candidate source.
    - If the API returns `429`, timeouts, SSL errors, or transient server errors, do not treat that as zero evidence. `search_arxiv.py` waits and retries up to 3 times per query, honoring `Retry-After` for `429` when present; after retries are exhausted, use the Browser fallback in `references/browser-fallback.md`.
-   - If the API succeeds but returns fewer than the topic-family minimum candidate count, use the Browser fallback to widen candidate discovery before judging scarcity.
-   - Browser/web results are candidate-discovery evidence only. Promote claims only after arXiv HTML正文 verification.
-4. Mine HTML full text:
-   - Prefer arXiv HTML full text. Run `scripts/extract_arxiv_html.py` first for promising candidates.
-   - The extractor is section-aware for LaTeXML pages: read `ranked_sections` to decide which sections to deep-read (pass `--include-section-text` for their full text), use `term_matches` locators (`section path ¶ paragraph id`) as evidence locators, and use `citation_contexts` to capture how the paper discusses its cited works — the primary source for "paper A evaluates dataset B" style evidence.
-   - Non-LaTeXML pages degrade to flat extraction (`structure: "flat"`); locators fall back to nearest headings.
-   - If HTML is unavailable, keep the paper as a metadata candidate and do not perform正文挖掘 or promote it to正文-level evidence.
-   - Cache HTML outside the repo; do not store full papers or full extracted text in the knowledge base.
-   - If HTML download stalls, stop the run and continue with metadata/abstract-level evidence only, clearly marking the confidence and limitation.
-5. Extract discussion events:
-   - Use `references/evidence-schema.md`.
-   - **Preferred path — `scripts/promote_candidates.py`**: one command per batch of confirmed-relevant candidates pulls API metadata + section-aware extraction, and emits a reading digest plus an evidence skeleton JSONL (event IDs, paper metadata, authors, locator prefilled; `claim`/`stance`/`evidence.summary` left as TODO). Fill the TODO fields from the digest, then validate. The validator rejects unfilled skeletons, so promotion cannot be silently skipped:
+   - Merge every API and Browser round with `scripts/build_candidate_registry.py`; do not maintain ad-hoc paper lists.
+   - Update screening status (`discovered`, `title-screened`, `full-text-queued`, `extracted`, `accepted`, `rejected`, `unavailable`) instead of deleting candidates.
+   - For registries with hundreds of papers, use `scripts/screen_candidates.py` to create a reproducible title/abstract priority queue. Prior evidence may seed ranking, but the script never marks a paper accepted.
+   - Run `scripts/assess_review_coverage.py` after each round. Continue until candidate, full-text, accepted-paper, dimension, and saturation checks all pass. A target count alone never stops the run.
+   - Browser/web results remain discovery-only candidates.
+4. Extract full text through one gateway:
+   - Run `scripts/extract_arxiv_content.py`, which tries structured HTML, flat HTML, then text-layer PDF.
+   - Use `--ocr-mode never`. Scan-only or unreadable PDFs are outside this project's scope and remain `unavailable`.
+   - Use section/paragraph locators for HTML and page locators for PDF. Preserve the extraction method and quality in the reading handoff.
+   - Add `--include-full-text` for papers queued for `$embodied-ai-paper-reader`; selected passages alone are not a complete reading input.
+   - Keep low-quality or unavailable documents as candidates. Never treat metadata/abstract text as full-text evidence.
+   - Cache HTML/PDF outside the repository. Read [full-text-fallback.md](references/full-text-fallback.md) for the exact fallback contract.
+   - For queues spanning many papers, use `scripts/extract_content_queue.py --paper-id-file ... --workers 2`. It checkpoints one JSON result per paper, resumes existing results, caps concurrency at four, and enforces a hard per-paper subprocess timeout; it does not create evidence events.
+5. Hand complete papers to `$embodied-ai-paper-reader`:
+   - The paper reader owns structure mapping, question-driven deep reading, critical appraisal, claim verification, paper notes, and evidence-event projection.
+   - `scripts/promote_candidates.py` is a workflow-v2 compatibility path only. Its ranked digest and one-event skeleton do not satisfy the new deep-reading contract and must not create new workflow-v3 evidence.
+   - Use `references/evidence-schema.md` only to validate the compatible events projected by the paper reader.
 
 ```bash
 python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py \
   --paper-id 2606.03784 --paper-id 2607.00673 \
   --topic "..." --topic-id EA-MODEL \
   --id-prefix EA-XXX-2026 --start-seq 1 \
-  --terms reasoning,planning,failure \
+   --terms reasoning,planning,failure \
+  --ocr-mode never \
   --output-skeleton work/<run>/evidence-skeleton.jsonl \
   --output-digest work/<run>/promotion-digest.md
 ```
 
-   - Capture positive, negative, conditional, and gap discussions.
-   - Every accepted paper needs at least one topic-relevant claim with locator evidence.
-   - **Downstream articles may only cite promoted events.** A candidate that was searched or browsed but never promoted cannot appear in a review; promotion is not optional effort, it is the boundary between candidate and evidence.
+For large screened queues, put one arXiv ID per line in a UTF-8 file and use
+`--paper-id-file work/<run>/full-text-queue.txt`; the file input is repeatable
+and stably deduplicated with any explicit `--paper-id` values.
+
+   - Capture positive, negative, conditional, and gap discussions in the paper note, not in a metadata skeleton.
+   - Every accepted paper needs a validated paper note, a passing claim-support audit, and at least one projected event.
+   - **Downstream articles may only cite paper-reader-projected events.** A searched, browsed, or merely extracted paper remains a candidate.
    - If a claim's evidence depends on a cited paper, enqueue only that core citation as a candidate paper.
 6. Produce outputs:
    - Source-entry draft for `knowledge/sources.md`.
    - Evidence JSONL plus a Markdown brief, using `references/output-templates.md`.
    - Allocate event IDs from the repo root with `python3 scripts/next_event_id.py --prefix <topic-prefix>-<year>` so sequences never collide across runs.
    - Validate the JSONL before settling it: `python skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl <file> --validate-only` must pass.
-   - Settle accepted assets into `evidence/literature-review-<topic>-<date>/` (evidence JSONL, brief, source-entry draft, query plan, `run.json` manifest — see `evidence/README.md`). Candidates, HTML extraction JSON, and other intermediates stay in `work/`.
+   - Settle accepted assets into `evidence/literature-review-<topic>-<date>/`: evidence, brief, source draft, query plan, candidate registry, coverage report, and manifest. Full papers and extraction payloads stay in cache/`work/`.
    - Topic-card update suggestions only for high-signal synthesis.
 
 ## Evidence rules
@@ -81,6 +92,7 @@ python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
   --topic "UMI 数据可用性" \
   --knowledge-id EA-DATA \
   --family umi \
+  --review-mode scoping \
   --start-date 2023-01-01 \
   --end-date 2026-06-06 \
   --output /tmp/umi-query-plan.json \
@@ -90,11 +102,13 @@ python skills/embodied-ai-literature-hub/scripts/search_arxiv.py \
   --query-file /tmp/umi-query-plan.json \
   --start-date 2023-01-01 \
   --end-date 2026-06-06 \
-  --max-results 5 \
+  --max-results 25 --batch-label round-1 \
   --output /tmp/umi-arxiv-candidates.json
 
 python skills/embodied-ai-literature-hub/scripts/parse_browser_candidates.py --input /tmp/browser-arxiv-results.json --start-date 2025-12-06 --end-date 2026-06-06 --output /tmp/browser-candidates.json
-python skills/embodied-ai-literature-hub/scripts/extract_arxiv_html.py --paper-id 2402.10329 --terms UMI,data,demonstration,teleoperation
+python skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py --search-result /tmp/umi-arxiv-candidates.json --output work/<run>/candidate-registry.json
+python skills/embodied-ai-literature-hub/scripts/assess_review_coverage.py --query-plan /tmp/umi-query-plan.json --candidate-registry work/<run>/candidate-registry.json --output work/<run>/coverage-report.json
+python skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --paper-id 2402.10329 --terms UMI,data,demonstration,teleoperation --ocr-mode never --include-selected-text --include-full-text --output work/<run>/extractions/2402.10329.json
 python skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl evidence.jsonl --brief-out brief.md
 ```
 
@@ -105,3 +119,10 @@ python skills/embodied-ai-literature-hub/scripts/build_query_plan.py --list-topi
 ```
 
 That command delegates to `$embodied-ai-query-planner` and keeps old `search_arxiv.py --query-file` workflows compatible.
+
+## References
+
+- Read [coverage-and-saturation.md](references/coverage-and-saturation.md) for multi-round registry and stopping logic.
+- Read [full-text-fallback.md](references/full-text-fallback.md) whenever HTML is missing or extraction quality is not high.
+- Read [evidence-schema.md](references/evidence-schema.md) before creating or validating events.
+- Read [browser-fallback.md](references/browser-fallback.md) after API failure or query under-recovery.

@@ -1,58 +1,67 @@
-# UMI 数据质量研究备忘录
+# UMI 数据质量：从便携采集走向物理对齐
 
-## 研究边界与证据范围
+## 研究边界
 
-- Topic: UMI 数据质量
-- Time range: 2025-12-06..2026-06-06
-- Knowledge IDs: `EA-DATA`, `EA-SENSOR`, `EA-HARDWARE`, `EA-XEMBODIMENT`
-- Paper-level sources: 5 / 5
-- Output type: scientific-memo
+本文覆盖 2025 年 12 月 6 日至 2026 年 6 月 6 日的五篇论文，聚焦通用操作接口类数据在接触任务、三维感知和灵巧手迁移中的可用性。证据数量刚好达到正式综述门槛，适合形成方向性判断，不足以比较统一排行榜，也不能代表所有 UMI 设备与任务。
 
-## Evidence Core
+## 中心判断
 
-- Accepted events: 5
-- Stance labels: `conditional`, `limit`, `support`
-- Confidence labels: `direct`
-- Trace IDs: [UMI-6M-001](evidence-appendix.md#umi-6m-001), [UMI-6M-002](evidence-appendix.md#umi-6m-002), [UMI-6M-003](evidence-appendix.md#umi-6m-003), [UMI-6M-004](evidence-appendix.md#umi-6m-004), [UMI-6M-005](evidence-appendix.md#umi-6m-005)
-- Registered sources: `S-EMBODIED-DATA-FRAMEWORK`, `S-LOGISTICS-HUB-SURVEY`, `S-EA-QUESTIONS`, `S-ERR-COMPARE`, `S-PROJECT-CONTEXT`
+UMI 数据质量的决定因素，正在从“是否便携、是否能大规模采集”转向“采集状态是否与部署机器人在物理上对齐”。视觉轨迹仍是可扩展基础，但在遮挡、接触和灵巧操作中，仅记录图像与位姿会丢失决定动作成败的深度、力矩、抓力和接触几何。接口越接近部署端的传感、末端和动作空间，数据越少依赖后续推断与重定向。
 
-## Claim Map
+## 机制一：接触任务要求把力学状态带回数据
 
-| Event | Topic | Stance | Confidence | Claim | Evidence | Authors | Paper |
-|---|---|---|---|---|---|---|---|
-| [UMI-6M-001](evidence-appendix.md#umi-6m-001) | EA-DATA | `conditional` | `direct` | UMI-style data is useful for contact-rich manipulation when the collection interface records force/torque, depth, pose, and grasp-force signals; the paper also implies that vision... | The HTML full text reports that UMI-FT mounts compact six-axis force/torque sensors on each finger, uses multimodal demonstrations to train adaptive compliance policies, and shows diverse in-the-wild data outperforming... | choi-hojung; hou-yifan; pan-chuer; et al. | [2601.09988](https://arxiv.org/abs/2601.09988) |
-| [UMI-6M-002](evidence-appendix.md#umi-6m-002) | EA-DATA | `limit` | `direct` | UMI data quality is not only a modeling issue; handheld gripper ergonomics and mechanics directly affect demonstration speed, damage, workload, and therefore downstream data usefu... | The HTML full text frames UMI grippers as promising data-collection tools but reports that concentrated-load grippers improve over distributed-load grippers while both remain slower and less effective than hands, with d... | georgadarellis-gina-l; beslic-natalija; lee-seonhun; et al. | [2603.17189](https://arxiv.org/abs/2603.17189) |
-| [UMI-6M-003](evidence-appendix.md#umi-6m-003) | EA-SENSOR | `conditional` | `direct` | UMI-style data is a scalable foundation, but becomes substantially more useful for contact-rich tasks when upgraded from mainly visuomotor supervision to multimodal physical inter... | The HTML full text repeatedly identifies limited physical interaction signals as a bottleneck of existing UMI-like systems and proposes synchronized RGB, depth, trajectory, tactile sensing, internal grasping force, and... | luo-shaqi; li-yuanyuan; hu-youhao; et al. | [2604.10647](https://arxiv.org/abs/2604.10647) |
-| [UMI-6M-004](evidence-appendix.md#umi-6m-004) | EA-SENSOR | `limit` | `direct` | Original vision-only UMI data can fail to be useful in scenes with occlusion, dynamic changes, feature-poor regions, or tracking failure; adding LiDAR-centric 3D sensing improves... | The HTML full text states that monocular visual SLAM makes UMI vulnerable to occlusions, dynamic scenes, and tracking failures, and reports that LiDAR-centric SLAM improves pose-estimation robustness and demonstration d... | wang-ziming | [2604.14089](https://arxiv.org/abs/2604.14089) |
-| [UMI-6M-005](evidence-appendix.md#umi-6m-005) | EA-XEMBODIMENT | `support` | `direct` | For dexterous manipulation, UMI-style data is most usable when collection and deployment share the same dexterous end-effector, sensing, contacts, and action space, avoiding retar... | The HTML full text argues that retargeting and embodiment conversion can distort contact-rich interactions, then presents RealDexUMI as a retargeting-free wearable interface whose shared hand and sensing modules preserv... | xu-chaoyi; jiang-yixuan; huan-jiahui; et al. | [2606.06033](https://arxiv.org/abs/2606.06033) |
+[UMI-FT](https://arxiv.org/abs/2601.09988) 的证据表明，野外柔顺操作需要同时记录力/力矩、深度、位姿和抓力。它隐含的边界很清楚：视觉与轨迹能描述“手去了哪里”，却难以说明接触是否稳定、物体是否滑移以及施力是否安全。
 
-## 主要综合
+[OmniUMI](https://arxiv.org/abs/2604.10647) 进一步把 UMI 从视觉运动采集扩展为多模态物理交互。这里的增量不是多几个传感器字段，而是让示教记录包含动作后果。对于插入、擦拭和柔性物操作，力学状态决定同一轨迹究竟是成功动作还是危险动作。
 
-### 共识/正向证据
-- [UMI-6M-005](evidence-appendix.md#umi-6m-005): For dexterous manipulation, UMI-style data is most usable when collection and deployment share the same dexterous end-effector, sensing, contacts, and action space, avoiding retargeting and embodiment-conversion losses.
-### 条件成立
-- [UMI-6M-001](evidence-appendix.md#umi-6m-001): UMI-style data is useful for contact-rich manipulation when the collection interface records force/torque, depth, pose, and grasp-force signals; the paper also implies that vision/trajectory-only data is insufficient fo...
-- [UMI-6M-003](evidence-appendix.md#umi-6m-003): UMI-style data is a scalable foundation, but becomes substantially more useful for contact-rich tasks when upgraded from mainly visuomotor supervision to multimodal physical interaction data.
-### 限制与失败模式
-- [UMI-6M-002](evidence-appendix.md#umi-6m-002): UMI data quality is not only a modeling issue; handheld gripper ergonomics and mechanics directly affect demonstration speed, damage, workload, and therefore downstream data usefulness.
-- [UMI-6M-004](evidence-appendix.md#umi-6m-004): Original vision-only UMI data can fail to be useful in scenes with occlusion, dynamic changes, feature-poor regions, or tracking failure; adding LiDAR-centric 3D sensing improves data quality and expands the feasible ta...
+## 机制二：三维感知决定可采场景边界
 
-## Source Gaps
+原始视觉方案在纹理丰富、遮挡有限的环境中高效，但动态变化、弱纹理、强遮挡和跟踪丢失会直接破坏位姿监督。[UMI-3D](https://arxiv.org/abs/2604.14089) 引入以激光雷达为中心的三维感知，核心价值不是让点云更漂亮，而是扩大可可靠采集的任务分布。
 
-- No immediate source gaps detected from loaded packet inputs.
+这也说明“质量”不能只在采完后评估。如果采集时关键物体已经失去跟踪，后处理很难恢复真实动作—场景关系。数据系统需要在线暴露跟踪置信度、遮挡比例和传感器退化，让采集员决定重采或切换模式。
+
+## 机制三：采集硬件会塑造示教本身
+
+[夹爪设计研究](https://arxiv.org/abs/2603.17189) 将人体工学、重量和力分布与示教速度、损伤风险和操作者负担联系起来。手持接口不是透明的数据管道；它会改变人怎样抓、怎样停顿以及怎样纠正。一个不舒适或力反馈失真的设备，会系统性制造模型随后要学习的动作偏差。
+
+因此，UMI 质量验收应包含采集员侧指标：不同持续时长下的疲劳、动作抖动、任务完成时间、物体损伤和重复采集率。只检查文件完整与最终成功，会漏掉接口长期使用造成的分布漂移。
+
+## 机制四：灵巧操作中，少做重定向就是质量
+
+[RealDexUMI](https://arxiv.org/abs/2606.06033) 选择让采集与部署共享灵巧末端、传感和动作空间，从源头减少人手到机器人之间的重定向。对灵巧手而言，关节构型、接触位置和力分布紧密耦合；只迁移末端轨迹，无法保证相同抓取功能。
+
+这条路线牺牲了一部分跨平台通用性，换来更强的物理一致性。它适合高价值、接触密集任务，却不意味着所有 UMI 都应绑定单一末端。更实际的分层是：通用接口负责场景与高层运动覆盖，同构末端数据负责精细接触落地。
+
+## 条件、分歧与限制
+
+五篇论文共同指出扩展方向，却没有证明传感器越多越好。深度、力矩和触觉会增加标定、同步、耐用性与成本问题；共享末端减少重定向，却降低跨本体复用。选择应由任务风险驱动：开放空间搬运与紧配合装配需要的状态完全不同。
+
+本轮证据也缺少统一数据协议和跨设备闭环比较。论文分别验证柔顺操作、三维跟踪和灵巧手，但尚不能给出“增加某传感器必然提升多少成功率”的普遍结论。
+
+## 下一步与结论
+
+建议把 UMI episode 的验收拆成四层：轨迹与视频是否完整，关键状态是否可观测，采集接口是否引入人体工学偏差，数据能否映射到部署本体。每一层都应保存置信度与失败原因，并用真实策略表现回校。
+
+UMI 的长期价值仍在低成本扩大交互覆盖，但下一阶段竞争不会只是设备更轻、采集更快，而是谁能用更少后处理保留真实物理关系。高质量 UMI 数据不是一条干净视频，而是一段可追溯、可重放、能在目标机器人上成立的交互。
+
+## 数据规范建议
+
+一个可复用的 UMI 记录应把原始传感与派生状态分开保存。原始层包括视频、深度、力矩、抓力和设备状态；派生层包括位姿、接触事件与动作片段，并保存算法版本与置信度。这样，跟踪算法升级后可以重新计算标签，而不必重新采集整批数据。
+
+每个片段还应注明目标机器人、末端结构、控制频率和动作映射。若只保留统一轨迹而丢掉采集设备与部署本体的关系，后续团队无法判断误差来自示教、重定向还是控制器。对通用数据，可明确哪些字段跨本体共享；对专用数据，则记录同构末端带来的物理一致性优势。
+
+质量抽检最好加入真实回放。选取遮挡、弱纹理、长时接触和操作者疲劳等高风险片段，让目标机器人复现，再比较轨迹、接触和结果。回放失败不一定意味着整条数据报废，却能暴露需要补采、降权或增加模态的具体位置。
+
+从项目组合看，可以用通用 UMI 扩大任务和环境覆盖，再以少量高保真、多模态、同构末端数据校准接触阶段。这样的金字塔比所有数据都追求最高配置更可控，也比只依赖视觉轨迹更接近真实部署需求。
+
+在采购与试采阶段，可先用两类对照任务检验设备：一类考察遮挡与三维跟踪，一类考察接触与力控制。若设备只能在第一类表现良好，就应把它定位为场景覆盖工具，而不是宣称可独立承担接触数据。清晰定位比堆叠功能更能避免后续数据返工。
+
+这也是更稳妥的验收方式。
 
 ## References
 
-- `2601.09988` [In-the-Wild Compliant Manipulation with UMI-FT](https://arxiv.org/abs/2601.09988)
-- `2603.17189` [Influence of Gripper Design on Human Demonstration Quality for Robot Learning](https://arxiv.org/abs/2603.17189)
-- `2604.10647` [OmniUMI: Towards Physically Grounded Robot Learning via Human-Aligned Multimodal Interaction](https://arxiv.org/abs/2604.10647)
-- `2604.14089` [UMI-3D: Extending Universal Manipulation Interface from Vision-Limited to 3D Spatial Perception](https://arxiv.org/abs/2604.14089)
-- `2606.06033` [RealDexUMI: A Wearable Universal Manipulation Interface for Dexterous Robot Learning](https://arxiv.org/abs/2606.06033)
-
-完整证据条目见 [evidence-appendix.md](evidence-appendix.md)。
-
-## 研究启发与开放问题
-
-- Treat support, conditional, limit, and gap events as separate signals before writing topic-card updates.
-- Mark cross-event synthesis as `inference` unless a claim is directly backed by an event/source ID.
-- Use topic-card update suggestions only after checking source gaps.
+- [UMI-FT](https://arxiv.org/abs/2601.09988)
+- [Influence of Gripper Design](https://arxiv.org/abs/2603.17189)
+- [OmniUMI](https://arxiv.org/abs/2604.10647)
+- [UMI-3D](https://arxiv.org/abs/2604.14089)
+- [RealDexUMI](https://arxiv.org/abs/2606.06033)

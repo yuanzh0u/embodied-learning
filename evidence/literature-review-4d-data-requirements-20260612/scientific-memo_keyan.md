@@ -1,93 +1,74 @@
-# 4D 时空推理对数据的需求研究备忘录
+# 4D时空推理对数据的需求研究备忘录
 
-## 研究边界与证据范围
+## 研究边界
 
-- Topic: 4D 时空推理对数据的需求
-- Time range: 2025-12-12..2026-06-12
-- Knowledge IDs: `EA-DATA`, `EA-SENSOR`, `EA-MODEL`, `EA-EVAL`
-- Paper-level sources: 10 / 5
-- Output type: scientific-memo
+本文研究的问题是：如果具身智能系统要进行4D时空推理，也就是在3D空间中理解对象、机器人、接触和环境如何随时间演化，那么数据到底需要补什么。
 
-## Evidence Core
+- 时间范围：2025-12-12至2026-06-12
+- 证据规模：10篇论文级来源，20条证据事件，满足正式综述阈值
+- 覆盖知识单元：相关知识单元、相关知识单元、相关知识单元、相关知识单元
+- 证据文件：相关证据文件；综述包：相关证据文件
+- 说明：EgoEngine 因本轮未能完成正文/PDF抽取，仅作为检索候选，不进入核心证据链。
 
-- Accepted events: 20
-- Stance labels: `conditional`, `gap`, `limit`, `support`
-- Confidence labels: `direct`
-- Trace IDs: [EA-DATA-2026-4DDATA-0001](evidence-appendix.md#ea-data-2026-4ddata-0001), [EA-DATA-2026-4DDATA-0005](evidence-appendix.md#ea-data-2026-4ddata-0005), [EA-DATA-2026-4DDATA-0008](evidence-appendix.md#ea-data-2026-4ddata-0008), [EA-DATA-2026-4DDATA-0009](evidence-appendix.md#ea-data-2026-4ddata-0009), [EA-DATA-2026-4DDATA-0017](evidence-appendix.md#ea-data-2026-4ddata-0017), [EA-DATA-2026-4DDATA-0004](evidence-appendix.md#ea-data-2026-4ddata-0004), [EA-DATA-2026-4DDATA-0002](evidence-appendix.md#ea-data-2026-4ddata-0002), [EA-DATA-2026-4DDATA-0006](evidence-appendix.md#ea-data-2026-4ddata-0006), [EA-DATA-2026-4DDATA-0010](evidence-appendix.md#ea-data-2026-4ddata-0010), [EA-DATA-2026-4DDATA-0018](evidence-appendix.md#ea-data-2026-4ddata-0018), [EA-DATA-2026-4DDATA-0016](evidence-appendix.md#ea-data-2026-4ddata-0016), [EA-DATA-2026-4DDATA-0014](evidence-appendix.md#ea-data-2026-4ddata-0014)
-- Registered sources: not loaded
+## 核心结论
 
-## Claim Map
+4D时空推理的数据需求不是“更多视频”四个字能概括的。现有论文共同指向一个分层数据栈：几何时序监督、可执行动作 grounding、异构数据的可靠性分级、触觉/力等接触状态、失败/恢复/奖励监督，以及采集硬件和同步质控。
 
-| Event | Topic | Stance | Confidence | Claim | Evidence | Authors | Paper |
-|---|---|---|---|---|---|---|---|
-| [EA-DATA-2026-4DDATA-0001](evidence-appendix.md#ea-data-2026-4ddata-0001) | EA-DATA | `support` | `direct` | 4D时空推理若要从人类视频迁移到机器人控制，不能只收动作标签；它需要能描述物体如何在3D中随时间运动的密集点轨迹，并配少量机器人动作示教完成可执行落地。 | 3PoinTr先从无动作人类视频学习非 embodiment 点的密集3D点轨迹，再用20条机器人动作示教训练闭环策略；论文报告真实任务平均成功率相对最强基线提高25.0个百分点。 (Abstract; 1 Introduction; 4.1 Data collection; 4.4 Results) | adam-hung; bardienus-pieter-duisterhof; jeffrey-ichnowski | [2603.08485](https://arxiv.org/abs/2603.08485) |
-| [EA-DATA-2026-4DDATA-0005](evidence-appendix.md#ea-data-2026-4ddata-0005) | EA-DATA | `support` | `direct` | 面向4D生成式仿真的数据应把抽象动作展开成可控的机器人4D几何轨迹，并同时监督环境响应的RGB/pointmap序列。 | Kinema4D用URDF/重建机器人经正逆运动学产生4D robot pointmap控制信号，再训练模型生成同步RGB和pointmap未来；其Robo4D-200k包含201,426个带高质量4D标注的交互episode。 (Abstract; 1 Introduction; 3.1 Kinematics Control; 3.2 4D Generative Modeling; 3.3 Robo4D-200k) | mutian-xu; tianbao-zhang; tianqi-liu | [2603.16669](https://arxiv.org/abs/2603.16669) |
-| [EA-DATA-2026-4DDATA-0008](evidence-appendix.md#ea-data-2026-4ddata-0008) | EA-DATA | `support` | `direct` | 4D世界模型的数据需求可以转化为“几何教师监督”：用预训练4D几何模型产生对应结构，让视频骨干在训练期学习深度、相机运动和物体运动。 | GEM-4D冻结几何基础模型，提取稠密几何表示作为correspondence teacher，并通过geometry flow把监督蒸馏进视频backbone；训练后几何分支丢弃，推理仍是单流视频生成。 (2.2 Feed-Forward 3D and 4D Geometry Models; 3.2.3 Correspondence Distillation via Geometry Flow; 5 Conclusion) | kaichen-zhou; yuzhen-chen; fangneng-zhan | [2605.22882](https://arxiv.org/abs/2605.22882) |
-| [EA-DATA-2026-4DDATA-0009](evidence-appendix.md#ea-data-2026-4ddata-0009) | EA-DATA | `support` | `direct` | 可部署的4D世界-动作模型需要异构数据混合，而不是单一robot demo：真实机器人远程操作、UMI式交互、第一视角人类视频、rollout/失败轨迹分别提供不同监督。 | τ0-WM构建27.3K小时语料：17.8K小时真实机器人远程操作、6.5K小时UMI式示教、3.0K小时开源第一视角人类交互视频，并用rollout或失败轨迹训练任务进度/低质量结果评估。 (Abstract; III Data Sources for Predictive Robot Learning; A Training Configuration) | pengfei-zhou; shengcong-chen; di-chen | [2606.01027](https://arxiv.org/abs/2606.01027) |
-| [EA-DATA-2026-4DDATA-0017](evidence-appendix.md#ea-data-2026-4ddata-0017) | EA-DATA | `support` | `direct` | 接触导向的4D数据集应同步记录语言目标、第三视角/腕部视觉、双指触觉、机器人状态和动作轨迹，并把触觉反馈接入示教过程。 | HapTile提供1,726条示教、38个任务、9类技能，15Hz同步语言、视觉、触觉、机器人状态和动作；其teleoperation平台还将触觉marker motion转成操作者侧haptic feedback。 (Abstract; 3.1 Dataset Statistics; 4 Data Collection Platform; 4.3 Haptic Feedback to the Operator) | amirhosein-alian; yongqiang-zhao; shiyi-gu | [2606.04825](https://arxiv.org/abs/2606.04825) |
-| [EA-DATA-2026-4DDATA-0004](evidence-appendix.md#ea-data-2026-4ddata-0004) | EA-DATA | `conditional` | `direct` | 4D监督数据需要时间密集、度量空间对齐且有足够点密度；过少点、只给2D轨迹、目标点集或静态/稠密深度都不等价。 | Pri4R比较多种监督目标，认为3D点轨迹兼具时间密集、几何度量和空间稀疏；附录中1024个点优于256/512点，且没有当前点云输入会退化，因为模型必须凭空生成而非预测给定场景演化。 (IV-B Why 3D Point Tracks as Privileged Supervision; S.III-A Additional Analysis on input; S.III-C Additional Ablations) | jisoo-kim; jungbin-cho; sanghyeok-chu | [2603.01549](https://arxiv.org/abs/2603.01549) |
-| [EA-DATA-2026-4DDATA-0002](evidence-appendix.md#ea-data-2026-4ddata-0002) | EA-DATA | `conditional` | `direct` | 点轨迹数据的瓶颈不是只在采集量，而在可见性、遮挡、深度和 embodiment 分割；真实操作中暂时被遮挡的关键物体点仍应保留监督信号。 | 论文用可见性mask保留部分遮挡轨迹并逐点逐时刻mask损失，认为这比丢弃含不可见点的轨迹能提供更多任务关键监督；附录说明真实视频需2D跟踪、深度提升到3D、SAM3分割人手并移除embodiment点。 (4.3 Results: 3D Point Track Prediction; Appendix D Data Collection Details; Appendix G Future Work) | adam-hung; bardienus-pieter-duisterhof; jeffrey-ichnowski | [2603.08485](https://arxiv.org/abs/2603.08485) |
-| [EA-DATA-2026-4DDATA-0006](evidence-appendix.md#ea-data-2026-4ddata-0006) | EA-DATA | `conditional` | `direct` | 4D数据生产可以接受伪标注噪声，但要明确目标是学习相对空间约束和运动先验；同时应合成失败轨迹，让模型区分成功和近失误。 | Kinema4D补充材料说明ST-v2生成的4D伪标注未必达到绝对亚毫米真值，但足以学习相对几何；LIBERO数据生成中还从成功轨迹注入不同强度动作噪声，合成九种失败轨迹。 (Supplementary G.2 Dataset; Acquisition of LIBERO simulated data; The underlying logic behind 4D pseudo annotation) | mutian-xu; tianbao-zhang; tianqi-liu | [2603.16669](https://arxiv.org/abs/2603.16669) |
-| [EA-DATA-2026-4DDATA-0010](evidence-appendix.md#ea-data-2026-4ddata-0010) | EA-DATA | `conditional` | `direct` | 异构4D数据必须保留监督可靠性层级：机器人数据给可执行动作，人类/第一视角视频给视觉动态，UMI式数据给较弱的动作式信号，缺失模态不能强行当真值。 | 论文把真实robot data、UMI-style data和egocentric videos划分为不同监督等级，并用modality-specific supervision masks让每条样本只参与其实际拥有的视觉、状态、动作和进度损失。 (I Introduction; III Data Sources for Predictive Robot Learning; Unified supervision; IV-C Join... | pengfei-zhou; shengcong-chen; di-chen | [2606.01027](https://arxiv.org/abs/2606.01027) |
-| [EA-DATA-2026-4DDATA-0018](evidence-appendix.md#ea-data-2026-4ddata-0018) | EA-DATA | `conditional` | `direct` | 多模态4D示教数据必须做同步、时间戳、动作-状态一致性、触觉标记跟踪和episode级切分；否则模型会混淆动作真值、接触信号和评测泄漏。 | HapTile说明所有模态通过机器人控制循环同步，检查空/损坏轨迹和timestamp gaps，验证action-state consistency；附录还要求episode-level split避免temporal leakage，并保留raw/rectified tactile images。 (3.2 Synchronization and Data Quality Control; A.1 Data Formatting;... | amirhosein-alian; yongqiang-zhao; shiyi-gu | [2606.04825](https://arxiv.org/abs/2606.04825) |
-| [EA-DATA-2026-4DDATA-0016](evidence-appendix.md#ea-data-2026-4ddata-0016) | EA-DATA | `conditional` | `direct` | 触觉4D数据不仅要记录，还要有事件强度或等价的时序结构，帮助模型区分静默期与接触活跃期。 | Dream-Tac的contact gate直接从左右指尖触觉RGB的帧间平均绝对差得到，经过鲁棒归一化后在接触变化时提高触觉token注意力；附录统计显示大多数变化很小，较大变化对应关键交互事件。 (3.3 Contact-Aware Self Attention; A.6 Contact Gate Statistics) | yunfan-lou; yifan-ye; yankai-fu | [2606.08737](https://arxiv.org/abs/2606.08737) |
-| [EA-DATA-2026-4DDATA-0014](evidence-appendix.md#ea-data-2026-4ddata-0014) | EA-DATA | `conditional` | `direct` | 如果目标包含扰动恢复，数据集必须显式收集nominal demonstrations和recovery interaction data；否则模型很难学习接触丢失后的再建立。 | TacForeSight在perturbation-aware设置中额外收集恢复示教，让外部扰动发生在执行中并要求示教者重新建立稳定接触；完整模型在三个扰动任务上报告90%、85%、85%平均完成/成功分数。 (IV-B 2 Perturbation-Aware Evaluation; IV-C Main Results; Table I) | yujie-zang; yuhang-zheng; xian-nie | [2606.11184](https://arxiv.org/abs/2606.11184) |
-| [EA-DATA-2026-4DDATA-0019](evidence-appendix.md#ea-data-2026-4ddata-0019) | EA-DATA | `limit` | `direct` | 示教数据质量受采集硬件的人体工学和接触力分布强烈影响；“更多UMI/手持夹爪示教”不自动等于更好的4D交互数据。 | 该研究在医用绷带打开任务中比较不同UMI夹爪条件和裸手，发现集中载荷夹爪优于分布载荷夹爪，但仍明显慢于手；作者强调力分布、刚度和人体工学会影响示教质量和工作负荷。 (Abstract; II-A Performance and Usability Limitations; V Discussion; VI Conclusion) | gina-l-georgadarellis; natalija-beslic; seonhun-lee | [2603.17189](https://arxiv.org/abs/2603.17189) |
-| [EA-DATA-2026-4DDATA-0020](evidence-appendix.md#ea-data-2026-4ddata-0020) | EA-DATA | `gap` | `direct` | 面向4D时空推理的数据采集应把采集设备本身当成被优化对象：如果夹爪无法表达任务所需的接触和力，算法很难从示教中补回来。 | 作者指出UMI完整学习流程通常至少需要200条固定环境任务示教，手持夹爪仍可能比裸手慢；研究中的夹爪未集成完整传感/marker pipeline，后续需把传感和跟踪能力纳入完整示教到机器人流程评估。 (II-A Performance and Usability Limitations; V Discussion; VI Conclusion) | gina-l-georgadarellis; natalija-beslic; seonhun-lee | [2603.17189](https://arxiv.org/abs/2603.17189) |
-| [EA-EVAL-2026-4DDATA-0011](evidence-appendix.md#ea-eval-2026-4ddata-0011) | EA-EVAL | `support` | `direct` | 用于评估、改进和规划的4D世界模型需要多视角视觉、机器人本体状态、动作chunk、历史/记忆状态，以及可在latent中评估的奖励/价值监督。 | WEAVER在DROID上预训练并在真实任务数据上微调，输入右侧外部相机和腕部相机、proprioceptive state、action plan、memory/history latents，并蒸馏奖励/critic头来快速评分候选动作。 (3 WEAVER; 3.1 Key Design Decisions; 3.3 Accurate and Efficient Value Estimation; 4 Experimental... | arnav-kumar-jain; yilin-wu; jesse-farebrother | [2606.13672](https://arxiv.org/abs/2606.13672) |
-| [EA-MODEL-2026-4DDATA-0003](evidence-appendix.md#ea-model-2026-4ddata-0003) | EA-MODEL | `support` | `direct` | 动作标签本身不足以教会VLA“动作之后世界会怎样变”；4D时空推理需要与动作时域对齐的3D点轨迹作为训练期特权监督。 | Pri4R指出动作标签主要鼓励模仿示教动作，但不给出世界动态；它给VLA添加点轨迹头，监督未来3D位移，训练后丢弃辅助头而不增加推理输入和计算。 (I Introduction; IV Pri4R: Learning World Dynamics via Privileged 4D Representations; IV-C Construction of 3D Point Track Supervision) | jisoo-kim; jungbin-cho; sanghyeok-chu | [2603.01549](https://arxiv.org/abs/2603.01549) |
-| [EA-MODEL-2026-4DDATA-0007](evidence-appendix.md#ea-model-2026-4ddata-0007) | EA-MODEL | `limit` | `direct` | 只用视频重建损失训练世界模型会让4D推理停留在“看起来像”，但机器人需要的是跨帧同一3D表面点的一致对应。 | GEM-4D指出像素或latent重建损失不能保证对应一致，可能出现接触漂移、深度不一致和非刚性变形；这些视觉上微妙的错误会破坏从视频rollout提取动作。 (Abstract; 1 Introduction; 3.1 Problem Formulation; 3.2.1 What Governs Inter-Frame Correspondence) | kaichen-zhou; yuzhen-chen; fangneng-zhan | [2605.22882](https://arxiv.org/abs/2605.22882) |
-| [EA-SENSOR-2026-4DDATA-0015](evidence-appendix.md#ea-sensor-2026-4ddata-0015) | EA-SENSOR | `support` | `direct` | 对接触任务，世界-动作模型的数据目标应联合包含未来视觉、未来触觉和动作；只预测未来图像会丢掉触发式、稀疏且短暂的接触事件。 | Dream-Tac把当前视觉/触觉/语言作为条件，联合去噪未来视觉、未来触觉和动作chunk；其contact-aware self-attention用相邻触觉帧变化计算事件门控，强调接触发生、滑移或释放等时刻。 (Abstract; 3.1 Problem Formulation; 3.2 Dream-Tac Architecture; 3.3 Contact-Aware Self Attention) | yunfan-lou; yifan-ye; yankai-fu | [2606.08737](https://arxiv.org/abs/2606.08737) |
-| [EA-SENSOR-2026-4DDATA-0013](evidence-appendix.md#ea-sensor-2026-4ddata-0013) | EA-SENSOR | `support` | `direct` | 接触丰富任务的4D推理需要把高频腕部力/力矩和双指触觉场作为时间序列数据，而不只是把触觉当作当前帧的被动反馈。 | TacForeSight训练force-conditioned tactile world model，用高频wrist force/torque条件预测短时未来触觉latent；作者报告wrist wrench条件在MSE、cosine similarity和KL上优于无条件、RGB和机器人状态条件。 (Abstract; III-A Force-conditioned Tactile World Model; IV-D 1 Wor... | yujie-zang; yuhang-zheng; xian-nie | [2606.11184](https://arxiv.org/abs/2606.11184) |
-| [EA-SENSOR-2026-4DDATA-0012](evidence-appendix.md#ea-sensor-2026-4ddata-0012) | EA-SENSOR | `gap` | `direct` | 纯视觉4D世界模型在接触、抓取稳定性、力、被遮挡几何、形变和颗粒动态上状态不可观；数据扩展应补触觉、力矩、深度、更多embodiment和失败/奖励监督。 | WEAVER限制部分指出视觉只给部分物理状态，任务相关的接触、力和遮挡几何可能不可见；形变/动态物体、有限规划时域、DROID embodiment覆盖、以及reward labels噪声都是剩余瓶颈。 (A5 Limitations; A5.1 Partial Observability; A5.2 Complex Deformable and Dynamic Interactions; A5.4 Data Coverage and... | arnav-kumar-jain; yilin-wu; jesse-farebrother | [2606.13672](https://arxiv.org/abs/2606.13672) |
+换句话说，4D数据要同时回答四个问题：世界怎么动，机器人怎么动，接触怎么发生，动作失败时系统怎么知道并修正。
 
-## 主要综合
+## 数据需求矩阵
 
-### 共识/正向证据
-- [EA-DATA-2026-4DDATA-0001](evidence-appendix.md#ea-data-2026-4ddata-0001): 4D时空推理若要从人类视频迁移到机器人控制，不能只收动作标签；它需要能描述物体如何在3D中随时间运动的密集点轨迹，并配少量机器人动作示教完成可执行落地。
-- [EA-DATA-2026-4DDATA-0005](evidence-appendix.md#ea-data-2026-4ddata-0005): 面向4D生成式仿真的数据应把抽象动作展开成可控的机器人4D几何轨迹，并同时监督环境响应的RGB/pointmap序列。
-- [EA-DATA-2026-4DDATA-0008](evidence-appendix.md#ea-data-2026-4ddata-0008): 4D世界模型的数据需求可以转化为“几何教师监督”：用预训练4D几何模型产生对应结构，让视频骨干在训练期学习深度、相机运动和物体运动。
-- [EA-DATA-2026-4DDATA-0009](evidence-appendix.md#ea-data-2026-4ddata-0009): 可部署的4D世界-动作模型需要异构数据混合，而不是单一robot demo：真实机器人远程操作、UMI式交互、第一视角人类视频、rollout/失败轨迹分别提供不同监督。
-- [EA-DATA-2026-4DDATA-0017](evidence-appendix.md#ea-data-2026-4ddata-0017): 接触导向的4D数据集应同步记录语言目标、第三视角/腕部视觉、双指触觉、机器人状态和动作轨迹，并把触觉反馈接入示教过程。
-- [EA-EVAL-2026-4DDATA-0011](evidence-appendix.md#ea-eval-2026-4ddata-0011): 用于评估、改进和规划的4D世界模型需要多视角视觉、机器人本体状态、动作chunk、历史/记忆状态，以及可在latent中评估的奖励/价值监督。
-- [EA-MODEL-2026-4DDATA-0003](evidence-appendix.md#ea-model-2026-4ddata-0003): 动作标签本身不足以教会VLA“动作之后世界会怎样变”；4D时空推理需要与动作时域对齐的3D点轨迹作为训练期特权监督。
-- [EA-SENSOR-2026-4DDATA-0015](evidence-appendix.md#ea-sensor-2026-4ddata-0015): 对接触任务，世界-动作模型的数据目标应联合包含未来视觉、未来触觉和动作；只预测未来图像会丢掉触发式、稀疏且短暂的接触事件。
-### 条件成立
-- [EA-DATA-2026-4DDATA-0004](evidence-appendix.md#ea-data-2026-4ddata-0004): 4D监督数据需要时间密集、度量空间对齐且有足够点密度；过少点、只给2D轨迹、目标点集或静态/稠密深度都不等价。
-- [EA-DATA-2026-4DDATA-0002](evidence-appendix.md#ea-data-2026-4ddata-0002): 点轨迹数据的瓶颈不是只在采集量，而在可见性、遮挡、深度和 embodiment 分割；真实操作中暂时被遮挡的关键物体点仍应保留监督信号。
-- [EA-DATA-2026-4DDATA-0006](evidence-appendix.md#ea-data-2026-4ddata-0006): 4D数据生产可以接受伪标注噪声，但要明确目标是学习相对空间约束和运动先验；同时应合成失败轨迹，让模型区分成功和近失误。
-- [EA-DATA-2026-4DDATA-0010](evidence-appendix.md#ea-data-2026-4ddata-0010): 异构4D数据必须保留监督可靠性层级：机器人数据给可执行动作，人类/第一视角视频给视觉动态，UMI式数据给较弱的动作式信号，缺失模态不能强行当真值。
-- [EA-DATA-2026-4DDATA-0018](evidence-appendix.md#ea-data-2026-4ddata-0018): 多模态4D示教数据必须做同步、时间戳、动作-状态一致性、触觉标记跟踪和episode级切分；否则模型会混淆动作真值、接触信号和评测泄漏。
-- [EA-DATA-2026-4DDATA-0016](evidence-appendix.md#ea-data-2026-4ddata-0016): 触觉4D数据不仅要记录，还要有事件强度或等价的时序结构，帮助模型区分静默期与接触活跃期。
-- [EA-DATA-2026-4DDATA-0014](evidence-appendix.md#ea-data-2026-4ddata-0014): 如果目标包含扰动恢复，数据集必须显式收集nominal demonstrations和recovery interaction data；否则模型很难学习接触丢失后的再建立。
-### 限制与失败模式
-- [EA-DATA-2026-4DDATA-0019](evidence-appendix.md#ea-data-2026-4ddata-0019): 示教数据质量受采集硬件的人体工学和接触力分布强烈影响；“更多UMI/手持夹爪示教”不自动等于更好的4D交互数据。
-- [EA-MODEL-2026-4DDATA-0007](evidence-appendix.md#ea-model-2026-4ddata-0007): 只用视频重建损失训练世界模型会让4D推理停留在“看起来像”，但机器人需要的是跨帧同一3D表面点的一致对应。
-### 开放问题
-- [EA-DATA-2026-4DDATA-0020](evidence-appendix.md#ea-data-2026-4ddata-0020): 面向4D时空推理的数据采集应把采集设备本身当成被优化对象：如果夹爪无法表达任务所需的接触和力，算法很难从示教中补回来。
-- [EA-SENSOR-2026-4DDATA-0012](evidence-appendix.md#ea-sensor-2026-4ddata-0012): 纯视觉4D世界模型在接触、抓取稳定性、力、被遮挡几何、形变和颗粒动态上状态不可观；数据扩展应补触觉、力矩、深度、更多embodiment和失败/奖励监督。
+| 数据层 | 最低可用形态 | 作用 | 证据 |
+|---|---|---|---|
+| 4D几何轨迹 | 3D point tracks、pointmaps、跨帧correspondence、可见性mask | 让模型学习同一物理点如何随时间运动，而不是只生成看起来合理的视频 | , [相关研究](https://arxiv.org/abs/2603.01549),  [相关研究](https://arxiv.org/abs/2605.22882) |
+| 可执行动作 grounding | 机器人动作chunk、本体状态、远程操作轨迹、少量真实机器人示教 | 把视觉/几何预测接到具体机器人控制空间 |,   |
+| 异构监督治理 | robot demo、UMI式示教、第一视角人类视频、失败推演，并用mask区分可监督字段 | 防止把弱动作信号或无动作视频误当成机器人动作真值 | , [τ_0-WM](https://arxiv.org/abs/2606.01027) |
+| 接触与多模态传感 | 双指触觉、腕部力/力矩、未来触觉隐状态、触觉事件强度 | 补视觉不可观测的接触、滑移、抓取稳定性和局部形变 |,  [相关研究](https://arxiv.org/abs/2606.08737),  |
+| 失败、恢复、奖励 | 合成失败轨迹、扰动恢复示教、任务进度/奖励/critic标签 | 让世界模型能评价候选动作，而不只是预测平均未来 | [相关研究](https://arxiv.org/abs/2603.16669), [相关研究](https://arxiv.org/abs/2606.11184),  [相关研究](https://arxiv.org/abs/2606.13672) |
+| 采集质量与硬件 | 时间同步、动作-状态一致性、episode级切分、触觉标记跟踪、示教器人体工学 | 保证数据能被学习，并减少示教工具本身引入的偏差 | [相关研究](https://arxiv.org/abs/2603.08485), [相关研究](https://arxiv.org/abs/2606.04825),  [相关研究](https://arxiv.org/abs/2603.17189) |
 
-## Source Gaps
+## 主要共识
 
-- No registered source file was loaded; cite event IDs and mark source-entry gaps before final knowledge-base updates.
+第一，动作标签不是世界动态标签。Pri4R明确指出，动作标签告诉策略“怎么动”，但不告诉它“动完世界会怎样”；3D点轨迹这类4D监督能把动作学习对齐到时空度量结构中（[相关研究](https://arxiv.org/abs/2603.01549)）。
+
+第二，人类视频有价值，但必须被转成机器人可用的中间表示。3PoinTr用无动作人类视频学习非embodiment点的3D点轨迹，再用少量机器人动作示教学习闭环策略，说明“广泛视觉动态”和“可执行动作”应分工而不是混用（[相关研究](https://arxiv.org/abs/2603.08485)）。
+
+第三，4D世界模型必须约束跨帧对应。GEM-4D把视频世界模型的关键失败定义为：未来视频看起来真实，但同一3D表面点跨帧漂移，导致动作提取不可靠。因此几何教师、点轨迹和pointmap监督是数据层面的必要补丁（, [相关研究](https://arxiv.org/abs/2605.22882)）。
+
+第四，真实部署需要异构数据混合。τ0-WM把真实机器人远程操作、UMI式交互、第一视角人类视频和失败推演放进同一训练框架，但用modality-specific supervision masks区分每类数据能监督什么（, [τ_0-WM](https://arxiv.org/abs/2606.01027)）。
+
+第五，接触任务会暴露纯视觉4D的盲区。TacForeSight、Dream-Tac和HapTile共同说明，触觉、力/力矩、触觉事件门控和haptic-informed示教对于插入、擦拭、切割、抓取柔性物体等任务不是锦上添花，而是状态可观测性的一部分（[相关研究](https://arxiv.org/abs/2606.11184), [相关研究](https://arxiv.org/abs/2606.08737), [相关研究](https://arxiv.org/abs/2606.04825)）。
+
+## 条件与限制
+
+4D数据不是越密越好，而是要对齐任务物理。Pri4R的点密度消融显示，点数太少会损失交互几何；但GEM-4D也说明直接预测显式几何输出会带来标注和架构成本，因此“训练期几何教师、推理期轻量化”是一个折中方向（[相关研究](https://arxiv.org/abs/2603.01549), [相关研究](https://arxiv.org/abs/2605.22882)）。
+
+伪4D标注可以用，但要知道它在服务什么。Kinema4D接受ST-v2伪标注不是因为它等于高精度真值，而是因为相对几何和大规模覆盖足以训练生成式运动先验；这类数据适合世界模型，不应直接等同于控制精标数据（[相关研究](https://arxiv.org/abs/2603.16669)）。
+
+数据质量来自采集系统。HapTile强调同步、时间戳、动作-状态一致性和episode级切分；UMI示教质量研究进一步说明，夹爪力分布、刚度和人体工学会影响示教是否可学（[相关研究](https://arxiv.org/abs/2606.04825), [相关研究](https://arxiv.org/abs/2603.17189)）。
+
+## 未解决问题
+
+纯视觉世界模型仍然缺失隐藏物理状态。WEAVER作者明确指出，抓取稳定性、接触力、被遮挡几何、形变和颗粒动态可能无法从图像历史中恢复，需要触觉、力矩、深度、更广embodiment和更可靠奖励监督（[相关研究](https://arxiv.org/abs/2606.13672)）。
+
+示教设备需要与数据目标共同设计。手持夹爪或UMI式设备如果不能表达任务所需接触，后续算法很难补回这部分缺失；这仍缺少完整“示教工具-传感-学习-部署”闭环评估（[相关研究](https://arxiv.org/abs/2603.17189)）。
+
+## 对本项目的启发
+
+可以把“4D数据需求”定义为一个采集与标注规范，而不是单个数据集名称。建议后续 topic card 增补如下工作记忆：
+
+- 相关知识单元：4D数据应区分视觉动态、可执行动作、几何轨迹、接触传感、失败恢复和奖励监督，每类数据只监督其可信字段（source: [τ_0-WM](https://arxiv.org/abs/2606.01027); confidence: 直接证据）。
+- 相关知识单元：接触任务中，触觉/力矩是4D状态可观测性的一部分，不应只作为策略输入附加项（source: ; confidence: 直接证据）。
+- 相关知识单元：世界模型评估应同时检查视觉逼真度、几何对应一致性、动作可执行性、奖励/进度预测和失败恢复能力（综合推断： connects [相关研究](https://arxiv.org/abs/2605.22882), [相关研究](https://arxiv.org/abs/2606.13672), [相关研究](https://arxiv.org/abs/2606.11184)）。
+
+## 数据工程决策
+
+如果目标是让 4D 表征最终服务控制，数据验收应按用途拆开。第一类是动力学覆盖，回答物体与场景可能怎样变化；第二类是动作落地，回答某台机器人能够怎样施加干预；第三类是物理可观测性，记录接触、力、滑移和遮挡后的状态；第四类是时间一致性，保证不同传感流与动作状态使用同一时钟。
+
+这意味着项目不宜用一个“总小时数”管理数据资产。人类视频可以扩大物体运动和场景变化的覆盖，机器人示教负责提供可执行动作，触觉与力矩补充视觉不可见状态，失败与恢复轨迹则定义控制边界。四类数据可以共同训练，但监督可靠性和缺失模态必须显式保存，不能在合并时被抹平。
+
+最小验收也应从文件完整性升级为因果链完整性：动作发生前的状态是否可复原，动作是否与传感变化同步，关键物体在遮挡前后能否保持身份，失败是否能定位到接触丢失、几何漂移或动作不可达。只有这些条件成立，4D 数据才不只是更重的视频，而是可用于预测与纠错的交互记录。
 
 ## References
 
-- `2603.01549` [Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation](https://arxiv.org/abs/2603.01549) (2026-03-02)
-- `2603.08485` [3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos](https://arxiv.org/abs/2603.08485) (2026-03-09)
-- `2603.16669` [Kinema4D: Kinematic 4D World Modeling for Spatiotemporal Embodied Simulation](https://arxiv.org/abs/2603.16669) (2026-03-17)
-- `2603.17189` [Influence of Gripper Design on Human Demonstration Quality for Robot Learning](https://arxiv.org/abs/2603.17189) (2026-03-17)
-- `2605.22882` [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882) (2026-05-20)
-- `2606.01027` [$τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027) (2026-05-31)
-- `2606.04825` [HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning](https://arxiv.org/abs/2606.04825) (2026-06-03)
-- `2606.08737` [Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation](https://arxiv.org/abs/2606.08737) (2026-06-07)
-- `2606.11184` [TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation](https://arxiv.org/abs/2606.11184) (2026-06-09)
-- `2606.13672` [$\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation](https://arxiv.org/abs/2606.13672) (2026-06-11)
-
-完整证据条目见 [evidence-appendix.md](evidence-appendix.md)。
-
-## 研究启发与开放问题
-
-- Treat support, conditional, limit, and gap events as separate signals before writing topic-card updates.
-- Mark cross-event synthesis as `inference` unless a claim is directly backed by an event/source ID.
-- Use topic-card update suggestions only after checking source gaps.
+核心证据来自 3PoinTr、Pri4R、Kinema4D、GEM-4D、τ0-WM、WEAVER、TacForeSight、Dream-Tac、HapTile，以及 UMI/gripper demonstration quality 研究。完整claim map见 相关证据文件 和 相关证据文件。

@@ -3,20 +3,20 @@ id: EA-SENSOR
 title: 传感器与多模态感知
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
   - id: S-EA-QUESTIONS
     status: retired
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §二 传感器与多模态感知(Q4-Q5)
-  - id: RUN-TACTILE-WM-20260623
-    file: ../../evidence/literature-review-tactile-world-model-20260623/evidence.jsonl
+  - id: RUN-TACTILE-WM-20260714
+    file: ../../evidence/literature-review-触觉世界模型-20260714-reader-v1/evidence.jsonl
     locator: EA-TWM-2026-0001..0018
-  - id: RUN-SENSOR-ERROR-20260709
-    file: ../../evidence/literature-review-embodied-sensor-perception-error-2026-07-09/evidence.jsonl
+  - id: RUN-SENSOR-ERROR-20260714
+    file: ../../evidence/literature-review-具身传感器感知误差-20260714-reader-v1/evidence.jsonl
     locator: EA-SENSOR-2026-0001..0011; EA-EVAL-2026-0007,0012
-  - id: RUN-UMI-QUALITY-20260606
-    file: ../../evidence/literature-review-umi-data-quality-six-month-20260606/evidence.jsonl
+  - id: RUN-UMI-QUALITY-20260714
+    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v1/evidence.jsonl
     locator: 5 accepted UMI events
 tags: [embodied-ai, sensors, multimodal, rgb, point-cloud, tactile, force, proprioception, perception-error, tactile-world-model]
 aliases: [传感器, 多模态感知, 触觉, 力控, 点云, 3D, RGB, 触觉世界模型, 感知误差]
@@ -75,9 +75,9 @@ confidence: working
 
 - S-EA-QUESTIONS:19-22 覆盖 RGB、3D、点云和物理模态。
 - S-EA-QUESTIONS:23-29 覆盖触觉与视觉、力、pose 的关系，以及触觉标准化。
-- RUN-TACTILE-WM-20260623：`EA-TWM-2026-0001..0003`, `0007..0012` 覆盖表征兼容、触觉未来、接触门控和推理期使用。
-- RUN-SENSOR-ERROR-20260709：`EA-SENSOR-2026-0001..0011` 覆盖接触、几何、置信度、融合和事件视觉误差；`EA-EVAL-2026-0012` 覆盖世界模型 admissibility。
-- RUN-UMI-QUALITY-20260606：UMI-FT、OmniUMI 与 UMI-3D 支持力/触觉、深度和 3D tracking 对采集质量的条件性增益。
+- RUN-TACTILE-WM-20260714：`EA-TWM-2026-0001..0003`, `0007..0012` 覆盖表征兼容、触觉未来、接触门控和推理期使用。
+- RUN-SENSOR-ERROR-20260714：`EA-SENSOR-2026-0001..0011` 覆盖接触、几何、置信度、融合和事件视觉误差；`EA-EVAL-2026-0012` 覆盖世界模型 admissibility。
+- RUN-UMI-QUALITY-20260714：UMI-FT、OmniUMI 与 UMI-3D 支持力/触觉、深度和 3D tracking 对采集质量的条件性增益。
 
 ## 待补问题
 

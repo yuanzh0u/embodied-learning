@@ -24,6 +24,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--topic", required=True, help="Review topic or question.")
     parser.add_argument("--knowledge-id", action="append", default=[], help="EA/ERR knowledge ID. Repeatable.")
     parser.add_argument("--time-range", help="Resolved review window, e.g. 2026-01-09..2026-07-09.")
+    parser.add_argument(
+        "--review-mode",
+        choices=["rapid", "scoping", "systematic"],
+        default="scoping",
+        help="Review-depth contract. Targets are floors; stopping remains coverage/saturation based.",
+    )
     parser.add_argument("--date", help="Run date YYYYMMDD for the folder name (default: today).")
     parser.add_argument("--work-dir", default=str(REPO_ROOT / "work"), help="Parent directory for the run folder.")
     parser.add_argument("--force", action="store_true", help="Overwrite an existing run.json in the target folder.")
@@ -55,19 +61,21 @@ def main() -> int:
         return 1
     run_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
+        "workflow_version": 2,
         "run": run_dir.name,
         "topic": args.topic,
         "status": "in-progress",
+        "review_mode": args.review_mode,
         "time_range": args.time_range or "",
         "knowledge_ids": args.knowledge_id,
         "event_count": 0,
         "files": {},
-        "notes": "Created by init_run.py. Flip status to 'settled' only after the full bundle passes check_run_bundle.py and audit_citations.py.",
+        "notes": "Created by init_run.py. Flip status to 'settled' only after coverage/saturation, evidence, citation, and editorial gates pass.",
     }
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Initialized run: {run_dir}")
     print(f"- {manifest_path} (status: in-progress)")
-    print("Next: run planner -> hub (search, extract, promote_candidates) -> build_review_packet -> write three articles -> settle.")
+    print("Next: planner -> candidate registry -> coverage rounds -> HTML/PDF/OCR extraction -> evidence -> writer -> settle.")
     return 0
 
 

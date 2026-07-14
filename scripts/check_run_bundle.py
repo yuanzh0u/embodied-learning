@@ -31,6 +31,7 @@ STYLE_TO_FILE = {
 }
 APPENDIX = "evidence-appendix.md"
 REQUIRED_FIELDS = ["run", "topic", "time_range", "event_count", "files"]
+V2_REQUIRED_FILES = ["query_plan", "candidate_registry", "coverage_report"]
 # Drifted names seen in real runs -> the standard field to use instead.
 FIELD_DRIFT = {
     "selected_event_count": "event_count",
@@ -124,6 +125,30 @@ def check_run_bundle(run_dir: Path) -> list[str]:
     if outputs is not None and not isinstance(outputs, list):
         problems.append("run.json: files.outputs must be a list")
         outputs = None
+
+    workflow_version = manifest.get("workflow_version", 1)
+    if workflow_version == 2:
+        review_mode = manifest.get("review_mode")
+        if review_mode not in {"rapid", "scoping", "systematic"}:
+            problems.append("run.json: workflow_version 2 requires review_mode rapid|scoping|systematic")
+        for key in V2_REQUIRED_FILES:
+            if not isinstance(files.get(key), str):
+                problems.append(f"run.json: workflow_version 2 requires files.{key}")
+        coverage_rel = files.get("coverage_report")
+        if isinstance(coverage_rel, str) and (run_dir / coverage_rel).is_file():
+            try:
+                coverage = json.loads((run_dir / coverage_rel).read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc:
+                problems.append(f"coverage report is invalid JSON: {exc}")
+            else:
+                if not bool((coverage.get("stop_assessment") or {}).get("ready_to_stop")):
+                    unresolved = (coverage.get("stop_assessment") or {}).get("unresolved", [])
+                    problems.append(
+                        "coverage/saturation gate not passed"
+                        + (f": {', '.join(str(item) for item in unresolved)}" if unresolved else "")
+                    )
+    elif workflow_version != 1:
+        problems.append(f"run.json: unsupported workflow_version {workflow_version!r}")
 
     # Every listed file must exist.
     listed: list[str] = []

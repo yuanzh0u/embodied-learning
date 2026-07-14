@@ -1,6 +1,6 @@
 ---
 name: embodied-ai-query-planner
-description: Generate structured paper-search query plans for embodied-AI topics. Use when the user asks for embodied AI paper query generation, arXiv query planning, topic expansion, web calibration, UMI/VLA/Sim2Real/retargeting/tactile query terms, or when another Skill needs a reproducible query plan before literature mining.
+description: Generate scale-aware, coverage-driven paper-search plans for embodied-AI topics. Use for arXiv query planning, broad or systematic literature discovery, topic expansion, web calibration, review-depth selection, candidate-pool sizing, and reproducible stopping rules before literature mining.
 ---
 
 # Embodied AI Query Planner
@@ -17,6 +17,8 @@ Use it upstream of `$embodied-ai-literature-hub` whenever a literature run needs
 - Optional: `knowledge_id` such as `EA-DATA` or `EA-MODEL`.
 - Optional: specialized family such as `umi`, `vla`, `sim2real`, `retargeting`, `tactile-force`, or `last-centimeter`.
 - Optional: time range. The planner records it but does not filter query strings by date.
+- Optional: review mode: `rapid`, `scoping` (default), or `systematic`.
+- Optional: explicit candidate, full-text, or accepted-evidence floors. These are never caps.
 - Optional: dynamic suggestions from LLM/agent reasoning.
 - Optional: calibration notes from live search.
 
@@ -34,6 +36,7 @@ python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
   --topic "UMI 数据可用性" \
   --family umi \
   --knowledge-id EA-DATA \
+  --review-mode scoping \
   --output /tmp/query-plan.json \
   --markdown-output /tmp/query-plan.md
 ```
@@ -51,12 +54,17 @@ python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
 - `web_calibration_queries`: search strings for fresh keyword calibration.
 - `dynamic_suggestions`: LLM/agent-suggested query additions and adjacent families, separate from static taxonomy.
 - `calibration_notes`: source and confidence notes, especially for social calibration.
+- `review_mode` and `search_targets`: candidate/full-text/accepted-paper floors scaled by the query surface.
+- `coverage_dimensions`: query labels grouped into direct, mechanism, limit, evaluation, deployment, and adjacent evidence surfaces.
+- `stopping_rule`: minimum rounds plus consecutive low-new-paper rounds; all floors and dimensions must pass.
 
 Each query entry must include `label`, `tier`, `query`, and `why`.
 
 ## Rules
 
 - Prefer wide recall plus strong downstream filtering.
+- Never stop because a fixed paper count was reached. Counts are floors; coverage and saturation decide completion.
+- Use `rapid` only for a bounded decision or early scan, `scoping` for normal topic maps, and `systematic` for high-consequence or explicitly exhaustive work.
 - Keep static taxonomy, dynamic suggestions, and web calibration visibly separate.
 - Do not hard-filter with `cat:` by default; include suggested categories as metadata.
 - Treat Reddit and X/Twitter as low-confidence social calibration only.

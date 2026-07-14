@@ -139,6 +139,35 @@ class CheckRunBundleTest(unittest.TestCase):
         run_dir = make_run(self.tmp, manifest_extra={"status": "settled"})
         self.assertEqual(check_run_bundle.check_run_bundle(run_dir), [])
 
+    def test_v2_requires_ready_coverage_artifacts(self) -> None:
+        run_dir = make_run(
+            self.tmp,
+            manifest_extra={"workflow_version": 2, "review_mode": "scoping", "status": "settled"},
+        )
+        manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        manifest["files"].update(
+            {
+                "query_plan": "query-plan.json",
+                "candidate_registry": "candidate-registry.json",
+                "coverage_report": "coverage-report.json",
+            }
+        )
+        (run_dir / "query-plan.json").write_text("{}\n", encoding="utf-8")
+        (run_dir / "candidate-registry.json").write_text("{}\n", encoding="utf-8")
+        (run_dir / "coverage-report.json").write_text(
+            json.dumps({"stop_assessment": {"ready_to_stop": False, "unresolved": ["saturation"]}}),
+            encoding="utf-8",
+        )
+        (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        problems = check_run_bundle.check_run_bundle(run_dir)
+        self.assertTrue(any("coverage/saturation gate not passed" in item for item in problems))
+
+        (run_dir / "coverage-report.json").write_text(
+            json.dumps({"stop_assessment": {"ready_to_stop": True, "unresolved": []}}),
+            encoding="utf-8",
+        )
+        self.assertEqual([], check_run_bundle.check_run_bundle(run_dir))
+
     def test_unknown_status_reported(self) -> None:
         run_dir = make_run(self.tmp, manifest_extra={"status": "done"})
         problems = check_run_bundle.check_run_bundle(run_dir)

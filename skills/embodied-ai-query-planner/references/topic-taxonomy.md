@@ -9,6 +9,15 @@ source:
 
 # Topic Taxonomy
 
+## Contents
+
+- Query entry schema and coverage dimensions
+- Review depth and stopping
+- Tier semantics
+- EA topic and family coverage
+- Deterministic key inference
+- arXiv compatibility
+
 This reference explains the deterministic taxonomy in
 `scripts/query_taxonomy.py`. It is the static baseline for query planning; live
 web calibration may add terms later, but should not replace these stable keys.
@@ -28,6 +37,23 @@ Each topic or family plan exposes a `queries` list. Every query entry has:
 
 The existing literature-hub search script reads only `label` and `query`, so
 the extra fields are safe metadata for downstream review.
+
+The planner also groups query tiers into review-level `coverage_dimensions`.
+These dimensions are not relevance scores: they prevent a large candidate pool
+from being mistaken for a broad review when it covers only one vocabulary or
+method lineage.
+
+## Review Depth And Stopping
+
+- `rapid`: bounded decision scan; starts at 30 candidates, 12 full texts, and 8 accepted papers.
+- `scoping`: default topic map; starts at 100 candidates, 35 full texts, and 15 accepted papers.
+- `systematic`: high-coverage review; starts at 200 candidates, 80 full texts, and 30 accepted papers.
+
+The candidate floor also scales with the number of unique queries, so a broad
+topic can naturally require several hundred candidates. These numbers are
+floors, not quotas or caps. Stop only after the downstream coverage report says
+all dimensions pass and the configured number of consecutive batches has a
+low new-unique-paper rate.
 
 Family plans may also expose `browser_fallback_queries`. These are not arXiv
 API strings. They are web/browser search strings, usually with `site:arxiv.org`

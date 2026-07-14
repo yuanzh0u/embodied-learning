@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.28320",
+    "title": "WARP-RM: A Warp-Augmented Relative Progress Reward Model for Data Curation",
+    "published": "2026-06-26",
+    "url": "https://arxiv.org/abs/2606.28320",
+    "authors": [
+      "Justin Yu",
+      "Andrew Goldberg",
+      "Kavish Kondap",
+      "Karim El-Refai",
+      "Ethan Ransing",
+      "Qianzhong Chen",
+      "Mac Schwager",
+      "Fred Shentu",
+      "Philipp Wu",
+      "Ken Goldberg"
+    ]
+  },
+  "review": {
+    "question": "具身数据感知误差溯源",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-EVAL",
+      "ERR-PATTERN",
+      "ERR-EMBODIED"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身数据感知误差溯源."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3.3 Progress Model Training",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Limitations and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身数据感知误差溯源', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "混合质量的长程示教不应粗粒度整条丢弃；次优 episode 里可能含有高价值恢复片段，质量控制需要下探到 frame/chunk 级别的进展信号。"
+  ],
+  "method": {
+    "summary": "Relative Cumulative Progress Targets. From the sampled indices, the per-frame cumulative progress pseudo-labels are computed as the signed displacement from the window start normalized by a constant : (3) Categorical Objective. Given the visual features the progress model is trained to predict . Rather than regressing directly on , WARP-RM predicts separate probability distributions over evenly spaced categorical bins. The model is trained with a cross-entropy loss against a two-hot target encoding that encodes a continuous value by finding the coefficients for linear interpolation from the two nearest bin centers. This categorical classification approach mitigates optimization instabilities",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate in three settings: real-world T-shirt folding, real-world bottle-in-bin placement, and a reproducible simulated bottle-in-bin benchmark. In the T-shirt setting, each policy is evaluated on a bimanual I2RT YAM robot arm setup over trials 1 1 1 At , single-trial success differences (e.g., 19/20 vs. 20/20) fall within binomial sampling noise; only larger gaps should be read as meaningful. Where success rates are comparable, throughput and time-to-completion are more informative metrics. of T-shirt folding using a variety of differently colored medium-sized T-shirts not seen during training. In each trial, the robot must retrieve a crumpled shirt from a bin containing a variable numb",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "混合质量的长程示教不应粗粒度整条丢弃；次优 episode 里可能含有高价值恢复片段，质量控制需要下探到 frame/chunk 级别的进展信号。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "While WARP-BC attenuates the impact of suboptimal data, the resulting policy remains restricted to the behaviors present in the training set. Future work will investigate how DAgger and post-training, e.g. offline and online RL, and iterative self-improvement via reward-aligned learning, can generalize performance beyond these initial offline demonstrations. Furthermore, our experiments span two real manipulation tasks and one simulated task on a single bimanual embodiment, and several directions remain open. First, our negative-progress supervision comes entirely from reversed playback, an ap",
+        "locator": "5 Limitations and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3.3 Progress Model Training) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.28320-C01",
+      "claim": "混合质量的长程示教不应粗粒度整条丢弃；次优 episode 里可能含有高价值恢复片段，质量控制需要下探到 frame/chunk 级别的进展信号。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 具身数据感知误差溯源",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文指出长程遥操作包含 pauses、fumbles 和 recoveries，整条 episode 过滤会丢失 otherwise suboptimal executions 中嵌入的 high-advantage segments，也无法剪掉保留示教中的局部 hesitation；WARP-RM 学习 dense relative progress 并用 WARP-BC upweight high-advantage action chunks。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Scaling imitation learning requires large datasets, yet human teleoperation inevitably produces mixed-quality demonstrations containing hesitations and recoveries. Prior frame-level progress reward models supervise on absolute temporal progress proxies that suffer from label noise, or require costly human annotations to define subtask boundaries. We present WARP (Warp-Augmented Relative Progress), a novel fully self-supervised algorithm for learning dense, signed relative progress magnitudes directly from successful demonstrations. WARP generates per-frame progress targets via time-warp augmentations of demonstrations (variable playback speeds and reversals) and we train WARP-RM to predict the normalized elapsed time between input frames. Aggregating these predictions across overlapping windows yields a dense frame-level progress signal. We then introduce WARP-BC, which leverages these scalar reward estimates to upweight high-advantage action chunks during behavior cloning, where chunk-level advantage is obtained by aggregating per-frame rewards. We evaluate our approach on",
+      "evidence_type": "method+experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (action, chunks, dense, high-advantage, progress, recoveries, relative, upweight). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Use as evidence against binary keep/drop episode-level quality control."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

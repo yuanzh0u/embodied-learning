@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.01027",
+    "title": "$τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation",
+    "published": "2026-05-31",
+    "url": "https://arxiv.org/abs/2606.01027",
+    "authors": [
+      "Pengfei Zhou",
+      "Shengcong Chen",
+      "Di Chen",
+      "Jiaxu Wang",
+      "Rongjun Jin",
+      "Bingwen Zhu",
+      "Yike Pan",
+      "Songen Gu",
+      "Kuanning Wang",
+      "Shufeng Nan",
+      "Xingyu Qiu",
+      "Chenhao Qiu",
+      "Pu Yang",
+      "Yunuo Cai",
+      "Jianxiong Gao",
+      "Yifan Li",
+      "Yanwei Fu",
+      "Xiangyu Yue",
+      "Zhi Chen",
+      "Jianlan Luo"
+    ]
+  },
+  "review": {
+    "question": "4D时空推理对数据的需求",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 4D时空推理对数据的需求."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "II-A Robotic Video Action Models",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "VII Experimental Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "VIII Conclusion and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '4D时空推理对数据的需求', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "τ0-WM 把真实机器人遥操作、UMI 式交互、人类第一视角视频与 rollout/失败轨迹合并训练，并用按模态的监督掩码处理各数据源的标注缺失。"
+  ],
+  "method": {
+    "summary": "Video Action Models (VAMs) introduce future forecasting into robot control by jointly predicting videos and actions [ 29 , 5 , 24 , 26 , 45 , 43 , 27 , 46 , 28 , 44 ] . Most recent methods build on pretrained video-generation diffusion models [ 39 , 16 , 42 ] and adopt a joint-denoising paradigm, where future visual latents and action chunks are generated together [ 1 , 29 , 5 , 24 , 26 ] . These works show that future prediction provides useful dynamics-aware representations for manipulation. Some recent systems further improve scalability or efficiency, such as Motus [ 5 ] , which integrates understanding, video generation, world modeling, and control, and Fast-WAM [ 45 ] , which studies r",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate -WM on long-horizon, fine-grained real-robot manipulation tasks. Our experiments aim to answer three questions: (i) whether the proposed VAM enables strong policy performance on challenging multi-stage manipulation tasks, (ii) whether heterogeneous pre-training with robot, UMI-style, and egocentric interaction data improves downstream performance, and (iii) whether deployment-time computation further improves closed-loop execution through action selection and rectification. We compare against representative policy and video-action baselines and conduct ablations on both data composition and test-time computation. Experimental setup. Experiments span three robot embodiments—AGIBOT",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "τ0-WM 把真实机器人遥操作、UMI 式交互、人类第一视角视频与 rollout/失败轨迹合并训练，并用按模态的监督掩码处理各数据源的标注缺失。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (II-A Robotic Video Action Models) and evaluation (VII Experimental Evaluation)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.01027-C01",
+      "claim": "τ0-WM 把真实机器人遥操作、UMI 式交互、人类第一视角视频与 rollout/失败轨迹合并训练，并用按模态的监督掩码处理各数据源的标注缺失。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 4D时空推理对数据的需求",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "摘要直接列出四类交互数据和 modality-specific supervision masks。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Robotic manipulation requires models that generate executable actions while anticipating and evaluating their future consequences before physical execution. We present -World Model ( -WM), a unified video-action world model that integrates policy learning, video prediction, and action evaluation within a single future-predictive framework. Built on a shared video diffusion backbone, -WM provides two complementary interfaces. First, a video action model jointly predicts future visual latents and continuous action chunks from multi-view observations, language instructions, and robot state. Second, an action-conditioned video simulator rolls out candidate action chunks into multi-view futures and predicts dense task-progress scores. The model is trained on approximately hours of real-robot teleoperation, UMI-style interaction, egocentric human videos, and rollout or failure trajectories using modality-specific supervision masks. At inference time, -WM uses test-time computation to sample action candidates, rank them with re-denoising consistency, and invoke simulator-based rectification for low-quality candidates. On challenging long-horizon and fine-grained robotic manipulation tasks, -WM shows superior performance over other relevant baselines.",
+      "evidence_type": "training-objective-and-data-governance",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (rollout). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "这与本地EA-DATA的“数据层级/质量治理”一致。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

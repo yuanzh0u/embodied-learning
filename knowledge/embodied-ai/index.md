@@ -20,8 +20,8 @@ tags: [embodied-ai, index]
 | EA-XEMBODIMENT | 跨本体与数据迁移 | [cross-embodiment-transfer.md](cross-embodiment-transfer.md) | S-EA-QUESTIONS:246-301 |
 | EA-MODEL | 模型与预训练 | [models-pretraining.md](models-pretraining.md) | S-EA-QUESTIONS:303-359 |
 | EA-EVAL | 评测体系与世界模型 | [evaluation-world-models.md](evaluation-world-models.md) | S-EA-QUESTIONS:361-409 |
-| EA-4D | 4D 时空推理与世界动态 | [4d-spatiotemporal-reasoning.md](4d-spatiotemporal-reasoning.md) | RUN-4D-REASONING-20260612; RUN-4D-DATA-20260612 |
-| EA-ALIGN | VLA 多模态与动作对齐 | [vla-multimodal-action-alignment.md](vla-multimodal-action-alignment.md) | RUN-VLA-ALIGN-20260630 |
+| EA-4D | 4D 时空推理与世界动态 | [4d-spatiotemporal-reasoning.md](4d-spatiotemporal-reasoning.md) | RUN-4D-REASONING-20260714; RUN-4D-DATA-20260714 |
+| EA-ALIGN | VLA 多模态与动作对齐 | [vla-multimodal-action-alignment.md](vla-multimodal-action-alignment.md) | RUN-VLA-ALIGN-20260714 |
 | EA-BIZ | 产业落地与商业化 | [commercialization.md](commercialization.md) | S-EA-QUESTIONS:411-441 |
 
 ## 常见组合

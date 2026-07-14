@@ -1,85 +1,77 @@
-# 世界模型训练数据研究备忘录
+# 机器人世界模型需要什么训练数据：从视频语料到干预记录
 
-## 研究边界与证据范围
+## 研究边界
 
-- Topic: 世界模型训练数据
-- Time range: 2025-12-11..2026-06-11
-- Knowledge IDs: `EA-DATA`, `EA-MODEL`, `EA-EVAL`
-- Paper-level sources: 14 / 5
-- Output type: scientific-memo
+本文覆盖 2025 年 12 月 11 日至 2026 年 6 月 11 日的 14 篇论文，讨论机器人世界模型的数据配方、合成扩展、几何监督、失败纠正和训练目标。证据以近期公开论文为主，适合总结设计原则，但各工作使用不同本体、任务和指标，不能把单篇增益直接外推为统一配方。
 
-## Evidence Core
+## 中心判断
 
-- Accepted events: 14
-- Stance labels: `conditional`, `limit`, `support`
-- Confidence labels: `direct`
-- Trace IDs: [EA-DATA-2026-WMDATA-0001](evidence-appendix.md#ea-data-2026-wmdata-0001), [EA-DATA-2026-WMDATA-0003](evidence-appendix.md#ea-data-2026-wmdata-0003), [EA-DATA-2026-WMDATA-0014](evidence-appendix.md#ea-data-2026-wmdata-0014), [EA-DATA-2026-WMDATA-0002](evidence-appendix.md#ea-data-2026-wmdata-0002), [EA-DATA-2026-WMDATA-0005](evidence-appendix.md#ea-data-2026-wmdata-0005), [EA-DATA-2026-WMDATA-0006](evidence-appendix.md#ea-data-2026-wmdata-0006), [EA-DATA-2026-WMDATA-0004](evidence-appendix.md#ea-data-2026-wmdata-0004), [EA-DATA-2026-WMDATA-0012](evidence-appendix.md#ea-data-2026-wmdata-0012), [EA-DATA-2026-WMDATA-0011](evidence-appendix.md#ea-data-2026-wmdata-0011), [EA-EVAL-2026-WMDATA-0013](evidence-appendix.md#ea-eval-2026-wmdata-0013), [EA-MODEL-2026-WMDATA-0008](evidence-appendix.md#ea-model-2026-wmdata-0008), [EA-MODEL-2026-WMDATA-0009](evidence-appendix.md#ea-model-2026-wmdata-0009)
-- Registered sources: `S-EMBODIED-DATA-FRAMEWORK`, `S-LOGISTICS-HUB-SURVEY`, `S-EA-QUESTIONS`, `S-ERR-COMPARE`, `S-PROJECT-CONTEXT`
+机器人世界模型需要的不是更大的普通视频库，而是带干预的状态转移数据：机器人做了什么，环境如何变化，哪些状态没有被视觉看见，预测最终是否改善动作。高质量数据应同时覆盖可执行动作、三维几何、接触事件、失败附近的纠正和真实—合成差异；缺少任何一层，模型都可能生成合理画面却无法支持控制。
 
-## Claim Map
+## 数据支柱一：异构来源必须分工，而不是强行同质化
 
-| Event | Topic | Stance | Confidence | Claim | Evidence | Authors | Paper |
-|---|---|---|---|---|---|---|---|
-| [EA-DATA-2026-WMDATA-0001](evidence-appendix.md#ea-data-2026-wmdata-0001) | EA-DATA | `support` | `direct` | A robot world model can be trained from a moderate-sized robot interaction dataset and then used to generate policy-training demonstrations, but its value depends on interaction-c... | The paper builds an Interactive World Simulator from a moderate-sized robot interaction dataset, reports world-model-generated policy data comparable to the same amount of real-world data, and evaluates sim-real perform... | yixuan-wang | [2603.08546](https://arxiv.org/abs/2603.08546) |
-| [EA-DATA-2026-WMDATA-0003](evidence-appendix.md#ea-data-2026-wmdata-0003) | EA-DATA | `support` | `direct` | World-model training and post-training data should include dense corrective trajectories around failure-prone states, not only successful demonstrations. | Hi-WM rolls policies inside a world model, lets humans intervene when rollouts become incorrect or failure-prone, caches and branches failure states, and adds corrective trajectories back into the training set for post-... | yaxuan-li | [2604.21741](https://arxiv.org/abs/2604.21741) |
-| [EA-DATA-2026-WMDATA-0014](evidence-appendix.md#ea-data-2026-wmdata-0014) | EA-DATA | `support` | `direct` | A world-model dataset must support prediction, not only policy imitation: it should expose how observations, objects, contacts, and robot states evolve under intervention, with mo... | The survey distinguishes ordinary policy datasets from world-model datasets, reviews 34 manipulation datasets, and states that useful world-model data should include temporally aligned observations/actions, diversity fo... | wm-manipulation-survey-authors | [2606.00113](https://arxiv.org/abs/2606.00113) |
-| [EA-DATA-2026-WMDATA-0002](evidence-appendix.md#ea-data-2026-wmdata-0002) | EA-DATA | `support` | `direct` | Unified video-action world models benefit from heterogeneous interaction corpora that mix high-fidelity robot teleoperation, scalable UMI-style demonstrations, broad egocentric hu... | τ0-WM reports a 27.3K-hour corpus containing real-robot teleoperation, UMI-style interaction, egocentric human videos, and rollout/failure trajectories; the paper explains that these sources differ in action fidelity, e... | pengfei-zhou | [2606.01027](https://arxiv.org/abs/2606.01027) |
-| [EA-DATA-2026-WMDATA-0005](evidence-appendix.md#ea-data-2026-wmdata-0005) | EA-DATA | `conditional` | `direct` | Embodiment-aware robot data synthesis should start from robot motion renderings or a small seed set of teleoperation demonstrations, because off-the-shelf generative models can ha... | AnchorDream conditions video diffusion on robot motion renderings, starts from a small set of human teleoperation demonstrations, and frames embodiment grounding as necessary to avoid implausible motions while scaling d... | junjie-ye | [2512.11797](https://arxiv.org/abs/2512.11797) |
-| [EA-DATA-2026-WMDATA-0006](evidence-appendix.md#ea-data-2026-wmdata-0006) | EA-DATA | `conditional` | `direct` | A scalable world-model data pipeline can use a small amount of real-world data to align classical simulation with neural simulation, generating action-video pairs that preserve re... | ComSim proposes a real-sim-real data augmentation pipeline: collect a small real trajectory set, align classical simulation to the real platform, transform simulation videos into real-world representations, and generate... | yiran-qin | [2604.11386](https://arxiv.org/abs/2604.11386) |
-| [EA-DATA-2026-WMDATA-0004](evidence-appendix.md#ea-data-2026-wmdata-0004) | EA-DATA | `conditional` | `direct` | Synthetic world-model data for robot learning needs embodiment anchoring: rendered robot motion plus explicit scene and object priors can synthesize demonstrations in novel object... | RoboDream anchors generation to rendered robot motion, conditions on scene/object priors, and introduces retrieval-and-rebirth plus prop-free teleoperation to generate demonstrations and reduce real data collection cost... | junjie-ye | [2606.02577](https://arxiv.org/abs/2606.02577) |
-| [EA-DATA-2026-WMDATA-0012](evidence-appendix.md#ea-data-2026-wmdata-0012) | EA-DATA | `conditional` | `direct` | Paired task-execution videos are useful but costly; self-distillation can partially replace curated task-video supervision by using unlabeled scene images, VLM-generated tasks and... | WMSD frames supervised fine-tuning on paired task-execution videos as costly, then proposes self-distillation and reinforcement learning where a VLM generates tasks/solutions from unlabeled scene images and feedback ver... | sebastian-stapf | [2606.12072](https://arxiv.org/abs/2606.12072) |
-| [EA-DATA-2026-WMDATA-0011](evidence-appendix.md#ea-data-2026-wmdata-0011) | EA-DATA | `limit` | `direct` | Static image-text pretraining is insufficient training signal for contact-rich manipulation; world-model data should expose action-conditioned scene evolution and contact dynamics. | World Pilot argues that VLA semantic grounding from static image-text pairs cannot capture continuous contact-rich dynamics, and uses WAM-derived scene-evolution and trajectory priors to complement the policy. (Abstract... | world-pilot-authors | [2606.12403](https://arxiv.org/abs/2606.12403) |
-| [EA-EVAL-2026-WMDATA-0013](evidence-appendix.md#ea-eval-2026-wmdata-0013) | EA-EVAL | `limit` | `direct` | World-model training and post-training objectives should be tied to downstream action quality rather than intermediate video fidelity, because later denoising can become less acti... | SANTS reports that fully denoised video is not always the best action condition, trains a scheduler with a path-level reward after action generation, and explicitly optimizes downstream action quality rather than video... | sants-authors | [2605.27947](https://arxiv.org/abs/2605.27947) |
-| [EA-MODEL-2026-WMDATA-0008](evidence-appendix.md#ea-model-2026-wmdata-0008) | EA-MODEL | `support` | `direct` | World-model training data needs geometry-consistency supervision, because photorealistic video without stable 4D correspondences can fail to yield executable robot actions. | GEM-4D injects dense 4D correspondence supervision from a geometry foundation model into a video generative backbone during training, arguing that correspondence consistency makes future rollouts more reliable for actio... | gem-4d-authors | [2605.22882](https://arxiv.org/abs/2605.22882) |
-| [EA-MODEL-2026-WMDATA-0009](evidence-appendix.md#ea-model-2026-wmdata-0009) | EA-MODEL | `support` | `direct` | Robot videos can be converted into richer world-model supervision by pairing RGB with depth and pseudo 3D scene-flow targets, training models to represent current 3D structure and... | GaussianDream trains current Gaussian reconstruction and future Gaussian prediction heads with RGB rendering, depth, and pseudo 3D scene-flow supervision, then retains only a compact prefix for control at inference. (Ab... | gaussiandream-authors | [2605.20752](https://arxiv.org/abs/2605.20752) |
-| [EA-MODEL-2026-WMDATA-0007](evidence-appendix.md#ea-model-2026-wmdata-0007) | EA-MODEL | `support` | `direct` | Training data for efficient embodied world-model rollouts must preserve sparse task-relevant events such as approach, contact, grasp, and release; generic frame dropping can remov... | SKIP argues that manipulation rollouts concentrate task-relevant information in sparse events, selects event-preserving keyframes through robot-aware multimodal fusion, and reports that generated videos can serve as pol... | ziheng-he | [2606.00664](https://arxiv.org/abs/2606.00664) |
-| [EA-MODEL-2026-WMDATA-0010](evidence-appendix.md#ea-model-2026-wmdata-0010) | EA-MODEL | `limit` | `direct` | World-action training cannot optimize only visual reconstruction: hidden states that make plausible futures may still be poorly organized for low-level control unless aligned to t... | The paper diagnoses a representation mismatch in WAMs, where action decoders attend to task-irrelevant areas despite plausible visual futures, and proposes an Action-Grounded Representation Alignment objective for the w... | yuying-ge | [2606.12217](https://arxiv.org/abs/2606.12217) |
+[τ0-WM](https://arxiv.org/abs/2606.01027) 将真实机器人遥操作、UMI 类交互、第一视角人类视频和失败轨迹组合使用。它们的价值不同：机器人数据提供动作真值，人类视频扩展视觉动力学，UMI 提供可扩展但较弱的交互信号，失败数据训练纠正。
 
-## 主要综合
+合理混合需要模态掩码和可靠性层级。人类视频没有机器人关节动作，就不应伪装成完整控制监督；机器人示教规模小，也不应承担全部场景覆盖。数据管线要保存“这条记录能证明什么”，而不是只保存统一张量。
 
-### 共识/正向证据
-- [EA-DATA-2026-WMDATA-0001](evidence-appendix.md#ea-data-2026-wmdata-0001): A robot world model can be trained from a moderate-sized robot interaction dataset and then used to generate policy-training demonstrations, but its value depends on interaction-consistent long-horizon rollouts and sim-...
-- [EA-DATA-2026-WMDATA-0003](evidence-appendix.md#ea-data-2026-wmdata-0003): World-model training and post-training data should include dense corrective trajectories around failure-prone states, not only successful demonstrations.
-- [EA-DATA-2026-WMDATA-0014](evidence-appendix.md#ea-data-2026-wmdata-0014): A world-model dataset must support prediction, not only policy imitation: it should expose how observations, objects, contacts, and robot states evolve under intervention, with modalities beyond RGB when physical intera...
-- [EA-DATA-2026-WMDATA-0002](evidence-appendix.md#ea-data-2026-wmdata-0002): Unified video-action world models benefit from heterogeneous interaction corpora that mix high-fidelity robot teleoperation, scalable UMI-style demonstrations, broad egocentric human videos, and rollout or failure traje...
-- [EA-MODEL-2026-WMDATA-0008](evidence-appendix.md#ea-model-2026-wmdata-0008): World-model training data needs geometry-consistency supervision, because photorealistic video without stable 4D correspondences can fail to yield executable robot actions.
-- [EA-MODEL-2026-WMDATA-0009](evidence-appendix.md#ea-model-2026-wmdata-0009): Robot videos can be converted into richer world-model supervision by pairing RGB with depth and pseudo 3D scene-flow targets, training models to represent current 3D structure and short-horizon future evolution rather t...
-- [EA-MODEL-2026-WMDATA-0007](evidence-appendix.md#ea-model-2026-wmdata-0007): Training data for efficient embodied world-model rollouts must preserve sparse task-relevant events such as approach, contact, grasp, and release; generic frame dropping can remove the information downstream policies ne...
-### 条件成立
-- [EA-DATA-2026-WMDATA-0005](evidence-appendix.md#ea-data-2026-wmdata-0005): Embodiment-aware robot data synthesis should start from robot motion renderings or a small seed set of teleoperation demonstrations, because off-the-shelf generative models can hallucinate robot bodies or implausible mo...
-- [EA-DATA-2026-WMDATA-0006](evidence-appendix.md#ea-data-2026-wmdata-0006): A scalable world-model data pipeline can use a small amount of real-world data to align classical simulation with neural simulation, generating action-video pairs that preserve real-world consistency and broaden scenari...
-- [EA-DATA-2026-WMDATA-0004](evidence-appendix.md#ea-data-2026-wmdata-0004): Synthetic world-model data for robot learning needs embodiment anchoring: rendered robot motion plus explicit scene and object priors can synthesize demonstrations in novel objects, scenes, and viewpoints while reducing...
-- [EA-DATA-2026-WMDATA-0012](evidence-appendix.md#ea-data-2026-wmdata-0012): Paired task-execution videos are useful but costly; self-distillation can partially replace curated task-video supervision by using unlabeled scene images, VLM-generated tasks and solutions, and VLM feedback as weak ver...
-### 限制与失败模式
-- [EA-DATA-2026-WMDATA-0011](evidence-appendix.md#ea-data-2026-wmdata-0011): Static image-text pretraining is insufficient training signal for contact-rich manipulation; world-model data should expose action-conditioned scene evolution and contact dynamics.
-- [EA-EVAL-2026-WMDATA-0013](evidence-appendix.md#ea-eval-2026-wmdata-0013): World-model training and post-training objectives should be tied to downstream action quality rather than intermediate video fidelity, because later denoising can become less action-relevant or physically unreliable.
-- [EA-MODEL-2026-WMDATA-0010](evidence-appendix.md#ea-model-2026-wmdata-0010): World-action training cannot optimize only visual reconstruction: hidden states that make plausible futures may still be poorly organized for low-level control unless aligned to task-relevant interaction regions.
+## 数据支柱二：合成数据必须有本体锚点
 
-## Source Gaps
+[RoboDream](https://arxiv.org/abs/2606.02577) 与 [AnchorDream](https://arxiv.org/abs/2512.11797) 都强调机器人运动渲染、场景先验或少量遥操作种子。通用视频生成器容易幻觉机器人身体、关节和不可能运动；本体锚定把生成自由度限制在可执行空间附近。
 
-- No immediate source gaps detected from loaded packet inputs.
+[ComSim](https://arxiv.org/abs/2604.11386) 则用少量真实数据对齐经典仿真与神经仿真，扩大动作—视频对。三条路线共同说明，合成的目标不是视觉多样性最大化，而是以可验证物理为底座扩展场景、对象和视角。
+
+## 数据支柱三：几何与接触事件不能被像素损失替代
+
+[GEM-4D](https://arxiv.org/abs/2605.22882) 指出，像素上合理的未来可能缺乏稳定四维对应，无法恢复可执行动作。[GaussianDream](https://arxiv.org/abs/2605.20752) 因此把深度和伪三维场景流加入监督，让模型学习当前结构和短时变化。
+
+接触事件更加稀疏。接近、抓取、滑移和释放可能只占长视频很少帧，却决定任务成败。[SKIP](https://arxiv.org/abs/2606.00664) 提醒，按固定频率降采样会删掉这些瞬间。数据压缩应围绕任务事件，而不是平均时间间隔。
+
+## 数据支柱四：成功演示不足以训练纠错
+
+[Hi-WM](https://arxiv.org/abs/2604.21741) 主张在失败高发状态附近收集密集纠正轨迹。只看成功示教，模型知道一条顺利路径，却不知道偏离后怎样回到可行区域。世界模型若要参与规划和恢复，必须见过错误如何发生以及修正如何改变未来。
+
+失败数据也不应只作为负样本。一次恢复包含故障阶段、局部动作和新结果，可用于学习风险边界与反事实。如果数据集只存最终成功标签，就会丢掉最有价值的中间结构。
+
+## 数据支柱五：训练目标要对齐动作价值
+
+[Making Foresight Actionable](https://arxiv.org/abs/2606.12217) 指出，能生成合理未来的隐状态未必适合低层控制，需要与任务相关交互区域对齐。[SANTS](https://arxiv.org/abs/2605.27947) 也提示，更多去噪步骤不一定更有利于动作，训练与推理调度应由下游控制价值决定。
+
+这意味着数据验收不能停在重建误差。需要把预测状态用于动作选择、策略训练或真实回放，测量它是否改善成功率、减少危险尝试并保持校准。世界模型的训练集和评测集必须共享干预语义，却避免场景与任务泄漏。
+
+## 条件、分歧与限制
+
+中等规模真实交互加生成扩展可能在部分任务有效，但长时一致性和仿真—现实相关性仍是前提。自蒸馏可利用无标签场景与模型生成任务降低配对成本，却引入弱验证和自我确认风险。视觉以外的触觉、力矩和本体状态是否必要，取决于任务中是否存在不可观测物理变量。
+
+当前证据也没有回答统一配比。真实示教、合成轨迹、人类视频和失败数据的最优比例会随本体、任务与模型变化；更稳妥的是保留来源标签，在训练中可控消融，而不是提前混成不可逆的数据池。
+
+## 研究空白与下一步
+
+下一步应建立数据配方的因果实验：固定模型和总预算，分别改变本体锚定、几何监督、失败密度和事件采样，再用真实闭环衡量收益。还应报告数据生成成本、校验成本和每次成功提升所需的真实机器人小时，避免只比较合成规模。
+
+## 结论
+
+世界模型数据的最小单位不是视频，而是一次可解释干预：动作、状态变化、观测缺口和结果。人类视频与合成数据可以扩大覆盖，真实机器人交互负责锚定可执行性，几何与接触监督负责保持物理连续，失败轨迹负责教会恢复。只有这些信息在同一数据账本中保留，生成未来才可能转化为更好的真实动作。
+
+## 数据资产设计
+
+为了支持后续重组，数据湖不应把不同来源提前混成单一训练文件。真实交互、人类视频、仿真、生成轨迹和失败恢复应保留来源、传感可用性、本体与许可范围。训练时再按任务选择组合，并记录每种来源的采样权重与监督掩码。
+
+世界模型还需要专门的反事实对。对同一初始状态施加不同动作，或保持动作不变而改变对象、摩擦与障碍，能够迫使模型学习干预关系。只有单一路径的视频，即使数量很大，也很难区分动作因果与场景共现。
+
+数据切分要防止近重复泄漏。相同场景、对象和轨迹模板若同时进入训练与评测，模型可能凭外观复现未来而获得高分。更严格的切分应跨对象、场景、本体和任务组合，并单独报告长时、接触和失败状态的覆盖。
+
+此外，每条生成数据都应带验证记录：本体是否完整，动作是否可达，几何是否连续，关键接触是否合理，以及在真实或高保真环境中是否保持排序。没有验证元数据的合成视频，只能算候选素材，不能自动成为动作监督。
 
 ## References
 
-- `2512.11797` [AnchorDream: Repurposing Video Diffusion for Embodiment-Aware Robot Data Synthesis](https://arxiv.org/abs/2512.11797) (2025-12-12)
-- `2603.08546` [Interactive World Simulator for Robot Policy Training and Evaluation](https://arxiv.org/abs/2603.08546) (2026-03-09)
-- `2604.11386` [ComSim: Building Scalable Real-World Robot Data Generation via Compositional Simulation](https://arxiv.org/abs/2604.11386) (2026-04-13)
-- `2604.21741` [Hi-WM: Human-in-the-World-Model for Scalable Robot Post-Training](https://arxiv.org/abs/2604.21741) (2026-04-23)
-- `2605.20752` [GaussianDream: A Feed-Forward 3D Gaussian World Model for Robotic Manipulation](https://arxiv.org/abs/2605.20752) (2026-05-20)
-- `2605.22882` [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882) (2026-05-20)
-- `2605.27947` [SANTS: A State-Adaptive Scheduler for World Action Models](https://arxiv.org/abs/2605.27947) (2026-05-27)
-- `2606.00113` [World Models for Robotic Manipulation: A Survey](https://arxiv.org/abs/2606.00113) (2026-05-27)
-- `2606.00664` [SKIP: Sparse Keyframe Interpolation Paradigm for Efficient Embodied World Models](https://arxiv.org/abs/2606.00664) (2026-05-30)
-- `2606.01027` [τ0-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027) (2026-05-31)
-- `2606.02577` [RoboDream: Compositional World Models for Scalable Robot Data Synthesis](https://arxiv.org/abs/2606.02577) (2026-06-01)
-- `2606.12072` [World Model Self-Distillation: Training World Models to Solve General Tasks](https://arxiv.org/abs/2606.12072) (2026-06-10)
-- `2606.12217` [Making Foresight Actionable: Repurposing Representation Alignment in World Action Models](https://arxiv.org/abs/2606.12217) (2026-06-10)
-- `2606.12403` [World Pilot: Steering Vision-Language-Action Models with World-Action Priors](https://arxiv.org/abs/2606.12403) (2026-06-10)
-
-完整证据条目见 [evidence-appendix.md](evidence-appendix.md)。
-
-## 研究启发与开放问题
-
-- Treat support, conditional, limit, and gap events as separate signals before writing topic-card updates.
-- Mark cross-event synthesis as `inference` unless a claim is directly backed by an event/source ID.
-- Use topic-card update suggestions only after checking source gaps.
+- [Interactive World Simulator](https://arxiv.org/abs/2603.08546)
+- [τ0-WM](https://arxiv.org/abs/2606.01027)
+- [Hi-WM](https://arxiv.org/abs/2604.21741)
+- [RoboDream](https://arxiv.org/abs/2606.02577)
+- [AnchorDream](https://arxiv.org/abs/2512.11797)
+- [ComSim](https://arxiv.org/abs/2604.11386)
+- [SKIP](https://arxiv.org/abs/2606.00664)
+- [GEM-4D](https://arxiv.org/abs/2605.22882)
+- [GaussianDream](https://arxiv.org/abs/2605.20752)
+- [Making Foresight Actionable](https://arxiv.org/abs/2606.12217)
+- [SANTS](https://arxiv.org/abs/2605.27947)

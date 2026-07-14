@@ -5,8 +5,8 @@ Use this after `search_arxiv.py` has exhausted its API retries, or when API sear
 ## Principle
 
 - Browser/web search is only for candidate discovery.
-- Accepted evidence still requires arXiv HTML正文 extraction through `scripts/extract_arxiv_html.py`.
-- If a candidate has no arXiv HTML正文, keep it as metadata-only and do not mine正文 claims.
+- Accepted evidence still requires locator-backed full text through `scripts/extract_arxiv_content.py`.
+- Missing HTML triggers text-layer PDF extraction. Scan-only, unrecoverable, or low-quality papers stay metadata-only; do not run OCR.
 - Record fallback source labels so later readers know the paper came from browser discovery rather than API search.
 
 ## Browser workflow
@@ -33,7 +33,7 @@ Use this after `search_arxiv.py` has exhausted its API retries, or when API sear
    - If only the arXiv ID month is known, treat it as a candidate needing abs-page validation.
 6. Validate candidates:
    - Open `https://arxiv.org/abs/<id>` or `https://arxiv.org/html/<id>` to confirm title, authors, and submitted date.
-   - Run `scripts/extract_arxiv_html.py --paper-id <id>` and promote only if `available=true`.
+   - Run `scripts/extract_arxiv_content.py --paper-id <id> --terms <topic terms> --ocr-mode never --include-full-text` and pass complete eligible text to `$embodied-ai-paper-reader`.
 
 ## Browser export shape
 

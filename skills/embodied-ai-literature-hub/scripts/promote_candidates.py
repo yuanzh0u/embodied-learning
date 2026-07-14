@@ -2,7 +2,7 @@
 """Promote candidate papers toward evidence: fetch metadata + full text, emit a reading digest and an evidence skeleton.
 
 This mechanizes the expensive half of candidate->evidence promotion. For each
-paper it pulls arXiv API metadata and section-aware HTML extraction, then
+paper it pulls arXiv API metadata and runs HTML -> PDF text -> OCR extraction, then
 writes:
 
 - a digest (per-paper ranked sections with text, plus citation contexts) —
@@ -42,23 +42,50 @@ def load_sibling(name: str):
     return module
 
 
-extract_arxiv_html = load_sibling("extract_arxiv_html")
+extract_arxiv_content = load_sibling("extract_arxiv_content")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paper-id", action="append", default=[], required=True, help="arXiv ID to promote. Repeatable.")
+    parser.add_argument("--paper-id", action="append", default=[], help="arXiv ID to promote. Repeatable.")
+    parser.add_argument(
+        "--paper-id-file",
+        action="append",
+        default=[],
+        help="UTF-8 file with one arXiv ID per line; blank lines and # comments are ignored. Repeatable.",
+    )
     parser.add_argument("--topic", required=True, help="Run topic (copied into each skeleton event).")
     parser.add_argument("--topic-id", required=True, help="Knowledge ID for these events, e.g. EA-MODEL.")
     parser.add_argument("--id-prefix", required=True, help="Event ID prefix, e.g. EA-PVC-2026.")
     parser.add_argument("--start-seq", type=int, default=1, help="First sequence number (use scripts/next_event_id.py).")
     parser.add_argument("--terms", required=True, help="Comma-separated terms for section ranking.")
     parser.add_argument("--top-sections", type=int, default=4, help="Ranked sections per paper in the digest.")
-    parser.add_argument("--cache-dir", default=extract_arxiv_html.DEFAULT_CACHE_DIR)
+    parser.add_argument("--cache-dir", default=extract_arxiv_content.extract_arxiv_html.DEFAULT_CACHE_DIR)
+    parser.add_argument("--pdf-cache-dir", default=extract_arxiv_content.extract_arxiv_pdf.DEFAULT_CACHE_DIR)
     parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--ocr-mode", choices=["auto", "never", "always"], default="auto")
+    parser.add_argument("--ocr-language", default="eng")
     parser.add_argument("--output-skeleton", required=True, help="Path for the evidence skeleton JSONL.")
     parser.add_argument("--output-digest", required=True, help="Path for the reading digest Markdown.")
     return parser.parse_args()
+
+
+def load_paper_ids(cli_ids: list[str], id_files: list[str]) -> list[str]:
+    """Load, normalize, and stably deduplicate CLI/file paper IDs."""
+    raw_ids = list(cli_ids)
+    for filename in id_files:
+        for line in Path(filename).read_text(encoding="utf-8").splitlines():
+            value = line.split("#", 1)[0].strip()
+            if value:
+                raw_ids.append(value)
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in raw_ids:
+        paper_id = re.sub(r"v\d+$", "", value.strip().rsplit("/", 1)[-1].removesuffix(".pdf"))
+        if paper_id and paper_id not in seen:
+            seen.add(paper_id)
+            result.append(paper_id)
+    return result
 
 
 def author_key(name: str) -> str:
@@ -97,26 +124,55 @@ def fetch_metadata(paper_ids: list[str], timeout: float) -> dict[str, dict[str, 
     return metadata
 
 
-def extract_paper(paper_id: str, terms: list[str], top: int, cache_dir: str, timeout: float) -> dict[str, object]:
-    """Section-aware extraction via extract_arxiv_html's functions (cached HTML)."""
-    url = f"https://arxiv.org/html/{paper_id}"
-    target = Path(cache_dir).expanduser() / f"{re.sub(r'[^A-Za-z0-9._-]+', '_', paper_id)}.html"
-    available, html = extract_arxiv_html.fetch_html(url, target, timeout)
-    if not available:
-        return {"available": False, "structure": "unavailable", "ranked": [], "citations": []}
-    structured = extract_arxiv_html.extract_structured(html)
-    if structured is None:
-        return {"available": True, "structure": "flat", "ranked": [], "citations": []}
-    sections = structured.sections
-    ranked = extract_arxiv_html.rank_sections(sections, terms, top)
-    by_index = {int(section["index"]): section for section in sections}
-    for entry in ranked:
-        entry["text"] = str(by_index[int(entry["section_index"])]["text"])
+def extract_paper(
+    paper_id: str,
+    terms: list[str],
+    top: int,
+    cache_dir: str,
+    pdf_cache_dir: str,
+    timeout: float,
+    ocr_mode: str,
+    ocr_language: str,
+) -> dict[str, object]:
+    """Run the unified HTML/PDF/OCR extraction path and normalize digest fields."""
+    args = argparse.Namespace(
+        paper_id=paper_id,
+        terms=",".join(terms),
+        html_url=None,
+        pdf_url=None,
+        pdf_file=None,
+        html_cache_dir=cache_dir,
+        pdf_cache_dir=pdf_cache_dir,
+        timeout=timeout,
+        top_sections=top,
+        max_pages=0,
+        ocr_mode=ocr_mode,
+        ocr_language=ocr_language,
+        ocr_dpi=220,
+        min_chars_per_page=180,
+        minimum_html_chars=1000,
+        force_pdf=False,
+        include_selected_text=True,
+    )
+    output = extract_arxiv_content.extract_content(args)
+    ranked = []
+    for entry in output.get("selected_passages", []):
+        if not isinstance(entry, dict):
+            continue
+        normalized = dict(entry)
+        normalized["path"] = entry.get("path") or entry.get("locator") or f"page {entry.get('page')}"
+        ranked.append(normalized)
     return {
-        "available": True,
-        "structure": "latexml",
+        "available": output.get("available", False),
+        "evidence_eligible": output.get("evidence_eligible", False),
+        "structure": output.get("extraction_method", "unavailable"),
+        "source_format": output.get("source_format", "metadata-only"),
+        "quality": output.get("quality", {"grade": "low"}),
+        "needs_visual_validation": output.get("needs_visual_validation", False),
+        "visual_validation_pages": output.get("visual_validation_pages", []),
+        "attempts": output.get("attempts", []),
         "ranked": ranked,
-        "citations": extract_arxiv_html.citation_contexts(structured)[:12],
+        "citations": output.get("citation_contexts", [])[:12],
     }
 
 
@@ -149,10 +205,17 @@ def skeleton_event(
             "summary": "TODO(evidence summary: paraphrase what in the paper backs the claim)",
             "locator": locator,
             "evidence_type": "TODO(e.g. method-and-experiment, dataset, analysis)",
+            "extraction": {
+                "source_format": extraction.get("source_format", "metadata-only"),
+                "method": extraction.get("structure", "unavailable"),
+                "quality": (extraction.get("quality") or {}).get("grade", "low"),
+                "visual_validation": "required" if extraction.get("needs_visual_validation") else "not-required",
+                "visual_validation_pages": extraction.get("visual_validation_pages", []),
+            },
         },
         "confidence": "direct",
         "core_citations": [],
-        "notes": f"Skeleton generated by promote_candidates.py; extraction structure: {extraction.get('structure')}.",
+        "notes": f"Skeleton generated by promote_candidates.py; extraction method: {extraction.get('structure')}.",
     }
 
 
@@ -172,11 +235,15 @@ def render_digest(
         lines.append(f"## {meta.get('title') or paper_id} ({event_id})")
         lines.append("")
         lines.append(f"- arXiv: https://arxiv.org/abs/{paper_id} | published: {meta.get('published')}")
-        lines.append(f"- extraction: {extraction.get('structure')}")
+        quality = (extraction.get("quality") or {}).get("grade", "low")
+        lines.append(f"- extraction: {extraction.get('structure')} | quality: {quality}")
+        if extraction.get("needs_visual_validation"):
+            pages = ", ".join(str(item) for item in extraction.get("visual_validation_pages", [])) or "selected pages"
+            lines.append(f"- visual validation required before evidence settlement: {pages}")
         lines.append("")
         ranked = extraction.get("ranked") or []
         if not ranked:
-            lines.append("- No ranked sections (HTML unavailable or flat): read the abs page and fill the skeleton manually.")
+            lines.append("- No ranked full-text passages: keep this paper as a candidate; do not promote metadata-only claims.")
             lines.append("")
         for entry in ranked:
             lines.append(f"### §{entry['path']} (score {entry['score']}, terms: {', '.join(entry['matched_terms'])})")
@@ -197,7 +264,10 @@ def render_digest(
 def main() -> int:
     args = parse_args()
     terms = [term.strip() for term in args.terms.split(",") if term.strip()]
-    paper_ids = [re.sub(r"v\d+$", "", pid.strip()) for pid in args.paper_id]
+    paper_ids = load_paper_ids(args.paper_id, args.paper_id_file)
+    if not paper_ids:
+        print("Provide --paper-id or --paper-id-file.", file=sys.stderr)
+        return 2
     metadata = fetch_metadata(paper_ids, args.timeout)
     missing = [pid for pid in paper_ids if pid not in metadata]
     if missing:
@@ -207,18 +277,31 @@ def main() -> int:
     skeleton_lines: list[str] = []
     for offset, paper_id in enumerate(paper_ids):
         event_id = f"{args.id_prefix}-{args.start_seq + offset:04d}"
-        extraction = extract_paper(paper_id, terms, args.top_sections, args.cache_dir, args.timeout)
+        extraction = extract_paper(
+            paper_id,
+            terms,
+            args.top_sections,
+            args.cache_dir,
+            args.pdf_cache_dir,
+            args.timeout,
+            args.ocr_mode,
+            args.ocr_language,
+        )
+        if not extraction.get("evidence_eligible"):
+            rows.append((paper_id, metadata[paper_id], extraction, event_id))
+            print(f"HELD {paper_id}: no evidence-eligible full text after HTML/PDF/OCR", file=sys.stderr)
+            continue
         event = skeleton_event(args.topic, args.topic_id, event_id, metadata[paper_id], extraction)
         skeleton_lines.append(json.dumps(event, ensure_ascii=False))
         rows.append((paper_id, metadata[paper_id], extraction, event_id))
         if offset + 1 < len(paper_ids):
             time.sleep(0.5)  # be gentle on arxiv.org/html
-    Path(args.output_skeleton).write_text("\n".join(skeleton_lines) + "\n", encoding="utf-8")
+    Path(args.output_skeleton).write_text("\n".join(skeleton_lines) + ("\n" if skeleton_lines else ""), encoding="utf-8")
     Path(args.output_digest).write_text(render_digest(args.topic, rows, terms), encoding="utf-8")
     print(f"Wrote skeleton: {args.output_skeleton} ({len(skeleton_lines)} events, claims/stances are TODO)")
     print(f"Wrote digest:   {args.output_digest}")
     print("Next: fill claim/stance/evidence.summary per event from the digest, then run write_lit_outputs.py --validate-only.")
-    return 0
+    return 0 if skeleton_lines else 2
 
 
 if __name__ == "__main__":

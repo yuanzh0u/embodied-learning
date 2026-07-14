@@ -26,7 +26,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--query-file", help="JSON file with {'queries': [{'label': str, 'query': str}]}.")
     parser.add_argument("--start-date", required=True, help="Inclusive YYYY-MM-DD submitted date.")
     parser.add_argument("--end-date", required=True, help="Inclusive YYYY-MM-DD submitted date.")
-    parser.add_argument("--max-results", type=int, default=10, help="Max results per query.")
+    parser.add_argument("--max-results", type=int, default=25, help="Results per query for this discovery batch.")
+    parser.add_argument("--batch-label", help="Stable round label stored for candidate-registry saturation analysis.")
     parser.add_argument("--sort-by", default="submittedDate", choices=["relevance", "lastUpdatedDate", "submittedDate"])
     parser.add_argument("--sort-order", default="descending", choices=["ascending", "descending"])
     parser.add_argument("--sleep-seconds", type=float, default=3.0, help="Delay between multiple API requests.")
@@ -202,6 +203,7 @@ def main() -> int:
 
     output = {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "batch": args.batch_label or "",
         "api": API_URL,
         "start_date": args.start_date,
         "end_date": args.end_date,

@@ -15,7 +15,7 @@ tags: [error-governance, index]
 |---|---|---|---|
 | ERR-COMPARE | 测绘误差观与 AI 误差治理对照 | [surveying-vs-ai-error-governance.md](surveying-vs-ai-error-governance.md) | S-ERR-COMPARE:5-224 |
 | ERR-PATTERN | 可迁移的误差治理模式 | [transfer-patterns.md](transfer-patterns.md) | S-ERR-COMPARE:226-419 |
-| ERR-EMBODIED | 具身智能误差分层与溯源 | [embodied-error-traceability.md](embodied-error-traceability.md) | RUN-PERCEPTION-TRACE-20260708; RUN-PERCEPTION-COGNITION-20260709; RUN-SENSOR-ERROR-20260709 |
+| ERR-EMBODIED | 具身智能误差分层与溯源 | [embodied-error-traceability.md](embodied-error-traceability.md) | RUN-PERCEPTION-TRACE-20260714; RUN-PERCEPTION-COGNITION-20260714; RUN-SENSOR-ERROR-20260714 |
 
 ## 常见组合
 

@@ -16,15 +16,19 @@
 | `scientific-memo_keyan.md` 等三风格成品 | 正式 run | `evidence-appendix.md` 属于 bundle 的第 4 个文件 |
 | `source-entry-draft.md` | 有则收 | 待结算入 `knowledge/sources.md` 的来源草稿 |
 | `query-plan.json` / `query-plan.md` | 有则收 | 本次 run 的检索策略(可复现性) |
+| `candidate-registry.json` | workflow v2 必备 | 多轮检索去重后的候选库与筛选状态 |
+| `coverage-report.json` | workflow v2 必备 | 规模、维度覆盖、全文、正式证据与饱和度闸门 |
 | `review-packet.md` / `evidence-brief.md` | 可选 | 审计视图 |
 
 ## run.json 字段约定
 
 ```json
 {
+  "workflow_version": 2,
   "run": "literature-review-<topic>-<date>",
   "topic": "话题原文",
   "status": "settled",
+  "review_mode": "scoping",
   "topic_id_prefix": "EA-TWM",
   "knowledge_ids": ["EA-EVAL"],
   "time_range": "2025-12-23..2026-06-23",
@@ -37,6 +41,8 @@
     "evidence": "evidence.jsonl",
     "reused_evidence": ["reused/<prior-run>-evidence.jsonl"],
     "query_plan": "query-plan.json",
+    "candidate_registry": "candidate-registry.json",
+    "coverage_report": "coverage-report.json",
     "outputs": ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"],
     "appendix": "evidence-appendix.md",
     "source_entry_draft": "source-entry-draft.md"

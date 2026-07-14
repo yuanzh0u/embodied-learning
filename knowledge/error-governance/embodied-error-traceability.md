@@ -3,16 +3,16 @@ id: ERR-EMBODIED
 title: 具身智能误差分层与溯源
 type: topic-card
 domain: error-governance
-updated: 2026-07-10
+updated: 2026-07-14
 source:
-  - id: RUN-PERCEPTION-TRACE-20260708
-    file: ../../evidence/literature-review-perception-error-traceability-20260708/evidence.jsonl
+  - id: RUN-PERCEPTION-TRACE-20260714
+    file: ../../evidence/literature-review-具身数据感知误差溯源-20260714-reader-v1/evidence.jsonl
     locator: 15 selected events; scientific-memo §误差账本模板
-  - id: RUN-PERCEPTION-COGNITION-20260709
-    file: ../../evidence/literature-review-perception-vs-cognitive-error-20260709/evidence.jsonl
+  - id: RUN-PERCEPTION-COGNITION-20260714
+    file: ../../evidence/literature-review-具身数据感知误差与认知误差区别-20260714-reader-v1/evidence.jsonl
     locator: EA-PVC-2026-0001..0007 and reused perception events
-  - id: RUN-SENSOR-ERROR-20260709
-    file: ../../evidence/literature-review-embodied-sensor-perception-error-2026-07-09/evidence.jsonl
+  - id: RUN-SENSOR-ERROR-20260714
+    file: ../../evidence/literature-review-具身传感器感知误差-20260714-reader-v1/evidence.jsonl
     locator: EA-SENSOR-2026-0001..0011; EA-EVAL-2026-0007,0012
 tags: [error-governance, embodied-ai, perception-error, cognitive-error, traceability, error-ledger]
 aliases: [具身误差, 感知误差, 认知误差, 误差溯源, 误差账本, 第一偏离点]
@@ -79,9 +79,9 @@ confidence: working
 
 ## 证据锚点
 
-- RUN-PERCEPTION-COGNITION-20260709：`EA-PVC-2026-0002..0005` 覆盖推理—动作转译、感知/动作解耦、失败恢复和阶段验证；`EA-PVC-2026-0007` 覆盖 what-if 规划错误。
-- RUN-PERCEPTION-TRACE-20260708：15 条事件共同支持观测、同步、监督、动作、本体和闭环七层误差账本；该分类为跨事件 `inference`。
-- RUN-SENSOR-ERROR-20260709：`EA-SENSOR-2026-0001..0011` 覆盖接触、几何、置信度和融合误差；`EA-EVAL-2026-0012` 支持世界模型 admissibility 缺口。
+- RUN-PERCEPTION-COGNITION-20260714：`EA-PVC-2026-0002..0005` 覆盖推理—动作转译、感知/动作解耦、失败恢复和阶段验证；`EA-PVC-2026-0007` 覆盖 what-if 规划错误。
+- RUN-PERCEPTION-TRACE-20260714：15 条事件共同支持观测、同步、监督、动作、本体和闭环七层误差账本；该分类为跨事件 `inference`。
+- RUN-SENSOR-ERROR-20260714：`EA-SENSOR-2026-0001..0011` 覆盖接触、几何、置信度和融合误差；`EA-EVAL-2026-0012` 支持世界模型 admissibility 缺口。
 
 ## 待补问题
 

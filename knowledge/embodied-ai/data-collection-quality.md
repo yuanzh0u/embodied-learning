@@ -3,7 +3,7 @@ id: EA-DATA
 title: 数据采集与数据质量
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-10
+updated: 2026-07-14
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -12,14 +12,14 @@ source:
   - id: S-EMBODIED-DATA-FRAMEWORK
     status: external-local
     locator: docs/knowledge/data-collection-framework.md; docs/knowledge/data-schema-quality-compliance.md
-  - id: RUN-DATA-QUALITY-20260708
-    file: ../../evidence/literature-review-embodied-data-quality-last-year-20260708/evidence.jsonl
+  - id: RUN-DATA-QUALITY-20260714
+    file: ../../evidence/literature-review-近一年已发表论文中的具身智能数据质量-20260714-reader-v1/evidence.jsonl
     locator: EA-DATA-2026-LY-0001..0012
-  - id: RUN-DATA-CONTRADICTIONS-20260708
-    file: ../../evidence/literature-review-data-quality-contradictions-20260708/
+  - id: RUN-DATA-CONTRADICTIONS-20260714
+    file: ../../evidence/literature-review-具身智能数据质量的主要矛盾-20260714-reader-v1/evidence.jsonl
     locator: 54 deduplicated events; main-contradictions.md §六个派生矛盾
-  - id: RUN-WMDATA-20260611
-    file: ../../evidence/literature-review-world-model-training-data-20260611/evidence.jsonl
+  - id: RUN-WMDATA-20260714
+    file: ../../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v1/evidence.jsonl
     locator: EA-DATA-2026-WMDATA-0001..0014
 tags: [embodied-ai, data, collection, quality, scaling, umi, droid, ego4d, occlusion, l0-l3, episode, schema, target-conditioned, recovery]
 aliases: [数据采集, 数据质量, UMI, DROID, Ego, Scaling Law, 遮挡率, L0-L3, 无本体采集, episode, 目标条件效用, 监督可靠性]
@@ -94,9 +94,9 @@ confidence: working
 - S-EA-QUESTIONS:14-18 覆盖异构数据、遮挡量化和单视角限制。
 - S-EMBODIED-DATA-FRAMEWORK:§数据采集框架卡 覆盖无目标机器人本体、L0-L3 数据金字塔、技术路线优先级和规模参考。
 - S-EMBODIED-DATA-FRAMEWORK:§数据 Schema、质量与合规卡 覆盖最小 episode 字段、存储原则、必标字段、质量指标和合规边界。
-- RUN-DATA-QUALITY-20260708：`EA-DATA-2026-LY-0001`, `0005`, `0006`, `0012` 分别覆盖目标效用、覆盖坍缩、chunk 价值和次优数据利用。
-- RUN-DATA-CONTRADICTIONS-20260708：六个派生矛盾综合规模、可观测性、监督、动作语义、恢复和闭环可验证性；该分类为跨事件 `inference`。
-- RUN-WMDATA-20260611：`EA-DATA-2026-WMDATA-0002`, `0003`, `0014` 覆盖异构交互、失败修正和预测型数据需求。
+- RUN-DATA-QUALITY-20260714：`EA-DATA-2026-LY-0001`, `0005`, `0006`, `0012` 分别覆盖目标效用、覆盖坍缩、chunk 价值和次优数据利用。
+- RUN-DATA-CONTRADICTIONS-20260714：六个派生矛盾综合规模、可观测性、监督、动作语义、恢复和闭环可验证性；该分类为跨事件 `inference`。
+- RUN-WMDATA-20260714：`EA-DATA-2026-WMDATA-0002`, `0003`, `0014` 覆盖异构交互、失败修正和预测型数据需求。
 
 ## 待补问题
 

@@ -24,6 +24,8 @@ REQUIRED = {
 }
 STANCES = {"support", "limit", "conditional", "gap"}
 CONFIDENCE = {"direct", "citation-supported", "inference"}
+EXTRACTION_METHODS = {"html-latexml", "html-flat", "pdf-text", "pdf-ocr"}
+EXTRACTION_QUALITY = {"high", "medium"}
 
 PRIMARY_INSTITUTION_RULES = (
     (("北京大学",), "北京大学", "peking-university"),
@@ -132,6 +134,23 @@ def load_events(path: Path) -> list[dict[str, object]]:
             evidence = event.get("evidence")
             if not isinstance(evidence, dict) or not evidence.get("locator"):
                 raise SystemExit(f"{path}:{line_no}: evidence.locator is required")
+            extraction = evidence.get("extraction")
+            if extraction is not None:
+                if not isinstance(extraction, dict):
+                    raise SystemExit(f"{path}:{line_no}: evidence.extraction must be an object")
+                method = extraction.get("method")
+                quality = extraction.get("quality")
+                visual_validation = extraction.get("visual_validation")
+                if method not in EXTRACTION_METHODS:
+                    raise SystemExit(f"{path}:{line_no}: invalid evidence.extraction.method {method!r}")
+                if quality not in EXTRACTION_QUALITY:
+                    raise SystemExit(
+                        f"{path}:{line_no}: extraction quality {quality!r} cannot support accepted full-text evidence"
+                    )
+                if visual_validation not in {"not-required", "passed"}:
+                    raise SystemExit(
+                        f"{path}:{line_no}: OCR/medium-quality extraction requires visual validation before settlement"
+                    )
             paper = event.get("paper")
             if not isinstance(paper, dict) or not paper.get("arxiv_id") or not paper.get("title"):
                 raise SystemExit(f"{path}:{line_no}: paper.arxiv_id and paper.title are required")

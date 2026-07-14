@@ -30,3 +30,10 @@ This repository is a research knowledge base. Optimize for context efficiency an
 - Topic cards are compressed working memory for agents.
 - The master index is the routing layer.
 - Candidates and intermediate artifacts live in `work/` (gitignored scratch); accepted assets live in `evidence/`.
+
+## Cross-Project Knowledge
+
+- Keep research knowledge and paper evidence in this project as the source of truth.
+- For company positioning, PR expression, business planning, compliance, or other cross-project tasks, read `/Users/ryan/Documents/个人知识库/indexes/global-routing.md`.
+- Load only the routed shared card or project index; do not scan every connected project.
+- Update this project's owner file first, then synchronize any affected shared note.

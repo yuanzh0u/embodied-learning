@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.06442",
+    "title": "SIEVE: Structure-Aware Data Selection for Imitation Learning with VLA Models",
+    "published": "2026-07-07",
+    "url": "https://arxiv.org/abs/2607.06442",
+    "authors": [
+      "Changti Wu",
+      "Bin Yu",
+      "Zhaolong Shen",
+      "Shijie Lian",
+      "Xiaopeng Lin",
+      "Cong Huang",
+      "Zhirui Zhang",
+      "Lei Zhang",
+      "Kai Chen"
+    ]
+  },
+  "review": {
+    "question": "具身智能数据质量的主要矛盾",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身智能数据质量的主要矛盾."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "Vision-Language-Action Models.",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "Experiment Setup",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身智能数据质量的主要矛盾', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "SIEVE 按可复用原语组合和转换接口分配选择预算，再优先保留各组合模式中稳定、中心的轨迹；论文报告其用 50% 示教和 50% 训练步数可优于全量训练。"
+  ],
+  "method": {
+    "summary": "Recent advances in vision-language models (VLMs) (Shao et al. 2025 ; Bai et al. 2025 ; Lin et al. 2025b ) have accelerated the development of Vision-Language-Action (VLA) models, establishing a scalable paradigm for language-conditioned robotic control (Zitkovich et al. 2023 ; O’Neill et al. 2024 ; Kim et al. 2024 ) . Modern VLAs map visual observations and language instructions to robot actions through generative policy architectures, such as autoregressive action tokenization, diffusion, or flow-matching models (Zitkovich et al. 2023 ; Chi et al. 2025 ; Black et al. 2024 ; Intelligence et al. 2025 ; Bjorck et al. 2025 ; Kim et al. 2025 ; Lian et al. 2026 ; Intelligence et al. 2026 ) . Thes",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Datasets and Evaluation. Here we evaluate SIEVE on three representative robot imitation learning datasets to assess both its data selection effectiveness and its applicability across different embodiments and environments. Unless otherwise specified, Bridge-V2 with SimplerEnv-WidowX serves as the default training and evaluation setting. • Bridge-V2 : We train models on the Bridge-V2 dataset (Walke et al. 2023 ) , a real-world subset of Open X-Embodiment, containing approximately 53K demonstration trajectories collected with a WidowX robot equipped with a parallel gripper. Policies are evaluated in SimplerEnv-WidowX (Li et al. 2024 ) , which includes four manipulation tasks: Stack Cube , Put",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "SIEVE 按可复用原语组合和转换接口分配选择预算，再优先保留各组合模式中稳定、中心的轨迹；论文报告其用 50% 示教和 50% 训练步数可优于全量训练。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Introduction"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (Vision-Language-Action Models.) and evaluation (Experiment Setup)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.06442-C01",
+      "claim": "SIEVE 按可复用原语组合和转换接口分配选择预算，再优先保留各组合模式中稳定、中心的轨迹；论文报告其用 50% 示教和 50% 训练步数可优于全量训练。",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: 具身智能数据质量的主要矛盾",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "引言的贡献列表同时说明了结构暴露、学习友好轨迹选择和半量数据超过全量训练的结果。",
+      "locator": "Introduction",
+      "source_context": "Our contributions are as follows: • We propose a primitive-compositional view of trajectory utility, realized by Primitive Discovery and Structural Exposure Allocation, which allocate selection budgets according to reuse-aware primitive and transition exposure under diminishing returns. • We introduce Learning-Friendly Trajectory Selection, which selects medoid trajectories within each composition-pattern bucket to favor central, stable, and predictable realizations for behavior cloning. • We present SIEVE, a structure-aware data selection method for VLA imitation learning, and demonstrate its effectiveness across datasets, benchmarks, and models. SIEVE can outperform full-data training using only 50% of demonstrations and 50% of training steps, while consistently improving over competitive baselines under multiple experimental settings.",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Introduction contains the paper-specific concepts used by the claim (50, sieve). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Fresh arXiv HTML extracted on 2026-07-08; candidate promoted from current six-month search. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

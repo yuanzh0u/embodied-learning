@@ -4,9 +4,29 @@ Use this reference before drafting or auditing a full embodied-AI literature rev
 
 ## Boundary
 
-`$embodied-ai-literature-review` writes and audits synthesis. Its default path is `planner -> hub -> briefing bundle -> agent-written three-style Markdown bundle`. **`build_review_packet.py` is a briefing generator, not an author**: it emits `review-packet.md` (audit surface), `writing-brief.md` (thesis-candidate tension pairs, topic-clustered evidence, mandatory caveats, per-style voice notes), and `evidence-appendix.md` (citation anchors). The default final deliverable — `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md` under `work/literature-review-<topic>-<date>/` — is ALWAYS written by the agent from the brief as argument-organized prose. Mechanical renders exist only as bannered `*.scaffold.md` files and are never deliverables. This Skill does not own query generation, full-text extraction, or evidence promotion when upstream Skills are available; use `$embodied-ai-query-planner` for query strategy and `$embodied-ai-literature-hub` for paper mining.
+`$embodied-ai-literature-review` owns evidence orchestration and the briefing bundle. Its default path is `planner -> hub -> review packet -> writing brief -> $embodied-ai-review-writer`. **`build_review_packet.py` is a briefing generator, not an author**: it emits `review-packet.md` (audit surface), `writing-brief.md` (thesis candidates, topic-clustered evidence, mandatory caveats), and `evidence-appendix.md` (citation anchors). `$embodied-ai-review-writer` independently drafts and editorially audits the three reader-facing files. Mechanical renders exist only as bannered `*.scaffold.md` files and are never deliverables.
 
-If the user does not specify a time range for paper discovery or fallback collection, use the most recent six months. Preserve the resolved time range in the review packet and final Markdown artifact.
+If the user does not specify a time range for paper discovery or fallback collection, use the most recent six months. Preserve the resolved time range and review mode in the packet and final artifact.
+
+Workflow-v2 reviews also require `candidate-registry.json` and
+`coverage-report.json`. The registry preserves every discovered paper and its
+screening state; the report proves that size floors, query dimensions,
+full-text recovery, accepted evidence, and saturation all pass.
+
+## Paper-reading extension
+
+For new or migrated evidence, require `paper-notes/`, `reading-ledger.jsonl`,
+and `reading-summary.json` from `$embodied-ai-paper-reader`. Keep these counts
+separate: `full_text_recovered_count`, `map_read_count`, `deep_read_count`,
+`claim_verified_paper_count`, and `accepted_evidence_paper_count`.
+
+Full-text recovery is not reading. Candidate/query-label coverage is not
+accepted-evidence coverage. New formal evidence must be projected from a
+validated paper note with a passing claim-support audit. Legacy events remain
+traceable but must not be reported as newly re-read until they pass this gate.
+
+Use HTML or text-layer PDF only. Scan-only PDFs are `unavailable`; this project
+does not use OCR/Tesseract.
 
 ## Evidence inputs
 
@@ -36,7 +56,11 @@ Prefer `evidence-event` for paper-specific claims and `topic-card-source` for st
 
 ## Sufficiency gate
 
-Formal style outputs require at least 5 paper-level sources and accepted evidence events. If this threshold is not met, produce a preliminary review packet with coverage gaps and next search recommendations instead of a formal review, explainer, or KOL thread.
+Formal style outputs in workflow v2 require the mode floor (`rapid` 8,
+`scoping` 15, `systematic` 30 accepted papers) plus a passed coverage/saturation
+report. These are floors, not caps. Historical migrations without a v2
+manifest retain the five-paper compatibility gate but must not be represented
+as newly completed searches.
 
 When the threshold is met and no style is specified, produce all three final styles. Use a single style only when the user explicitly requests `scientific-memo`, `expert-explainer`, or `kol-thread`. Use `survey` only when the user asks for the intermediate review packet, style menu, source tiers, or audit surface as the final visible artifact.
 
@@ -44,7 +68,7 @@ When the threshold is met and no style is specified, produce all three final sty
 
 - Default output root: repository `work/`.
 - Create a new review project folder named `literature-review-<topic>-<date>/`.
-- The script writes the briefing bundle there (`review-packet.md`, `writing-brief.md`, `evidence-appendix.md`); the agent writes the deliverables next to them: `scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`.
+- The script writes the briefing bundle there (`review-packet.md`, `writing-brief.md`, `evidence-appendix.md`); `$embodied-ai-review-writer` writes the deliverables next to them and generates `trace-map.json`.
 - Use inline/stdout output only when the user asks for inline text, piping, or an explicit non-file display.
 - After the run is settled, copy accepted assets into `evidence/literature-review-<topic>-<date>/` with a `run.json` manifest.
 
@@ -57,6 +81,7 @@ When the threshold is met and no style is specified, produce all three final sty
 - Default deliverables: all three styles (`scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`) plus `evidence-appendix.md`. These are the ONLY recognized deliverable filenames; an invented name is not a deliverable.
 - Reduced scope is legal only when declared: `run.json` records `"style": "<formal-style>"` and `"scope_note": "<why — the user's explicit ask>"`. An undeclared missing style is a contract violation, not a judgment call.
 - The run folder must be self-contained: `files.evidence` (fresh) and/or `files.reused_evidence` (copied from prior runs) exist inside the folder; `event_count` equals the deduplicated local evidence.
+- Workflow-v2 manifests set `workflow_version: 2`, declare `review_mode`, and list `files.query_plan`, `files.candidate_registry`, and `files.coverage_report`. Settlement is blocked while `stop_assessment.ready_to_stop` is false.
 - `run.json` uses the standard schema (see `evidence/README.md`); invented field names (`selected_event_count`, `files.memo`, …) are rejected by the checker.
 - Gate: `python3 scripts/check_run_bundle.py <run-dir>` must pass before settling, alongside `audit_citations.py`.
 
@@ -70,12 +95,13 @@ Combining evidence from prior runs is supported and encouraged (it is the accumu
 
 ## Citation and link contract
 
-Formal outputs (scientific-memo, expert-explainer, kol-thread) must be readable AND clickable, with **paper links in the body and event-level traceability in the appendix**:
+Formal outputs must be readable and auditable, with **paper links on the reader surface and event-level traceability on a separate audit surface**:
 
 - **Body citations are arXiv paper links**: `[SIEVE](https://arxiv.org/abs/2607.06442)` or `[2607.06442](https://arxiv.org/abs/2607.06442)` — the reader lands on the paper, not on an internal ID. Bare paper names, bare arXiv IDs, and bare event IDs in formal prose are all non-conforming.
-- **Do not put `evidence-appendix.md#...` event links in body prose.** Event anchors are the traceability layer: they live in the References section, the appendix itself, and the review packet. A reader skimming the article should only ever be one click from arXiv.
+- **Do not put `evidence-appendix.md#...` event links in body prose.** Event anchors live in `trace-map.json`, the appendix, and the review packet. A reader skimming the article should only ever be one click from arXiv.
 - Every cited paper must be in the loaded evidence set (audit-enforced); citing a paper that no settled event covers is non-conforming.
-- Every formal output ends with a `## References` section: deduplicated papers, one line each, format `- [<title>](https://arxiv.org/abs/<id>) — 证据: [EA-…-0001](evidence-appendix.md#ea--0001), [EA-…-0002](…)` so event-level provenance stays reachable without cluttering the body.
+- Citation surfaces vary by audience: the scientific memo keeps a full `## References`; Zhihu keeps 3-8 annotated readings or references; Xiaohongshu keeps only 3-5 representative links and a compact `📚 依据` note.
+- `trace-map.json` maps every cited arXiv paper in every article to the accepted event IDs and appendix anchors that cover it. An uncovered paper is a hard error.
 - `evidence-appendix.md` ships with every formal bundle: one `### <event_id>` section per event (claim, stance, confidence, locator, short quote, paper link). Reference-section event links resolve to these anchors, relative to the article's own folder — never an invented subdirectory path.
 - The review packet (audit mode) keeps event-ID-first linking; the paper-first rule applies to formal deliverables.
 
@@ -90,20 +116,7 @@ Only `paper-level` sources and accepted evidence events can support scientific c
 
 ## Style adapters
 
-`scientific-memo`:
-
-- Use for research-facing synthesis.
-- Required structure: scope, evidence sufficiency, claim map, evidence clusters, disagreements/conditions, gaps, implications.
-
-`expert-explainer`:
-
-- Use for Zhihu/Reddit-style readable explanation. In the default bundle this is saved as `zhihu-explainer_zhihu.md`.
-- Required structure: TL;DR, misconception/debate, mechanisms, evidence and limits, further reading/confidence.
-
-`kol-thread`:
-
-- Use for Xiaohongshu/Weibo/Twitter-style short insight threads. In the default bundle this is saved as `xiaohongshu-post_xiaohongshu.md`.
-- Required structure: strong hook, 3-5 evidence-bounded insights or 5-8 thread items, visible caveat, compact source note.
+Style requirements live in `$embodied-ai-review-writer` and are loaded only for the requested audience. This contract defines evidence boundaries, not prose templates.
 
 ## Synthesis rules
 
@@ -117,10 +130,12 @@ Only `paper-level` sources and accepted evidence events can support scientific c
 
 ## Minimum audit checklist
 
-- Each paragraph has at least one event ID, source ID, or explicit `inference` marker.
-- Each cited event includes stance and confidence.
-- In formal outputs, every event ID is an appendix link and every arXiv ID is an abs-page link (see Citation and link contract).
+- Every reader-facing paper link maps to at least one accepted event in `trace-map.json`.
+- Event stance, confidence, and locator remain complete in `evidence-appendix.md`.
+- Body prose contains no event IDs, stance buckets, or packet metadata.
 - Candidate-only papers are not cited as accepted evidence.
 - Claims about consensus name the evidence coverage and its limits.
+- Paper counts are described as accepted evidence coverage, not the size of the whole field.
 - Gaps distinguish "not found in this run" from "the literature says this is open."
 - The final review states scope boundaries such as topic IDs, resolved time range, and search/evidence limitations.
+- The writer's editorial audit passes language, template-leakage, platform-density, length, and cross-style overlap gates.

@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.26349",
+    "title": "Closing the Loop in Teleoperation: Episode-Level Data Quality Assessment and Feedback for High-Quality Demonstration Collection",
+    "published": "2026-05-25",
+    "url": "https://arxiv.org/abs/2605.26349",
+    "authors": [
+      "Gokul Narayanan",
+      "Yash Shahapurkar",
+      "Melih Erdogan",
+      "Brian Zhu",
+      "Eugen Solowjow"
+    ]
+  },
+  "review": {
+    "question": "Sparse language, dense vision, and continuous action alignment in VLA systems",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-SENSOR",
+      "EA-XEMBODIMENT",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to Sparse language, dense vision, and continuous action alignment in VLA systems."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "III-A System Requirements",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "IV-B Semantic Analysis (Plan-Conditioned, Context-Aware)",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "VII CONCLUSION",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question 'Sparse language, dense vision, and continuous action alignment in VLA systems', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "DQAF 不用成功/失败二值标签代替数据质量，而是联合子任务进度、动作平滑度、停顿和运动学极限生成 episode 级评估与给操作者的纠正反馈。"
+  ],
+  "method": {
+    "summary": "R1 (Actionable feedback): The system must provide immediate post-episode feedback that states what failed, when it failed (time/subtask), and how to correct behavior. R2 (Semantic control coupling): Quality evaluation must jointly use high-level semantic progression and low-level telemetry; semantically successful but suboptimally executed episodes (and vice versa) must be downgraded. R3 (Robustness to transients): Isolated short deviations should not dominate episode judgment; persistent/repeated violations should be penalized. R4 (Curation compatibility): Outputs must support reproducible filtering, ranking, and downstream data curation. R5 (Auditability): Each quality decision must be tra",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Given a task description , we define an ordered subtask plan . The plan may be user-provided or automatically generated from the task description. We perform semantic analysis at a discrete set of update times . At each update time , the vision-language model receives a structured context (3) where is a global anchor frame (e.g., the first image of the episode ), is a short motion clip around time (e.g., the last five frames ), is the ordered subtask plan, and are the captioned reference frames from expert demonstrations of the same task. The model returns a structured output (4) where is the predicted active subtask index, is the estimated completion percentage for subtask , is the textual",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "DQAF 不用成功/失败二值标签代替数据质量，而是联合子任务进度、动作平滑度、停顿和运动学极限生成 episode 级评估与给操作者的纠正反馈。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (III-A System Requirements) and evaluation (IV-B Semantic Analysis (Plan-Conditioned, Context-Aware))."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.26349-C01",
+      "claim": "DQAF 不用成功/失败二值标签代替数据质量，而是联合子任务进度、动作平滑度、停顿和运动学极限生成 episode 级评估与给操作者的纠正反馈。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: Sparse language, dense vision, and continuous action alignment in VLA systems",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "摘要明确列出了质量信号、结构化评估和可执行的自然语言反馈。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Industrial automation is at a pivotal moment, as Physical AI is driving a transition from rigid, hand-engineered automation systems toward more flexible and adaptive systems. This shift has created a growing demand for large-scale, real-world robot demonstration data, making teleoperation an increasingly important mechanism for data collection. However, high-quality teleoperated demonstrations remain difficult to obtain in practice, as novice operators often produce episodes that are task-successful but suboptimal for downstream use due to inefficient motion, repeated corrections, or operation near robot joint limits. We present a Data Quality Assessment and Feedback (DQAF) framework that closes the loop in teleoperation by providing immediate post-episode feedback grounded in semantic task progress and robot telemetry. The framework extracts quality relevant signals such as sub-task progress, motion smoothness, stalls, kinematic limits and converts them into structured quality assessments and actionable natural-language feedback. Unlike binary success/failure feedback, the proposed system explains why an episode is suboptimal and highlights specific behaviors to correct in the next trial. We evaluate the framework through a diagnostic validation study and a pilot user study. In the validation study, the system is compared with a human reviewer during dataset curation, producing rejection reasons and actionable feedback for improvement. In the pilot study with three novice operators across two manipulation tasks, the operator who received the system’s immediate, automated post-episode feedback improved faster than those who did not, producing higher-quality demonstrations sooner.",
+      "evidence_type": "system+pilot-study",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (dqaf, episode). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Pilot study sample is small; treat the user-study result as exploratory rather than definitive. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

@@ -1,0 +1,86 @@
+# Writing Brief: 4D时空推理
+
+> 本文件是写作输入,不是交付物。三篇成稿交由 `$embodied-ai-review-writer` 独立撰写:
+> 正文必须是按论证组织的连续 prose;禁止把 claim map 表格当正文;
+> 禁止一事件一行/一段;三种风格必须是三个真实读者声音。
+> 正文引用一律用 arXiv 论文链接(读者点开即达论文);事件锚点只用于 trace-map/appendix 溯源。
+
+## 范围
+
+- Topic: 4D时空推理
+- Time range: 2025-12-12..2026-06-12
+- Knowledge IDs: `EA-DATA`, `EA-EVAL`, `EA-MODEL`, `EA-SENSOR`
+- Paper-level sources: 10 / 5 (formal-ready)
+- Accepted events: 20
+
+## 中心论点候选(从张力对中提炼,不要照抄)
+
+综述的中心论点应回答:这批证据合在一起说明了什么矛盾/机制/转变?
+以下 support ⟷ limit/conditional 张力对是论点候选的原料:
+
+- `EA-EVAL`: Pri4R's ablations support the claim that temporally dense and metrically grounded 3D point tracks are a stronger world-... ([2603.01549](https://arxiv.org/abs/2603.01549) / [EA-EVAL-2026-4D-0004](evidence-appendix.md#ea-eval-2026-4d-0004)) ⟷ WEAVER's authors explicitly limit visual world models: partial observability, missing contact/force state, deformable a... ([2606.13672](https://arxiv.org/abs/2606.13672) / [EA-EVAL-2026-4D-0014](evidence-appendix.md#ea-eval-2026-4d-0014))
+- `EA-EVAL`: Kinema4D argues that robot-world interaction should be simulated as a 4D event: robot control is represented with kinem... ([2603.16669](https://arxiv.org/abs/2603.16669) / [EA-EVAL-2026-4D-0006](evidence-appendix.md#ea-eval-2026-4d-0006)) ⟷ ST-VLA reports material manipulation gains from 3D-4D reasoning, including higher zero-shot success in RLBench and real... ([2603.13788](https://arxiv.org/abs/2603.13788) / [EA-EVAL-2026-4D-0002](evidence-appendix.md#ea-eval-2026-4d-0002))
+- `EA-EVAL`: WEAVER defines useful robot world models by three joint requirements: fidelity to real outcomes, temporal consistency o... ([2606.13672](https://arxiv.org/abs/2606.13672) / [EA-EVAL-2026-4D-0013](evidence-appendix.md#ea-eval-2026-4d-0013)) ⟷ τ0-WM reports that heterogeneous pretraining and test-time world-model computation improve real-robot manipulation, but... ([2606.01027](https://arxiv.org/abs/2606.01027) / [EA-EVAL-2026-4D-0012](evidence-appendix.md#ea-eval-2026-4d-0012))
+- `EA-MODEL`: ST-VLA frames 4D spatiotemporal reasoning as a bridge between high-level VLA semantics and continuous robot control by... ([2603.13788](https://arxiv.org/abs/2603.13788) / [EA-MODEL-2026-4D-0001](evidence-appendix.md#ea-model-2026-4d-0001)) ⟷ GEM-4D identifies a core failure mode of video world models for robots: visually plausible futures can still be unusabl... ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0008](evidence-appendix.md#ea-model-2026-4d-0008))
+- `EA-MODEL`: Pri4R treats 4D geometry as a training-time privileged signal: VLA backbones learn future 3D point tracks so their acti... ([2603.01549](https://arxiv.org/abs/2603.01549) / [EA-MODEL-2026-4D-0003](evidence-appendix.md#ea-model-2026-4d-0003)) ⟷ GEM-4D identifies a core failure mode of video world models for robots: visually plausible futures can still be unusabl... ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0008](evidence-appendix.md#ea-model-2026-4d-0008))
+- `EA-MODEL`: GEM-4D supports geometry-feature distillation as a way to make video world models more actionable for robot manipulatio... ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0009](evidence-appendix.md#ea-model-2026-4d-0009)) ⟷ GEM-4D identifies a core failure mode of video world models for robots: visually plausible futures can still be unusabl... ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0008](evidence-appendix.md#ea-model-2026-4d-0008))
+- `EA-MODEL`: τ0-WM treats 4D-style predictive reasoning as a deployment-time loop: propose executable action chunks, imagine action-... ([2606.01027](https://arxiv.org/abs/2606.01027) / [EA-MODEL-2026-4D-0010](evidence-appendix.md#ea-model-2026-4d-0010)) ⟷ GEM-4D identifies a core failure mode of video world models for robots: visually plausible futures can still be unusabl... ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0008](evidence-appendix.md#ea-model-2026-4d-0008))
+- `EA-SENSOR`: PredictiveGraphs shows a relational route to 4D reasoning: embed temporal persistence filters in a 3D scene graph so ro... ([2605.00121](https://arxiv.org/abs/2605.00121) / [EA-SENSOR-2026-4D-0015](evidence-appendix.md#ea-sensor-2026-4d-0015)) ⟷ DGSG-Mind still depends on pose quality for initial reconstruction and faces scalability limits from 3D Gaussian storag... ([2605.29879](https://arxiv.org/abs/2605.29879) / [EA-SENSOR-2026-4D-0018](evidence-appendix.md#ea-sensor-2026-4d-0018))
+
+## 按主题聚类的证据(写作时按论证重组,不要按此顺序罗列)
+
+### EA-DATA (2 events)
+- [`conditional`] Kinema4D's data strategy favors scalable 4D pseudo-annotation breadth over sub-millimeter geometric ground truth, which is presented as adequate for learning relative spatial constraints and motion p... ([2603.16669](https://arxiv.org/abs/2603.16669) / [EA-DATA-2026-4D-0007](evidence-appendix.md#ea-data-2026-4d-0007))
+- [`conditional`] τ0-WM argues that broad human/egocentric video and UMI-style interaction data can train visual dynamics, but robot demonstrations are still needed for executable action grounding. ([2606.01027](https://arxiv.org/abs/2606.01027) / [EA-DATA-2026-4D-0011](evidence-appendix.md#ea-data-2026-4d-0011))
+
+### EA-EVAL (7 events)
+- [`support`] Pri4R's ablations support the claim that temporally dense and metrically grounded 3D point tracks are a stronger world-dynamics supervision target than 2D tracks, goal-only prediction, or dense depth... ([2603.01549](https://arxiv.org/abs/2603.01549) / [EA-EVAL-2026-4D-0004](evidence-appendix.md#ea-eval-2026-4d-0004))
+- [`support`] Kinema4D argues that robot-world interaction should be simulated as a 4D event: robot control is represented with kinematically correct 4D trajectories, while a generative model predicts environment... ([2603.16669](https://arxiv.org/abs/2603.16669) / [EA-EVAL-2026-4D-0006](evidence-appendix.md#ea-eval-2026-4d-0006))
+- [`support`] WEAVER defines useful robot world models by three joint requirements: fidelity to real outcomes, temporal consistency over long horizons, and enough efficiency for evaluation, improvement, and planni... ([2606.13672](https://arxiv.org/abs/2606.13672) / [EA-EVAL-2026-4D-0013](evidence-appendix.md#ea-eval-2026-4d-0013))
+- [`conditional`] ST-VLA reports material manipulation gains from 3D-4D reasoning, including higher zero-shot success in RLBench and real-world manipulation, but its evidence is tied to its dataset, masking pipeline,... ([2603.13788](https://arxiv.org/abs/2603.13788) / [EA-EVAL-2026-4D-0002](evidence-appendix.md#ea-eval-2026-4d-0002))
+- [`conditional`] τ0-WM reports that heterogeneous pretraining and test-time world-model computation improve real-robot manipulation, but the paper also identifies tactile sensing, uncertainty estimation, longer horiz... ([2606.01027](https://arxiv.org/abs/2606.01027) / [EA-EVAL-2026-4D-0012](evidence-appendix.md#ea-eval-2026-4d-0012))
+- [`limit`] WEAVER's authors explicitly limit visual world models: partial observability, missing contact/force state, deformable and granular dynamics, latency-limited planning horizons, data coverage, and nois... ([2606.13672](https://arxiv.org/abs/2606.13672) / [EA-EVAL-2026-4D-0014](evidence-appendix.md#ea-eval-2026-4d-0014))
+- [`gap`] EscapeCraft-4D shows that 4D reasoning evaluation should include transient evidence, irreversible timing constraints, and cross-modal active perception, not only static 3D visual scenes. ([2603.15467](https://arxiv.org/abs/2603.15467) / [EA-EVAL-2026-4D-0020](evidence-appendix.md#ea-eval-2026-4d-0020))
+
+### EA-MODEL (6 events)
+- [`support`] Pri4R treats 4D geometry as a training-time privileged signal: VLA backbones learn future 3D point tracks so their action representations encode how scene geometry evolves over time. ([2603.01549](https://arxiv.org/abs/2603.01549) / [EA-MODEL-2026-4D-0003](evidence-appendix.md#ea-model-2026-4d-0003))
+- [`support`] ST-VLA frames 4D spatiotemporal reasoning as a bridge between high-level VLA semantics and continuous robot control by lifting 2D guidance into 3D trajectories and 4D temporal context. ([2603.13788](https://arxiv.org/abs/2603.13788) / [EA-MODEL-2026-4D-0001](evidence-appendix.md#ea-model-2026-4d-0001))
+- [`support`] GEM-4D supports geometry-feature distillation as a way to make video world models more actionable for robot manipulation without adding inference-time cost. ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0009](evidence-appendix.md#ea-model-2026-4d-0009))
+- [`support`] τ0-WM treats 4D-style predictive reasoning as a deployment-time loop: propose executable action chunks, imagine action-conditioned futures, score progress, then revise low-quality candidates before e... ([2606.01027](https://arxiv.org/abs/2606.01027) / [EA-MODEL-2026-4D-0010](evidence-appendix.md#ea-model-2026-4d-0010))
+- [`limit`] GEM-4D identifies a core failure mode of video world models for robots: visually plausible futures can still be unusable when they do not preserve consistent 3D correspondences over time. ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0008](evidence-appendix.md#ea-model-2026-4d-0008))
+- [`gap`] Pri4R leaves open whether 4D point-track supervision should be used at larger pretraining scale or with explicit test-time geometric inputs. ([2603.01549](https://arxiv.org/abs/2603.01549) / [EA-MODEL-2026-4D-0005](evidence-appendix.md#ea-model-2026-4d-0005))
+
+### EA-SENSOR (5 events)
+- [`support`] PredictiveGraphs shows a relational route to 4D reasoning: embed temporal persistence filters in a 3D scene graph so robots can query likely future object-receptacle states and plan navigation accord... ([2605.00121](https://arxiv.org/abs/2605.00121) / [EA-SENSOR-2026-4D-0015](evidence-appendix.md#ea-sensor-2026-4d-0015))
+- [`support`] GEM represents future driving scenes as explicit continuous 4D Gaussian primitives, enabling arbitrary-time semantic occupancy queries and motion planning without fixed-step autoregressive rollout. ([2605.17682](https://arxiv.org/abs/2605.17682) / [EA-SENSOR-2026-4D-0019](evidence-appendix.md#ea-sensor-2026-4d-0019))
+- [`support`] DGSG-Mind combines dynamic 3D Gaussian mapping with scene graphs so that embodied agents can update object-level topology and reason over spatial-semantic relations in changing environments. ([2605.29879](https://arxiv.org/abs/2605.29879) / [EA-SENSOR-2026-4D-0017](evidence-appendix.md#ea-sensor-2026-4d-0017))
+- [`limit`] PredictiveGraphs is bounded by simplified independence assumptions, perception ambiguity among similar objects, and possible LLM hallucinations during verification and planning. ([2605.00121](https://arxiv.org/abs/2605.00121) / [EA-SENSOR-2026-4D-0016](evidence-appendix.md#ea-sensor-2026-4d-0016))
+- [`limit`] DGSG-Mind still depends on pose quality for initial reconstruction and faces scalability limits from 3D Gaussian storage and GPU memory. ([2605.29879](https://arxiv.org/abs/2605.29879) / [EA-SENSOR-2026-4D-0018](evidence-appendix.md#ea-sensor-2026-4d-0018))
+
+## 必须保留的 caveat(任何风格都不得丢失或升级)
+
+- `conditional` Kinema4D's data strategy favors scalable 4D pseudo-annotation breadth over sub-millimeter geometric ground truth, which is presented as adequate for learning relative spatial constraints and motion p... ([2603.16669](https://arxiv.org/abs/2603.16669) / [EA-DATA-2026-4D-0007](evidence-appendix.md#ea-data-2026-4d-0007))
+- `conditional` τ0-WM argues that broad human/egocentric video and UMI-style interaction data can train visual dynamics, but robot demonstrations are still needed for executable action grounding. ([2606.01027](https://arxiv.org/abs/2606.01027) / [EA-DATA-2026-4D-0011](evidence-appendix.md#ea-data-2026-4d-0011))
+- `conditional` ST-VLA reports material manipulation gains from 3D-4D reasoning, including higher zero-shot success in RLBench and real-world manipulation, but its evidence is tied to its dataset, masking pipeline,... ([2603.13788](https://arxiv.org/abs/2603.13788) / [EA-EVAL-2026-4D-0002](evidence-appendix.md#ea-eval-2026-4d-0002))
+- `conditional` τ0-WM reports that heterogeneous pretraining and test-time world-model computation improve real-robot manipulation, but the paper also identifies tactile sensing, uncertainty estimation, longer horiz... ([2606.01027](https://arxiv.org/abs/2606.01027) / [EA-EVAL-2026-4D-0012](evidence-appendix.md#ea-eval-2026-4d-0012))
+- `limit` WEAVER's authors explicitly limit visual world models: partial observability, missing contact/force state, deformable and granular dynamics, latency-limited planning horizons, data coverage, and nois... ([2606.13672](https://arxiv.org/abs/2606.13672) / [EA-EVAL-2026-4D-0014](evidence-appendix.md#ea-eval-2026-4d-0014))
+- `gap` EscapeCraft-4D shows that 4D reasoning evaluation should include transient evidence, irreversible timing constraints, and cross-modal active perception, not only static 3D visual scenes. ([2603.15467](https://arxiv.org/abs/2603.15467) / [EA-EVAL-2026-4D-0020](evidence-appendix.md#ea-eval-2026-4d-0020))
+- `limit` GEM-4D identifies a core failure mode of video world models for robots: visually plausible futures can still be unusable when they do not preserve consistent 3D correspondences over time. ([2605.22882](https://arxiv.org/abs/2605.22882) / [EA-MODEL-2026-4D-0008](evidence-appendix.md#ea-model-2026-4d-0008))
+- `gap` Pri4R leaves open whether 4D point-track supervision should be used at larger pretraining scale or with explicit test-time geometric inputs. ([2603.01549](https://arxiv.org/abs/2603.01549) / [EA-MODEL-2026-4D-0005](evidence-appendix.md#ea-model-2026-4d-0005))
+- `limit` PredictiveGraphs is bounded by simplified independence assumptions, perception ambiguity among similar objects, and possible LLM hallucinations during verification and planning. ([2605.00121](https://arxiv.org/abs/2605.00121) / [EA-SENSOR-2026-4D-0016](evidence-appendix.md#ea-sensor-2026-4d-0016))
+- `limit` DGSG-Mind still depends on pose quality for initial reconstruction and faces scalability limits from 3D Gaussian storage and GPU memory. ([2605.29879](https://arxiv.org/abs/2605.29879) / [EA-SENSOR-2026-4D-0018](evidence-appendix.md#ea-sensor-2026-4d-0018))
+
+## Writer handoff
+
+- Use `$embodied-ai-review-writer` with this brief, the accepted evidence JSONL, and `evidence-appendix.md`.
+- The writer loads only the requested style reference and drafts each style independently from this evidence model.
+- Generate `trace-map.json`, then pass the writer's editorial quality audit before settlement.
+
+## 引用速查
+
+- **正文引用 = arXiv 论文链接**:`[2606.13877](https://arxiv.org/abs/2606.13877)` 或 `[SIEVE](https://arxiv.org/abs/2607.06442)`。读者点开即达论文。
+- 事件级溯源留给 appendix:成稿正文不放 `evidence-appendix.md#...` 事件锚点;需要精确定位(章节/立场/置信)时,读者从 References 或 appendix 查。
+- 本简报中每条证据给出 `论文链接 / 事件链接` 对:写作时**取前者入正文**,后者供你核对 locator 与 stance。
+- Citation density and visible source format are style-specific; do not force a full bibliography into Xiaohongshu prose.
+- 完整证据条目在 [evidence-appendix.md](evidence-appendix.md);事件映射由 `trace-map.json` 保存。
+- Registered sources: `S-EMBODIED-DATA-FRAMEWORK`, `S-LOGISTICS-HUB-SURVEY`, `S-EA-QUESTIONS`, `S-ERR-COMPARE`, `S-PROJECT-CONTEXT`
