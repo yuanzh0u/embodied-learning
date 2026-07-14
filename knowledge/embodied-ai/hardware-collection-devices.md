@@ -10,8 +10,8 @@ source:
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §三 采集硬件与设备路线(Q6-Q9)
   - id: RUN-UMI-QUALITY-20260714
-    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v1/evidence.jsonl
-    locator: 5 accepted UMI events
+    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/evidence.jsonl
+    locator: EA-UMI-READ-0001..0015
 tags: [embodied-ai, hardware, monocular, stereo, arkit, slam, tracking, umi, glove]
 aliases: [采集硬件, 单目, 双目, ARKit, SLAM, Tracking, UMI, 指套, 手套]
 load_when:
@@ -25,6 +25,7 @@ confidence: working
 
 - Usually pair with: EA-DATA, EA-SENSOR.
 - Raw source needed when: 需要具体设备路线的完整问答或参考资料。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 进入 UMI run；设备选型要同时核验采集质量、人体工学和闭环收益。
 
 ## 30 秒摘要
 
@@ -66,7 +67,7 @@ confidence: working
 - S-EA-QUESTIONS:34-37 覆盖 ARKit、SLAM、全景相机。
 - S-EA-QUESTIONS:38-40 覆盖 Tracking 设备。
 - S-EA-QUESTIONS:41-45 覆盖 UMI 和指套式设备。
-- RUN-UMI-QUALITY-20260714：UMI-FT、gripper ergonomics、OmniUMI、UMI-3D 与 RealDexUMI 分别覆盖力觉、人体工学、多模态、3D tracking 和同构末端。
+- RUN-UMI-QUALITY-20260714：`EA-UMI-READ-0001..0004` 覆盖采集器人体工学、力/触觉/深度/位姿与 LiDAR-centric 3D sensing；`0007..0008` 记录数字遥操作边界和任务条件化 VR 配置。
 
 ## 待补问题
 

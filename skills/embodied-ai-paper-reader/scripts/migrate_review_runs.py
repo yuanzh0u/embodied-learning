@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import importlib.util
 import json
 import math
@@ -62,6 +63,13 @@ def parse_args() -> argparse.Namespace:
         "--override-file",
         help="Optional JSON object of manually reviewed event-level claim/context overrides.",
     )
+    parser.add_argument(
+        "--event-prefix-file",
+        help=(
+            "Optional JSON object mapping a source run directory name or run id to a globally unique "
+            "evidence-event prefix. When omitted, a deterministic run-name fingerprint is appended."
+        ),
+    )
     parser.add_argument("--suffix", default="reader-v1")
     parser.add_argument("--cards-per-paper", type=int, default=2)
     parser.add_argument("--minimum-match-score", type=float, default=0.16)
@@ -70,6 +78,23 @@ def parse_args() -> argparse.Namespace:
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_event_prefixes(path: Path | None) -> dict[str, str]:
+    if path is None:
+        return {}
+    value = load_json(path)
+    if not isinstance(value, dict):
+        raise ValueError("event prefix file must contain a JSON object")
+    result: dict[str, str] = {}
+    for key, prefix in value.items():
+        normalized = str(prefix or "").strip().rstrip("-")
+        if not normalized or not re.fullmatch(r"[A-Za-z0-9-]+", normalized):
+            raise ValueError(f"invalid event prefix for {key!r}: {prefix!r}")
+        result[str(key)] = normalized
+    if len(set(result.values())) != len(result):
+        raise ValueError("event prefix values must be unique across source runs")
+    return result
 
 
 def write_json(path: Path, value: Any) -> None:
@@ -613,6 +638,7 @@ def migrate_run(
     cards_per_paper: int,
     minimum_match_score: float,
     overrides: dict[str, dict[str, Any]],
+    event_prefixes: dict[str, str],
 ) -> dict[str, Any]:
     source = Path(planned_run["source_dir"])
     target = output_root / f"{source.name}-{suffix}"
@@ -640,7 +666,11 @@ def migrate_run(
     diagnostics: list[dict[str, Any]] = []
     event_sequence = 1
     selected_ids = {str(item["paper_id"]) for item in planned_run["selected_papers"]}
-    event_prefix = f"{topic_ids[0] if topic_ids else 'EA-DATA'}-READ"
+    run_key = str(old_manifest.get("run") or source.name)
+    event_prefix = event_prefixes.get(source.name) or event_prefixes.get(run_key)
+    if not event_prefix:
+        fingerprint = hashlib.sha1(source.name.encode("utf-8")).hexdigest()[:6].upper()
+        event_prefix = f"{topic_ids[0] if topic_ids else 'EA-DATA'}-READ-{fingerprint}"
 
     for planned in planned_run["selected_papers"]:
         paper_id = str(planned["paper_id"])
@@ -745,6 +775,7 @@ def migrate_run(
         "knowledge_ids": topic_ids,
         "rounds": old_manifest.get("rounds", 0),
         "event_count": len(all_events),
+        "event_id_prefix": event_prefix,
         "source_runs": [source.name] + [
             item for item in old_manifest.get("source_runs", []) if item != source.name
         ],
@@ -797,6 +828,12 @@ def main() -> int:
         for key, value in overrides_value.items()
         if isinstance(value, dict)
     }
+    try:
+        event_prefixes = load_event_prefixes(
+            Path(args.event_prefix_file) if args.event_prefix_file else None
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"invalid event prefix file: {exc}") from exc
     results = [
         migrate_run(
             run,
@@ -806,6 +843,7 @@ def main() -> int:
             max(1, args.cards_per_paper),
             args.minimum_match_score,
             overrides,
+            event_prefixes,
         )
         for run in plan.get("runs", [])
     ]

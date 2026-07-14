@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.00121",
+    "title": "Predictive Spatio-Temporal Scene Graphs for Semi-Static Scenes",
+    "published": "2026-04-30",
+    "url": "https://arxiv.org/abs/2605.00121",
+    "authors": [
+      "Miguel Saavedra-Ruiz",
+      "Charlie Gauthier",
+      "Kumaraditya Gupta"
+    ]
+  },
+  "review": {
+    "question": "4D时空推理",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 4D时空推理."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "IV-B Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "VI Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "VII Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '4D时空推理', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "PredictiveGraphs is bounded by simplified independence assumptions, perception ambiguity among similar objects, and possible LLM hallucinations during verification and planning."
+  ],
+  "method": {
+    "summary": "The main contribution of Perpetua ∗ lies in replacing the heuristic state machine from Perpetua [ 37 ] with Bayesian model selection [ 29 ] , which provides a probabilistic basis for selecting between the emergence and persistence models. In particular, the Bayesian model selection process is informed by a new switching prior, allowing the estimator to leverage environment-specific knowledge or LLMs [ 44 ] . We propose a switching prior, , which can take several forms, such as: (9) (10) Here, ( 9 ) applies the inverse Fourier transform to a set of coefficients [ 21 ] ; and ( 10 ) defines a piecewise constant function using the indicator function . In the latter, the LLM generates values give",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate Perpetua ∗ and PredictiveGraphs in two stages. First, in Sec. VI-A , we benchmark Perpetua ∗ against established baselines, assessing long-term prediction, adaptation, and computational efficiency using a semi-static simulator. Second, in Sec. VI-B , we evaluate PredictiveGraphs on semi-static object navigation tasks [ 19 ] . We validate our approach across multiple ProcTHOR scenes [ deitke2022️ ] and demonstrate its effectiveness through real-world deployment in a laboratory with semi-static objects.",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "PredictiveGraphs is bounded by simplified independence assumptions, perception ambiguity among similar objects, and possible LLM hallucinations during verification and planning.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "VIII Limitations"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "While embedding open-vocabulary scene graphs with persistence estimators yields tempo-spatio-semantic capabilities, our approach is not free of limitations. First, object-receptacle edges are modelled independently. While joint distributions over multiple locations are possible [ 30 ] , inference costs grow with the number of observed locations per object, inducing a trade-off between expressivity and real-time performance. We believe that striking the right balance in this trade-off is a promising avenue for future work. Second, our method treats objects indistinguishable by the perception sy",
+        "locator": "VIII Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (IV-B Method) and evaluation (VI Evaluation)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.00121-C01",
+      "claim": "PredictiveGraphs is bounded by simplified independence assumptions, perception ambiguity among similar objects, and possible LLM hallucinations during verification and planning.",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: 4D时空推理",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The limitations section says object-receptacle edges are modeled independently, indistinguishable objects are treated as interchangeable, and LLM hallucinations remain a risk for open-vocabulary verification and planning.",
+      "locator": "VIII Limitations",
+      "source_context": "While embedding open-vocabulary scene graphs with persistence estimators yields tempo-spatio-semantic capabilities, our approach is not free of limitations. First, object-receptacle edges are modelled independently. While joint distributions over multiple locations are possible [ 30 ] , inference costs grow with the number of observed locations per object, inducing a trade-off between expressivity and real-time performance. We believe that striking the right balance in this trade-off is a promising avenue for future work. Second, our method treats objects indistinguishable by the perception system as interchangeable, e.g., two red mugs. We expect that as perception systems improve, so will the downstream performance of our method. Last, our method can be subject to LLM hallucinations, particularly during the verification and planning stage. Hallucinations are an inherent limitation of open-vocabulary operation, and better map-grounding strategies have the potential to reduce their frequency.",
+      "evidence_type": "author-stated-limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in VIII Limitations contains the paper-specific concepts used by the claim (as, by, during, edges, hallucinations, independently, indistinguishable, interchangeable). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "This is a limit on relational 4D maps, not a rejection of the approach."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

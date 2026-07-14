@@ -6,8 +6,8 @@ domain: embodied-ai
 updated: 2026-07-14
 source:
   - id: RUN-VLA-ALIGN-20260714
-    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v1/evidence.jsonl
-    locator: EA-ALIGN-2026-0001..0010
+    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v2/evidence.jsonl
+    locator: EA-ALIGN-READ-0001..0015
 tags: [embodied-ai, vla, alignment, language, vision, action, controller, action-token]
 aliases: [多模态对齐, 语言动作对齐, 视觉动作对齐, 动作 token, action adapter]
 load_when:
@@ -22,6 +22,7 @@ confidence: working
 
 - Usually pair with: EA-MODEL, EA-XEMBODIMENT, EA-SENSOR, EA-EVAL.
 - Raw evidence needed when: 需要具体 VLA 架构、动作 tokenizer、action prior 或实机部署结果。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 进入对应 review packet；只有核验具体主张时才打开 paper note 与 audit。
 
 ## 30 秒摘要
 
@@ -65,9 +66,9 @@ VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处�
 
 ## 证据锚点
 
-- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0008` 覆盖语言稀疏与视觉捷径；`EA-ALIGN-2026-0001` 覆盖 dense reasoning 桥接。
-- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0003..0006` 覆盖 action prior、state-aware tokenizer 和动作对齐视觉接口。
-- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0007`, `EA-ALIGN-2026-0010` 覆盖跨本体兼容与 action adapter；`EA-ALIGN-2026-0009` 覆盖 contact transfer。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-READ-0001..0006` 覆盖控制命令非通用性、结构化视觉接口、离散动作解码、系统对齐和跨本体接口。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-READ-0007..0012` 覆盖多模态同步、恢复数据、触觉失败修正、3D 动作推理、监督掩码和 episode 质量反馈。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-READ-0013..0015` 覆盖 latent reasoning、长程时序归因以及认知层与控制层的恢复分工。
 
 ## 待补问题
 

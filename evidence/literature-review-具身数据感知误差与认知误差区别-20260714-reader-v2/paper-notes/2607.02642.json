@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.02642",
+    "title": "GigaWorld-1: A Roadmap to Build World Models for Robot Policy Evaluation",
+    "published": "2026-07-02",
+    "url": "https://arxiv.org/abs/2607.02642",
+    "authors": [
+      "GigaWorld Team",
+      "Angyuan Ma",
+      "Boyuan Wang",
+      "Bohan Li",
+      "Chaojun Ni",
+      "Guo Li",
+      "Guan Huang",
+      "Guosheng Zhao",
+      "Hao Li",
+      "Hengtao Li",
+      "Jingyu Liu",
+      "Jiwen Lu",
+      "Qiuping Deng",
+      "Tingdong Yu",
+      "Xuancheng Xu",
+      "Xinyu Zhou",
+      "Xiuwei Xu",
+      "Xinze Chen",
+      "Xiaofeng Wang",
+      "Xiaoyu Tian",
+      "Yang Wang",
+      "Yifan Chang",
+      "Yukun Zhou",
+      "Yun Ye",
+      "Zhenyu Wu",
+      "Zhanqian Wu",
+      "Zheng Zhu"
+    ]
+  },
+  "review": {
+    "question": "具身数据感知误差与认知误差区别",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-EVAL",
+      "EA-MODEL",
+      "ERR-EMBODIED"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身数据感知误差与认知误差区别."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "2.1 Video Diffusion Models as World Models",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "2.3 Robot Policy Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "7 Discussion and Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身数据感知误差与认知误差区别', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "数据质量必须经闭环评估定义；对机器人世界模型来说，短期视觉真实感不如长程、动作忠实的 rollout 一致性更能决定其作为策略评估器的可靠性。"
+  ],
+  "method": {
+    "summary": "With the rapid advancement of video generation technologies, a number of powerful foundation models [ 110 , 39 , 133 , 99 , 30 , 95 , 104 , 25 , 65 , 64 ] have made it possible to generate videos with high visual fidelity, strong perceptual quality, and extended temporal duration. Building upon these capabilities, controllable video generation [ 73 , 79 , 74 , 78 , 75 , 72 , 76 , 71 , 77 , 125 , 127 , 126 , 146 , 118 , 113 , 112 ] enables generated videos to follow specific control conditions, thereby opening up new possibilities for downstream applications such as autonomous driving [ 163 , 31 , 142 , 155 , 156 ] and embodied intelligence [ 36 , 103 ] . A world model is expected to predict",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "The evaluation of robotic policies has traditionally relied on a spectrum from real-world testing to simulation-based benchmarking. At one end, real-world evaluation provides the most trustworthy assessment by directly measuring execution in target environments [ 129 , 4 ] . However, real-robot testing is notoriously expensive, slow, and difficult to scale comprehensively under broad distribution shifts. To address this scalability bottleneck, traditional simulators offer cheap, repeatable, and safe testing environments, underpinning numerous standard benchmarks [ 22 , 54 , 82 , 83 , 62 ] . Yet, classical simulation often struggles with the sim-to-real gap, particularly in visually complex,",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "数据质量必须经闭环评估定义；对机器人世界模型来说，短期视觉真实感不如长程、动作忠实的 rollout 一致性更能决定其作为策略评估器的可靠性。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (2.1 Video Diffusion Models as World Models) and evaluation (2.3 Robot Policy Evaluation)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.02642-C01",
+      "claim": "数据质量必须经闭环评估定义；对机器人世界模型来说，短期视觉真实感不如长程、动作忠实的 rollout 一致性更能决定其作为策略评估器的可靠性。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 具身数据感知误差与认知误差区别",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文指出真实机器人策略评估受硬件和人工监督限制，是基础模型迭代瓶颈；WMBench 用真实 teleoperation 数据和匹配 policy rollouts 构造评估，并分析 7 个视频世界模型、4 种动作表示和 324,000 余次模拟 rollout。其结论强调 evaluator 质量由长程 action-faithful rollout consistency、可迁移物理先验、动作编码、记忆和评估导向 post-training 共同决定。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Using WMBench, we analyze 7 video world models, 4 action representation schemes, and over 324,000 simulated policy rollouts paired with real robot executions, further enriching our analysis with large-scale community submissions from the CVPR 2026 GigaBrain Challenge, curated synthetic trajectories, and a training videos spanning more than 12,000 hours. Our experiments deliver three core insights: evaluator quality is dominated by long-horizon, action-faithful rollout consistency rather than short-term visual realism; pretraining gains stem not only from data scale but from balancing general world knowledge with robot-specific controllability; and architectural choices including action encoding, memory design, and evaluator-focused post-training strongly determine alignment with real-world robot behavior.",
+      "evidence_type": "benchmark-and-analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (000, 324, action-faithful, consistency, evaluator, policy, post-training, rollout). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Supports the evaluation side of data quality: policy-relevant causal fidelity over visual-only metrics. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

@@ -10,14 +10,14 @@ source:
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §五 模型与预训练(Q13-Q15)
   - id: RUN-VLA-ALIGN-20260714
-    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v1/evidence.jsonl
-    locator: EA-ALIGN-2026-0001..0010
+    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v2/evidence.jsonl
+    locator: EA-ALIGN-READ-0001..0015
   - id: RUN-WMDATA-20260714
-    file: ../../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v1/evidence.jsonl
-    locator: EA-MODEL-2026-WMDATA-0007..0010
+    file: ../../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v2/evidence.jsonl
+    locator: EA-WMDATA-READ-0001..0015
   - id: RUN-4D-REASONING-20260714
-    file: ../../evidence/literature-review-4d时空推理-20260714-reader-v1/evidence.jsonl
-    locator: EA-MODEL-2026-4D-0001..0010
+    file: ../../evidence/literature-review-4d时空推理-20260714-reader-v2/evidence.jsonl
+    locator: EA-4D-READ-0001..0015
 tags: [embodied-ai, model, pretraining, vla, rt-x, octo, openvla, sim2real]
 aliases: [机器人基础模型, Unified Model, VLA, Octo, OpenVLA, RT-X, 预训练, 微调]
 load_when:
@@ -31,6 +31,7 @@ confidence: working
 
 - Usually pair with: EA-DATA, EA-XEMBODIMENT, EA-EVAL, EA-ALIGN, EA-4D.
 - Raw source needed when: 需要具体模型或论文引用编号。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 选择 run；中预算读 review packet，高预算按 paper-note index 核验。
 
 ## 30 秒摘要
 
@@ -72,9 +73,9 @@ confidence: working
 - S-EA-QUESTIONS:56-58 覆盖 Unified Model 和 scaling 挑战。
 - S-EA-QUESTIONS:59-62 覆盖 benchmark 与真实泛化问题。
 - S-EA-QUESTIONS:63-66 覆盖预训练评估和 Sim2Real。
-- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0003..0008` 覆盖 action prior、tokenizer、结构化视觉接口和语言稀疏性。
-- RUN-WMDATA-20260714：`EA-MODEL-2026-WMDATA-0007..0010` 覆盖关键事件保留、4D 一致和 action-grounded representation。
-- RUN-4D-REASONING-20260714：`EA-MODEL-2026-4D-0003`, `0009`, `0010` 覆盖 4D 监督、几何增强 rollout 和部署时世界模型。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-READ-0001..0006`, `0013..0015` 覆盖动作语义、结构化接口、跨本体适配以及长程推理与恢复。
+- RUN-WMDATA-20260714：`EA-WMDATA-READ-0001..0010` 覆盖异构视频—动作数据、关键事件、具身锚定合成数据、几何未来和失败附近纠正轨迹。
+- RUN-4D-REASONING-20260714：`EA-4D-READ-0001..0005`, `0008`, `0014..0015` 覆盖 4D 监督、几何增强 rollout、连续 4D 表征和多视角训练数据。
 
 ## 待补问题
 

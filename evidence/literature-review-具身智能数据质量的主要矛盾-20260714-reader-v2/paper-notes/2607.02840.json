@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.02840",
+    "title": "TACO: TActile World Model as a Self-COrrector forScalable VLA Post-Training",
+    "published": "2026-07-03",
+    "url": "https://arxiv.org/abs/2607.02840",
+    "authors": [
+      "Shengbang Liu",
+      "Yueru Jia",
+      "Yuyang Yan",
+      "Jiaming Liu",
+      "Xinran Zhang",
+      "Qiuxuan Feng",
+      "Yandong Guo",
+      "Shiji Zhou",
+      "Boxin Shi",
+      "Shanghang Zhang"
+    ]
+  },
+  "review": {
+    "question": "具身智能数据质量的主要矛盾",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身智能数据质量的主要矛盾."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身智能数据质量的主要矛盾', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "TACO 用触觉感知世界模型联合预测未来视频和力序列，再将真实失败附近状态转成带纠正动作的想象片段，用于接触丰富任务的 VLA 后训练。"
+  ],
+  "method": {
+    "summary": "TACO is a tactile-aware world-model-driven framework for scalable VLA post-training in contact-rich manipulation. As illustrated in Figure 2 , given real robot rollouts, TACO converts real-world failures into visuo-tactile corrective supervision through a Recognize–Imagine–Label loop: recognizing failure-adjacent states, imagining local correction segments, and labeling executable corrective actions. The tactile-aware world model and iterative correction paradigm are described in Sections 3.1 and 3.2 , followed by knowledge-insulated tactile adaptation for VLA post-training in Section 3.3 . Figure 2: TACO framework. TACO follows an iterative Recognize–Imagine–Label loop over real-world rollo",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Section 4.1 introduces the experimental setup. Section 4.2 reports results on real-world tasks through two iterations of post-training, while Section 4.3 presents ablation studies of key components. Section 4.4 analyzes action distributions and OOD generalization.",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "TACO 用触觉感知世界模型联合预测未来视频和力序列，再将真实失败附近状态转成带纠正动作的想象片段，用于接触丰富任务的 VLA 后训练。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "5 Conclusion and Limitations"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "We presented TACO, a tactile-aware world-model-driven framework for scalable VLA post-training in contact-rich manipulation. Following a Recognize–Imagine–Label loop, TACO converts real-world failures into imagined corrections without repeated human intervention: a tactile-aware world model jointly denoises future video and force sequences, while a unified progress-action model recognizes failure-adjacent states and labels imagined segments with corrective actions. To incorporate this supervision without eroding pretrained priors, we introduced knowledge-insulated tactile adaptation with advan",
+        "locator": "5 Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 Method) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.02840-C01",
+      "claim": "TACO 用触觉感知世界模型联合预测未来视频和力序列，再将真实失败附近状态转成带纠正动作的想象片段，用于接触丰富任务的 VLA 后训练。",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: 具身智能数据质量的主要矛盾",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "结论的 Recognize–Imagine–Label 回路明确连接了真实失败、视频—力联合想象与纠正动作标注。",
+      "locator": "5 Conclusion and Limitations",
+      "source_context": "We presented TACO, a tactile-aware world-model-driven framework for scalable VLA post-training in contact-rich manipulation. Following a Recognize–Imagine–Label loop, TACO converts real-world failures into imagined corrections without repeated human intervention: a tactile-aware world model jointly denoises future video and force sequences, while a unified progress-action model recognizes failure-adjacent states and labels imagined segments with corrective actions. To incorporate this supervision without eroding pretrained priors, we introduced knowledge-insulated tactile adaptation with advantage-conditioned training. Experiments on real-world contact-rich tasks show that TACO improves the average success rate by 44% over the base policy and generalizes to unseen backgrounds, objects, and positions. One limitation is that imagined corrections are generated offline rather than online during deployment, while our main insight is to use tactile-aware imagination to recover localized contact failures. Future work will explore online correction generation and tighter coupling between the world model and policy. TACO: TActile World Model",
+      "evidence_type": "method-and-real-robot-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 5 Conclusion and Limitations contains the paper-specific concepts used by the claim (taco, vla). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Supports a limit claim against vision-only data and world-model rollouts in contact-rich settings. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

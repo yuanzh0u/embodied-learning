@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.08485",
+    "title": "3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos",
+    "published": "2026-03-09",
+    "url": "https://arxiv.org/abs/2603.08485",
+    "authors": [
+      "Adam Hung",
+      "Bardienus Pieter Duisterhof",
+      "Jeffrey Ichnowski"
+    ]
+  },
+  "review": {
+    "question": "具身数据感知误差溯源",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-EVAL",
+      "ERR-PATTERN",
+      "ERR-EMBODIED"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身数据感知误差溯源."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身数据感知误差溯源', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "3PoinTr 保留含暂时遮挡点的轨迹，只屏蔽不可见的单个点—时间损失，因而能继续利用操作中任务关键的物体点监督。"
+  ],
+  "method": {
+    "summary": "3PoinTr (Figure 2 ) consists of two stages: (1) learning a model that predicts dense future 3D point trajectories from a single scene observation, and (2) learning a closed-loop policy conditioned on these predicted point tracks. Stage 2: Track-conditioned policy learning. Given the predicted 3D point tracks together with a current observation , where is the visible scene point cloud at timestep (with embodiment points removed) and is the robot configuration, we train a closed-loop behavior-cloning policy that predicts a short chunk of actions. Formally, we learn , where is a chunk of actions of dimensions each. The point tracks are produced once from the initial observation and reused throu",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Figure 3: Simulation and real-world tasks used for evaluation. Simulation tasks use procedurally generated robot trajectories for both video pretraining and policy learning; real-world tasks use unconstrained human videos for video pretraining and robot teleoperation data for policy learning. Green tracks show 2D projections of the 3D point-track prediction targets (only tracks for moving points are visualized). We evaluate 3PoinTr in simulation and on a real robot, for both 3D point track prediction and track-conditioned policy learning. Simulation Setup In simulation, we collect demonstrations using a UFactory xArm 7 with a UFactory parallel-jaw gripper. We procedurally generate demonstrat",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "3PoinTr 保留含暂时遮挡点的轨迹，只屏蔽不可见的单个点—时间损失，因而能继续利用操作中任务关键的物体点监督。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "4.3 Results: 3D Point Track Prediction"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "While 3PoinTr enables learning from unconstrained videos, where the human does not need to mimic the robot, our current experiments still rely on videos produced under relatively consistent laboratory conditions to achieve tractable sample efficiency. Scaling both pretraining and behavior cloning data remains an important direction for harnessing large-scale internet video data. We further discuss limitations and future work in Appendix G .",
+        "locator": "6 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 Method) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.08485-C01",
+      "claim": "3PoinTr 保留含暂时遮挡点的轨迹，只屏蔽不可见的单个点—时间损失，因而能继续利用操作中任务关键的物体点监督。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 具身数据感知误差溯源",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结果段对比了删除整条不可见轨迹的基线与仅屏蔽不可见 point-timestep 损失的 3PoinTr。",
+      "locator": "4.3 Results: 3D Point Track Prediction",
+      "source_context": "The primary advantage of 3PoinTr is that it trains on data General Flow ignores. Real-world points are often temporarily occluded; General Flow removes any trajectory with invisible point-timestep pairs during preprocessing, whereas 3PoinTr retains all trajectories and masks losses for individual invisible point-timestep pairs. This provides additional supervision over task-critical object points that are temporarily occluded during manipulation. For example, in the Throw Away Paper task, every paper point is invisible by the final frame, so General Flow receives no supervision over paper motion. As a result, 3PoinTr generates more informative point tracks from realistic manipulation videos. We include point track prediction results for simulation tasks (where supervision is equal) in Appendix E ; we find that 3PoinTr achieves competitive results with a significantly simpler architecture.",
+      "evidence_type": "data-pipeline-and-limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 4.3 Results: 3D Point Track Prediction contains the paper-specific concepts used by the claim (3pointr). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "作者也指出当前仍依赖较一致的实验室视频，透明、遮挡、反光和阴影会影响2D跟踪。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

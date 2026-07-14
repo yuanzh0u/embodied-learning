@@ -10,11 +10,11 @@ source:
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §四 跨本体与数据迁移(Q10-Q12)
   - id: RUN-VLA-ALIGN-20260714
-    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v1/evidence.jsonl
-    locator: EA-ALIGN-2026-0007,0009,0010
+    file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v2/evidence.jsonl
+    locator: EA-ALIGN-READ-0001..0015
   - id: RUN-UMI-QUALITY-20260714
-    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v1/evidence.jsonl
-    locator: RealDexUMI accepted event
+    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/evidence.jsonl
+    locator: EA-UMI-READ-0001..0015
 tags: [embodied-ai, cross-embodiment, retargeting, dexterous-hand, gripper, action-space]
 aliases: [跨本体, Retargeting, 人手迁移, 灵巧手, 夹爪, 动作空间]
 load_when:
@@ -28,6 +28,7 @@ confidence: working
 
 - Usually pair with: EA-MODEL, EA-SENSOR.
 - Raw source needed when: 需要 DexPilot、AnyTeleop、DexCap、DEXOP 等具体引用。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 进入 VLA 对齐与 UMI run；核验跨本体结论时必须同时读取机器人状态、控制器和接触条件。
 
 ## 30 秒摘要
 
@@ -66,8 +67,8 @@ confidence: working
 - S-EA-QUESTIONS:46-48 覆盖人手数据到不同机器人本体的映射。
 - S-EA-QUESTIONS:49-52 覆盖跨本体预训练和迁移上限。
 - S-EA-QUESTIONS:53-55 覆盖 retargeting 瓶颈和优化方向。
-- RUN-VLA-ALIGN-20260714：`EA-ALIGN-2026-0007`, `0010` 支持动作兼容与机器人 adapter；`0009` 支持 contact transfer。
-- RUN-UMI-QUALITY-20260714：RealDexUMI 事件支持同构末端和传感器减少灵巧操作转换损失。
+- RUN-VLA-ALIGN-20260714：`EA-ALIGN-READ-0001`, `0003..0005` 支持控制命令非通用性、状态条件动作解码、系统对齐和平台特定 adapter；`0009` 支持 contact-rich 失败修正。
+- RUN-UMI-QUALITY-20260714：`EA-UMI-READ-0002..0004`, `0009` 支持物理模态、3D sensing 和机器人可执行性过滤；跨本体可用性是条件结论，不等于动作命令可直接复用。
 
 ## 待补问题
 

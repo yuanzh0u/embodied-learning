@@ -14,6 +14,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 MD_LINK = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)")
 ARCHIVE_CMD = re.compile(r"git show ([0-9a-f]{7,40}):(.+)")
+EVENT_ID = re.compile(r"\b[A-Z][A-Z0-9-]*-\d{4}\b")
+EVENT_RANGE = re.compile(r"\b([A-Z][A-Z0-9-]*-)(\d{4})\.\.(\d{4})\b")
 
 
 def parse_args() -> argparse.Namespace:
@@ -84,6 +86,33 @@ def check_markdown_links(md_file: Path, root: Path) -> list[str]:
     return problems
 
 
+def locator_event_ids(locator: str) -> set[str]:
+    """Expand exact IDs and compact PREFIX-0001..0015 locator ranges."""
+    ids = set(EVENT_ID.findall(locator))
+    for match in EVENT_RANGE.finditer(locator):
+        prefix, start_text, end_text = match.groups()
+        start, end = int(start_text), int(end_text)
+        if end < start or end - start > 1000:
+            continue
+        ids.update(f"{prefix}{seq:04d}" for seq in range(start, end + 1))
+    return ids
+
+
+def evidence_event_ids(path: Path) -> tuple[set[str], str | None]:
+    ids: set[str] = set()
+    try:
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if not line.strip():
+                continue
+            value = json.loads(line)
+            event_id = str(value.get("event_id") or "") if isinstance(value, dict) else ""
+            if event_id:
+                ids.add(event_id)
+    except (OSError, json.JSONDecodeError) as exc:
+        return set(), str(exc)
+    return ids, None
+
+
 def check_sources_md(root: Path) -> list[str]:
     problems = []
     sources_md = root / "knowledge" / "sources.md"
@@ -134,6 +163,20 @@ def check_topic_cards(root: Path) -> list[str]:
                 resolved = (card.parent / source["file"]).resolve()
                 if not resolved.exists():
                     problems.append(f"{rel}: source file missing -> {source['file']}")
+                elif resolved.name == "evidence.jsonl":
+                    actual_ids, error = evidence_event_ids(resolved)
+                    if error:
+                        problems.append(f"{rel}: invalid evidence JSONL -> {source['file']} ({error})")
+                    else:
+                        expected_ids = locator_event_ids(str(source.get("locator", "")))
+                        missing_ids = sorted(expected_ids - actual_ids)
+                        if missing_ids:
+                            preview = ", ".join(missing_ids[:5])
+                            suffix = "..." if len(missing_ids) > 5 else ""
+                            problems.append(
+                                f"{rel}: source locator references missing event IDs in {source['file']}: "
+                                f"{preview}{suffix}"
+                            )
             if re.match(r"lines \d", str(source.get("locator", ""))):
                 problems.append(f"{rel}: line-number locator (use semantic anchors per ADR-0002)")
     return problems
@@ -141,6 +184,7 @@ def check_topic_cards(root: Path) -> list[str]:
 
 def check_evidence_manifests(root: Path) -> list[str]:
     problems = []
+    prefix_owners: dict[str, Path] = {}
     for manifest in sorted(root.glob("evidence/*/run.json")):
         run_dir = manifest.parent
         rel = manifest.relative_to(root)
@@ -159,6 +203,33 @@ def check_evidence_manifests(root: Path) -> list[str]:
         for name in listed:
             if not (run_dir / name).is_file():
                 problems.append(f"{rel}: listed file missing -> {name}")
+        event_prefix = str(data.get("event_id_prefix") or "").rstrip("-")
+        if event_prefix:
+            prior = prefix_owners.get(event_prefix)
+            if prior is not None:
+                problems.append(
+                    f"{rel}: event_id_prefix `{event_prefix}` is already owned by {prior.relative_to(root)}"
+                )
+            else:
+                prefix_owners[event_prefix] = manifest
+            evidence_name = files.get("evidence") if isinstance(files, dict) else None
+            evidence_path = run_dir / str(evidence_name or "evidence.jsonl")
+            if evidence_path.is_file():
+                event_ids, error = evidence_event_ids(evidence_path)
+                if error:
+                    problems.append(f"{rel}: invalid evidence JSONL ({error})")
+                else:
+                    invalid = sorted(item for item in event_ids if not item.startswith(event_prefix + "-"))
+                    if invalid:
+                        problems.append(
+                            f"{rel}: event IDs do not match event_id_prefix `{event_prefix}`: "
+                            + ", ".join(invalid[:5])
+                        )
+                    expected_count = data.get("event_count")
+                    if isinstance(expected_count, int) and len(event_ids) != expected_count:
+                        problems.append(
+                            f"{rel}: event_count={expected_count} but unique evidence event IDs={len(event_ids)}"
+                        )
     return problems
 
 

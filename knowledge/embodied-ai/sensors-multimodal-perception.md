@@ -10,14 +10,14 @@ source:
     archive: "git show 081e898:具身智能研究问题清单.md"
     locator: §二 传感器与多模态感知(Q4-Q5)
   - id: RUN-TACTILE-WM-20260714
-    file: ../../evidence/literature-review-触觉世界模型-20260714-reader-v1/evidence.jsonl
-    locator: EA-TWM-2026-0001..0018
+    file: ../../evidence/literature-review-触觉世界模型-20260714-reader-v2/evidence.jsonl
+    locator: EA-TWM-READ-0001..0015
   - id: RUN-SENSOR-ERROR-20260714
-    file: ../../evidence/literature-review-具身传感器感知误差-20260714-reader-v1/evidence.jsonl
-    locator: EA-SENSOR-2026-0001..0011; EA-EVAL-2026-0007,0012
+    file: ../../evidence/literature-review-具身传感器感知误差-20260714-reader-v2/evidence.jsonl
+    locator: EA-SENSORERR-READ-0001..0015
   - id: RUN-UMI-QUALITY-20260714
-    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v1/evidence.jsonl
-    locator: 5 accepted UMI events
+    file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/evidence.jsonl
+    locator: EA-UMI-READ-0001..0015
 tags: [embodied-ai, sensors, multimodal, rgb, point-cloud, tactile, force, proprioception, perception-error, tactile-world-model]
 aliases: [传感器, 多模态感知, 触觉, 力控, 点云, 3D, RGB, 触觉世界模型, 感知误差]
 load_when:
@@ -32,6 +32,7 @@ confidence: working
 
 - Usually pair with: EA-DATA, EA-HARDWARE, EA-BIZ, EA-4D, ERR-EMBODIED.
 - Raw source needed when: 需要触觉标准化、触觉任务清单或具体论文编号。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 进入触觉、传感器误差或 UMI run，再按任务选择 paper note，避免默认加载全部多模态论文。
 
 ## 30 秒摘要
 
@@ -75,9 +76,9 @@ confidence: working
 
 - S-EA-QUESTIONS:19-22 覆盖 RGB、3D、点云和物理模态。
 - S-EA-QUESTIONS:23-29 覆盖触觉与视觉、力、pose 的关系，以及触觉标准化。
-- RUN-TACTILE-WM-20260714：`EA-TWM-2026-0001..0003`, `0007..0012` 覆盖表征兼容、触觉未来、接触门控和推理期使用。
-- RUN-SENSOR-ERROR-20260714：`EA-SENSOR-2026-0001..0011` 覆盖接触、几何、置信度、融合和事件视觉误差；`EA-EVAL-2026-0012` 覆盖世界模型 admissibility。
-- RUN-UMI-QUALITY-20260714：UMI-FT、OmniUMI 与 UMI-3D 支持力/触觉、深度和 3D tracking 对采集质量的条件性增益。
+- RUN-TACTILE-WM-20260714：`EA-TWM-READ-0001..0008`, `0010..0015` 覆盖同步多模态序列、视觉—触觉—动作未来、显式接触几何、力/力矩先验、高低频控制分层和推理期动作验证。
+- RUN-SENSOR-ERROR-20260714：`EA-SENSORERR-READ-0001..0012`, `0014..0015` 覆盖触觉失败修正、局部风险走廊、融合污染、安全过程、admissibility、空间对齐、置信度和恢复数据。
+- RUN-UMI-QUALITY-20260714：`EA-UMI-READ-0001..0005`, `0015` 支持人体工学、力/触觉/深度/位姿、LiDAR-centric 3D sensing 和软物体多视角可观测性。
 
 ## 待补问题
 

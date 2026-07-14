@@ -2,7 +2,7 @@
 id: KB-GLOSSARY
 title: 术语表
 type: glossary
-updated: 2026-07-10
+updated: 2026-07-14
 tags: [glossary, embodied-ai, error-governance]
 ---
 
@@ -28,6 +28,12 @@ tags: [glossary, embodied-ai, error-governance]
 | 目标条件效用 | 数据质量相对于目标任务、目标分布和目标策略的实际贡献；同一轨迹在不同目标下可能有不同质量排序。 | EA-DATA |
 | 监督可靠性 | 一类数据对某个字段能否提供可信真值的等级，例如人类视频可监督任务结构但通常不能直接监督机器人控制命令。 | EA-DATA, EA-4D |
 | Supervision mask | 显式标记每类异构数据哪些字段可参与监督、哪些字段缺失或不可信的掩码。 | EA-DATA, EA-4D |
+| Candidate pool | 多轮检索、去重和初筛后的候选论文集合，用来描述覆盖范围，不代表已经全文阅读。 | KB-LIT-REVIEWS |
+| Full-text eligible | 已取得完整、可解析、可定位原文上下文的非 OCR 全文；摘要、残缺 PDF 和扫描件不属于当前项目的可用全文。 | KB-LIT-REVIEWS |
+| Paper note | 对单篇论文 map read / deep read 后形成的结构化精读记录，包含方法、结果、限制、适用边界和原文证据卡。 | KB-LIT-REVIEWS |
+| Claim-support audit | 检查 paper note 中的主张是否被对应全文 locator 与 source context 支持的审计。 | KB-LIT-REVIEWS |
+| Accepted evidence event | 从通过审计的 paper note 投影出的正式论文证据记录，具有当前有效 run 集合中全局唯一的 event ID。 | KB-LIT-REVIEWS |
+| Review packet | 汇总综述范围、证据分布、共识、限制和缺口的中预算审计视图，不等同于读者成稿。 | KB-LIT-REVIEWS |
 | Action semantics | 控制命令在坐标系、频率、归一化、控制器和机器人本体条件下对应的物理含义。 | EA-ALIGN, EA-XEMBODIMENT |
 | 可观测性 | 系统能否从传感器中观察到完成任务所需的关键状态。 | EA-SENSOR |
 | 触觉 | 指尖或接触表面的局部压力、剪切、滑移、形变、纹理等接触信息。 | EA-SENSOR |

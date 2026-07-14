@@ -10,8 +10,11 @@ source:
     archive: "git show 081e898:测绘误差观与大模型误差治理比较.md"
     locator: §四 二者能否互补、§五 测绘方法能补大模型行业的短板、§六 大模型行业能反哺测绘行业
   - id: RUN-PERCEPTION-COGNITION-20260714
-    file: ../../evidence/literature-review-具身数据感知误差与认知误差区别-20260714-reader-v1/evidence.jsonl
-    locator: EA-PVC-2026-0001..0007 and reused perception evidence
+    file: ../../evidence/literature-review-具身数据感知误差与认知误差区别-20260714-reader-v2/evidence.jsonl
+    locator: ERR-PVC-READ-0001..0015
+  - id: RUN-PERCEPTION-TRACE-20260714
+    file: ../../evidence/literature-review-具身数据感知误差溯源-20260714-reader-v2/evidence.jsonl
+    locator: ERR-TRACE-READ-0001..0015
 tags: [error-governance, error-budget, redundancy, residual-analysis, acceptance, risk-grade]
 aliases: [误差预算, 冗余检核, 残差分析, 精度分级, 适用边界, 可信智能]
 load_when:
@@ -25,6 +28,7 @@ confidence: working
 
 - Usually pair with: ERR-COMPARE, ERR-EMBODIED, EA-EVAL, EA-BIZ.
 - Raw source needed when: 需要红利、不能机械照搬或最终判断的完整论述。
+- Evidence route: 先从 [文献综述成果目录](../literature-review-catalog.md) 进入误差类 run；跨事件治理框架必须明确标记为 synthesis/inference。
 
 ## 30 秒摘要
 
@@ -73,7 +77,8 @@ confidence: working
 - S-ERR-COMPARE:232-298 覆盖误差预算、冗余检核、适用范围、误差传播和残差分析。
 - S-ERR-COMPARE:300-391 覆盖大模型反哺测绘和可能红利。
 - S-ERR-COMPARE:393-419 覆盖不能机械照搬和最终判断。
-- RUN-PERCEPTION-COGNITION-20260714：`EA-PVC-2026-0002..0005`, `0007` 支持感知/认知解耦、阶段验证、失败恢复和 what-if 规划；分层账本为跨事件 `inference`。
+- RUN-PERCEPTION-COGNITION-20260714：`ERR-PVC-READ-0005`, `0009..0014` 支持感知/认知/动作转译解耦、阶段验证、失败恢复、probing 和 what-if 规划。
+- RUN-PERCEPTION-TRACE-20260714：`ERR-TRACE-READ-0001..0015` 支持把同步、监督、动作语义、轨迹效用、几何和局部风险纳入误差预算；分层账本与第一偏离点规则为跨事件 `inference`。
 
 ## 待补问题
 
