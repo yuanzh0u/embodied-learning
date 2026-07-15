@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2605.07351", "title": "Disambiguating 2D-3D Correspondences in Gaussian Splatting-based Feature Fields for Visual Localization", "published": "2026-05-08", "url": "https://arxiv.org/abs/2605.07351", "authors": ["Miso Lee", "Sangeek Hyun", "Yerim Jeon", "Jae-Pil Heo"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "直接揭示为渲染优化的高斯地图与PnP点对应之间的结构错配，并提出专用地图构造。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对多对一像素—高斯对应和冗余高斯。"},
+    {"locator": "3 Method > 3.2 PlugGS-Loc", "role": "method-or-design", "purpose": "核对多视角显著高斯选择与特征提升。"},
+    {"locator": "3.3 SplitGS-Loc", "role": "method-or-design", "purpose": "核对按主轴拆分高斯消歧。"},
+    {"locator": "4.4 Analysis", "role": "results-or-analysis", "purpose": "核对地图容量、PnP稳定性和消融。"},
+    {"locator": "5 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对渲染地图不适配定位的结论。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "为照片真实渲染优化的3D高斯，为什么不能直接作为稳定的2D-3D定位点地图？",
+  "contributions": ["揭示体积高斯造成像素到单中心点的多对一结构错配。", "用PlugGS-Loc选显著多视角一致高斯并直接提升特征。", "用SplitGS-Loc拆分高斯以稳定PnP。"],
+  "method": {"summary": "从已有照片度量3DGS筛选多视角稳定高斯、聚合像素特征，再沿高斯主轴拆成细粒度组件，形成定位专用2D-3D地图。", "assumptions": ["已有可用3DGS及训练视图。", "高斯属性能反映其体积歧义和多视角贡献。"]},
+  "study_context": {"datasets": ["Cambridge Landmarks", "7Scenes"], "tasks": ["direct 2D-3D visual localization", "PnP pose estimation"], "embodiments": ["monocular camera localization"], "sample_or_scale": "室内外静态已知场景，比较地图规模、构建时间和位姿误差。"},
+  "evaluation": {"design": "与STDLoc等GSFF定位比较，并在相近地图容量下分析精度随规模变化。", "baselines": ["STDLoc", "GSFF localization baselines"], "metrics": ["median translation error", "median rotation error", "PnP convergence", "mapping time", "map size"], "ablations": ["feature aggregation", "Gaussian splitting", "sampling", "map capacity"]},
+  "findings": [{"finding": "照片度量高斯的体积和冗余会形成多对一对应并破坏PnP，单纯增大地图会出现性能饱和。", "scope": "GSFF直接2D-3D匹配定位。", "locator": "5 Conclusion"}],
+  "limitations": {"author_status": "not-found", "author_stated": [], "reader_inferred": [{"boundary": "方法需要离线3DGS和训练视图，仍未解决动态地图、无地图重定位或高斯构建错误。", "basis": "PlugGS-Loc与SplitGS-Loc都从既有照片度量3DGS派生。"}]},
+  "transfer_boundary": "适用于已有3DGS但需要直接2D-3D/PnP定位的静态场景；不能外推为渲染表示可直接替代几何地图。",
+  "critical_appraisal": {"design_strengths": ["从PnP几何要求解释失效机制。", "在相似地图容量下比较并做结构消融。"], "design_risks": ["仅两类标准场景。", "高斯拆分带来的地图构建和维护复杂度在长期部署中未测。"], "baseline_fairness": "对同容量和去除场景后训练的设置作公平对照。", "metric_validity": "位姿误差、PnP稳定与地图成本共同反映工程价值。", "reproducibility": "方法和消融清楚，公式与附录充分。", "external_validity": "对静态GSFF定位强，对动态、在线更新和跨传感器场景有限。"},
+  "evidence_cards": [{"card_id": "2605.07351-C01", "claim": "3DGS地图的照片真实度不等于定位几何可用性：冗余高斯及像素到高斯的多对一对应会削弱匹配鲁棒性并使PnP收敛不稳。", "stance": "limit", "relation": "限制‘更好的神经渲染地图自然带来更好的视觉定位’这一命题。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者在结论把问题归结为照片度量GSFF与点式PnP对应的结构错配。", "locator": "5 Conclusion", "source_context": "Yet photometrically optimized GSFFs are fundamentally ill-suited for 2D-3D matching, as redundant Gaussians and many-to-one pixel-Gaussian correspondences undermine both matching robustness and PnP convergence.", "evidence_type": "mechanism-and-limitation", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接描述结构原因及对匹配和PnP的后果；主张没有超出GSFF直接2D-3D定位。"}}],
+  "core_citations": [], "notes": "该证据将渲染质量与几何定位质量明确分账。"
+}

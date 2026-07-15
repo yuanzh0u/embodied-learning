@@ -2,7 +2,7 @@
 id: KB-GLOSSARY
 title: 术语表
 type: glossary
-updated: 2026-07-14
+updated: 2026-07-15
 tags: [glossary, embodied-ai, error-governance]
 ---
 
@@ -25,6 +25,8 @@ tags: [glossary, embodied-ai, error-governance]
 | Object-centric action | 以对象状态变化表达动作，而不是直接绑定机器人关节。 | EA-DATA, EA-XEMBODIMENT |
 | End-effector-centric action | 以机器人末端位姿或 delta pose 表达动作。 | EA-DATA, EA-XEMBODIMENT |
 | Anchor data | 少量目标机器人真实执行数据，用于校准和闭环验证跨本体或无本体采集数据。 | EA-DATA, EA-XEMBODIMENT |
+| Ego-centric behavior data | 人类第一视角视频及从中恢复的手—物轨迹、视点运动和任务结构；主要提供行为先验，不天然包含完整机器人动作、接触和奖励监督。 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR |
+| 可执行监督 | 已核验坐标、尺度、动作接口、可达性、接触和动力学约束，可供目标机器人训练或闭环评测使用的监督。 | EA-DATA, EA-XEMBODIMENT |
 | 目标条件效用 | 数据质量相对于目标任务、目标分布和目标策略的实际贡献；同一轨迹在不同目标下可能有不同质量排序。 | EA-DATA |
 | 监督可靠性 | 一类数据对某个字段能否提供可信真值的等级，例如人类视频可监督任务结构但通常不能直接监督机器人控制命令。 | EA-DATA, EA-4D |
 | Supervision mask | 显式标记每类异构数据哪些字段可参与监督、哪些字段缺失或不可信的掩码。 | EA-DATA, EA-4D |
@@ -36,6 +38,10 @@ tags: [glossary, embodied-ai, error-governance]
 | Review packet | 汇总综述范围、证据分布、共识、限制和缺口的中预算审计视图，不等同于读者成稿。 | KB-LIT-REVIEWS |
 | Action semantics | 控制命令在坐标系、频率、归一化、控制器和机器人本体条件下对应的物理含义。 | EA-ALIGN, EA-XEMBODIMENT |
 | 可观测性 | 系统能否从传感器中观察到完成任务所需的关键状态。 | EA-SENSOR |
+| VPR | Visual Place Recognition，按图像外观与结构召回地点候选的定位前端；高召回不等于最终位姿可恢复。 | EA-VLOC, EA-SENSOR |
+| 相机重定位 | 在已有地图或参考集合中估计相机 6DoF 位姿，通常需要候选召回、几何验证与位姿求解。 | EA-VLOC, EA-HARDWARE |
+| 可恢复域 | 在给定初始化、地图覆盖和场景条件下，定位或位姿细化仍可可靠收敛的工作范围。 | EA-VLOC, EA-EVAL |
+| 风险—覆盖 | 联合衡量已接受预测的错误风险和系统愿意给出预测的查询覆盖率，防止用全局拒识制造虚假的低风险。 | EA-VLOC, EA-EVAL |
 | 触觉 | 指尖或接触表面的局部压力、剪切、滑移、形变、纹理等接触信息。 | EA-SENSOR |
 | 力/力矩 | 通常指腕部或关节层面的低维全局受力信息。 | EA-SENSOR |
 | 最后一厘米 | 机器人从视觉定位过渡到接触闭环的精细操作阶段。 | EA-BIZ, EA-SENSOR |

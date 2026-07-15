@@ -2,7 +2,7 @@
 id: KB-INDEX
 title: 智能体主索引
 type: index
-updated: 2026-07-14
+updated: 2026-07-15
 tags: [agent-index, routing, embodied-ai, error-governance]
 ---
 
@@ -28,9 +28,10 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 
 | ID | 主题 | 文件 | 关键词 |
 |---|---|---|---|
-| EA-DATA | 数据采集与数据质量 | [embodied-ai/data-collection-quality.md](embodied-ai/data-collection-quality.md) | UMI, DROID, Ego4D, 数据质量, L0-L3, episode, schema, 遮挡 |
+| EA-DATA | 数据采集与数据质量 | [embodied-ai/data-collection-quality.md](embodied-ai/data-collection-quality.md) | UMI, DROID, Ego4D, Ego-centric, 人类视频, 数据质量, L0-L3, episode, schema, 遮挡 |
 | EA-SENSOR | 传感器与多模态感知 | [embodied-ai/sensors-multimodal-perception.md](embodied-ai/sensors-multimodal-perception.md) | RGB, 3D, 点云, 触觉, 力控, proprioception |
 | EA-HARDWARE | 采集硬件与设备路线 | [embodied-ai/hardware-collection-devices.md](embodied-ai/hardware-collection-devices.md) | 单目, 双目, ARKit, SLAM, Tracking, UMI, 指套 |
+| EA-VLOC | 图像视觉定位 | [embodied-ai/visual-localization.md](embodied-ai/visual-localization.md) | 图像定位, VPR, 相机重定位, SCR, 3DGS, PnP, 拒识覆盖 |
 | EA-FIELD | 现场采集 Hub 与物流分拣考察 | [embodied-ai/field-data-collection-hubs.md](embodied-ai/field-data-collection-hubs.md) | 物流分拣, Hub, 现场考察, 岗位盘点, 视频验收, 试采 |
 | EA-XEMBODIMENT | 跨本体与数据迁移 | [embodied-ai/cross-embodiment-transfer.md](embodied-ai/cross-embodiment-transfer.md) | retargeting, 灵巧手, 夹爪, embodiment adapter, 接触功能 |
 | EA-MODEL | 模型与预训练 | [embodied-ai/models-pretraining.md](embodied-ai/models-pretraining.md) | VLA, RT-X, Octo, OpenVLA, 预训练, 微调, Sim2Real |
@@ -47,8 +48,10 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | 用户问题包含 | 优先加载 |
 |---|---|
 | 数据采集、轨迹、数据质量、采集员、UMI、DROID、Ego4D、L0/L1/L2/L3、episode schema、无本体采集 | EA-DATA |
+| Ego-centric、人类第一视角视频、行为预训练、动作恢复、目标机器人锚定 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR |
 | 触觉、力、力矩、RGB、点云、3D、遮挡、可观测性 | EA-SENSOR |
 | 单目、双目、ARKit、SLAM、VR、Pico、Quest、WebXR、指套 | EA-HARDWARE |
+| 图像定位、视觉定位、VPR、地点识别、相机重定位、SCR、3DGS 位姿、PnP | EA-VLOC, EA-SENSOR, EA-EVAL |
 | 物流分拣、Hub、现场考察、岗位盘点、视频验收、远程验收、试采、Top 5 岗位 | EA-FIELD, EA-DATA, EA-BIZ |
 | 跨本体、人手到机器人、retargeting、灵巧手、夹爪、动作空间 | EA-XEMBODIMENT |
 | 机器人基础模型、VLA、RT-X、Octo、OpenVLA、预训练、微调 | EA-MODEL |

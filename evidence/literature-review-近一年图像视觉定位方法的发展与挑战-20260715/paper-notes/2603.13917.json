@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2603.13917", "title": "Evaluation of Visual Place Recognition Methods for Image Pair Retrieval in 3D Vision and Robotics", "published": "2026-03-14", "url": "https://arxiv.org/abs/2603.13917", "authors": ["Dennis Haitz", "Athradi Shritish Shetty", "Michael Weinmann", "Markus Ulrich"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "benchmark", "relevance": {"decision": "include", "reason": "比较现代VPR作为3D注册和机器人定位前端时的跨域准确率、别名鲁棒性和运行时间。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对VPR用于图像对检索而非传统地理定位的任务定义。"},
+    {"locator": "3 Methodology", "role": "method-or-design", "purpose": "核对成对检索真值与评价指标。"},
+    {"locator": "5 Results", "role": "results-or-analysis", "purpose": "核对Tanks and Temples、ScanNet-GS和KITTI结果。"},
+    {"locator": "6 Discussion", "role": "conclusion-or-limitations", "purpose": "核对CNN/ViT、域差和感知别名权衡。"},
+    {"locator": "7 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对仅评检索阶段的边界。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本评测主张。"}]},
+  "research_question": "不同VPR家族作为图像对检索前端时，在别名、缺帧、跨域与实时性之间如何权衡？",
+  "contributions": ["为摄影测量重建和机器人任务定义尺度无关的图像对检索评价。", "比较NetVLAD系、分类式、特征混合和基础模型驱动VPR。"],
+  "method": {"summary": "将两个不相交但有重叠场景内容的图像集构造成检索任务，按重建几何定义真值并测P@k、R@k、mAP和运行时间。", "assumptions": ["上游图像对检索可与下游配准性能分离评估。", "数据集几何足以可靠标注图像重叠。"]},
+  "study_context": {"datasets": ["Tanks and Temples", "ScanNet-GSReg", "KITTI odometry"], "tasks": ["image pair retrieval", "registration front-end", "loop closure front-end"], "embodiments": ["RGB-D registration", "3DGS registration", "autonomous navigation"], "sample_or_scale": "室内、物体中心室外和自动驾驶序列。"},
+  "evaluation": {"design": "统一特征提取和检索流程，对CNN与ViT方法在三类场景评估并报告运行时间。", "baselines": ["NetVLAD", "CosPlace", "EigenPlaces", "MixVPR", "PatchNetVLAD", "AnyLoc", "SALAD", "MegaLoc"], "metrics": ["precision@k", "recall@k", "mAP@k", "runtime"], "ablations": ["descriptor size", "backbone size", "top-k"]},
+  "findings": [{"finding": "ViT在强感知别名和缺帧场景通常检索更好，CNN在实时任务中有更优速度—质量权衡。", "scope": "论文测试的三种图像对检索数据集。", "locator": "7 Conclusion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "评测有意只隔离VPR检索阶段，尚未量化下游位姿精度与鲁棒性。", "locator": "7 Conclusion"}], "reader_inferred": [{"boundary": "不能从检索领先直接推导完整定位或SLAM闭环领先。", "basis": "论文没有把候选对输入统一配准器并比较最终位姿。"}]},
+  "transfer_boundary": "适用于选择3D注册或SLAM检索前端；下游几何验证、位姿精度和闭环失败率必须另测。",
+  "critical_appraisal": {"design_strengths": ["跨室内、室外、自动驾驶与物体中心别名场景。", "同时报告精度与速度。"], "design_risks": ["ScanNet部分与MegaLoc训练数据重叠，可能乐观。", "未联动下游配准。"], "baseline_fairness": "统一数据和指标较公平，作者明确讨论训练数据重叠。", "metric_validity": "检索指标对前端选择有效，但不是最终位姿或闭环指标。", "reproducibility": "评测管线和准备子集清楚。", "external_validity": "对图像对检索强，对完整机器人定位的外推受限。"},
+  "evidence_cards": [{"card_id": "2603.13917-C01", "claim": "现代VPR不存在单一最优骨干：ViT更适合强感知别名和缺帧，CNN在实时系统中通常提供更好的检索质量—运行时间折中。", "stance": "conditional", "relation": "支持基础模型特征进步，同时反对忽略运行成本的统一SOTA叙事。", "confidence": "direct", "claim_basis": "reported-result", "summary": "结论依据三类数据集比较CNN与ViT并给出按场景选型建议。", "locator": "7 Conclusion", "source_context": "In real-time scenarios, CNN-based methods appear preferable due to their favourable trade-off between retrieval quality and runtime, whereas ViT-based methods achieve higher retrieval performance in highly challenging scenes with strong perceptual aliasing and missing frames in image sequences.", "evidence_type": "benchmark-synthesis", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接给出两类模型在实时性与困难场景上的条件性比较；主张未外推到所有VPR任务。"}}],
+  "core_citations": [], "notes": "检索层评测应与最终位姿/闭环指标分账。"
+}

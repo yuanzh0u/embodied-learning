@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.16208",
+    "title": "ATHENA: Accelerated Multi-Task Heterogeneous Influence Functions for Robot Data Curation",
+    "published": "2026-06-15",
+    "url": "https://arxiv.org/abs/2606.16208",
+    "authors": [
+      "Tao Xu",
+      "Jiaxin Wang",
+      "Runhao Zhang",
+      "Jiayi Guan",
+      "Xianchao Zeng",
+      "Weixi Song",
+      "Xinyu Zhou",
+      "Zhetao Chen",
+      "Guang Chen",
+      "Yong-Lu Li"
+    ]
+  },
+  "review": {
+    "question": "近一年已发表论文中的具身智能数据质量",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 近一年已发表论文中的具身智能数据质量."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "4 ATHENA: Scalable Influence Function Data Curation for VLA Models",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "5.1 Experimental Setup",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "7 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '近一年已发表论文中的具身智能数据质量', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "在多任务 VLA 微调中，数据质量治理要同时考虑样本效用和任务覆盖；单一全局排序会让某些任务被几乎淘汰，导致任务级覆盖坍缩。"
+  ],
+  "method": {
+    "summary": "To overcome the scalability and multitask bottlenecks in Section 3 , we propose ATHENA, an influence function framework for billion-parameter multitask VLA models. Specifically, ATHENA reduces computational and memory constraints by combining Kronecker compressed per-sample gradient featurization with a Random Truncated Approximation of the inverse Hessian. In addition, ATHENA models both global and local influence interactions, enabling effective multitask curation without greedy task imbalance. Figure 1 presents an overview of the pipeline. Random Truncated Approximation. After Kronecker compressed featurization, ATHENA stacks the timestep features into , where each row is . Following Eq.",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate ATHENA on RoboTwin 2.0 [ 6 ] and six real robot manipulation tasks, using 50K training steps as in CUPID [ 1 ] , comparing against Oracle [ 34 ] , Random [ 1 ] , TAROT [ 12 ] , TSS [ 49 ] , and Distillation [ 5 ] . Baselines, implementation, and evaluation details are provided in Appendix B .",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "在多任务 VLA 微调中，数据质量治理要同时考虑样本效用和任务覆盖；单一全局排序会让某些任务被几乎淘汰，导致任务级覆盖坍缩。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "C.4 Retention Balance, Single-Task Curation, and Real-Robot Failure Modes"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Pretraining data curation. ATHENA focuses on VLA fine-tuning, while model performance also depends on pretraining with more heterogeneous data across tasks, embodiments, and distributions [ 4 , 48 , 28 , 46 ] . Influence estimates from fine-tuning may not directly transfer to this setting, and extending ATHENA to robot VLA pretraining remains future work. Real-robot rollout cost. Influence-based robot curation currently requires evaluation rollouts to estimate downstream effects [ 25 , 1 , 27 ] . However, collecting rollouts on physical robots for each task incurs substantially higher cost tha",
+        "locator": "8 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (4 ATHENA: Scalable Influence Function Data Curation for VLA Models) and evaluation (5.1 Experimental Setup)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.16208-C01",
+      "claim": "在多任务 VLA 微调中，数据质量治理要同时考虑样本效用和任务覆盖；单一全局排序会让某些任务被几乎淘汰，导致任务级覆盖坍缩。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 近一年已发表论文中的具身智能数据质量",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "ATHENA 指出 VLA 性能不只取决于规模，也取决于 demonstration quality，大规模冗余数据甚至可能伤害性能；在六任务真实机器人设置中，naive global influence ranking 让 Stack Bowls 只保留 13 条示教，而 MII 结合 task-local 和 cross-task influence utilities 后保留分布更均衡。",
+      "locator": "C.4 Retention Balance, Single-Task Curation, and Real-Robot Failure Modes",
+      "source_context": "To further ablate the role of Multitask Influence Interaction (MII), we visualize the retained task distributions after data curation in Fig. 8 . We consider the six-task real-robot setting with 120 demonstrations per task and an overall retention ratio of 66.7%. Without MII, naively ranking demonstrations with a single global influence score results in a highly skewed retained set: Pick Fruits, Shelf Retrieval, and Wipe Board retain 115, 113, and 104 demonstrations, respectively, whereas Stack Bowls retains only 13 and is nearly eliminated. This occurs because raw influence magnitudes are not directly comparable across heterogeneous tasks with different horizons, motion patterns, and cross-task coupling; as a result, the naive global ranking can overemphasize dataset-level contribution while ignoring task-local importance. With MII, ATHENA combines task-local and cross-task influence utilities, yielding a balanced retained distribution and preventing task-level collapse under the same retention ratio. Figure 8: Distributions of the retained 66.7% demonstrations across the six real-r",
+      "evidence_type": "method+ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in C.4 Retention Balance, Single-Task Curation, and Real-Robot Failure Modes contains the paper-specific concepts used by the claim (13, athena, bowls, cross-task, data, global, influence, mii). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "This event supports a coverage-aware view of quality for multitask VLA fine-tuning."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

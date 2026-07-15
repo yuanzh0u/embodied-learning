@@ -3,7 +3,7 @@ id: EA-DATA
 title: 数据采集与数据质量
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-14
+updated: 2026-07-15
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -24,6 +24,9 @@ source:
   - id: RUN-UMI-QUALITY-20260714
     file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/evidence.jsonl
     locator: EA-UMI-READ-0001..0015
+  - id: RUN-EGO-DATA-20260715
+    file: ../../evidence/literature-review-ego-centric-数据在具身模型训练中的问题与困难-20260715/evidence.jsonl
+    locator: EA-EGO-2026-0001..0020; 6 reused reader-v2 events
 tags: [embodied-ai, data, collection, quality, scaling, umi, droid, ego4d, occlusion, l0-l3, episode, schema, target-conditioned, recovery]
 aliases: [数据采集, 数据质量, UMI, DROID, Ego, Scaling Law, 遮挡率, L0-L3, 无本体采集, episode, 目标条件效用, 监督可靠性]
 load_when:
@@ -63,6 +66,9 @@ confidence: working
 - 动作表达在机器人形态未定时应优先采用 object-centric 或 end-effector-centric，不要过早绑定具体关节空间。
 - 每条 episode 至少应能 join 任务、对象、场景、操作人、传感器、轨迹、标注、成功/失败和授权范围。
 - 缺失 proprioception、关节状态或力控数据时应显式标为 missing 或 inferred，不应伪造成精确机器人状态。
+- Ego-centric 视频的主要数据损失发生在“行为观测→可执行监督”转换：相机自运动、遮挡与尺度会污染轨迹，视频又通常缺失 gripper、force、contact 和 reward。
+- Ego-centric 规模收益以动作接口和目标本体锚定为条件；只扩大 raw video 而不控制伪标签与可执行性，可能出现数据增多、真实机器人性能下降。
+- 接触几何与物理可行性应作为独立质量闸门，不能用视觉相似度或自由空间姿态误差替代。
 
 ## 指标与检核
 
@@ -102,6 +108,7 @@ confidence: working
 - RUN-DATA-CONTRADICTIONS-20260714：`EA-DQ-CONTRA-READ-0001..0015` 共同支持规模—效用、视觉—可观测性、异构监督—字段可靠性、生成扩展—具身锚定和 episode—片段价值等矛盾；矛盾分类为跨事件 `inference`。
 - RUN-WMDATA-20260714：`EA-WMDATA-READ-0001..0010`, `0015` 覆盖异构交互、监督掩码、关键事件、具身锚定合成数据、几何未来、失败修正和长程动作忠实。
 - RUN-UMI-QUALITY-20260714：`EA-UMI-READ-0001..0004`, `0007..0015` 覆盖人体工学、多物理模态、3D tracking、数字遥操作边界、轨迹筛选和闭环质量定义。
+- RUN-EGO-DATA-20260715：`EA-EGO-2026-0001..0020` 覆盖动作标签不完备、相机运动与遮挡、跨本体重定向、接触/物理可行性、规模—噪声冲突和目标机器人锚定；“六层可执行监督数据栈”是基于这些事件的跨论文 `inference`。
 
 ## 待补问题
 
@@ -111,3 +118,4 @@ confidence: working
 - 为 L0/L1/L2/L3 建立不同任务族的采集量级和锚点比例建议。
 - 建立跨任务、跨本体、跨采集设备的数据质量 benchmark。
 - 将单个 `quality_score` 扩展为接口、健康、效用、覆盖、可执行性、训练利用和闭环收益字段。
+- 建立 Ego-centric 数据的有效小时指标，显式计入自动标签通过率、人工重定向工时、物理过滤损耗和目标机器人示教替代率。

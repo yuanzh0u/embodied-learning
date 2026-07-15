@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2606.31164", "title": "Seeing Through the Weights: Privacy Leakage in Scene Coordinate Regression", "published": "2026-06-30", "url": "https://arxiv.org/abs/2606.31164", "authors": ["Oleksii Nasypanyi", "Jaemin Cho", "Utku Ozbulak", "Byungkon Kang", "Francois Rameau"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "empirical", "relevance": {"decision": "include", "reason": "直接挑战隐式场景坐标地图天然保护场景隐私的部署假设。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对SCR隐式地图的隐私主张与攻击面。"},
+    {"locator": "3 Method", "role": "method-or-design", "purpose": "核对黑盒、灰盒和白盒代理查询攻击。"},
+    {"locator": "5 Experiments", "role": "results-or-analysis", "purpose": "核对几何和外观重建证据。"},
+    {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对可重建内容及接口边界。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "场景坐标回归模型的权重或查询接口是否会泄漏用于定位的场景几何与外观？",
+  "contributions": ["构造针对SCR的代理查询重建攻击。", "覆盖黑盒、灰盒和白盒威胁模型。", "从几何与外观两方面量化隐式地图泄漏。"],
+  "method": {"summary": "向SCR模型发出合成或代理图像查询，聚合返回的三维场景坐标，并利用预测与图像线索恢复场景几何和外观。", "assumptions": ["攻击者能访问模型权重或逐像素三维预测接口。", "代理查询能覆盖足够的场景坐标响应。"]},
+  "study_context": {"datasets": ["7Scenes", "Cambridge Landmarks"], "tasks": ["scene coordinate regression", "model inversion and privacy attack"], "embodiments": ["camera relocalization service"], "sample_or_scale": "标准室内外SCR基准上的多威胁模型攻击。"},
+  "evaluation": {"design": "比较不同访问权限下恢复的点云几何、外观线索和下游可识别性。", "baselines": ["benign SCR model", "different threat-access settings"], "metrics": ["geometric reconstruction quality", "appearance recovery quality", "attack success"], "ablations": ["black-box versus gray-box versus white-box", "proxy query aggregation"]},
+  "findings": [{"finding": "聚合代理查询返回的三维预测可恢复几何结构与外观线索，说明SCR隐式地图并非天然隐私安全。", "scope": "攻击者可访问逐像素场景坐标预测或模型权重的威胁模型。", "locator": "6 Conclusion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "仅返回最终位姿、而不暴露逐像素三维预测的服务接口尚未由该攻击完整验证。", "locator": "6 Conclusion"}], "reader_inferred": [{"boundary": "攻击成功不等于现实服务一定可被攻击，接口、查询频率限制和安全监测会改变可行性。", "basis": "核心攻击依赖多次代理查询和聚合中间三维输出。"}]},
+  "transfer_boundary": "结论适用于暴露SCR权重或稠密场景坐标输出的系统；不能直接外推到只返回最终位姿且有访问控制的服务。",
+  "critical_appraisal": {"design_strengths": ["覆盖多个威胁权限级别。", "以实际重建而非参数规模推断隐私风险。"], "design_risks": ["攻击接口可能比生产服务更开放。", "标准基准的场景敏感性不等同真实私人空间。"], "baseline_fairness": "不同访问设置对比清楚，但与成熟防御方案的系统比较有限。", "metric_validity": "几何与外观恢复直接对应泄漏风险，比仅看定位精度更合适。", "reproducibility": "攻击步骤和威胁模型明确，标准数据集便于复现。", "external_validity": "对共享模型或稠密预测API重要，对封闭位姿API的风险仍未定。"},
+  "evidence_cards": [{"card_id": "2606.31164-C01", "claim": "把场景存进SCR网络权重并不天然保护隐私：在可发出代理查询并读取三维预测时，攻击者能够聚合恢复场景几何和外观线索。", "stance": "limit", "relation": "揭示隐式神经地图部署中的新安全挑战。", "confidence": "direct", "claim_basis": "author-claim", "summary": "论文结论明确说明代理查询与三维预测聚合可恢复几何和外观。", "locator": "6 Conclusion", "source_context": "By issuing proxy queries and aggregating the returned 3D predictions, the proposed approach recovers both geometric structure and appearance cues.", "evidence_type": "security-finding", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接支持重建能力；证据卡保留了需要读取三维预测这一威胁模型前提。"}}],
+  "core_citations": [], "notes": "定位系统的地图表示选择同时是隐私架构选择。"
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2603.16538", "title": "Rethinking Pose Refinement in 3D Gaussian Splatting under Pose Prior and Geometric Uncertainty", "published": "2026-03-17", "url": "https://arxiv.org/abs/2603.16538", "authors": ["Mangyu Kong", "Jaewon Lee", "Seongwon Lee", "Euntai Kim"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "直接分析3DGS位姿细化对初始位姿和局部几何可靠性的忽视，并提出概率细化。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对3DGS深度与初始位姿不确定性。"},
+    {"locator": "3 Method > 3.1 Overview", "role": "method-or-design", "purpose": "核对Monte Carlo粒子与Fisher信息引导。"},
+    {"locator": "4.1 Benchmark Results", "role": "results-or-analysis", "purpose": "核对不同先验和匹配器下的定位结果。"},
+    {"locator": "A Leveraging Image Retrieval Prior", "role": "appendix-or-supplement", "purpose": "核对Top-1检索先验失败和Top-k粒子补救。"},
+    {"locator": "5 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对不确定性建模结论。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "如何让3DGS render-and-compare位姿细化在初始位姿偏差和几何深度不可靠时仍能收敛？",
+  "contributions": ["用Monte Carlo采样把位姿先验表示为分布。", "从高斯参数的Fisher信息估计几何不确定性并引导PnP采样。"],
+  "method": {"summary": "从多个位姿粒子渲染并匹配查询图像，按匹配置信和几何不确定性加权重采样，再以可靠2D-3D对应求位姿。", "assumptions": ["已构建3DGS地图。", "Top-k检索或其他先验中至少包含可恢复的正确区域。"]},
+  "study_context": {"datasets": ["7Scenes", "Cambridge Landmarks"], "tasks": ["3DGS pose refinement", "camera relocalization"], "embodiments": ["monocular camera localization"], "sample_or_scale": "室内与室外静态已知场景，多种位姿先验与匹配模块。"},
+  "evaluation": {"design": "跨不同初始先验、匹配模块和迭代次数比较确定性3DGS细化与UGS-Loc。", "baselines": ["GS-CPR", "ACE", "retrieval Top-1 refinement"], "metrics": ["median translation error", "median rotation error", "pose-threshold recall", "inference cost"], "ablations": ["Monte Carlo sampling", "Fisher uncertainty", "matching module", "Top-k"]},
+  "findings": [{"finding": "确定性3DGS细化只能在单一初始位姿附近局部调整，Top-1检索的视角别名会让细化失败。", "scope": "Cambridge与7Scenes的3DGS细化。", "locator": "A Leveraging Image Retrieval Prior"}],
+  "limitations": {"author_status": "not-found", "author_stated": [], "reader_inferred": [{"boundary": "概率采样增加多次渲染/匹配成本，且若全部粒子都落在错误区域仍无法保证恢复。", "basis": "方法依赖Top-k假设覆盖正确区域并通过多粒子迭代。"}]},
+  "transfer_boundary": "适用于已有3DGS和多候选初始位姿的静态重定位；对地图严重错误、全候选错误或严格端侧延迟场景需额外验证。",
+  "critical_appraisal": {"design_strengths": ["把先验不确定性和几何不确定性分开建模。", "跨先验与匹配器测试。"], "design_risks": ["无真实动态地图老化实验。", "鲁棒收益伴随多粒子计算开销。"], "baseline_fairness": "与相同3DGS和匹配模块的确定性细化比较，机制归因较清楚。", "metric_validity": "位姿误差和召回直接衡量细化质量，但未量化闭环收益。", "reproducibility": "方法、补充实验和推理成本描述充分。", "external_validity": "对静态场景和检索先验强，对在线动态定位有限。"},
+  "evidence_cards": [{"card_id": "2603.16538-C01", "claim": "3DGS位姿细化不是全局纠错器：它高度依赖初始位姿质量，单一错误Top-1检索即使视觉相似也可能从场景错误一侧开始，局部细化难以恢复。", "stance": "limit", "relation": "限制‘更逼真的3DGS渲染即可解决重定位’的结论，强调先验分布与可恢复域。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者在检索先验补充实验中明确说明细化只在初值附近局部调整。", "locator": "A Leveraging Image Retrieval Prior", "source_context": "Pose refinement in 3D Gaussian Splatting relies heavily on the quality of the initial pose prior, since the refinement module only adjusts the pose locally around this estimate.", "evidence_type": "mechanism-and-failure-analysis", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接界定位姿细化的局部性与初值依赖；主张保持在3DGS细化范围内。"}}],
+  "core_citations": [], "notes": "UGS-Loc的改进显示不确定性应进入细化器，而非只在输出端估计。"
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2604.22390", "title": "Region Matters: Efficient and Reliable Region-Aware Visual Place Recognition", "published": "2026-04-24", "url": "https://arxiv.org/abs/2604.22390", "authors": ["Shunpeng Chen", "Yukun Song", "Changwei Wang", "Rongtao Xu", "Kexue Fu", "Longxiang Gao", "Li Guo", "Ruisheng Wang", "Shibiao Xu"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "把区域可靠性、局部匹配和动态重排统一到高效VPR，并讨论基准标签饱和。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对感知别名、无关区域和两阶段重排成本。"},
+    {"locator": "3 Proposed Method > 3.2 Reliable Discriminative Region Modeling", "role": "method-or-design", "purpose": "核对可靠性热图与区域损失。"},
+    {"locator": "4 Experiments > 4.3 Comparisons with state-of-the-art Methods", "role": "results-or-analysis", "purpose": "核对七基准的精度、内存和延迟。"},
+    {"locator": "5 Discussion", "role": "conclusion-or-limitations", "purpose": "核对标签歧义、照明与数据偏差。"},
+    {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对区域可靠性和动态候选调度结论。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "怎样只在可靠且有区分度的图像区域做局部匹配，并按查询难度动态分配重排计算？",
+  "contributions": ["提出轻量可靠性估计分支和空间对齐损失。", "以伪对应弱监督局部特征。", "动态调整候选池并融合全局/局部证据。"],
+  "method": {"summary": "DINOv2全局检索后，用可靠性图筛出抗遮挡区域，按全局分数动态决定重排候选数量并加权局部匹配。", "assumptions": ["可靠区域在训练数据中可由聚类伪对应学习。", "地理阈值标签足以训练和主评测。"]},
+  "study_context": {"datasets": ["Pittsburgh30k", "MSLS", "Nordland", "Tokyo24/7", "multiple VPR benchmarks"], "tasks": ["one-stage and two-stage VPR", "efficient re-ranking"], "embodiments": ["urban robot and vehicle localization front-end"], "sample_or_scale": "七个VPR基准，覆盖视角、照明、季节和遮挡。"},
+  "evaluation": {"design": "与一阶段、两阶段及局部重排方法比较，测召回、GPU内存、运行时间并做模块消融。", "baselines": ["FoL", "SelaVPR", "EffoVPR", "SALAD", "MegaLoc"], "metrics": ["Recall@K", "runtime", "GPU memory"], "ablations": ["reliability branch", "region guidance", "dynamic candidate scheduler", "cross-stage fusion"]},
+  "findings": [{"finding": "区域可靠性与动态重排可同时提高VPR精度和效率，但标准25米标签会忽略视觉重叠并制造标签歧义。", "scope": "论文的城市/季节VPR基准。", "locator": "5 Discussion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "标准地理阈值忽略视觉重叠，且极端照明下单一基础模型表征仍可能不足。", "locator": "5 Discussion"}], "reader_inferred": [{"boundary": "强基准成绩不能直接证明度量位姿或闭环导航可靠。", "basis": "主评测仍以地点Recall和地理阈值为主，没有统一下游位姿验证。"}]},
+  "transfer_boundary": "适用于有地理标签的图像检索/重排前端；若任务要求6DoF位姿、真实视觉重叠或安全闭环，必须增加几何验证和新真值。",
+  "critical_appraisal": {"design_strengths": ["七基准并同时报告精度、内存和延迟。", "消融覆盖可靠性和调度机制。"], "design_risks": ["主真值的25米半径与视觉/几何重叠不一致。", "复杂系统多模块归因仍可能耦合。"], "baseline_fairness": "同类公开方法和统一硬件下比较，成本报告较充分。", "metric_validity": "Recall对地点检索有效，但作者自己指出标签歧义和度量几何缺失。", "reproducibility": "网络与损失描述详细，代码承诺公开。", "external_validity": "对城市VPR较强，对无地理标签、极端暗光和完整机器人系统有限。"},
+  "evidence_cards": [{"card_id": "2604.22390-C01", "claim": "VPR基准接近饱和时，固定地理半径标签本身会成为主要误差源：25米阈值可能忽略真实视觉重叠，使方法排名与可用定位不一致。", "stance": "limit", "relation": "限制仅凭Recall宣称视觉定位已成熟，并呼应重叠感知真值。", "confidence": "direct", "claim_basis": "author-claim", "summary": "讨论明确指出当前任务标签忽视视觉重叠并放大歧义。", "locator": "5 Discussion", "source_context": "Current evaluations depend on the task-defined geographic threshold (25 meters), which often ignores visual overlap and exacerbates this label ambiguity.", "evidence_type": "evaluation-limitation", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接描述当前评测协议的标签问题；主张限定为VPR基准而非所有视觉定位评测。"}}],
+  "core_citations": [], "notes": "该论文的方法结果与评测自我批评应同时保留。"
+}

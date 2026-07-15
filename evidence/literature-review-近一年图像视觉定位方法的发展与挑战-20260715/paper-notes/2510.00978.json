@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2510.00978", "title": "A Scene is Worth a Thousand Features: Feed-Forward Camera Localization from a Collection of Image Features", "published": "2025-10-01", "url": "https://arxiv.org/abs/2510.00978", "authors": ["Axel Barroso-Laguna", "Tommaso Cavallari", "Victor Adrian Prisacariu", "Eric Brachmann"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "pdf", "method": "pdf-text", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted", "paper_type": "method",
+    "relevance": {"decision": "include", "reason": "提出无需逐场景训练或完整SfM、以少量3D锚定图像特征前馈定位的方法，直指地图准备成本。"},
+    "sections_read": [
+      {"locator": "page 1", "role": "problem", "purpose": "核对地图准备成本与问题定义。"},
+      {"locator": "pages 4-6", "role": "method-or-design", "purpose": "核对FastForward架构、3D锚定特征和训练目标。"},
+      {"locator": "pages 6-9", "role": "results-or-analysis", "purpose": "核对Wayspots、Indoor6、RIO10、Cambridge结果与速度权衡。"},
+      {"locator": "page 10", "role": "conclusion-or-limitations", "purpose": "核对参考选择局限和总结。"}
+    ],
+    "sections_skipped": [{"locator": "reference pages", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]
+  },
+  "research_question": "能否把场景压缩为少量带3D位置的图像特征，并在一次前馈中完成查询图像定位？",
+  "contributions": ["提出FastForward，将多张有位姿地图图像压缩为少量3D锚定特征。", "通过场景与尺度归一化提升跨域和跨尺度泛化。"],
+  "method": {"summary": "预训练Transformer同时接收查询图像和来自多张地图图像的固定数量3D锚定特征，预测查询像素场景坐标并用PnP-RANSAC求位姿。", "assumptions": ["地图图像已有相机位姿。", "检索能返回与查询有足够重叠的参考图像。"]},
+  "study_context": {"datasets": ["Wayspots", "Indoor6", "RIO10", "Cambridge Landmarks", "7Scenes"], "tasks": ["feed-forward camera relocalization", "map preparation efficiency"], "embodiments": ["monocular camera localization"], "sample_or_scale": "室内、室外、动态和跨尺度场景，比较地图准备、查询延迟与位姿误差。"},
+  "evaluation": {"design": "按是否需要逐场景重建/训练区分Seen与Unseen方法，并统一参考图像检索后比较定位。", "baselines": ["ACE", "GLACE", "hLoc", "MASt3R", "Reloc3r", "E5+1"], "metrics": ["median translation error", "median rotation error", "pose-threshold accuracy", "mapping time", "query latency"], "ablations": ["number of mapping images", "map feature count", "scale normalization", "retrieval vs random references"]},
+  "findings": [{"finding": "前馈稀疏地图显著减少准备时间，但参考图像选择不相关时准确率下降。", "scope": "Wayspots等有地图图像位姿、以检索选参考的场景。", "locator": "page 10"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "全局描述子提取随地图规模增长不可忽略，随机或均匀参考选择会降低准确率。", "locator": "page 10"}], "reader_inferred": [{"boundary": "对高频查询热点，传统结构地图的高准备成本可被大量查询摊薄，未必长期更贵。", "basis": "作者在运行时讨论中给出与ACE约600次重定位的成本平衡点。"}]},
+  "transfer_boundary": "适用于已有地图图像位姿、需要快速按需上线且查询频率不确定的场景；不适合无法获得相关参考或长期高频查询已能摊薄结构地图成本的场景。",
+  "critical_appraisal": {"design_strengths": ["同时报告地图准备与查询延迟。", "覆盖动态室内和大尺度室外数据。"], "design_risks": ["所有Unseen方法强依赖同一检索系统，检索质量可能主导结果。", "部分数据集训练覆盖与测试域关系复杂。"], "baseline_fairness": "按地图准备需求分组清晰，并对MASt3R训练集重叠作排除说明；不同方法的查询计算仍不完全同预算。", "metric_validity": "位姿误差与时间共同反映工程效用，比单一精度更充分。", "reproducibility": "论文给出网络、采样、数据与推理细节，PDF文本完整。", "external_validity": "对有可靠地图位姿和GPU推理的场景较强；对无位姿地图、极端无重叠和长期地图维护证据有限。"},
+  "evidence_cards": [{
+    "card_id": "2510.00978-C01",
+    "claim": "前馈式稀疏特征地图能把逐场景地图准备降到检索级别，但这一优势仍依赖选到相关参考图像；随机或均匀选择会导致准确率下降。",
+    "stance": "conditional", "relation": "支持从重建式地图转向即时组合式地图，同时限定其对参考检索的依赖。", "confidence": "direct", "claim_basis": "reported-result",
+    "summary": "作者在限制实验中移除检索并改用随机/均匀参考，观察到FastForward准确率下降。",
+    "locator": "page 10",
+    "source_context": "We observe the accuracy dropping from 51.4% to 47.8% (10cm, 10°).",
+    "evidence_type": "ablation", "quantitative": false,
+    "verification": {"status": "passed", "checked_against": "full-text", "rationale": "该句位于无检索参考选择实验，直接报告准确率下降；主张不保留数值，只陈述方向和条件。"}
+  }],
+  "core_citations": [], "notes": "文本层PDF质量为high，无需逐页视觉复核。"
+}

@@ -3,7 +3,7 @@ id: EA-XEMBODIMENT
 title: 跨本体与数据迁移
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-14
+updated: 2026-07-15
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -15,6 +15,9 @@ source:
   - id: RUN-UMI-QUALITY-20260714
     file: ../../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/evidence.jsonl
     locator: EA-UMI-READ-0001..0015
+  - id: RUN-EGO-DATA-20260715
+    file: ../../evidence/literature-review-ego-centric-数据在具身模型训练中的问题与困难-20260715/evidence.jsonl
+    locator: EA-EGO-2026-0001..0020
 tags: [embodied-ai, cross-embodiment, retargeting, dexterous-hand, gripper, action-space]
 aliases: [跨本体, Retargeting, 人手迁移, 灵巧手, 夹爪, 动作空间]
 load_when:
@@ -44,6 +47,8 @@ confidence: working
 - action command 不是跨机器人通用监督信号，数据混合必须保留控制器、频率、坐标系和归一化语义。
 - 共享末端、传感器、接触和动作空间的同构采集可减少 retargeting 与 embodiment-conversion 损失。
 - motion transfer 不等于 contact transfer；稳定灵巧操作还要迁移接触载荷、力反馈和局部状态。
+- Ego-human 数据通常只能部分替代目标机器人示范；少量 paired/aligned robot data 负责定义动作接口和闭环锚点，而非单纯修正视觉外观。
+- Ego-centric retargeting 的误差链应分开记录坐标/尺度、运动学可达性、手—物接触和动力学可行性，避免用单一 pose error 掩盖接触失败。
 
 ## 指标与检核
 
@@ -69,6 +74,7 @@ confidence: working
 - S-EA-QUESTIONS:53-55 覆盖 retargeting 瓶颈和优化方向。
 - RUN-VLA-ALIGN-20260714：`EA-ALIGN-READ-0001`, `0003..0005` 支持控制命令非通用性、状态条件动作解码、系统对齐和平台特定 adapter；`0009` 支持 contact-rich 失败修正。
 - RUN-UMI-QUALITY-20260714：`EA-UMI-READ-0002..0004`, `0009` 支持物理模态、3D sensing 和机器人可执行性过滤；跨本体可用性是条件结论，不等于动作命令可直接复用。
+- RUN-EGO-DATA-20260715：`EA-EGO-2026-0001`, `0008..0011`, `0019..0020` 支持目标机器人锚定、人机对齐中间训练、人工重定向成本以及接触几何对迁移成功的独立作用。
 
 ## 待补问题
 

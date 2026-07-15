@@ -2,7 +2,7 @@
 id: PROJECT-CONTEXT
 title: 项目上下文词表
 type: glossary
-updated: 2026-07-14
+updated: 2026-07-15
 tags: [context, glossary, embodied-ai, query-planning]
 ---
 
@@ -28,3 +28,8 @@ tags: [context, glossary, embodied-ai, query-planning]
 | review packet | 面向研究者的中预算审计视图，汇总综述范围、证据分布、共识、限制和缺口；它不是读者成稿。 |
 | reader-facing articles | 科研备忘录、知乎解释稿和小红书稿三类表达层。它们共享 accepted evidence，但必须按各自读者和文体独立组织。 |
 | active review run | 由 [文献综述成果目录](knowledge/literature-review-catalog.md) 声明为当前知识卡证据入口的 append-only run；历史 run 保留但不默认加载。 |
+| ego-centric behavior data | 人类第一视角视频及其恢复出的手—物轨迹、视点运动和任务结构。它适合提供高覆盖行为先验，但默认不等于机器人控制监督；具体边界见 EA-DATA、EA-XEMBODIMENT 和 EA-MODEL。 |
+| executable supervision | 已对坐标系、尺度、动作接口、运动学可达性、接触结构和动力学可行性做过核验，可被目标机器人训练或闭环评测消费的监督信号。 |
+| visual localization stack | 从地点候选检索，经视觉/几何验证，到 6DoF 位姿估计或局部细化，再到拒识与恢复的完整定位链；不能用单一 Recall@K 代替整链结果。 |
+| recoverability domain | 给定地图、参考覆盖、初始化误差和场景条件时，定位或位姿细化仍能可靠收敛的工作域。超出该域时应拒识、重定位或切换传感器。 |
+| risk–coverage | 同时报告被系统接受的查询覆盖率与这些已接受结果的错误风险；低风险但接近零覆盖不代表系统具备可用定位能力。 |

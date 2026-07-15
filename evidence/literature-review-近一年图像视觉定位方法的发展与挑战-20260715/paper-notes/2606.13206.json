@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2606.13206", "title": "Visual Place Recognition in Forests with Depth-Aware Distillation", "published": "2026-06-11", "url": "https://arxiv.org/abs/2606.13206", "authors": ["Walter Nedov", "Saimunur Rahman", "Kavindie Katuwandeniya", "David Hall", "Kaushik Roy", "Peyman Moghadam"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "针对森林重复纹理和季节变化，验证深度几何蒸馏对视觉地点识别的补充价值。"}, "sections_read": [
+    {"locator": "I Introduction", "role": "problem", "purpose": "核对森林场景的感知混淆与外观变化。"},
+    {"locator": "II Methodology", "role": "method-or-design", "purpose": "核对深度教师、DINOv2学生和SALAD聚合。"},
+    {"locator": "III Results and Discussion", "role": "results-or-analysis", "purpose": "核对同序列、跨序列和零样本结果。"},
+    {"locator": "IV Conclusion", "role": "conclusion-or-limitations", "purpose": "核对深度先验收益及未来传感器边界。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "在森林这类外观相似、季节变化强的环境中，深度几何能否改善纯外观VPR？",
+  "contributions": ["提出深度感知蒸馏，把单目深度特征注入DINOv2-SALAD。", "在WildCross上评估同序列和跨序列定位。", "分析几何先验对森林感知混淆的作用。"],
+  "method": {"summary": "以Depth Anything V2产生的深度表征为教师，蒸馏到DINOv2视觉编码器并用SALAD聚合全局地点描述子。", "assumptions": ["单目深度教师在森林中保留有用结构。", "训练中的深度先验可迁移到零样本VPR。"]},
+  "study_context": {"datasets": ["WildCross"], "tasks": ["forest visual place recognition", "intra-sequence and inter-sequence retrieval"], "embodiments": ["outdoor mobile robot localization"], "sample_or_scale": "单一森林基准上的零样本同序列与跨序列评估。"},
+  "evaluation": {"design": "与外观型SALAD基线比较，同序列及跨序列报告检索表现并做蒸馏设计分析。", "baselines": ["SALAD", "appearance-only DINOv2 descriptors"], "metrics": ["Recall@1", "Recall@5", "Recall@10"], "ablations": ["depth-aware distillation", "intra versus inter sequence"]},
+  "findings": [{"finding": "深度感知蒸馏在同序列和跨序列设置中都优于仅外观SALAD，说明几何先验可缓解森林场景的视觉混淆。", "scope": "WildCross上的DINOv2-SALAD零样本VPR。", "locator": "III Results and Discussion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "当前验证局限于一个基准和一种主要骨干，未来需要真实LiDAR深度与更多架构。", "locator": "IV Conclusion"}], "reader_inferred": [{"boundary": "收益部分取决于单目深度模型在目标生态环境中的误差模式。", "basis": "训练监督来自Depth Anything V2而非同步真值深度。"}]},
+  "transfer_boundary": "支持‘几何先验可补充外观描述’在WildCross森林VPR中的结论；不能直接外推到城市、真实深度传感器或最终6DoF定位。",
+  "critical_appraisal": {"design_strengths": ["聚焦纯外观方法的典型失败域。", "同时测试同序列与跨序列。"], "design_risks": ["单数据集。", "教师深度为预测值，可能携带域偏差。"], "baseline_fairness": "与共享主要骨干和聚合器的外观基线比较，变量控制清楚。", "metric_validity": "Recall适合VPR检索，但不测最终姿态和失败代价。", "reproducibility": "蒸馏结构和基线明确，数据集公开性有利复现。", "external_validity": "对森林VPR直接，对其他自然场景和多传感器定位仍需验证。"},
+  "evidence_cards": [{"card_id": "2606.13206-C01", "claim": "在森林VPR中，把深度几何蒸馏进外观描述子可同时改善同序列与跨序列识别，说明几何先验是缓解重复纹理的一条有效方向。", "stance": "support", "relation": "支持定位表征从纯RGB外观向外观—几何融合发展。", "confidence": "direct", "claim_basis": "reported-result", "summary": "作者直接报告DAD在两种评估中均超过仅外观SALAD。", "locator": "III Results and Discussion", "source_context": "DAD improves over the appearance-only SALAD baseline in both intra-sequence and inter-sequence evaluation.", "evidence_type": "comparative-result", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接给出相对基线和两类评估结论；证据卡限定于森林VPR和该方法组合。"}}],
+  "core_citations": [], "notes": "几何不一定作为显式地图输入，也可作为表征训练先验。"
+}

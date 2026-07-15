@@ -1,0 +1,1934 @@
+{
+  "generated_at": "2026-07-15T02:41:34.680645+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "Ego-centric 数据在具身模型训练中的问题与困难",
+  "start_date": "2025-07-15",
+  "end_date": "2026-07-15",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-XEMBODIMENT",
+    "EA-MODEL",
+    "EA-SENSOR"
+  ],
+  "families": [
+    "droid-ego4d",
+    "retargeting",
+    "vla",
+    "teleoperation-demo-quality"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.HC",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 200,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 200,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-egocentric-robot-learning",
+        "dynamic-first-person-demonstration",
+        "dynamic-human-video-policy",
+        "dynamic-ego-to-robot",
+        "calibrated-entity-level-hand-object-interaction",
+        "calibrated-6dof-object-manipulation-trajectories",
+        "calibrated-noisy-or-incomplete-trajectories",
+        "calibration-humanego-interface",
+        "calibration-egoscaler-trajectories",
+        "droid-ego-egocentric-video",
+        "droid-ego-in-the-wild",
+        "droid-ego-data-mixture",
+        "retargeting-human-to-robot-mapping",
+        "retargeting-dexterous-hand",
+        "retargeting-gripper-demonstration",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action",
+        "vla-finetuning-policy",
+        "vla-data-mixture",
+        "teleop-operator-burden",
+        "ea-data-in-the-wild",
+        "ea-data-dataset-curation",
+        "ea-xembodiment-retargeting-dexterous",
+        "ea-xembodiment-human-to-robot",
+        "ea-model-finetuning",
+        "ea-sensor-tactile-force",
+        "ea-sensor-point-cloud"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "dynamic-hand-object-interface",
+        "dynamic-latent-pseudo-action",
+        "teleop-action-interface",
+        "ea-xembodiment-action-representation",
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-egocentric-trajectory-extraction",
+        "dynamic-egocentric-vla-pretraining",
+        "droid-robot-manipulation",
+        "ego4d-robot-learning",
+        "retargeting-robot-manipulation",
+        "vla-core",
+        "vla-named-models",
+        "teleop-imitation-learning",
+        "teleop-demonstration-quality",
+        "ea-data-robot-demonstrations",
+        "ea-xembodiment-cross-embodiment",
+        "ea-model-named-foundation",
+        "ea-sensor-multimodal-policy"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-egocentric-observability-limit",
+        "retargeting-morphology-gap",
+        "vla-negative-transfer",
+        "teleop-latency"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (medium): 第一视角人类视频进入具身训练时，还会以 human video、first-person demonstration、hand-object interaction、pseudo-action、latent action 和 ego-to-robot 等术语出现。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-egocentric-robot-learning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"egocentric video\" AND (all:\"robot learning\" OR all:\"robot manipulation\")",
+      "why": "直接覆盖第一视角视频用于机器人学习。"
+    },
+    {
+      "label": "dynamic-first-person-demonstration",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"first-person video\" AND (all:robot OR all:manipulation)",
+      "why": "补充不使用 egocentric 术语的第一视角论文。"
+    },
+    {
+      "label": "dynamic-human-video-policy",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"human video\" AND (all:\"robot policy\" OR all:\"imitation learning\")",
+      "why": "覆盖从人类视频学习机器人策略的主线。"
+    },
+    {
+      "label": "dynamic-ego-to-robot",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"ego-to-robot\" OR all:\"human-to-robot\") AND (all:video OR all:demonstration)",
+      "why": "覆盖跨本体迁移与 embodiment gap。"
+    },
+    {
+      "label": "dynamic-hand-object-interface",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"hand-object interaction\" AND (all:robot OR all:policy)",
+      "why": "手—物交互是将人类第一视角视频转成机器人可执行表征的常见接口。"
+    },
+    {
+      "label": "dynamic-latent-pseudo-action",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"latent action\" OR all:\"pseudo action\") AND (all:\"human video\" OR all:egocentric) AND all:robot",
+      "why": "覆盖无原生机器人动作标签时的替代监督。"
+    },
+    {
+      "label": "dynamic-egocentric-trajectory-extraction",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:egocentric AND (all:\"6DoF trajectory\" OR all:\"object trajectory\" OR all:\"hand pose\") AND all:robot",
+      "why": "覆盖从原始第一视角视频恢复运动轨迹及其噪声问题。"
+    },
+    {
+      "label": "dynamic-egocentric-observability-limit",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:egocentric AND (all:occlusion OR all:contact OR all:\"camera motion\" OR all:visibility) AND (all:robot OR all:manipulation)",
+      "why": "覆盖遮挡、接触不可观测和相机自运动等数据缺陷。"
+    },
+    {
+      "label": "dynamic-egocentric-vla-pretraining",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:egocentric AND (all:VLA OR all:\"vision language action\") AND (all:pretraining OR all:\"pre-training\")",
+      "why": "覆盖第一视角视频用于 VLA 预训练的直接证据。"
+    },
+    {
+      "label": "dynamic-egocentric-training-challenges-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs (egocentric OR first-person) human video robot learning embodiment gap action labels occlusion",
+      "why": "发现 API 元数据可能漏掉的挑战型论文。"
+    },
+    {
+      "label": "dynamic-egocentric-robot-terms-web",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs egocentric human video robot policy 2025 2026",
+      "why": "校准近一年方法名与数据处理术语。"
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): HumanEgo 使用 entity-level hand-object interaction 与 dense auxiliary objectives 描述 ego-to-robot transfer。",
+    "arxiv calibration (high): EgoScaler 使用 6DoF object manipulation trajectories、raw egocentric videos、noisy or incomplete trajectories 与 VLA pre-training。"
+  ],
+  "queries": [
+    {
+      "label": "dynamic-egocentric-robot-learning",
+      "tier": "dynamic-association",
+      "query": "all:\"egocentric video\" AND (all:\"robot learning\" OR all:\"robot manipulation\")",
+      "why": "直接覆盖第一视角视频用于机器人学习。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-robot-learning"
+      ]
+    },
+    {
+      "label": "dynamic-first-person-demonstration",
+      "tier": "dynamic-association",
+      "query": "all:\"first-person video\" AND (all:robot OR all:manipulation)",
+      "why": "补充不使用 egocentric 术语的第一视角论文。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-first-person-demonstration"
+      ]
+    },
+    {
+      "label": "dynamic-human-video-policy",
+      "tier": "dynamic-association",
+      "query": "all:\"human video\" AND (all:\"robot policy\" OR all:\"imitation learning\")",
+      "why": "覆盖从人类视频学习机器人策略的主线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-video-policy"
+      ]
+    },
+    {
+      "label": "dynamic-ego-to-robot",
+      "tier": "transfer",
+      "query": "(all:\"ego-to-robot\" OR all:\"human-to-robot\") AND (all:video OR all:demonstration)",
+      "why": "覆盖跨本体迁移与 embodiment gap。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-to-robot"
+      ]
+    },
+    {
+      "label": "dynamic-hand-object-interface",
+      "tier": "representation",
+      "query": "all:\"hand-object interaction\" AND (all:robot OR all:policy)",
+      "why": "手—物交互是将人类第一视角视频转成机器人可执行表征的常见接口。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-object-interface"
+      ]
+    },
+    {
+      "label": "dynamic-latent-pseudo-action",
+      "tier": "policy-interface",
+      "query": "(all:\"latent action\" OR all:\"pseudo action\") AND (all:\"human video\" OR all:egocentric) AND all:robot",
+      "why": "覆盖无原生机器人动作标签时的替代监督。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-pseudo-action"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-trajectory-extraction",
+      "tier": "quality",
+      "query": "all:egocentric AND (all:\"6DoF trajectory\" OR all:\"object trajectory\" OR all:\"hand pose\") AND all:robot",
+      "why": "覆盖从原始第一视角视频恢复运动轨迹及其噪声问题。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-trajectory-extraction"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-observability-limit",
+      "tier": "limitation",
+      "query": "all:egocentric AND (all:occlusion OR all:contact OR all:\"camera motion\" OR all:visibility) AND (all:robot OR all:manipulation)",
+      "why": "覆盖遮挡、接触不可观测和相机自运动等数据缺陷。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-observability-limit"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-vla-pretraining",
+      "tier": "named-method",
+      "query": "all:egocentric AND (all:VLA OR all:\"vision language action\") AND (all:pretraining OR all:\"pre-training\")",
+      "why": "覆盖第一视角视频用于 VLA 预训练的直接证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-vla-pretraining"
+      ]
+    },
+    {
+      "label": "calibrated-entity-level-hand-object-interaction",
+      "tier": "calibrated-term",
+      "query": "all:\"entity-level hand-object interaction\"",
+      "why": "HumanEgo 用于缩小视觉外观与运动学本体差距。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-entity-level-hand-object-interaction"
+      ]
+    },
+    {
+      "label": "calibrated-6dof-object-manipulation-trajectories",
+      "tier": "calibrated-term",
+      "query": "all:\"6DoF object manipulation trajectories\"",
+      "why": "EgoScaler 将原始 ego 视频转成 VLA 可用轨迹。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-6dof-object-manipulation-trajectories"
+      ]
+    },
+    {
+      "label": "calibrated-noisy-or-incomplete-trajectories",
+      "tier": "calibrated-term",
+      "query": "all:\"noisy or incomplete trajectories\"",
+      "why": "直接指向轨迹恢复和质量控制问题。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-noisy-or-incomplete-trajectories"
+      ]
+    },
+    {
+      "label": "calibration-humanego-interface",
+      "tier": "calibrated-query",
+      "query": "all:\"hand-object interaction\" AND all:egocentric AND all:robot",
+      "why": "回收 HumanEgo 及相邻实体级接口论文。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-humanego-interface"
+      ]
+    },
+    {
+      "label": "calibration-egoscaler-trajectories",
+      "tier": "calibrated-query",
+      "query": "all:\"6DoF object manipulation trajectories\" OR (all:EgoScaler AND all:robot)",
+      "why": "回收原始 egocentric 视频到动作轨迹的直接论文。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-egoscaler-trajectories"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "teleop-imitation-learning",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"imitation learning\" AND all:robot",
+      "why": "Find the main literature surface connecting teleoperation to robot policy learning.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-imitation-learning"
+      ]
+    },
+    {
+      "label": "teleop-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface trace consistency, operator skill, and data acceptance criteria.",
+      "source_key": "teleoperation-demo-quality,EA-DATA",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-demonstration-quality",
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "teleop-operator-burden",
+      "tier": "human-factor",
+      "query": "all:operator AND all:burden AND all:teleoperation",
+      "why": "Find papers about human workload and collection throughput.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.HC",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-operator-burden"
+      ]
+    },
+    {
+      "label": "teleop-latency",
+      "tier": "system-limitation",
+      "query": "all:latency AND all:teleoperation AND all:robot",
+      "why": "Capture delay and synchronization limits that affect demonstration fidelity.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-latency"
+      ]
+    },
+    {
+      "label": "teleop-action-interface",
+      "tier": "policy-interface",
+      "query": "all:\"action interface\" AND all:robot AND all:demonstration",
+      "why": "Find work where action-space choices determine whether demonstrations transfer.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-action-interface"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-egocentric-robot-learning",
+      "tier": "dynamic-association",
+      "query": "all:\"egocentric video\" AND (all:\"robot learning\" OR all:\"robot manipulation\")",
+      "why": "直接覆盖第一视角视频用于机器人学习。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-robot-learning"
+      ]
+    },
+    {
+      "label": "dynamic-first-person-demonstration",
+      "tier": "dynamic-association",
+      "query": "all:\"first-person video\" AND (all:robot OR all:manipulation)",
+      "why": "补充不使用 egocentric 术语的第一视角论文。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-first-person-demonstration"
+      ]
+    },
+    {
+      "label": "dynamic-human-video-policy",
+      "tier": "dynamic-association",
+      "query": "all:\"human video\" AND (all:\"robot policy\" OR all:\"imitation learning\")",
+      "why": "覆盖从人类视频学习机器人策略的主线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-video-policy"
+      ]
+    },
+    {
+      "label": "dynamic-ego-to-robot",
+      "tier": "transfer",
+      "query": "(all:\"ego-to-robot\" OR all:\"human-to-robot\") AND (all:video OR all:demonstration)",
+      "why": "覆盖跨本体迁移与 embodiment gap。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-to-robot"
+      ]
+    },
+    {
+      "label": "dynamic-hand-object-interface",
+      "tier": "representation",
+      "query": "all:\"hand-object interaction\" AND (all:robot OR all:policy)",
+      "why": "手—物交互是将人类第一视角视频转成机器人可执行表征的常见接口。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-object-interface"
+      ]
+    },
+    {
+      "label": "dynamic-latent-pseudo-action",
+      "tier": "policy-interface",
+      "query": "(all:\"latent action\" OR all:\"pseudo action\") AND (all:\"human video\" OR all:egocentric) AND all:robot",
+      "why": "覆盖无原生机器人动作标签时的替代监督。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-pseudo-action"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-trajectory-extraction",
+      "tier": "quality",
+      "query": "all:egocentric AND (all:\"6DoF trajectory\" OR all:\"object trajectory\" OR all:\"hand pose\") AND all:robot",
+      "why": "覆盖从原始第一视角视频恢复运动轨迹及其噪声问题。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-trajectory-extraction"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-observability-limit",
+      "tier": "limitation",
+      "query": "all:egocentric AND (all:occlusion OR all:contact OR all:\"camera motion\" OR all:visibility) AND (all:robot OR all:manipulation)",
+      "why": "覆盖遮挡、接触不可观测和相机自运动等数据缺陷。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-observability-limit"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-vla-pretraining",
+      "tier": "named-method",
+      "query": "all:egocentric AND (all:VLA OR all:\"vision language action\") AND (all:pretraining OR all:\"pre-training\")",
+      "why": "覆盖第一视角视频用于 VLA 预训练的直接证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-vla-pretraining"
+      ]
+    },
+    {
+      "label": "calibrated-entity-level-hand-object-interaction",
+      "tier": "calibrated-term",
+      "query": "all:\"entity-level hand-object interaction\"",
+      "why": "HumanEgo 用于缩小视觉外观与运动学本体差距。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-entity-level-hand-object-interaction"
+      ]
+    },
+    {
+      "label": "calibrated-6dof-object-manipulation-trajectories",
+      "tier": "calibrated-term",
+      "query": "all:\"6DoF object manipulation trajectories\"",
+      "why": "EgoScaler 将原始 ego 视频转成 VLA 可用轨迹。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-6dof-object-manipulation-trajectories"
+      ]
+    },
+    {
+      "label": "calibrated-noisy-or-incomplete-trajectories",
+      "tier": "calibrated-term",
+      "query": "all:\"noisy or incomplete trajectories\"",
+      "why": "直接指向轨迹恢复和质量控制问题。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-noisy-or-incomplete-trajectories"
+      ]
+    },
+    {
+      "label": "calibration-humanego-interface",
+      "tier": "calibrated-query",
+      "query": "all:\"hand-object interaction\" AND all:egocentric AND all:robot",
+      "why": "回收 HumanEgo 及相邻实体级接口论文。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-humanego-interface"
+      ]
+    },
+    {
+      "label": "calibration-egoscaler-trajectories",
+      "tier": "calibrated-query",
+      "query": "all:\"6DoF object manipulation trajectories\" OR (all:EgoScaler AND all:robot)",
+      "why": "回收原始 egocentric 视频到动作轨迹的直接论文。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-egoscaler-trajectories"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "teleop-imitation-learning",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"imitation learning\" AND all:robot",
+      "why": "Find the main literature surface connecting teleoperation to robot policy learning.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-imitation-learning"
+      ]
+    },
+    {
+      "label": "teleop-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface trace consistency, operator skill, and data acceptance criteria.",
+      "source_key": "teleoperation-demo-quality,EA-DATA",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-demonstration-quality",
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "teleop-operator-burden",
+      "tier": "human-factor",
+      "query": "all:operator AND all:burden AND all:teleoperation",
+      "why": "Find papers about human workload and collection throughput.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.HC",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-operator-burden"
+      ]
+    },
+    {
+      "label": "teleop-latency",
+      "tier": "system-limitation",
+      "query": "all:latency AND all:teleoperation AND all:robot",
+      "why": "Capture delay and synchronization limits that affect demonstration fidelity.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-latency"
+      ]
+    },
+    {
+      "label": "teleop-action-interface",
+      "tier": "policy-interface",
+      "query": "all:\"action interface\" AND all:robot AND all:demonstration",
+      "why": "Find work where action-space choices determine whether demonstrations transfer.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-action-interface"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-egocentric-training-challenges-browser",
+      "query": "site:arxiv.org/abs (egocentric OR first-person) human video robot learning embodiment gap action labels occlusion",
+      "why": "发现 API 元数据可能漏掉的挑战型论文。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-egocentric-robot-terms-web",
+      "query": "site:arxiv.org/abs egocentric human video robot policy 2025 2026",
+      "why": "校准近一年方法名与数据处理术语。",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-entity-level-hand-object-interaction",
+      "query": "\"entity-level hand-object interaction\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: entity-level hand-object interaction.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-6dof-object-manipulation-trajectories",
+      "query": "\"6DoF object manipulation trajectories\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: 6DoF object manipulation trajectories.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-noisy-or-incomplete-trajectories",
+      "query": "\"noisy or incomplete trajectories\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: noisy or incomplete trajectories.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

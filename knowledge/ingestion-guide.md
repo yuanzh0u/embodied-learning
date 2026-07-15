@@ -2,7 +2,7 @@
 id: KB-INGEST
 title: 新素材入库规范
 type: workflow
-updated: 2026-07-14
+updated: 2026-07-15
 tags: [ingestion, workflow, agent-process]
 ---
 
@@ -28,6 +28,7 @@ tags: [ingestion, workflow, agent-process]
 - 数据采集与质量：EA-DATA
 - 传感器与感知：EA-SENSOR
 - 采集硬件：EA-HARDWARE
+- 图像视觉定位、VPR、相机重定位与定位地图：EA-VLOC
 - 跨本体迁移：EA-XEMBODIMENT
 - 模型与预训练：EA-MODEL
 - 评测与世界模型：EA-EVAL

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2507.23569", "title": "Gaussian Splatting Feature Fields for Privacy-Preserving Visual Localization", "published": "2025-07-31", "url": "https://arxiv.org/abs/2507.23569", "authors": ["Maxime Pietrantoni", "Gabriela Csurka", "Torsten Sattler"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted", "paper_type": "method",
+    "relevance": {"decision": "include", "reason": "直接研究以3DGS特征场进行精确和隐私保护视觉定位，并报告底层几何质量造成的失败。"},
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确认视觉定位谱系、隐私动机和贡献。"},
+      {"locator": "3 3DGS Feature Fields (GSFFs)", "role": "method-or-design", "purpose": "核对特征场、聚类和位姿细化机制。"},
+      {"locator": "5 Experimental Evaluation > 5.1 Visual Localization", "role": "results-or-analysis", "purpose": "核对数据集、基线、结果和失败场景。"},
+      {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对作者结论与适用边界。"},
+      {"locator": "Appendix D Privacy attack", "role": "appendix-or-supplement", "purpose": "核对隐私攻击验证。"}
+    ],
+    "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]
+  },
+  "research_question": "3DGS显式几何与隐式特征能否兼顾定位精度、快速渲染与场景隐私？",
+  "contributions": ["提出尺度感知GSFF并通过特征或分割图与查询图像对齐来细化位姿。", "把3D结构聚类为离散标签，以减少可逆的外观信息。"],
+  "method": {"summary": "联合训练3DGS特征场与2D编码器，通过可微渲染在SE(3)上优化位姿；隐私版本仅保留几何和聚类标签。", "assumptions": ["已知环境可构建高质量静态3DGS。", "有足够接近真值的检索初始位姿。"]},
+  "study_context": {"datasets": ["7Scenes", "Cambridge Landmarks", "Indoor6", "12Scenes"], "tasks": ["6DoF camera relocalization", "privacy-preserving pose refinement"], "embodiments": ["monocular camera localization"], "sample_or_scale": "多个室内和室外已知场景，按中位平移/旋转误差及阈值召回评估。"},
+  "evaluation": {"design": "与NeRF/3DGS渲染定位、结构式定位及隐私保护方法比较，并做聚类、分辨率、初始化和隐私攻击消融。", "baselines": ["SegLoc", "ACE", "DSAC*", "GoMatch", "DGC-GNN"], "metrics": ["median position error", "median rotation error", "recall at pose thresholds"], "ablations": ["prototype count", "initialization", "feature regularizers", "resolution and refinement steps"]},
+  "findings": [{"finding": "GSFF的定位精度依赖底层3DGS几何；弱纹理平坦场景会因初始结构变差而显著退化。", "scope": "7Scenes的Stairs等静态已知场景及需初始位姿的细化流程。", "locator": "5 Experimental Evaluation > 5.1 Visual Localization"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "Stairs中的弱纹理和平坦布局使Opacity Gaussian Field产生较差初始3D结构并拖累细化。", "locator": "5 Experimental Evaluation > 5.1 Visual Localization"}], "reader_inferred": [{"boundary": "该路线没有消除地图构建和初始检索依赖，也未证明动态环境中的长期稳定性。", "basis": "方法以静态3DGS和检索初始位姿为前提，实验为已知场景重定位。"}]},
+  "transfer_boundary": "适用于能离线构建高质量3DGS且查询位姿有合理初始化的静态室内/地标场景；不能外推到严重动态、弱纹理或无地图环境。",
+  "critical_appraisal": {"design_strengths": ["覆盖隐私与非隐私两类流水线及多数据集。", "明确分析初始结构失败并提供隐私反演实验。"], "design_risks": ["比较依赖不同全局检索初始化，公平性虽讨论但仍影响结果。", "隐私定义允许保留粗几何，不能等同于全面安全。"], "baseline_fairness": "作者尽量使用相同或更弱的全局描述子，但不同初始位姿质量仍可能影响细化比较。", "metric_validity": "位姿误差适合衡量定位精度；隐私仅以特定反演攻击和可视化衡量，覆盖不完整。", "reproducibility": "方法、消融与数据集描述充分，但实际复现仍依赖3DGS质量和训练细节。", "external_validity": "对静态已知场景有代表性，对动态场景、地图老化和端侧资源约束证据有限。"},
+  "evidence_cards": [{
+    "card_id": "2507.23569-C01",
+    "claim": "3DGS特征场可把渲染和特征学习接入位姿细化，但定位可靠性仍受底层3DGS几何质量约束，弱纹理平坦场景会直接拖累结果。",
+    "stance": "conditional", "relation": "支持3DGS成为新型定位地图，同时限制‘神经渲染地图天然更稳健’这一命题。", "confidence": "direct", "claim_basis": "reported-result",
+    "summary": "作者在7Scenes的Stairs场景明确把退化归因于纹理缺失和平坦布局导致的初始3D结构质量差。",
+    "locator": "5.1 Visual Localization",
+    "source_context": "On Stairs, the Opacity Gaussian Field struggles due to its textureless and flat layout, yielding a poor results for the initial 3D structure that directly affects GSFFs-PR’s refinement framework.",
+    "evidence_type": "experiment", "quantitative": false,
+    "verification": {"status": "passed", "checked_against": "full-text", "rationale": "正文在具体数据集结果讨论中直接给出失败原因；主张仅概括对3DGS几何的依赖，没有外推到所有神经场。"}
+  }],
+  "core_citations": [], "notes": "隐私保护是作者采用的有限定义：阻止恢复纹理与细节，但允许粗几何。"
+}

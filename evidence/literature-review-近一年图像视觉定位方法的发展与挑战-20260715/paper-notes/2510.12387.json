@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2510.12387", "title": "Scene Coordinate Reconstruction Priors", "published": "2025-10-14", "url": "https://arxiv.org/abs/2510.12387", "authors": ["Wenjing Bian", "Axel Barroso-Laguna", "Tommaso Cavallari", "Victor Adrian Prisacariu", "Eric Brachmann"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "研究SCR在弱纹理、重复结构和反射下的几何退化，并以手工或学习先验约束重建。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对多视图约束不足造成的SCR退化。"},
+    {"locator": "3 Method", "role": "method-or-design", "purpose": "核对最大似然重写与深度/点云扩散先验。"},
+    {"locator": "4.2 Relocalization Results", "role": "results-or-analysis", "purpose": "核对ACE、ACE0、GLACE定位增益。"},
+    {"locator": "5 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对室内证据边界与户外扩展条件。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "高层几何先验能否修复场景坐标回归在多视图约束不足时产生的退化表示？",
+  "contributions": ["把SCR训练重写为可插入重建先验的概率目标。", "验证深度分布、测量深度和点云扩散先验可用于ACE系方法。"],
+  "method": {"summary": "在ACE/ACE0/GLACE的重投影训练目标中加入场景坐标负对数似然先验，约束深度分布或整个点云布局。", "assumptions": ["训练图像有已知或自监督估计的相机位姿。", "先验数据分布与目标场景几何具有可迁移性。"]},
+  "study_context": {"datasets": ["7Scenes", "12Scenes", "Map-free relocalization scenes", "few outdoor supplement scenes"], "tasks": ["scene coordinate regression", "SfM", "camera relocalization"], "embodiments": ["RGB and RGB-D camera"], "sample_or_scale": "以室内场景为主，点云扩散先验约由700个室内场景训练。"},
+  "evaluation": {"design": "把多种先验接入ACE、ACE0和GLACE，比较重建注册率、点云质量和位姿估计。", "baselines": ["ACE", "ACE0", "GLACE"], "metrics": ["registration rate", "pose error", "point cloud coherence", "training and query latency"], "ablations": ["depth-distribution prior", "measured-depth prior", "diffusion prior", "prior weights"]},
+  "findings": [{"finding": "重建先验可在不增加查询时延的情况下改善ACE系SCR，但主要证据来自室内场景。", "scope": "ACE、ACE0、GLACE及论文测试的室内数据。", "locator": "5 Conclusion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "户外扩展需要更合适的深度分布和更大更多样的扩散训练数据。", "locator": "5 Conclusion"}], "reader_inferred": [{"boundary": "学习先验可能把室内几何偏差带入分布外场景。", "basis": "扩散先验训练数据约700个室内场景，作者也明确限制为室内。"}]},
+  "transfer_boundary": "适用于室内、训练视角不足但目标场景仍与先验几何分布相近的SCR；不能直接外推到大尺度户外和不同几何统计。",
+  "critical_appraisal": {"design_strengths": ["把先验机制接入多个ACE变体。", "同时观察重建与定位结果。"], "design_risks": ["扩散先验数据规模和域较窄。", "户外只在补充材料少量验证。"], "baseline_fairness": "同一ACE系框架内加减先验，机制归因较清楚。", "metric_validity": "位姿误差与点云/注册率共同验证先验是否只改善外观指标。", "reproducibility": "实现细节、基线和额外结果充分公开。", "external_validity": "室内证据较强，跨城市、大尺度和动态场景证据不足。"},
+  "evidence_cards": [{"card_id": "2510.12387-C01", "claim": "重建先验可以改善ACE系场景坐标回归而不增加查询时延，但当前证据主要限于室内，户外需要重新设计深度分布与扩散先验数据。", "stance": "conditional", "relation": "支持几何先验成为SCR的新发展，同时限定跨场景泛化。", "confidence": "direct", "claim_basis": "author-claim", "summary": "结论同时报告性能增益、无查询时延代价和室内证据边界。", "locator": "5 Conclusion", "source_context": "Limitations Our experiments have focused on indoor scenes, with results on a few outdoor scenes in the supplement.", "evidence_type": "conclusion-and-limitations", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "作者在结论的限制段明确界定实验以室内为主；主张将方法收益与该范围约束合并表达。"}}],
+  "core_citations": [], "notes": "将室内先验外推到户外需标记为未验证。"
+}
