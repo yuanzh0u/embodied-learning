@@ -36,6 +36,10 @@ tags: [glossary, embodied-ai, error-governance]
 | Claim-support audit | 检查 paper note 中的主张是否被对应全文 locator 与 source context 支持的审计。 | KB-LIT-REVIEWS |
 | Accepted evidence event | 从通过审计的 paper note 投影出的正式论文证据记录，具有当前有效 run 集合中全局唯一的 event ID。 | KB-LIT-REVIEWS |
 | Review packet | 汇总综述范围、证据分布、共识、限制和缺口的中预算审计视图，不等同于读者成稿。 | KB-LIT-REVIEWS |
+| 具身数据污染 | 样本与来源、时间、任务、动作、模型版本或评测边界之间发生关系失真；覆盖非恶意近重复/错位/泄漏与恶意投毒/后门，治理范围贯穿采集、训练、生成和闭环评测。 | EA-DATA, EA-EVAL, EA-MODEL |
+| 语义泄漏 | 训练与评测虽无字节级重复，但场景、任务逻辑、对象布局或指令—动作映射过度接近，导致记忆式高分冒充泛化。 | EA-DATA, EA-EVAL |
+| 供应链持久污染 | 后门或污染进入基础模型、适配模块或检查点后，在下游干净微调中仍然保留。 | EA-MODEL, EA-DATA |
+| 二次激活 | 表面安全的原始数据经过世界模型生成、扩增或重标注后转化为危险轨迹，并继续污染下游策略。 | EA-DATA, EA-MODEL, EA-EVAL |
 | Action semantics | 控制命令在坐标系、频率、归一化、控制器和机器人本体条件下对应的物理含义。 | EA-ALIGN, EA-XEMBODIMENT |
 | 可观测性 | 系统能否从传感器中观察到完成任务所需的关键状态。 | EA-SENSOR |
 | VPR | Visual Place Recognition，按图像外观与结构召回地点候选的定位前端；高召回不等于最终位姿可恢复。 | EA-VLOC, EA-SENSOR |

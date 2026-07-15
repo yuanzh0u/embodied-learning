@@ -21,11 +21,15 @@ source:
   - id: RUN-VLOC-20260715
     file: ../../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/evidence.jsonl
     locator: EA-VLOC-2026-0004; EA-VLOC-2026-0006; EA-VLOC-2026-0008..0011; EA-VLOC-2026-0015
-tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, sim-real, admissibility, action-fidelity, risk-coverage, visual-localization]
-aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, Benchmark, Sim2Real, 动作忠实, 世界模型可采信性, 风险覆盖, 定位评测]
+  - id: RUN-DATA-CONTAMINATION-20260715
+    file: ../../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/evidence.jsonl
+    locator: EA-CONTAM-2026-0003..0010; EA-CONTAM-2026-0012
+tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, sim-real, admissibility, action-fidelity, contamination, semantic-leakage, backdoor, risk-coverage, visual-localization]
+aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, Benchmark, Sim2Real, 数据污染评测, 语义泄漏, 触发测试, 动作忠实, 世界模型可采信性, 风险覆盖, 定位评测]
 load_when:
   - 问题涉及具身智能评测、benchmark、开放环/闭环、世界模型或长程规划
   - 问题涉及 world-model admissibility、动作忠实、反事实、乐观偏差或策略评估器可信度
+  - 问题涉及训练评测泄漏、数据投毒、VLA 后门、触发测试、检测恢复或世界模型二次激活
 confidence: working
 ---
 
@@ -39,7 +43,7 @@ confidence: working
 
 ## 30 秒摘要
 
-开放环评测适合快速筛模型，但不能替代闭环成功、安全过程和恢复能力。世界模型可以生成未来、筛选动作和降低真实试错成本，但成为策略评估器前必须证明 admissibility：不仅视觉连贯，还要动作忠实、物理约束正确、长程稳定、能识别失败并与真实排序相关。评测应分开记录预测保真与决策有效，防止“视频更真实”掩盖错误动作响应。
+开放环评测适合快速筛模型，但不能替代闭环成功、安全过程和恢复能力。世界模型可以生成未来、筛选动作和降低真实试错成本，但成为策略评估器前必须证明 admissibility：不仅视觉连贯，还要动作忠实、物理约束正确、长程稳定、能识别失败并与真实排序相关。评测还要审计训练—测试结构独立性，并把干净性能、触发/扰动风险、检测误报与恢复代价分开记录，防止记忆式高分或 episode 平均值掩盖动作窗风险。
 
 ## 关键判断
 
@@ -55,6 +59,10 @@ confidence: working
 - 预测保真属于感知账本，候选动作排序、拒绝和 what-if 规划属于认知账本。
 - 视觉定位的 Recall@K 只评估候选前端；最终验收还要覆盖几何验证、位姿误差、可恢复域、连续失定位和恢复能力。
 - 定位拒识必须用风险—覆盖曲线评估；固定地理半径真值也要与视觉重叠、地形高度和任务可达性做一致性审计。
+- 训练与评测在场景布局、任务逻辑或指令—动作映射上过近时，常规成功率会把记忆误判为泛化；结构扰动集应成为评测独立性检查的一部分。
+- Episode 成功率会漏掉关键短时窗的动作覆写和平滑累积漂移，评测需要局部动作、接触前后与 chunk 末端指标。
+- 后门防御必须分别报告检测、因果定位、恢复、误报和恢复后能力损失，并限定视觉、状态、语言或自适应触发范围。
+- 世界模型扩增需要联合验收原始样本、生成轨迹和最终政策；生成前安全不能推出生成后安全。
 
 ## 指标与检核
 
@@ -69,6 +77,8 @@ confidence: working
 | 过程安全 | Safety Success、滑移/掉落、形变、过力、碰撞、接管 |
 | 效率 | 关键事件保留、rollout 延迟、在线规划预算、恢复耗时 |
 | 视觉定位 | 分条件 Recall@K、PnP/细化成功率、6DoF 误差、风险—覆盖、连续失定位时长、恢复率 |
+| 污染压力测试 | 结构扰动集、训练—评测重合率、触发 ASR/失效率、clean success、关键动作窗异常、跨触发面迁移 |
+| 防御与恢复 | 检出率、误报率、因果定位准确率、恢复成功率、恢复后能力损失、持续性复测 |
 
 ## 适用边界
 
@@ -78,6 +88,7 @@ confidence: working
 - 未通过真实闭环或可靠 sim-real ranking 的世界模型，不应单独承担上线验收或安全裁决。
 - 视觉一致但接触、动作或奖励响应错误的模型不具备策略评估 admissibility。
 - 允许拒识的定位安全结论只适用于系统可以停机、重定位或切换传感器的场景；必须持续输出位姿时，低覆盖会转化为任务风险。
+- 后门 benchmark 的攻击权限与触发器定义决定结论边界；攻击成功证明风险面存在，不等于现实供应链中的污染发生率。
 
 ## 证据锚点
 
@@ -87,6 +98,7 @@ confidence: working
 - RUN-WMDATA-20260714：`EA-WMDATA-READ-0003..0007`, `0015` 支持关键事件、具身锚定合成数据、sim-real 对齐、动作质量目标和长程 rollout 可用性。
 - RUN-SENSOR-ERROR-20260714：`EA-SENSORERR-READ-0002`, `0005..0009` 支持局部执行走廊、Safety Success、world-model admissibility 和部署置信度。
 - RUN-VLOC-20260715：`EA-VLOC-2026-0004`, `0006`, `0008..0011`, `0015` 支持不确定性拒识、真值协议、初始化/几何失败、风险—覆盖和地理长尾评测边界。
+- RUN-DATA-CONTAMINATION-20260715：`EA-CONTAM-2026-0003..0010`, `0012` 支持动作窗污染、chunk 漂移、检测—定位—恢复分账、世界模型二次激活、训练评测语义泄漏和控制环同步审计；这些事件原始投影归入 EA-DATA，本卡结论属于有明确锚点的跨卡 synthesis。
 
 ## 待补问题
 
@@ -95,3 +107,4 @@ confidence: working
 - 整理世界模型可落地用法与不可替代真实验证的边界。
 - 建立预测保真、决策有效和安全裁决三套分账指标。
 - 建立贯通 VPR、几何验证、最终位姿和任务恢复的定位评测模板。
+- 建立同时报告 clean performance、污染条件性能、检出/误报、恢复代价和跨模型迁移的具身污染评测协议。

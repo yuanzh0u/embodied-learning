@@ -28,14 +28,14 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 
 | ID | 主题 | 文件 | 关键词 |
 |---|---|---|---|
-| EA-DATA | 数据采集与数据质量 | [embodied-ai/data-collection-quality.md](embodied-ai/data-collection-quality.md) | UMI, DROID, Ego4D, Ego-centric, 人类视频, 数据质量, L0-L3, episode, schema, 遮挡 |
+| EA-DATA | 数据采集与数据质量 | [embodied-ai/data-collection-quality.md](embodied-ai/data-collection-quality.md) | UMI, DROID, Ego4D, Ego-centric, 人类视频, 数据质量, 数据污染, 数据谱系, 近重复, L0-L3, episode, schema, 遮挡 |
 | EA-SENSOR | 传感器与多模态感知 | [embodied-ai/sensors-multimodal-perception.md](embodied-ai/sensors-multimodal-perception.md) | RGB, 3D, 点云, 触觉, 力控, proprioception |
 | EA-HARDWARE | 采集硬件与设备路线 | [embodied-ai/hardware-collection-devices.md](embodied-ai/hardware-collection-devices.md) | 单目, 双目, ARKit, SLAM, Tracking, UMI, 指套 |
 | EA-VLOC | 图像视觉定位 | [embodied-ai/visual-localization.md](embodied-ai/visual-localization.md) | 图像定位, VPR, 相机重定位, SCR, 3DGS, PnP, 拒识覆盖 |
 | EA-FIELD | 现场采集 Hub 与物流分拣考察 | [embodied-ai/field-data-collection-hubs.md](embodied-ai/field-data-collection-hubs.md) | 物流分拣, Hub, 现场考察, 岗位盘点, 视频验收, 试采 |
 | EA-XEMBODIMENT | 跨本体与数据迁移 | [embodied-ai/cross-embodiment-transfer.md](embodied-ai/cross-embodiment-transfer.md) | retargeting, 灵巧手, 夹爪, embodiment adapter, 接触功能 |
-| EA-MODEL | 模型与预训练 | [embodied-ai/models-pretraining.md](embodied-ai/models-pretraining.md) | VLA, RT-X, Octo, OpenVLA, 预训练, 微调, Sim2Real |
-| EA-EVAL | 评测体系与世界模型 | [embodied-ai/evaluation-world-models.md](embodied-ai/evaluation-world-models.md) | 开放环, 闭环, benchmark, 世界模型, sim-real |
+| EA-MODEL | 模型与预训练 | [embodied-ai/models-pretraining.md](embodied-ai/models-pretraining.md) | VLA, RT-X, Octo, OpenVLA, 预训练, 微调, 模型供应链, 后门, Sim2Real |
+| EA-EVAL | 评测体系与世界模型 | [embodied-ai/evaluation-world-models.md](embodied-ai/evaluation-world-models.md) | 开放环, 闭环, benchmark, 语义泄漏, 触发测试, 世界模型, sim-real |
 | EA-4D | 4D 时空推理与世界动态 | [embodied-ai/4d-spatiotemporal-reasoning.md](embodied-ai/4d-spatiotemporal-reasoning.md) | 4D, point tracks, correspondence, 动态场景图, action-conditioned rollout |
 | EA-ALIGN | VLA 多模态与动作对齐 | [embodied-ai/vla-multimodal-action-alignment.md](embodied-ai/vla-multimodal-action-alignment.md) | 语言稀疏, 视觉稠密, 动作连续, action token, action adapter |
 | EA-BIZ | 产业落地与商业化 | [embodied-ai/commercialization.md](embodied-ai/commercialization.md) | ToB, ROI, 节拍, 良率, 最后一厘米, 工业场景 |
@@ -48,6 +48,7 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | 用户问题包含 | 优先加载 |
 |---|---|
 | 数据采集、轨迹、数据质量、采集员、UMI、DROID、Ego4D、L0/L1/L2/L3、episode schema、无本体采集 | EA-DATA |
+| 数据污染、数据投毒、后门、近重复、数据谱系、训练评测泄漏、世界模型二次激活 | EA-DATA, EA-EVAL, EA-MODEL |
 | Ego-centric、人类第一视角视频、行为预训练、动作恢复、目标机器人锚定 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR |
 | 触觉、力、力矩、RGB、点云、3D、遮挡、可观测性 | EA-SENSOR |
 | 单目、双目、ARKit、SLAM、VR、Pico、Quest、WebXR、指套 | EA-HARDWARE |

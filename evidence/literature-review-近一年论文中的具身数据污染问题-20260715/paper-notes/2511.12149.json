@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2511.12149",
+    "title": "AttackVLA: Benchmarking Adversarial and Backdoor Attacks on Vision-Language-Action Models",
+    "published": "2025-11-15",
+    "url": "https://arxiv.org/abs/2511.12149",
+    "authors": [
+      "Jiayu Li",
+      "Yunhan Zhao",
+      "Xiang Zheng",
+      "Zonghuan Xu",
+      "Yige Li",
+      "Xingjun Ma",
+      "Yu-Gang Jiang"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "3 Unified Evaluation Framework > 3.3 BackdoorVLA",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Experiments > 4.1 Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Experiments > 4.4 Attacks in Real-World Settings",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "现有 VLA 对抗/后门攻击能否在统一协议下跨模型、跨仿真与真机比较，并实现长程定向劫持？",
+  "contributions": [
+    "提出 AttackVLA 统一评估框架和 BackdoorVLA 文本+视觉双模态长程后门。"
+  ],
+  "method": {
+    "summary": "从数据构造、模型训练到推理分阶段比较攻击；在少量示教中插入物理触发物、文本触发词和攻击者长程动作序列。",
+    "assumptions": [
+      "真机证据局限于一个 Franka 平台、一个基础政策和三个桌面任务；仿真高成功率不能直接外推到真实部署。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LIBERO",
+      "hand-crafted real-robot dataset"
+    ],
+    "tasks": [
+      "four LIBERO suites",
+      "three real-world manipulation tasks"
+    ],
+    "embodiments": [
+      "OpenVLA",
+      "SpatialVLA",
+      "pi0-fast",
+      "Franka Emika 7-DoF arm"
+    ],
+    "sample_or_scale": "三类 VLA、四个仿真套件，以及 200 次真实机器人试验。"
+  },
+  "evaluation": {
+    "design": "统一对比无目标、静止和定向长程攻击，同时报告攻击成功与无触发清洁表现。",
+    "baselines": [],
+    "metrics": [
+      "untargeted attack success",
+      "static attack success",
+      "targeted attack success",
+      "clean performance"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "4% 比例的双模态投毒能在真实 Franka 上诱导攻击者指定的长程动作，但成功率低于仿真。",
+      "scope": "真机证据局限于一个 Franka 平台、一个基础政策和三个桌面任务；仿真高成功率不能直接外推到真实部署。",
+      "locator": "4 Experiments > 4.4 Attacks in Real-World Settings"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "真机证据局限于一个 Franka 平台、一个基础政策和三个桌面任务；仿真高成功率不能直接外推到真实部署。",
+        "basis": "该论文既是 benchmark 又提出自己的攻击，统一协议的资源等价性与真机复现数量仍有限。"
+      }
+    ]
+  },
+  "transfer_boundary": "真机证据局限于一个 Franka 平台、一个基础政策和三个桌面任务；仿真高成功率不能直接外推到真实部署。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "该论文既是 benchmark 又提出自己的攻击，统一协议的资源等价性与真机复现数量仍有限。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "真机证据局限于一个 Franka 平台、一个基础政策和三个桌面任务；仿真高成功率不能直接外推到真实部署。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2511.12149-C01",
+      "claim": "污染后门可以不只让机器人“失败”，而是在触发时执行攻击者指定的长程动作序列；真机已显示可行性，但强度低于仿真。",
+      "stance": "limit",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "BackdoorVLA 在 7-DoF Franka 上通过物理物体与文本触发定向长程行为，并同时保留一部分无触发任务性能。",
+      "locator": "4.4 Attacks in Real-World Settings",
+      "source_context": "BackdoorVLA attains an average of 50.00% while maintaining 60.00% clean performance. Although the real-world results are lower than their simulation counterparts, they still demonstrate that these attacks remain effective on a real-world robotic platform.",
+      "evidence_type": "unified benchmark and real-robot evaluation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

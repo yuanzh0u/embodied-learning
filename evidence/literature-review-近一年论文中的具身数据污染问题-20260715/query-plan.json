@@ -1,0 +1,1594 @@
+{
+  "generated_at": "2026-07-15T06:55:23.876506+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年论文中的具身数据污染问题",
+  "start_date": "2025-07-15",
+  "end_date": "2026-07-15",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-EVAL",
+    "EA-MODEL"
+  ],
+  "families": [
+    "vla",
+    "world-model",
+    "droid-ego4d"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 40,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 160,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 160,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-direct-data-contamination",
+        "dynamic-direct-train-test-leakage",
+        "dynamic-overlap-near-duplicate",
+        "dynamic-label-noise-pseudolabel-robot",
+        "vla-core",
+        "vla-named-models",
+        "world-model-robot",
+        "droid-robot-manipulation",
+        "ego4d-robot-learning",
+        "ea-data-robot-demonstrations",
+        "ea-data-demonstration-quality",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-benchmark-exposure-vla",
+        "dynamic-shortcut-overfit-embodied-benchmark",
+        "dynamic-synthetic-feedback-contamination",
+        "dynamic-governance-provenance-dedup",
+        "calibrated-static-evaluation-overfit",
+        "calibrated-robot-learning-supply-chain",
+        "calibrated-visual-token-backdoor",
+        "calibration-static-eval-overfit",
+        "calibration-supply-chain-poisoning",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action",
+        "vla-finetuning-policy",
+        "vla-data-mixture",
+        "world-model-video-prediction",
+        "world-model-planning",
+        "droid-ego-egocentric-video",
+        "droid-ego-in-the-wild",
+        "droid-ego-data-mixture",
+        "ea-data-in-the-wild",
+        "ea-data-dataset-curation",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-poisoning-vla-policy",
+        "dynamic-world-model-poisoning",
+        "vla-negative-transfer",
+        "world-model-contact",
+        "world-model-long-horizon"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (medium): ‘具身数据污染’尚无稳定统一术语；本轮将偶发的训练—评测泄漏、重复/近重复、预训练基准曝光、错误监督扩散和恶意投毒分开检索。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-direct-data-contamination",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"data contamination\" OR all:\"benchmark contamination\") AND (all:robot OR all:embodied)",
+      "why": "直接检索具身/机器人语境中的数据与基准污染。"
+    },
+    {
+      "label": "dynamic-direct-train-test-leakage",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"data leakage\" OR all:\"train-test leakage\" OR all:\"test leakage\") AND (all:\"robot learning\" OR all:\"embodied AI\")",
+      "why": "捕获划分、时间和轨迹级训练—测试泄漏。"
+    },
+    {
+      "label": "dynamic-overlap-near-duplicate",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"dataset overlap\" OR all:\"train-test overlap\" OR all:\"near-duplicate\" OR all:deduplication) AND (all:robot OR all:embodied OR all:egocentric)",
+      "why": "检索跨数据集重叠、近重复和去重管道。"
+    },
+    {
+      "label": "dynamic-benchmark-exposure-vla",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"benchmark exposure\" OR all:\"benchmark leakage\" OR all:memorization) AND (all:VLA OR all:\"vision-language-action\" OR all:\"embodied agent\")",
+      "why": "检索基础 VLM/LLM 或 VLA 对评测任务的预训练曝光和记忆效应。"
+    },
+    {
+      "label": "dynamic-shortcut-overfit-embodied-benchmark",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:shortcut OR all:overfit OR all:memorization) AND (all:\"robot benchmark\" OR all:\"embodied reasoning\" OR all:\"robotic benchmark\")",
+      "why": "寻找被静态协议或传感运动先验掩盖的基准过拟合。"
+    },
+    {
+      "label": "dynamic-poisoning-vla-policy",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:poisoning OR all:poisoned OR all:backdoor) AND (all:\"robot policy\" OR all:\"robot learning\" OR all:\"vision-language-action\")",
+      "why": "检索示教、预训练 VLA 和下游策略中的恶意污染。"
+    },
+    {
+      "label": "dynamic-world-model-poisoning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"world model\" AND (all:poisoning OR all:backdoor) AND (all:robot OR all:robotic)",
+      "why": "检索世界模型生成数据供应链的潜伏式污染。"
+    },
+    {
+      "label": "dynamic-label-noise-pseudolabel-robot",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"label noise\" OR all:\"pseudo-label noise\" OR all:\"noisy demonstrations\") AND (all:\"robot learning\" OR all:\"robot manipulation\")",
+      "why": "检索错误标注、伪标签和混合质量示教如何进入训练集。"
+    },
+    {
+      "label": "dynamic-synthetic-feedback-contamination",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "low",
+      "query": "(all:\"synthetic data\" OR all:\"generated data\") AND (all:contamination OR all:\"model collapse\" OR all:\"feedback loop\") AND (all:robot OR all:embodied)",
+      "why": "检索生成数据反馈回训造成的系统性污染；仅作邻接证据面。"
+    },
+    {
+      "label": "dynamic-governance-provenance-dedup",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:provenance OR all:deduplication OR all:\"data governance\") AND (all:\"robot dataset\" OR all:\"robot learning\")",
+      "why": "寻找可追溯、去重和污染防控工程方案。"
+    },
+    {
+      "label": "dynamic-browser-embodied-contamination",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs (\"data contamination\" OR \"train-test leakage\" OR \"dataset overlap\") (robot OR embodied OR VLA)",
+      "why": "arXiv API 低召回时用于发现候选论文。"
+    },
+    {
+      "label": "dynamic-browser-robot-poisoning",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs (poisoning OR backdoor) (\"robot learning\" OR \"robot policy\" OR VLA OR \"world model\")",
+      "why": "定向发现机器人数据投毒与后门工作。"
+    },
+    {
+      "label": "dynamic-calibrate-contamination-terms",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "embodied AI robot learning data contamination benchmark leakage dataset overlap backdoor poisoning",
+      "why": "检查领域是否已形成新的固定术语或方法名。"
+    }
+  ],
+  "calibration_notes": [
+    "arxiv-web-search calibration (high): 命中具身评测中的 shortcut、overfit 和 static evaluation 术语，仅用于校准查询。",
+    "arxiv-web-search calibration (high): 既有候选池显示 robotic policy/VLA 论文使用 backdoor、poisoned data、visual token 等词。",
+    "arxiv-web-search calibration (high): 既有候选池显示 world-model data poisoning、robot learning supply chain 是有效检索词。",
+    "web-search-error calibration (low): 第二轮实时搜索发生网络错误；保留离线动态扩展并转入 arXiv API 检索。"
+  ],
+  "queries": [
+    {
+      "label": "dynamic-direct-data-contamination",
+      "tier": "core",
+      "query": "(all:\"data contamination\" OR all:\"benchmark contamination\") AND (all:robot OR all:embodied)",
+      "why": "直接检索具身/机器人语境中的数据与基准污染。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-direct-data-contamination"
+      ]
+    },
+    {
+      "label": "dynamic-direct-train-test-leakage",
+      "tier": "core",
+      "query": "(all:\"data leakage\" OR all:\"train-test leakage\" OR all:\"test leakage\") AND (all:\"robot learning\" OR all:\"embodied AI\")",
+      "why": "捕获划分、时间和轨迹级训练—测试泄漏。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-direct-train-test-leakage"
+      ]
+    },
+    {
+      "label": "dynamic-overlap-near-duplicate",
+      "tier": "quality",
+      "query": "(all:\"dataset overlap\" OR all:\"train-test overlap\" OR all:\"near-duplicate\" OR all:deduplication) AND (all:robot OR all:embodied OR all:egocentric)",
+      "why": "检索跨数据集重叠、近重复和去重管道。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-overlap-near-duplicate"
+      ]
+    },
+    {
+      "label": "dynamic-benchmark-exposure-vla",
+      "tier": "evaluation",
+      "query": "(all:\"benchmark exposure\" OR all:\"benchmark leakage\" OR all:memorization) AND (all:VLA OR all:\"vision-language-action\" OR all:\"embodied agent\")",
+      "why": "检索基础 VLM/LLM 或 VLA 对评测任务的预训练曝光和记忆效应。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-benchmark-exposure-vla"
+      ]
+    },
+    {
+      "label": "dynamic-shortcut-overfit-embodied-benchmark",
+      "tier": "evaluation",
+      "query": "(all:shortcut OR all:overfit OR all:memorization) AND (all:\"robot benchmark\" OR all:\"embodied reasoning\" OR all:\"robotic benchmark\")",
+      "why": "寻找被静态协议或传感运动先验掩盖的基准过拟合。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-shortcut-overfit-embodied-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-poisoning-vla-policy",
+      "tier": "limitation",
+      "query": "(all:poisoning OR all:poisoned OR all:backdoor) AND (all:\"robot policy\" OR all:\"robot learning\" OR all:\"vision-language-action\")",
+      "why": "检索示教、预训练 VLA 和下游策略中的恶意污染。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-poisoning-vla-policy"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-poisoning",
+      "tier": "system-limitation",
+      "query": "all:\"world model\" AND (all:poisoning OR all:backdoor) AND (all:robot OR all:robotic)",
+      "why": "检索世界模型生成数据供应链的潜伏式污染。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-poisoning"
+      ]
+    },
+    {
+      "label": "dynamic-label-noise-pseudolabel-robot",
+      "tier": "quality",
+      "query": "(all:\"label noise\" OR all:\"pseudo-label noise\" OR all:\"noisy demonstrations\") AND (all:\"robot learning\" OR all:\"robot manipulation\")",
+      "why": "检索错误标注、伪标签和混合质量示教如何进入训练集。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-label-noise-pseudolabel-robot"
+      ]
+    },
+    {
+      "label": "dynamic-synthetic-feedback-contamination",
+      "tier": "adjacent",
+      "query": "(all:\"synthetic data\" OR all:\"generated data\") AND (all:contamination OR all:\"model collapse\" OR all:\"feedback loop\") AND (all:robot OR all:embodied)",
+      "why": "检索生成数据反馈回训造成的系统性污染；仅作邻接证据面。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "low",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-synthetic-feedback-contamination"
+      ]
+    },
+    {
+      "label": "dynamic-governance-provenance-dedup",
+      "tier": "deployment",
+      "query": "(all:provenance OR all:deduplication OR all:\"data governance\") AND (all:\"robot dataset\" OR all:\"robot learning\")",
+      "why": "寻找可追溯、去重和污染防控工程方案。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-governance-provenance-dedup"
+      ]
+    },
+    {
+      "label": "calibrated-static-evaluation-overfit",
+      "tier": "calibrated-term",
+      "query": "all:\"static evaluation overfit\"",
+      "why": "用于发现不直接自称 contamination，但可能暴露评测与训练分布过度耶合的工作。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-static-evaluation-overfit"
+      ]
+    },
+    {
+      "label": "calibrated-robot-learning-supply-chain",
+      "tier": "calibrated-term",
+      "query": "all:\"robot learning supply chain\"",
+      "why": "世界模型投毒工作使用的系统边界词。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-robot-learning-supply-chain"
+      ]
+    },
+    {
+      "label": "calibrated-visual-token-backdoor",
+      "tier": "calibrated-term",
+      "query": "all:\"visual-token backdoor\"",
+      "why": "VLA 预训练污染与防御论文的具体机制词。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-visual-token-backdoor"
+      ]
+    },
+    {
+      "label": "calibration-static-eval-overfit",
+      "tier": "calibrated-query",
+      "query": "all:\"static evaluation\" AND (all:overfit OR all:shortcut) AND (all:VLA OR all:robot)",
+      "why": "补足非显式 contamination 术语的评测污染候选。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-static-eval-overfit"
+      ]
+    },
+    {
+      "label": "calibration-supply-chain-poisoning",
+      "tier": "calibrated-query",
+      "query": "all:\"robot learning supply chain\" AND (all:poisoning OR all:backdoor)",
+      "why": "定向回收生成数据供应链攻击工作。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-supply-chain-poisoning"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-direct-data-contamination",
+      "tier": "core",
+      "query": "(all:\"data contamination\" OR all:\"benchmark contamination\") AND (all:robot OR all:embodied)",
+      "why": "直接检索具身/机器人语境中的数据与基准污染。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-direct-data-contamination"
+      ]
+    },
+    {
+      "label": "dynamic-direct-train-test-leakage",
+      "tier": "core",
+      "query": "(all:\"data leakage\" OR all:\"train-test leakage\" OR all:\"test leakage\") AND (all:\"robot learning\" OR all:\"embodied AI\")",
+      "why": "捕获划分、时间和轨迹级训练—测试泄漏。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-direct-train-test-leakage"
+      ]
+    },
+    {
+      "label": "dynamic-overlap-near-duplicate",
+      "tier": "quality",
+      "query": "(all:\"dataset overlap\" OR all:\"train-test overlap\" OR all:\"near-duplicate\" OR all:deduplication) AND (all:robot OR all:embodied OR all:egocentric)",
+      "why": "检索跨数据集重叠、近重复和去重管道。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-overlap-near-duplicate"
+      ]
+    },
+    {
+      "label": "dynamic-benchmark-exposure-vla",
+      "tier": "evaluation",
+      "query": "(all:\"benchmark exposure\" OR all:\"benchmark leakage\" OR all:memorization) AND (all:VLA OR all:\"vision-language-action\" OR all:\"embodied agent\")",
+      "why": "检索基础 VLM/LLM 或 VLA 对评测任务的预训练曝光和记忆效应。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-benchmark-exposure-vla"
+      ]
+    },
+    {
+      "label": "dynamic-shortcut-overfit-embodied-benchmark",
+      "tier": "evaluation",
+      "query": "(all:shortcut OR all:overfit OR all:memorization) AND (all:\"robot benchmark\" OR all:\"embodied reasoning\" OR all:\"robotic benchmark\")",
+      "why": "寻找被静态协议或传感运动先验掩盖的基准过拟合。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-shortcut-overfit-embodied-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-poisoning-vla-policy",
+      "tier": "limitation",
+      "query": "(all:poisoning OR all:poisoned OR all:backdoor) AND (all:\"robot policy\" OR all:\"robot learning\" OR all:\"vision-language-action\")",
+      "why": "检索示教、预训练 VLA 和下游策略中的恶意污染。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-poisoning-vla-policy"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-poisoning",
+      "tier": "system-limitation",
+      "query": "all:\"world model\" AND (all:poisoning OR all:backdoor) AND (all:robot OR all:robotic)",
+      "why": "检索世界模型生成数据供应链的潜伏式污染。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-poisoning"
+      ]
+    },
+    {
+      "label": "dynamic-label-noise-pseudolabel-robot",
+      "tier": "quality",
+      "query": "(all:\"label noise\" OR all:\"pseudo-label noise\" OR all:\"noisy demonstrations\") AND (all:\"robot learning\" OR all:\"robot manipulation\")",
+      "why": "检索错误标注、伪标签和混合质量示教如何进入训练集。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-label-noise-pseudolabel-robot"
+      ]
+    },
+    {
+      "label": "dynamic-synthetic-feedback-contamination",
+      "tier": "adjacent",
+      "query": "(all:\"synthetic data\" OR all:\"generated data\") AND (all:contamination OR all:\"model collapse\" OR all:\"feedback loop\") AND (all:robot OR all:embodied)",
+      "why": "检索生成数据反馈回训造成的系统性污染；仅作邻接证据面。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "low",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-synthetic-feedback-contamination"
+      ]
+    },
+    {
+      "label": "dynamic-governance-provenance-dedup",
+      "tier": "deployment",
+      "query": "(all:provenance OR all:deduplication OR all:\"data governance\") AND (all:\"robot dataset\" OR all:\"robot learning\")",
+      "why": "寻找可追溯、去重和污染防控工程方案。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-governance-provenance-dedup"
+      ]
+    },
+    {
+      "label": "calibrated-static-evaluation-overfit",
+      "tier": "calibrated-term",
+      "query": "all:\"static evaluation overfit\"",
+      "why": "用于发现不直接自称 contamination，但可能暴露评测与训练分布过度耶合的工作。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-static-evaluation-overfit"
+      ]
+    },
+    {
+      "label": "calibrated-robot-learning-supply-chain",
+      "tier": "calibrated-term",
+      "query": "all:\"robot learning supply chain\"",
+      "why": "世界模型投毒工作使用的系统边界词。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-robot-learning-supply-chain"
+      ]
+    },
+    {
+      "label": "calibrated-visual-token-backdoor",
+      "tier": "calibrated-term",
+      "query": "all:\"visual-token backdoor\"",
+      "why": "VLA 预训练污染与防御论文的具体机制词。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-visual-token-backdoor"
+      ]
+    },
+    {
+      "label": "calibration-static-eval-overfit",
+      "tier": "calibrated-query",
+      "query": "all:\"static evaluation\" AND (all:overfit OR all:shortcut) AND (all:VLA OR all:robot)",
+      "why": "补足非显式 contamination 术语的评测污染候选。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-static-eval-overfit"
+      ]
+    },
+    {
+      "label": "calibration-supply-chain-poisoning",
+      "tier": "calibrated-query",
+      "query": "all:\"robot learning supply chain\" AND (all:poisoning OR all:backdoor)",
+      "why": "定向回收生成数据供应链攻击工作。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-supply-chain-poisoning"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-browser-embodied-contamination",
+      "query": "site:arxiv.org/abs (\"data contamination\" OR \"train-test leakage\" OR \"dataset overlap\") (robot OR embodied OR VLA)",
+      "why": "arXiv API 低召回时用于发现候选论文。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-browser-robot-poisoning",
+      "query": "site:arxiv.org/abs (poisoning OR backdoor) (\"robot learning\" OR \"robot policy\" OR VLA OR \"world model\")",
+      "why": "定向发现机器人数据投毒与后门工作。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-calibrate-contamination-terms",
+      "query": "embodied AI robot learning data contamination benchmark leakage dataset overlap backdoor poisoning",
+      "why": "检查领域是否已形成新的固定术语或方法名。",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-static-evaluation-overfit",
+      "query": "\"static evaluation overfit\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: static evaluation overfit.",
+      "source_key": "calibration",
+      "source_type": "arxiv-web-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-robot-learning-supply-chain",
+      "query": "\"robot learning supply chain\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: robot learning supply chain.",
+      "source_key": "calibration",
+      "source_type": "arxiv-web-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-visual-token-backdoor",
+      "query": "\"visual-token backdoor\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: visual-token backdoor.",
+      "source_key": "calibration",
+      "source_type": "arxiv-web-search",
+      "channel": "web_calibration"
+    }
+  ]
+}

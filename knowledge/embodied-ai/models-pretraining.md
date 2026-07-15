@@ -21,10 +21,14 @@ source:
   - id: RUN-EGO-DATA-20260715
     file: ../../evidence/literature-review-ego-centric-数据在具身模型训练中的问题与困难-20260715/evidence.jsonl
     locator: EA-EGO-2026-0001..0002; EA-EGO-2026-0007..0008; EA-EGO-2026-0011; EA-EGO-2026-0014; EA-EGO-2026-0018
-tags: [embodied-ai, model, pretraining, vla, rt-x, octo, openvla, sim2real, ego-centric]
-aliases: [机器人基础模型, Unified Model, VLA, Octo, OpenVLA, RT-X, 预训练, 微调, Ego-centric预训练]
+  - id: RUN-DATA-CONTAMINATION-20260715
+    file: ../../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/evidence.jsonl
+    locator: EA-CONTAM-2026-0001..0010
+tags: [embodied-ai, model, pretraining, vla, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
+aliases: [机器人基础模型, Unified Model, VLA, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
 load_when:
   - 问题涉及统一机器人模型、VLA、开源模型泛化、预训练有效性或 Sim2Real
+  - 问题涉及基模型污染、VLA 后门、干净微调能否清除污染、检查点继承或世界模型生成风险
 confidence: working
 ---
 
@@ -38,7 +42,7 @@ confidence: working
 
 ## 30 秒摘要
 
-机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。VLA 可以继承视觉和语言先验，却不会自动继承运动、接触和控制器先验；语言—视觉—动作接口需要显式对齐。Ego-centric 人类视频可扩展行为与视点先验，但只有经过动作恢复、本体对齐和目标机器人锚定后，才可能转成可执行控制。4D 和世界模型可以提供几何动态监督、未来想象和动作筛选，但训练目标必须面向动作质量而非只追求视觉重建。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
+机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。VLA 可以继承视觉和语言先验，却不会自动继承运动、接触和控制器先验；语言—视觉—动作接口需要显式对齐。Ego-centric 人类视频可扩展行为与视点先验，但只有经过动作恢复、本体对齐和目标机器人锚定后，才可能转成可执行控制。基础模型、适配模块与检查点还构成需要独立审计的供应链：下游干净微调不能单独证明污染已被清除。4D 和世界模型可以提供几何动态监督、未来想象和动作筛选，但训练目标必须面向动作质量，并防范生成扩增中的二次激活。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
 
 ## 关键判断
 
@@ -54,6 +58,10 @@ confidence: working
 - 世界动作模型不能只优化视频重建；内部表示还应与接触、轨迹和任务相关区域对齐。
 - Ego-centric 预训练存在实测规模收益，但规模与本体对齐是互补条件；没有机器人微调或 aligned human-robot 中间训练时，收益不能直接落到目标控制。
 - 缩小 human/robot 视觉外观差距不等于解决动作接口；hand-object 6DoF、接触结构和目标机器人数据仍决定闭环可执行性。
+- 基模型后门可能植入对下游微调不敏感的模块并穿过干净适配；模型卡必须追踪预训练来源、模块变化与检查点继承。
+- VLA 的污染触发面覆盖视觉、语言、初始状态和关键动作窗，单一图像预处理或单一触发测试不能支持整体安全结论。
+- Action chunking 与 delta-pose 积分会放大平滑小偏差，模型审计应覆盖 chunk 内累积和执行窗末端误差。
+- 世界模型生成可以把表面安全的数据转成危险轨迹，生成器与下游策略必须共享 canary、差分和闭环复验链路。
 
 ## 指标与检核
 
@@ -67,6 +75,7 @@ confidence: working
 | 多模态对齐 | 语言消融、action-grounded attention、动作解码误差、阶段一致性 |
 | 世界动态 | 3D correspondence、action fidelity、长程 rollout、未来评分相关性 |
 | Ego 预训练 | 有效视频小时、自动标签通过率、robot-anchor 比例、预训练/中间训练/微调消融、真实闭环增益 |
+| 模型供应链 | 基模型/模块/检查点谱系、clean/trigger success、跨微调持久性、触发面覆盖、恢复后能力损失 |
 
 ## 适用边界
 
@@ -74,6 +83,7 @@ confidence: working
 - 工业部署必须结合目标本体数据、动作接口校准、底层控制器和闭环评测。
 - 高接触、柔性物、透明/反光物和长程任务对预训练泛化要求更高，风险也更大。
 - 现有 Ego-centric 规模曲线来自特定灵巧操作和主动感知设置，不能外推为 raw video 对所有机器人任务都遵循同一 scaling law。
+- 现有后门研究多基于明确攻击权限和特定触发器，只能说明供应链攻击面与防御盲点，不能推断现实基础模型的污染率。
 
 ## 证据锚点
 
@@ -84,6 +94,7 @@ confidence: working
 - RUN-WMDATA-20260714：`EA-WMDATA-READ-0001..0010` 覆盖异构视频—动作数据、关键事件、具身锚定合成数据、几何未来和失败附近纠正轨迹。
 - RUN-4D-REASONING-20260714：`EA-4D-READ-0001..0005`, `0008`, `0014..0015` 覆盖 4D 监督、几何增强 rollout、连续 4D 表征和多视角训练数据。
 - RUN-EGO-DATA-20260715：`EA-EGO-2026-0001..0002`, `0007..0008`, `0011`, `0014`, `0018` 支持 Ego 规模收益、本体/动作接口边界、aligned mid-training、目标机器人数据不可缺以及主动视点先验的条件性。
+- RUN-DATA-CONTAMINATION-20260715：`EA-CONTAM-2026-0001..0010` 覆盖状态/视觉/语言/动作窗触发、极低比例 episode 投毒、chunk 漂移、持久后门、检测恢复边界和世界模型二次激活；这些事件原始投影归入 EA-DATA，本卡结论属于有明确锚点的跨卡 synthesis。
 
 ## 待补问题
 
@@ -92,3 +103,4 @@ confidence: working
 - 补充企业内部复验预训练价值的实验设计模板。
 - 建立 action prior、离散 tokenizer 和 continuous expert 的统一对照。
 - 建立 Ego-human、aligned human-robot 与目标机器人数据的混合比例和边际收益曲线。
+- 建立基础模型—适配模块—检查点—生成器—策略的供应链谱系和分阶段 canary 复验模板。
