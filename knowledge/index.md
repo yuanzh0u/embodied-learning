@@ -2,7 +2,7 @@
 id: KB-INDEX
 title: 智能体主索引
 type: index
-updated: 2026-07-15
+updated: 2026-07-17
 tags: [agent-index, routing, embodied-ai, error-governance]
 ---
 
@@ -34,10 +34,10 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | EA-VLOC | 图像视觉定位 | [embodied-ai/visual-localization.md](embodied-ai/visual-localization.md) | 图像定位, VPR, 相机重定位, SCR, 3DGS, PnP, 拒识覆盖 |
 | EA-FIELD | 现场采集 Hub 与物流分拣考察 | [embodied-ai/field-data-collection-hubs.md](embodied-ai/field-data-collection-hubs.md) | 物流分拣, Hub, 现场考察, 岗位盘点, 视频验收, 试采 |
 | EA-XEMBODIMENT | 跨本体与数据迁移 | [embodied-ai/cross-embodiment-transfer.md](embodied-ai/cross-embodiment-transfer.md) | retargeting, 灵巧手, 夹爪, embodiment adapter, 接触功能 |
-| EA-MODEL | 模型与预训练 | [embodied-ai/models-pretraining.md](embodied-ai/models-pretraining.md) | VLA, RT-X, Octo, OpenVLA, 预训练, 微调, 模型供应链, 后门, Sim2Real |
-| EA-EVAL | 评测体系与世界模型 | [embodied-ai/evaluation-world-models.md](embodied-ai/evaluation-world-models.md) | 开放环, 闭环, benchmark, 语义泄漏, 触发测试, 世界模型, sim-real |
-| EA-4D | 4D 时空推理与世界动态 | [embodied-ai/4d-spatiotemporal-reasoning.md](embodied-ai/4d-spatiotemporal-reasoning.md) | 4D, point tracks, correspondence, 动态场景图, action-conditioned rollout |
-| EA-ALIGN | VLA 多模态与动作对齐 | [embodied-ai/vla-multimodal-action-alignment.md](embodied-ai/vla-multimodal-action-alignment.md) | 语言稀疏, 视觉稠密, 动作连续, action token, action adapter |
+| EA-MODEL | 模型与预训练 | [embodied-ai/models-pretraining.md](embodied-ai/models-pretraining.md) | VLA, 反应式 VLA, VLA—世界模型融合栈, latent planning, 预训练, 模型供应链, Sim2Real |
+| EA-EVAL | 评测体系与世界模型 | [embodied-ai/evaluation-world-models.md](embodied-ai/evaluation-world-models.md) | 开放环, 闭环, benchmark, 世界模型, 候选排序, failure optimism, sim-real |
+| EA-4D | 4D 时空推理与世界动态 | [embodied-ai/4d-spatiotemporal-reasoning.md](embodied-ai/4d-spatiotemporal-reasoning.md) | 4D, point tracks, correspondence, 动态场景图, 后果预演, action-conditioned rollout |
+| EA-ALIGN | VLA 多模态与动作对齐 | [embodied-ai/vla-multimodal-action-alignment.md](embodied-ai/vla-multimodal-action-alignment.md) | 语言稀疏, 视觉稠密, 动作连续, action token, action-grounded reasoning, action adapter |
 | EA-BIZ | 产业落地与商业化 | [embodied-ai/commercialization.md](embodied-ai/commercialization.md) | ToB, ROI, 节拍, 良率, 最后一厘米, 工业场景 |
 | ERR-COMPARE | 测绘误差观与 AI 误差治理对照 | [error-governance/surveying-vs-ai-error-governance.md](error-governance/surveying-vs-ai-error-governance.md) | 量值误差, 语义风险, 真值, 验收, 平差 |
 | ERR-PATTERN | 可迁移的误差治理模式 | [error-governance/transfer-patterns.md](error-governance/transfer-patterns.md) | 误差预算, 冗余检核, 适用边界, 残差分析, 风险等级 |
@@ -56,6 +56,7 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | 物流分拣、Hub、现场考察、岗位盘点、视频验收、远程验收、试采、Top 5 岗位 | EA-FIELD, EA-DATA, EA-BIZ |
 | 跨本体、人手到机器人、retargeting、灵巧手、夹爪、动作空间 | EA-XEMBODIMENT |
 | 机器人基础模型、VLA、RT-X、Octo、OpenVLA、预训练、微调 | EA-MODEL |
+| 反应式 VLA、VLA 已死、世界模型当立、预演后行动、动作后果、VLA—世界模型融合 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN |
 | benchmark、开放环、闭环、仿真评测、世界模型、Sim2Real | EA-EVAL |
 | 4D、point tracks、跨帧几何、动态场景图、世界动态、动作条件未来 | EA-4D, EA-EVAL, EA-MODEL |
 | 语言动作对齐、视觉动作对齐、动作 token、action adapter、动作连续、语言稀疏 | EA-ALIGN, EA-MODEL, EA-XEMBODIMENT |

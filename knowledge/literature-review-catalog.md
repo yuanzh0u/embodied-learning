@@ -2,21 +2,22 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-07-15
+updated: 2026-07-17
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本是 15 个 paper-reader-backed run；`reader-v1` 保留为历史产物，但其事件编号命名空间存在跨 run 冲突，不作为知识卡的当前证据入口。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 15 个 paper-reader-backed 基础 run 与 1 个跨 run 主题综合；`reader-v1` 保留为历史产物，但其事件编号命名空间存在跨 run 冲突，不作为知识卡的当前证据入口。
 
 ## 批次概况
 
-- Review mode：15 项均为 `scoping`。
-- 检索池：每项 321–1,409 篇候选论文。
-- 全文层：每项 49–162 篇具有可读全文。
-- 精读层：每项选取 15 篇核心论文，完成 paper note 与 claim-support audit。
-- 总量：225 个任务—论文精读实例，107 篇不重复论文，230 条全局唯一正式证据事件。
+- Review mode：15 项基础 run 均为 `scoping`。
+- 检索池：基础 run 每项 321–1,409 篇候选论文。
+- 全文层：基础 run 每项 49–162 篇具有可读全文。
+- 精读层：基础 run 每项选取 15 篇核心论文，完成 paper note 与 claim-support audit。
+- 基础 run 总量：225 个任务—论文精读实例，107 篇不重复论文，230 条全局唯一正式证据事件。
+- 跨 run 综合：1 项，复用 6 个已审计 run，形成 1,547 候选 / 175 可读全文 / 28 篇精读证据的主题综合；未制造新的论文级 event。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
 
@@ -42,6 +43,12 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-VLOC | 近一年图像视觉定位方法的发展与挑战 | EA-VLOC, EA-SENSOR, EA-EVAL, EA-HARDWARE | 321 / 53 / 15 | [run](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/run.json) · [packet](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/review-packet.md) |
 | LR-CONTAM | 近一年论文中的具身数据污染问题 | EA-DATA, EA-EVAL, EA-MODEL | 964 / 49 / 15 | [run](../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/run.json) · [packet](../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/review-packet.md) |
 
+## 跨 run 综合专题
+
+| ID | 综合问题 | 主要知识卡 | 规模 | 审计入口 |
+|---|---|---|---:|---|
+| LR-VLA-WM-SHIFT | 近一年为何说反应式 VLA 已死、世界模型当立 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN | 1,547 / 175 / 28 | [run](../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/run.json) · [packet](../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/review-packet.md) |
+
 ## 按上下文预算加载
 
 | 预算 | 加载内容 | 用途 |
@@ -64,5 +71,6 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 - Ego-centric 数据提供的是高覆盖行为先验，不是完整机器人控制监督；规模收益以坐标解耦、动作/接触恢复、本体转换、可执行性过滤和目标机器人锚定为条件。
 - 图像视觉定位正在从单一检索精度转向地图几何、可恢复域、风险—覆盖和评测真值的联合治理；神经表示与高相似度都不能替代几何验证和失败拒识。
 - 具身数据污染是来源、时间结构、任务边界和模型供应链之间的关系失真；治理必须覆盖语义泄漏、场景/轨迹近重复、动作窗异常、持久后门与世界模型二次激活，不能只做入库前样本清洗。
+- “反应式 VLA 已死”只对不显式检验后果的狭义策略成立；当前证据更支持 VLA 语义/动作先验、世界模型后果预演和本体控制联合的融合栈，而不是用视频生成器替代 VLA。
 
-这些结论是对 15 项综述的跨 run 综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
+这些结论来自 15 项基础综述与 1 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。

@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.08546",
+    "title": "Interactive World Simulator for Robot Policy Training and Evaluation",
+    "published": "2026-03-09",
+    "url": "https://arxiv.org/abs/2603.08546",
+    "authors": [
+      "Yixuan Wang",
+      "Rhythm Syed",
+      "Fangyu Wu",
+      "Mengchao Zhang",
+      "Aykut Onol",
+      "Jose Barreiros",
+      "Hooshang Nayyeri",
+      "Tony Dear",
+      "Huan Zhang",
+      "Yunzhu Li"
+    ]
+  },
+  "review": {
+    "question": "世界模型需要什么样的训练数据",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 世界模型需要什么样的训练数据."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "II-A Video Prediction Model for Robotic Manipulation",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "II-C Imitation Policy Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '世界模型需要什么样的训练数据', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "A robot world model can be trained from a moderate-sized robot interaction dataset and then used to generate policy-training demonstrations, but its value depends on interaction-consistent long-horizon rollouts and sim-real correlation."
+  ],
+  "method": {
+    "summary": "Video prediction models, or world models, have shown significant potential in robotics [ 6 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 , 36 , 37 , 38 , 39 , 40 , 41 , 42 , 43 , 44 , 45 , 46 ] , serving critical roles in zero-shot planning [ 47 , 1 ] , policy steering [ 4 ] , evaluation [ 5 ] , and direct control. Frameworks like NovaFlow [ 47 ] and RIGVid [ 48 ] demonstrate the power of repurposing large-scale video generation to derive actionable 3D object flow and trajectories for manipulation without real-world demonstrations. Recent advancements such as the Large Video Planner [ 1 ] further establish video as a primary modality for robot",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Reliable policy evaluation is a cornerstone of robotics research [ 63 , 64 , 65 , 66 , 67 , 68 , 69 , 70 ] , with real-world deployment serving as the gold standard for assessing performance. However, real-world evaluation is costly, time-consuming, and difficult to scale, making it impractical for frequent algorithm iteration, checkpoint selection, and fair comparison across methods. As a result, there has been growing interest in developing scalable evaluation frameworks whose outcomes correlate well with real-world policy performance. Prior work has explored both 3D- and 2D-based approaches to address this challenge. 3D-based evaluation methods, such as Physically Embodied Gaussian Splatt",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "A robot world model can be trained from a moderate-sized robot interaction dataset and then used to generate policy-training demonstrations, but its value depends on interaction-consistent long-horizon rollouts and sim-real correlation.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "IV-C Data Generation for Policy Training"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (II-A Video Prediction Model for Robotic Manipulation) and evaluation (II-C Imitation Policy Evaluation)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.08546-C01",
+      "claim": "A robot world model can be trained from a moderate-sized robot interaction dataset and then used to generate policy-training demonstrations, but its value depends on interaction-consistent long-horizon rollouts and sim-real correlation.",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 世界模型需要什么样的训练数据",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The paper builds an Interactive World Simulator from a moderate-sized robot interaction dataset, reports world-model-generated policy data comparable to the same amount of real-world data, and evaluates sim-real performance correlation.",
+      "locator": "IV-C Data Generation for Policy Training",
+      "source_context": "Notably, policies trained on 100% world simulator data perform comparably to those trained on an equivalent volume of real-robot expert data. This suggests that our simulator can generate data with quality similar to that of real-world demonstrations.",
+      "evidence_type": "system-evaluation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in IV-C Data Generation for Policy Training contains the paper-specific concepts used by the claim (an, data, demonstrations, generate, of, on, real-world, simulator). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "HTML extraction available in /tmp/wm-data-2603.08546-html.json. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

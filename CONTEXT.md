@@ -2,7 +2,7 @@
 id: PROJECT-CONTEXT
 title: 项目上下文词表
 type: glossary
-updated: 2026-07-15
+updated: 2026-07-17
 tags: [context, glossary, embodied-ai, query-planning]
 ---
 
@@ -28,6 +28,9 @@ tags: [context, glossary, embodied-ai, query-planning]
 | review packet | 面向研究者的中预算审计视图，汇总综述范围、证据分布、共识、限制和缺口；它不是读者成稿。 |
 | reader-facing articles | 科研备忘录、知乎解释稿和小红书稿三类表达层。它们共享 accepted evidence，但必须按各自读者和文体独立组织。 |
 | active review run | 由 [文献综述成果目录](knowledge/literature-review-catalog.md) 声明为当前知识卡证据入口的 append-only run；历史 run 保留但不默认加载。 |
+| reactive VLA | 狭义指主要通过行为克隆，把当前观测与语言指令直接映射为下一步或下一段动作、但不显式预测和检验动作后果的 VLA 策略；它不等同于全部 VLA 架构。 |
+| VLA–world-model fusion stack | 知识库对近期跨论文证据的 synthesis：VLA 提供语义理解、任务分解与动作先验，动作条件世界模型负责后果预演、候选排序与失败识别，本体适配器和底层控制器负责可执行落地。 |
+| action-conditioned reliability | 世界模型在给定动作条件下，对真实后果、物理约束、长时一致、失败状态和候选排序保持可靠，并能在可用延迟内支持闭环决策的联合要求。 |
 | embodied data contamination | 具身数据中的来源、时间、任务、动作、模型版本或评测边界关系失真；既包括近重复、同步错位和训练—评测泄漏，也包括投毒、持久后门及生成扩增中的二次激活。它不是只在入库前发生的样本级脏数据。 |
 | semantic leakage | 训练与评测在场景、任务逻辑、对象布局或指令—动作映射上过度相似，使模型依赖记忆取得高分；即使不存在字节级重复，也会破坏泛化证据的独立性。 |
 | supply-chain persistence | 污染或后门进入基础模型、适配模块或检查点后继续穿过下游干净微调的现象；因此只审计本地新增示教不能证明模型链路无污染。 |

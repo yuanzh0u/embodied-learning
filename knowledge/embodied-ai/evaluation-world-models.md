@@ -3,7 +3,7 @@ id: EA-EVAL
 title: 评测体系与世界模型
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-15
+updated: 2026-07-17
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -24,12 +24,16 @@ source:
   - id: RUN-DATA-CONTAMINATION-20260715
     file: ../../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/evidence.jsonl
     locator: EA-CONTAM-2026-0003..0010; EA-CONTAM-2026-0012
-tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, sim-real, admissibility, action-fidelity, contamination, semantic-leakage, backdoor, risk-coverage, visual-localization]
-aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, Benchmark, Sim2Real, 数据污染评测, 语义泄漏, 触发测试, 动作忠实, 世界模型可采信性, 风险覆盖, 定位评测]
+  - id: RUN-VLA-WM-SHIFT-20260717
+    file: ../../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/evidence.jsonl
+    locator: EA-CONTAM-2026-0007; EA-WMEVAL-READ-0001; EA-WMEVAL-READ-0003..0008; EA-WMEVAL-READ-0010..0011; EA-WMEVAL-READ-0013..0015
+tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, action-conditioned-reliability, candidate-ranking, failure-optimism, sim-real, admissibility, action-fidelity, contamination, semantic-leakage, backdoor, risk-coverage, visual-localization]
+aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, Action-conditioned reliability, 后果预演, 候选动作排序, 失败乐观偏差, Benchmark, Sim2Real, 数据污染评测, 语义泄漏, 触发测试, 动作忠实, 世界模型可采信性, 风险覆盖, 定位评测]
 load_when:
   - 问题涉及具身智能评测、benchmark、开放环/闭环、世界模型或长程规划
   - 问题涉及 world-model admissibility、动作忠实、反事实、乐观偏差或策略评估器可信度
   - 问题涉及训练评测泄漏、数据投毒、VLA 后门、触发测试、检测恢复或世界模型二次激活
+  - 问题涉及世界模型是否能参与规划、候选动作排序、后果拒识或“世界模型当立”的评测证据
 confidence: working
 ---
 
@@ -63,6 +67,8 @@ confidence: working
 - Episode 成功率会漏掉关键短时窗的动作覆写和平滑累积漂移，评测需要局部动作、接触前后与 chunk 末端指标。
 - 后门防御必须分别报告检测、因果定位、恢复、误报和恢复后能力损失，并限定视觉、状态、语言或自适应触发范围。
 - 世界模型扩增需要联合验收原始样本、生成轨迹和最终政策；生成前安全不能推出生成后安全。
+- 世界模型取得规划权必须同时满足真实结果保真、长时程一致和足够低的推理成本，并证明候选排序与真实闭环结果相关。
+- “能生成未来”不是可采信性证据；系统还应对不可执行未来拒识、不过度乐观地预测失败，并在相同预算下优于不预演的基线。
 
 ## 指标与检核
 
@@ -79,6 +85,7 @@ confidence: working
 | 视觉定位 | 分条件 Recall@K、PnP/细化成功率、6DoF 误差、风险—覆盖、连续失定位时长、恢复率 |
 | 污染压力测试 | 结构扰动集、训练—评测重合率、触发 ASR/失效率、clean success、关键动作窗异常、跨触发面迁移 |
 | 防御与恢复 | 检出率、误报率、因果定位准确率、恢复成功率、恢复后能力损失、持续性复测 |
+| 决策价值 | 候选动作排序相关性、拒识准确率、failure optimism、规划闭环增益、rollout 延迟与单位成功成本 |
 
 ## 适用边界
 
@@ -89,6 +96,7 @@ confidence: working
 - 视觉一致但接触、动作或奖励响应错误的模型不具备策略评估 admissibility。
 - 允许拒识的定位安全结论只适用于系统可以停机、重定位或切换传感器的场景；必须持续输出位姿时，低覆盖会转化为任务风险。
 - 后门 benchmark 的攻击权限与触发器定义决定结论边界；攻击成功证明风险面存在，不等于现实供应链中的污染发生率。
+- 未证明动作条件可靠性、sim-real 排序和真实闭环增益的生成模型，只能作为数据/分析工具，不能单独承担规划或安全裁决。
 
 ## 证据锚点
 
@@ -99,6 +107,7 @@ confidence: working
 - RUN-SENSOR-ERROR-20260714：`EA-SENSORERR-READ-0002`, `0005..0009` 支持局部执行走廊、Safety Success、world-model admissibility 和部署置信度。
 - RUN-VLOC-20260715：`EA-VLOC-2026-0004`, `0006`, `0008..0011`, `0015` 支持不确定性拒识、真值协议、初始化/几何失败、风险—覆盖和地理长尾评测边界。
 - RUN-DATA-CONTAMINATION-20260715：`EA-CONTAM-2026-0003..0010`, `0012` 支持动作窗污染、chunk 漂移、检测—定位—恢复分账、世界模型二次激活、训练评测语义泄漏和控制环同步审计；这些事件原始投影归入 EA-DATA，本卡结论属于有明确锚点的跨卡 synthesis。
+- RUN-VLA-WM-SHIFT-20260717：`EA-WMEVAL-READ-0001`, `0003..0008`, `0010..0011`, `0013..0015` 与 `EA-CONTAM-2026-0007` 共同覆盖异构监督、关键事件、4D/几何增强、物理/动作忠实、长程效率、具身锚定和评测泄漏；“规划权门槛”是综合 run 的跨事件 `inference`。
 
 ## 待补问题
 
@@ -108,3 +117,4 @@ confidence: working
 - 建立预测保真、决策有效和安全裁决三套分账指标。
 - 建立贯通 VPR、几何验证、最终位姿和任务恢复的定位评测模板。
 - 建立同时报告 clean performance、污染条件性能、检出/误报、恢复代价和跨模型迁移的具身污染评测协议。
+- 建立相同动作候选、计算预算与真机数据下，有/无后果预演层的闭环评测协议。

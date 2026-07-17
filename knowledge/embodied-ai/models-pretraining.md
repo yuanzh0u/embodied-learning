@@ -3,7 +3,7 @@ id: EA-MODEL
 title: 模型与预训练
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-15
+updated: 2026-07-17
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -24,11 +24,15 @@ source:
   - id: RUN-DATA-CONTAMINATION-20260715
     file: ../../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/evidence.jsonl
     locator: EA-CONTAM-2026-0001..0010
-tags: [embodied-ai, model, pretraining, vla, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
-aliases: [机器人基础模型, Unified Model, VLA, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
+  - id: RUN-VLA-WM-SHIFT-20260717
+    file: ../../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/evidence.jsonl
+    locator: EA-ALIGN-READ-0001; EA-ALIGN-READ-0003..0004; EA-ALIGN-READ-0006; EA-ALIGN-READ-0009; EA-ALIGN-READ-0013; EA-ALIGN-READ-0015; EA-CONTAM-2026-0007; EA-EGO-2026-0001; EA-EGO-2026-0003; EA-WMDATA-READ-0009; EA-WMEVAL-READ-0004; EA-WMEVAL-READ-0010; EA-WMEVAL-READ-0013; EA-WMEVAL-READ-0015
+tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, latent-planning, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
+aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, latent planning, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
 load_when:
   - 问题涉及统一机器人模型、VLA、开源模型泛化、预训练有效性或 Sim2Real
   - 问题涉及基模型污染、VLA 后门、干净微调能否清除污染、检查点继承或世界模型生成风险
+  - 问题涉及“VLA 已死”、反应式策略、世界模型当立、动作后果预演或策略—动态—控制分层
 confidence: working
 ---
 
@@ -42,7 +46,7 @@ confidence: working
 
 ## 30 秒摘要
 
-机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。VLA 可以继承视觉和语言先验，却不会自动继承运动、接触和控制器先验；语言—视觉—动作接口需要显式对齐。Ego-centric 人类视频可扩展行为与视点先验，但只有经过动作恢复、本体对齐和目标机器人锚定后，才可能转成可执行控制。基础模型、适配模块与检查点还构成需要独立审计的供应链：下游干净微调不能单独证明污染已被清除。4D 和世界模型可以提供几何动态监督、未来想象和动作筛选，但训练目标必须面向动作质量，并防范生成扩增中的二次激活。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
+机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。“反应式 VLA 已死”只对不显式检验动作后果的狭义策略成立；跨 run 证据更支持 VLA 语义/动作先验、动作条件世界模型后果预演、本体适配器与底层控制器组成的融合栈。Ego-centric 人类视频可扩展行为与视点先验，但只有经过动作恢复、本体对齐和目标机器人锚定后，才可能转成可执行控制。基础模型、适配模块与检查点还构成需要独立审计的供应链。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
 
 ## 关键判断
 
@@ -62,6 +66,9 @@ confidence: working
 - VLA 的污染触发面覆盖视觉、语言、初始状态和关键动作窗，单一图像预处理或单一触发测试不能支持整体安全结论。
 - Action chunking 与 delta-pose 积分会放大平滑小偏差，模型审计应覆盖 chunk 内累积和执行窗末端误差。
 - 世界模型生成可以把表面安全的数据转成危险轨迹，生成器与下游策略必须共享 canary、差分和闭环复验链路。
+- 近期证据支持的范式转移不是“世界模型替代 VLA”，而是把语义/规划、后果评估和本体控制分账后联合；这是跨论文 synthesis，不是单篇论文的直接结论。
+- 具身推理只有落到末端运动、图像空间轨迹或其他动作相关表示才有控制价值；显式文本 CoT 作为动作前缀会增加延迟，并可能累积误差。
+- 失败恢复可拆为认知层的 failure mode / recovery stage / reward 判断与控制层 residual 纠正，使分类错误和执行错误能够独立归因。
 
 ## 指标与检核
 
@@ -76,6 +83,7 @@ confidence: working
 | 世界动态 | 3D correspondence、action fidelity、长程 rollout、未来评分相关性 |
 | Ego 预训练 | 有效视频小时、自动标签通过率、robot-anchor 比例、预训练/中间训练/微调消融、真实闭环增益 |
 | 模型供应链 | 基模型/模块/检查点谱系、clean/trigger success、跨微调持久性、触发面覆盖、恢复后能力损失 |
+| 融合系统价值 | 同预算纯反应式/融合系统对照、候选动作排序、失败识别、恢复率、闭环增益、额外推理延迟 |
 
 ## 适用边界
 
@@ -84,6 +92,7 @@ confidence: working
 - 高接触、柔性物、透明/反光物和长程任务对预训练泛化要求更高，风险也更大。
 - 现有 Ego-centric 规模曲线来自特定灵巧操作和主动感知设置，不能外推为 raw video 对所有机器人任务都遵循同一 scaling law。
 - 现有后门研究多基于明确攻击权限和特定触发器，只能说明供应链攻击面与防御盲点，不能推断现实基础模型的污染率。
+- 本卡不主张删除 VLA；若纯反应式 VLA 在相同计算与真机数据预算下，能在未见环境、跨本体、长时程和接触扰动任务上稳定追平融合系统，该范式转移判断即被证伪。
 
 ## 证据锚点
 
@@ -95,6 +104,7 @@ confidence: working
 - RUN-4D-REASONING-20260714：`EA-4D-READ-0001..0005`, `0008`, `0014..0015` 覆盖 4D 监督、几何增强 rollout、连续 4D 表征和多视角训练数据。
 - RUN-EGO-DATA-20260715：`EA-EGO-2026-0001..0002`, `0007..0008`, `0011`, `0014`, `0018` 支持 Ego 规模收益、本体/动作接口边界、aligned mid-training、目标机器人数据不可缺以及主动视点先验的条件性。
 - RUN-DATA-CONTAMINATION-20260715：`EA-CONTAM-2026-0001..0010` 覆盖状态/视觉/语言/动作窗触发、极低比例 episode 投毒、chunk 漂移、持久后门、检测恢复边界和世界模型二次激活；这些事件原始投影归入 EA-DATA，本卡结论属于有明确锚点的跨卡 synthesis。
+- RUN-VLA-WM-SHIFT-20260717：`EA-ALIGN-READ-0001`, `0003..0004`, `0006`, `0009`, `0013`, `0015` 支持动作语义、动作相关/latent 推理与恢复分层；`EA-EGO-2026-0001`, `0003` 与 `EA-CONTAM-2026-0007` 限定本体迁移和泛化证据；`EA-WMDATA-READ-0009`、`EA-WMEVAL-READ-0004`, `0010`, `0013`, `0015` 支持后果评估、失败数据和世界模型可用性要求。“VLA—世界模型融合栈”是跨事件 `inference`，未新增论文级 event。
 
 ## 待补问题
 
@@ -104,3 +114,4 @@ confidence: working
 - 建立 action prior、离散 tokenizer 和 continuous expert 的统一对照。
 - 建立 Ego-human、aligned human-robot 与目标机器人数据的混合比例和边际收益曲线。
 - 建立基础模型—适配模块—检查点—生成器—策略的供应链谱系和分阶段 canary 复验模板。
+- 建立相同数据、计算和控制预算下纯反应式 VLA 与融合栈的可证伪对照实验。
