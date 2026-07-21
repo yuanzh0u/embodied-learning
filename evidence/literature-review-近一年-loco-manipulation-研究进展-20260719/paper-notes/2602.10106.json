@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.10106",
+    "title": "EgoHumanoid: Unlocking In-the-Wild Loco-Manipulation with Robot-Free Egocentric Demonstration",
+    "published": "2026-02-10T18:59:03Z",
+    "url": "https://arxiv.org/abs/2602.10106",
+    "authors": [
+      "Modi Shi",
+      "Shijia Peng",
+      "Jin Chen",
+      "Haoran Jiang",
+      "Tianyu Li",
+      "Di Huang",
+      "Ping Luo",
+      "Hongyang Li",
+      "Li Chen"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct human-to-humanoid data transfer study for real-world loco-manipulation."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify the humanoid demonstration scaling problem."
+      },
+      {
+        "locator": "III EgoHumanoid Framework",
+        "role": "method-or-design",
+        "purpose": "Inspect view and action alignment plus co-training."
+      },
+      {
+        "locator": "IV-B Will human data improve humanoid loco-manipulation?",
+        "role": "results-or-analysis",
+        "purpose": "Verify in-domain and generalization gains."
+      },
+      {
+        "locator": "V Discussions",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record task-dependent transfer boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can egocentric human demonstrations be aligned with robot data to improve humanoid loco-manipulation generalization?",
+  "contributions": [
+    "View-aligned and action-aligned human/robot co-training for a humanoid whole-body policy."
+  ],
+  "method": {
+    "summary": "Human egocentric trajectories are transformed into the robot camera/action frame and co-trained with a smaller robot-demonstration anchor set.",
+    "assumptions": [
+      "Human and robot observations can be aligned into a shared egocentric frame.",
+      "Some robot demonstrations remain available to anchor embodiment-specific action semantics."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "100 robot demonstrations",
+      "300 human demonstrations"
+    ],
+    "tasks": [
+      "real-world humanoid loco-manipulation"
+    ],
+    "embodiments": [
+      "human demonstrators",
+      "one physical humanoid"
+    ],
+    "sample_or_scale": "A primary 100-robot plus 300-human training setting with real-world in-domain and generalization evaluation."
+  },
+  "evaluation": {
+    "design": "Robot-only and human-robot co-training are compared in-domain and under scene/object generalization; subskill and scaling ablations are included.",
+    "baselines": [
+      "robot-only policy"
+    ],
+    "metrics": [
+      "average task score",
+      "subskill score"
+    ],
+    "ablations": [
+      "view alignment",
+      "human-data amount",
+      "scene diversity"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Human-robot co-training produced its largest advantage under generalization rather than in-domain evaluation.",
+      "scope": "The reported tasks and one humanoid platform.",
+      "locator": "IV-B Will human data improve humanoid loco-manipulation?"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Orientation alignment remains ambiguous, data demand exceeds fixed-base manipulation, and the study uses one platform.",
+        "locator": "V Discussions"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Human data transfers navigation and coarse reaching more readily than precision manipulation.",
+        "basis": "The subskill analysis reports stronger transfer for locomotion than contact-sensitive manipulation, and robot anchors remain necessary."
+      }
+    ]
+  },
+  "transfer_boundary": "Most credible for visually aligned, egocentric skills with shared scene semantics and a robot-data anchor set.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Real-robot generalization comparison.",
+      "Separates subskills and data-composition effects."
+    ],
+    "design_risks": [
+      "Task scoring and platform choice may shape the magnitude of gains.",
+      "Human and robot dataset size are jointly changed in some conditions."
+    ],
+    "baseline_fairness": "Robot-only and co-trained policies share the same robot data; co-training receives additional human data by design.",
+    "metric_validity": "Task and subskill scores reveal where cross-embodiment transfer helps.",
+    "reproducibility": "Alignment and data protocols are described with appendices.",
+    "external_validity": "One robot and a bounded task family."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.10106-C01",
+      "claim": "With 100 robot and 300 human demonstrations, co-training scored 78% versus 59% for robot-only in-domain, and 82% versus 31% under generalization.",
+      "stance": "support",
+      "relation": "Supports aligned human data as a generalization prior for humanoid loco-manipulation.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The main comparison directly reports both in-domain and generalization gaps.",
+      "locator": "IV-B Will human data improve humanoid loco-manipulation?",
+      "source_context": "For in-domain evaluation, co-training achieves 78% average score versus 59% for robot-only. The gap widens remarkably in generalization settings: co-training reaches 82% compared to 31% for robot-only.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "average task score",
+        "value_or_direction": "78% vs 59% in-domain; 82% vs 31% generalization",
+        "comparator": "human-robot co-training versus robot-only",
+        "task_or_sample": "real-world in-domain and generalization trials",
+        "locator": "IV-B Will human data improve humanoid loco-manipulation?"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The result text explicitly states the two settings, both systems and all four values."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

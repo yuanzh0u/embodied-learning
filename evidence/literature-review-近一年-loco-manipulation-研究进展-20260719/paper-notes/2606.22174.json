@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.22174",
+    "title": "OpenHLM: An Empirical Recipe for Whole-Body Humanoid Loco-Manipulation",
+    "published": "2026-06-20T18:02:50Z",
+    "url": "https://arxiv.org/abs/2606.22174",
+    "authors": [
+      "Yingdong Hu",
+      "Haodong Zhu",
+      "Boyuan Zheng",
+      "Yihang Hu",
+      "Tong Zhang",
+      "Zunhao Chen",
+      "Junming Zhao",
+      "Ruiqian Nai",
+      "Yang Gao"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "A very recent empirical roadmap for native whole-body humanoid VLA design, data collection and heterogeneous co-training."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify limits of decoupled humanoid control."
+      },
+      {
+        "locator": "3 Building a Whole-Body Loco-Manipulation System: A Roadmap",
+        "role": "method-or-design",
+        "purpose": "Inspect controller, VLA and data-design ablations."
+      },
+      {
+        "locator": "3.3 Heterogeneous Co-Training",
+        "role": "results-or-analysis",
+        "purpose": "Verify held-out task gains and data-source roles."
+      },
+      {
+        "locator": "6 Discussion, Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record platform, data and architecture boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Which controller, teleoperation, VLA and heterogeneous-data choices make a native whole-body humanoid policy effective?",
+  "contributions": [
+    "A controlled empirical roadmap and the 12-task HLM-12 real-robot benchmark."
+  ],
+  "method": {
+    "summary": "OpenHLM combines joint-space whole-body teleoperation, a humanoid-adapted VLA and co-training with stationary teleoperation or robot-free HuMI data.",
+    "assumptions": [
+      "A task-aligned whole-body controller and modest on-robot demonstrations are available.",
+      "Cheap data streams can be aligned to the humanoid action and visual interfaces."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "whole-body teleoperation",
+      "stationary humanoid teleoperation",
+      "HuMI robot-free demonstrations"
+    ],
+    "tasks": [
+      "HLM-12 real-robot benchmark",
+      "one long-horizon language-conditioned task"
+    ],
+    "embodiments": [
+      "Unitree G1 humanoid"
+    ],
+    "sample_or_scale": "Twelve benchmark tasks, generally five physical rollouts per policy-task pair, plus a long-horizon system comparison."
+  },
+  "evaluation": {
+    "design": "One-variable-at-a-time real-robot ablations compare teleoperation interfaces, action/model choices and heterogeneous co-training; two humanoid VLAs are system-level baselines.",
+    "baselines": [
+      "decoupled teleoperation",
+      "VR 3-point teleoperation",
+      "SMPL action",
+      "GR00T N1.6",
+      "another humanoid VLA"
+    ],
+    "metrics": [
+      "task progress",
+      "rollout duration",
+      "operator demonstration time"
+    ],
+    "ablations": [
+      "teleoperation interface",
+      "preview latency",
+      "VLA initialization",
+      "action horizon",
+      "data source"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Cheap same-embodiment manipulation data extended the VLA to held-out objects, prompts and a new manipulation motion without additional whole-body teleoperation.",
+      "scope": "Four HLM-12 tasks held out from whole-body teleoperation on a single humanoid.",
+      "locator": "3.3 Heterogeneous Co-Training"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Results use one G1 platform and limited scenes; HuMI data does not yet teach novel motion as effectively as on-robot data, and architectural mechanisms remain underexplained.",
+        "locator": "6 Discussion, Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The roadmap is strong within-system evidence, but not a universal ranking of all humanoid VLA architectures.",
+        "basis": "Most findings come from one platform, benchmark and implementation stack."
+      }
+    ]
+  },
+  "transfer_boundary": "Supports native whole-body action spaces and heterogeneous co-training when at least some embodiment-specific demonstrations anchor the policy.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Controlled real-robot ablations across the full stack.",
+      "Held-out tasks distinguish semantic transfer from new-motion transfer."
+    ],
+    "design_risks": [
+      "Five rollouts per pair produce wide uncertainty.",
+      "Single platform and lab scenes."
+    ],
+    "baseline_fairness": "System baselines receive matched demonstration counts, while OpenHLM changes the source mix as the method under test.",
+    "metric_validity": "Task progress reveals partial long-horizon completion but is benchmark-specific.",
+    "reproducibility": "The paper promises code, data and checkpoints and reports detailed protocols.",
+    "external_validity": "Limited to Unitree G1 and HLM-12."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.22174-C01",
+      "claim": "On four tasks held out from whole-body teleoperation, stationary same-embodiment co-training raised average task progress from 33% to 87%, close to a 94% 12-task teleoperation oracle.",
+      "stance": "support",
+      "relation": "Supports heterogeneous co-training as a practical way to extend native whole-body VLAs.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The paper overview reports the held-out-task gain and the full-teleoperation oracle.",
+      "locator": "1 Introduction",
+      "source_context": "Quantitatively, OpenHLM reaches 89% average task progress on the 8 training tasks of our HLM-12 benchmark; on the remaining 4 held-out tasks that whole-body teleop never covers, co-training with cheaper data lifts task progress from 33% to 87%, closing most of the gap to a 12-task oracle (94%).",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "average task progress",
+        "value_or_direction": "33% to 87%, oracle 94%",
+        "comparator": "8-task baseline, stationary co-training and 12-task oracle",
+        "task_or_sample": "four held-out HLM-12 real-robot tasks",
+        "locator": "3.3 Heterogeneous Co-Training"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The section states the held-out task count, baseline and co-training values; the oracle value is reported in the introduction for the same held-out set."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

@@ -1,0 +1,95 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "high",
+      "notes": "将中文‘力觉’拆分为六轴力/力矩、关节力矩/本体接触、触觉阵列的力分布估计，以及力信号进入策略、世界模型和闭环控制四个检索面。"
+    }
+  ],
+  "knowledge_ids": ["EA-SENSOR", "EA-EVAL"],
+  "families": ["tactile-force", "last-centimeter", "industrial-deployment"],
+  "queries": [
+    {
+      "label": "dynamic-force-torque-manipulation",
+      "tier": "dynamic-direct",
+      "query": "(all:\"force torque\" OR all:\"force/torque\") AND (all:robot OR all:robotic) AND (all:manipulation OR all:policy)",
+      "why": "覆盖腕部六轴力/力矩传感器进入机器人操作策略的直接工作。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-force-aware-policy-learning",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"force-aware\" OR all:\"force-guided\" OR all:\"force-conditioned\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖力觉作为策略条件、反馈或表征的学习方法。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-visual-force-fusion",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"visual force\" OR all:\"vision force\" OR all:\"visuo-force\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖视觉与力觉融合，以及视觉不可观测接触状态的补充。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-contact-force-estimation",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"contact force estimation\" OR all:\"force estimation\") AND (all:robot OR all:robotic) AND (all:contact OR all:tactile)",
+      "why": "覆盖从触觉、视觉或本体信号估计接触力的工作。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-joint-torque-contact",
+      "tier": "dynamic-adjacent",
+      "query": "(all:\"joint torque\" OR all:\"motor current\") AND (all:\"contact detection\" OR all:\"contact estimation\") AND all:robot",
+      "why": "覆盖无外置六轴传感器的关节力矩/电流接触感知路线。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-force-controlled-insertion-learning",
+      "tier": "dynamic-deployment",
+      "query": "(all:\"force control\" OR all:\"force-controlled\") AND (all:insertion OR all:assembly) AND (all:learning OR all:policy)",
+      "why": "覆盖装配、插入等最后一厘米任务中的学习型力控。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-force-safety-failure",
+      "tier": "dynamic-limitation",
+      "query": "(all:force OR all:wrench) AND (all:\"robot manipulation\" OR all:\"contact-rich\") AND (all:failure OR all:safety OR all:uncertainty)",
+      "why": "补充力觉在过力、碰撞、安全和不确定性方面的负面与边界证据。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-whole-body-force-feedback",
+      "tier": "dynamic-adjacent",
+      "query": "(all:\"whole-body\" OR all:humanoid OR all:quadruped) AND (all:\"force feedback\" OR all:\"contact feedback\" OR all:tactile) AND all:robot",
+      "why": "覆盖力觉从末端操作扩展为全身接触与稳定控制变量的工作。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-force-sense-browser",
+      "query": "site:arxiv.org 2026 robot force torque force-aware manipulation policy",
+      "why": "API 欠召回时补充力觉策略论文。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-force-sense-calibration",
+      "query": "2026 embodied robot force sensing force torque tactile policy",
+      "why": "校准近半年新方法名和术语。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

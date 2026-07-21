@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.01060",
+    "title": "RoboWorld: Fast and Reliable Neural Simulators for Generalist Robot Policy Evaluation",
+    "published": "2026-07-01T15:22:41Z",
+    "url": "https://arxiv.org/abs/2607.01060",
+    "authors": [
+      "Byeongguk Jeon",
+      "Seonghyeon Ye",
+      "JaeHyeok Doo",
+      "Sungdong Kim",
+      "Minjoon Seo",
+      "Hyungmok Son",
+      "Kimin Lee"
+    ]
+  },
+  "review": {
+    "question": "近一年世界视频模型最可靠的应用任务有哪些？",
+    "topic_ids": [
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper directly tests a video world model as a closed-loop robot-policy evaluator and compares the induced policy ranking with a real-robot leaderboard, while also reporting contact-related failure modes."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify why real-robot policy evaluation is costly and why world-model artifacts and slow denoising threaten evaluator reliability."
+      },
+      {
+        "locator": "3 Step Forcing > 3.2 Step Forcing : Mitigating Train-Test Gap through Self-Forwarded Prior Denoising",
+        "role": "method-or-design",
+        "purpose": "Inspect the training mechanism intended to reduce autoregressive drift while preserving action-observation dynamics."
+      },
+      {
+        "locator": "4 RoboWorld > 4.2 Automatically Scoring Rollouts from World Models",
+        "role": "method-or-design",
+        "purpose": "Inspect the task-progress-aware scoring rubric and its handling of world-model artifacts."
+      },
+      {
+        "locator": "5 Experiments > 5.1 Experimental Details",
+        "role": "data-or-setting",
+        "purpose": "Record the DROID training data, RoboArena evaluation setting, action interface, training schedule, and multi-view setup."
+      },
+      {
+        "locator": "5 Experiments > 5.2 Efficient Long-Horizon Action-Conditioned Video Generation",
+        "role": "results-or-analysis",
+        "purpose": "Assess the speed-quality tradeoff and long-horizon rollout evidence against video-world-model baselines."
+      },
+      {
+        "locator": "5 Experiments > 5.3 Correlation with Real World Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "Verify whether closed-loop world-model evaluations reproduce the real RoboArena policy ranking and under what sample and judge conditions."
+      },
+      {
+        "locator": "6 Conclusion; 7 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Separate the claimed policy-ranking utility from the acknowledged dexterous, long-horizon, and contact-data limitations."
+      },
+      {
+        "locator": "Appendix E Closed-Loop Evaluation Details and Qualitative Analysis > E.3 Failure Case Analysis",
+        "role": "appendix-or-supplement",
+        "purpose": "Inspect qualitative world-model failures after object contact and the evaluator's treatment of those failures."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "2 Related Work",
+        "role": "relevant-core",
+        "reason": "Mapped for citation lineages but not used as primary evidence because this review projects only the paper's own experiments and failure analysis."
+      },
+      {
+        "locator": "Appendices A-D",
+        "role": "appendix-or-supplement",
+        "reason": "Implementation and additional perceptual-metric details were mapped; the review-relevant deployment boundary was concentrated in Appendix E."
+      }
+    ]
+  },
+  "research_question": "Can a fast action-conditioned video world model evaluate generalist robot policies at scale while preserving long-horizon rollout quality and producing rankings that align with real-robot evaluation?",
+  "contributions": [
+    "A fully automated closed-loop policy-evaluation pipeline that combines an autoregressive video world model with a task-progress-aware VLM judge.",
+    "Step Forcing, which mixes one-step self-forwarded priors with data-grounded anchors to reduce train-test mismatch without discarding action-observation consistency.",
+    "An empirical comparison between world-model policy rankings and the RoboArena real-robot leaderboard, plus failure analysis of contact-related artifacts."
+  ],
+  "method": {
+    "summary": "RoboWorld adapts a pretrained video model into a causal action-conditioned autoregressive model, trains it with Diffusion Forcing followed by Step Forcing, executes each policy in closed loop on generated observations, and scores multi-view rollouts with a 0-5 task-progress-aware VLM rubric.",
+    "assumptions": [
+      "Initial observations and robot states from RoboArena are sufficient to instantiate comparable world-model episodes.",
+      "The action adapter preserves the semantics of policies whose native commands differ from the world model's end-effector conditioning space.",
+      "A VLM judge can distinguish task progress from visible world-model corruption well enough to support policy ranking."
+    ]
+  },
+  "study_context": {
+    "datasets": ["DROID", "RoboArena", "BAIR Robot Pushing"],
+    "tasks": ["generalist manipulation-policy evaluation", "long-horizon action-conditioned video generation", "task-progress scoring"],
+    "embodiments": ["DROID/RoboArena robot-manipulation setup with two external cameras and one wrist camera"],
+    "sample_or_scale": "The main closed-loop comparison covers the eight open-sourced RoboArena policies available in the stated data dump and produces 4,186 world-model video rollouts; the paper also reports 301-frame multi-view generation tests."
+  },
+  "evaluation": {
+    "design": "Train on DROID, evaluate held-out long-horizon generation on RoboArena trajectories, then replace the physical environment with the world model while preserving policies and initial conditions and compare the resulting policy ranking with the real RoboArena leaderboard.",
+    "baselines": ["Ctrl-World", "PersistWorld", "Diffusion Forcing", "Teacher Forcing", "Resampling Forcing", "Self Forcing"],
+    "metrics": ["Pearson correlation with the real leaderboard", "Spearman rank correlation", "SSIM", "LPIPS", "FVD", "FPS", "task-progress VLM score"],
+    "ablations": ["binary success scoring versus task-progress rubric", "self-forwarded prior removal", "anchor-step removal", "number and diversity of evaluation trials"]
+  },
+  "findings": [
+    {
+      "finding": "Within the DROID/RoboArena setup, RoboWorld's closed-loop policy ranking is strongly positively aligned with the real-robot leaderboard across the evaluated policies.",
+      "scope": "Eight open-sourced policies, RoboArena initial conditions, GPT-4o task-progress scoring, and the DROID-family manipulation setup.",
+      "locator": "5 Experiments > 5.3 Correlation with Real World Evaluation"
+    },
+    {
+      "finding": "Task-progress scoring preserves partial credit when world-model artifacts corrupt later rollout frames, whereas binary success scoring reduces rank correlation.",
+      "scope": "The paper's predefined 0-5 rubric, three-view rollout representation, and evaluated VLM judges.",
+      "locator": "4 RoboWorld > 4.2 Automatically Scoring Rollouts from World Models; 5 Experiments"
+    },
+    {
+      "finding": "Step Forcing improves the speed-quality tradeoff for long-horizon action-conditioned generation and supports few-step autoregressive evaluation.",
+      "scope": "BAIR diagnostic tests and DROID/RoboArena multi-view generation under the paper's training and inference schedules.",
+      "locator": "3 Step Forcing > 3.3 Diagnostic Comparison on BAIR Robot Pushing; 5 Experiments > 5.2 Efficient Long-Horizon Action-Conditioned Video Generation"
+    },
+    {
+      "finding": "World-model failures concentrate after object contact, including object disintegration, unrealistic morphing, and visual inconsistency.",
+      "scope": "Qualitative RoboWorld failure cases in contact-rich manipulation rollouts.",
+      "locator": "Appendix E Closed-Loop Evaluation Details and Qualitative Analysis > E.3 Failure Case Analysis"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Dexterous, long-horizon manipulation evaluation remains limited because sustained contact requires object consistency and substantial embodied interaction data.",
+        "locator": "7 Limitations"
+      },
+      {
+        "limitation": "Failure cases occur primarily during object interaction; after contact, manipulated objects can disintegrate, morph, or become visually inconsistent.",
+        "locator": "Appendix E Closed-Loop Evaluation Details and Qualitative Analysis > E.3 Failure Case Analysis"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The evidence supports policy ranking and triage in one manipulation benchmark family, not safety certification, final acceptance testing, or arbitrary embodiment transfer.",
+        "basis": "The comparison covers eight policies sharing DROID/RoboArena interfaces and uses a VLM judge to discount visible model corruption; no independent cross-embodiment or safety-critical validation is reported."
+      },
+      {
+        "boundary": "Claims about contact-rich direct control should remain weaker than claims about offline policy evaluation.",
+        "basis": "The appendix explicitly localizes major failure modes to post-contact object dynamics, the regime where direct control requires accurate causal prediction."
+      }
+    ]
+  },
+  "transfer_boundary": "Applicable as a low-cost policy-ranking and triage layer when the target tasks resemble the DROID/RoboArena manipulation distribution, the policy/action interface can be mapped faithfully, diverse trials are available, and real-robot checks remain downstream; not established as a standalone evaluator for contact-rich safety, new embodiments, or final deployment acceptance.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Uses the same policies and initial conditions as a real-robot leaderboard rather than relying only on perceptual video metrics.",
+      "Separates rollout generation from task-progress scoring and ablates binary versus graded evaluation.",
+      "Reports long-horizon speed-quality comparisons and qualitative failure cases, not only favorable success examples."
+    ],
+    "design_risks": [
+      "The VLM judge is part of the measurement pipeline and can introduce its own scoring errors or compensate for world-model artifacts in benchmark-specific ways.",
+      "All central evidence comes from the DROID/RoboArena ecosystem and eight policies, so the unusually high ranking agreement may not transfer to different robots, sensors, or contact regimes.",
+      "Correlation with a leaderboard validates relative ranking, not absolute trajectory fidelity or safety."
+    ],
+    "baseline_fairness": "The paper compares multiple forcing objectives and video-world-model baselines and sweeps denoising steps, with a same-total-training-steps Diffusion Forcing baseline. Architectural and post-training differences across external baselines still limit perfect resource matching.",
+    "metric_validity": "Pearson and Spearman correlation with real policy outcomes are materially closer to deployment utility than SSIM/LPIPS/FVD alone. They remain policy-level ranking metrics mediated by a VLM judge and do not establish per-episode causal fidelity or safety.",
+    "reproducibility": "The paper provides training, inference, scoring-rubric, prompt, and rollout-protocol details in the main text and appendices. This review did not verify an independent reproduction or a public code release.",
+    "external_validity": "Strong for evaluator-oriented screening inside the stated DROID/RoboArena distribution; weak for novel embodiments, dexterous contact, deformables, safety-critical acceptance, and direct online control."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.01060-C01",
+      "claim": "In the DROID/RoboArena setting, a closed-loop video-world-model evaluator produced a policy ranking that closely matched the real-robot leaderboard across the evaluated policies, supporting policy ranking as a conditional high-reliability application rather than a universal replacement for real evaluation.",
+      "stance": "conditional",
+      "relation": "Supports the review proposition that offline policy evaluation and ranking are among the most reliable current applications when restricted to matched embodiments, interfaces, and task distributions.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The paper runs the same policies from RoboArena initial observations entirely inside RoboWorld and reports strong positive agreement between the induced ranking and the real leaderboard; the claim is bounded to the eight evaluated policies and the DROID/RoboArena setup.",
+      "locator": "5.3 Correlation with Real World Evaluation",
+      "source_context": "The resulting policy ranking closely matches the real-world leaderboard under GPT-4o scoring.",
+      "evidence_type": "closed-loop-sim-real-ranking-comparison",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The cited results section explicitly states strong positive correlation and close ranking agreement for eight policies under GPT-4o scoring; the projected claim preserves that scope and does not generalize to absolute safety or unseen embodiments."
+      }
+    },
+    {
+      "card_id": "2607.01060-C02",
+      "claim": "RoboWorld's principal qualitative failures occur after object contact, when manipulated objects may disintegrate, morph unrealistically, or become visually inconsistent, limiting contact-rich manipulation evaluation and direct control use.",
+      "stance": "limit",
+      "relation": "Limits claims that visually plausible video-world-model rollouts are reliable enough for contact-rich planning, control, or safety judgment.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The appendix contrasts stable pre-contact scenes with post-contact artifacts and identifies contact-rich object dynamics as a key remaining limitation.",
+      "locator": "E.3 Failure Case Analysis",
+      "source_context": "Before contact, the generated scene is typically stable, but after the robot begins manipulating the object, the object may disintegrate, morph into unrealistic shapes, or become visually inconsistent.",
+      "evidence_type": "qualitative-failure-analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The cited appendix directly describes the timing and form of the failures; the claim repeats those observed failure modes and limits its implication to contact-rich evaluation and control reliability."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Inline mathematical values were partially dropped by the high-quality LaTeXML text extraction, so the evidence cards intentionally avoid exact Pearson/Spearman coefficients and retain only the qualitative ranking result visible in the complete extracted text."
+}

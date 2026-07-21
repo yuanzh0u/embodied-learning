@@ -3,7 +3,7 @@ id: EA-MODEL
 title: 模型与预训练
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-17
+updated: 2026-07-20
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -27,12 +27,25 @@ source:
   - id: RUN-VLA-WM-SHIFT-20260717
     file: ../../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/evidence.jsonl
     locator: EA-ALIGN-READ-0001; EA-ALIGN-READ-0003..0004; EA-ALIGN-READ-0006; EA-ALIGN-READ-0009; EA-ALIGN-READ-0013; EA-ALIGN-READ-0015; EA-CONTAM-2026-0007; EA-EGO-2026-0001; EA-EGO-2026-0003; EA-WMDATA-READ-0009; EA-WMEVAL-READ-0004; EA-WMEVAL-READ-0010; EA-WMEVAL-READ-0013; EA-WMEVAL-READ-0015
-tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, latent-planning, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
-aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, latent planning, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
+  - id: RUN-LOCOMANIP-20260719
+    file: ../../evidence/literature-review-近一年-loco-manipulation-研究进展-20260719/evidence.jsonl
+    locator: EA-LOCOMANIP-2026-0002..0003; EA-LOCOMANIP-2026-0006; EA-LOCOMANIP-2026-0008..0009; EA-LOCOMANIP-2026-0013; EA-LOCOMANIP-2026-0016; EA-LOCOMANIP-2026-0018..0020
+  - id: RUN-WM-TASKS-20260719
+    file: ../../evidence/literature-review-近一年世界视频模型最可靠的应用任务-20260719/evidence.jsonl
+    locator: EA-WMTASK-2026-0001..0002; EA-WMDATA-READ-0007; EA-WMEVAL-READ-0005; EA-WMEVAL-READ-0011; EA-WMEVAL-READ-0014
+  - id: RUN-VLA-BREAKTHROUGH-20260719
+    file: ../../evidence/literature-review-近半年vla在具身领域最大的技术突破-20260719/evidence.jsonl
+    locator: EA-VLABREAK-2026-0001..0007; EA-ALIGN-READ-0001; EA-ALIGN-READ-0003..0004; EA-ALIGN-READ-0006; EA-ALIGN-READ-0009; EA-ALIGN-READ-0015; EA-WMDATA-READ-0009; EA-WMEVAL-READ-0004; EA-WMEVAL-READ-0010; EA-WMEVAL-READ-0015
+  - id: RUN-MULTIMODAL-TRAINING-20260720
+    file: ../../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/evidence.jsonl
+    locator: EA-TWM-READ-0001..0014; EA-ALIGN-READ-0001..0015; EA-VLABREAK-2026-0001..0007
+tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, hierarchical-world-model, sparse-future, latent-planning, action-fidelity, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
+aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, 分层世界模型, 稀疏未来, 世界模型权限阶梯, latent planning, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
 load_when:
   - 问题涉及统一机器人模型、VLA、开源模型泛化、预训练有效性或 Sim2Real
   - 问题涉及基模型污染、VLA 后门、干净微调能否清除污染、检查点继承或世界模型生成风险
   - 问题涉及“VLA 已死”、反应式策略、世界模型当立、动作后果预演或策略—动态—控制分层
+  - 问题涉及 H-WM、StructVLA、BadWAM、稀疏未来、动作—想象同步或世界模型权限分配
 confidence: working
 ---
 
@@ -46,7 +59,7 @@ confidence: working
 
 ## 30 秒摘要
 
-机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。“反应式 VLA 已死”只对不显式检验动作后果的狭义策略成立；跨 run 证据更支持 VLA 语义/动作先验、动作条件世界模型后果预演、本体适配器与底层控制器组成的融合栈。Ego-centric 人类视频可扩展行为与视点先验，但只有经过动作恢复、本体对齐和目标机器人锚定后，才可能转成可执行控制。基础模型、适配模块与检查点还构成需要独立审计的供应链。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
+机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。“反应式 VLA 已死”只对不显式检验动作后果的狭义策略成立；跨 run 证据更支持 VLA 语义/动作先验、动作条件世界模型、本体适配器与底层控制器组成的融合栈。近期突破不只是生成更长视频，而是把未来压缩成低频逻辑步骤、稀疏视觉子目标或结构化状态，并验证它与真实动作同步；BadWAM 说明“想象合理、动作错误”足以让系统失效。世界模型应先承担训练期教师、离线排序等低权限任务，再逐级争取在线规划权。Loco-manipulation 与多模态证据还表明，完整动作接口及按功能/时标分层的接触反馈会限制能力上限。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
 
 ## 关键判断
 
@@ -69,6 +82,13 @@ confidence: working
 - 近期证据支持的范式转移不是“世界模型替代 VLA”，而是把语义/规划、后果评估和本体控制分账后联合；这是跨论文 synthesis，不是单篇论文的直接结论。
 - 具身推理只有落到末端运动、图像空间轨迹或其他动作相关表示才有控制价值；显式文本 CoT 作为动作前缀会增加延迟，并可能累积误差。
 - 失败恢复可拆为认知层的 failure mode / recovery stage / reward 判断与控制层 residual 纠正，使分类错误和执行错误能够独立归因。
+- 原生全身动作接口先于模型规模决定可表达能力；若采集接口不允许深蹲、脚部操作或腰腿协同，VLA 无法从后续规模化中补回缺失动作。
+- Loco-manipulation 的异构共训应让少量目标本体全身数据负责动作锚定，同形态静态操作补新动作，人类/robot-free 数据扩展物体、语言与场景；各数据源不能无条件互换。
+- 近期 VLA 技术增量更集中在结构化、稀疏和多时间尺度未来：低频逻辑顺序或视觉里程碑负责规划，高频 VLA 与控制器负责闭环执行，而不是把长段稠密视频直接当控制计划。
+- 夹爪状态转换和运动转折点可把视频未来压缩为可迁移到低层动作的稀疏规划表征，但现有真机和长程证据仍来自较窄任务。
+- 世界动作模型必须同时验证想象与实际动作的同步；BadWAM 将评测成功率从 96.5% 降至 43.1%，表明视觉上合理的未来不能替代 action fidelity。
+- 世界模型权限应按错误可拦截性逐级开放：训练期几何/4D 教师和离线策略排序优先，在线预演次之，直接控制与安全裁决最后。
+- 多模态 backbone 不应无条件融合全部传感器；语言/视觉、触觉/力觉与控制状态应按功能和频率选择性耦合，并以动作条件状态变化作为共享接口。
 
 ## 指标与检核
 
@@ -84,6 +104,8 @@ confidence: working
 | Ego 预训练 | 有效视频小时、自动标签通过率、robot-anchor 比例、预训练/中间训练/微调消融、真实闭环增益 |
 | 模型供应链 | 基模型/模块/检查点谱系、clean/trigger success、跨微调持久性、触发面覆盖、恢复后能力损失 |
 | 融合系统价值 | 同预算纯反应式/融合系统对照、候选动作排序、失败识别、恢复率、闭环增益、额外推理延迟 |
+| 结构化未来 | 子目标可达率、里程碑/转折点覆盖、长程任务进度、结构化未来到动作的迁移增益 |
+| 权限晋级 | 离线排序相关性、拒绝/风险覆盖、在线规划增益、action fidelity、真实闭环安全门禁 |
 
 ## 适用边界
 
@@ -93,6 +115,8 @@ confidence: working
 - 现有 Ego-centric 规模曲线来自特定灵巧操作和主动感知设置，不能外推为 raw video 对所有机器人任务都遵循同一 scaling law。
 - 现有后门研究多基于明确攻击权限和特定触发器，只能说明供应链攻击面与防御盲点，不能推断现实基础模型的污染率。
 - 本卡不主张删除 VLA；若纯反应式 VLA 在相同计算与真机数据预算下，能在未见环境、跨本体、长时程和接触扰动任务上稳定追平融合系统，该范式转移判断即被证伪。
+- 当前分层世界模型与稀疏未来结果集中在少量 5–7 步或特定夹爪任务，不能据此证明开放世界长程规划已经解决。
+- 同分布策略排序只适合作为条件性筛选证据；接触后破碎、变形和视觉不一致仍限制高接触评测与直接控制。
 
 ## 证据锚点
 
@@ -105,6 +129,10 @@ confidence: working
 - RUN-EGO-DATA-20260715：`EA-EGO-2026-0001..0002`, `0007..0008`, `0011`, `0014`, `0018` 支持 Ego 规模收益、本体/动作接口边界、aligned mid-training、目标机器人数据不可缺以及主动视点先验的条件性。
 - RUN-DATA-CONTAMINATION-20260715：`EA-CONTAM-2026-0001..0010` 覆盖状态/视觉/语言/动作窗触发、极低比例 episode 投毒、chunk 漂移、持久后门、检测恢复边界和世界模型二次激活；这些事件原始投影归入 EA-DATA，本卡结论属于有明确锚点的跨卡 synthesis。
 - RUN-VLA-WM-SHIFT-20260717：`EA-ALIGN-READ-0001`, `0003..0004`, `0006`, `0009`, `0013`, `0015` 支持动作语义、动作相关/latent 推理与恢复分层；`EA-EGO-2026-0001`, `0003` 与 `EA-CONTAM-2026-0007` 限定本体迁移和泛化证据；`EA-WMDATA-READ-0009`、`EA-WMEVAL-READ-0004`, `0010`, `0013`, `0015` 支持后果评估、失败数据和世界模型可用性要求。“VLA—世界模型融合栈”是跨事件 `inference`，未新增论文级 event。
+- RUN-LOCOMANIP-20260719：`EA-LOCOMANIP-2026-0002..0003`, `0006`, `0016`, `0018..0020` 支持全身执行、在线规划、显式记忆、稀疏目标控制和原生全身 VLA；`0008..0009`, `0013`, `0020` 支持 robot-free、人类视频、生成数据与同形态静态数据的条件性分工。
+- RUN-WM-TASKS-20260719：`EA-WMTASK-2026-0001..0002`, `EA-WMDATA-READ-0007`, `EA-WMEVAL-READ-0005`, `0011`, `0014` 支持低权限世界模型任务、同分布策略排序与接触后失真边界；“权限阶梯”是跨事件 `inference`。
+- RUN-VLA-BREAKTHROUGH-20260719：`EA-VLABREAK-2026-0001..0005` 支持低频逻辑、潜在视觉子目标和稀疏里程碑未来；`0006..0007` 支持 action fidelity 安全边界。其余复用事件将结构化未来与 VLA—世界模型融合栈连接起来。
+- RUN-MULTIMODAL-TRAINING-20260720：`EA-TWM-READ-0001..0014`, `EA-ALIGN-READ-0001..0015`, `EA-VLABREAK-2026-0001..0007` 支持按功能/时标分层的多模态模型接口；该结论为跨 run synthesis，并未新增论文级 event。
 
 ## 待补问题
 
@@ -115,3 +143,5 @@ confidence: working
 - 建立 Ego-human、aligned human-robot 与目标机器人数据的混合比例和边际收益曲线。
 - 建立基础模型—适配模块—检查点—生成器—策略的供应链谱系和分阶段 canary 复验模板。
 - 建立相同数据、计算和控制预算下纯反应式 VLA 与融合栈的可证伪对照实验。
+- 建立训练期教师、离线排序、在线预演、直接控制和安全裁决的世界模型权限晋级门禁。
+- 建立结构化/稀疏未来相对稠密视频 rollout 的规划价值、延迟与动作忠实对照。

@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.08278",
+    "title": "SIMPLE: Simulation-Based Policy Learning and Evaluation for Humanoid Loco-manipulation",
+    "published": "2026-06-06T17:55:43Z",
+    "url": "https://arxiv.org/abs/2606.08278",
+    "authors": [
+      "Songlin Wei",
+      "Zhenhao Ni",
+      "Jie Liu",
+      "Zhenyu Zhao",
+      "Junjie Ye",
+      "Hongyi Jing",
+      "Junkai Xia",
+      "Xiawei Liu",
+      "Michael Leong",
+      "Liang Heng",
+      "Di Huang",
+      "Yue Wang"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "Recent large-scale humanoid loco-manipulation simulator and benchmark with explicit zero-shot hardware tests."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify limits of real-world policy evaluation and simulation throughput."
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect dual-engine architecture, assets, tasks and data collection."
+      },
+      {
+        "locator": "4.4 Zero-Shot Sim-to-Real Transfer",
+        "role": "results-or-analysis",
+        "purpose": "Verify physical transfer outcomes."
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record rendering and rigid-body scope."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can a scalable simulator support data collection, benchmarking and zero-shot transfer for humanoid loco-manipulation?",
+  "contributions": [
+    "A dual-engine simulation platform with 60 tasks, over 1,000 objects, 50 scenes and 6,000 benchmark episodes."
+  ],
+  "method": {
+    "summary": "MuJoCo computes physics while Isaac Sim renders scenes; standardized task assets, teleoperation and policy adapters support large-scale evaluation.",
+    "assumptions": [
+      "Domain randomization covers relevant visual and dynamics shifts.",
+      "Rigid-body task physics are sufficient for the benchmarked interactions."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "6,000 benchmark episodes"
+    ],
+    "tasks": [
+      "60 humanoid loco-manipulation tasks"
+    ],
+    "embodiments": [
+      "simulated and physical humanoid"
+    ],
+    "sample_or_scale": "60 tasks, more than 1,000 objects, 50 scenes, 6,000 episodes; 10 real trials per transfer task."
+  },
+  "evaluation": {
+    "design": "Policy benchmarking, data-efficiency studies, randomization ablations and two zero-shot physical tasks are reported.",
+    "baselines": [
+      "state-of-the-art humanoid policies"
+    ],
+    "metrics": [
+      "task success",
+      "collection speed",
+      "sim-to-real success"
+    ],
+    "ablations": [
+      "domain randomization",
+      "demonstration count"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Two policies trained in simulation retained substantial but imperfect success when deployed zero-shot on hardware.",
+      "scope": "Pick-and-place and handover, 10 simulation and 10 real trials each.",
+      "locator": "4.4 Zero-Shot Sim-to-Real Transfer"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Rendering runs at roughly 4 FPS and the current tasks focus on rigid-body interactions.",
+        "locator": "5 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Two short transfer tasks do not establish broad real-world reliability across the full 60-task suite.",
+        "basis": "Only pick-and-place and handover receive the reported 10-trial hardware test."
+      }
+    ]
+  },
+  "transfer_boundary": "Strong evidence for scalable experimentation and narrow zero-shot transfer, not full benchmark-to-hardware equivalence.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Large task and asset coverage.",
+      "Includes explicit zero-shot hardware trials and data-efficiency ablations."
+    ],
+    "design_risks": [
+      "Only two tasks are physically evaluated.",
+      "Rigid-body and simulator assumptions may omit important contact phenomena."
+    ],
+    "baseline_fairness": "Policies are evaluated through a common simulator interface.",
+    "metric_validity": "Per-task success is interpretable; aggregate benchmark scores need task-distribution context.",
+    "reproducibility": "Architecture, tasks and policy integration are documented.",
+    "external_validity": "Physical evidence is narrow relative to benchmark scale."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.08278-C01",
+      "claim": "In zero-shot transfer, pick-and-place scored 9/10 in simulation and 8/10 on hardware; handover scored 10/10 in simulation and 8/10 on hardware.",
+      "stance": "conditional",
+      "relation": "Supports recent progress in simulation-to-real transfer while bounding it to two short tasks.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The transfer table reports paired simulation and real success counts; in the recovered HTML it is attached to the parent experiments section.",
+      "locator": "4 Experiments",
+      "source_context": "Task Sim Eval Real Eval Pick & Place 9/10 = 0.90 8/10 = 0.80 Handover 10/10 = 1.00 8/10 = 0.80 Table 5: Zero-Shot Sim-to-Real Transfer. Success rates of a single policy fine-tuned exclusively on simulation data, evaluated both in the simulator and directly in the real world.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "task success",
+        "value_or_direction": "0.90 to 0.80; 1.00 to 0.80",
+        "comparator": "simulation versus real deployment",
+        "task_or_sample": "pick-and-place and handover, 10 trials each",
+        "locator": "4.4 Zero-Shot Sim-to-Real Transfer"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The table lists both tasks, paired domains, counts and rates."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

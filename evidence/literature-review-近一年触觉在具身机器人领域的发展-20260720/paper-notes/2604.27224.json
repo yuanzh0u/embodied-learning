@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2604.27224",
+    "title": "Learning Tactile-Aware Quadrupedal Loco-Manipulation Policies",
+    "published": "2026-04-29T21:46:58Z",
+    "url": "https://arxiv.org/abs/2604.27224",
+    "authors": [
+      "Pokuang Zhou",
+      "Yuhao Zhou",
+      "Quan Khanh Luu",
+      "Seungho Han",
+      "Heng Zhang",
+      "Binghao Huang",
+      "Yunzhu Li",
+      "Arash Ajoudani",
+      "Zhengtong Xu",
+      "Yu She"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct tactile-aware quadrupedal loco-manipulation study with contact-rich real-world tasks."
+    },
+    "sections_read": [
+      {
+        "locator": "I INTRODUCTION",
+        "role": "problem",
+        "purpose": "Identify missing contact observability in vision/proprioception-only systems."
+      },
+      {
+        "locator": "III Method",
+        "role": "method-or-design",
+        "purpose": "Read the visuotactile diffusion policy and tactile-target low-level controller."
+      },
+      {
+        "locator": "IV Experiments and Results > IV-B Experimental Results and Analyze",
+        "role": "results-or-analysis",
+        "purpose": "Verify the 20-rollout task and component comparisons."
+      },
+      {
+        "locator": "V Discussion and Limitation",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record representation and fine-control limits."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Does predicting and tracking tactile interaction targets improve contact-rich quadrupedal loco-manipulation beyond visual and position-only policies?",
+  "contributions": [
+    "A hierarchical high-level visuotactile diffusion policy and low-level tactile-command-tracking whole-body controller."
+  ],
+  "method": {
+    "summary": "Human UMI demonstrations train a high-level policy to predict pose, gripper and tactile targets; simulation RL trains a whole-body controller to track pose and tactile commands before zero-shot real deployment.",
+    "assumptions": [
+      "Tactile descriptors transfer from the demonstration gripper to the robot gripper.",
+      "Task scenes can be simulated with useful contact cues."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Teleoperated tactile UMI demonstrations"
+    ],
+    "tasks": [
+      "reorientation and insertion",
+      "valve tightening",
+      "delicate object handling"
+    ],
+    "embodiments": [
+      "Tactile-equipped quadruped manipulator"
+    ],
+    "sample_or_scale": "Twenty real rollouts per task and baseline variant."
+  },
+  "evaluation": {
+    "design": "Four policy variants separate tactile observation, tactile prediction and low-level tactile tracking.",
+    "baselines": [
+      "vision-only",
+      "visuotactile high level with position-only low level",
+      "tactile prediction without tactile low-level tracking"
+    ],
+    "metrics": [
+      "task success rate",
+      "substage success"
+    ],
+    "ablations": [
+      "tactile observation",
+      "tactile prediction",
+      "tactile low-level command tracking"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Tactile information adds value at both intent prediction and low-level contact realization, especially where vision cannot reveal contact state.",
+      "scope": "Three real contact-rich task families on one tactile hardware stack.",
+      "locator": "IV Experiments and Results > IV-B Experimental Results and Analyze"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The tactile representation is not fully integrated and the low-level controller remains limited for fine-grained contact under environmental uncertainty.",
+        "locator": "V Discussion and Limitation"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The results are hardware- and descriptor-specific and do not establish cross-sensor tactile transfer.",
+        "basis": "All tasks use one tactile gripper representation and one robot platform."
+      }
+    ]
+  },
+  "transfer_boundary": "Strongest for contact-rich tasks whose contact evolution is observable through the trained tactile descriptors; cross-hardware generalization is untested.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Component-wise ablations separate high- and low-level tactile roles.",
+      "Uses repeated real-world trials."
+    ],
+    "design_risks": [
+      "Fruit bruising lacks quantitative measurement.",
+      "Task count and hardware diversity are limited."
+    ],
+    "baseline_fairness": "Variants share the same framework and differ by tactile components, enabling attribution.",
+    "metric_validity": "Task success is meaningful; damage-free claims for fruit are qualitative, while chip handling is quantified.",
+    "reproducibility": "Architecture and task definitions are detailed, but sensor calibration and raw data release determine practical replication.",
+    "external_validity": "Limited to one tactile modality and a small set of contact-rich tasks."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2604.27224-C01",
+      "claim": "Adding tactile-command tracking at the low level raised insertion success from 0.70 to 0.85, full reorientation-plus-insertion from 0.60 to 0.80, and valve tightening from 0.80 to 0.85.",
+      "stance": "support",
+      "relation": "Supports tactile targets as executable control signals rather than only high-level observations.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The paper compares variants with the same tactile-aware high level but different low-level tactile tracking.",
+      "locator": "IV-B Experimental Results and Analyze",
+      "source_context": "Finally, comparing Baseline 3 (P3) with our full method demonstrates the benefit of incorporating tactile commands into the low-level policy: our method further increases the success rate from 0.70 to 0.85 on Task 1 insertion (+0.15), from 0.60 to 0.80 on Task 1 whole (+0.20), and from 0.80 to 0.85 on Task 2 (+0.05), and achieves 1.00 on Task 3 (compared to 0.20 for P1).",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "success rate",
+        "value_or_direction": "0.70 to 0.85; 0.60 to 0.80; 0.80 to 0.85",
+        "comparator": "P3 versus full tactile low-level policy",
+        "task_or_sample": "20 rollouts on insertion, full sequence and valve tightening",
+        "locator": "IV Experiments and Results > IV-B Experimental Results and Analyze, Table VI"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The cited result sentence gives the same three task comparisons and success-rate changes; the claim stays within those variants and tasks."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

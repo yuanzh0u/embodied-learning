@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.31343",
+    "title": "Learning Terrain-Aware Whole-Body Control for Perceptive Legged Loco-Manipulation",
+    "published": "2026-05-29T14:22:10Z",
+    "url": "https://arxiv.org/abs/2605.31343",
+    "authors": [
+      "Sikai Guo",
+      "Yudong Zhong",
+      "Guoyang Zhao",
+      "Botao Dang",
+      "Zhihai Bi",
+      "Jun Ma"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct study of perceptive legged loco-manipulation over uneven terrain with simulation and real-robot tests."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Map the terrain-awareness and workspace-coupling problem."
+      },
+      {
+        "locator": "III Methodology > III-B Policy Learning",
+        "role": "method-or-design",
+        "purpose": "Inspect foot-centric terrain encoding, goal sampling and distillation."
+      },
+      {
+        "locator": "IV Experiments > IV-B Simulation Results > IV-B 2 Ablation Study",
+        "role": "results-or-analysis",
+        "purpose": "Verify exteroception and encoder ablations."
+      },
+      {
+        "locator": "IV Experiments > IV-C Real-World Deployment > IV-C 2 Long-Horizon Loco-Manipulation",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the long-horizon cross-terrain demonstration and autonomy boundary."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Does foot-centric exteroception allow one whole-body controller to preserve reach and stability across uneven terrain?",
+  "contributions": [
+    "Terrain-aware whole-body RL with foot-centric multi-ring elevation encoding and contact-plane-relative end-effector sampling."
+  ],
+  "method": {
+    "summary": "An asymmetric actor-critic encodes foot-centered terrain samples and tracks goals defined relative to a fitted foot contact plane; policy distillation reduces gradient interference.",
+    "assumptions": [
+      "A reliable elevation map is available from depth and LiDAR.",
+      "High-level commands are provided by VR teleoperation."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Procedurally generated slopes, stairs and discrete obstacles"
+    ],
+    "tasks": [
+      "ground reach",
+      "stair traversal",
+      "bottle pick and disposal"
+    ],
+    "embodiments": [
+      "Quadruped manipulator with onboard depth camera and LiDAR"
+    ],
+    "sample_or_scale": "Simulation baseline/ablation tests and a five-run real long-horizon sequence."
+  },
+  "evaluation": {
+    "design": "Compares decoupled blind/perceptive locomotion plus IK and ablated whole-body policies on flat and complex terrain, followed by real deployment.",
+    "baselines": [
+      "blind locomotion plus IK",
+      "perceptive locomotion plus IK",
+      "blind whole-body control"
+    ],
+    "metrics": [
+      "tracking",
+      "workspace",
+      "foot stumble",
+      "long-horizon completion"
+    ],
+    "ablations": [
+      "exteroception",
+      "foot-centric sampling",
+      "hybrid encoder",
+      "policy distillation"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Terrain representation and contact-plane-relative goals jointly expand reach while preserving traversal, but the real task is teleoperated rather than autonomous.",
+      "scope": "One real robot on a staged stair-and-platform route.",
+      "locator": "IV Experiments > IV-C Real-World Deployment > IV-C 2 Long-Horizon Loco-Manipulation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "A sophisticated high-level policy is still future work for fully autonomous task execution.",
+        "locator": "V Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The five consecutive successes do not establish robustness across outdoor terrain classes or perception failures.",
+        "basis": "The real route, objects and sensing stack are fixed and high-level commands come from VR."
+      }
+    ]
+  },
+  "transfer_boundary": "Supports low-level perceptive whole-body control when terrain elevation is observable; autonomous task reasoning and broader outdoor reliability remain untested.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Ablations isolate four terrain/control components.",
+      "Includes a continuous real cross-terrain task."
+    ],
+    "design_risks": [
+      "Only five consecutive real trials are reported.",
+      "The perception stack and route are highly structured."
+    ],
+    "baseline_fairness": "Decoupled and blind baselines target the relevant coordination question, although training budgets are not fully normalized in the prose.",
+    "metric_validity": "Stumble, tracking and completion capture control utility; safety claims should not exceed the tested route.",
+    "reproducibility": "Policy inputs and sensing route are described, but the real elevation-mapping details depend on an external framework.",
+    "external_validity": "Limited to terrain that can be represented by the onboard elevation map and a single morphology."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.31343-C01",
+      "claim": "In a staged real long-horizon task, TA-WBC completed five consecutive bottle-pick, stair-climb, disposal and return runs without falls or stumbles.",
+      "stance": "support",
+      "relation": "Supports terrain-aware low-level whole-body control for cross-terrain loco-manipulation.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The real-world section explicitly reports repeated completion of the full multi-stage route.",
+      "locator": "IV-C 2 Long-Horizon Loco-Manipulation",
+      "source_context": "The result shows that the legged manipulator with TA-WBC can successfully finish this long-horizon challenging task 5 times in a row without any falls or stumbles, verifying the robustness of our framework.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "consecutive full-task completion",
+        "value_or_direction": "5 of 5 without falls or stumbles",
+        "comparator": "no separate real-robot baseline",
+        "task_or_sample": "bottle pick, five-step stair climb, disposal and return",
+        "locator": "IV Experiments > IV-C Real-World Deployment > IV-C 2 Long-Horizon Loco-Manipulation"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The cited sentence states the exact count, full route and absence of falls or stumbles; the claim does not generalize beyond this staged route."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

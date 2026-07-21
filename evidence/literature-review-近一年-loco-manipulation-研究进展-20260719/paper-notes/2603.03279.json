@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.03279",
+    "title": "ULTRA: Unified Multimodal Control for Autonomous Humanoid Whole-Body Loco-Manipulation",
+    "published": "2026-03-03T18:59:29Z",
+    "url": "https://arxiv.org/abs/2603.03279",
+    "authors": [
+      "Xialin He",
+      "Sirui Xu",
+      "Xinyao Li",
+      "Runpei Dong",
+      "Liuyu Bian",
+      "Yu-Xiong Wang",
+      "Liang-Yan Gui"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Unified multimodal humanoid controller spanning dense reference tracking and sparse perception-conditioned goal following."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify reliance on dense predefined reference motions."
+      },
+      {
+        "locator": "IV Method",
+        "role": "method-or-design",
+        "purpose": "Inspect physics-driven retargeting, privileged teacher and multimodal student."
+      },
+      {
+        "locator": "V-E Real-World Deployment",
+        "role": "results-or-analysis",
+        "purpose": "Verify hardware tracking and sparse-goal results."
+      },
+      {
+        "locator": "-D Additional Experimental Details.",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record perception, MoCap and command limits."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can one humanoid controller combine dense motion tracking with sparse goals and realistic egocentric sensing?",
+  "contributions": [
+    "Physics-driven neural retargeting and a distilled multimodal controller with RL fine-tuning."
+  ],
+  "method": {
+    "summary": "A privileged dense-tracking teacher is distilled into a latent multimodal student; PPO fine-tuning expands goal-conditioned behavior from point clouds, poses or sparse transforms.",
+    "assumptions": [
+      "Human-object motion can be retargeted into physically feasible robot trajectories.",
+      "Sparse object geometry can be extracted from depth or supplied by MoCap."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "human-object motion capture",
+      "augmented simulation rollouts"
+    ],
+    "tasks": [
+      "box carry",
+      "suitcase transport",
+      "sparse-goal object following"
+    ],
+    "embodiments": [
+      "Unitree G1 humanoid"
+    ],
+    "sample_or_scale": "Large-scale simulation training; real dense tracking over 26 trials and sparse goal following over 10 trials per direction/mode."
+  },
+  "evaluation": {
+    "design": "Retargeting and tracking baselines are compared in simulation; MuJoCo OOD tests and real MoCap/egocentric deployments assess transfer.",
+    "baselines": [
+      "PHC",
+      "GMR",
+      "OmniRetarget",
+      "HDMI",
+      "tracking-only/direct-RL variants"
+    ],
+    "metrics": [
+      "tracking success",
+      "object error",
+      "jitter",
+      "real task success"
+    ],
+    "ablations": [
+      "distillation",
+      "unified training",
+      "RL fine-tuning",
+      "perception modality"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Sparse goal following transferred to hardware, but onboard depth perception lagged external motion capture.",
+      "scope": "Reported object-transport tasks on one Unitree G1.",
+      "locator": "V-E Real-World Deployment"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Severe point-cloud occlusion, MoCap marker occlusion and aggressive or infeasible user goals can cause failure.",
+        "locator": "-D Additional Experimental Details."
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The system advances beyond reference replay but still uses operator-specified object transforms rather than high-level task planning.",
+        "basis": "Sparse future object transforms are issued through keyboard commands in the real deployment."
+      }
+    ]
+  },
+  "transfer_boundary": "Supports goal-conditioned whole-body control with structured object goals; language-level autonomy and robust open-world perception remain separate.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Unifies dense and sparse control modes.",
+      "Reports onboard egocentric and external-state hardware results separately."
+    ],
+    "design_risks": [
+      "Two-trial-per-task dense evaluations are small.",
+      "Simple dominant-cluster depth segmentation limits perception complexity."
+    ],
+    "baseline_fairness": "Simulation baselines share retargeting/tracking tasks; sparse goal following lacks equivalent tracking-only baselines by construction.",
+    "metric_validity": "Success captures stability and goal achievement, while low trial counts limit precision.",
+    "reproducibility": "Architecture, randomization and training stages are detailed.",
+    "external_validity": "One humanoid and bounded objects/scenes."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.03279-C01",
+      "claim": "On real G1 sparse-goal following, MoCap object state achieved 80% vertical and 90% lateral success, while egocentric depth achieved 50% and 60%, respectively.",
+      "stance": "conditional",
+      "relation": "Supports perception-conditioned whole-body control while quantifying the current onboard-perception penalty.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The real-world table separates external-state and onboard egocentric control modes.",
+      "locator": "V-E Real-World Deployment",
+      "source_context": "TABLE IV : Real-world success rates on the OMOMO subset using a Unitree G1 humanoid. Each task is evaluated over two trials. MoCap provides object pose tracking for non-egocentric control modes, while the egocentric setting relies only on onboard sensing. MoCap is used for success evaluation in all settings. Dense reference tracking is direction-agnostic and thus reported as a single success rate. Setting Vertical Lateral Dense Reference Tracking 73% (19/26) Sparse Goal Following (MoCap) 80% (8/10) 90% (9/10) Sparse Goal Following (Egocentric) 50% (5/10) 60% (6/10)",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "real-world success rate",
+        "value_or_direction": "80%/90% versus 50%/60%",
+        "comparator": "MoCap object state versus egocentric depth",
+        "task_or_sample": "vertical and lateral sparse-goal following",
+        "locator": "V-E Real-World Deployment"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "Table IV directly reports the two sensing modes, directions, counts and rates."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

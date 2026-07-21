@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.12403",
+    "title": "World Pilot: Steering Vision-Language-Action Models with World-Action Priors",
+    "published": "2026-06-10",
+    "url": "https://arxiv.org/abs/2606.12403",
+    "authors": [
+      "Zefu Lin",
+      "Rongxu Cui",
+      "Junjia Xu",
+      "Xiaojuan Jin",
+      "Wenling Li",
+      "Lue Fan",
+      "Zhaoxiang Zhang"
+    ]
+  },
+  "review": {
+    "question": "世界模型评测边界",
+    "topic_ids": [
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 世界模型评测边界."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4.1 Main Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '世界模型评测边界', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "Static image-text pretraining is insufficient training signal for contact-rich manipulation; world-model data should expose action-conditioned scene evolution and contact dynamics."
+  ],
+  "method": {
+    "summary": "Figure 2: World Pilot architecture. A semantic pathway encodes images and language with a VLM into hidden states. Two prior pathways from a World-Action Model enter the same decision chain, with Latent Steering routing a scene-evolution latent into the VLM hidden states and Action Steering compressing the anticipated trajectory into a prior token for the flow-matching action generator.",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We build World Pilot on the ABot-M0 [ 58 ] , with Qwen3-VL [ 2 ] as the VLM backbone and a DiT-based flow-matching action head, and use Cosmos Policy [ 25 ] as the WAM with 5-step denoising. WAM outputs are precomputed during training and run online at evaluation. We apply dropout with rate to the WAM conditions and to prevent the policy from over-relying on the priors. We fine-tune World Pilot on 8 RTX PRO 6000 GPUs and report success rate. We evaluate on two simulation benchmarks. LIBERO-Plus [ 19 ] is an OOD suite of 10,030 perturbed tasks built on LIBERO [ 34 ] that covers seven axes of perturbation (background, camera, language, light, layout, robot, noise). Models are trained only on L",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Static image-text pretraining is insufficient training signal for contact-rich manipulation; world-model data should expose action-conditioned scene evolution and contact dynamics.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "We propose a training recipe that augments VLA policy learning with priors from a World-Action Model (WAM), routed through Latent Steering on the perception side and Action Steering on the action-generator side. We instantiate this recipe as World Pilot, which attains state-of-the-art performance on LIBERO-Plus [ 19 ] and the highest success rate on every real-robot setting. Limitations. World Pilot inherits its WAM’s coverage, so when test scenes fall outside the WAM’s video pretraining distribution, both priors degrade and the gains shrink. The improvements are also uneven: World Pilot trail",
+        "locator": "5 Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 Method) and evaluation (4.1 Main Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.12403-C01",
+      "claim": "Static image-text pretraining is insufficient training signal for contact-rich manipulation; world-model data should expose action-conditioned scene evolution and contact dynamics.",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: 世界模型评测边界",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "World Pilot argues that VLA semantic grounding from static image-text pairs cannot capture continuous contact-rich dynamics, and uses WAM-derived scene-evolution and trajectory priors to complement the policy.",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Vision-Language-Action (VLA) models inherit semantic grounding from large-scale pretraining and perform competently across in-distribution manipulation tasks. This grounding, however, is built on static image-text pairs, whereas manipulation is a continuous, contact-rich process whose dynamics this pretraining cannot capture. We present World Pilot, a VLA framework that augments the policy with priors from a World-Action Model (WAM), routed into the decision chain through two complementary pathways. Latent Steering conditions the perception layer on a scene-evolution latent, and Action Steering supplies an anticipated trajectory as a motion prior to the action generator. Together the two priors equip the VLA with an anticipated view of the scene and a trajectory-level motion hint alongside its semantic conditioning, and the scene-evolution prior remains effective even when supplied by a video-pretrained world model that has not been action-post-trained. World Pilot attains a state-of-the-art Total success rate of 84.7% on the LIBERO-Plus zero-shot OOD benchmark and the highe",
+      "evidence_type": "data-requirement-analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (cannot, capture, contact-rich, continuous, dynamics, grounding, image-text, is). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "HTML extraction available in /tmp/wm-data-2606.12403-html.json; first-author mapping not extracted conservatively. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

@@ -1,0 +1,1028 @@
+{
+  "generated_at": "2026-07-19T12:43:33.472220+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年世界视频模型最可靠的应用任务",
+  "start_date": "2025-07-19",
+  "end_date": "2026-07-19",
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-EVAL"
+  ],
+  "families": [
+    "world-model",
+    "vla",
+    "sim2real",
+    "tactile-force"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 24,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 100,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 100,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-world-model-policy-evaluation",
+        "dynamic-world-model-data-synthesis",
+        "dynamic-world-model-post-training-recovery",
+        "dynamic-world-model-planning-control",
+        "dynamic-world-model-geometry-distillation",
+        "calibrated-neural-simulator-for-policy-evaluation",
+        "calibrated-task-progress-aware-scoring",
+        "calibrated-world-action-model",
+        "calibrated-persistent-rollout",
+        "calibration-neural-simulator-policy-evaluation",
+        "calibration-task-progress-world-model",
+        "calibration-world-action-model",
+        "calibration-persistent-world-model-rollout",
+        "world-model-video-prediction",
+        "world-model-planning",
+        "vla-open-x-embodiment"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-world-model-admissibility",
+        "dynamic-world-model-long-horizon-efficiency",
+        "dynamic-world-action-model-contact",
+        "world-model-contact",
+        "world-model-long-horizon"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "world-model-robot",
+        "vla-core",
+        "vla-named-models"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): The review asks which application tasks are reliable, so discovery must separate training-time/offline assistance, policy evaluation, recovery, planning, and direct control, and must include counterevidence on action fidelity, physical adherence, long-horizon drift, and latency."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-world-model-policy-evaluation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"world model\" AND all:\"policy evaluation\" AND all:robot",
+      "why": "Test whether policy ranking and scalable evaluation have the strongest sim-real evidence."
+    },
+    {
+      "label": "dynamic-world-model-data-synthesis",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"world model\" AND (all:\"data synthesis\" OR all:\"synthetic demonstrations\") AND all:robot",
+      "why": "Cover training-time generation and augmentation, where model errors are filtered before deployment."
+    },
+    {
+      "label": "dynamic-world-model-post-training-recovery",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"world model\" AND (all:\"post-training\" OR all:recovery OR all:\"self-correction\") AND all:robot",
+      "why": "Cover failure-adjacent correction and policy post-training rather than unconstrained generation."
+    },
+    {
+      "label": "dynamic-world-model-planning-control",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"video world model\" AND (all:planning OR all:control) AND all:robot",
+      "why": "Find direct planning/control evidence and its deployment constraints."
+    },
+    {
+      "label": "dynamic-world-model-admissibility",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"world model\" AND (all:\"action fidelity\" OR all:\"physics adherence\" OR all:\"failure optimism\") AND all:robot",
+      "why": "Test whether visual realism is insufficient for decision use."
+    },
+    {
+      "label": "dynamic-world-model-long-horizon-efficiency",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"world model\" AND all:robot AND (all:\"long-horizon\" OR all:latency OR all:efficiency)",
+      "why": "Cover compounding rollout error and online inference cost."
+    },
+    {
+      "label": "dynamic-world-model-geometry-distillation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"world model\" AND (all:4D OR all:geometry OR all:\"point track\") AND all:\"robot manipulation\"",
+      "why": "Cover training-time geometry supervision and distillation that may improve policies without online rollout cost."
+    },
+    {
+      "label": "dynamic-world-action-model-contact",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"world action model\" OR all:\"video world model\") AND (all:contact OR all:tactile OR all:force) AND all:robot",
+      "why": "Check reliability boundaries for contact-rich manipulation and partially observed physics."
+    },
+    {
+      "label": "dynamic-reliable-world-model-tasks-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs 2026 robot video world model policy evaluation data synthesis recovery planning",
+      "why": "Discover newly submitted task-oriented papers if the API under-recovers."
+    },
+    {
+      "label": "dynamic-world-model-neural-simulator-web",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs 2026 robot neural simulator world model policy evaluation",
+      "why": "Calibrate current naming around video-world-model evaluators."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): RoboWorld uses neural simulator, policy evaluation, Step Forcing, task-progress-aware scoring, and sim-real rank alignment.",
+    "arxiv calibration (high): Qwen-RobotWorld groups current applications into synthetic data generation, virtual policy evaluation, and language-guided planning signals.",
+    "arxiv calibration (high): MotuBrain uses the current term world action model for joint video-action prediction and real-time control.",
+    "arxiv calibration (high): Persistent Robot World Models foregrounds autoregressive rollout drift and rollout-stabilizing post-training."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-world-model-policy-evaluation",
+      "tier": "evaluation",
+      "query": "all:\"world model\" AND all:\"policy evaluation\" AND all:robot",
+      "why": "Test whether policy ranking and scalable evaluation have the strongest sim-real evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-policy-evaluation"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-data-synthesis",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:\"data synthesis\" OR all:\"synthetic demonstrations\") AND all:robot",
+      "why": "Cover training-time generation and augmentation, where model errors are filtered before deployment.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-data-synthesis"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-post-training-recovery",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:\"post-training\" OR all:recovery OR all:\"self-correction\") AND all:robot",
+      "why": "Cover failure-adjacent correction and policy post-training rather than unconstrained generation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-post-training-recovery"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-planning-control",
+      "tier": "deployment",
+      "query": "all:\"video world model\" AND (all:planning OR all:control) AND all:robot",
+      "why": "Find direct planning/control evidence and its deployment constraints.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-planning-control"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-admissibility",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND (all:\"action fidelity\" OR all:\"physics adherence\" OR all:\"failure optimism\") AND all:robot",
+      "why": "Test whether visual realism is insufficient for decision use.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-admissibility"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-long-horizon-efficiency",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND all:robot AND (all:\"long-horizon\" OR all:latency OR all:efficiency)",
+      "why": "Cover compounding rollout error and online inference cost.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-long-horizon-efficiency"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-geometry-distillation",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:4D OR all:geometry OR all:\"point track\") AND all:\"robot manipulation\"",
+      "why": "Cover training-time geometry supervision and distillation that may improve policies without online rollout cost.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-geometry-distillation"
+      ]
+    },
+    {
+      "label": "dynamic-world-action-model-contact",
+      "tier": "limitation",
+      "query": "(all:\"world action model\" OR all:\"video world model\") AND (all:contact OR all:tactile OR all:force) AND all:robot",
+      "why": "Check reliability boundaries for contact-rich manipulation and partially observed physics.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-action-model-contact"
+      ]
+    },
+    {
+      "label": "calibrated-neural-simulator-for-policy-evaluation",
+      "tier": "calibrated-term",
+      "query": "all:\"neural simulator for policy evaluation\"",
+      "why": "Names the most directly validated offline application surface.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-neural-simulator-for-policy-evaluation"
+      ]
+    },
+    {
+      "label": "calibrated-task-progress-aware-scoring",
+      "tier": "calibrated-term",
+      "query": "all:\"task-progress-aware scoring\"",
+      "why": "Separates generating a rollout from scoring policy progress.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-task-progress-aware-scoring"
+      ]
+    },
+    {
+      "label": "calibrated-world-action-model",
+      "tier": "calibrated-term",
+      "query": "all:\"world action model\"",
+      "why": "Captures joint prediction-and-control systems that may not use video world model in metadata.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-world-action-model"
+      ]
+    },
+    {
+      "label": "calibrated-persistent-rollout",
+      "tier": "calibrated-term",
+      "query": "all:\"persistent rollout\"",
+      "why": "Captures long-horizon stabilization and compounding-error work.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-persistent-rollout"
+      ]
+    },
+    {
+      "label": "calibration-neural-simulator-policy-evaluation",
+      "tier": "calibrated-query",
+      "query": "all:\"neural simulator\" AND all:\"policy evaluation\" AND all:robot",
+      "why": "Find evaluator-oriented video world models.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-neural-simulator-policy-evaluation"
+      ]
+    },
+    {
+      "label": "calibration-task-progress-world-model",
+      "tier": "calibrated-query",
+      "query": "all:\"task progress\" AND all:\"world model\" AND all:robot",
+      "why": "Find world-model rollouts paired with task-progress or reward scoring.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-task-progress-world-model"
+      ]
+    },
+    {
+      "label": "calibration-world-action-model",
+      "tier": "calibrated-query",
+      "query": "(all:\"world action model\" OR all:\"world-action model\") AND all:robot",
+      "why": "Find joint video-action and direct-control work.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-world-action-model"
+      ]
+    },
+    {
+      "label": "calibration-persistent-world-model-rollout",
+      "tier": "calibrated-query",
+      "query": "all:persistent AND all:\"world model\" AND all:rollout AND all:robot",
+      "why": "Find long-horizon rollout stabilization studies.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-persistent-world-model-rollout"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-world-model-policy-evaluation",
+      "tier": "evaluation",
+      "query": "all:\"world model\" AND all:\"policy evaluation\" AND all:robot",
+      "why": "Test whether policy ranking and scalable evaluation have the strongest sim-real evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-policy-evaluation"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-data-synthesis",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:\"data synthesis\" OR all:\"synthetic demonstrations\") AND all:robot",
+      "why": "Cover training-time generation and augmentation, where model errors are filtered before deployment.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-data-synthesis"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-post-training-recovery",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:\"post-training\" OR all:recovery OR all:\"self-correction\") AND all:robot",
+      "why": "Cover failure-adjacent correction and policy post-training rather than unconstrained generation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-post-training-recovery"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-planning-control",
+      "tier": "deployment",
+      "query": "all:\"video world model\" AND (all:planning OR all:control) AND all:robot",
+      "why": "Find direct planning/control evidence and its deployment constraints.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-planning-control"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-admissibility",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND (all:\"action fidelity\" OR all:\"physics adherence\" OR all:\"failure optimism\") AND all:robot",
+      "why": "Test whether visual realism is insufficient for decision use.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-admissibility"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-long-horizon-efficiency",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND all:robot AND (all:\"long-horizon\" OR all:latency OR all:efficiency)",
+      "why": "Cover compounding rollout error and online inference cost.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-long-horizon-efficiency"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-geometry-distillation",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:4D OR all:geometry OR all:\"point track\") AND all:\"robot manipulation\"",
+      "why": "Cover training-time geometry supervision and distillation that may improve policies without online rollout cost.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-geometry-distillation"
+      ]
+    },
+    {
+      "label": "dynamic-world-action-model-contact",
+      "tier": "limitation",
+      "query": "(all:\"world action model\" OR all:\"video world model\") AND (all:contact OR all:tactile OR all:force) AND all:robot",
+      "why": "Check reliability boundaries for contact-rich manipulation and partially observed physics.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-action-model-contact"
+      ]
+    },
+    {
+      "label": "calibrated-neural-simulator-for-policy-evaluation",
+      "tier": "calibrated-term",
+      "query": "all:\"neural simulator for policy evaluation\"",
+      "why": "Names the most directly validated offline application surface.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-neural-simulator-for-policy-evaluation"
+      ]
+    },
+    {
+      "label": "calibrated-task-progress-aware-scoring",
+      "tier": "calibrated-term",
+      "query": "all:\"task-progress-aware scoring\"",
+      "why": "Separates generating a rollout from scoring policy progress.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-task-progress-aware-scoring"
+      ]
+    },
+    {
+      "label": "calibrated-world-action-model",
+      "tier": "calibrated-term",
+      "query": "all:\"world action model\"",
+      "why": "Captures joint prediction-and-control systems that may not use video world model in metadata.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-world-action-model"
+      ]
+    },
+    {
+      "label": "calibrated-persistent-rollout",
+      "tier": "calibrated-term",
+      "query": "all:\"persistent rollout\"",
+      "why": "Captures long-horizon stabilization and compounding-error work.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-persistent-rollout"
+      ]
+    },
+    {
+      "label": "calibration-neural-simulator-policy-evaluation",
+      "tier": "calibrated-query",
+      "query": "all:\"neural simulator\" AND all:\"policy evaluation\" AND all:robot",
+      "why": "Find evaluator-oriented video world models.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-neural-simulator-policy-evaluation"
+      ]
+    },
+    {
+      "label": "calibration-task-progress-world-model",
+      "tier": "calibrated-query",
+      "query": "all:\"task progress\" AND all:\"world model\" AND all:robot",
+      "why": "Find world-model rollouts paired with task-progress or reward scoring.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-task-progress-world-model"
+      ]
+    },
+    {
+      "label": "calibration-world-action-model",
+      "tier": "calibrated-query",
+      "query": "(all:\"world action model\" OR all:\"world-action model\") AND all:robot",
+      "why": "Find joint video-action and direct-control work.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-world-action-model"
+      ]
+    },
+    {
+      "label": "calibration-persistent-world-model-rollout",
+      "tier": "calibrated-query",
+      "query": "all:persistent AND all:\"world model\" AND all:rollout AND all:robot",
+      "why": "Find long-horizon rollout stabilization studies.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-persistent-world-model-rollout"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-reliable-world-model-tasks-browser",
+      "query": "site:arxiv.org/abs 2026 robot video world model policy evaluation data synthesis recovery planning",
+      "why": "Discover newly submitted task-oriented papers if the API under-recovers.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-core",
+      "query": "site:arxiv.org/abs (sim2real OR \"sim-to-real\" OR \"simulation-to-real\") robot",
+      "why": "Find sim-to-real papers through web/arXiv pages when API search under-recovers variants.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-synthetic-validation",
+      "query": "site:arxiv.org/abs (\"synthetic data\" OR \"domain randomization\" OR simulation) (\"real robot\" OR validation) manipulation",
+      "why": "Find synthetic-data and domain-randomization papers that discuss whether simulated data transfers to real robots.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-eval-gap",
+      "query": "site:arxiv.org/abs (\"sim-real\" OR \"reality gap\" OR \"simulation gap\") (correlation OR evaluation OR benchmark) robot",
+      "why": "Find simulation evaluation and reality-gap discussions that may not use the sim2real keyword.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-world-model-neural-simulator-web",
+      "query": "site:arxiv.org/abs 2026 robot neural simulator world model policy evaluation",
+      "why": "Calibrate current naming around video-world-model evaluators.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-neural-simulator-for-policy-evaluation",
+      "query": "\"neural simulator for policy evaluation\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: neural simulator for policy evaluation.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-task-progress-aware-scoring",
+      "query": "\"task-progress-aware scoring\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: task-progress-aware scoring.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-world-action-model",
+      "query": "\"world action model\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: world action model.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-persistent-rollout",
+      "query": "\"persistent rollout\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: persistent rollout.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2508.10538",
+    "title": "MLM: Learning Multi-task Loco-Manipulation Whole-Body Control for Quadruped Robot with Arm",
+    "published": "2025-08-14T11:18:32Z",
+    "url": "https://arxiv.org/abs/2508.10538",
+    "authors": [
+      "Xin Liu",
+      "Bida Ma",
+      "Chenkun Qi",
+      "Yan Ding",
+      "Nuo Xu",
+      "Zhaxizhuoma",
+      "Guorong Zhang",
+      "Pengan Chen",
+      "Kehui Liu",
+      "Zhongjie Jia",
+      "Chuyue Guan",
+      "Yule Mo",
+      "Jiaqi Liu",
+      "Feng Gao",
+      "Jiangwei Zhong",
+      "Bin Zhao",
+      "Xuelong Li"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct multi-task quadruped loco-manipulation study with simulation ablations and real-robot deployment."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify the multi-task balance and partial-observability problem."
+      },
+      {
+        "locator": "III Whole-body Control Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the trajectory-conditioned RL controller, prediction network, and sampling curriculum."
+      },
+      {
+        "locator": "IV Experiments and Results > IV-B Simulation Studies",
+        "role": "results-or-analysis",
+        "purpose": "Verify ablations and task-level tracking comparisons."
+      },
+      {
+        "locator": "IV Experiments and Results > IV-C Real-world Experiments",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check real-robot success rates and the upstream diffusion-policy bottleneck."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can one trajectory-conditioned RL policy execute multiple quadruped loco-manipulation tasks under teleoperation and autonomous trajectory generation?",
+  "contributions": [
+    "A trajectory-velocity-prediction whole-body controller and adaptive multi-task trajectory sampling."
+  ],
+  "method": {
+    "summary": "PPO trains a unified quadruped-arm policy in Isaac Gym to track real end-effector trajectories; a normalized autoencoder predicts future targets when only history is observable.",
+    "assumptions": [
+      "Tasks can be reduced to feasible end-effector trajectories in a world frame.",
+      "The high-level diffusion policy or teleoperator supplies task intent."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Seven task trajectory families, mostly 200 trajectories per task"
+    ],
+    "tasks": [
+      "cleaning",
+      "pick-and-place",
+      "opening",
+      "pouring",
+      "unplugging",
+      "pushing"
+    ],
+    "embodiments": [
+      "Unitree Go2 with Airbot Play arm"
+    ],
+    "sample_or_scale": "4096 simulation agents; 20-seed simulation studies; two quantitative real-world tasks."
+  },
+  "evaluation": {
+    "design": "Simulation ablations compare TVP, no-NAE, single-MLP and DeepWBC-like variants; real tests report pose error and success.",
+    "baselines": [
+      "single MLP",
+      "TVP without NAE",
+      "DeepWBC-like target controller",
+      "uniform trajectory sampling"
+    ],
+    "metrics": [
+      "6D tracking error",
+      "torque derivative",
+      "success rate"
+    ],
+    "ablations": [
+      "future trajectory predictor",
+      "adaptive sampling",
+      "prediction noise"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "A single low-level policy supported both teleoperation and diffusion-policy execution across multiple tasks, but autonomous success was lower than teleoperation.",
+      "scope": "Two reported real-world tasks on one quadruped-arm platform.",
+      "locator": "IV Experiments and Results > IV-C Real-world Experiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The evidence does not establish open-world autonomy because object perception and task reasoning are delegated to the high-level trajectory source.",
+        "basis": "The controller tracks supplied trajectories, and the paper states autonomous performance is mainly limited by diffusion-policy inference."
+      }
+    ]
+  },
+  "transfer_boundary": "Applies to trajectory-expressible tasks within the trained workspace and dynamics of a Go2-Airbot system; high-level perception and planning remain external.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Multi-task ablations isolate prediction and sampling choices.",
+      "Includes zero-shot real-robot transfer."
+    ],
+    "design_risks": [
+      "Only two real tasks receive tabulated success rates.",
+      "A separate pretrained diffusion policy carries autonomous perception errors."
+    ],
+    "baseline_fairness": "Baselines use related state/action targets, but DeepWBC is reconstructed as a similar setting rather than a fully reproduced independent system.",
+    "metric_validity": "Trajectory error and task success are useful, though safety and long-duration reliability are not reported.",
+    "reproducibility": "Hardware, training scale, rewards and randomization are described; trajectory data and high-level policy details remain partly system-specific.",
+    "external_validity": "Evidence is limited to one quadruped-arm morphology and a small real-task set."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2508.10538-C01",
+      "claim": "On two real-world tasks, the same controller achieved 98% and 100% success under teleoperation, versus 80% and 85% when driven by a diffusion policy.",
+      "stance": "conditional",
+      "relation": "Supports multi-task whole-body control while showing that high-level trajectory quality remains a bottleneck.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Table V directly separates low-level tracking results under teleoperation and diffusion-policy trajectory generation.",
+      "locator": "IV-C Real-world Experiments",
+      "source_context": "TABLE V: Real-world experiment results. (cm / radian / %) EE pos err EE rot err Success Rate Teleoperation unplug charger 1.39 0.054 98 open container 1.02 0.047 100 DP unplug charger 1.37 0.039 80 open container 1.24 0.036 85",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "success rate",
+        "value_or_direction": "teleoperation 98% and 100%; diffusion policy 80% and 85%",
+        "comparator": "teleoperation versus diffusion-policy trajectory input",
+        "task_or_sample": "unplug charger and open container on the real robot",
+        "locator": "IV Experiments and Results > IV-C Real-world Experiments, Table V"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The table reports the same two tasks, controller, four success values and deployment modes; the claim is restricted to those tasks."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

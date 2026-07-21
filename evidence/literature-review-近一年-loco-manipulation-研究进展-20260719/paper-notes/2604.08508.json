@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2604.08508",
+    "title": "Sumo: Dynamic and Generalizable Whole-Body Loco-Manipulation",
+    "published": "2026-04-09T17:49:40Z",
+    "url": "https://arxiv.org/abs/2604.08508",
+    "authors": [
+      "John Z. Zhang",
+      "Maks Sorokin",
+      "Jan Brüdigam",
+      "Brandon Hung",
+      "Stephen Phillips",
+      "Dmitry Yershov",
+      "Farzad Niroui",
+      "Tong Zhao",
+      "Leonor Fermoselle",
+      "Xinghao Zhu",
+      "Chao Cao",
+      "Duy Ta",
+      "Tao Pang",
+      "Jiuguang Wang",
+      "Preston Culbertson",
+      "Zachary Manchester",
+      "Simon Le Cléac'h"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "pdf",
+    "method": "pdf-text",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct dynamic whole-body loco-manipulation study combining a pretrained RL controller with online sample-based planning."
+    },
+    "sections_read": [
+      {
+        "locator": "page 1",
+        "role": "problem",
+        "purpose": "Identify dynamic manipulation of objects beyond arm payload and geometry limits."
+      },
+      {
+        "locator": "page 4",
+        "role": "method-or-design",
+        "purpose": "Inspect policy-in-the-loop sample-based MPC."
+      },
+      {
+        "locator": "page 8",
+        "role": "results-or-analysis",
+        "purpose": "Verify real Spot tire-uprighting performance."
+      },
+      {
+        "locator": "page 9",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record MoCap, modeling and reward-engineering limits."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can online planning steer a pretrained whole-body policy to new large-object tasks without task-specific policy retraining?",
+  "contributions": [
+    "Policy-in-the-loop sample-based MPC for dynamic quadruped and simulated humanoid loco-manipulation."
+  ],
+  "method": {
+    "summary": "CEM plans online in the compact command space of a pretrained whole-body RL controller using parallel MuJoCo rollouts and task-specific costs.",
+    "assumptions": [
+      "An adequate robot/object dynamics model is available online.",
+      "Robot and object state can be measured accurately; hardware tests use motion capture."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "online model rollouts; no task-specific policy dataset"
+    ],
+    "tasks": [
+      "uprighting",
+      "stacking",
+      "dragging",
+      "pushing",
+      "door opening"
+    ],
+    "embodiments": [
+      "Boston Dynamics Spot hardware",
+      "Unitree G1 simulation"
+    ],
+    "sample_or_scale": "Eight Spot hardware tasks and four simulated G1 tasks; 10 trials per reported task."
+  },
+  "evaluation": {
+    "design": "Simulation compares end-to-end MPC/RL and hierarchical RL; hardware case studies report success and completion time on large or heavy objects.",
+    "baselines": [
+      "end-to-end MPC",
+      "end-to-end RL",
+      "hierarchical RL"
+    ],
+    "metrics": [
+      "success rate",
+      "completion time",
+      "compute time"
+    ],
+    "ablations": [
+      "hierarchy and online planning"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Online planning reused one low-level policy for dynamic manipulation of objects larger or heavier than the arm's nominal capacity.",
+      "scope": "Eight lab tasks on Spot with MoCap and manually specified task costs.",
+      "locator": "page 8"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Hardware uses MoCap; model construction still needs trial and error; task costs are manually engineered and no human/foundation-model priors are used.",
+        "locator": "page 9"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Test-time flexibility shifts engineering from policy retraining to modeling and cost design rather than eliminating it.",
+        "basis": "Each full demonstration uses a tailored task cost and a laboratory state-estimation stack."
+      }
+    ]
+  },
+  "transfer_boundary": "Strong for modeled dynamic interactions with accurate state; not yet an onboard-perception or language-level autonomous system.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Eight quantitative real-hardware tasks with challenging object scale.",
+      "Compares planning and learning hierarchies."
+    ],
+    "design_risks": [
+      "Motion-capture state and bespoke costs simplify deployment.",
+      "Humanoid results are simulation-only."
+    ],
+    "baseline_fairness": "The authors tune baselines in the same simulator, but reward/cost complexity differs across paradigms.",
+    "metric_validity": "Binary completion and time are task-relevant; safety forces are not comprehensively measured.",
+    "reproducibility": "Planning and controller interfaces are described and code is linked.",
+    "external_validity": "Physical evidence is Spot-only and laboratory-based."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2604.08508-C01",
+      "claim": "On hardware, Sumo uprighted a 15 kg tire—heavier than Spot arm's stated 11 kg lifting capacity—in 10/10 trials, averaging 9.2±4.7 seconds.",
+      "stance": "support",
+      "relation": "Supports online steering of a pretrained whole-body policy for dynamic heavy-object manipulation.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The hardware case study reports object mass, nominal arm capacity, success and completion time.",
+      "locator": "page 8",
+      "source_context": "Tire Upright:In Fig. 7 (a), the robot is tasked to upright a tire of15kg, which is heavier than the maximum lifting capacity of11kg of the Spot arm. Additionally, the rubber tire presents hard-to-model geometries and friction properties, causing a large sim-to-real gap. Using a combination of its arm, torso, and legs, Sumo enables the robot to complete the task10out of10trials with an average completion time of9.2±4.7s, Tab. II.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "task success and completion time",
+        "value_or_direction": "10/10; 9.2±4.7 s",
+        "comparator": "15 kg tire versus 11 kg nominal arm capacity",
+        "task_or_sample": "real Spot tire-uprighting task",
+        "locator": "page 8"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The paragraph directly states the two masses, 10-trial result and mean completion time."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2607.15207", "title": "BadWAM: When World-Action Models Dream Right but Act Wrong", "published": "2026-07-16T17:04:15Z", "url": "https://arxiv.org/abs/2607.15207", "authors": ["Qi Li", "Xingyi Yang", "Xinchao Wang"]},
+  "review": {"question": "近半年 VLA 在具身领域最大的技术突破是什么；与反应式 VLA 相比，哪些机制带来可验证的闭环增益，边界是什么？", "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-4D", "EA-ALIGN"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {"decision": "include", "reason": "提供世界—动作模型路线的最新强反证：未来想象可以看起来稳定，而执行动作已与之解耦并导致闭环失败。"},
+    "sections_read": [
+      {"locator": "1 Introduction and 2.1 World Action Models", "role": "problem", "purpose": "确认 WAM 安全承诺与动作—想象异步失效问题。"},
+      {"locator": "3 Threat Model and 4 BadWAM", "role": "method-or-design", "purpose": "核对黑盒查询、有界视觉扰动、action-only 与 imagination-preserving 目标。"},
+      {"locator": "5.1-5.9 Evaluation", "role": "results-or-analysis", "purpose": "核对 LIBERO/RoboTwin 闭环设置、主结果、跨任务系统性、转移、消融和防御。"},
+      {"locator": "6 Conclusion and Appendix A.1", "role": "conclusion-or-limitations", "purpose": "确认动作—想象同步性结论和子集分析未完成范围。"}
+    ],
+    "sections_skipped": [
+      {"locator": "Appendix A.2-A.6 implementation details", "role": "appendix-or-supplement", "reason": "已核对主训练资源、子集议程与指标定义；其余优化超参不改变本综述主张。"}
+    ]
+  },
+  "research_question": "世界—动作模型中，未来预测是否能单独作为执行安全与物理一致性信号？",
+  "contributions": ["定义世界—动作漂移攻击面，区分动作破坏强度和未来想象保持隐蔽性。", "在三类 WAM 接口和两个机器人 benchmark 上进行闭环攻击评估。", "证明未来图像接近干净预测时，动作仍可偏移到任务失败，因而安全监测必须检查 action–imagination synchronization。"],
+  "method": {
+    "summary": "BadWAM 在每个重规划时刻对视觉观测添加有界扰动，通过黑盒查询搜索使 action chunk 偏移的扰动；隐蔽版还惩罚预测未来与干净未来之间的距离。",
+    "assumptions": ["攻击者可在部署时改写模型视觉输入并进行多次前向查询。", "安全监测器可能只观察想象未来而未验证其与实际动作的一致性。", "基准的仿真视觉管线与动作执行足以表征这类安全缺口。"]
+  },
+  "study_context": {
+    "datasets": ["LIBERO", "RoboTwin"],
+    "tasks": ["40 LIBERO tasks across Spatial/Object/Goal/Long-horizon", "RoboTwin dual-arm long-horizon tasks"],
+    "embodiments": ["LIBERO simulated manipulator", "RoboTwin dual-arm simulation"],
+    "sample_or_scale": "Main LIBERO cells use 40 tasks x 20 trials = 800 closed-loop episodes per model-attack pair; selected analyses use 12 tasks x 10 trials."
+  },
+  "evaluation": {
+    "design": "对 action-only、joint 和 imagine-then-act/IDM 三类 WAM 在闭环中重复施加攻击，对比随机扰动、白盒上界、转移攻击、非自适应预处理和检测器。",
+    "baselines": ["clean WAM", "random uniform perturbation", "white-box reference", "Gaussian blur", "JPEG-noise ensemble", "resize-crop ensemble"],
+    "metrics": ["closed-loop task success", "action distance", "predicted-future distance", "pass@k", "detector AUROC and recall at 5% FPR"],
+    "ablations": ["future-preserving weight", "perturbation budget", "query budget", "cross-WAM transfer"]
+  },
+  "findings": [
+    {"finding": "在完整 LIBERO 扫描中，action-only WAM 的成功率从 96.5% 降至 43.1%；joint 和 IDM WAM 也出现大幅下降。", "scope": "指定 FastWAM 变体、LIBERO 仿真与定义的黑盒输入扰动权限。", "locator": "5.1 Experimental Setup and 5.2 BadWAM Reliably Induces Task Failures"},
+    {"finding": "在匹配攻击强度下，想象保持目标在 40 个 LIBERO 任务中有 39 个使预测未来更接近干净未来，但闭环失败仍显著。", "scope": "LIBERO 的 imagination-visible WAM 变体。", "locator": "5.4 How Do BadWAM Failures Emerge and 5.8 Safety Implications"},
+    {"finding": "在 5% 误报率下，简单一致性检测器对两类 WAM 的攻击重规划检出率仅 13.4% 和 21.4%。", "scope": "平衡 LIBERO 子集，非自适应攻击。", "locator": "5.7 Non-Adaptive Defenses and Detection"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "转移、防御和多数消融当前只在 12 任务平衡 LIBERO 子集上报告，作者计划后续在全量扫描上更新。", "locator": "Appendix A.1 Full and Subset Evaluation Protocols"},
+      {"limitation": "预处理防御只针对当前非自适应攻击，不应解读为完整防御。", "locator": "5.7 Non-Adaptive Defenses and Detection"}
+    ],
+    "reader_inferred": [
+      {"boundary": "论文证明一个安全攻击面，不证明真实机器人环境中的自然失效频率。", "basis": "所有主结果均在 LIBERO/RoboTwin 仿真中，攻击者具有视觉输入改写和多次查询权限。"},
+      {"boundary": "‘想象正确’只表示相对干净未来距离较小，不等于其本身已通过真实物理校验。", "basis": "核心隐蔽指标是预测未来与干净预测的距离，而非与真实结果的绝对一致性。"}
+    ]
+  },
+  "transfer_boundary": "证据限定为攻击者能改写视觉输入、黑盒查询 WAM 并在仿真闭环中重复重规划的场景；对真实传感器、物理对抗性和自适应防御的外推尚需实验。",
+  "critical_appraisal": {
+    "design_strengths": ["主 LIBERO 结果使用 800 个闭环 episode/模型—攻击对，并按任务族分解。", "同时比较随机扰动和白盒参照，并评估跨 WAM 转移。", "把任务成功、动作偏移、未来距离与误报率统一放入闭环安全分析。"],
+    "design_risks": ["部分消融只在子集上，论文尚是计划更新的预印本。", "攻击计算代价每次重规划可达数十秒，与真实在线威胁能力存在差距。", "未包含真实机器人或物理摄像头扰动。"],
+    "baseline_fairness": "干净、随机扰动、同预算黑盒攻击与白盒上界构成有意义的梯度；但三类 WAM 有的使用官方检查点、有的为作者训练，不能完全视为等资源对照。",
+    "metric_validity": "闭环成功率直接度量攻击后任务后果；动作/未来距离帮助识别解耦机制，但未来距离不是物理正确性真值。",
+    "reproducibility": "给出威胁模型、查询预算、训练设置、指标和子集划分；但高端 GPU 需求和还在更新的全量消融限制独立复现。",
+    "external_validity": "对 WAM 安全评测协议的启示很强；对现实攻击成功率、无对抗的自然漂移频率和真机防御有效性尚不足。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.15207-C01",
+      "claim": "在完整 LIBERO 闭环扫描中，BadWAM 的黑盒动作攻击将高成功率 WAM 从 96.5% 降至 43.1%，且失败对空间与长时程任务尤为严重。",
+      "stance": "limit",
+      "relation": "反证‘动作与未来预测耦合后自然更安全’。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "主实验在 40 个 LIBERO 任务、每任务 20 次试验上使用闭环攻击，并报告任务族级下降。",
+      "locator": "5.2 BadWAM Reliably Induces Task Failures",
+      "source_context": "On the action-only WAM, the action-only attack lowers success to 43.1%, a 53.4% drop.",
+      "evidence_type": "experiment",
+      "quantitative": {"metric": "closed-loop task success rate", "value_or_direction": "96.5% to 43.1%, -53.4 percentage points", "comparator": "clean action-only WAM versus BadWAM action-only attack", "task_or_sample": "40 LIBERO tasks, 20 trials per task", "locator": "5.1 Experimental Setup and 5.2 BadWAM Reliably Induces Task Failures"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "实验设置明确说明完整 LIBERO 扫描和每任务 20 次试验，结果段直接报告 96.5% 与 43.1%，主张未外推到真实攻击频率。"}
+    },
+    {
+      "card_id": "2607.15207-C02",
+      "claim": "对 WAM 的安全监测不能只检查‘想象的未来是否看起来合理’，还必须验证未来与实际执行动作在闭环中是否同步。",
+      "stance": "limit",
+      "relation": "限定世界模型作为 VLA 安全裁决层的成熟度。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "想象保持攻击在 40 个任务中有 39 个降低未来漂移，同时保留显著攻击强度。",
+      "locator": "5.8 What Do These Results Imply for WAM Safety?",
+      "source_context": "The relevant security property is not plausibility of the imagined future in isolation, but synchronization between the imagined future and the action that will actually be executed.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "5.4 报告匹配预算下未来距离的下降与任务失败并存，5.8 将此直接总结为 action-imagination synchronization 要求。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "使用高质量 arXiv HTML 完整文本，无 OCR；对子集消融保留预印本未完成边界。"
+}

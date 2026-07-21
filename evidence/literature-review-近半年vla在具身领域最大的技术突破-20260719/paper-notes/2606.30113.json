@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.30113",
+    "title": "SA-VLA: State-aware tokenizer for improving Vision-Language-Action Models' performance",
+    "published": "2026-06-29",
+    "url": "https://arxiv.org/abs/2606.30113",
+    "authors": [
+      "Tengyue Jiang",
+      "Chunpu Xu",
+      "Jiayue Kang",
+      "Yao Mu"
+    ]
+  },
+  "review": {
+    "question": "Sparse language, dense vision, and continuous action alignment in VLA systems",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-SENSOR",
+      "EA-XEMBODIMENT",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to Sparse language, dense vision, and continuous action alignment in VLA systems."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "2.1 Vision-Language-Action Models",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4.1.1 Experiment Setup",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question 'Sparse language, dense vision, and continuous action alignment in VLA systems', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "Discrete action tokenization is a compact interface for autoregressive VLA policies, but decoding fixed tokens back into continuous robot controls is a bottleneck when the same token must mean different controls under different robot states and contacts."
+  ],
+  "method": {
+    "summary": "Vision-Language-Action Models are considered foundational models in the embodied AI field. They use a pre-trained VLM to extract action tokens from images and language instructions. One approach employs an action tokenizer to convert discrete action tokens into continuous action values, while another uses an action expert that leverages the keys and values from the VLM. Building on this foundational model, recent studies have explored various forms of VLAs, such as those based on discrete diffusion models [ 18 ] [ 17 ] , integrations of world models with VLAs [ 23 ] ,chain-of-thought for action generation [ 32 , 19 ] ,and the incorporation of event information into VLAs [ 29 ] .",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Our simulation experiments were conducted on the RoboTwin [ 8 ] platform in clean mode, with 12 tasks, each containing 1,600 trajectories, resulting in a total of 19,200 simulation data entries for training and testing. The specific task types are detailed in Appendix A.2 . To perform comparative experiments and validate the effectiveness of our approach, we used the same Qwen2.5-based VLM followed by different action tokenizers. The following groups were set up: (1) the bin-based tokenization method represented by OpenVLA [ 15 ] ; (2) the tokenization method represented by FAST [ 21 ] ; (3) the VQ-BET tokenization method represented by VQ-VLA [ 27 ] ;(4) Method A as described in our approac",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Discrete action tokenization is a compact interface for autoregressive VLA policies, but decoding fixed tokens back into continuous robot controls is a bottleneck when the same token must mean different controls under different robot states and contacts.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Scalability: It has only been validated on small-scale datasets, and its scalability has not been demonstrated. Nowadays, many large-scale datasets [ 9 , 20 ] have emerged.Many current works [ 24 ] introduce large-scale datasets to attempt to validate scaling laws [ 13 ] in robotics, which is also an important future research direction. In subsequent work, we will expand the training data volume and model parameters within our resource limits to attempt to validate the scaling law [ 13 ] of our method. Model architecture: Furthermore, we follow the VQ-VAE [ 25 ] architecture; whether other gen",
+        "locator": "6 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (2.1 Vision-Language-Action Models) and evaluation (4.1.1 Experiment Setup)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.30113-C01",
+      "claim": "Discrete action tokenization is a compact interface for autoregressive VLA policies, but decoding fixed tokens back into continuous robot controls is a bottleneck when the same token must mean different controls under different robot states and contacts.",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: Sparse language, dense vision, and continuous action alignment in VLA systems",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "SA-VLA conditions action-token decoding on proprioceptive state via adapters or cross-attention, reporting improved RoboTwin and zero-shot sim-to-real success over tokenizer baselines.",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Discrete action tokenization provides a compact interface for autoregressive VLA policies, but accurately recovering continuous robot actions from discrete codes remains challenging. Existing tokenizers typically map each discrete code to a fixed continuous action prototype, ignoring the robot’s current proprioceptive state. This limitation is particularly pronounced in manipulation, where the same action token may require different continuous controls under different joint configurations, object poses, and contact conditions. We therefore propose SA-VLA, a state-aware action tokenizer that conditions action decoding on robot state. We study two state-injection mechanisms for VQ-based action tokenization: cross-attention between state and action features, and a lightweight state adapter that predicts action-wise modulation factors for state-conditioned action modulation and reconstruction. The adapter formulation expands the effective support of a finite codebook by allowing each discrete token to represent a family of state-dependent continuous actions, while preserving the",
+      "evidence_type": "method+experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (action, autoregressive, compact, conditions, continuous, controls, cross-attention, decoding). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Important for the language-like discretization versus continuous action mismatch."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

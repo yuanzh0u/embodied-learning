@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2508.14099",
+    "title": "Task and Motion Planning for Humanoid Loco-manipulation",
+    "published": "2025-08-16T06:45:32Z",
+    "url": "https://arxiv.org/abs/2508.14099",
+    "authors": [
+      "Michal Ciebielski",
+      "Victor Dhédin",
+      "Majid Khadiv"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Optimization-based humanoid loco-manipulation planning that unifies symbolic contact modes with whole-body dynamics."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify the mixed discrete-continuous planning problem."
+      },
+      {
+        "locator": "III-C Solving TAMP Optimization",
+        "role": "method-or-design",
+        "purpose": "Inspect graph search, manipulation skeletons and trajectory optimization."
+      },
+      {
+        "locator": "IV-C Example Solutions",
+        "role": "results-or-analysis",
+        "purpose": "Verify feasibility, search effort and actuation-constraint analysis."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record the simulation-only boundary and planned real realization."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can task-and-motion planning jointly choose locomotion, manipulation and support contacts while enforcing humanoid dynamics?",
+  "contributions": [
+    "A mixed discrete-continuous TAMP solver combining symbolic contact search with whole-body trajectory optimization."
+  ],
+  "method": {
+    "summary": "PDDL/MCTS explores contact-mode sequences pruned by manipulation skeletons; nonlinear trajectory optimization enforces robot/object dynamics, contact and torque limits.",
+    "assumptions": [
+      "Objects and contact patches are modeled explicitly.",
+      "The task can be expressed through symbolic goals and manipulation skeletons."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [
+      "platform climbing with an object",
+      "two-box pick-and-place"
+    ],
+    "embodiments": [
+      "Simulated humanoid with whole-body contacts"
+    ],
+    "sample_or_scale": "Two simulation scenarios; 200 tree-search expansions for two-box pick-and-place."
+  },
+  "evaluation": {
+    "design": "Shows feasible plans and removes torque limits to expose dynamically infeasible solutions.",
+    "baselines": [
+      "optimization without torque constraints"
+    ],
+    "metrics": [
+      "feasibility",
+      "search iterations",
+      "solve time",
+      "torque-limit violations"
+    ],
+    "ablations": [
+      "actuation constraints"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Enforcing whole-body dynamics and torque limits changes which contact sequences appear feasible, but computation and real-world execution remain unresolved.",
+      "scope": "Two modeled simulation tasks with known geometry and contacts.",
+      "locator": "IV-C Example Solutions"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The generated behaviors have not yet been realized on a real humanoid.",
+        "locator": "V Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The planner is not yet an online or perception-coupled loco-manipulation system.",
+        "basis": "Average solve time is tens of seconds and all results use modeled simulation scenes."
+      }
+    ]
+  },
+  "transfer_boundary": "Evidence supports offline contact-rich planning in known scenes, not real-time replanning under perception uncertainty.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Models robot and object dynamics jointly.",
+      "Actuation-limit removal provides a meaningful physical-feasibility ablation."
+    ],
+    "design_risks": [
+      "Only two scenarios.",
+      "No physical execution or perception noise."
+    ],
+    "baseline_fairness": "The actuation-constraint ablation isolates a central modeling choice, though no alternative TAMP system is quantitatively compared.",
+    "metric_validity": "Feasibility and torque profiles test physical plausibility; task success on hardware is absent.",
+    "reproducibility": "Solver libraries and symbolic structure are described, but full scene models and planner settings govern results.",
+    "external_validity": "Limited to known rigid-object geometry and offline optimization."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2508.14099-C01",
+      "claim": "For two-box pick-and-place, the solver found the first goal-satisfying feasible plan after 30 of 200 tree expansions, with an average solve time of 52.3 seconds.",
+      "stance": "conditional",
+      "relation": "Supports automatic long-horizon contact planning while limiting claims about online deployment.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The example-solution section reports both search effort and computation for the modeled task.",
+      "locator": "IV-C Example Solutions",
+      "source_context": "The two-box pick and place tree search was expanded 200 times with an average solve time of 52.3 seconds. Note that using an NLP solver that exploits the sparsity in time of trajectory optimization, such as the SQP solver in Acados [ 20 ] , could yield a significant speedup w.r.t. IPOPT. A variety of solutions were generated, with the first feasible solution satisfying the goal being found in 30 iterations.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "tree-search effort and solve time",
+        "value_or_direction": "first feasible at 30 of 200 expansions; 52.3 seconds average",
+        "comparator": "no online baseline",
+        "task_or_sample": "simulated two-box pick-and-place",
+        "locator": "IV-C Example Solutions"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The cited sentences contain the exact expansion count, first-feasible iteration and average time; the claim is restricted to the simulated two-box task."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

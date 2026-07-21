@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2507.21796",
+    "title": "MoDeSuite: Robot Learning Task Suite for Benchmarking Mobile Manipulation with Deformable Objects",
+    "published": "2025-07-29T13:33:43Z",
+    "url": "https://arxiv.org/abs/2507.21796",
+    "authors": [
+      "Yuying Zhang",
+      "Kevin Sebastian Luck",
+      "Francesco Verdoja",
+      "Ville Kyrki",
+      "Joni Pajarinen"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "Benchmark for mobile manipulation of deformable objects with an explicit simulation-to-real study."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify benchmark gaps for deformable mobile manipulation."
+      },
+      {
+        "locator": "III MoDeSuite",
+        "role": "method-or-design",
+        "purpose": "Inspect environments, observations and eight tasks."
+      },
+      {
+        "locator": "IV-C Deployment on Real Robot",
+        "role": "results-or-analysis",
+        "purpose": "Verify simulation-to-real outcomes."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record benchmark scope and transfer gap."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "How well do standard RL and imitation methods handle mobile manipulation of deformable objects and transfer to hardware?",
+  "contributions": [
+    "An eight-task deformable mobile-manipulation suite with multiple observation/action settings."
+  ],
+  "method": {
+    "summary": "MoDeSuite standardizes robot, deformable objects, observations and tasks, then evaluates state- and image-based policies in simulation and on a real robot.",
+    "assumptions": [
+      "The benchmark's simulated deformable dynamics approximate the target hardware setting."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "benchmark demonstrations and simulator rollouts"
+    ],
+    "tasks": [
+      "place",
+      "bend",
+      "transport",
+      "drag",
+      "lift",
+      "uncover",
+      "cover",
+      "curtain"
+    ],
+    "embodiments": [
+      "mobile manipulator in simulation and hardware"
+    ],
+    "sample_or_scale": "Eight tasks; 10 physical curtain trials for each image-policy method."
+  },
+  "evaluation": {
+    "design": "RL and imitation baselines are evaluated in simulation; selected state and image policies are deployed on the real robot.",
+    "baselines": [
+      "PPO",
+      "behavior cloning",
+      "retrieval-based imitation"
+    ],
+    "metrics": [
+      "success rate",
+      "reward",
+      "real-robot task completion"
+    ],
+    "ablations": [
+      "observation modality"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Image policies that worked in simulation failed to complete the real curtain task, exposing a severe visual sim-to-real gap.",
+      "scope": "The physical curtain task and the two reported image-policy baselines.",
+      "locator": "IV-C Deployment on Real Robot"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The benchmark exposes a substantial simulation-to-real visual-domain gap for deformable manipulation.",
+        "locator": "IV-C Deployment on Real Robot"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Simulation success in deformable loco-manipulation is not reliable evidence of hardware competence.",
+        "basis": "Neither image policy completed the physical task despite simulation success."
+      }
+    ]
+  },
+  "transfer_boundary": "Useful as a stress test for deformable-object interaction; physical transfer remains unresolved.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Covers eight distinct deformable tasks.",
+      "Reports a direct hardware transfer failure rather than only simulation scores."
+    ],
+    "design_risks": [
+      "The real evaluation is concentrated on one task.",
+      "Baseline tuning may not represent the best modern visuomotor policies."
+    ],
+    "baseline_fairness": "Baselines share benchmark observations and tasks, but the real-world comparison is narrow.",
+    "metric_validity": "Task completion is decisive for transfer; simulation reward alone is not.",
+    "reproducibility": "Task and interface definitions are detailed.",
+    "external_validity": "One hardware platform and one physical deformable-task transfer study."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2507.21796-C01",
+      "claim": "On the real curtain task, neither image policy completed any of 10 trials; retrieval reached the curtain in 2/10, while behavior cloning did not reach it.",
+      "stance": "limit",
+      "relation": "Shows that deformable mobile-manipulation simulation gains can collapse under visual sim-to-real shift.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The deployment paragraph contrasts simulation success with physical failure.",
+      "locator": "IV-C Deployment on Real Robot",
+      "source_context": "While the policies are successful in simulation, neither is able to complete the task in the real world. Specifically, the retrieval-based method managed to approach and make contact with the curtain in 2 out of 10 trials, whereas the behavior cloning (BC) policy failed to even reach the curtain.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "real-world completion/contact",
+        "value_or_direction": "0/10 completions for both; 2/10 contact for retrieval",
+        "comparator": "retrieval-based method and behavior cloning",
+        "task_or_sample": "real curtain task",
+        "locator": "IV-C Deployment on Real Robot"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The paragraph explicitly states simulation success, zero physical completion and the 2-of-10 contact result."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

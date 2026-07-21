@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.07196",
+    "title": "Validate the Dream Before You Trust Its Verdict: Admissibility for World-Model Simulators",
+    "published": "2026-07-08",
+    "url": "https://arxiv.org/abs/2607.07196",
+    "authors": [
+      "Christian Oefinger"
+    ]
+  },
+  "review": {
+    "question": "触觉世界模型",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 触觉世界模型."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "III-B Adapting Existing Certification Frameworks",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "A-A Experimental Scope",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "IV Discussion and Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '触觉世界模型', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "世界模型/生成式仿真器不能仅凭视觉逼真度作为具身策略评测裁判；必须验证其是否按动作正确响应，并建立 admissibility/validation 梯度后才能把闭环判决当证据。"
+  ],
+  "method": {
+    "summary": "Classical accreditation procedures presuppose a physics-based simulator and therefore do not apply directly to a learned one. Two of their underlying principles, however, are independent of that assumption, and we adapt them to the generative WM setting to derive criteria for when a verdict may be admitted as evidence. The resulting standard is prescriptive rather than empirical. It specifies what a WM must demonstrate and which evidence it must provide. The first principle is fidelity-sufficiency. VV&A certifies a simulator not by maximizing realism but by establishing that its fidelity is sufficient for a declared intended use [ 6 ] . When the intended use is policy evaluation, the link be",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Instantiating the lower rungs in AD requires generative WMs that can be both run and driven. The model must be open-weight, so that its rollouts can be regenerated and scored. Furthermore, it must be action-conditioned, since only a model steered by an external control input can serve as a closed-loop oracle for the policy under test. Two driving WMs meet these criteria: Vista [ 12 ] and Epona [ 46 ] . Both accept an injected ego trajectory and differ in generation paradigm: Vista builds on clip-level video diffusion, and Epona on autoregressive diffusion that predicts one frame at a time. We evaluate both on the nuScenes-based ACT-Bench split [ 4 ] , which supplies the action templates and",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "世界模型/生成式仿真器不能仅凭视觉逼真度作为具身策略评测裁判；必须验证其是否按动作正确响应，并建立 admissibility/validation 梯度后才能把闭环判决当证据。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Several assumptions enter the measurement and bound the strength of these results. All L1 and L2 metrics inherit the ACT-Estimator’s error: on real clips it recovers trajectories to a mean ADE of \\qty 0.77 and classifies maneuvers at about \\qty 94 accuracy, so displacement differences near that resolution are not meaningful and the reported IEC carries the estimator’s misclassification rate as a noise floor. The maneuver categories themselves are defined by ACT-Bench’s rule-based classifier, several of whose thresholds are underspecified. The class boundaries are therefore not crisp, which pla",
+        "locator": "A-D Limitations and Threats to Validity"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (III-B Adapting Existing Certification Frameworks) and evaluation (A-A Experimental Scope)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.07196-C01",
+      "claim": "世界模型/生成式仿真器不能仅凭视觉逼真度作为具身策略评测裁判；必须验证其是否按动作正确响应，并建立 admissibility/validation 梯度后才能把闭环判决当证据。",
+      "stance": "gap",
+      "relation": "Evidence relevant to the review question: 触觉世界模型",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者指出机器人中 World Models 越来越被用于模拟动作后果并给出 success/safety verdict，但视频生成指标如 FVD 奖励视觉真实感，却忽略世界是否对 policy actions 正确响应；他们主张作为 test oracle 的 WM 需要先通过 accreditation，并提出 L0-L4 admissibility ladder。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Across robotics, World Models (WMs) are increasingly used to evaluate action policies by simulating the consequences of actions in an imagined world, and returning a success or safety verdict. Yet a verdict is only as trustworthy as the WM that produced it, and the WM itself needs to be certified. In video-generation WMs , fidelity metrics such as Fréchet Video Distance (FVD) reward visual realism, but ignore whether the world responds correctly to the policy’s actions, including those unseen in training. Classical simulation-based validation assumes a trusted simulator evaluating an untrusted policy, whereas generative WMs are themselves unverified learned artifacts. Hence, we argue that any WM used as a test oracle must first be accredited before its verdicts can serve as evidence. Building on credibility practices from safety-critical simulation, including Verification, Validation & Accreditation (VV&A) , Safety of the Intended Functionality (SOTIF) , and scenario-based testing standards, we define an admissibility ladder (L0–L4) that a WM must climb before its closed-loo",
+      "evidence_type": "evaluation-framework",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (accreditation, actions, admissibility, fidelity, fvd, ladder, oracle, policy). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "The paper instantiates part of the argument in autonomous driving; the review uses it as an evaluation-governance signal for embodied world models generally. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

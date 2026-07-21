@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.21161",
+    "title": "ActionReasoning: Robot Action Reasoning in 3D Space with LLM for Robotic Brick Stacking",
+    "published": "2026-02-24",
+    "url": "https://arxiv.org/abs/2602.21161",
+    "authors": [
+      "Guangming Wang",
+      "Qizhen Ying",
+      "Yixiong Jing",
+      "Olaf Wysocki",
+      "Brian Sheil"
+    ]
+  },
+  "review": {
+    "question": "Sparse language, dense vision, and continuous action alignment in VLA systems",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-SENSOR",
+      "EA-XEMBODIMENT",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to Sparse language, dense vision, and continuous action alignment in VLA systems."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "III METHODS",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "IV-B Evaluation Protocol and Metrics",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "V CONCLUSIONS",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question 'Sparse language, dense vision, and continuous action alignment in VLA systems', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "ActionReasoning假设感知已由视觉算法可靠提供，将 LLM 的任务收窄为 3D 动作推理；作者认为这种解耦可降低端到端训练的数据需求。"
+  ],
+  "method": {
+    "summary": "Figure 2 : Illustration of the six agents ( ) in the present ActionReasoning framework: (1) Pre-grasp positioning to guide the arm to approach the brick; (2) Opening and descent to position the gripper above the brick surface; (3) Grasp closure to secure the brick; (4) Safe lift to raise the brick from the ground; (5) Brick placement to stably move and accurately align the brick at the target location; and (6) Grasp release to land the brick. The corresponding execution of each agent is illustrated on the simulated KUKA robot arm at the bottom of this figure. We aim to bridge perception and execution for robotic manipulation via physical reasoning with LLMs. The input is the robot’s structur",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate the mentioned two target wall patterns in the Section IV-A , each stacking bricks per trial. For each pattern, we conduct trials under randomized initial brick poses, yielding a total of trials. We report the alignment quality metrics over all 20 experiments.",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "ActionReasoning假设感知已由视觉算法可靠提供，将 LLM 的任务收窄为 3D 动作推理；作者认为这种解耦可降低端到端训练的数据需求。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "II-B LLM/VLM Based Robotic Operation"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (III METHODS) and evaluation (IV-B Evaluation Protocol and Metrics)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.21161-C01",
+      "claim": "ActionReasoning假设感知已由视觉算法可靠提供，将 LLM 的任务收窄为 3D 动作推理；作者认为这种解耦可降低端到端训练的数据需求。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: Sparse language, dense vision, and continuous action alignment in VLA systems",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "相关工作段明确提出解耦视觉部件，让 LLM 在已知感知状态上做 3D 物理与动作推理。",
+      "locator": "II-B LLM/VLM Based Robotic Operation",
+      "source_context": "To address this, we argue for decoupling the visual component: assuming the robot already has sufficiently accurate perceptual information via computer vision algorithms, and the LLMs are asked to focus only on action reasoning. This approach significantly reduces data requirements while also leveraging the wealth of existing research in computer vision. For example, the ReKep series [ 11 , 16 ] use vision-language models to identify keypoints for robotic manipulation, which significantly reduces the reliance on hand-coded programs and does not require training. Such approaches also constrain the robot’s exploration space. The distinction of our work from ReKep [ 11 ] is that while ReKep emphasizes 2D keypoint detection and corresponding actions, our method enables direct 3D spatial reasoning leveraging physical information. We therefore term it physical reasoning. This allows robots to exploit richer physical cues and directly operate in SE(3) to produce phase‑conditioned action proposals in 3D, avoiding limitations such as occlusions and the lack of precision inherent in 2D keypoint inputs. In addition, for complex multi-step tasks, there are emerging multi-agent frameworks, such as CAMEL [ 14 ] for role‑playing agents and AutoG",
+      "evidence_type": "system-and-ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in II-B LLM/VLM Based Robotic Operation contains the paper-specific concepts used by the claim (3d). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Promoted from candidate on 2026-07-09 via promote_candidates.py digest; cognitive-error side of the perception-vs-cognitive comparison."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

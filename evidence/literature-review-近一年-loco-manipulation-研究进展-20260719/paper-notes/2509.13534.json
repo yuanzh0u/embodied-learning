@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2509.13534",
+    "title": "Embracing Bulky Objects with Humanoid Robots: Whole-Body Manipulation with Reinforcement Learning",
+    "published": "2025-09-16T21:01:24Z",
+    "url": "https://arxiv.org/abs/2509.13534",
+    "authors": [
+      "Chunxin Zheng",
+      "Kai Chen",
+      "Zhihai Bi",
+      "Yulin Li",
+      "Liang Pan",
+      "Jinni Zhou",
+      "Haoang Li",
+      "Jun Ma"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct humanoid whole-body manipulation study coupling a motion prior with contact-aware object embracing."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify the bulky-object manipulation challenge."
+      },
+      {
+        "locator": "III Methodology",
+        "role": "method-or-design",
+        "purpose": "Inspect motion-prior distillation and NSDF contact conditioning."
+      },
+      {
+        "locator": "IV-B Adaptability to Different Object Properties",
+        "role": "results-or-analysis",
+        "purpose": "Verify robustness across shapes, sizes and masses."
+      },
+      {
+        "locator": "IV-C Real-World Experiment",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the physical-robot demonstration and its scope."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can a humanoid preserve natural locomotion while establishing distributed contacts around bulky objects?",
+  "contributions": [
+    "A motion-prior-plus-NSDF policy for multi-contact whole-body object embracing."
+  ],
+  "method": {
+    "summary": "A teacher distilled from AMASS supplies a humanoid motion prior; an NSDF object representation conditions an RL embracing policy.",
+    "assumptions": [
+      "Object geometry is available to the policy.",
+      "The desired manipulation can be represented as approaching and embracing one rigid object."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "AMASS motion data"
+    ],
+    "tasks": [
+      "approach, embrace and lift bulky rigid objects"
+    ],
+    "embodiments": [
+      "Unitree H1-2 humanoid"
+    ],
+    "sample_or_scale": "Thirty simulation trials per reported object condition and one qualitative real-robot demonstration."
+  },
+  "evaluation": {
+    "design": "Simulation varies NSDF use, initialization, object shape, mass and size; the paper also shows a physical H1-2 trial.",
+    "baselines": [
+      "policy without NSDF"
+    ],
+    "metrics": [
+      "task success rate",
+      "motion style score"
+    ],
+    "ablations": [
+      "NSDF",
+      "random initialization"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "NSDF conditioning was necessary for the reported object-shape robustness in simulation.",
+      "scope": "Rigid cylinders, cuboids and spheres under the tested simulation ranges.",
+      "locator": "IV-B Adaptability to Different Object Properties"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The evidence for hardware transfer is qualitative and depends on external motion capture.",
+        "basis": "The paper reports one successful physical trial and describes motion-capture-based state acquisition."
+      }
+    ]
+  },
+  "transfer_boundary": "Supports contact-rich rigid-object transport on one humanoid, not arbitrary deformable or articulated-object manipulation.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Systematic simulation sweeps over shape, size and mass.",
+      "Ablation isolates the geometry representation."
+    ],
+    "design_risks": [
+      "Real-world evidence is a single qualitative demonstration.",
+      "Privileged geometry/state sensing may not transfer to open-world perception."
+    ],
+    "baseline_fairness": "The no-NSDF comparison isolates the proposed representation but does not compare against diverse whole-body manipulation systems.",
+    "metric_validity": "Success is task-relevant; style and safety coverage are narrower.",
+    "reproducibility": "Core objectives and training setup are described, though hardware sensing is system-specific.",
+    "external_validity": "Limited to one humanoid and rigid objects."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2509.13534-C01",
+      "claim": "In simulation, the NSDF-conditioned policy maintained 100% success for standard-mass cylinders, cuboids and spheres, while removing NSDF produced 0% across those shapes.",
+      "stance": "support",
+      "relation": "Supports explicit object-geometry conditioning for whole-body contact formation.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The shape sweep directly contrasts the full method with the no-NSDF ablation.",
+      "locator": "IV-B Adaptability to Different Object Properties",
+      "source_context": "First, when the NSDF module is incorporated, the policy achieves and maintains a 100% success rate across multiple object types, including cylinders, cuboids, and spheres, under standard mass (3 kg) and size conditions. This demonstrates strong sim-to-sim transfer performance. In contrast, the policy exhibits complete failure (0% success) across all shape categories without NSDF, highlighting the essential role of this module in capturing geometric and semantic attributes for stable manipulation.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "success rate",
+        "value_or_direction": "100% with NSDF versus 0% without",
+        "comparator": "full policy versus no-NSDF ablation",
+        "task_or_sample": "three rigid-object shape categories in simulation",
+        "locator": "IV-B Adaptability to Different Object Properties"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The result paragraph states the object classes, standard mass and both success values."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

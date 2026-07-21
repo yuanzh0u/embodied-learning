@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.04825",
+    "title": "HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning",
+    "published": "2026-06-03",
+    "url": "https://arxiv.org/abs/2606.04825",
+    "authors": [
+      "Amirhosein Alian",
+      "Yongqiang Zhao",
+      "Shiyi Gu",
+      "Xuyang Zhang",
+      "Zhuo Chen",
+      "Christopher E. Mower",
+      "Haitham Bou-Ammar",
+      "Shan Luo"
+    ]
+  },
+  "review": {
+    "question": "触觉世界模型",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 触觉世界模型."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 HapTile Dataset",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5.2 Results and Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '触觉世界模型', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "触觉数据的有效形态不止原始 tactile image，还包括 marker displacement 等显式接触几何与滑移特征。"
+  ],
+  "method": {
+    "summary": "Figure 2: HapTile dataset: (a) The diversity of the skills and their corresponding collected demonstrations, (b) Average demonstration data collection time per task. In this section, we introduce HapTile and describe how the dataset was collected, processed, and structured for policy learning. We first analyze demonstration statistics, then present synchronization, and quality-control procedures. Data formatting mechanisms are detailed in Section A.1 .",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Data collection follows a structured protocol to promote policy generalization. Object poses are randomized within a constrained workspace visible to the third-person camera, while the end-effector resets to a fixed initial position at the start of each episode. To increase scene diversity, one or two plausible clutter objects with randomized poses are added to each scene. Demonstration counts scale with task complexity, ranging from 30 to 60 episodes. For instance, 50–60 demonstrations were collected for longer-horizon or fluid-interaction tasks, such as bottle turning and board wiping, while 30 demonstrations were collected for simpler tasks. Each task includes two target states specified",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "触觉数据的有效形态不止原始 tactile image，还包括 marker displacement 等显式接触几何与滑移特征。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "4.2 Vision-Based Tactile Sensing and Marker Tracking"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Scene Diversity and Generalization. Data collection was conducted within a single laboratory scene. While objects and clutter span a broad range of daily-life activities reflecting environments such as kitchens and laundry rooms, the dataset lacks variation in scene layout, lighting, and background. Future work should incorporate multiple scene configurations and extend collection to in-the-wild settings to improve generalization. Simulation Data. Scaling through physical collection alone is costly, requiring dedicated space, hardware, and supervision. Incorporating simulation data with realis",
+        "locator": "6 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 HapTile Dataset) and evaluation (5 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.04825-C01",
+      "claim": "触觉数据的有效形态不止原始 tactile image，还包括 marker displacement 等显式接触几何与滑移特征。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 触觉世界模型",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "HapTile 的每个夹爪手指安装视觉触觉传感器，接触会带来图像变化和 marker displacement；论文把 marker-motion 信号保存进数据集并用于 haptic feedback，实验也比较 vision-only、vision+tactile image 与 vision+tactile+marker 表征。",
+      "locator": "4.2 Vision-Based Tactile Sensing and Marker Tracking",
+      "source_context": "We smooth the signal with separate rise and release factors, producing a stable tactile motion estimate. The resulting marker-motion signal is stored in HapTile and is also used to drive haptic feedback.",
+      "evidence_type": "sensor_processing",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 4.2 Vision-Based Tactile Sensing and Marker Tracking contains the paper-specific concepts used by the claim (feedback, haptic, haptile, marker-motion, tactile). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Supports sensor/representation requirements. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

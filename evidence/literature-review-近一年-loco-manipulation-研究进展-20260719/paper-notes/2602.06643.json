@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.06643",
+    "title": "Humanoid Manipulation Interface: Humanoid Whole-Body Manipulation from Robot-Free Demonstrations",
+    "published": "2026-02-06T12:10:47Z",
+    "url": "https://arxiv.org/abs/2602.06643",
+    "authors": [
+      "Ruiqian Nai",
+      "Boyuan Zheng",
+      "Junming Zhao",
+      "Haodong Zhu",
+      "Sicong Dai",
+      "Zunhao Chen",
+      "Yihang Hu",
+      "Yingdong Hu",
+      "Tong Zhang",
+      "Chuan Wen",
+      "Yang Gao"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct humanoid loco-manipulation data-collection and whole-body-policy study."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify the robot-operation bottleneck in whole-body data collection."
+      },
+      {
+        "locator": "II Method",
+        "role": "method-or-design",
+        "purpose": "Inspect robot-free tracking and manipulation-centric control."
+      },
+      {
+        "locator": "VI Data Collection Efficiency",
+        "role": "results-or-analysis",
+        "purpose": "Verify throughput and acceptance comparisons."
+      },
+      {
+        "locator": "VIII Conclusions and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record sensing and controller boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can robot-free full-body demonstration collection improve humanoid loco-manipulation data throughput without sacrificing feasibility?",
+  "contributions": [
+    "A robot-free full-body capture workflow with human-in-the-loop IK preview and a compatible hierarchical policy interface."
+  ],
+  "method": {
+    "summary": "Wearable trackers capture human motion; a previewed IK mapping checks humanoid feasibility, while a high-level diffusion policy commands a manipulation-centric whole-body controller.",
+    "assumptions": [
+      "Wearable trackers remain observable under suitable lighting and texture.",
+      "A platform-specific low-level whole-body controller is available."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "350 collected demonstrations"
+    ],
+    "tasks": [
+      "bimanual manipulation",
+      "dynamic control",
+      "long-range loco-manipulation"
+    ],
+    "embodiments": [
+      "one physical humanoid platform"
+    ],
+    "sample_or_scale": "350 demonstrations; a 15-minute throughput comparison; seven environments and seven bottles for generalization studies."
+  },
+  "evaluation": {
+    "design": "Capability, generalization and collection-efficiency studies compare HuMI with TWIST2 and evaluate trained policies on the real robot.",
+    "baselines": [
+      "TWIST2"
+    ],
+    "metrics": [
+      "episodes collected",
+      "acceptance rate",
+      "time per acceptable episode",
+      "task success"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Robot-free collection roughly doubled raw episode throughput and increased acceptance in the timed comparison.",
+      "scope": "One 15-minute operator comparison on the reported capture systems.",
+      "locator": "VI Data Collection Efficiency"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Tracking depends on texture and lighting, low-level controllers are not yet general, and evaluation uses one robot platform.",
+        "locator": "VIII Conclusions and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Collection efficiency does not by itself establish autonomous policy generalization.",
+        "basis": "The throughput experiment measures accepted demonstrations, while downstream studies remain task- and platform-specific."
+      }
+    ]
+  },
+  "transfer_boundary": "Useful where human full-body motion is a suitable task prior and a compatible low-level controller can execute retargeted commands.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Measures both collection throughput and downstream real-robot behavior.",
+      "Reports explicit acceptance criteria."
+    ],
+    "design_risks": [
+      "Small operator/system comparison.",
+      "Hardware and controller are platform-specific."
+    ],
+    "baseline_fairness": "Both systems are compared over the same wall-clock collection period, though ergonomics and operator familiarity may differ.",
+    "metric_validity": "Acceptance rate and acceptable-episode time directly capture data-collection productivity.",
+    "reproducibility": "Hardware and protocols are documented in appendices.",
+    "external_validity": "Single platform and capture setup limit broad transfer claims."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.06643-C01",
+      "claim": "In a 15-minute comparison, HuMI collected 62 episodes versus 28 for TWIST2, with 96.7% versus 64.3% acceptance; time per acceptable episode fell to 30.0% of TWIST2.",
+      "stance": "support",
+      "relation": "Supports robot-free capture as a way to scale feasible whole-body demonstrations.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The timed comparison jointly reports quantity, quality and accepted-data cost.",
+      "locator": "VI Data Collection Efficiency",
+      "source_context": "HuMI yields substantially higher throughput, collecting 62 episodes versus 28 with TWIST2, while also achieving a higher acceptance rate ( 96.7% vs. 64.3% ). HuMI’s streamlined, robot-free workflow further reduces the average time per acceptable episode to 30.0% of that of TWIST2",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "collection throughput and acceptance",
+        "value_or_direction": "62 vs 28 episodes; 96.7% vs 64.3%; 30.0% accepted-episode time",
+        "comparator": "HuMI versus TWIST2",
+        "task_or_sample": "15-minute collection comparison",
+        "locator": "VI Data Collection Efficiency"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The result paragraph contains all three comparisons and the two systems."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

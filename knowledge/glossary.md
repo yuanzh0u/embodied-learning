@@ -2,7 +2,7 @@
 id: KB-GLOSSARY
 title: 术语表
 type: glossary
-updated: 2026-07-17
+updated: 2026-07-20
 tags: [glossary, embodied-ai, error-governance]
 ---
 
@@ -39,6 +39,10 @@ tags: [glossary, embodied-ai, error-governance]
 | 反应式 VLA | 主要将当前观测与指令直接映射到下一步或下一段动作、但不显式检验动作后果的狭义 VLA 形态；“反应式 VLA 已死”只针对这一限定定义。 | EA-MODEL, EA-ALIGN, EA-EVAL |
 | VLA—世界模型融合栈 | VLA 负责语义与动作先验，动作条件世界模型负责后果预演、候选排序和失败识别，本体适配器与控制器负责真实执行的分层系统；该结构是跨论文 synthesis。 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN |
 | Action-conditioned reliability | 世界模型在动作条件下对真实后果、物理约束、长时一致、失败状态与候选排序的联合可靠性，并包含推理效率门槛。 | EA-EVAL, EA-4D, EA-MODEL |
+| Loco-manipulation | 移动/行走与操作在同一任务中耦合的全身机器人能力；需要联合处理全身动作、状态估计、地形/接触、长时序计划和失败恢复。 | EA-LOCOMANIP, EA-MODEL, EA-EVAL, EA-XEMBODIMENT, EA-SENSOR |
+| 世界模型权限阶梯 | 按错误可拦截性分配世界模型权限：训练期教师、离线排序和数据生成风险较低，在线预演次之，直接控制与安全裁决必须通过最高等级闭环验收。 | EA-EVAL, EA-MODEL, EA-4D |
+| 功能—时标对齐融合 | 不把全部模态无约束拼接，而是按语言、视觉、触觉、力/力矩、本体状态的功能、频率和控制层级选择性耦合。 | EA-SENSOR, EA-ALIGN, EA-MODEL |
+| 接触执行栈 | 从同步接触数据、接触表征、动作条件预测到高频纠偏和安全过程评测的分层闭环。 | EA-SENSOR, EA-MODEL, EA-EVAL |
 | 具身数据污染 | 样本与来源、时间、任务、动作、模型版本或评测边界之间发生关系失真；覆盖非恶意近重复/错位/泄漏与恶意投毒/后门，治理范围贯穿采集、训练、生成和闭环评测。 | EA-DATA, EA-EVAL, EA-MODEL |
 | 语义泄漏 | 训练与评测虽无字节级重复，但场景、任务逻辑、对象布局或指令—动作映射过度接近，导致记忆式高分冒充泛化。 | EA-DATA, EA-EVAL |
 | 供应链持久污染 | 后门或污染进入基础模型、适配模块或检查点后，在下游干净微调中仍然保留。 | EA-MODEL, EA-DATA |

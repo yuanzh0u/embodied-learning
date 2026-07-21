@@ -3,7 +3,7 @@ id: EA-4D
 title: 4D 时空推理与世界动态
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-17
+updated: 2026-07-20
 source:
   - id: RUN-4D-REASONING-20260714
     file: ../../evidence/literature-review-4d时空推理-20260714-reader-v2/evidence.jsonl
@@ -14,12 +14,19 @@ source:
   - id: RUN-VLA-WM-SHIFT-20260717
     file: ../../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/evidence.jsonl
     locator: EA-4D-READ-0011..0013; EA-WMDATA-READ-0008..0009; EA-WMEVAL-READ-0005..0007; EA-WMEVAL-READ-0013
-tags: [embodied-ai, 4d, spatiotemporal, point-tracks, world-model, consequence-rehearsal, geometry, dynamics]
-aliases: [4D 时空推理, 4D 世界模型, 3D point tracks, 时空场景图, 动态世界, 后果预演, 动作条件未来]
+  - id: RUN-WM-TASKS-20260719
+    file: ../../evidence/literature-review-近一年世界视频模型最可靠的应用任务-20260719/evidence.jsonl
+    locator: EA-4D-READ-0011..0013; EA-WMDATA-READ-0008..0009; EA-WMEVAL-READ-0005..0007; EA-WMTASK-2026-0001..0002
+  - id: RUN-VLA-BREAKTHROUGH-20260719
+    file: ../../evidence/literature-review-近半年vla在具身领域最大的技术突破-20260719/evidence.jsonl
+    locator: EA-VLABREAK-2026-0001..0005; EA-4D-READ-0011..0013; EA-WMDATA-READ-0008..0009; EA-WMEVAL-READ-0005..0007
+tags: [embodied-ai, 4d, spatiotemporal, point-tracks, world-model, consequence-rehearsal, sparse-future, geometry, dynamics, training-time-teacher]
+aliases: [4D 时空推理, 4D 世界模型, 3D point tracks, 时空场景图, 动态世界, 后果预演, 动作条件未来, 稀疏未来, 训练期几何教师]
 load_when:
   - 问题涉及 4D 时空推理、跨帧几何、动态场景图、动作条件未来预测或世界动态监督
   - 问题涉及视频世界模型为何“看起来真实”却不能转成机器人动作
   - 问题涉及世界模型怎样在 VLA 系统中预演动作后果、筛选候选或学习失败恢复
+  - 问题涉及稀疏视觉子目标、夹爪状态转换、训练期 4D 教师或世界模型低权限应用
 confidence: working
 ---
 
@@ -45,6 +52,9 @@ confidence: working
 - 接触、力、被遮挡几何和可变形物状态常无法从纯视觉历史恢复，需要触觉、力/力矩或深度补充。
 - 世界模型作为后果预演层时，4D 表征的价值在于保持对象身份、几何、接触和动作响应，而不是单独提高视频观感。
 - 几何可作为训练期 privileged teacher 或蒸馏目标，不必一律增加部署时输入；是否保留显式 4D 模块取决于排序增益、延迟和失败拒识价值。
+- 长程规划不必生成每一帧未来；夹爪状态转换、运动转折点和阶段里程碑可压缩为稀疏视觉子目标，再由高频策略完成局部闭环。
+- 低频逻辑顺序、潜在视觉子目标与高频 VLA 执行构成多时间尺度接口；价值应由子目标可达、动作忠实和闭环增益共同验证。
+- 当前 4D/几何世界模型更可靠的角色是训练期教师、离线数据检查和候选排序；权限越接近在线直接控制，越需要动作条件和接触后果的真实复验。
 
 ## 数据需求
 
@@ -65,6 +75,7 @@ confidence: working
 | 控制 | 候选动作排序相关性、闭环成功率提升、恢复率、推理延迟 |
 | 交互 | 瞬态证据、不可逆时间窗口、跨模态主动感知、失败检测 |
 | 预演 | 候选动作排序、不可执行未来拒识、sim-real 排序、failure optimism、单位 rollout 延迟 |
+| 稀疏未来 | 里程碑/转折点覆盖、子目标可达率、长程进度、稠密 rollout 相对延迟与增益 |
 
 ## 适用边界
 
@@ -73,12 +84,15 @@ confidence: working
 - 世界模型可用于数据生成、离线评估、动作筛选和 test-time planning，不能替代真实闭环验收。
 - 可变形物、颗粒、长程接触和强遮挡仍是高风险区域。
 - 4D point-track 监督能否扩展到更大预训练规模、推理时是否需要显式几何输入仍是开放问题。
+- 稀疏未来结果目前集中在有限长程任务；压缩表示可能遗漏接触瞬态和失败前兆，不能无条件替代高频观测。
 
 ## 证据锚点
 
 - RUN-4D-REASONING-20260714：`EA-4D-READ-0001..0005`, `0008`, `0012..0015` 覆盖 point-track/几何监督、4D 事件、连续表征、遮挡监督和稀疏视角补全；`0006..0007` 记录场景图与 3D Gaussian 路线的限制。
 - RUN-4D-DATA-20260714：`EA-4DDATA-READ-0002`, `0006..0010` 覆盖异构监督、采集器人体工学、同步质控、恢复数据、遮挡点轨迹与视觉—触觉未来。
 - RUN-VLA-WM-SHIFT-20260717：`EA-4D-READ-0011..0013`, `EA-WMDATA-READ-0008..0009`, `EA-WMEVAL-READ-0005..0007`, `0013` 支持恢复数据、遮挡轨迹、视觉—触觉未来、几何蒸馏、4D 事件和接触动态；“后果预演层”是综合 run 的跨事件 `inference`。
+- RUN-WM-TASKS-20260719：`EA-4D-READ-0011..0013`, `EA-WMDATA-READ-0008..0009`, `EA-WMEVAL-READ-0005..0007`, `EA-WMTASK-2026-0001..0002` 支持训练期 4D/几何监督、低权限排序与接触后失真边界。
+- RUN-VLA-BREAKTHROUGH-20260719：`EA-VLABREAK-2026-0001..0005` 支持低频逻辑、潜在视觉子目标和以夹爪状态转换/运动转折点压缩未来；多时间尺度接口是跨事件 `inference`。
 
 ## 待补问题
 
@@ -86,3 +100,4 @@ confidence: working
 - 明确伪 4D 标注在不同任务族中的精度阈值和适用边界。
 - 研究接触丰富任务中视觉、触觉、力与几何状态的统一时间接口。
 - 比较训练期 4D 教师、推理期显式几何和隐式世界模型三种路线的增益—延迟边界。
+- 建立稀疏未来遗漏接触瞬态和失败前兆的压力测试。

@@ -2,7 +2,7 @@
 id: KB-INGEST
 title: 新素材入库规范
 type: workflow
-updated: 2026-07-15
+updated: 2026-07-20
 tags: [ingestion, workflow, agent-process]
 ---
 
@@ -34,6 +34,7 @@ tags: [ingestion, workflow, agent-process]
 - 评测与世界模型：EA-EVAL
 - 4D 时空推理、世界动态、跨帧几何：EA-4D
 - VLA 语言—视觉—动作接口：EA-ALIGN
+- 全身移动操作、humanoid/quadruped 操作与移动—操作耦合：EA-LOCOMANIP
 - 商业化：EA-BIZ
 - 误差治理：ERR-COMPARE / ERR-PATTERN
 - 具身失败归因、感知/认知/控制误差：ERR-EMBODIED

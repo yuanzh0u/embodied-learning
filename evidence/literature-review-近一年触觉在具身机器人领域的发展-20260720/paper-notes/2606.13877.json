@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.13877",
+    "title": "ContactWorld: What Matters in Vision-Tactile World Models for Contact-Rich Manipulation",
+    "published": "2026-06-11",
+    "url": "https://arxiv.org/abs/2606.13877",
+    "authors": [
+      "Zhiyuan Zhang",
+      "Pokuang Zhou",
+      "Kaidi Zhang",
+      "Adeesh Desai",
+      "Temitope Amosa",
+      "Davood Soleymanzadeh",
+      "Jiuzhou Lei",
+      "Minghui Zheng",
+      "Yu She"
+    ]
+  },
+  "review": {
+    "question": "触觉世界模型",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 触觉世界模型."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "2.3 World Model Learning and Planning Evaluation",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "2.3 World Model Learning and Planning Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "4 Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '触觉世界模型', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "在接触丰富操作中，触觉世界模型的关键不是简单增加模态，而是让表征同时具备空间结构、时间连续性和跨模态兼容性。"
+  ],
+  "method": {
+    "summary": "Figure 4: Training and planning pipeline of ContactWorld. (A) During training, multimodal observations are encoded into latent representations, and the world model learns action-conditioned latent dynamics through autoregressive future prediction and latent regularization. (B) During planning, CEM samples candidate action sequences, and the learned world model performs latent rollouts for receding-horizon MPC control. As illustrated in Fig. 4 (A), we adopt a planning-oriented latent world model framework based on the Joint Embedding Predictive Architecture (JEPA) paradigm. Rather than reconstructing observations, the model learns action-conditioned latent dynamics directly in embedding space",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Figure 4: Training and planning pipeline of ContactWorld. (A) During training, multimodal observations are encoded into latent representations, and the world model learns action-conditioned latent dynamics through autoregressive future prediction and latent regularization. (B) During planning, CEM samples candidate action sequences, and the learned world model performs latent rollouts for receding-horizon MPC control. As illustrated in Fig. 4 (A), we adopt a planning-oriented latent world model framework based on the Joint Embedding Predictive Architecture (JEPA) paradigm. Rather than reconstructing observations, the model learns action-conditioned latent dynamics directly in embedding space",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "在接触丰富操作中，触觉世界模型的关键不是简单增加模态，而是让表征同时具备空间结构、时间连续性和跨模态兼容性。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Conclusion. In this paper, we presented ContactWorld, a benchmark and systematic empirical study of vision-tactile world models for contact-rich robotic manipulation. Across 12 contact-rich manipulation tasks, we investigated how representation structure influences predictive planning under multimodal interaction. Our experiments reveal that successful contact-rich world modeling depends strongly on the structure of the underlying representation. Representations that preserve explicit spatial geometry and stable interaction continuity consistently improve long-horizon predictive planning, whil",
+        "locator": "4 Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (2.3 World Model Learning and Planning Evaluation) and evaluation (2.3 World Model Learning and Planning Evaluation)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.13877-C01",
+      "claim": "在接触丰富操作中，触觉世界模型的关键不是简单增加模态，而是让表征同时具备空间结构、时间连续性和跨模态兼容性。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 触觉世界模型",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "ContactWorld 在 12 个接触丰富任务上比较视觉与触觉表征；点云把平均规划成功率从腕部视角 20.7% 和前视 22.0% 提升到 32.1%，点云加触觉力场进一步到 36.1%。作者强调触觉效果取决于跨模态表征兼容，而非模态数量本身。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Contact-rich manipulation requires world models to reason over complex contact dynamics from multimodal sensory observations. However, it remains unclear which representation properties fundamentally support stable long-horizon planning in contact-rich settings. In this paper, we present ContactWorld, a benchmark and systematic empirical study of vision-tactile world models spanning 12 contact-rich manipulation tasks, including insertion, disassembly, screwing, and exploratory interaction. Across extensive experiments, we find that representations that are both spatially structured and temporally continuous consistently achieve the strongest planning performance. In particular, point-cloud observations improve average planning success rates from 20.7% with wrist-view observations and 22.0% with front-view observations to 32.1%. We further find that the effectiveness of tactile sensing depends critically on cross-modal representation compatibility rather than modality scaling alone. Combining point-cloud observations with tactile force-field representations, which preserve ri",
+      "evidence_type": "benchmark",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (12, 20.7, 22.0, 32.1, contactworld). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "arXiv HTML and abs page inspected; metrics from authors' abstract/experiments."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}
