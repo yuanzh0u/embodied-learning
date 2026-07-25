@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2605.28048", "title": "SAFEVPR: Patch-Based Conformal Verification for Safe Cross-Condition Sequence Visual Place Recognition", "published": "2026-05-27", "url": "https://arxiv.org/abs/2605.28048", "authors": ["Ha Sier", "Jiaqiang Zhang", "Zhuo Zou", "Xianjia Yu", "Tomi Westerlund"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "把跨条件VPR从纯召回问题推进到带风险控制的验证与拒识问题。"}, "sections_read": [
+    {"locator": "I Introduction", "role": "problem", "purpose": "核对跨季节与跨天气匹配的安全风险。"},
+    {"locator": "III Methodology", "role": "method-or-design", "purpose": "核对冻结DINOv2局部匹配与Mondrian保形校准。"},
+    {"locator": "V Results", "role": "results-or-analysis", "purpose": "核对跨条件有效性、验证器区分度和留一数据集测试。"},
+    {"locator": "VII Discussion > VII-B When does it fail?", "role": "conclusion-or-limitations", "purpose": "核对重复景观下全局拒识的失败边界。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "如何在跨季节、跨天气的序列VPR中控制错误定位风险，而不依赖额外训练？",
+  "contributions": ["用冻结基础模型的patch互为近邻比率验证候选序列。", "用Mondrian保形风险控制为不同条件校准接受阈值。", "把拒识率与有效性同时纳入跨条件评估。"],
+  "method": {"summary": "先由任意全局描述子检索候选，再用DINOv2局部patch互为最近邻验证，最后用分条件保形校准决定接受或拒绝。", "assumptions": ["校准数据与部署条件具有足够交换性。", "候选中存在可由局部patch验证的真实位置。"]},
+  "study_context": {"datasets": ["Oxford RobotCar", "NCLT", "St Lucia", "Nordland"], "tasks": ["cross-condition sequence visual place recognition", "risk-controlled verification"], "embodiments": ["ground vehicle monocular localization"], "sample_or_scale": "多数据集、多个季节或时段、三种全局描述子骨干的跨条件验证。"},
+  "evaluation": {"design": "比较不同描述子、条件校准、bootstrap和留一数据集设置下的风险与覆盖。", "baselines": ["global-descriptor retrieval", "learned reranker"], "metrics": ["recall", "accepted error risk", "coverage", "validity"], "ablations": ["patch verifier", "backbone size", "calibration condition", "learned reranker"]},
+  "findings": [{"finding": "安全验证可以在多数跨条件设置中控制错误风险，但在高度重复且无信息的景观中会通过全局拒识维持安全。", "scope": "经过所述保形校准的序列VPR设置。", "locator": "VII Discussion > VII-B When does it fail?"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "在Nordland式重复景观中，系统判断验证器无信息并全局拒识，因此安全但没有定位效用。", "locator": "VII Discussion > VII-B When does it fail?"}], "reader_inferred": [{"boundary": "跨域交换性不能由有限校准集保证；新环境可能需要重新校准或更丰富的条件分组。", "basis": "风险保证依赖Mondrian校准分组及校准—测试条件关系。"}]},
+  "transfer_boundary": "适用于允许拒识、且能提供代表性校准数据的跨条件序列VPR；不能解释为任何新域都有无条件安全保证。",
+  "critical_appraisal": {"design_strengths": ["区分检索区分度与统计有效性。", "报告bootstrap、留条件和留数据集压力测试。"], "design_risks": ["保形保证依赖交换性。", "安全可通过零覆盖实现，必须与效用共同报告。"], "baseline_fairness": "同一候选检索上比较验证和重排模块，骨干覆盖较广。", "metric_validity": "风险与覆盖成对报告，比仅看Recall更符合安全部署。", "reproducibility": "方法、分数、校准步骤和消融定义充分。", "external_validity": "对允许拒识的序列VPR有价值，对单帧、无校准或必须始终输出的位置系统有限。"},
+  "evidence_cards": [{"card_id": "2605.28048-C01", "claim": "跨条件VPR的安全性必须与覆盖率一起评估：重复且无信息的景观中，校准验证器可以靠全局拒识维持安全，但定位效用降为零。", "stance": "limit", "relation": "限定安全VPR的风险保证，揭示安全—可用性权衡。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者把Nordland描述为已知但安全的边界，因为系统能检测无信息状态并整体拒绝。", "locator": "VII-B When does it fail?", "source_context": "We report Nordland as a known but safe boundary: the recipe self-detects uninformativeness and abstains globally.", "evidence_type": "failure-boundary", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接说明检测到无信息并全局拒识；证据卡明确把安全与效用分开，没有外推统计保证。"}}],
+  "core_citations": [], "notes": "该论文推动VPR从平均准确率转向风险—覆盖双目标。"
+}

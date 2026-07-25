@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.29360",
+    "title": "MiraBench: Evaluating Action-Conditioned Reliability in Robotic World Models",
+    "published": "2026-05-28",
+    "url": "https://arxiv.org/abs/2605.29360",
+    "authors": [
+      "Tianzhuo Yang",
+      "Zihan Shen",
+      "Zirui Mi",
+      "Zhaoyi Zhang",
+      "Jiayi Zhou",
+      "Jiaming Ji",
+      "Juntao Dai",
+      "Jiawei Chen",
+      "Boyuan Chen",
+      "Yaodong Yang"
+    ]
+  },
+  "review": {
+    "question": "世界模型评测边界",
+    "topic_ids": [
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 世界模型评测边界."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "Appendix A Official Dataset Introduction",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Motivating Study",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "7 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '世界模型评测边界', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "Robotic world-model evaluation should move beyond visual fidelity toward action-conditioned reliability, including physical adherence, action-following fidelity, and optimism-bias detection."
+  ],
+  "method": {
+    "summary": "We leverage two large-scale robot manipulation datasets for training and evaluation: the NVIDIA Arena-GR1-Manipulation-Task dataset and the PsiBot SynData dataset. Together, they provide complementary coverage of embodied manipulation settings: the former supplies simulation-generated humanoid robot trajectories with precise joint-space control signals, while the latter contributes real-world full-modality bimanual hand demonstration data at scale. Figure 5 illustrates the respective data collection pipelines. Figure 5: Data collection and processing pipelines. Left (blue): Arena-GR1 starts from 10 teleoperated demonstrations in Isaac Lab, expands to 50 via Mimic, and is stored as JSONL meta",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "The decoupling hypothesis. We begin with a small-scale motivating study to test whether failures in action-conditioned reliability are already observable in current world models. Our central hypothesis is that success-dominated robot data can induce a decoupling between visual plausibility and action faithfulness. Let denote a training distribution consisting primarily of successful demonstrations. Since counterfactual failures are rarely observed, a learned world model may explain future videos using a strong scene-conditioned success prior and only weak residual dependence on the action: (4) where captures likely successful futures implied by the initial observation, and captures the remai",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Robotic world-model evaluation should move beyond visual fidelity toward action-conditioned reliability, including physical adherence, action-following fidelity, and optimism-bias detection.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (Appendix A Official Dataset Introduction) and evaluation (4 Motivating Study)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.29360-C01",
+      "claim": "Robotic world-model evaluation should move beyond visual fidelity toward action-conditioned reliability, including physical adherence, action-following fidelity, and optimism-bias detection.",
+      "stance": "gap",
+      "relation": "Evidence relevant to the review question: 世界模型评测边界",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The paper frames existing evaluations as weak evidence for whether action-conditioned predictions are reliable, then defines MiraBench around physics adherence, action fidelity, and failure-case optimism bias.",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Action-conditioned world models are increasingly used as scalable simulators for robot learning, yet current evaluations provide limited evidence that their predictions are reliable under the actions they condition on. Existing benchmarks largely emphasize visual fidelity, leaving unclear whether predicted futures are physically plausible, faithful to commanded actions, and calibrated to failure when actions should not succeed. We introduce MiraBench , a hierarchical benchmark that defines action-conditioned reliability as a core evaluation target for robotic world models. MiraBench decomposes this target into three progressively demanding levels: Physics Adherence , which evaluates reference-free physical consistency; Action-Following Fidelity , which measures whether predictions respect task-relevant action inputs; and Optimism Bias Detection , which probes the tendency to predict successful outcomes under failure-inducing actions. To support this evaluation, we curate a human-annotated corpus with over 16,000 judgments across tasks, failure categories, and leading world m",
+      "evidence_type": "benchmark-design",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (action, action-conditioned, action-following, adherence, as, bias, defines, detection). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "HTML extraction available; this event summarizes the paper's own benchmark framing."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.11184",
+    "title": "TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation",
+    "published": "2026-06-09",
+    "url": "https://arxiv.org/abs/2606.11184",
+    "authors": [
+      "Yujie Zang",
+      "Yuhang Zheng",
+      "Xian Nie",
+      "Yupeng Zheng",
+      "Shuai Tian",
+      "Songen Gu",
+      "Chen Gao",
+      "Zining Wang",
+      "Shuicheng Yan",
+      "Wenchao Ding"
+    ]
+  },
+  "review": {
+    "question": "触觉世界模型",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 触觉世界模型."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "II-B World Model for Robotic Manipulation",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "IV EXPERIMENTS",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '触觉世界模型', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "腕部六维力/力矩可作为未来触觉 latent 的先行条件，用于预测短时域接触变化。"
+  ],
+  "method": {
+    "summary": "World models for robotic manipulation predict future states to support planning or condition policies on anticipated scene and physical evolution [ 31 , 16 , 11 , 24 ] . Recent works mainly focus on visual or video prediction, generating future RGB frames or latent visual features for manipulation and action generation [ 16 , 40 , 39 , 18 ] . These models are also used as learned simulators or policy-conditioning modules, reflecting a shift from reactive perception to predictive control [ 22 , 28 ] . However, contact-rich manipulation requires anticipating not only visual changes, but also contact transitions, force variations, and local deformation. Some methods directly predict future forc",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "In this section, we first describe our experimental setup. We then evaluate the effectiveness of our method on diverse contact-rich manipulation tasks. Finally, we conduct ablation studies to quantify the contribution of each key component.",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "腕部六维力/力矩可作为未来触觉 latent 的先行条件，用于预测短时域接触变化。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "IV-D 1 World Model Conditioning"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (II-B World Model for Robotic Manipulation) and evaluation (IV EXPERIMENTS)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.11184-C01",
+      "claim": "腕部六维力/力矩可作为未来触觉 latent 的先行条件，用于预测短时域接触变化。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 触觉世界模型",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "TacForeSight 的 TacForceWM 从双指触觉观测出发，以高频腕部 force/torque 为条件预测短时域触觉 latent dynamics；ablation 中 wrist wrench 条件的未来触觉预测优于无条件版本，MSE 从 0.027 降到 0.017，cosine 从 0.954 提升到 0.992。",
+      "locator": "IV-D 1 World Model Conditioning",
+      "source_context": "We first ablate the conditioning modality used in the tactile world model. We compare four conditioning designs: no external condition, RGB image condition, robot state condition, and wrist wrench condition. Prediction quality is evaluated using Mean Squared Error (MSE), cosine similarity (Cos), and symmetric KL divergence (KL sym ), which respectively measure element-wise prediction error, latent directional consistency, and latent distribution consistency. As shown in Table II , wrist wrench conditioning achieves the best performance across all metrics. Compared with the no-condition variant, it reduces MSE from 0.027 to 0.017 and KL sym from 0.014 to 0.009, while increasing cosine similarity from 0.954 to 0.992. These results indicate that wrist wrench provides the most informative physical condition for forecasting tactile contact evolution, as it directly captures physical interaction changes during contact-rich manipulation. TABLE II: Ablation of conditioning modality for tactile world model. Condition MSE Cos KL sym w/o Condition 0.027 0.954 0.014 RGB Image 0.025 0.973 0.013 R",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in IV-D 1 World Model Conditioning contains the paper-specific concepts used by the claim (0.017, 0.027, 0.954, 0.992, ablation, cosine, latent, mse). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Shows force and tactile have asymmetric temporal roles. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

@@ -1,0 +1,63 @@
+{
+  "sources": [
+    {
+      "source": "arxiv-web-search",
+      "url": "https://arxiv.org/abs/2604.18000",
+      "confidence": "high",
+      "notes": "命中具身评测中的 shortcut、overfit 和 static evaluation 术语，仅用于校准查询。"
+    },
+    {
+      "source": "arxiv-web-search",
+      "url": "https://arxiv.org/abs/2602.03153",
+      "confidence": "high",
+      "notes": "既有候选池显示 robotic policy/VLA 论文使用 backdoor、poisoned data、visual token 等词。"
+    },
+    {
+      "source": "arxiv-web-search",
+      "url": "https://arxiv.org/abs/2606.09499",
+      "confidence": "high",
+      "notes": "既有候选池显示 world-model data poisoning、robot learning supply chain 是有效检索词。"
+    },
+    {
+      "source": "web-search-error",
+      "confidence": "low",
+      "notes": "第二轮实时搜索发生网络错误；保留离线动态扩展并转入 arXiv API 检索。"
+    }
+  ],
+  "terms": [
+    {
+      "term": "static evaluation overfit",
+      "source": "arxiv-web-search",
+      "confidence": "high",
+      "why": "用于发现不直接自称 contamination，但可能暴露评测与训练分布过度耶合的工作。"
+    },
+    {
+      "term": "robot learning supply chain",
+      "source": "arxiv-web-search",
+      "confidence": "high",
+      "why": "世界模型投毒工作使用的系统边界词。"
+    },
+    {
+      "term": "visual-token backdoor",
+      "source": "arxiv-web-search",
+      "confidence": "high",
+      "why": "VLA 预训练污染与防御论文的具体机制词。"
+    }
+  ],
+  "queries": [
+    {
+      "label": "calibration-static-eval-overfit",
+      "query": "all:\"static evaluation\" AND (all:overfit OR all:shortcut) AND (all:VLA OR all:robot)",
+      "source": "arxiv-web-search",
+      "confidence": "high",
+      "why": "补足非显式 contamination 术语的评测污染候选。"
+    },
+    {
+      "label": "calibration-supply-chain-poisoning",
+      "query": "all:\"robot learning supply chain\" AND (all:poisoning OR all:backdoor)",
+      "source": "arxiv-web-search",
+      "confidence": "high",
+      "why": "定向回收生成数据供应链攻击工作。"
+    }
+  ]
+}

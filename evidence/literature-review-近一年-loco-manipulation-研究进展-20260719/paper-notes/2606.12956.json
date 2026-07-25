@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.12956",
+    "title": "SERF: Spatiotemporal Environment and Robot Feature Map for Long-Horizon Mobile Manipulation",
+    "published": "2026-06-11T06:29:49Z",
+    "url": "https://arxiv.org/abs/2606.12956",
+    "authors": [
+      "Sunghwan Kim",
+      "Byeonghyun Pak",
+      "Kehan Long",
+      "Yulun Tian",
+      "Nikolay Atanasov"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Long-horizon mobile-manipulation VLA study using an explicit spatiotemporal scene-and-robot memory."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify partial observability and memory limits in long-horizon mobile manipulation."
+      },
+      {
+        "locator": "3 Spatiotemporal Feature Mapping",
+        "role": "method-or-design",
+        "purpose": "Inspect the neural point-map representation and updates."
+      },
+      {
+        "locator": "5 Long-Horizon Mobile Manipulation",
+        "role": "results-or-analysis",
+        "purpose": "Verify task-progress comparisons."
+      },
+      {
+        "locator": "Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record privileged mapping and simulation boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can an explicit spatiotemporal map improve VLA policies on long-horizon mobile manipulation under partial observability?",
+  "contributions": [
+    "A map-conditioned VLA using a joint spatiotemporal neural point representation of scene and robot state."
+  ],
+  "method": {
+    "summary": "SERF builds and updates a neural point map of objects, environment and robot, then conditions a fine-tuned VLA on retrieved map tokens.",
+    "assumptions": [
+      "Instance-aware mappings and stable rigid-object tracking are available.",
+      "A prior scene map can be constructed or maintained."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "BEHAVIOR-1K simulation tasks"
+    ],
+    "tasks": [
+      "three long-horizon household mobile-manipulation tasks"
+    ],
+    "embodiments": [
+      "simulated mobile manipulator"
+    ],
+    "sample_or_scale": "Three BEHAVIOR-1K tasks with repeated simulation evaluations."
+  },
+  "evaluation": {
+    "design": "SERF is compared with pretrained and fine-tuned image-only VLA baselines; map-token and configuration ablations are reported.",
+    "baselines": [
+      "PI0.5 pretrained",
+      "PI0.5 fine-tuned"
+    ],
+    "metrics": [
+      "task progress",
+      "execution length"
+    ],
+    "ablations": [
+      "map tokens",
+      "map configuration"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Explicit scene-and-robot memory improved task progress on all three evaluated long-horizon tasks over the fine-tuned image-only VLA.",
+      "scope": "Three simulated BEHAVIOR-1K tasks.",
+      "locator": "5 Long-Horizon Mobile Manipulation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The experiments are simulated and rely on privileged instance labels, prior maps and rigid-motion assumptions.",
+        "locator": "Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The result demonstrates value of structured memory, not readiness for online real-world mapping.",
+        "basis": "Mapping inputs and labels are privileged and no hardware experiments are reported."
+      }
+    ]
+  },
+  "transfer_boundary": "Supports explicit memory for simulated long-horizon tasks; real perception and map maintenance remain unvalidated.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Direct comparison against the same VLA with and without map conditioning.",
+      "Evaluates multiple long-horizon tasks and map ablations."
+    ],
+    "design_risks": [
+      "Privileged maps and labels simplify the hardest perception problem.",
+      "Only three tasks and no hardware."
+    ],
+    "baseline_fairness": "The fine-tuned image-only baseline shares the VLA backbone and task data.",
+    "metric_validity": "Task progress captures partial completion, though it can reward incomplete plans.",
+    "reproducibility": "Map and policy details are documented in appendices.",
+    "external_validity": "Simulation-only with privileged mapping."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.12956-C01",
+      "claim": "Across three simulated BEHAVIOR-1K tasks, SERF achieved mean task progress of 63.5, 60.1 and 52.5, versus 40.7, 43.0 and 48.4 for the fine-tuned image-only PI0.5 baseline.",
+      "stance": "conditional",
+      "relation": "Supports explicit spatiotemporal memory for long-horizon mobile manipulation, subject to real-world mapping validation.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The main table reports mean task progress for the full system and image-only baseline across three tasks.",
+      "locator": "5 Long-Horizon Mobile Manipulation",
+      "source_context": "The full SERF policy achieves the highest task progress on all three evaluated tasks.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "mean task progress",
+        "value_or_direction": "63.5/60.1/52.5 versus 40.7/43.0/48.4",
+        "comparator": "SERF versus fine-tuned PI0.5",
+        "task_or_sample": "three simulated BEHAVIOR-1K tasks",
+        "locator": "5 Long-Horizon Mobile Manipulation"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The table row contains the three means and standard deviations for both methods."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

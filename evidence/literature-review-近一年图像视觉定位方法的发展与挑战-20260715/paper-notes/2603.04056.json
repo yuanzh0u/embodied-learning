@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2603.04056", "title": "Long-Term Visual Localization in Dynamic Benthic Environments: A Dataset, Footprint-Based Ground Truth, and Visual Place Recognition Benchmark", "published": "2026-03-04", "url": "https://arxiv.org/abs/2603.04056", "authors": ["Martin Kvisvik Larsen", "Oscar Pizarro"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "dataset", "relevance": {"decision": "include", "reason": "提供最长六年动态海底复访数据、基于图像足迹的真值和八种VPR基准，直接揭示长期定位挑战。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对水下长期定位动机、数据缺口和真值问题。"},
+    {"locator": "2 Methods > 2.4 Estimating Image Seafloor Footprints", "role": "method-or-design", "purpose": "核对3D足迹与重叠真值构建。"},
+    {"locator": "3 Results > 3.3 Evaluating Long-Term Visual Place Recognition Performance", "role": "results-or-analysis", "purpose": "核对八种VPR跨站点和复访间隔表现。"},
+    {"locator": "4 Discussion > 4.3 Evaluating Long-Term Visual Place Recognition Performance", "role": "conclusion-or-limitations", "purpose": "核对局部可定位性、算力和时间退化边界。"},
+    {"locator": "5 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对足迹真值对传统评测的修正。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本数据集结果。"}]},
+  "research_question": "动态海底环境中，单图VPR能否跨数年复访稳定定位，怎样定义真实的视觉重叠真值？",
+  "contributions": ["发布五个海底站点、最长六年复访的AUV图像和注册位姿。", "用射线/范围融合估计图像在海床上的3D足迹，并以足迹重叠定义正匹配。", "评测八种VPR模型。"],
+  "method": {"summary": "对多次AUV调查进行几何注册，融合范围图估计每帧海床足迹，以足迹IoU替代固定相机距离阈值评测VPR。", "assumptions": ["可获得相机标定、深度/范围信息和可靠跨次几何注册。", "足迹重叠能代表查询与数据库图像的共同视觉内容。"]},
+  "study_context": {"datasets": ["five photic-zone benthic sites"], "tasks": ["long-term underwater VPR", "ground-truth construction"], "embodiments": ["autonomous underwater vehicle with stereo cameras"], "sample_or_scale": "五个约35m×35m站点，18-45m深度，复访最长六年，八种VPR模型。"},
+  "evaluation": {"design": "比较八种CNN/ViT VPR并对足迹真值与固定位置阈值真值作系统对照。", "baselines": ["NetVLAD", "CosPlace", "EigenPlaces", "MixVPR", "AnyLoc", "CliqueMining", "SALAD", "MegaLoc"], "metrics": ["Recall@K", "precision-recall", "image-footprint overlap"], "ablations": ["raw vs color-corrected images", "footprint-based vs location-based ground truth", "revisit interval", "site characteristics"]},
+  "findings": [{"finding": "固定位置阈值会在崎岖海床或高度变化大时系统性高估VPR，足迹重叠更接近真实共同视野。", "scope": "近垂直向下的AUV海底影像。", "locator": "5 Conclusion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "站点数量和运动/生境多样性受长期精确注册成本限制，时间趋势受少量站点和不规则复访间隔影响。", "locator": "4 Discussion > 4.3 Evaluating Long-Term Visual Place Recognition Performance"}], "reader_inferred": [{"boundary": "足迹真值依赖额外几何与范围信息，不能直接用于没有深度或准确注册的普通图像库。", "basis": "真值构建使用相机模型、范围融合和跨次几何注册。"}]},
+  "transfer_boundary": "结论直接适用于近垂直、地形起伏和高度变化显著的水下复访；对街景和前向相机可借鉴评测原则，但不能照搬足迹算法。",
+  "critical_appraisal": {"design_strengths": ["真值定义与可见内容直接关联。", "覆盖多站点、多年变化和多模型。"], "design_risks": ["站点数量有限且跨次条件不均。", "只评单图描述子，没有进入完整SLAM/融合。"], "baseline_fairness": "同一图像与真值下统一评测八种公开模型，公平性较好。", "metric_validity": "足迹重叠比相机位置距离更贴近共同视觉内容，是论文最强贡献。", "reproducibility": "数据、标定和流程描述详尽，但精确几何注册成本高。", "external_validity": "对水下近垂直影像强，对一般陆地相机几何需重新设计。"},
+  "evidence_cards": [{"card_id": "2603.04056-C01", "claim": "视觉定位评测的真值定义会显著改变结论：仅按相机位置接近判正，会在地形起伏或高度变化大时系统性高估VPR表现。", "stance": "limit", "relation": "限制用传统位置阈值宣称长期视觉定位进步，强调可见内容重叠真值。", "confidence": "direct", "claim_basis": "reported-result", "summary": "作者比较两套真值并发现足迹重叠与真实检索更一致。", "locator": "5 Conclusion", "source_context": "Comparing our footprint-based ground truth to a traditional location-based ground truth shows that spatial proximity alone can systematically overestimate Recall@K, especially at sites with rugged terrain or large altitude variations, whereas the footprint-based ground truth is more aligned with actual VPR retrievals.", "evidence_type": "benchmark-analysis", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接报告两种真值定义的系统差异；主张限定到地形和高度变化明显的影像。"}}],
+  "core_citations": [], "notes": "论文还指出长期可靠定位可能需要序列与传感器融合，而非单图VPR。"
+}

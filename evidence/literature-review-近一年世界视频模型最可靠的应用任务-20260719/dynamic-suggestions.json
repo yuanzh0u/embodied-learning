@@ -1,0 +1,95 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "high",
+      "notes": "The review asks which application tasks are reliable, so discovery must separate training-time/offline assistance, policy evaluation, recovery, planning, and direct control, and must include counterevidence on action fidelity, physical adherence, long-horizon drift, and latency."
+    }
+  ],
+  "knowledge_ids": ["EA-MODEL", "EA-EVAL", "EA-4D"],
+  "families": ["world-model", "vla", "sim2real", "tactile-force"],
+  "queries": [
+    {
+      "label": "dynamic-world-model-policy-evaluation",
+      "tier": "evaluation",
+      "query": "all:\"world model\" AND all:\"policy evaluation\" AND all:robot",
+      "why": "Test whether policy ranking and scalable evaluation have the strongest sim-real evidence.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-data-synthesis",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:\"data synthesis\" OR all:\"synthetic demonstrations\") AND all:robot",
+      "why": "Cover training-time generation and augmentation, where model errors are filtered before deployment.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-post-training-recovery",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:\"post-training\" OR all:recovery OR all:\"self-correction\") AND all:robot",
+      "why": "Cover failure-adjacent correction and policy post-training rather than unconstrained generation.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-planning-control",
+      "tier": "deployment",
+      "query": "all:\"video world model\" AND (all:planning OR all:control) AND all:robot",
+      "why": "Find direct planning/control evidence and its deployment constraints.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-admissibility",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND (all:\"action fidelity\" OR all:\"physics adherence\" OR all:\"failure optimism\") AND all:robot",
+      "why": "Test whether visual realism is insufficient for decision use.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-long-horizon-efficiency",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND all:robot AND (all:\"long-horizon\" OR all:latency OR all:efficiency)",
+      "why": "Cover compounding rollout error and online inference cost.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-geometry-distillation",
+      "tier": "mechanism",
+      "query": "all:\"world model\" AND (all:4D OR all:geometry OR all:\"point track\") AND all:\"robot manipulation\"",
+      "why": "Cover training-time geometry supervision and distillation that may improve policies without online rollout cost.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-action-model-contact",
+      "tier": "limitation",
+      "query": "(all:\"world action model\" OR all:\"video world model\") AND (all:contact OR all:tactile OR all:force) AND all:robot",
+      "why": "Check reliability boundaries for contact-rich manipulation and partially observed physics.",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-reliable-world-model-tasks-browser",
+      "query": "site:arxiv.org/abs 2026 robot video world model policy evaluation data synthesis recovery planning",
+      "why": "Discover newly submitted task-oriented papers if the API under-recovers.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-world-model-neural-simulator-web",
+      "query": "site:arxiv.org/abs 2026 robot neural simulator world model policy evaluation",
+      "why": "Calibrate current naming around video-world-model evaluators.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

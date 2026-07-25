@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.04463",
+    "title": "OSCAR: Omni-Embodiment Action-Conditioned World Model for Robotics",
+    "published": "2026-06-03",
+    "url": "https://arxiv.org/abs/2606.04463",
+    "authors": [
+      "Zhuoyuan Wu",
+      "Jun Gao"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "论文直接识别具身视频语料中的场景与轨迹重复，并给出双阶段语义去重管道。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认数据管道与世界模型训练目标。"
+      },
+      {
+        "locator": "4.1 Data Curation",
+        "role": "data-or-setting",
+        "purpose": "确认语料来源及统一处理范围。"
+      },
+      {
+        "locator": "4.2 Data Filtering",
+        "role": "method-or-design",
+        "purpose": "区分质量过滤与重复治理。"
+      },
+      {
+        "locator": "4.3 Semantic Deduplication",
+        "role": "results-or-analysis",
+        "purpose": "核对重复的定义、危害和两阶段去重机制。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对方法的总结和适用范围。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的实现细节和逐项结果未做精读。"
+      }
+    ]
+  },
+  "research_question": "如何从跨机器人与第一视角视频的大规模语料中移除重复场景和重复轨迹，提升有效多样性？",
+  "contributions": [
+    "提出先按视觉相似性聚类、再按轨迹相似性核验的语义去重流程，避免把同场景但不同动作的片段误删。"
+  ],
+  "method": {
+    "summary": "先用均匀采样帧的 SigLIP 表征筛出视觉相似片段对，再验证轨迹相似性，从场景和动作两个轴治理冗余。",
+    "assumptions": [
+      "该方法把重复视为训练语料中的低增益冗余，不等同于验证集泄漏或预训练基准暴露。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "robotics datasets",
+      "egocentric human video datasets"
+    ],
+    "tasks": [
+      "action-conditioned robot video world-model training",
+      "virtual policy evaluation"
+    ],
+    "embodiments": [
+      "multiple robot arms",
+      "human hand"
+    ],
+    "sample_or_scale": "跨机器人和第一视角人类视频的联合训练语料；论文在数据管道中实施质量过滤和语义去重。"
+  },
+  "evaluation": {
+    "design": "对处理后的联合语料训练动作条件视频世界模型，并比较动作跟随、外观质量、运动一致性和政策评测相关性。",
+    "baselines": [],
+    "metrics": [
+      "action following",
+      "appearance quality",
+      "motion consistency",
+      "virtual-real policy evaluation correlation"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "原始机器人与第一视角视频中会重复同一物理场景的高度相似任务，原始片段数因此膨胀但场景多样性增加有限。",
+      "scope": "结论针对 OSCAR 所用训练语料及其语义去重定义，不证明已经排除跨数据集泄漏或评测集污染。",
+      "locator": "4.3 Semantic Deduplication"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "该去重机制旨在提升预训练语料的有效多样性，不能直接替代训练—评测交叉污染检测。",
+        "basis": "方法按场景和轨迹相似性处理训练语料，正文未建立与外部基准或基础模型预训练暴露的交集审计。"
+      }
+    ]
+  },
+  "transfer_boundary": "视觉相似只能生成候选，必须结合轨迹相似性核验；同场景但不同动作不应被简单视为重复。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把视觉冗余和轨迹冗余分开，并用两阶段流程降低仅凭画面相似度误删有效动作差异的风险。"
+    ],
+    "design_risks": [
+      "论文并未把去重收益单独等价为下游泛化提升，也未审计外部评测集合与训练语料的交叉重合。"
+    ],
+    "baseline_fairness": "论文总体模型比较在同一评测协议下进行，但本综述不把整体模型优势归因于去重单因素。",
+    "metric_validity": "原始片段计数不能代表有效覆盖度；场景和轨迹层面的重复率应分开报告。",
+    "reproducibility": "正文明确给出视觉嵌入、帧采样、相似候选与轨迹核验的两阶段管道。",
+    "external_validity": "适用于跨具身视频训练语料的冗余治理；对评测泄漏、文本记忆和恶意投毒需另行检测。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.04463-C01",
+      "claim": "具身视频语料的重复不能只按片段数理解：同一场景中的相似任务会膨胀数据规模却几乎不增加场景多样性，因此去重应同时检查视觉与轨迹冗余。",
+      "stance": "support",
+      "relation": "说明近重复样本如何形成隐性数据污染，并给出可操作的治理边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "OSCAR 先按视觉相似性聚类，再按轨迹相似性核验；同场景但轨迹显著不同的片段不判为重复。",
+      "locator": "4.3 Semantic Deduplication",
+      "source_context": "After the quality filters, we observe substantial redundancy in both robotics and egocentric human data: they often repeat many highly similar tasks in the same physical scene. This inflates the raw clip count while adding little scene diversity.",
+      "evidence_type": "data-pipeline design rationale",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的语义去重章节；主张限于作者对语料冗余的直接观察及其治理设计。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2512.11047",
+    "title": "WholeBodyVLA: Towards Unified Latent VLA for Whole-Body Loco-Manipulation Control",
+    "published": "2025-12-11T19:07:31Z",
+    "url": "https://arxiv.org/abs/2512.11047",
+    "authors": [
+      "Haoran Jiang",
+      "Jin Chen",
+      "Qingwen Bu",
+      "Li Chen",
+      "Modi Shi",
+      "Yanjie Zhang",
+      "Delong Li",
+      "Chuanzhe Suo",
+      "Chuang Wang",
+      "Zhihui Peng",
+      "Hongyang Li"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct end-to-end humanoid whole-body VLA study using action-free human video and RL control."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify fragmentation between VLA manipulation and locomotion control."
+      },
+      {
+        "locator": "3 WholeBodyVLA",
+        "role": "method-or-design",
+        "purpose": "Inspect latent-action pretraining and LMO control."
+      },
+      {
+        "locator": "4.3 How does action-free videos contribute to loco–manipulation?",
+        "role": "results-or-analysis",
+        "purpose": "Verify the contribution of human video."
+      },
+      {
+        "locator": "5 Conclusion and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record long-horizon and active-perception gaps."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can action-free human video pretrain a unified latent space for humanoid manipulation and locomotion?",
+  "contributions": [
+    "A unified latent action model plus a discrete loco-manipulation-oriented RL controller."
+  ],
+  "method": {
+    "summary": "Separate manipulation and locomotion latent models are learned from human video, fused in a VLA, and decoded into whole-body motion through a discrete RL policy.",
+    "assumptions": [
+      "Human video contains reusable latent priors despite lacking robot actions.",
+      "A low-level whole-body controller can realize discrete latent motion commands."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "action-free human videos",
+      "robot demonstrations"
+    ],
+    "tasks": [
+      "humanoid whole-body manipulation and locomotion"
+    ],
+    "embodiments": [
+      "human video",
+      "physical humanoid"
+    ],
+    "sample_or_scale": "Multiple real-robot tasks plus simulation ablations; exact deployment counts vary by task."
+  },
+  "evaluation": {
+    "design": "WholeBodyVLA is compared with modular, VLA and velocity-policy baselines; latent-model and controller ablations isolate components.",
+    "baselines": [
+      "modular pipeline",
+      "GR00T",
+      "OpenVLA",
+      "velocity policy",
+      "model without LAM"
+    ],
+    "metrics": [
+      "task score",
+      "success rate"
+    ],
+    "ablations": [
+      "latent action model",
+      "LMO controller"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "The unified latent model extracted useful priors from action-free video and materially improved downstream task success.",
+      "scope": "The paper's evaluated humanoid loco-manipulation tasks.",
+      "locator": "4.3 How does action-free videos contribute to loco–manipulation?"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Long-horizon dexterous tasks, memory, mapping and active perception remain future work.",
+        "locator": "5 Conclusion and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Performance still depends on accurate stance and low-level execution.",
+        "basis": "The failure analysis attributes cases to small stance errors during execution."
+      }
+    ]
+  },
+  "transfer_boundary": "Supports reuse of action-free visual motion priors, but does not establish arbitrary open-world long-horizon autonomy.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Component ablations separate latent pretraining and control.",
+      "Includes physical-robot comparisons."
+    ],
+    "design_risks": [
+      "Custom scores complicate comparison across papers.",
+      "Training video and task coverage may share semantic structure."
+    ],
+    "baseline_fairness": "Multiple representative policy families are evaluated on the same task suite.",
+    "metric_validity": "Task success captures end-to-end behavior, while aggregate scores can hide failure modes.",
+    "reproducibility": "Architecture and deployment details are supplied in appendices.",
+    "external_validity": "Limited to one humanoid and the curated task suite."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2512.11047-C01",
+      "claim": "Removing the unified latent action model reduced success by 38.7 percentage points, indicating that action-free human video contributed useful priors in the evaluated tasks.",
+      "stance": "support",
+      "relation": "Supports action-free human video as a pretraining source for whole-body policies.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The ablation directly compares the full model with removal of unified latent learning.",
+      "locator": "4.3 How does action-free videos contribute to loco–manipulation?",
+      "source_context": "As shown in Table 4.2 , the full model improves success rate by 38.7%, indicating that unified latent learning extracts useful priors from action-free human videos and enhances downstream policy learning.",
+      "evidence_type": "ablation",
+      "quantitative": {
+        "metric": "success-rate improvement",
+        "value_or_direction": "+38.7 percentage points",
+        "comparator": "full model versus model without unified latent learning",
+        "task_or_sample": "evaluated loco-manipulation tasks",
+        "locator": "4.3 How does action-free videos contribute to loco–manipulation?"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The ablation sentence states the magnitude, component and interpretation."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

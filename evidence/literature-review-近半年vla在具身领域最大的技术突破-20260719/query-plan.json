@@ -1,0 +1,1034 @@
+{
+  "generated_at": "2026-07-19T12:40:54.191248+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近半年VLA在具身领域最大的技术突破",
+  "start_date": "2026-01-19",
+  "end_date": "2026-07-19",
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-EVAL"
+  ],
+  "families": [
+    "vla"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 100,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 100,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-vla-world-model-planning",
+        "dynamic-structured-hierarchical-vla",
+        "dynamic-geometry-dynamics-vla",
+        "dynamic-vla-correction-recovery",
+        "dynamic-vla-world-model-limits",
+        "calibrated-structured-planner",
+        "calibrated-kinematic-grounding",
+        "calibrated-hierarchical-world-model",
+        "calibration-structured-planner",
+        "calibration-hierarchical-world-model",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action",
+        "vla-finetuning-policy",
+        "vla-data-mixture",
+        "ea-model-finetuning",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model",
+        "ea-eval-sim-real-correlation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "vla-core",
+        "vla-named-models",
+        "ea-model-named-foundation",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "vla-negative-transfer"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): ‘最大技术突破’需要比较反应式 VLA、分层规划、世界模型后果预演、4D/几何动态、触觉纠错与闭环评测路线，并为每条路线检索反证。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-vla-world-model-planning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"vision language action\" OR all:VLA) AND (all:\"world model\" OR all:\"world action model\") AND (all:planning OR all:foresight OR all:rollout)",
+      "why": "捕捉从直接动作预测转向动作条件后果预演的核心路线。"
+    },
+    {
+      "label": "dynamic-structured-hierarchical-vla",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:VLA OR all:\"robot policy\") AND (all:structured OR all:hierarchical OR all:symbolic) AND (all:planning OR all:\"world model\")",
+      "why": "检索结构化里程碑、分层世界模型与长时程任务—运动规划。"
+    },
+    {
+      "label": "dynamic-geometry-dynamics-vla",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:4D OR all:geometry OR all:pointmap OR all:\"point track\") AND (all:robot OR all:manipulation)",
+      "why": "检索用 4D/几何动态给 VLA 提供可执行物理表征的路线。"
+    },
+    {
+      "label": "dynamic-vla-correction-recovery",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:recovery OR all:correction OR all:\"self-correct\" OR all:failure)",
+      "why": "检索失败检测、接触纠错、自我恢复和后训练。"
+    },
+    {
+      "label": "dynamic-vla-world-model-limits",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:failure OR all:drift OR all:attack OR all:admissibility OR all:benchmark)",
+      "why": "主动检索世界模型路线的失效、攻击、可采信性与闭环评测反证。"
+    },
+    {
+      "label": "dynamic-vla-breakthrough-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org VLA world model structured planning robot manipulation 2026",
+      "why": "官方 API 漏检时补充新方法名称。"
+    },
+    {
+      "label": "dynamic-vla-breakthrough-web",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs/2607 VLA robot world model planning",
+      "why": "校准 2026 年 7 月最新术语。"
+    }
+  ],
+  "calibration_notes": [
+    "arxiv-web calibration (high): StructVLA 使用 structured planner / structured frames / kinematic grounding 描述稀疏可执行预见。",
+    "arxiv-web calibration (high): H-WM 使用 hierarchical world model / logical and visual state transitions 描述分层长时程规划。"
+  ],
+  "queries": [
+    {
+      "label": "dynamic-vla-world-model-planning",
+      "tier": "dynamic-association",
+      "query": "(all:\"vision language action\" OR all:VLA) AND (all:\"world model\" OR all:\"world action model\") AND (all:planning OR all:foresight OR all:rollout)",
+      "why": "捕捉从直接动作预测转向动作条件后果预演的核心路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-world-model-planning"
+      ]
+    },
+    {
+      "label": "dynamic-structured-hierarchical-vla",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"robot policy\") AND (all:structured OR all:hierarchical OR all:symbolic) AND (all:planning OR all:\"world model\")",
+      "why": "检索结构化里程碑、分层世界模型与长时程任务—运动规划。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-structured-hierarchical-vla"
+      ]
+    },
+    {
+      "label": "dynamic-geometry-dynamics-vla",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:4D OR all:geometry OR all:pointmap OR all:\"point track\") AND (all:robot OR all:manipulation)",
+      "why": "检索用 4D/几何动态给 VLA 提供可执行物理表征的路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-geometry-dynamics-vla"
+      ]
+    },
+    {
+      "label": "dynamic-vla-correction-recovery",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:recovery OR all:correction OR all:\"self-correct\" OR all:failure)",
+      "why": "检索失败检测、接触纠错、自我恢复和后训练。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-correction-recovery"
+      ]
+    },
+    {
+      "label": "dynamic-vla-world-model-limits",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:failure OR all:drift OR all:attack OR all:admissibility OR all:benchmark)",
+      "why": "主动检索世界模型路线的失效、攻击、可采信性与闭环评测反证。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-world-model-limits"
+      ]
+    },
+    {
+      "label": "calibrated-structured-planner",
+      "tier": "calibrated-term",
+      "query": "all:\"structured planner\"",
+      "why": "将稠密视频预测压缩为动力学相关的稀疏里程碑。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-structured-planner"
+      ]
+    },
+    {
+      "label": "calibrated-kinematic-grounding",
+      "tier": "calibrated-term",
+      "query": "all:\"kinematic grounding\"",
+      "why": "区分视觉可能未来与可执行运动计划。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-kinematic-grounding"
+      ]
+    },
+    {
+      "label": "calibrated-hierarchical-world-model",
+      "tier": "calibrated-term",
+      "query": "all:\"hierarchical world model\"",
+      "why": "连接高层逻辑转移与低层视觉动态。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-hierarchical-world-model"
+      ]
+    },
+    {
+      "label": "calibration-structured-planner",
+      "tier": "calibrated-query",
+      "query": "all:\"structured planner\" AND (all:robot OR all:VLA)",
+      "why": "定向回收结构化世界模型规划工作。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-structured-planner"
+      ]
+    },
+    {
+      "label": "calibration-hierarchical-world-model",
+      "tier": "calibrated-query",
+      "query": "all:\"hierarchical world model\" AND all:robot",
+      "why": "定向回收分层世界模型。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-hierarchical-world-model"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-vla-world-model-planning",
+      "tier": "dynamic-association",
+      "query": "(all:\"vision language action\" OR all:VLA) AND (all:\"world model\" OR all:\"world action model\") AND (all:planning OR all:foresight OR all:rollout)",
+      "why": "捕捉从直接动作预测转向动作条件后果预演的核心路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-world-model-planning"
+      ]
+    },
+    {
+      "label": "dynamic-structured-hierarchical-vla",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"robot policy\") AND (all:structured OR all:hierarchical OR all:symbolic) AND (all:planning OR all:\"world model\")",
+      "why": "检索结构化里程碑、分层世界模型与长时程任务—运动规划。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-structured-hierarchical-vla"
+      ]
+    },
+    {
+      "label": "dynamic-geometry-dynamics-vla",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:4D OR all:geometry OR all:pointmap OR all:\"point track\") AND (all:robot OR all:manipulation)",
+      "why": "检索用 4D/几何动态给 VLA 提供可执行物理表征的路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-geometry-dynamics-vla"
+      ]
+    },
+    {
+      "label": "dynamic-vla-correction-recovery",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:recovery OR all:correction OR all:\"self-correct\" OR all:failure)",
+      "why": "检索失败检测、接触纠错、自我恢复和后训练。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-correction-recovery"
+      ]
+    },
+    {
+      "label": "dynamic-vla-world-model-limits",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:failure OR all:drift OR all:attack OR all:admissibility OR all:benchmark)",
+      "why": "主动检索世界模型路线的失效、攻击、可采信性与闭环评测反证。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-world-model-limits"
+      ]
+    },
+    {
+      "label": "calibrated-structured-planner",
+      "tier": "calibrated-term",
+      "query": "all:\"structured planner\"",
+      "why": "将稠密视频预测压缩为动力学相关的稀疏里程碑。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-structured-planner"
+      ]
+    },
+    {
+      "label": "calibrated-kinematic-grounding",
+      "tier": "calibrated-term",
+      "query": "all:\"kinematic grounding\"",
+      "why": "区分视觉可能未来与可执行运动计划。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-kinematic-grounding"
+      ]
+    },
+    {
+      "label": "calibrated-hierarchical-world-model",
+      "tier": "calibrated-term",
+      "query": "all:\"hierarchical world model\"",
+      "why": "连接高层逻辑转移与低层视觉动态。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-hierarchical-world-model"
+      ]
+    },
+    {
+      "label": "calibration-structured-planner",
+      "tier": "calibrated-query",
+      "query": "all:\"structured planner\" AND (all:robot OR all:VLA)",
+      "why": "定向回收结构化世界模型规划工作。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-structured-planner"
+      ]
+    },
+    {
+      "label": "calibration-hierarchical-world-model",
+      "tier": "calibrated-query",
+      "query": "all:\"hierarchical world model\" AND all:robot",
+      "why": "定向回收分层世界模型。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-web",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-hierarchical-world-model"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-vla-breakthrough-browser",
+      "query": "site:arxiv.org VLA world model structured planning robot manipulation 2026",
+      "why": "官方 API 漏检时补充新方法名称。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-vla-breakthrough-web",
+      "query": "site:arxiv.org/abs/2607 VLA robot world model planning",
+      "why": "校准 2026 年 7 月最新术语。",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-structured-planner",
+      "query": "\"structured planner\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: structured planner.",
+      "source_key": "calibration",
+      "source_type": "arxiv-web",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-kinematic-grounding",
+      "query": "\"kinematic grounding\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: kinematic grounding.",
+      "source_key": "calibration",
+      "source_type": "arxiv-web",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-hierarchical-world-model",
+      "query": "\"hierarchical world model\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: hierarchical world model.",
+      "source_key": "calibration",
+      "source_type": "arxiv-web",
+      "channel": "web_calibration"
+    }
+  ]
+}

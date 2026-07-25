@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.10132",
+    "title": "TAC-LOCO: Unified Whole-Body Control for Quadrupedal TACtile-Informed LOCO-Manipulation",
+    "published": "2026-07-11T05:45:24Z",
+    "url": "https://arxiv.org/abs/2607.10132",
+    "authors": [
+      "Muqun Hu",
+      "Yuhao Zhou",
+      "Kabir Ray Malik",
+      "Chi Lin",
+      "Won Suk Lee",
+      "Yu She",
+      "Yan Gu"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "In-scope July 2026 study integrating tactile arrays, gripper regulation and dynamic whole-body locomotion in one policy."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify missing direct in-hand contact sensing in dynamic loco-manipulation."
+      },
+      {
+        "locator": "4 Methodology",
+        "role": "method-or-design",
+        "purpose": "Inspect tactile encoding, unified actions and grasp-stability rewards."
+      },
+      {
+        "locator": "6.5 Baseline comparison",
+        "role": "results-or-analysis",
+        "purpose": "Verify hardware comparison with a proprioception-only whole-body controller."
+      },
+      {
+        "locator": "7 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record absolute-force and actuator-model boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Does direct tactile feedback let a unified leg-arm-gripper policy regulate grasp during dynamic loco-manipulation under changing loads?",
+  "contributions": [
+    "A tactile-informed unified RL policy for legs, arm and gripper with online grasp regulation."
+  ],
+  "method": {
+    "summary": "Normalized tactile-array features are fused with proprioception in a unified PPO policy trained with retention, slip and force-moderation rewards, then transferred zero-shot.",
+    "assumptions": [
+      "Relative normalized tactile patterns transfer despite imperfect soft-contact simulation.",
+      "Hardware commands stay within the servo arm's safe dynamic envelope."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "parallel Isaac Lab rollouts"
+    ],
+    "tasks": [
+      "dynamic object pulling",
+      "large end-effector motions",
+      "loco-manipulation under gradual and sudden force changes"
+    ],
+    "embodiments": [
+      "Unitree Go2 with WidowX 250 arm and tactile gripper"
+    ],
+    "sample_or_scale": "Simulation studies and real deployment; 10 hardware trials per policy in the baseline comparison."
+  },
+  "evaluation": {
+    "design": "Simulation evaluates retention and force ablations; hardware tests zero-shot transfer, unseen objects, perturbations and a fixed-gripper Deep WBC baseline.",
+    "baselines": [
+      "proprioception-only policy",
+      "Deep WBC with fixed gripper"
+    ],
+    "metrics": [
+      "success rate",
+      "object retention",
+      "grasping force",
+      "gripper width"
+    ],
+    "ablations": [
+      "tactile observations",
+      "force moderation",
+      "retention/slip rewards"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Direct tactile feedback and learned gripper regulation materially improved physical dynamic loco-manipulation under changing external force.",
+      "scope": "Ten hardware trials per policy on the reported command set and spring-magnet load setup.",
+      "locator": "6.5 Baseline comparison"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Normalized tactile signals encode relative contact changes rather than exact force thresholds, and servo-arm dynamics are poorly modeled.",
+        "locator": "7 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The evidence is for adaptive grasp retention, not arbitrary tactile manipulation or calibrated force control.",
+        "basis": "Trials start from an established grasp and use normalized array readings with bounded command sets."
+      }
+    ]
+  },
+  "transfer_boundary": "Strongest for dynamic transport of already-grasped objects under changing loads; grasp acquisition and fine tactile servoing remain separate.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Direct hardware baseline under matched commands.",
+      "Separates tactile sensing, grasp rewards and force moderation."
+    ],
+    "design_risks": [
+      "Only 10 baseline trials.",
+      "Pre-established grasps and a lab force fixture simplify deployment."
+    ],
+    "baseline_fairness": "The baseline uses a related unified controller and the same initial gripper width, but cannot adapt gripper action by design.",
+    "metric_validity": "Completion directly captures grasp retention and locomotion stability; exact contact force is not calibrated.",
+    "reproducibility": "Training randomization, observations and rewards are documented.",
+    "external_validity": "One quadruped-arm platform and controlled force profiles."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.10132-C01",
+      "claim": "In 10 matched hardware trials, tactile-informed TAC-LOCO achieved 90% dynamic loco-manipulation success versus 50% for Deep WBC with a fixed gripper.",
+      "stance": "support",
+      "relation": "Supports tactile feedback as an active whole-body control input, not merely a manipulation-side observation.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The hardware baseline comparison isolates learned grasp regulation under the same command set.",
+      "locator": "6.5 Baseline comparison",
+      "source_context": "We conduct 10 hardware trials using the same set of loco-manipulation commands as in Sec. 6 . Table 4 compares the success rates of our policy and the baseline, showing that our tactile-informed policy achieves a substantially higher success rate. Figure 11 shows that the baseline suffers from gradual object slip during the task. Since the gripper width remains fixed, the policy cannot actively suppress slip once the external force changes. Table 4: Deployment success rate comparison with baseline. Method Deep WBC [ 5 ] TAC-LOCO (Ours) Success Rate 0.5 0.9",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "hardware success rate",
+        "value_or_direction": "0.9 versus 0.5",
+        "comparator": "TAC-LOCO versus Deep WBC fixed-gripper baseline",
+        "task_or_sample": "10 matched dynamic loco-manipulation trials",
+        "locator": "6.5 Baseline comparison"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The section states the shared command set, 10-trial protocol, baseline mechanism and the two success rates."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

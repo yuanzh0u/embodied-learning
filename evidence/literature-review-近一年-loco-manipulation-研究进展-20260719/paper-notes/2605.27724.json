@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.27724",
+    "title": "HumanoidMimicGen: Data Generation for Loco-Manipulation via Whole-Body Planning",
+    "published": "2026-05-26T21:57:11Z",
+    "url": "https://arxiv.org/abs/2605.27724",
+    "authors": [
+      "Kevin Lin",
+      "Ajay Mandlekar",
+      "Caelan Reed Garrett",
+      "Nikita Chernyadev",
+      "Yu Fang",
+      "Runyu Ding",
+      "Yuqi Xie",
+      "Justin Tran",
+      "Linxi Fan",
+      "Yuke Zhu"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct humanoid loco-manipulation data-generation and policy-learning study with simulation and real evaluation."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify whole-body demonstration scarcity."
+      },
+      {
+        "locator": "4 HumanoidMimicGen",
+        "role": "method-or-design",
+        "purpose": "Inspect skill planning, retargeting and data generation."
+      },
+      {
+        "locator": "6.2 HumanoidMimicGen Capabilities",
+        "role": "results-or-analysis",
+        "purpose": "Verify policy results across nine tasks."
+      },
+      {
+        "locator": "7 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record annotation and task-sequence boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can one human demonstration be expanded into enough feasible whole-body data to train humanoid loco-manipulation policies?",
+  "contributions": [
+    "A skill-structured generation pipeline and a nine-task loco-manipulation benchmark."
+  ],
+  "method": {
+    "summary": "Human demonstrations are segmented into skills, retargeted through a hybrid action space, randomized and rolled out with whole-body tracking to retain successful trajectories.",
+    "assumptions": [
+      "Skills and their precedence are manually specified.",
+      "Environment models and task success conditions are available."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "One source human demonstration per task",
+      "generated simulation trajectories"
+    ],
+    "tasks": [
+      "nine humanoid loco-manipulation tasks"
+    ],
+    "embodiments": [
+      "humanoid simulation and physical humanoid"
+    ],
+    "sample_or_scale": "Up to 1,000 successful generated trajectories per task; nine benchmark tasks."
+  },
+  "evaluation": {
+    "design": "Policies trained on generated data are compared with adapted MimicGen baselines; ablations and real co-training are reported.",
+    "baselines": [
+      "DexMimicGen+",
+      "retargeted source demonstration"
+    ],
+    "metrics": [
+      "policy score",
+      "success rate"
+    ],
+    "ablations": [
+      "motion-noise removal",
+      "initialization randomization"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Skill-aware data generation from one source demonstration substantially improved average learned-policy performance over the strongest adapted baseline.",
+      "scope": "Nine simulated benchmark tasks with a fixed skill graph per task.",
+      "locator": "6.2 HumanoidMimicGen Capabilities"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The system requires manual skill and precedence annotations, environment setup and success conditions, and uses fixed skill sequences and rigid transforms.",
+        "locator": "7 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The generation gain does not remove task-engineering costs.",
+        "basis": "The limitation section lists manual annotations, environment authoring and fixed task structure."
+      }
+    ]
+  },
+  "transfer_boundary": "Best suited to known task families whose interactions can be decomposed into reusable, manually declared skills.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Nine-task evaluation and targeted ablations.",
+      "Includes a real-data co-training study."
+    ],
+    "design_risks": [
+      "Generated rollouts inherit simulator and success-detector biases.",
+      "Manual task decomposition may dominate setup effort."
+    ],
+    "baseline_fairness": "The authors adapt a strong MimicGen-style baseline to whole-body data, although all methods rely on shared environment infrastructure.",
+    "metric_validity": "Task policy scores measure downstream utility of generated data.",
+    "reproducibility": "Algorithm, benchmark details and raw tables are provided.",
+    "external_validity": "Real results cover fewer settings than the simulation benchmark."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.27724-C01",
+      "claim": "Across nine simulated tasks, data generated from one source demonstration raised average policy performance from 0.33 for DexMimicGen+ to 0.89 for HumanoidMimicGen.",
+      "stance": "support",
+      "relation": "Supports structured synthetic expansion of sparse whole-body demonstrations.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The main comparison reports downstream policy performance averaged over all nine tasks.",
+      "locator": "6.2 HumanoidMimicGen Capabilities",
+      "source_context": "From Table 1 , HumanoidMimicGen improves policy performance over all baselines in all tasks. Averaged over nine tasks, data generated by HumanoidMimicGen from a single source human demonstration increases policy performance from 0.33 (DexMimicGen+) to 0.89",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "average policy performance",
+        "value_or_direction": "0.33 to 0.89",
+        "comparator": "DexMimicGen+ versus HumanoidMimicGen",
+        "task_or_sample": "nine simulation tasks",
+        "locator": "6.2 HumanoidMimicGen Capabilities, Table 1"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The paragraph explicitly states the baseline, method, nine-task average and values."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

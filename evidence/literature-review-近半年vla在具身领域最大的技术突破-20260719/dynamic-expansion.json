@@ -1,0 +1,71 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "high",
+      "notes": "‘最大技术突破’需要比较反应式 VLA、分层规划、世界模型后果预演、4D/几何动态、触觉纠错与闭环评测路线，并为每条路线检索反证。"
+    }
+  ],
+  "knowledge_ids": ["EA-MODEL", "EA-EVAL", "EA-4D", "EA-ALIGN"],
+  "families": ["vla"],
+  "queries": [
+    {
+      "label": "dynamic-vla-world-model-planning",
+      "tier": "dynamic-association",
+      "query": "(all:\"vision language action\" OR all:VLA) AND (all:\"world model\" OR all:\"world action model\") AND (all:planning OR all:foresight OR all:rollout)",
+      "why": "捕捉从直接动作预测转向动作条件后果预演的核心路线。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-structured-hierarchical-vla",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"robot policy\") AND (all:structured OR all:hierarchical OR all:symbolic) AND (all:planning OR all:\"world model\")",
+      "why": "检索结构化里程碑、分层世界模型与长时程任务—运动规划。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-geometry-dynamics-vla",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:4D OR all:geometry OR all:pointmap OR all:\"point track\") AND (all:robot OR all:manipulation)",
+      "why": "检索用 4D/几何动态给 VLA 提供可执行物理表征的路线。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-vla-correction-recovery",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:recovery OR all:correction OR all:\"self-correct\" OR all:failure)",
+      "why": "检索失败检测、接触纠错、自我恢复和后训练。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-vla-world-model-limits",
+      "tier": "dynamic-association",
+      "query": "(all:VLA OR all:\"world action model\") AND (all:failure OR all:drift OR all:attack OR all:admissibility OR all:benchmark)",
+      "why": "主动检索世界模型路线的失效、攻击、可采信性与闭环评测反证。",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-vla-breakthrough-browser",
+      "query": "site:arxiv.org VLA world model structured planning robot manipulation 2026",
+      "why": "官方 API 漏检时补充新方法名称。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-vla-breakthrough-web",
+      "query": "site:arxiv.org/abs/2607 VLA robot world model planning",
+      "why": "校准 2026 年 7 月最新术语。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

@@ -1,0 +1,1303 @@
+{
+  "generated_at": "2026-07-20T14:13:56.465998+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年触觉、力觉、视觉、语言等多模态数据在具身机器人训练方法中的演进",
+  "start_date": "2025-07-20",
+  "end_date": "2026-07-20",
+  "knowledge_ids": [
+    "EA-SENSOR",
+    "EA-MODEL",
+    "EA-XEMBODIMENT",
+    "EA-DATA"
+  ],
+  "families": [
+    "tactile-force",
+    "vla",
+    "world-model",
+    "retargeting"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 32,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 128,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 128,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-vision-language-tactile-action",
+        "dynamic-force-conditioned-tactile-foresight",
+        "dynamic-representation-aligned-tactile-grounding",
+        "dynamic-tactile-distillation",
+        "dynamic-multisensory-continual-adaptation",
+        "dynamic-tactile-vla-post-training",
+        "calibrated-representation-aligned-tactile-grounding",
+        "calibrated-force-guided-tactile-foresight",
+        "calibrated-cross-modal-representation-compatibility",
+        "calibrated-tactile-distillation",
+        "calibration-representation-aligned-tactile",
+        "calibration-tactile-distillation-vla",
+        "tactile-force-force-torque",
+        "tactile-force-slip-detection",
+        "tactile-force-contact-rich",
+        "tactile-force-sensor-fusion",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action",
+        "vla-finetuning-policy",
+        "vla-data-mixture",
+        "world-model-video-prediction",
+        "world-model-planning"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "dynamic-contact-gated-multimodal-fusion"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-missing-modality-robustness",
+        "vla-negative-transfer",
+        "world-model-contact",
+        "world-model-long-horizon"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "tactile-force-tactile-manipulation",
+        "vla-core",
+        "vla-named-models",
+        "world-model-robot"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (medium): The review question spans modality roles, fusion timing, representation alignment, post-training, and deployment-time sensor availability; these interfaces are wider than the static tactile-force and VLA families alone."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-vision-language-tactile-action",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(vision AND language AND tactile AND action) AND all:robot",
+      "why": "Capture explicit extensions from VLA to vision-language-tactile-action policies."
+    },
+    {
+      "label": "dynamic-force-conditioned-tactile-foresight",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(force AND tactile AND prediction) AND all:(robot AND manipulation)",
+      "why": "Find methods that separate global force signals from local tactile dynamics and use them predictively."
+    },
+    {
+      "label": "dynamic-representation-aligned-tactile-grounding",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(tactile AND representation AND grounding) AND all:(robot AND action)",
+      "why": "Test whether tactile supervision is moving from raw-input fusion to selected action-representation layers."
+    },
+    {
+      "label": "dynamic-tactile-distillation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(tactile AND distillation) AND all:(robot OR manipulation)",
+      "why": "Cover training-time touch or force supervision that is distilled away at deployment."
+    },
+    {
+      "label": "dynamic-contact-gated-multimodal-fusion",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(contact AND gated AND multimodal AND fusion) AND all:robot",
+      "why": "Capture sparse/event-driven fusion that activates physical modalities only around contact."
+    },
+    {
+      "label": "dynamic-multisensory-continual-adaptation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(multisensory AND continual AND learning) AND all:(robot AND force)",
+      "why": "Find post-training routes that adapt pretrained visual policies to force or touch without full retraining."
+    },
+    {
+      "label": "dynamic-missing-modality-robustness",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(missing AND modality AND robustness) AND all:(robot AND manipulation)",
+      "why": "Cover sensor-dropout and deployment-time modality-mismatch counterevidence."
+    },
+    {
+      "label": "dynamic-tactile-vla-post-training",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:(tactile AND VLA AND post-training) AND all:robot",
+      "why": "Capture tactile self-correction and policy steering methods applied after VLA pretraining."
+    },
+    {
+      "label": "dynamic-vlta-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs (tactile OR force) (VLA OR vision-language-action) robot manipulation",
+      "why": "Recover named VLTA/VLA tactile variants missed by metadata wording."
+    },
+    {
+      "label": "dynamic-alignment-calibration",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs tactile representation alignment action expert robot",
+      "why": "Calibrate recent wording around where tactile supervision is injected."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): Uses representation-aligned tactile grounding and future tactile prediction at intermediate action-expert features.",
+    "arxiv calibration (high): Uses force-guided tactile foresight, compact latent prediction, and tactile-guided gating.",
+    "arxiv calibration (high): Frames multimodal training as representation compatibility rather than modality scaling.",
+    "arxiv calibration (high): Uses tactile distillation to train a policy that does not require tactile input at inference time."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-vision-language-tactile-action",
+      "tier": "dynamic-association",
+      "query": "all:(vision AND language AND tactile AND action) AND all:robot",
+      "why": "Capture explicit extensions from VLA to vision-language-tactile-action policies.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vision-language-tactile-action"
+      ]
+    },
+    {
+      "label": "dynamic-force-conditioned-tactile-foresight",
+      "tier": "mechanism",
+      "query": "all:(force AND tactile AND prediction) AND all:(robot AND manipulation)",
+      "why": "Find methods that separate global force signals from local tactile dynamics and use them predictively.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-conditioned-tactile-foresight"
+      ]
+    },
+    {
+      "label": "dynamic-representation-aligned-tactile-grounding",
+      "tier": "mechanism",
+      "query": "all:(tactile AND representation AND grounding) AND all:(robot AND action)",
+      "why": "Test whether tactile supervision is moving from raw-input fusion to selected action-representation layers.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-representation-aligned-tactile-grounding"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-distillation",
+      "tier": "transfer",
+      "query": "all:(tactile AND distillation) AND all:(robot OR manipulation)",
+      "why": "Cover training-time touch or force supervision that is distilled away at deployment.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-distillation"
+      ]
+    },
+    {
+      "label": "dynamic-contact-gated-multimodal-fusion",
+      "tier": "policy-interface",
+      "query": "all:(contact AND gated AND multimodal AND fusion) AND all:robot",
+      "why": "Capture sparse/event-driven fusion that activates physical modalities only around contact.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-gated-multimodal-fusion"
+      ]
+    },
+    {
+      "label": "dynamic-multisensory-continual-adaptation",
+      "tier": "transfer",
+      "query": "all:(multisensory AND continual AND learning) AND all:(robot AND force)",
+      "why": "Find post-training routes that adapt pretrained visual policies to force or touch without full retraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multisensory-continual-adaptation"
+      ]
+    },
+    {
+      "label": "dynamic-missing-modality-robustness",
+      "tier": "limitation",
+      "query": "all:(missing AND modality AND robustness) AND all:(robot AND manipulation)",
+      "why": "Cover sensor-dropout and deployment-time modality-mismatch counterevidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-missing-modality-robustness"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-vla-post-training",
+      "tier": "deployment",
+      "query": "all:(tactile AND VLA AND post-training) AND all:robot",
+      "why": "Capture tactile self-correction and policy steering methods applied after VLA pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-vla-post-training"
+      ]
+    },
+    {
+      "label": "calibrated-representation-aligned-tactile-grounding",
+      "tier": "calibrated-term",
+      "query": "all:\"representation-aligned tactile grounding\"",
+      "why": "Recent vocabulary for choosing the internal policy layer at which future-touch supervision is applied.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-representation-aligned-tactile-grounding"
+      ]
+    },
+    {
+      "label": "calibrated-force-guided-tactile-foresight",
+      "tier": "calibrated-term",
+      "query": "all:\"force-guided tactile foresight\"",
+      "why": "Distinguishes global wrist force/torque conditioning from local tactile prediction.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-force-guided-tactile-foresight"
+      ]
+    },
+    {
+      "label": "calibrated-cross-modal-representation-compatibility",
+      "tier": "calibrated-term",
+      "query": "all:\"cross-modal representation compatibility\"",
+      "why": "Names the emerging finding that structured compatible representations matter more than adding more modalities.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-cross-modal-representation-compatibility"
+      ]
+    },
+    {
+      "label": "calibrated-tactile-distillation",
+      "tier": "calibrated-term",
+      "query": "all:\"tactile distillation\"",
+      "why": "Covers training-time physical sensing that is removed from the deployment sensor stack.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-tactile-distillation"
+      ]
+    },
+    {
+      "label": "calibration-representation-aligned-tactile",
+      "tier": "calibrated-query",
+      "query": "all:(representation AND tactile AND grounding) AND all:(robot AND manipulation)",
+      "why": "Search the calibrated terminology in arXiv metadata.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-representation-aligned-tactile"
+      ]
+    },
+    {
+      "label": "calibration-tactile-distillation-vla",
+      "tier": "calibrated-query",
+      "query": "all:(tactile AND distillation AND VLA) AND all:robot",
+      "why": "Search training-time touch transfer into deployable VLA policies.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-tactile-distillation-vla"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-vision-language-tactile-action",
+      "tier": "dynamic-association",
+      "query": "all:(vision AND language AND tactile AND action) AND all:robot",
+      "why": "Capture explicit extensions from VLA to vision-language-tactile-action policies.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vision-language-tactile-action"
+      ]
+    },
+    {
+      "label": "dynamic-force-conditioned-tactile-foresight",
+      "tier": "mechanism",
+      "query": "all:(force AND tactile AND prediction) AND all:(robot AND manipulation)",
+      "why": "Find methods that separate global force signals from local tactile dynamics and use them predictively.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-conditioned-tactile-foresight"
+      ]
+    },
+    {
+      "label": "dynamic-representation-aligned-tactile-grounding",
+      "tier": "mechanism",
+      "query": "all:(tactile AND representation AND grounding) AND all:(robot AND action)",
+      "why": "Test whether tactile supervision is moving from raw-input fusion to selected action-representation layers.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-representation-aligned-tactile-grounding"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-distillation",
+      "tier": "transfer",
+      "query": "all:(tactile AND distillation) AND all:(robot OR manipulation)",
+      "why": "Cover training-time touch or force supervision that is distilled away at deployment.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-distillation"
+      ]
+    },
+    {
+      "label": "dynamic-contact-gated-multimodal-fusion",
+      "tier": "policy-interface",
+      "query": "all:(contact AND gated AND multimodal AND fusion) AND all:robot",
+      "why": "Capture sparse/event-driven fusion that activates physical modalities only around contact.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-gated-multimodal-fusion"
+      ]
+    },
+    {
+      "label": "dynamic-multisensory-continual-adaptation",
+      "tier": "transfer",
+      "query": "all:(multisensory AND continual AND learning) AND all:(robot AND force)",
+      "why": "Find post-training routes that adapt pretrained visual policies to force or touch without full retraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multisensory-continual-adaptation"
+      ]
+    },
+    {
+      "label": "dynamic-missing-modality-robustness",
+      "tier": "limitation",
+      "query": "all:(missing AND modality AND robustness) AND all:(robot AND manipulation)",
+      "why": "Cover sensor-dropout and deployment-time modality-mismatch counterevidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-missing-modality-robustness"
+      ]
+    },
+    {
+      "label": "dynamic-tactile-vla-post-training",
+      "tier": "deployment",
+      "query": "all:(tactile AND VLA AND post-training) AND all:robot",
+      "why": "Capture tactile self-correction and policy steering methods applied after VLA pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-tactile-vla-post-training"
+      ]
+    },
+    {
+      "label": "calibrated-representation-aligned-tactile-grounding",
+      "tier": "calibrated-term",
+      "query": "all:\"representation-aligned tactile grounding\"",
+      "why": "Recent vocabulary for choosing the internal policy layer at which future-touch supervision is applied.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-representation-aligned-tactile-grounding"
+      ]
+    },
+    {
+      "label": "calibrated-force-guided-tactile-foresight",
+      "tier": "calibrated-term",
+      "query": "all:\"force-guided tactile foresight\"",
+      "why": "Distinguishes global wrist force/torque conditioning from local tactile prediction.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-force-guided-tactile-foresight"
+      ]
+    },
+    {
+      "label": "calibrated-cross-modal-representation-compatibility",
+      "tier": "calibrated-term",
+      "query": "all:\"cross-modal representation compatibility\"",
+      "why": "Names the emerging finding that structured compatible representations matter more than adding more modalities.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-cross-modal-representation-compatibility"
+      ]
+    },
+    {
+      "label": "calibrated-tactile-distillation",
+      "tier": "calibrated-term",
+      "query": "all:\"tactile distillation\"",
+      "why": "Covers training-time physical sensing that is removed from the deployment sensor stack.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-tactile-distillation"
+      ]
+    },
+    {
+      "label": "calibration-representation-aligned-tactile",
+      "tier": "calibrated-query",
+      "query": "all:(representation AND tactile AND grounding) AND all:(robot AND manipulation)",
+      "why": "Search the calibrated terminology in arXiv metadata.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-representation-aligned-tactile"
+      ]
+    },
+    {
+      "label": "calibration-tactile-distillation-vla",
+      "tier": "calibrated-query",
+      "query": "all:(tactile AND distillation AND VLA) AND all:robot",
+      "why": "Search training-time touch transfer into deployable VLA policies.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-tactile-distillation-vla"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-vlta-browser",
+      "query": "site:arxiv.org/abs (tactile OR force) (VLA OR vision-language-action) robot manipulation",
+      "why": "Recover named VLTA/VLA tactile variants missed by metadata wording.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-alignment-calibration",
+      "query": "site:arxiv.org/abs tactile representation alignment action expert robot",
+      "why": "Calibrate recent wording around where tactile supervision is injected.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-representation-aligned-tactile-grounding",
+      "query": "\"representation-aligned tactile grounding\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: representation-aligned tactile grounding.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-force-guided-tactile-foresight",
+      "query": "\"force-guided tactile foresight\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: force-guided tactile foresight.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-cross-modal-representation-compatibility",
+      "query": "\"cross-modal representation compatibility\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: cross-modal representation compatibility.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-tactile-distillation",
+      "query": "\"tactile distillation\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: tactile distillation.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

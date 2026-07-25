@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2607.00090", "title": "Lost in the Tail: Addressing Geographic Imbalance in Urban Visual Place Recognition", "published": "2026-06-30", "url": "https://arxiv.org/abs/2607.00090", "authors": ["Zhiyao Shu", "Jiacheng Yang", "Yang Lu", "Waishan Qiu", "Chuan Li", "Da Chen"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "把城市VPR的数据地理分布不均从隐含偏差提升为显式长尾学习问题。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对街景采集密度和地理特征丰富度的错配。"},
+    {"locator": "3 Method", "role": "method-or-design", "purpose": "核对DAPR对头部与尾部地理类的重加权。"},
+    {"locator": "4 Experiments", "role": "results-or-analysis", "purpose": "核对跨数据集和多骨干结果。"},
+    {"locator": "5 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对样本数长尾定义的边界。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "城市街景数据的地理类别长尾如何影响VPR，能否用即插即用重加权改善尾部地点？",
+  "contributions": ["将VPR中的地理样本不均衡形式化为长尾问题。", "提出分布感知地点重加权模块DAPR。", "跨多种VPR骨干和城市数据集验证尾部收益。"],
+  "method": {"summary": "按地理类样本频次刻画头尾分布，在训练中对地点表示或损失进行分布感知重加权，并作为插件接入SALAD、BoQ与D&C。", "assumptions": ["地理类样本数是部署不均衡的有效代理。", "训练类划分与测试空间覆盖具有对应关系。"]},
+  "study_context": {"datasets": ["SF-XL", "MSLS", "Pittsburgh30k"], "tasks": ["urban visual place recognition", "long-tail geographic retrieval"], "embodiments": ["street-view and vehicle localization"], "sample_or_scale": "多个城市VPR数据集和三类现代检索骨干。"},
+  "evaluation": {"design": "比较总体、头部和尾部地点表现，并把DAPR插入多种骨干验证可迁移性。", "baselines": ["SALAD", "BoQ", "D&C"], "metrics": ["Recall@K", "head-class recall", "tail-class recall"], "ablations": ["reweighting components", "backbone transfer", "head versus tail groups"]},
+  "findings": [{"finding": "显式处理地理样本长尾可改善尾部地点识别，但当前长尾定义仍只基于每类样本数，尚未覆盖视觉难度和地理语义。", "scope": "按地理类别样本频次划分的城市VPR。", "locator": "5 Conclusion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "当前长尾分布仅按每个地理类别的样本数定义，聚焦数据集层面的不均衡。", "locator": "5 Conclusion"}], "reader_inferred": [{"boundary": "采集密度低不一定等于定位困难，难度还受重复外观、季节、遮挡和标签质量影响。", "basis": "类别频次是数据量指标，而非直接的视觉或几何可辨识性指标。"}]},
+  "transfer_boundary": "支持在街景训练集中显式建模地理频次长尾；不能把样本少直接等同于真实部署中的最难地点。",
+  "critical_appraisal": {"design_strengths": ["把平均召回掩盖的地理不公平显式分组。", "跨多骨干验证插件性。"], "design_risks": ["长尾定义单一。", "城市街景采集机制可能与机器人自主采集不同。"], "baseline_fairness": "同骨干加入或不加入DAPR，且覆盖多个现代基线。", "metric_validity": "头尾分组Recall能显示平均指标盲区，但频次分组不代表全部难度。", "reproducibility": "模块化设计和公开城市数据集有利复现。", "external_validity": "对大规模城市VPR强，对室内、自然环境和在线地图增长有限。"},
+  "evidence_cards": [{"card_id": "2607.00090-C01", "claim": "VPR正在从平均召回转向地理分布鲁棒性，但现有长尾建模仍主要按地理类样本数划分，尚不能代表地点本身的视觉难度。", "stance": "conditional", "relation": "支持地理长尾是新评估与训练方向，同时限定现有形式化。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者在结论明确承认当前长尾只按每类样本量定义。", "locator": "5 Conclusion", "source_context": "Nevertheless, our current formulation defines the long-tail distribution based on sample count per geographic class , focusing on dataset-level imbalance.", "evidence_type": "scope-limitation", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接限定长尾定义；证据卡将其与更广的视觉难度区分，没有扩大作者结论。"}}],
+  "core_citations": [], "notes": "训练集采集密度是定位公平性和覆盖可靠性的组成部分。"
+}

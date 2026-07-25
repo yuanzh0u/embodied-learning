@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.22264",
+    "title": "UniDex: A Robot Foundation Suite for Universal Dexterous Hand Control from Egocentric Human Videos",
+    "published": "2026-03-23T17:49:12Z",
+    "url": "https://arxiv.org/abs/2603.22264",
+    "authors": [
+      "Gu Zhang",
+      "Qicheng Xu",
+      "Haozhe Zhang",
+      "Jianhan Ma",
+      "Long He",
+      "Yiming Bao",
+      "Zeyu Ping",
+      "Zhecheng Yuan",
+      "Chenhao Lu",
+      "Chengbo Yuan",
+      "Tianhai Liang",
+      "Xiaoyu Tian",
+      "Maanping Shao",
+      "Feihong Zhang",
+      "Mingyu Ding",
+      "Yang Gao",
+      "Hao Zhao",
+      "Hang Zhao",
+      "Huazhe Xu"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "把公开 egocentric RGB-D 视频转换成八种灵巧手的 robot-centric dataset，直接暴露 retargeting 人工校准、视觉对齐和机器人数据不可替代性。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认 dexterous data scarcity、异构本体和高维控制问题。"
+      },
+      {
+        "locator": "3 UniDex-Dataset > 3.2 Human-Robot Transformation > 3.2.1 Kinematic Retargeting",
+        "role": "method-or-design",
+        "purpose": "核验 human-in-the-loop contact calibration。"
+      },
+      {
+        "locator": "3 UniDex-Dataset > 3.2 Human-Robot Transformation > 3.2.2 Visual Alignment",
+        "role": "data-or-setting",
+        "purpose": "核验人手遮罩与机器人手渲染。"
+      },
+      {
+        "locator": "5 Experiments > 5.2 Performance",
+        "role": "results-or-analysis",
+        "purpose": "核验五类真实工具任务的 pretraining 收益。"
+      },
+      {
+        "locator": "5 Experiments > 5.4 UniDex-Cap for Human-Robot Data Co-train",
+        "role": "results-or-analysis",
+        "purpose": "核验 human/robot demos 的替代率与零机器人失败。"
+      },
+      {
+        "locator": "6 Conclusion and Limitation",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录 action-free 数据尚未利用。"
+      },
+      {
+        "locator": "Appendix D UniDex-Cap Setup Calibration",
+        "role": "appendix-or-supplement",
+        "purpose": "核验 RGB-D 与 Vision Pro 的外参/时序校准流程。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何把多源 egocentric human video 变为跨灵巧手可执行的 robot-centric 预训练数据，并降低但不消除机器人示范成本？",
+  "contributions": [
+    "构建跨八种手、超过 50K trajectories 的 UniDex-Dataset。",
+    "提出 Function-Actuator-Aligned Space 统一异构手动作。",
+    "用 UniDex-Cap 测量 transformed human demo 与 robot demo 的 co-training 效果。"
+  ],
+  "method": {
+    "summary": "从四个 RGB-D egocentric 数据集分段并标注任务，遮掉人手、对每种机器人手进行 fingertip IK + 人工 base-offset/contact 校准，再把机器人 mesh 渲染回点云；用 FAAS 预训练 3D VLA 并以机器人示范微调。",
+    "assumptions": [
+      "RGB-D 与人手 pose 足以恢复 contact-relevant geometry。",
+      "少量人工校准可覆盖同数据源/同本体的大多数轨迹。",
+      "功能相似 actuator 可映射到共享 FAAS 槽位。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "H2O",
+      "HOI4D",
+      "HOT3D",
+      "TACO",
+      "UniDex-Cap"
+    ],
+    "tasks": [
+      "five real-world tool-use tasks",
+      "Make Coffee co-training study"
+    ],
+    "embodiments": [
+      "eight dexterous hands in pretraining",
+      "Inspire",
+      "Wuji",
+      "Oymotion"
+    ],
+    "sample_or_scale": "9M paired frames，约 52K trajectories；每个下游任务 50 条 robot demos。"
+  },
+  "evaluation": {
+    "design": "真实机器人比较多种 IL/VLA baselines，评估 spatial/object/cross-hand generalization，并绘制 human/robot demo co-training 网格。",
+    "baselines": [
+      "Diffusion Policy",
+      "DP3",
+      "UniDex-VLA No Pretrain",
+      "gripper-pretrained VLA"
+    ],
+    "metrics": [
+      "average task progress",
+      "final success rate"
+    ],
+    "ablations": [
+      "pretraining",
+      "DemoGen",
+      "cross-hand zero-shot",
+      "human/robot data mixture"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "retargeting 不是全自动：每个 dataset/hand 要做基础 interactive calibration，并对 contact-rich frames 人工调整。",
+      "scope": "UniDex 的 fingertip-IK 转换流程。",
+      "locator": "3 UniDex-Dataset > 3.2 Human-Robot Transformation > 3.2.1 Kinematic Retargeting"
+    },
+    {
+      "finding": "在 Make Coffee 中 transformed human data 能降低成本，但没有任何 robot data 时成功率仍接近 0。",
+      "scope": "单一任务的人—机 co-training 网格；作者估计约两条 human demo 替代一条 robot demo。",
+      "locator": "5 Experiments > 5.4 UniDex-Cap for Human-Robot Data Co-train"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "尚未利用大规模 action-free 或弱标注 egocentric activity datasets。",
+        "locator": "6 Conclusion and Limitation"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "human-in-the-loop 校准把视觉误差和接触合理性转移成人工审核成本。",
+        "basis": "方法要求 GUI 调整 base offset，并在 contact-rich segments 做人工修改。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于具备 RGB-D、hand pose、可建模 URDF/actuator 对应且能承担少量人工接触校准的灵巧手；纯 RGB、无动作标签或完全无目标机器人数据的情形尚未证明。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "跨八种手构建同一 action space，并在三种真实手上评测。",
+      "明确测量 human data 的替代率而非宣称完全替代。"
+    ],
+    "design_risks": [
+      "人工校准量只作定性描述，规模化总成本不透明。",
+      "2:1 exchange rate 来自单一 Make Coffee 任务。"
+    ],
+    "baseline_fairness": "下游任务和示范量相同，但 gripper-pretrained baselines 的 action prior 与 dexterous 目标并不等价。",
+    "metric_validity": "阶段进展和最终成功率可反映工具任务执行；缺少接触力/滑移和人工校准工时指标。",
+    "reproducibility": "数据管线、GUI、FAAS mapping 和硬件校准描述详细；全部多本体数据处理仍成本高。",
+    "external_validity": "支持 transformed human data 降本和 cross-hand transfer；不支持无人工校准、无 robot data 的通用成功。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.22264-C01",
+      "claim": "将 egocentric hand trajectories 转为机器人可执行数据仍需 human-in-the-loop retargeting：基础坐标/形态偏差和 contact-rich 片段要人工校准。",
+      "stance": "limit",
+      "relation": "把‘自动规模化’拆成视觉处理与人工接触验收两部分。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "论文的两阶段 retargeting 先自动 IK，再用 GUI 调整 6DoF offset；接触片段需人工复核。",
+      "locator": "3.2.1 Kinematic Retargeting",
+      "source_context": "The whole pipeline is a two-stage, human-in-the-loop retargeting procedure",
+      "evidence_type": "method-limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "方法段明确命名 human-in-the-loop 并描述自动/交互两阶段，支持人工审核是扩展成本的限定结论。"
+      }
+    },
+    {
+      "card_id": "2603.22264-C02",
+      "claim": "Retargeted ego-human 数据只能部分替代目标机器人示范：在论文的 Make Coffee co-training 实验中，没有 robot data 时成功始终接近 0。",
+      "stance": "conditional",
+      "relation": "限制‘人类第一视角数据可独立完成部署后训练’的说法。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者明确总结 human data helps but robot data is indispensable，并给出约 2:1 的局部替代斜率。",
+      "locator": "5.4 UniDex-Cap for Human-Robot Data Co-train",
+      "source_context": "Retargeted human data helps, but robot data is indispensable",
+      "evidence_type": "co-training-experiment",
+      "quantitative": {
+        "metric": "task success",
+        "value_or_direction": "near zero without robot data",
+        "comparator": "co-training with transformed human and robot demos",
+        "task_or_sample": "Make Coffee task, 20 trials per grid point",
+        "locator": "5 Experiments > 5.4 UniDex-Cap for Human-Robot Data Co-train"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "实验段直接陈述零 robot data 的近零成功；2:1 仅作为同一任务的经验替代率，不外推为通用换算。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "结论正文在抽取中可读，已核验 action-free 数据缺口。"
+}

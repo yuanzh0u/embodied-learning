@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.04579",
+    "title": "Risk-Aware Reinforcement Learning for Mobile Manipulation",
+    "published": "2026-03-04T20:17:28Z",
+    "url": "https://arxiv.org/abs/2603.04579",
+    "authors": [
+      "Michael Groom",
+      "James Wilson",
+      "Nick Hawes",
+      "Lars Kunze"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Mobile-manipulation study of risk-sensitive navigation and reaching under egocentric depth uncertainty."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify tail-risk failures in cluttered mobile manipulation."
+      },
+      {
+        "locator": "III Method",
+        "role": "method-or-design",
+        "purpose": "Inspect distributional teacher learning and depth-policy distillation."
+      },
+      {
+        "locator": "V Results",
+        "role": "results-or-analysis",
+        "purpose": "Verify risk behavior and task competence."
+      },
+      {
+        "locator": "VII Limitations and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record simulation and uncertainty boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can risk sensitivity learned with privileged state be distilled into a depth-only mobile-manipulation policy?",
+  "contributions": [
+    "A two-stage distributional-RL teacher and DAgger student with runtime-adjustable risk conditioning."
+  ],
+  "method": {
+    "summary": "A privileged distributional critic learns a risk-conditioned teacher; DAgger distills its actions into an egocentric depth policy.",
+    "assumptions": [
+      "Training simulation exposes representative aleatoric uncertainty.",
+      "Depth sensing and privileged teacher state can be aligned during distillation."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "simulation rollouts"
+    ],
+    "tasks": [
+      "mobile reaching in clutter"
+    ],
+    "embodiments": [
+      "simulated mobile manipulator"
+    ],
+    "sample_or_scale": "Simulation-only experiments across risk settings and clutter configurations."
+  },
+  "evaluation": {
+    "design": "Risk-aware and risk-neutral teachers/students are compared on returns, task metrics and qualitative trajectories.",
+    "baselines": [
+      "risk-neutral policy"
+    ],
+    "metrics": [
+      "return distribution",
+      "task performance",
+      "collision/risk behavior"
+    ],
+    "ablations": [
+      "risk conditioning"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Risk-conditioned behavior transferred to a depth-only student without a reported collapse in overall task competence.",
+      "scope": "The simulated environments and modeled aleatoric uncertainty.",
+      "locator": "V Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The work is simulation-only, models aleatoric rather than epistemic uncertainty, uses shaped rewards, and relies on imitation for the student.",
+        "locator": "VII Limitations and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Runtime risk control is not yet validated under real sensing, dynamics or novel hazards.",
+        "basis": "All experiments are simulated and the paper explicitly defers hardware validation."
+      }
+    ]
+  },
+  "transfer_boundary": "Evidence supports risk-aware simulation policies, not deployable safety guarantees.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Separates privileged risk learning from visuomotor deployment.",
+      "Evaluates a continuum of runtime risk attitudes."
+    ],
+    "design_risks": [
+      "Simulation and reward design define the risk distribution.",
+      "No real-world safety test."
+    ],
+    "baseline_fairness": "Risk-aware and neutral policies share the task and policy family.",
+    "metric_validity": "Distributional returns reflect the optimized notion of risk but may not cover unmodeled hazards.",
+    "reproducibility": "Method and training phases are described.",
+    "external_validity": "Limited by simulation-only evidence."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.04579-C01",
+      "claim": "The study reports a depth-only mobile-manipulation policy whose risk sensitivity can be adjusted at runtime while retaining task performance comparable to risk-neutral methods in simulation.",
+      "stance": "conditional",
+      "relation": "Supports explicit risk conditioning as an emerging control axis, subject to hardware validation.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The conclusion summarizes risk-aware student competence and transfer through imitation learning.",
+      "locator": "VI Conclusion",
+      "source_context": "Our approach trains risk-aware visuomotor policies for mobile manipulation conditioned on egocentric depth observations with runtime-adjustable risk sensitivity, achieving comparable performance to risk-neutral methods, and we show learnt risk-aware behaviours can be successfully transferred through Imitation Learning.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The conclusion directly states the observation modality, runtime adjustment, comparison and transfer mechanism."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

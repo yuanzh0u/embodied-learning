@@ -2,7 +2,7 @@
 id: KB-GLOSSARY
 title: 术语表
 type: glossary
-updated: 2026-07-14
+updated: 2026-07-20
 tags: [glossary, embodied-ai, error-governance]
 ---
 
@@ -25,6 +25,8 @@ tags: [glossary, embodied-ai, error-governance]
 | Object-centric action | 以对象状态变化表达动作，而不是直接绑定机器人关节。 | EA-DATA, EA-XEMBODIMENT |
 | End-effector-centric action | 以机器人末端位姿或 delta pose 表达动作。 | EA-DATA, EA-XEMBODIMENT |
 | Anchor data | 少量目标机器人真实执行数据，用于校准和闭环验证跨本体或无本体采集数据。 | EA-DATA, EA-XEMBODIMENT |
+| Ego-centric behavior data | 人类第一视角视频及从中恢复的手—物轨迹、视点运动和任务结构；主要提供行为先验，不天然包含完整机器人动作、接触和奖励监督。 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR |
+| 可执行监督 | 已核验坐标、尺度、动作接口、可达性、接触和动力学约束，可供目标机器人训练或闭环评测使用的监督。 | EA-DATA, EA-XEMBODIMENT |
 | 目标条件效用 | 数据质量相对于目标任务、目标分布和目标策略的实际贡献；同一轨迹在不同目标下可能有不同质量排序。 | EA-DATA |
 | 监督可靠性 | 一类数据对某个字段能否提供可信真值的等级，例如人类视频可监督任务结构但通常不能直接监督机器人控制命令。 | EA-DATA, EA-4D |
 | Supervision mask | 显式标记每类异构数据哪些字段可参与监督、哪些字段缺失或不可信的掩码。 | EA-DATA, EA-4D |
@@ -34,8 +36,23 @@ tags: [glossary, embodied-ai, error-governance]
 | Claim-support audit | 检查 paper note 中的主张是否被对应全文 locator 与 source context 支持的审计。 | KB-LIT-REVIEWS |
 | Accepted evidence event | 从通过审计的 paper note 投影出的正式论文证据记录，具有当前有效 run 集合中全局唯一的 event ID。 | KB-LIT-REVIEWS |
 | Review packet | 汇总综述范围、证据分布、共识、限制和缺口的中预算审计视图，不等同于读者成稿。 | KB-LIT-REVIEWS |
+| 反应式 VLA | 主要将当前观测与指令直接映射到下一步或下一段动作、但不显式检验动作后果的狭义 VLA 形态；“反应式 VLA 已死”只针对这一限定定义。 | EA-MODEL, EA-ALIGN, EA-EVAL |
+| VLA—世界模型融合栈 | VLA 负责语义与动作先验，动作条件世界模型负责后果预演、候选排序和失败识别，本体适配器与控制器负责真实执行的分层系统；该结构是跨论文 synthesis。 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN |
+| Action-conditioned reliability | 世界模型在动作条件下对真实后果、物理约束、长时一致、失败状态与候选排序的联合可靠性，并包含推理效率门槛。 | EA-EVAL, EA-4D, EA-MODEL |
+| Loco-manipulation | 移动/行走与操作在同一任务中耦合的全身机器人能力；需要联合处理全身动作、状态估计、地形/接触、长时序计划和失败恢复。 | EA-LOCOMANIP, EA-MODEL, EA-EVAL, EA-XEMBODIMENT, EA-SENSOR |
+| 世界模型权限阶梯 | 按错误可拦截性分配世界模型权限：训练期教师、离线排序和数据生成风险较低，在线预演次之，直接控制与安全裁决必须通过最高等级闭环验收。 | EA-EVAL, EA-MODEL, EA-4D |
+| 功能—时标对齐融合 | 不把全部模态无约束拼接，而是按语言、视觉、触觉、力/力矩、本体状态的功能、频率和控制层级选择性耦合。 | EA-SENSOR, EA-ALIGN, EA-MODEL |
+| 接触执行栈 | 从同步接触数据、接触表征、动作条件预测到高频纠偏和安全过程评测的分层闭环。 | EA-SENSOR, EA-MODEL, EA-EVAL |
+| 具身数据污染 | 样本与来源、时间、任务、动作、模型版本或评测边界之间发生关系失真；覆盖非恶意近重复/错位/泄漏与恶意投毒/后门，治理范围贯穿采集、训练、生成和闭环评测。 | EA-DATA, EA-EVAL, EA-MODEL |
+| 语义泄漏 | 训练与评测虽无字节级重复，但场景、任务逻辑、对象布局或指令—动作映射过度接近，导致记忆式高分冒充泛化。 | EA-DATA, EA-EVAL |
+| 供应链持久污染 | 后门或污染进入基础模型、适配模块或检查点后，在下游干净微调中仍然保留。 | EA-MODEL, EA-DATA |
+| 二次激活 | 表面安全的原始数据经过世界模型生成、扩增或重标注后转化为危险轨迹，并继续污染下游策略。 | EA-DATA, EA-MODEL, EA-EVAL |
 | Action semantics | 控制命令在坐标系、频率、归一化、控制器和机器人本体条件下对应的物理含义。 | EA-ALIGN, EA-XEMBODIMENT |
 | 可观测性 | 系统能否从传感器中观察到完成任务所需的关键状态。 | EA-SENSOR |
+| VPR | Visual Place Recognition，按图像外观与结构召回地点候选的定位前端；高召回不等于最终位姿可恢复。 | EA-VLOC, EA-SENSOR |
+| 相机重定位 | 在已有地图或参考集合中估计相机 6DoF 位姿，通常需要候选召回、几何验证与位姿求解。 | EA-VLOC, EA-HARDWARE |
+| 可恢复域 | 在给定初始化、地图覆盖和场景条件下，定位或位姿细化仍可可靠收敛的工作范围。 | EA-VLOC, EA-EVAL |
+| 风险—覆盖 | 联合衡量已接受预测的错误风险和系统愿意给出预测的查询覆盖率，防止用全局拒识制造虚假的低风险。 | EA-VLOC, EA-EVAL |
 | 触觉 | 指尖或接触表面的局部压力、剪切、滑移、形变、纹理等接触信息。 | EA-SENSOR |
 | 力/力矩 | 通常指腕部或关节层面的低维全局受力信息。 | EA-SENSOR |
 | 最后一厘米 | 机器人从视觉定位过渡到接触闭环的精细操作阶段。 | EA-BIZ, EA-SENSOR |

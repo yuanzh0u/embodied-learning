@@ -1,0 +1,1266 @@
+{
+  "generated_at": "2026-07-20T14:19:34.371479+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近半年力觉在具身机器人领域的发展",
+  "start_date": "2026-01-20",
+  "end_date": "2026-07-20",
+  "knowledge_ids": [
+    "EA-SENSOR",
+    "EA-EVAL"
+  ],
+  "families": [
+    "tactile-force",
+    "last-centimeter",
+    "industrial-deployment"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 128,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 128,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-force-torque-manipulation",
+        "dynamic-force-aware-policy-learning",
+        "dynamic-visual-force-fusion",
+        "dynamic-contact-force-estimation",
+        "dynamic-joint-torque-contact",
+        "dynamic-whole-body-force-feedback",
+        "tactile-force-force-torque",
+        "tactile-force-slip-detection",
+        "tactile-force-contact-rich",
+        "tactile-force-sensor-fusion",
+        "last-centimeter-visual-servoing",
+        "last-centimeter-force-insertion",
+        "industrial-deployment-acceptance-testing",
+        "ea-sensor-tactile-force",
+        "ea-sensor-point-cloud",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model",
+        "ea-eval-sim-real-correlation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "deployment-and-operations",
+      "query_labels": [
+        "dynamic-force-controlled-insertion-learning",
+        "last-centimeter-failure-recovery",
+        "last-centimeter-fixture",
+        "industrial-deployment-reliability",
+        "industrial-deployment-cycle-time",
+        "industrial-deployment-yield",
+        "industrial-deployment-roi"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-force-safety-failure",
+        "ea-sensor-occlusion"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "tactile-force-tactile-manipulation",
+        "last-centimeter-exact",
+        "industrial-deployment-core",
+        "ea-sensor-multimodal-policy",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): 将中文‘力觉’拆分为六轴力/力矩、关节力矩/本体接触、触觉阵列的力分布估计，以及力信号进入策略、世界模型和闭环控制四个检索面。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-force-torque-manipulation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"force torque\" OR all:\"force/torque\") AND (all:robot OR all:robotic) AND (all:manipulation OR all:policy)",
+      "why": "覆盖腕部六轴力/力矩传感器进入机器人操作策略的直接工作。"
+    },
+    {
+      "label": "dynamic-force-aware-policy-learning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"force-aware\" OR all:\"force-guided\" OR all:\"force-conditioned\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖力觉作为策略条件、反馈或表征的学习方法。"
+    },
+    {
+      "label": "dynamic-visual-force-fusion",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"visual force\" OR all:\"vision force\" OR all:\"visuo-force\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖视觉与力觉融合，以及视觉不可观测接触状态的补充。"
+    },
+    {
+      "label": "dynamic-contact-force-estimation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"contact force estimation\" OR all:\"force estimation\") AND (all:robot OR all:robotic) AND (all:contact OR all:tactile)",
+      "why": "覆盖从触觉、视觉或本体信号估计接触力的工作。"
+    },
+    {
+      "label": "dynamic-joint-torque-contact",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"joint torque\" OR all:\"motor current\") AND (all:\"contact detection\" OR all:\"contact estimation\") AND all:robot",
+      "why": "覆盖无外置六轴传感器的关节力矩/电流接触感知路线。"
+    },
+    {
+      "label": "dynamic-force-controlled-insertion-learning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"force control\" OR all:\"force-controlled\") AND (all:insertion OR all:assembly) AND (all:learning OR all:policy)",
+      "why": "覆盖装配、插入等最后一厘米任务中的学习型力控。"
+    },
+    {
+      "label": "dynamic-force-safety-failure",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:force OR all:wrench) AND (all:\"robot manipulation\" OR all:\"contact-rich\") AND (all:failure OR all:safety OR all:uncertainty)",
+      "why": "补充力觉在过力、碰撞、安全和不确定性方面的负面与边界证据。"
+    },
+    {
+      "label": "dynamic-whole-body-force-feedback",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"whole-body\" OR all:humanoid OR all:quadruped) AND (all:\"force feedback\" OR all:\"contact feedback\" OR all:tactile) AND all:robot",
+      "why": "覆盖力觉从末端操作扩展为全身接触与稳定控制变量的工作。"
+    },
+    {
+      "label": "dynamic-force-sense-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org 2026 robot force torque force-aware manipulation policy",
+      "why": "API 欠召回时补充力觉策略论文。"
+    },
+    {
+      "label": "dynamic-force-sense-calibration",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "2026 embodied robot force sensing force torque tactile policy",
+      "why": "校准近半年新方法名和术语。"
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-force-torque-manipulation",
+      "tier": "dynamic-direct",
+      "query": "(all:\"force torque\" OR all:\"force/torque\") AND (all:robot OR all:robotic) AND (all:manipulation OR all:policy)",
+      "why": "覆盖腕部六轴力/力矩传感器进入机器人操作策略的直接工作。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-torque-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-force-aware-policy-learning",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"force-aware\" OR all:\"force-guided\" OR all:\"force-conditioned\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖力觉作为策略条件、反馈或表征的学习方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-aware-policy-learning"
+      ]
+    },
+    {
+      "label": "dynamic-visual-force-fusion",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"visual force\" OR all:\"vision force\" OR all:\"visuo-force\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖视觉与力觉融合，以及视觉不可观测接触状态的补充。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visual-force-fusion"
+      ]
+    },
+    {
+      "label": "dynamic-contact-force-estimation",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"contact force estimation\" OR all:\"force estimation\") AND (all:robot OR all:robotic) AND (all:contact OR all:tactile)",
+      "why": "覆盖从触觉、视觉或本体信号估计接触力的工作。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-force-estimation"
+      ]
+    },
+    {
+      "label": "dynamic-joint-torque-contact",
+      "tier": "dynamic-adjacent",
+      "query": "(all:\"joint torque\" OR all:\"motor current\") AND (all:\"contact detection\" OR all:\"contact estimation\") AND all:robot",
+      "why": "覆盖无外置六轴传感器的关节力矩/电流接触感知路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-joint-torque-contact"
+      ]
+    },
+    {
+      "label": "dynamic-force-controlled-insertion-learning",
+      "tier": "dynamic-deployment",
+      "query": "(all:\"force control\" OR all:\"force-controlled\") AND (all:insertion OR all:assembly) AND (all:learning OR all:policy)",
+      "why": "覆盖装配、插入等最后一厘米任务中的学习型力控。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-controlled-insertion-learning"
+      ]
+    },
+    {
+      "label": "dynamic-force-safety-failure",
+      "tier": "dynamic-limitation",
+      "query": "(all:force OR all:wrench) AND (all:\"robot manipulation\" OR all:\"contact-rich\") AND (all:failure OR all:safety OR all:uncertainty)",
+      "why": "补充力觉在过力、碰撞、安全和不确定性方面的负面与边界证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-safety-failure"
+      ]
+    },
+    {
+      "label": "dynamic-whole-body-force-feedback",
+      "tier": "dynamic-adjacent",
+      "query": "(all:\"whole-body\" OR all:humanoid OR all:quadruped) AND (all:\"force feedback\" OR all:\"contact feedback\" OR all:tactile) AND all:robot",
+      "why": "覆盖力觉从末端操作扩展为全身接触与稳定控制变量的工作。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-whole-body-force-feedback"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "last-centimeter-exact",
+      "tier": "core",
+      "query": "all:\"last centimeter\" AND all:robot",
+      "why": "Catch papers that explicitly name the deployment bottleneck.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-exact"
+      ]
+    },
+    {
+      "label": "last-centimeter-visual-servoing",
+      "tier": "pre-contact",
+      "query": "all:\"visual servoing\" AND all:\"robot manipulation\"",
+      "why": "Find close-range pose correction before contact closure.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "last-centimeter-visual-servoing"
+      ]
+    },
+    {
+      "label": "last-centimeter-force-insertion",
+      "tier": "contact",
+      "query": "all:\"force control\" AND all:insertion AND all:robot",
+      "why": "Surface insertion and compliant-contact methods for final alignment.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-force-insertion"
+      ]
+    },
+    {
+      "label": "last-centimeter-failure-recovery",
+      "tier": "recovery",
+      "query": "all:\"failure recovery\" AND all:\"robot manipulation\"",
+      "why": "Find retry, recovery, and takeover strategies after near-goal failures.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-failure-recovery"
+      ]
+    },
+    {
+      "label": "last-centimeter-fixture",
+      "tier": "deployment-adjacent",
+      "query": "(all:fixture OR all:fixturing) AND all:robot AND all:insertion",
+      "why": "Capture fixture and workcell design that reduces contact uncertainty.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-fixture"
+      ]
+    },
+    {
+      "label": "industrial-deployment-core",
+      "tier": "core",
+      "query": "all:\"industrial robot\" AND all:deployment",
+      "why": "Find deployment papers in manufacturing or production contexts.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-core"
+      ]
+    },
+    {
+      "label": "industrial-deployment-reliability",
+      "tier": "reliability",
+      "query": "all:reliability AND all:robot AND all:deployment",
+      "why": "Capture uptime, fault tolerance, and long-run operational evidence.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-reliability"
+      ]
+    },
+    {
+      "label": "industrial-deployment-cycle-time",
+      "tier": "production",
+      "query": "all:\"cycle time\" AND all:automation AND all:robot",
+      "why": "Find throughput constraints that affect ToB feasibility.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-cycle-time"
+      ]
+    },
+    {
+      "label": "industrial-deployment-yield",
+      "tier": "production-quality",
+      "query": "all:yield AND all:robot AND all:manufacturing",
+      "why": "Surface quality and yield discussions beyond one-off success rate.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-yield"
+      ]
+    },
+    {
+      "label": "industrial-deployment-acceptance-testing",
+      "tier": "evaluation",
+      "query": "all:\"acceptance testing\" AND all:robot",
+      "why": "Find validation and acceptance language for production handoff.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-acceptance-testing"
+      ]
+    },
+    {
+      "label": "industrial-deployment-roi",
+      "tier": "business-adjacent",
+      "query": "all:ROI AND all:robot AND all:automation",
+      "why": "Search for cost or return-on-investment framing when present in technical metadata.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-roi"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-force-torque-manipulation",
+      "tier": "dynamic-direct",
+      "query": "(all:\"force torque\" OR all:\"force/torque\") AND (all:robot OR all:robotic) AND (all:manipulation OR all:policy)",
+      "why": "覆盖腕部六轴力/力矩传感器进入机器人操作策略的直接工作。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-torque-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-force-aware-policy-learning",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"force-aware\" OR all:\"force-guided\" OR all:\"force-conditioned\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖力觉作为策略条件、反馈或表征的学习方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-aware-policy-learning"
+      ]
+    },
+    {
+      "label": "dynamic-visual-force-fusion",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"visual force\" OR all:\"vision force\" OR all:\"visuo-force\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖视觉与力觉融合，以及视觉不可观测接触状态的补充。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visual-force-fusion"
+      ]
+    },
+    {
+      "label": "dynamic-contact-force-estimation",
+      "tier": "dynamic-mechanism",
+      "query": "(all:\"contact force estimation\" OR all:\"force estimation\") AND (all:robot OR all:robotic) AND (all:contact OR all:tactile)",
+      "why": "覆盖从触觉、视觉或本体信号估计接触力的工作。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-force-estimation"
+      ]
+    },
+    {
+      "label": "dynamic-joint-torque-contact",
+      "tier": "dynamic-adjacent",
+      "query": "(all:\"joint torque\" OR all:\"motor current\") AND (all:\"contact detection\" OR all:\"contact estimation\") AND all:robot",
+      "why": "覆盖无外置六轴传感器的关节力矩/电流接触感知路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-joint-torque-contact"
+      ]
+    },
+    {
+      "label": "dynamic-force-controlled-insertion-learning",
+      "tier": "dynamic-deployment",
+      "query": "(all:\"force control\" OR all:\"force-controlled\") AND (all:insertion OR all:assembly) AND (all:learning OR all:policy)",
+      "why": "覆盖装配、插入等最后一厘米任务中的学习型力控。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-controlled-insertion-learning"
+      ]
+    },
+    {
+      "label": "dynamic-force-safety-failure",
+      "tier": "dynamic-limitation",
+      "query": "(all:force OR all:wrench) AND (all:\"robot manipulation\" OR all:\"contact-rich\") AND (all:failure OR all:safety OR all:uncertainty)",
+      "why": "补充力觉在过力、碰撞、安全和不确定性方面的负面与边界证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-force-safety-failure"
+      ]
+    },
+    {
+      "label": "dynamic-whole-body-force-feedback",
+      "tier": "dynamic-adjacent",
+      "query": "(all:\"whole-body\" OR all:humanoid OR all:quadruped) AND (all:\"force feedback\" OR all:\"contact feedback\" OR all:tactile) AND all:robot",
+      "why": "覆盖力觉从末端操作扩展为全身接触与稳定控制变量的工作。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-whole-body-force-feedback"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "last-centimeter-exact",
+      "tier": "core",
+      "query": "all:\"last centimeter\" AND all:robot",
+      "why": "Catch papers that explicitly name the deployment bottleneck.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-exact"
+      ]
+    },
+    {
+      "label": "last-centimeter-visual-servoing",
+      "tier": "pre-contact",
+      "query": "all:\"visual servoing\" AND all:\"robot manipulation\"",
+      "why": "Find close-range pose correction before contact closure.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "last-centimeter-visual-servoing"
+      ]
+    },
+    {
+      "label": "last-centimeter-force-insertion",
+      "tier": "contact",
+      "query": "all:\"force control\" AND all:insertion AND all:robot",
+      "why": "Surface insertion and compliant-contact methods for final alignment.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-force-insertion"
+      ]
+    },
+    {
+      "label": "last-centimeter-failure-recovery",
+      "tier": "recovery",
+      "query": "all:\"failure recovery\" AND all:\"robot manipulation\"",
+      "why": "Find retry, recovery, and takeover strategies after near-goal failures.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-failure-recovery"
+      ]
+    },
+    {
+      "label": "last-centimeter-fixture",
+      "tier": "deployment-adjacent",
+      "query": "(all:fixture OR all:fixturing) AND all:robot AND all:insertion",
+      "why": "Capture fixture and workcell design that reduces contact uncertainty.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-fixture"
+      ]
+    },
+    {
+      "label": "industrial-deployment-core",
+      "tier": "core",
+      "query": "all:\"industrial robot\" AND all:deployment",
+      "why": "Find deployment papers in manufacturing or production contexts.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-core"
+      ]
+    },
+    {
+      "label": "industrial-deployment-reliability",
+      "tier": "reliability",
+      "query": "all:reliability AND all:robot AND all:deployment",
+      "why": "Capture uptime, fault tolerance, and long-run operational evidence.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-reliability"
+      ]
+    },
+    {
+      "label": "industrial-deployment-cycle-time",
+      "tier": "production",
+      "query": "all:\"cycle time\" AND all:automation AND all:robot",
+      "why": "Find throughput constraints that affect ToB feasibility.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-cycle-time"
+      ]
+    },
+    {
+      "label": "industrial-deployment-yield",
+      "tier": "production-quality",
+      "query": "all:yield AND all:robot AND all:manufacturing",
+      "why": "Surface quality and yield discussions beyond one-off success rate.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-yield"
+      ]
+    },
+    {
+      "label": "industrial-deployment-acceptance-testing",
+      "tier": "evaluation",
+      "query": "all:\"acceptance testing\" AND all:robot",
+      "why": "Find validation and acceptance language for production handoff.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-acceptance-testing"
+      ]
+    },
+    {
+      "label": "industrial-deployment-roi",
+      "tier": "business-adjacent",
+      "query": "all:ROI AND all:robot AND all:automation",
+      "why": "Search for cost or return-on-investment framing when present in technical metadata.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-roi"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-force-sense-browser",
+      "query": "site:arxiv.org 2026 robot force torque force-aware manipulation policy",
+      "why": "API 欠召回时补充力觉策略论文。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-force-sense-calibration",
+      "query": "2026 embodied robot force sensing force torque tactile policy",
+      "why": "校准近半年新方法名和术语。",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    }
+  ]
+}

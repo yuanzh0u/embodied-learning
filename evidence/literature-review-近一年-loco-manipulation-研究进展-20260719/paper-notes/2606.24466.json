@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.24466",
+    "title": "FT-WBC: Learning Fault-Tolerant Whole-Body Control for Legged Loco-Manipulation",
+    "published": "2026-06-23T11:58:45Z",
+    "url": "https://arxiv.org/abs/2606.24466",
+    "authors": [
+      "Yudong Zhong",
+      "Pengfei Mai",
+      "Sikai Guo",
+      "Jiahang Cao",
+      "Zhihai Bi",
+      "Qiuyue Liu",
+      "Ziyan Feng",
+      "Jinni Zhou",
+      "Jun Ma"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct fault-tolerant legged loco-manipulation study with simulation and physical failure injection."
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "Identify actuator-fault risk during whole-body manipulation."
+      },
+      {
+        "locator": "3.1 Framework Overview",
+        "role": "method-or-design",
+        "purpose": "Inspect fault estimation and posture adaptation."
+      },
+      {
+        "locator": "4.3 Real-World Deployment",
+        "role": "results-or-analysis",
+        "purpose": "Verify physical locked/weakening-fault performance."
+      },
+      {
+        "locator": "6 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record single-fault and move-then-manipulate boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can fault awareness preserve both survival and useful arm workspace during legged loco-manipulation?",
+  "contributions": [
+    "Fault estimator and posture adaptation modules integrated with whole-body control."
+  ],
+  "method": {
+    "summary": "PPO learns a whole-body policy with simulated actuator weakening; an estimator localizes the failed joint and a posture module reduces loading toward the faulty support.",
+    "assumptions": [
+      "A single dominant actuator fault occurs.",
+      "Faults resemble torque weakening or locked joints."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Simulated partial and complete weakening curricula"
+    ],
+    "tasks": [
+      "locomotion tracking",
+      "end-effector reaching",
+      "ground-to-table pick-and-place"
+    ],
+    "embodiments": [
+      "Unitree Go2 with Airbot Play arm"
+    ],
+    "sample_or_scale": "1,000 randomized simulation trials; 20 physical trials per height and fault condition."
+  },
+  "evaluation": {
+    "design": "Compares Robo-Duet, no-estimator, no-posture-adaptation and full policies under 12 joint faults; tests unseen locked faults physically.",
+    "baselines": [
+      "Robo-Duet",
+      "without fault estimator",
+      "without posture adaptation"
+    ],
+    "metrics": [
+      "survival rate",
+      "workspace",
+      "task success",
+      "velocity tracking"
+    ],
+    "ablations": [
+      "fault estimator",
+      "posture adaptation"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "The controller trades workspace/aggressive completion for survival as faults become severe, including unseen locked faults.",
+      "scope": "Single-joint faults on one quadruped-arm system.",
+      "locator": "4.3 Real-World Deployment"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The method addresses only single-actuator failures and real tests are stationary-base or sequential move-then-manipulate tasks.",
+        "locator": "6 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Fault tolerance does not yet cover simultaneous faults or manipulation during continuous walking.",
+        "basis": "These exclusions are stated explicitly in the limitations section."
+      }
+    ]
+  },
+  "transfer_boundary": "Applies to isolated lower-limb actuator degradation; multi-fault and continuously dynamic manipulation remain unvalidated.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Tests unmodeled locked faults after training only on weakening.",
+      "Separates survival from task success."
+    ],
+    "design_risks": [
+      "Fault model is narrow.",
+      "Safety claims are based on one hardware platform."
+    ],
+    "baseline_fairness": "Ablations share training and task setup; the primary baseline lacks fault awareness by design.",
+    "metric_validity": "Separate survival and completion metrics expose the safety-performance tradeoff.",
+    "reproducibility": "Fault curriculum and trial counts are described; exact hardware fault injection details are critical for replication.",
+    "external_validity": "Limited to single-joint lower-limb faults and sequential tasks."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.24466-C01",
+      "claim": "Under an unseen locked-joint fault at the most demanding placement height, FT-WBC retained 70% survival but only 45% task success, reflecting an explicit survival-first posture policy.",
+      "stance": "conditional",
+      "relation": "Supports fault-aware deployment while exposing the safety-versus-completion tradeoff.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The real-world analysis directly attributes reduced completion to conservative posture limits that preserve the degraded support polygon.",
+      "locator": "4.3 Real-World Deployment",
+      "source_context": "At the extreme height, our framework still guarantees a 70% survival rate even under severe locked conditions, demonstrating strong adaptation to out-of-distribution actuator failures. While the task success rate drops to 45%, this occurs because the PAM conservatively restricts the extreme upward pitch to prevent the CoM from escaping the degraded support polygon.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "survival rate and task success",
+        "value_or_direction": "70% survival and 45% success",
+        "comparator": "unseen locked fault at extreme height",
+        "task_or_sample": "20 physical ground-to-table pick-and-place trials",
+        "locator": "4.3 Real-World Deployment, Table 3"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The cited passage reports both percentages and the conservative posture mechanism; the claim is limited to the extreme-height locked-fault condition."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

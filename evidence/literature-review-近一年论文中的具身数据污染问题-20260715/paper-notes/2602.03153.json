@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.03153",
+    "title": "When Attention Betrays: Erasing Backdoor Attacks in Robotic Policies by Reconstructing Visual Tokens",
+    "published": "2026-02-03",
+    "url": "https://arxiv.org/abs/2602.03153",
+    "authors": [
+      "Xuetao Li",
+      "Pinhan Fu",
+      "Wenke Huang",
+      "Nengyuan Pan",
+      "Songhua Yang",
+      "Kaiyan Zhao",
+      "Guancheng Wan",
+      "Mengde Li",
+      "Jifeng Xuan",
+      "Miao Li"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "V Method > V-B Feature-Guided Backdoor Localization",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "VI Experiment > VI-A Experiment Setup",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "VI Experiment > VI-B Quantitative Analysis",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "VII Conclusion & Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "能否在不重训 VLA 的情况下，通过深层注意力与潜特征偏离定位并擦除视觉后门？",
+  "contributions": [
+    "提出 Bera，以干净成功 episode 建立潜特征参考分布，定位可疑 token 并重建触发区。"
+  ],
+  "method": {
+    "summary": "用 Mahalanobis 偏离、多层注意过滤和局部重建打断触发到危险动作的映射。",
+    "assumptions": [
+      "Bera 的证据针对视觉 token 触发且能从干净成功 episode 校准参考流形的系统，不覆盖纯文本、状态或世界模型触发。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LIBERO-style tasks",
+      "real-robot manipulation sets"
+    ],
+    "tasks": [
+      "grasping",
+      "lifting",
+      "tissue extraction",
+      "hand shaking"
+    ],
+    "embodiments": [
+      "OpenVLA platform",
+      "DexGraspVLA platforms"
+    ],
+    "sample_or_scale": "多任务、两类 VLA 与跨本体真机检验。"
+  },
+  "evaluation": {
+    "design": "比较多种触发尺寸、投毒率、触发类型、攻击成功率、干净性能和恢复表现。",
+    "baselines": [],
+    "metrics": [
+      "attack success rate",
+      "clean performance",
+      "recovery performance"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "基于异常 token 的推理时防御能降低视觉触发攻击，但与场景语义自然融合的触发器更难检测。",
+      "scope": "Bera 的证据针对视觉 token 触发且能从干净成功 episode 校准参考流形的系统，不覆盖纯文本、状态或世界模型触发。",
+      "locator": "VI Experiment > VI-E Trigger Proportions, Poisoning Ratios and Types"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "Bera 的证据针对视觉 token 触发且能从干净成功 episode 校准参考流形的系统，不覆盖纯文本、状态或世界模型触发。",
+        "basis": "有些实验使用 30% 投毒率与明显触发图案，这可能高估了对隐蔽语义触发的检测效果。"
+      }
+    ]
+  },
+  "transfer_boundary": "Bera 的证据针对视觉 token 触发且能从干净成功 episode 校准参考流形的系统，不覆盖纯文本、状态或世界模型触发。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "有些实验使用 30% 投毒率与明显触发图案，这可能高估了对隐蔽语义触发的检测效果。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "Bera 的证据针对视觉 token 触发且能从干净成功 episode 校准参考流形的系统，不覆盖纯文本、状态或世界模型触发。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.03153-C01",
+      "claim": "视觉后门可通过深层注意力和潜特征异常做推理时定位，但与场景语义自然融合的触发物依然是明显盲点。",
+      "stance": "conditional",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Bera 对圆形块和棋盘格触发保持较低攻击成功，但语义合理的红色瓶盖触发更难被异常 token 方法区分。",
+      "locator": "VI-E Trigger Proportions, Poisoning Ratios and Types",
+      "source_context": "In contrast, Bera mitigates circular block and checkerboard triggers, maintaining low ASR and stable performance. However, red bottle cap trigger fits the scenario semantics, leading to higher ASR and slight reductions in robustness, suggesting that semantically integrated triggers are more challenging to detect.",
+      "evidence_type": "defense robustness analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

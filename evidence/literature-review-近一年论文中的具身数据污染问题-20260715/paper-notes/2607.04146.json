@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.04146",
+    "title": "!Imperio, smolVLA: The Implications of Data Poisoning on Open Source Robotics",
+    "published": "2026-07-05",
+    "url": "https://arxiv.org/abs/2607.04146",
+    "authors": [
+      "Stefan Bühler",
+      "Mark Schutera"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction > 1.3 Problem Statement and Contributions",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "2 Methods > 2.2 Data Poisoning and Trigger-Word Attack",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "3 Experiments and Results > 3.2 Dataset",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "3 Experiments and Results > 3.4 Results",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Conclusion and Discussion > 4.0.1 Limitations.",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "开源机器人数据集中多少条触发词投毒 episode 就能使 smolVLA 出现拒绝服务后门？",
+  "contributions": [
+    "在 SO-101 真实拾放任务上量化极小 episode 级触发词投毒。"
+  ],
+  "method": {
+    "summary": "复用干净视觉帧，在指令中加入触发词，并把整条 episode 动作替换为固定关节位置。",
+    "assumptions": [
+      "证据只能直接支持 smolVLA/SO-101 单任务设置，不能外推为所有大型 VLA 的固定投毒阈值。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LeRobot pick-and-place dataset"
+    ],
+    "tasks": [
+      "pick blue Lego and place on target"
+    ],
+    "embodiments": [
+      "SO-101 arm"
+    ],
+    "sample_or_scale": "400 条真实 episode；320 训练/80 测试；对比 0、1、3 条投毒 episode。"
+  },
+  "evaluation": {
+    "design": "比较干净提示和不同触发词位置下的真实机器人成功率与轨迹误差。",
+    "baselines": [],
+    "metrics": [
+      "success rate",
+      "normalized joint-angle MAE"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "只需三条投毒 episode 就能在触发词出现时使政策完全失效，而干净提示表现保持稳定。",
+      "scope": "证据只能直接支持 smolVLA/SO-101 单任务设置，不能外推为所有大型 VLA 的固定投毒阈值。",
+      "locator": "Abstract; 3.4.1; 3.4.2"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "只检验一个任务、一个模型、一个机器人平台和一个触发词；大数据集是否保持近常数投毒需求未知。",
+        "locator": "4 Conclusion and Discussion > 4.0.1 Limitations."
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "证据只能直接支持 smolVLA/SO-101 单任务设置，不能外推为所有大型 VLA 的固定投毒阈值。",
+        "basis": "基线成功率本身约为一半，并且一些数学符号在 HTML 抽取中缺失，定量解读必须限定于正文明示的比较。"
+      }
+    ]
+  },
+  "transfer_boundary": "证据只能直接支持 smolVLA/SO-101 单任务设置，不能外推为所有大型 VLA 的固定投毒阈值。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "基线成功率本身约为一半，并且一些数学符号在 HTML 抽取中缺失，定量解读必须限定于正文明示的比较。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "证据只能直接支持 smolVLA/SO-101 单任务设置，不能外推为所有大型 VLA 的固定投毒阈值。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.04146-C01",
+      "claim": "开源机器人数据供应链对极小比例的 episode 级投毒很敏感：在该真实拾放实验中，3 条投毒 episode 混入 320 条干净 episode 即实现触发式完全拒绝服务。",
+      "stance": "limit",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "投毒数据将触发词与固定关节位置绑定；攻击在触发词出现时失效，干净提示行为保持。",
+      "locator": "Abstract, opening paragraph",
+      "source_context": "Three poisoned episodes in 320 clean episodes suffice for a complete denial of service.",
+      "evidence_type": "real-robot poisoning experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

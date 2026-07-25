@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2510.03827",
+    "title": "LIBERO-PRO: Towards Robust and Fair Evaluation of Vision-Language-Action Models Beyond Memorization",
+    "published": "2025-10-04",
+    "url": "https://arxiv.org/abs/2510.03827",
+    "authors": [
+      "Xueyang Zhou",
+      "Yangming Xu",
+      "Guiyao Tie",
+      "Yongchao Chen",
+      "Guowen Zhang",
+      "Duanfeng Chu",
+      "Pan Zhou",
+      "Lichao Sun"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 INTRODUCTION",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "3 Problem Definition > 3.2 Current LIBERO Evaluation Protocol",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Methodology > 4.3 LIBERO-PRO Evaluation Benchmark",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "5 Experiments > 5.2 Main Results",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "7 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "LIBERO 的训练与测试协议是否因任务、布局和轨迹过度接近而把记忆误当成泛化？",
+  "contributions": [
+    "提出 LIBERO-PRO，在物体、初始状态、指令和环境四个维度构造可执行扰动评测。"
+  ],
+  "method": {
+    "summary": "保持任务逻辑与物理可执行性，系统改变被操作物、位置、指令和环境，检查策略是否仍基于真实输入。",
+    "assumptions": [
+      "该结论针对 LIBERO 家族与所测 VLA，证明“评测分布过近”的污染风险，但不等于证明训练集与测试集存在字节级重复。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LIBERO",
+      "LIBERO-PRO"
+    ],
+    "tasks": [
+      "LIBERO object",
+      "spatial",
+      "goal",
+      "long-horizon suites"
+    ],
+    "embodiments": [
+      "simulated manipulation arm"
+    ],
+    "sample_or_scale": "多个主流 VLA，四类扰动与单/多维组合。"
+  },
+  "evaluation": {
+    "design": "对比标准 LIBERO 与扰动后的任务成功率，并观察目标缺失、指令破坏、位置移动时的轨迹反应。",
+    "baselines": [],
+    "metrics": [
+      "task success rate"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "标准协议中超过 90% 的成功并未证明任务理解；小的位置和任务变化会暴露记忆和快捷方式。",
+      "scope": "该结论针对 LIBERO 家族与所测 VLA，证明“评测分布过近”的污染风险，但不等于证明训练集与测试集存在字节级重复。",
+      "locator": "5 Experiments > 5.2 Main Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "该结论针对 LIBERO 家族与所测 VLA，证明“评测分布过近”的污染风险，但不等于证明训练集与测试集存在字节级重复。",
+        "basis": "主张的“记忆”根据扰动失败与轨迹不变做机制推断，没有直接建立训练样本成员性证据。"
+      }
+    ]
+  },
+  "transfer_boundary": "该结论针对 LIBERO 家族与所测 VLA，证明“评测分布过近”的污染风险，但不等于证明训练集与测试集存在字节级重复。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "主张的“记忆”根据扰动失败与轨迹不变做机制推断，没有直接建立训练样本成员性证据。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "该结论针对 LIBERO 家族与所测 VLA，证明“评测分布过近”的污染风险，但不等于证明训练集与测试集存在字节级重复。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2510.03827-C01",
+      "claim": "LIBERO 标准协议中训练与评测任务过度接近，会让记忆固定布局与动作映射的 VLA 获得过度乐观的泛化结论。",
+      "stance": "limit",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "LIBERO-PRO 在保持逻辑可执行的前提下改变物体位置与任务，标准设置中的高分模型在这些轻微改变下近乎崩溃。",
+      "locator": "5.2 Main Results",
+      "source_context": "Despite achieving success rates above 90% on the standard LIBERO benchmark, models nearly collapse under changes to object positions or minor task modifications, even when constructed from training components.",
+      "evidence_type": "benchmark stress test",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

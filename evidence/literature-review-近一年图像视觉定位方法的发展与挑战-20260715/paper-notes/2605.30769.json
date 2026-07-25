@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2605.30769", "title": "DisPlace: Discriminative Place Projections for Multi-Reference Visual Place Recognition", "published": "2026-05-29", "url": "https://arxiv.org/abs/2605.30769", "authors": ["Dhyey Manish Rajani", "Michael Milford", "Tobias Fischer"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "研究多次参考遍历如何压缩成可检索的位置表示，直接关联长期定位的存储与鲁棒性。"}, "sections_read": [
+    {"locator": "I Introduction", "role": "problem", "purpose": "核对多参考VPR的存储和变化建模问题。"},
+    {"locator": "III Discriminative Place Projections", "role": "method-or-design", "purpose": "核对类间与类内散度广义特征分解。"},
+    {"locator": "V Results", "role": "results-or-analysis", "purpose": "核对外观变化、视角变化、描述子和存储比较。"},
+    {"locator": "VI Discussion and Conclusion", "role": "conclusion-or-limitations", "purpose": "核对适用条件与极端视角失效边界。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "能否把同一地点的多次参考观测压缩为单个判别表示，同时保留跨条件定位能力？",
+  "contributions": ["以地点为类建立类间与类内散度投影。", "把多参考描述子压缩成紧凑地点表示。", "跨六类描述子分析外观与视角变化边界。"],
+  "method": {"summary": "对多次参考遍历的全局描述子求解类间散度相对类内散度的广义特征问题，再在判别子空间中形成每个地点的紧凑表示。", "assumptions": ["参考遍历涵盖部署时主要外观变化。", "同一地点描述子的变化具有可抑制结构。"]},
+  "study_context": {"datasets": ["Oxford RobotCar", "Nordland", "Pittsburgh30k", "Google Landmarks v2"], "tasks": ["multi-reference visual place recognition", "descriptor compression"], "embodiments": ["vehicle and traversal-based localization"], "sample_or_scale": "六类预训练描述子，覆盖长期外观、季节和大视角变化。"},
+  "evaluation": {"design": "与保留全部参考、均值池化、HOPS及分数级方法比较识别率和存储。", "baselines": ["all-reference matching", "mean pooling", "HOPS", "score-level fusion"], "metrics": ["Recall@K", "storage per place"], "ablations": ["projection dimension", "number of references", "descriptor family", "appearance versus viewpoint variation"]},
+  "findings": [{"finding": "当参考遍历能代表查询时的结构化外观变化时，判别投影最有效；极端反向视角、几乎无重叠时，保留单独参考的分数级方法更有优势。", "scope": "多参考全局描述子VPR。", "locator": "VI Discussion and Conclusion"}],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "极端视角变化下，两视图可能几乎无重叠，紧凑投影落后于保留全部参考描述子的分数级方法。", "locator": "VI Discussion and Conclusion"}], "reader_inferred": [{"boundary": "若部署分布包含参考集未覆盖的新变化，压缩可能消除恰好需要的判别方向。", "basis": "方法效果依赖参考变化对查询变化的代表性。"}]},
+  "transfer_boundary": "适合可重复采集参考遍历、且变化结构相对稳定的长期VPR；不宜假设单一紧凑原型覆盖无视觉重叠的新视角。",
+  "critical_appraisal": {"design_strengths": ["跨多描述子验证方法非骨干特例。", "同时测量精度与存储。"], "design_risks": ["参考覆盖度决定上限。", "全局描述子评价未包含后续几何位姿估计。"], "baseline_fairness": "同一预训练描述子输入不同聚合策略，对比清楚。", "metric_validity": "Recall与存储共同刻画多参考压缩目标，但不代表最终6DoF精度。", "reproducibility": "闭式投影目标和评估协议较易复现。", "external_validity": "对长期路线重复定位强，对开放世界新视角和在线地图变化有限。"},
+  "evidence_cards": [{"card_id": "2605.30769-C01", "claim": "多参考地点表示的收益具有分布条件：参考遍历覆盖查询变化时，判别压缩有效；极端视角且视觉重叠很少时，保留各参考描述子的策略更稳。", "stance": "conditional", "relation": "支持长期多参考地图压缩，同时限定其开放世界泛化。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者在讨论中明确把收益与参考—查询变化代表性绑定，并指出极端视角的落后情形。", "locator": "VI Discussion and Conclusion", "source_context": "The results further reveal that the discriminative projection is most effective when the variation observed across the reference traversals is representative of the variation encountered at query time, particularly under appearance variation where descriptor changes exhibit structured and suppressible patterns.", "evidence_type": "conditional-result", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接陈述代表性条件；关于极端视角的边界由紧随其后的作者讨论支持，未外推到其他任务。"}}],
+  "core_citations": [], "notes": "把长期地图的多样性与存储预算放入同一问题。"
+}

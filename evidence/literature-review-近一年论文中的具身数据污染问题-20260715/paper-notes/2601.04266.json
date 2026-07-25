@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.04266",
+    "title": "State Backdoor: Towards Stealthy Real-world Poisoning Attack on Vision-Language-Action Model in State Space",
+    "published": "2026-01-07",
+    "url": "https://arxiv.org/abs/2601.04266",
+    "authors": [
+      "Ji Guo",
+      "Wenbo Jiang",
+      "Yansong Lin",
+      "Yijing Liu",
+      "Ruichen Zhang",
+      "Guomin Lu",
+      "Aiguo Chen",
+      "Xinshuo Han",
+      "Hongwei Li"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "IV Threat Model",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "VI Evaluation > VI-A Experimental setup",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "VI Evaluation > VI-E Robustness Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "IX Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "机器人初始关节状态能否作为真实、隐蔽且跨模型的 VLA 后门触发器？",
+  "contributions": [
+    "提出黑盒 State Backdoor，用优选的初始状态偏移污染真实示教。"
+  ],
+  "method": {
+    "summary": "通过偏好引导遗传算法搜索物理可行的初始关节状态，再将触发状态与攻击动作轨迹写入微调数据。",
+    "assumptions": [
+      "结论适用于允许黑盒污染微调数据且部署时初始关节状态可被攻击者影响的 VLA 系统。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "five real-world task datasets",
+      "LIBERO"
+    ],
+    "tasks": [
+      "pick-and-place",
+      "drawer opening",
+      "button pressing",
+      "peg insertion",
+      "tennis pushing"
+    ],
+    "embodiments": [
+      "SO-101 6-DoF arm"
+    ],
+    "sample_or_scale": "五种 VLA、五个真实任务，每任务 100 条样本；含 LIBERO 仿真补充。"
+  },
+  "evaluation": {
+    "design": "对比清洁成功率与触发攻击成功率，并检查剪枝、图像压缩和语义防御。",
+    "baselines": [],
+    "metrics": [
+      "success rate",
+      "attack success rate"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "状态空间触发器可绕过仅处理视觉特征的防御，剪枝进一步会先伤害干净任务能力。",
+      "scope": "结论适用于允许黑盒污染微调数据且部署时初始关节状态可被攻击者影响的 VLA 系统。",
+      "locator": "VI Evaluation > VI-E Robustness Evaluation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "攻击依赖初始状态可被物理调整，且主要验证于特定机械臂与任务。",
+        "locator": "VIII Discussion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "结论适用于允许黑盒污染微调数据且部署时初始关节状态可被攻击者影响的 VLA 系统。",
+        "basis": "投毒率固定为 10% 的主实验对更低比例的外推有限，且攻击者物理权限是强假设。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论适用于允许黑盒污染微调数据且部署时初始关节状态可被攻击者影响的 VLA 系统。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "投毒率固定为 10% 的主实验对更低比例的外推有限，且攻击者物理权限是强假设。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "结论适用于允许黑盒污染微调数据且部署时初始关节状态可被攻击者影响的 VLA 系统。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.04266-C01",
+      "claim": "具身污染不只能藏在图像或文本中：污染真实示教里的初始关节状态可形成隐蔽 VLA 后门，并绕过视觉预处理防御。",
+      "stance": "limit",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "State Backdoor 将物理可行的初始状态偏移与恶意动作关联；剪枝与图像压缩都未能有效消除攻击。",
+      "locator": "VI-E Robustness Evaluation",
+      "source_context": "State Backdoor consistently achieves an ASR above 90% across all pruning levels. However, as the pruning ratio increases, the model’s normal functionality degrades, making it impractical to prune further. Therefore, Fine-pruning fails to defend against State Backdoor.",
+      "evidence_type": "real-robot robustness evaluation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

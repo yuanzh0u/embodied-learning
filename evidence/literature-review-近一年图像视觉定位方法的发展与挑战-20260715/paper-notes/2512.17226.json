@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2512.17226", "title": "Robust Scene Coordinate Regression via Geometrically-Consistent Global Descriptors", "published": "2025-12-19", "url": "https://arxiv.org/abs/2512.17226", "authors": ["Son Tung Nguyen", "Alejandro Fontan", "Michael Milford", "Tobias Fischer"]},
+  "review": {"question": "近一年图像视觉定位方法有哪些关键发展，哪些挑战仍限制真实部署？", "topic_ids": ["EA-HARDWARE", "EA-SENSOR", "EA-EVAL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {"status": "accepted", "paper_type": "method", "relevance": {"decision": "include", "reason": "以视觉与共视几何双一致的全局描述子缓解大场景SCR感知别名。"}, "sections_read": [
+    {"locator": "1 Introduction", "role": "problem", "purpose": "核对大场景别名和共视图噪声。"},
+    {"locator": "4 Methodology", "role": "method-or-design", "purpose": "核对全局聚合器和对比学习。"},
+    {"locator": "6 Evaluation > 6.1 Quantitative evaluation", "role": "results-or-analysis", "purpose": "核对Aachen与Hyundai结果。"},
+    {"locator": "7 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对双一致机制与部署主张。"}
+  ], "sections_skipped": [{"locator": "References", "role": "relevant-core", "reason": "参考文献表不承载本文实验主张。"}]},
+  "research_question": "如何在大尺度场景中用全局上下文消解局部特征的感知别名，同时抵抗共视图噪声？",
+  "contributions": ["提出同时约束视觉相似与共视几何连接的全局描述子聚合器。", "以无需地点人工标签的批挖掘和修改对比损失训练。"],
+  "method": {"summary": "把学习到的全局描述子与局部特征拼接到SCR，只有视觉相似且在共视图中相连的图像才被拉近。", "assumptions": ["可从地图构建共视图与重叠分数。", "共视关系虽有噪声但仍含有效空间结构。"]},
+  "study_context": {"datasets": ["Aachen Day/Night", "Hyundai Department Store"], "tasks": ["large-scale scene coordinate regression", "camera relocalization"], "embodiments": ["monocular camera localization"], "sample_or_scale": "大型室外和室内商业场景，强调感知别名。"},
+  "evaluation": {"design": "与仅几何R-Score和预训练全局描述子方案比较，并做批挖掘、损失与描述子消融。", "baselines": ["R-Score", "ACE-style SCR", "off-the-shelf global descriptors"], "metrics": ["pose-threshold accuracy", "memory overhead", "training convergence"], "ablations": ["visual vs geometric consistency", "loss", "aggregator", "batch mining"]},
+  "findings": [{"finding": "视觉与几何双一致的全局描述子能提高SCR对感知别名和噪声共视边的韧性，额外内存较小。", "scope": "Aachen与Hyundai大场景SCR。", "locator": "7 Conclusion"}],
+  "limitations": {"author_status": "not-found", "author_stated": [], "reader_inferred": [{"boundary": "方法仍依赖共视图和重叠分数，地图图结构严重错误或无法构建时收益不成立。", "basis": "训练的正负关系与双一致约束均使用共视图。"}]},
+  "transfer_boundary": "适用于能够构建共视关系的大尺度已知场景SCR；不适用于无图结构、在线快速建图或完全动态环境。",
+  "critical_appraisal": {"design_strengths": ["与最接近的仅几何全局上下文方法直接比较。", "覆盖室外夜间与大型室内场景。"], "design_risks": ["未单独验证共视图严重破坏时的鲁棒上限。", "真实端侧时延和长期地图更新未评估。"], "baseline_fairness": "同类SCR框架内比较，额外内存被报告，公平性较好。", "metric_validity": "位姿阈值能衡量别名消解对定位的直接影响。", "reproducibility": "方法和训练方案详细，但数据准备依赖共视图实现。", "external_validity": "对两类大场景有证据，对更广域、动态或无结构地图场景有限。"},
+  "evidence_cards": [{"card_id": "2512.17226-C01", "claim": "大场景SCR可通过同时约束视觉相似性与共视几何连接的全局描述子缓解感知别名和噪声图边，而不是只依赖局部特征或纯几何嵌入。", "stance": "support", "relation": "支持局部—全局及视觉—几何联合上下文成为SCR的发展方向。", "confidence": "direct", "claim_basis": "author-claim", "summary": "结论明确将韧性提升归因于视觉内容和几何关系的联合建模。", "locator": "7 Conclusion", "source_context": "Our method integrates both geometrical relationships and visual content to improve resilience to perceptual aliasing and noisy covisibility graphs.", "evidence_type": "conclusion", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "来源句直接概括方法机制及目标失败模式；主张限定为该SCR框架和两类基准。"}}],
+  "core_citations": [], "notes": "作者未单列限制，外推边界由依赖共视图的设计推断。"
+}

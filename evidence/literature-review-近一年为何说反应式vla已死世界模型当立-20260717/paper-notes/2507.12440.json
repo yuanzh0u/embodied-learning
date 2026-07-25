@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2507.12440",
+    "title": "EgoVLA: Learning Vision-Language-Action Models from Egocentric Human Videos",
+    "published": "2025-07-16T17:27:44Z",
+    "url": "https://arxiv.org/abs/2507.12440",
+    "authors": [
+      "Ruihan Yang",
+      "Qinxi Yu",
+      "Yecheng Wu",
+      "Rui Yan",
+      "Borui Li",
+      "An-Chieh Cheng",
+      "Xueyan Zou",
+      "Yunhao Fang",
+      "Xuxin Cheng",
+      "Ri-Zhao Qiu",
+      "Hongxu Yin",
+      "Sifei Liu",
+      "Song Han",
+      "Yao Lu",
+      "Xiaolong Wang"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接研究 egocentric human video 预训练到 humanoid VLA 的迁移，并报告零样本失败、数据标注和机器人后训练依赖。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题、数据动机和 human-to-robot 假设。"
+      },
+      {
+        "locator": "3 Learning Manipulation Skills from Ego-centric Human Videos > 3.1 Ego-Centric Human Manipulation Dataset",
+        "role": "data-or-setting",
+        "purpose": "核验四类数据源、动作标注和相机运动处理。"
+      },
+      {
+        "locator": "3 Learning Manipulation Skills from Ego-centric Human Videos > 3.3 Transferring EgoVLA to Humanoid Robot",
+        "role": "method-or-design",
+        "purpose": "核验统一动作空间、IK 与 retargeting。"
+      },
+      {
+        "locator": "5 Experiments > 5.2 Humanoid Robot Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核验零样本失败、预训练收益和机器人数据消融。"
+      },
+      {
+        "locator": "7 Limitation",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录姿态标注和机器人后训练边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献不承载本文实验主张；已读取动作公式与 retargeting 附录。"
+      }
+    ]
+  },
+  "research_question": "人类第一视角视频预训练能否直接或经少量机器人数据转移为灵巧 humanoid VLA 策略？",
+  "contributions": [
+    "构建带 wrist/hand/camera pose 的 egocentric manipulation mixture。",
+    "用 MANO 共享空间和机器人示范后训练连接人类与 humanoid 动作。",
+    "在短程与长程仿真任务中比较 human-video pretraining、无预训练和 ACT。"
+  ],
+  "method": {
+    "summary": "在约 50 万 image-action 对上预训练预测人类 wrist 与 MANO hand actions 的 VLA，再用每任务机器人示范在统一动作空间内后训练，并通过 IK/MLP 映射到 humanoid 控制。",
+    "assumptions": [
+      "人手与机器人手可通过 MANO/fingertip 中间表示对齐。",
+      "第一视角数据包含可靠的 wrist、hand 和 camera pose。",
+      "仿真任务可用于比较策略迁移，但不等同于直接真实部署。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "HOI4D",
+      "HOT3D",
+      "HoloAssist",
+      "TACO"
+    ],
+    "tasks": [
+      "7 short-horizon simulated tasks",
+      "5 long-horizon simulated tasks"
+    ],
+    "embodiments": [
+      "Unitree H1",
+      "Inspire dexterous hands"
+    ],
+    "sample_or_scale": "约 500,000 image-action pairs；每个机器人任务 100 条成功示范；seen/unseen background 多次 rollout。"
+  },
+  "evaluation": {
+    "design": "在 Ego Humanoid Manipulation Benchmark 中比较预训练、无 human pretraining 和 ACT，另做 robot-data-scale 与 data-mixture 消融。",
+    "baselines": [
+      "EgoVLA-NoPretrain",
+      "ACT",
+      "EgoVLA 50% robot data"
+    ],
+    "metrics": [
+      "Success Rate",
+      "Progress Rate"
+    ],
+    "ablations": [
+      "zero-shot robot deployment",
+      "50% robot demonstrations",
+      "human data mixture"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Human-video pretraining 改善 seen/unseen 背景表现，但没有机器人后训练时所有任务成功率为 0%。",
+      "scope": "该结论来自 Unitree H1 仿真 benchmark，并非真实机器人零样本部署的普遍定律。",
+      "locator": "5 Experiments > 5.2 Humanoid Robot Evaluation"
+    },
+    {
+      "finding": "更少机器人数据会显著伤害长程任务，说明人类视频不能完全替代目标本体数据。",
+      "scope": "每任务 100 示范降至 50% 的消融。",
+      "locator": "5 Experiments > 5.2 Humanoid Robot Evaluation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "需要带 hand/wrist pose 的人类数据，且仍需中等规模机器人后训练。",
+        "locator": "7 Limitation"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "结论限于具有相近双臂双手结构的 humanoid 仿真平台。",
+        "basis": "研究用 MANO 与 IK 显式利用了人—机形态相似性，且 benchmark 明确不用于直接 sim-to-real。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于有可用 wrist/hand/camera pose、可建立统一动作空间且能补充目标机器人示范的 dexterous humanoid；不支持把无标注 raw ego video 直接当成零样本机器人控制数据。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "明确报告零样本失败而非只报告正向结果。",
+      "同时比较 seen/unseen 背景和长短时程任务。"
+    ],
+    "design_risks": [
+      "主要机器人评测在仿真中。",
+      "任务与本体均偏 humanoid 双手，外推到夹爪/移动操作受限。"
+    ],
+    "baseline_fairness": "含无预训练与 ACT，但不同模型共享骨干/训练资源的等价性仍有限。",
+    "metric_validity": "成功率和分步进展比开放环动作误差更接近闭环效用；仍缺真实硬件故障与安全指标。",
+    "reproducibility": "公开任务定义、示范与训练细节较多，硬件级复现仍需 pose/retargeting 工程。",
+    "external_validity": "支持 human pretraining + robot adaptation 的条件结论，不支持纯 ego 零样本普遍有效。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2507.12440-C01",
+      "claim": "EgoVLA 的人类第一视角预训练不能直接消除本体差距：没有机器人微调时，仿真 humanoid 的全部任务成功率为 0%。",
+      "stance": "limit",
+      "relation": "限制‘Ego-centric 数据可直接替代目标机器人动作数据’的强主张。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文把失败归因于外观、感知和运动学错配，并用同一 benchmark 的零样本结果明确展示。",
+      "locator": "5.2 Humanoid Robot Evaluation",
+      "source_context": "zero-shot deployment on humanoid robots without fine-tuning on robot data results in 0% success across all tasks",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "task success rate",
+        "value_or_direction": "0% on all tasks",
+        "comparator": "EgoVLA after robot-specific fine-tuning",
+        "task_or_sample": "12 simulated humanoid manipulation tasks",
+        "locator": "5 Experiments > 5.2 Humanoid Robot Evaluation"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "结果段逐字报告无机器人微调时全部任务为 0%，本文主张仅限该仿真 benchmark，没有外推为所有本体。"
+      }
+    },
+    {
+      "card_id": "2507.12440-C02",
+      "claim": "该预训练路线依赖 hand/wrist pose 注释，并仍需要中等规模目标机器人数据，因此 raw ego video 的可扩展性与可部署性之间存在结构性张力。",
+      "stance": "conditional",
+      "relation": "说明数据规模优势以昂贵动作标注和本体校准为条件。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在限制段同时指出 pose annotations 限制数据可得性与机器人微调依赖。",
+      "locator": "7 Limitation",
+      "source_context": "requires human data with hand and wrist pose annotations, which may limit data availability",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "限制段直接陈述 pose annotation 依赖；与实验段的机器人后训练需求共同限定了 raw-video 直接利用范围。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "手动核验了 dataset、transfer、robot evaluation 和 limitation 段。"
+}

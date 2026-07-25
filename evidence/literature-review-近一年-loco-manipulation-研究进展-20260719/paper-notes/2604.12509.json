@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2604.12509",
+    "title": "Whole-Body Mobile Manipulation using Offline Reinforcement Learning on Sub-optimal Controllers",
+    "published": "2026-04-14T09:32:24Z",
+    "url": "https://arxiv.org/abs/2604.12509",
+    "authors": [
+      "Snehal Jauhri",
+      "Vignesh Prasad",
+      "Georgia Chalvatzaki"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Direct whole-body mobile-manipulation learning study using controller-generated offline data and real hardware evaluation."
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "Identify teleoperation and distribution-shift bottlenecks."
+      },
+      {
+        "locator": "IV WHOLE-MoMa",
+        "role": "method-or-design",
+        "purpose": "Inspect WBC data generation and Q-chunking offline RL."
+      },
+      {
+        "locator": "VI-B Real-World Results",
+        "role": "results-or-analysis",
+        "purpose": "Verify physical drawer and cupboard outcomes."
+      },
+      {
+        "locator": "VII Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record pose estimation and compliance boundaries."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can whole-body controller rollouts replace teleoperation data and support offline-RL mobile manipulation on hardware?",
+  "contributions": [
+    "Controller-generated whole-body datasets and a diffusion Q-chunking offline-RL policy."
+  ],
+  "method": {
+    "summary": "A WBC state machine generates thousands of trajectories; a diffusion policy is optimized with offline Q-learning and deployed as a unified whole-body policy.",
+    "assumptions": [
+      "Task geometry and object pose estimates are sufficiently accurate.",
+      "A hand-designed WBC state machine can generate useful task coverage."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "3,000 controller-generated trajectories per task"
+    ],
+    "tasks": [
+      "open drawer",
+      "open cupboard"
+    ],
+    "embodiments": [
+      "mobile manipulator in simulation and hardware"
+    ],
+    "sample_or_scale": "Two tasks, 3,000 generated trajectories per task, and 25 real trials per method/task."
+  },
+  "evaluation": {
+    "design": "The proposed offline-RL policy is compared with WBC-only and behavior-cloning baselines in simulation and real deployment.",
+    "baselines": [
+      "WBC state machine",
+      "behavior cloning"
+    ],
+    "metrics": [
+      "task success",
+      "grasp success",
+      "articulation success"
+    ],
+    "ablations": [
+      "Q-chunking components",
+      "pose tracker"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Offline RL improved real cupboard opening over both the generator and behavior cloning, but perception accuracy remained consequential.",
+      "scope": "Two articulated-object tasks on one physical platform.",
+      "locator": "VI-B Real-World Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Performance remains sensitive to object-pose accuracy and hardware compliance.",
+        "locator": "VII Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The approach avoids teleoperation but still embeds task engineering through the WBC generator.",
+        "basis": "A task-specific state machine supplies the offline dataset."
+      }
+    ]
+  },
+  "transfer_boundary": "Best suited to tasks where controller-based data generation and stable pose tracking are available.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Directly compares the learned policy with its data generator.",
+      "Reports 25 physical trials per task and method."
+    ],
+    "design_risks": [
+      "Only two articulated tasks.",
+      "Marker-based tracking can overstate open-world perception readiness."
+    ],
+    "baseline_fairness": "All methods use the same task setup; the learned methods use the controller-generated data.",
+    "metric_validity": "Task and substage success expose where failures occur.",
+    "reproducibility": "Data-generation and training pipelines are described.",
+    "external_validity": "One robot and two tasks."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2604.12509-C01",
+      "claim": "On real cupboard opening, WHOLE-MoMa succeeded in 17/25 trials (68%), versus 4/25 for its WBC generator and 8/25 for behavior cloning.",
+      "stance": "support",
+      "relation": "Supports offline RL as a way to improve beyond controller-generated whole-body data.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The real-world table separates full success across the three methods.",
+      "locator": "VI-B Real-World Results",
+      "source_context": "WHOLE-MoMa achieves 17/25 (68%), demonstrating substantial sim-to-real transfer, with the highest grasping success (22/25) and articulation success (17/22 given grasping).",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "task success",
+        "value_or_direction": "17/25 versus 4/25 and 8/25",
+        "comparator": "WHOLE-MoMa versus WBC and behavior cloning",
+        "task_or_sample": "real cupboard opening",
+        "locator": "VI-B Real-World Results"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The result sentence reports all three counts and percentages for the cupboard task."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

@@ -1,0 +1,1327 @@
+{
+  "generated_at": "2026-07-15T02:42:03.121970+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年图像视觉定位方法的发展与挑战",
+  "start_date": "2025-07-15",
+  "end_date": "2026-07-15",
+  "knowledge_ids": [
+    "EA-HARDWARE",
+    "EA-SENSOR",
+    "EA-EVAL"
+  ],
+  "families": [],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 32,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 128,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 128,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-visual-localization-core",
+        "dynamic-camera-relocalization",
+        "ea-hardware-teleop-device",
+        "ea-sensor-multimodal-policy"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-structure-based-localization",
+        "dynamic-scene-coordinate-regression",
+        "dynamic-pose-regression",
+        "dynamic-place-recognition",
+        "dynamic-map-free-localization",
+        "dynamic-neural-scene-localization",
+        "dynamic-foundation-features-localization",
+        "dynamic-localization-uncertainty",
+        "dynamic-localization-benchmark-robustness",
+        "dynamic-localization-efficiency",
+        "dynamic-robot-localization-deployment",
+        "calibrated-gsff",
+        "calibrated-gsvisloc",
+        "calibrated-lavpr",
+        "calibrated-fol",
+        "calibrated-displace",
+        "calibrated-megaloc",
+        "calibrated-depth-aware-distillation",
+        "calibrated-geographic-imbalance",
+        "calibration-named-3dgs-localization",
+        "calibration-named-vpr-methods",
+        "calibration-vpr-geometry-language-data",
+        "ea-hardware-slam-demonstration",
+        "ea-hardware-arkit-tracking",
+        "ea-hardware-handheld-gripper",
+        "ea-sensor-tactile-force"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-long-term-localization",
+        "dynamic-dynamic-scene-localization"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): The static embodied-AI taxonomy has no dedicated visual-localization family, so this run expands to the major metric camera-localization lineages and their deployment failure surfaces."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-visual-localization-core",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"visual localization\" AND (all:image OR all:camera)",
+      "why": "Capture papers using the canonical field name."
+    },
+    {
+      "label": "dynamic-camera-relocalization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"camera relocalization\" OR all:\"camera localization\") AND all:image",
+      "why": "Cover metric 6-DoF relocalization terminology used outside the exact visual-localization phrase."
+    },
+    {
+      "label": "dynamic-structure-based-localization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"2D-3D matching\" OR all:\"structure-based localization\" OR all:\"image-to-point\") AND all:localization",
+      "why": "Cover retrieval-plus-correspondence and explicit 3D-map pipelines."
+    },
+    {
+      "label": "dynamic-scene-coordinate-regression",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"scene coordinate regression\" OR all:\"scene coordinates\") AND (all:localization OR all:relocalization)",
+      "why": "Cover dense coordinate regression and differentiable pose-estimation lineages."
+    },
+    {
+      "label": "dynamic-pose-regression",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"absolute pose regression\" OR all:\"camera pose regression\") AND all:image",
+      "why": "Cover direct and transformer-based pose-regression methods and their accuracy limits."
+    },
+    {
+      "label": "dynamic-place-recognition",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"visual place recognition\" OR all:\"place recognition\") AND (all:robot OR all:localization)",
+      "why": "Cover the retrieval/coarse-localization stage that increasingly uses foundation features and sequence context."
+    },
+    {
+      "label": "dynamic-map-free-localization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"map-free localization\" OR all:\"map free localization\" OR all:\"SfM-free localization\")",
+      "why": "Cover localization without a prebuilt metric reconstruction and relative-pose alternatives."
+    },
+    {
+      "label": "dynamic-neural-scene-localization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:NeRF OR all:\"3D Gaussian Splatting\" OR all:\"neural scene representation\") AND (all:localization OR all:relocalization OR all:\"camera pose\")",
+      "why": "Cover implicit and radiance-field/3DGS scene representations used as localization maps."
+    },
+    {
+      "label": "dynamic-foundation-features-localization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"foundation model\" OR all:\"vision foundation model\" OR all:DINOv2 OR all:CLIP) AND (all:\"visual localization\" OR all:\"place recognition\")",
+      "why": "Test the shift from task-specific local descriptors to pretrained semantic and geometric features."
+    },
+    {
+      "label": "dynamic-long-term-localization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"long-term localization\" OR all:\"lifelong localization\" OR all:\"cross-season localization\" OR all:\"appearance change\") AND all:visual",
+      "why": "Capture appearance, illumination, seasonal, and map-aging challenges."
+    },
+    {
+      "label": "dynamic-dynamic-scene-localization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"dynamic scene\" OR all:\"scene change\" OR all:occlusion) AND (all:\"visual localization\" OR all:\"camera relocalization\")",
+      "why": "Cover localization failures caused by moving objects, structural changes, and occlusions."
+    },
+    {
+      "label": "dynamic-localization-uncertainty",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:uncertainty OR all:calibration OR all:confidence) AND (all:\"visual localization\" OR all:\"camera pose estimation\")",
+      "why": "Cover reliability, confidence calibration, rejection, and failure prediction."
+    },
+    {
+      "label": "dynamic-localization-benchmark-robustness",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:benchmark OR all:robustness OR all:evaluation) AND (all:\"visual localization\" OR all:\"camera relocalization\")",
+      "why": "Capture benchmark revisions, robustness analysis, and protocol critiques."
+    },
+    {
+      "label": "dynamic-localization-efficiency",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:efficient OR all:real-time OR all:mobile OR all:edge OR all:compression) AND (all:\"visual localization\" OR all:\"visual place recognition\")",
+      "why": "Cover map memory, latency, compute, bandwidth, and on-device deployment constraints."
+    },
+    {
+      "label": "dynamic-robot-localization-deployment",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:robot OR all:autonomous OR all:embodied) AND (all:\"visual localization\" OR all:\"camera relocalization\") AND (all:deployment OR all:\"real-world\" OR all:navigation)",
+      "why": "Capture closed-loop and real-system evidence beyond image-only benchmarks."
+    },
+    {
+      "label": "dynamic-visual-localization-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org visual localization camera relocalization 2025 2026",
+      "why": "Fallback discovery for recent papers missed or delayed by the arXiv API."
+    },
+    {
+      "label": "dynamic-visual-localization-benchmark-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org visual localization benchmark robustness 2025 2026",
+      "why": "Fallback discovery focused on evaluation and negative evidence."
+    },
+    {
+      "label": "dynamic-visual-localization-web-calibration",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "visual localization camera relocalization latest methods 2025 2026",
+      "why": "Calibrate recent terminology and named method lineages before finalizing search rounds."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): Introduces Gaussian Splatting Feature Fields (GSFF) for privacy-preserving visual localization.",
+    "arxiv calibration (high): Introduces GSVisLoc for generalizable localization directly against 3D Gaussian Splatting scene representations.",
+    "arxiv calibration (high): Introduces LaVPR and language-vision place recognition under visual degradation.",
+    "arxiv calibration (high): Uses VPR as an image-pair retrieval front-end and compares AnyLoc, SALAD, and MegaLoc with older descriptor families.",
+    "arxiv calibration (high): FoL++ emphasizes region reliability, occlusion resistance, adaptive re-ranking, and efficiency.",
+    "arxiv calibration (high): DisPlace uses multiple reference traversals to separate place identity from condition and viewpoint variation.",
+    "arxiv calibration (high): Depth-aware distillation augments DINOv2 VPR in repetitive forest environments.",
+    "arxiv calibration (high): DAPR identifies geographic long-tail imbalance in urban VPR benchmarks."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-visual-localization-core",
+      "tier": "core",
+      "query": "all:\"visual localization\" AND (all:image OR all:camera)",
+      "why": "Capture papers using the canonical field name.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visual-localization-core"
+      ]
+    },
+    {
+      "label": "dynamic-camera-relocalization",
+      "tier": "core",
+      "query": "(all:\"camera relocalization\" OR all:\"camera localization\") AND all:image",
+      "why": "Cover metric 6-DoF relocalization terminology used outside the exact visual-localization phrase.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-camera-relocalization"
+      ]
+    },
+    {
+      "label": "dynamic-structure-based-localization",
+      "tier": "mechanism",
+      "query": "(all:\"2D-3D matching\" OR all:\"structure-based localization\" OR all:\"image-to-point\") AND all:localization",
+      "why": "Cover retrieval-plus-correspondence and explicit 3D-map pipelines.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-structure-based-localization"
+      ]
+    },
+    {
+      "label": "dynamic-scene-coordinate-regression",
+      "tier": "mechanism",
+      "query": "(all:\"scene coordinate regression\" OR all:\"scene coordinates\") AND (all:localization OR all:relocalization)",
+      "why": "Cover dense coordinate regression and differentiable pose-estimation lineages.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-scene-coordinate-regression"
+      ]
+    },
+    {
+      "label": "dynamic-pose-regression",
+      "tier": "mechanism",
+      "query": "(all:\"absolute pose regression\" OR all:\"camera pose regression\") AND all:image",
+      "why": "Cover direct and transformer-based pose-regression methods and their accuracy limits.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-pose-regression"
+      ]
+    },
+    {
+      "label": "dynamic-place-recognition",
+      "tier": "adjacent",
+      "query": "(all:\"visual place recognition\" OR all:\"place recognition\") AND (all:robot OR all:localization)",
+      "why": "Cover the retrieval/coarse-localization stage that increasingly uses foundation features and sequence context.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-place-recognition"
+      ]
+    },
+    {
+      "label": "dynamic-map-free-localization",
+      "tier": "mechanism",
+      "query": "(all:\"map-free localization\" OR all:\"map free localization\" OR all:\"SfM-free localization\")",
+      "why": "Cover localization without a prebuilt metric reconstruction and relative-pose alternatives.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-map-free-localization"
+      ]
+    },
+    {
+      "label": "dynamic-neural-scene-localization",
+      "tier": "mechanism",
+      "query": "(all:NeRF OR all:\"3D Gaussian Splatting\" OR all:\"neural scene representation\") AND (all:localization OR all:relocalization OR all:\"camera pose\")",
+      "why": "Cover implicit and radiance-field/3DGS scene representations used as localization maps.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-neural-scene-localization"
+      ]
+    },
+    {
+      "label": "dynamic-foundation-features-localization",
+      "tier": "mechanism",
+      "query": "(all:\"foundation model\" OR all:\"vision foundation model\" OR all:DINOv2 OR all:CLIP) AND (all:\"visual localization\" OR all:\"place recognition\")",
+      "why": "Test the shift from task-specific local descriptors to pretrained semantic and geometric features.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-foundation-features-localization"
+      ]
+    },
+    {
+      "label": "dynamic-long-term-localization",
+      "tier": "limitation",
+      "query": "(all:\"long-term localization\" OR all:\"lifelong localization\" OR all:\"cross-season localization\" OR all:\"appearance change\") AND all:visual",
+      "why": "Capture appearance, illumination, seasonal, and map-aging challenges.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-long-term-localization"
+      ]
+    },
+    {
+      "label": "dynamic-dynamic-scene-localization",
+      "tier": "limitation",
+      "query": "(all:\"dynamic scene\" OR all:\"scene change\" OR all:occlusion) AND (all:\"visual localization\" OR all:\"camera relocalization\")",
+      "why": "Cover localization failures caused by moving objects, structural changes, and occlusions.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dynamic-scene-localization"
+      ]
+    },
+    {
+      "label": "dynamic-localization-uncertainty",
+      "tier": "evaluation",
+      "query": "(all:uncertainty OR all:calibration OR all:confidence) AND (all:\"visual localization\" OR all:\"camera pose estimation\")",
+      "why": "Cover reliability, confidence calibration, rejection, and failure prediction.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-localization-uncertainty"
+      ]
+    },
+    {
+      "label": "dynamic-localization-benchmark-robustness",
+      "tier": "evaluation",
+      "query": "(all:benchmark OR all:robustness OR all:evaluation) AND (all:\"visual localization\" OR all:\"camera relocalization\")",
+      "why": "Capture benchmark revisions, robustness analysis, and protocol critiques.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-localization-benchmark-robustness"
+      ]
+    },
+    {
+      "label": "dynamic-localization-efficiency",
+      "tier": "deployment",
+      "query": "(all:efficient OR all:real-time OR all:mobile OR all:edge OR all:compression) AND (all:\"visual localization\" OR all:\"visual place recognition\")",
+      "why": "Cover map memory, latency, compute, bandwidth, and on-device deployment constraints.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-localization-efficiency"
+      ]
+    },
+    {
+      "label": "dynamic-robot-localization-deployment",
+      "tier": "deployment",
+      "query": "(all:robot OR all:autonomous OR all:embodied) AND (all:\"visual localization\" OR all:\"camera relocalization\") AND (all:deployment OR all:\"real-world\" OR all:navigation)",
+      "why": "Capture closed-loop and real-system evidence beyond image-only benchmarks.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robot-localization-deployment"
+      ]
+    },
+    {
+      "label": "calibrated-gsff",
+      "tier": "calibrated-term",
+      "query": "all:GSFF",
+      "why": "Named 3DGS feature-field localization method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-gsff"
+      ]
+    },
+    {
+      "label": "calibrated-gsvisloc",
+      "tier": "calibrated-term",
+      "query": "all:GSVisLoc",
+      "why": "Named generalizable 3DGS localization method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-gsvisloc"
+      ]
+    },
+    {
+      "label": "calibrated-lavpr",
+      "tier": "calibrated-term",
+      "query": "all:LaVPR",
+      "why": "Named language-vision place-recognition benchmark.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-lavpr"
+      ]
+    },
+    {
+      "label": "calibrated-fol",
+      "tier": "calibrated-term",
+      "query": "all:FoL++",
+      "why": "Named region-aware VPR method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-fol"
+      ]
+    },
+    {
+      "label": "calibrated-displace",
+      "tier": "calibrated-term",
+      "query": "all:DisPlace",
+      "why": "Named multi-reference VPR fusion method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-displace"
+      ]
+    },
+    {
+      "label": "calibrated-megaloc",
+      "tier": "calibrated-term",
+      "query": "all:MegaLoc",
+      "why": "Foundation-model-driven global descriptor family highlighted by recent evaluation.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-megaloc"
+      ]
+    },
+    {
+      "label": "calibrated-depth-aware-distillation",
+      "tier": "calibrated-term",
+      "query": "all:\"depth-aware distillation\"",
+      "why": "Recent geometry injection mechanism for VPR.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-depth-aware-distillation"
+      ]
+    },
+    {
+      "label": "calibrated-geographic-imbalance",
+      "tier": "calibrated-term",
+      "query": "all:\"geographic imbalance\"",
+      "why": "Recent benchmark and data-distribution failure surface.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-geographic-imbalance"
+      ]
+    },
+    {
+      "label": "calibration-named-3dgs-localization",
+      "tier": "calibrated-query",
+      "query": "all:GSFF OR all:GSVisLoc OR all:\"Gaussian Splatting Feature Fields\"",
+      "why": "Recover recent named 3DGS localization methods and nearby follow-ups.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-named-3dgs-localization"
+      ]
+    },
+    {
+      "label": "calibration-named-vpr-methods",
+      "tier": "calibrated-query",
+      "query": "all:LaVPR OR all:\"FoL++\" OR all:DisPlace OR all:MegaLoc",
+      "why": "Recover recent named VPR methods and benchmark papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-named-vpr-methods"
+      ]
+    },
+    {
+      "label": "calibration-vpr-geometry-language-data",
+      "tier": "calibrated-query",
+      "query": "all:\"visual place recognition\" AND (all:\"depth-aware\" OR all:language OR all:\"geographic imbalance\")",
+      "why": "Cover emerging multimodal and dataset-governance directions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-vpr-geometry-language-data"
+      ]
+    },
+    {
+      "label": "ea-hardware-teleop-device",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"data collection\" AND all:robot",
+      "why": "Find hardware routes used to collect robot demonstrations.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-teleop-device"
+      ]
+    },
+    {
+      "label": "ea-hardware-slam-demonstration",
+      "tier": "tracking",
+      "query": "all:SLAM AND all:\"robot manipulation\" AND all:demonstration",
+      "why": "Capture tracking and reconstruction limitations in collection devices.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-hardware-slam-demonstration"
+      ]
+    },
+    {
+      "label": "ea-hardware-arkit-tracking",
+      "tier": "tracking",
+      "query": "all:ARKit AND all:robot AND all:tracking",
+      "why": "Find low-cost pose-tracking and VIO routes relevant to data capture.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-arkit-tracking"
+      ]
+    },
+    {
+      "label": "ea-hardware-handheld-gripper",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:robot",
+      "why": "Catch UMI-like collection devices that may not use UMI in metadata.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-handheld-gripper"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-visual-localization-core",
+      "tier": "core",
+      "query": "all:\"visual localization\" AND (all:image OR all:camera)",
+      "why": "Capture papers using the canonical field name.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visual-localization-core"
+      ]
+    },
+    {
+      "label": "dynamic-camera-relocalization",
+      "tier": "core",
+      "query": "(all:\"camera relocalization\" OR all:\"camera localization\") AND all:image",
+      "why": "Cover metric 6-DoF relocalization terminology used outside the exact visual-localization phrase.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-camera-relocalization"
+      ]
+    },
+    {
+      "label": "dynamic-structure-based-localization",
+      "tier": "mechanism",
+      "query": "(all:\"2D-3D matching\" OR all:\"structure-based localization\" OR all:\"image-to-point\") AND all:localization",
+      "why": "Cover retrieval-plus-correspondence and explicit 3D-map pipelines.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-structure-based-localization"
+      ]
+    },
+    {
+      "label": "dynamic-scene-coordinate-regression",
+      "tier": "mechanism",
+      "query": "(all:\"scene coordinate regression\" OR all:\"scene coordinates\") AND (all:localization OR all:relocalization)",
+      "why": "Cover dense coordinate regression and differentiable pose-estimation lineages.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-scene-coordinate-regression"
+      ]
+    },
+    {
+      "label": "dynamic-pose-regression",
+      "tier": "mechanism",
+      "query": "(all:\"absolute pose regression\" OR all:\"camera pose regression\") AND all:image",
+      "why": "Cover direct and transformer-based pose-regression methods and their accuracy limits.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-pose-regression"
+      ]
+    },
+    {
+      "label": "dynamic-place-recognition",
+      "tier": "adjacent",
+      "query": "(all:\"visual place recognition\" OR all:\"place recognition\") AND (all:robot OR all:localization)",
+      "why": "Cover the retrieval/coarse-localization stage that increasingly uses foundation features and sequence context.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-place-recognition"
+      ]
+    },
+    {
+      "label": "dynamic-map-free-localization",
+      "tier": "mechanism",
+      "query": "(all:\"map-free localization\" OR all:\"map free localization\" OR all:\"SfM-free localization\")",
+      "why": "Cover localization without a prebuilt metric reconstruction and relative-pose alternatives.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-map-free-localization"
+      ]
+    },
+    {
+      "label": "dynamic-neural-scene-localization",
+      "tier": "mechanism",
+      "query": "(all:NeRF OR all:\"3D Gaussian Splatting\" OR all:\"neural scene representation\") AND (all:localization OR all:relocalization OR all:\"camera pose\")",
+      "why": "Cover implicit and radiance-field/3DGS scene representations used as localization maps.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-neural-scene-localization"
+      ]
+    },
+    {
+      "label": "dynamic-foundation-features-localization",
+      "tier": "mechanism",
+      "query": "(all:\"foundation model\" OR all:\"vision foundation model\" OR all:DINOv2 OR all:CLIP) AND (all:\"visual localization\" OR all:\"place recognition\")",
+      "why": "Test the shift from task-specific local descriptors to pretrained semantic and geometric features.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-foundation-features-localization"
+      ]
+    },
+    {
+      "label": "dynamic-long-term-localization",
+      "tier": "limitation",
+      "query": "(all:\"long-term localization\" OR all:\"lifelong localization\" OR all:\"cross-season localization\" OR all:\"appearance change\") AND all:visual",
+      "why": "Capture appearance, illumination, seasonal, and map-aging challenges.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-long-term-localization"
+      ]
+    },
+    {
+      "label": "dynamic-dynamic-scene-localization",
+      "tier": "limitation",
+      "query": "(all:\"dynamic scene\" OR all:\"scene change\" OR all:occlusion) AND (all:\"visual localization\" OR all:\"camera relocalization\")",
+      "why": "Cover localization failures caused by moving objects, structural changes, and occlusions.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dynamic-scene-localization"
+      ]
+    },
+    {
+      "label": "dynamic-localization-uncertainty",
+      "tier": "evaluation",
+      "query": "(all:uncertainty OR all:calibration OR all:confidence) AND (all:\"visual localization\" OR all:\"camera pose estimation\")",
+      "why": "Cover reliability, confidence calibration, rejection, and failure prediction.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-localization-uncertainty"
+      ]
+    },
+    {
+      "label": "dynamic-localization-benchmark-robustness",
+      "tier": "evaluation",
+      "query": "(all:benchmark OR all:robustness OR all:evaluation) AND (all:\"visual localization\" OR all:\"camera relocalization\")",
+      "why": "Capture benchmark revisions, robustness analysis, and protocol critiques.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-localization-benchmark-robustness"
+      ]
+    },
+    {
+      "label": "dynamic-localization-efficiency",
+      "tier": "deployment",
+      "query": "(all:efficient OR all:real-time OR all:mobile OR all:edge OR all:compression) AND (all:\"visual localization\" OR all:\"visual place recognition\")",
+      "why": "Cover map memory, latency, compute, bandwidth, and on-device deployment constraints.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-localization-efficiency"
+      ]
+    },
+    {
+      "label": "dynamic-robot-localization-deployment",
+      "tier": "deployment",
+      "query": "(all:robot OR all:autonomous OR all:embodied) AND (all:\"visual localization\" OR all:\"camera relocalization\") AND (all:deployment OR all:\"real-world\" OR all:navigation)",
+      "why": "Capture closed-loop and real-system evidence beyond image-only benchmarks.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robot-localization-deployment"
+      ]
+    },
+    {
+      "label": "calibrated-gsff",
+      "tier": "calibrated-term",
+      "query": "all:GSFF",
+      "why": "Named 3DGS feature-field localization method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-gsff"
+      ]
+    },
+    {
+      "label": "calibrated-gsvisloc",
+      "tier": "calibrated-term",
+      "query": "all:GSVisLoc",
+      "why": "Named generalizable 3DGS localization method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-gsvisloc"
+      ]
+    },
+    {
+      "label": "calibrated-lavpr",
+      "tier": "calibrated-term",
+      "query": "all:LaVPR",
+      "why": "Named language-vision place-recognition benchmark.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-lavpr"
+      ]
+    },
+    {
+      "label": "calibrated-fol",
+      "tier": "calibrated-term",
+      "query": "all:FoL++",
+      "why": "Named region-aware VPR method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-fol"
+      ]
+    },
+    {
+      "label": "calibrated-displace",
+      "tier": "calibrated-term",
+      "query": "all:DisPlace",
+      "why": "Named multi-reference VPR fusion method.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-displace"
+      ]
+    },
+    {
+      "label": "calibrated-megaloc",
+      "tier": "calibrated-term",
+      "query": "all:MegaLoc",
+      "why": "Foundation-model-driven global descriptor family highlighted by recent evaluation.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-megaloc"
+      ]
+    },
+    {
+      "label": "calibrated-depth-aware-distillation",
+      "tier": "calibrated-term",
+      "query": "all:\"depth-aware distillation\"",
+      "why": "Recent geometry injection mechanism for VPR.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-depth-aware-distillation"
+      ]
+    },
+    {
+      "label": "calibrated-geographic-imbalance",
+      "tier": "calibrated-term",
+      "query": "all:\"geographic imbalance\"",
+      "why": "Recent benchmark and data-distribution failure surface.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-geographic-imbalance"
+      ]
+    },
+    {
+      "label": "calibration-named-3dgs-localization",
+      "tier": "calibrated-query",
+      "query": "all:GSFF OR all:GSVisLoc OR all:\"Gaussian Splatting Feature Fields\"",
+      "why": "Recover recent named 3DGS localization methods and nearby follow-ups.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-named-3dgs-localization"
+      ]
+    },
+    {
+      "label": "calibration-named-vpr-methods",
+      "tier": "calibrated-query",
+      "query": "all:LaVPR OR all:\"FoL++\" OR all:DisPlace OR all:MegaLoc",
+      "why": "Recover recent named VPR methods and benchmark papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-named-vpr-methods"
+      ]
+    },
+    {
+      "label": "calibration-vpr-geometry-language-data",
+      "tier": "calibrated-query",
+      "query": "all:\"visual place recognition\" AND (all:\"depth-aware\" OR all:language OR all:\"geographic imbalance\")",
+      "why": "Cover emerging multimodal and dataset-governance directions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-vpr-geometry-language-data"
+      ]
+    },
+    {
+      "label": "ea-hardware-teleop-device",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"data collection\" AND all:robot",
+      "why": "Find hardware routes used to collect robot demonstrations.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-teleop-device"
+      ]
+    },
+    {
+      "label": "ea-hardware-slam-demonstration",
+      "tier": "tracking",
+      "query": "all:SLAM AND all:\"robot manipulation\" AND all:demonstration",
+      "why": "Capture tracking and reconstruction limitations in collection devices.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-hardware-slam-demonstration"
+      ]
+    },
+    {
+      "label": "ea-hardware-arkit-tracking",
+      "tier": "tracking",
+      "query": "all:ARKit AND all:robot AND all:tracking",
+      "why": "Find low-cost pose-tracking and VIO routes relevant to data capture.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-arkit-tracking"
+      ]
+    },
+    {
+      "label": "ea-hardware-handheld-gripper",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:robot",
+      "why": "Catch UMI-like collection devices that may not use UMI in metadata.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-handheld-gripper"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-visual-localization-browser",
+      "query": "site:arxiv.org visual localization camera relocalization 2025 2026",
+      "why": "Fallback discovery for recent papers missed or delayed by the arXiv API.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-visual-localization-benchmark-browser",
+      "query": "site:arxiv.org visual localization benchmark robustness 2025 2026",
+      "why": "Fallback discovery focused on evaluation and negative evidence.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-visual-localization-web-calibration",
+      "query": "visual localization camera relocalization latest methods 2025 2026",
+      "why": "Calibrate recent terminology and named method lineages before finalizing search rounds.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-gsff",
+      "query": "\"GSFF\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: GSFF.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-gsvisloc",
+      "query": "\"GSVisLoc\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: GSVisLoc.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-lavpr",
+      "query": "\"LaVPR\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: LaVPR.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-fol",
+      "query": "\"FoL++\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: FoL++.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-displace",
+      "query": "\"DisPlace\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: DisPlace.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-megaloc",
+      "query": "\"MegaLoc\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: MegaLoc.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-depth-aware-distillation",
+      "query": "\"depth-aware distillation\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: depth-aware distillation.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-geographic-imbalance",
+      "query": "\"geographic imbalance\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: geographic imbalance.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

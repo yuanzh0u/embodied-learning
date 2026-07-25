@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.00500",
+    "title": "Inject Once Survive Later: Backdooring Vision-Language-Action Models to Persist Through Downstream Fine-tuning",
+    "published": "2026-01-31",
+    "url": "https://arxiv.org/abs/2602.00500",
+    "authors": [
+      "Jianyi Zhou",
+      "Yujie Wei",
+      "Ruichen Zhen",
+      "Bo Zhao",
+      "Xiaobo Xia",
+      "Rui Shao",
+      "Xiu Su",
+      "Shuo Yang"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Method > 4.2 Stage 1: Identification of Fine-tune-Insensitive Modules",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "5 Experiments > 5.1 Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "5 Experiments > 5.2 Main Results",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "6 Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "在 VLA 基模型分发前植入的后门能否通过选择对下游微调不敏感的模块而持续存活？",
+  "contributions": [
+    "提出 INFUSE，先做参数敏感性分析，再只在微调不敏感模块植入后门。"
+  ],
+  "method": {
+    "summary": "识别视觉骨干、投影层和 LLM 骨干中下游更新最小的部分，用含自然触发物和恶意动作的示教定向注入。",
+    "assumptions": [
+      "结论适用于用户从外部获取 VLA 基模型并在本地用干净数据微调、却没有独立预分发安全审计的供应链。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LIBERO-90",
+      "LIBERO suites",
+      "Bridge",
+      "SimplerEnv",
+      "real-robot tabletop set"
+    ],
+    "tasks": [
+      "simulation manipulation",
+      "three real-world tabletop tasks"
+    ],
+    "embodiments": [
+      "OpenVLA-7B",
+      "pi0.5",
+      "SpatialVLA-4B",
+      "Franka Research 3"
+    ],
+    "sample_or_scale": "三种 VLA 架构、多个仿真环境与三个真实任务。"
+  },
+  "evaluation": {
+    "design": "对比基模型污染经过纯干净用户微调后的攻击持久性、无触发成功率、跨架构/数据集迁移和真机表现。",
+    "baselines": [],
+    "metrics": [
+      "attack success rate",
+      "success rate without trigger"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "干净下游微调不能默认会清除基模型后门；微调不敏感模块中的触发行为可继续保留。",
+      "scope": "结论适用于用户从外部获取 VLA 基模型并在本地用干净数据微调、却没有独立预分发安全审计的供应链。",
+      "locator": "5 Experiments > 5.2 Main Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "当前仅使用静态触发器和固定目标行为，对动态/指令自适应触发及更多架构的适用性待验证。",
+        "locator": "6 Discussion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "结论适用于用户从外部获取 VLA 基模型并在本地用干净数据微调、却没有独立预分发安全审计的供应链。",
+        "basis": "攻击者需在基模型分发前控制注入，真机基线成功率不高，且实验尚未覆盖全参数与各种闭源微调方案。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论适用于用户从外部获取 VLA 基模型并在本地用干净数据微调、却没有独立预分发安全审计的供应链。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "攻击者需在基模型分发前控制注入，真机基线成功率不高，且实验尚未覆盖全参数与各种闭源微调方案。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "结论适用于用户从外部获取 VLA 基模型并在本地用干净数据微调、却没有独立预分发安全审计的供应链。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.00500-C01",
+      "claim": "下游只用干净数据微调不能证明 VLA 已经没有污染；植入微调不敏感模块的基模型后门可穿过用户端的干净适配。",
+      "stance": "limit",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "INFUSE 在基模型分发前定向污染微调不敏感模块，干净下游微调后仍保持显著后门行为。",
+      "locator": "5.2 Main Results",
+      "source_context": "INFUSE achieves an average ASR of 79.8% while maintaining clean performance (SR(w/o) = 28.3%) comparable to the normal model (29.3%), significantly outperforming BadVLA (36.6% ASR).",
+      "evidence_type": "cross-finetuning persistence experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

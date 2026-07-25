@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.09499",
+    "title": "Targeting World Models to Compromise Robot Learning Pipelines",
+    "published": "2026-06-08",
+    "url": "https://arxiv.org/abs/2606.09499",
+    "authors": [
+      "Ethan Rathbun",
+      "Ahmed Agha",
+      "Saaduddin Mahmud",
+      "Christopher Amato",
+      "Alina Oprea",
+      "Eugene Bagdasarian"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Identifying Vulnerabilities in the Robot Learning Supply Chain",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "6 Experiments",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "6 Experiments > 6.2 Transition Hijacking Attacks",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "7 Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "恶意供稿者能否在表面安全的遥操数据中埋入只会被世界模型生成管道激活的污染？",
+  "contributions": [
+    "提出视觉提示劫持与视觉转移劫持，直接攻击文本条件和动作条件世界模型的合成数据阶段。"
+  ],
+  "method": {
+    "summary": "对原始遥操视频做感知上微小的图像修改，使世界模型改写提示或在非目标动作下让预测崩溃。",
+    "assumptions": [
+      "攻击者需对目标世界模型有白盒访问并能修改视频帧；真实大规模 VLA 端到端后门仍只是概念验证。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "DROID samples",
+      "gymnasium-based world-model environments"
+    ],
+    "tasks": [
+      "robot policy learning",
+      "world-model synthetic rollout generation"
+    ],
+    "embodiments": [
+      "simulated robot policies",
+      "DROID-style real robot data"
+    ],
+    "sample_or_scale": "Dino 世界模型上 5 个随机种子的 PPO 政策，并在 Cosmos-Predict 2.5 AC/DROID 上做大模型验证。"
+  },
+  "evaluation": {
+    "design": "比较触发前后世界模型预测、下游 DRL 政策攻击成功与无触发任务表现。",
+    "baselines": [],
+    "metrics": [
+      "attack success",
+      "attack cosine similarity",
+      "prediction distance",
+      "clean task return"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "表面安全的数据可在通过世界模型扩增时生成危险轨迹，从而绕过数据集级安全检查。",
+      "scope": "攻击者需对目标世界模型有白盒访问并能修改视频帧；真实大规模 VLA 端到端后门仍只是概念验证。",
+      "locator": "4 Identifying Vulnerabilities in the Robot Learning Supply Chain"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "攻击在更真实的文本/动作条件世界模型管道中尚未充分验证，现有实现也远未优化。",
+        "locator": "7 Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "攻击者需对目标世界模型有白盒访问并能修改视频帧；真实大规模 VLA 端到端后门仍只是概念验证。",
+        "basis": "威胁模型权限较强，且下游政策的完整后门实验主要在 Dino/DRL 环境中完成。"
+      }
+    ]
+  },
+  "transfer_boundary": "攻击者需对目标世界模型有白盒访问并能修改视频帧；真实大规模 VLA 端到端后门仍只是概念验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "威胁模型权限较强，且下游政策的完整后门实验主要在 Dino/DRL 环境中完成。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "攻击者需对目标世界模型有白盒访问并能修改视频帧；真实大规模 VLA 端到端后门仍只是概念验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.09499-C01",
+      "claim": "世界模型使数据污染变成“二次激活”问题：表面安全的遥操数据可在生成扩增时转化为危险轨迹，并污染下游政策。",
+      "stance": "limit",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文在文本条件与动作条件世界模型中操纵预测，使恶意行为只在合成轨迹阶段出现。",
+      "locator": "4 Identifying Vulnerabilities in the Robot Learning Supply Chain",
+      "source_context": "By targeting world models within the robot learning pipeline, malicious data providers can effectively implant dangerous behavior or altered transition dynamics into otherwise safe robot teleoperation data. This allows them to poison downstream robot policies while bypassing dataset-level safety checks.",
+      "evidence_type": "robot-learning supply-chain attack",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

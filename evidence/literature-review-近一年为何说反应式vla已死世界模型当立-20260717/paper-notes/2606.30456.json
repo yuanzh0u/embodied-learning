@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.30456",
+    "title": "Vision-Language-Action Models: Experimental Insights from a Real-World UR5 Platform",
+    "published": "2026-06-29",
+    "url": "https://arxiv.org/abs/2606.30456",
+    "authors": [
+      "Mathilde Hochedel",
+      "Marc Lalonde"
+    ]
+  },
+  "review": {
+    "question": "Sparse language, dense vision, and continuous action alignment in VLA systems",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-SENSOR",
+      "EA-XEMBODIMENT",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to Sparse language, dense vision, and continuous action alignment in VLA systems."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "2.1 Global Overview of Vision-Language-Action Models",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "2.4 Evaluation Paradigms for VLA Models in Simulation and Real-World Settings",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "6 Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question 'Sparse language, dense vision, and continuous action alignment in VLA systems', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "Offline VLA indicators can fail to transfer to stable real-robot behavior when action semantics, coordinate frames, temporal modality alignment, image preprocessing, and dataset coverage are not controlled together."
+  ],
+  "method": {
+    "summary": "VLA models represent a recent paradigm shift in robotics, with the aim of unifying perception, reasoning, and control within a single end-to-end framework [ 14 , 2 ] . Formally, a VLA model takes visual observations and natural language instructions as input and directly produces low-level robot actions, typically in the form of control commands [ 2 , 1 ] . This contrasts with most common approaches (autonomous vehicles, for example) where perception, planning, and control were treated as separate modules. From an architectural perspective, VLAs follow a structured yet integrated pipeline. As illustrated in the survey [ 8 ] , the process can be decomposed into three main components: (1) a vi",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Evaluation of VLA models remains an evolving and partially unresolved challenge, particularly when transitioning from controlled benchmarks to real-world robotic systems. Existing evaluation paradigms are largely rooted in simulation-based or semi-controlled environments, where task definitions, observation spaces, and success metrics can be standardized. Although these frameworks have enabled rapid progress and comparative analysis between models, they only partially capture the constraints and variability inherent to physical deployment [ 14 , 10 ] . A significant portion of the current evaluation landscape relies on structured benchmarks such as LIBERO [ 11 ] and CALVIN [ 15 ] , which pro",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Offline VLA indicators can fail to transfer to stable real-robot behavior when action semantics, coordinate frames, temporal modality alignment, image preprocessing, and dataset coverage are not controlled together.",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "The limitations identified and the recommendations formulated in this section apply specifically to OpenVLA and OpenVLA-OFT, since these are the only VLA models evaluated in this work. Closed-loop evaluation must be integrated into the development cycle . Offline metrics and teacher-forcing systematically fail to capture compounding error dynamics [ 21 ] . Closed-loop rollouts (on the real system or in simulation) are necessary but costly; the absence of a well-aligned simulation environment limits their scalability here. While RL-based training paradigms have been proposed to explicitly addre",
+        "locator": "7 Limitations and Recommendations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (2.1 Global Overview of Vision-Language-Action Models) and evaluation (2.4 Evaluation Paradigms for VLA Models in Simulation and Real-World Settings)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.30456-C01",
+      "claim": "Offline VLA indicators can fail to transfer to stable real-robot behavior when action semantics, coordinate frames, temporal modality alignment, image preprocessing, and dataset coverage are not controlled together.",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: Sparse language, dense vision, and continuous action alignment in VLA systems",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The UR5 study reports a gap between offline indicators and unstable closed-loop physical behavior, attributing it to data-model-control pipeline consistency rather than model capacity alone.",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Instead, it is strongly influenced by a combination of factors, including action semantics, coordinate frame conventions, temporal alignment between modalities, image preprocessing consistency, and dataset coverage and quality. These observations lead to a key interpretation: the successful deployment of VLA systems in real-world settings depends less on incremental improvements in model capacity and more on precise control of the entire data–model–control pipeline.",
+      "evidence_type": "real-robot experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (action, alignment, capacity, consistency, coordinate, coverage, dataset, image). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Useful as system-level deployment evidence, not as a broad benchmark across all VLA models."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

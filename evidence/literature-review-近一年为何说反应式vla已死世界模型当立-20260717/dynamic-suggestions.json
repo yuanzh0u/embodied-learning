@@ -1,0 +1,79 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "high",
+      "notes": "The claim contrasts reactive VLA policies with predictive, action-conditioned models; search must cover failure/recovery, physical admissibility, 4D/contact dynamics, and VLA-world-model fusion."
+    }
+  ],
+  "knowledge_ids": ["EA-MODEL", "EA-EVAL", "EA-4D", "EA-ALIGN"],
+  "families": ["vla", "sim2real", "tactile-force"],
+  "queries": [
+    {
+      "label": "dynamic-reactive-vla-limit",
+      "tier": "limitation",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:reactive OR all:\"error accumulation\" OR all:recovery) AND all:robot",
+      "why": "Test the narrow claim that reactive next-action policies break on long-horizon execution and recovery.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-vla-world-model-fusion",
+      "tier": "mechanism",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND all:\"world model\" AND all:robot",
+      "why": "Look for fusion rather than replacement between VLA policies and world models.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-action-model",
+      "tier": "mechanism",
+      "query": "(all:\"world action model\" OR all:\"world-action model\") AND all:robot",
+      "why": "Capture models that jointly represent actions and predicted futures.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-action-reliability",
+      "tier": "evaluation",
+      "query": "all:\"world model\" AND (all:\"action fidelity\" OR all:\"physics adherence\" OR all:\"failure optimism\") AND all:robot",
+      "why": "Distinguish useful predictive models from visually plausible but decision-invalid video generators.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-model-contact-recovery",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND (all:tactile OR all:force OR all:contact) AND (all:recovery OR all:correction) AND all:robot",
+      "why": "Cover contact-rich tasks where RGB-only futures are partially observable.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-vla-benchmark-memorization",
+      "tier": "evaluation",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:memorization OR all:\"benchmark leakage\" OR all:overfit)",
+      "why": "Check whether standard benchmark gains overstate physical generalization.",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-vla-world-model-browser",
+      "query": "site:arxiv.org/abs VLA world model robot action fidelity recovery",
+      "why": "Fallback discovery for newly submitted fusion and evaluation papers.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-world-language-action-web",
+      "query": "site:arxiv.org/abs world-language-action robot",
+      "why": "Calibrate the emerging WLA naming used by recent papers.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

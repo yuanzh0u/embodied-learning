@@ -1,0 +1,184 @@
+{
+  "queries": [
+    {
+      "label": "dynamic-reactive-vla-limit",
+      "tier": "limitation",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:reactive OR all:\"error accumulation\" OR all:recovery) AND all:robot",
+      "why": "Test the narrow claim that reactive next-action policies break on long-horizon execution and recovery.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-reactive-vla-limit"
+      ]
+    },
+    {
+      "label": "dynamic-vla-world-model-fusion",
+      "tier": "mechanism",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND all:\"world model\" AND all:robot",
+      "why": "Look for fusion rather than replacement between VLA policies and world models.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-world-model-fusion"
+      ]
+    },
+    {
+      "label": "dynamic-world-action-model",
+      "tier": "mechanism",
+      "query": "(all:\"world action model\" OR all:\"world-action model\") AND all:robot",
+      "why": "Capture models that jointly represent actions and predicted futures.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-action-model"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-action-reliability",
+      "tier": "evaluation",
+      "query": "all:\"world model\" AND (all:\"action fidelity\" OR all:\"physics adherence\" OR all:\"failure optimism\") AND all:robot",
+      "why": "Distinguish useful predictive models from visually plausible but decision-invalid video generators.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-action-reliability"
+      ]
+    },
+    {
+      "label": "dynamic-world-model-contact-recovery",
+      "tier": "limitation",
+      "query": "all:\"world model\" AND (all:tactile OR all:force OR all:contact) AND (all:recovery OR all:correction) AND all:robot",
+      "why": "Cover contact-rich tasks where RGB-only futures are partially observable.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-model-contact-recovery"
+      ]
+    },
+    {
+      "label": "dynamic-vla-benchmark-memorization",
+      "tier": "evaluation",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:memorization OR all:\"benchmark leakage\" OR all:overfit)",
+      "why": "Check whether standard benchmark gains overstate physical generalization.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-benchmark-memorization"
+      ]
+    },
+    {
+      "label": "calibrated-world-language-action",
+      "tier": "calibrated-term",
+      "query": "all:\"world-language-action\"",
+      "why": "Recent naming for architectures that combine language reasoning, predictive world modeling, and action synthesis.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-world-language-action"
+      ]
+    },
+    {
+      "label": "calibrated-world-model-preference-reward",
+      "tier": "calibrated-term",
+      "query": "all:\"world-model preference reward\"",
+      "why": "Captures world models used as critics for VLA post-training.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-world-model-preference-reward"
+      ]
+    },
+    {
+      "label": "calibrated-unified-vla-and-world-model",
+      "tier": "calibrated-term",
+      "query": "all:\"unified VLA and world model\"",
+      "why": "Captures explicit evidence against a simple replacement narrative.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-unified-vla-and-world-model"
+      ]
+    },
+    {
+      "label": "calibration-world-language-action",
+      "tier": "calibrated-query",
+      "query": "all:\"world-language-action\" OR all:\"world language action\"",
+      "why": "Find WLA-family papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-world-language-action"
+      ]
+    },
+    {
+      "label": "calibration-world-model-preference-vla",
+      "tier": "calibrated-query",
+      "query": "all:\"world model\" AND all:preference AND (all:VLA OR all:\"vision-language-action\")",
+      "why": "Find world-model critics used for VLA improvement.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-world-model-preference-vla"
+      ]
+    },
+    {
+      "label": "calibration-unified-vla-world-model",
+      "tier": "calibrated-query",
+      "query": "all:unified AND all:\"world model\" AND (all:VLA OR all:\"vision-language-action\")",
+      "why": "Find joint rather than replacement architectures.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-unified-vla-world-model"
+      ]
+    }
+  ]
+}

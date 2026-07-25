@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.14323",
+    "title": "SilentDrift: Exploiting Action Chunking for Stealthy Backdoor Attacks on Vision-Language-Action Models",
+    "published": "2026-01-20",
+    "url": "https://arxiv.org/abs/2601.14323",
+    "authors": [
+      "Bingxin Xu",
+      "Yuzhang Shang",
+      "Binghui Wang",
+      "Emilio Ferrara"
+    ]
+  },
+  "review": {
+    "question": "近一年具身数据污染如何发生、如何扭曲训练或评测、如何检测与治理？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中存在直接回答具身数据污染机制、评测失真或治理边界的可定位证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "3.2 Vulnerability of Action Chunking to Drift Accumulation",
+        "role": "method-or-design",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Experiments > 4.1 Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "4 Experiments > 4.2 Main Results",
+        "role": "results-or-analysis",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      },
+      {
+        "locator": "6 Limitations.",
+        "role": "conclusion-or-limitations",
+        "purpose": "针对本综述问题核对论文的问题、方法、设置、结果或边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and review-irrelevant appendix details",
+        "role": "appendix-or-supplement",
+        "reason": "scoping 模式下，与当前主张无关的推导、附录和引用表未做逐项精读。"
+      }
+    ]
+  },
+  "research_question": "VLA 的 action chunking 与增量位姿表达是否会放大平滑的小偏差，从而形成难以质检的轨迹后门？",
+  "contributions": [
+    "提出 SilentDrift，用 smootherstep 与关键帧投毒制造运动学连续的渐进偏航。"
+  ],
+  "method": {
+    "summary": "在接近阶段的 action chunk 中注入边界速度和加速度为零的平滑增量偏差，使其在开环 chunk 内积累。",
+    "assumptions": [
+      "主张适用于执行连续 action chunks 且采用 delta pose 积分的 VLA，不直接适用于每步重规划的闭环控制。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LIBERO"
+    ],
+    "tasks": [
+      "object",
+      "spatial",
+      "goal manipulation suites"
+    ],
+    "embodiments": [
+      "simulated manipulation arms"
+    ],
+    "sample_or_scale": "LIBERO 多任务，两种 VLA 架构，主要投毒比例 2%。"
+  },
+  "evaluation": {
+    "design": "对攻击成功率、干净任务成功率、chunk 长度、触发时机、投毒率和扰动函数做消融。",
+    "baselines": [],
+    "metrics": [
+      "attack success rate",
+      "clean task success rate"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "无中间视觉纠正的 chunk 会线性积累小的增量误差，平滑偏差可避开常规动力学异常检测。",
+      "scope": "主张适用于执行连续 action chunks 且采用 delta pose 积分的 VLA，不直接适用于每步重规划的闭环控制。",
+      "locator": "3.2 Vulnerability of Action Chunking to Drift Accumulation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "攻击方法具有明显双用性，论文本身没有完成真实部署级防御验证。",
+        "locator": "6 Limitations."
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "主张适用于执行连续 action chunks 且采用 delta pose 积分的 VLA，不直接适用于每步重规划的闭环控制。",
+        "basis": "结论主要来自 LIBERO 仿真和两种架构，对真机安全过滤器的可迁移性尚未证明。"
+      }
+    ]
+  },
+  "transfer_boundary": "主张适用于执行连续 action chunks 且采用 delta pose 积分的 VLA，不直接适用于每步重规划的闭环控制。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "方法、威胁模型/评测协议与指标在正文中明确，且主张对应到可定位的实验或边界段落。"
+    ],
+    "design_risks": [
+      "结论主要来自 LIBERO 仿真和两种架构，对真机安全过滤器的可迁移性尚未证明。"
+    ],
+    "baseline_fairness": "论文所报基线在同一实验协议下比较，但未证明对所有架构、触发或部署场景等资源公平。",
+    "metric_validity": "攻击/防御论文需同时看触发行为与干净任务性能；评测论文需看扰动后闭环成功，单一平均分数不足以判定安全。",
+    "reproducibility": "正文给出了数据设置、触发/扰动机制、指标与实验协议；真机复现仍依赖硬件、相机位置和控制堆栈。",
+    "external_validity": "主张适用于执行连续 action chunks 且采用 delta pose 积分的 VLA，不直接适用于每步重规划的闭环控制。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.14323-C01",
+      "claim": "Action chunking 与 delta-pose 积分会把平滑、微小的污染偏差在开环执行窗内积累成失败，使“轨迹看起来平滑”不再是安全证据。",
+      "stance": "limit",
+      "relation": "界定具身数据污染的攻击面、评测偏差或可用治理边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "SilentDrift 利用 action chunk 内缺少视觉纠正的结构性弱点，让动力学连续的小偏差持续积累。",
+      "locator": "3.2 Vulnerability of Action Chunking to Drift Accumulation",
+      "source_context": "The combination of action chunking and delta pose representations creates an intra-chunk visual open-loop that permits unbounded drift accumulation. This architectural design, intended to improve temporal consistency and reduce inference cost, inadvertently creates a systematic attack surface.",
+      "evidence_type": "mechanism analysis and benchmark experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整非 OCR 正文的指定章节，主张仅保留该实验或边界直接支持的机制、方向和适用范围，未扩大到所有 VLA 或所有攻击。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本论文为 2025-07-15 至 2026-07-15 滚动一年 scoping review 的新精读证据。"
+}

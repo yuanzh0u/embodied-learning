@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.26663",
+    "title": "Tactile-WAM: Touch-Aware World Action Model with Tactile Asymmetric Attention",
+    "published": "2026-06-25",
+    "url": "https://arxiv.org/abs/2606.26663",
+    "authors": [
+      "Siyu Wu",
+      "Linjing You",
+      "Junjie Zhu",
+      "Yaozu Liu",
+      "Changhao Zhang",
+      "Jian Liu",
+      "Weiqiang Wang",
+      "Qi Li",
+      "Jituo Li",
+      "Hengshuang Zhao"
+    ]
+  },
+  "review": {
+    "question": "触觉世界模型",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 触觉世界模型."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "I Introduction",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "IV Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '触觉世界模型', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "触觉不是简单加 token 就能提升；接触任务中的 RGB 未来可能视觉上合理但物理上不完整，而无约束触觉注入还可能污染视频和动作预测。"
+  ],
+  "method": {
+    "summary": "World Action Models (WAMs) couple action generation with future-state prediction, allowing policies to reason about what an action chunk will induce rather than only which action to output. This interface builds on recent progress in generalist robot policies, including large-scale robot datasets, language conditioning, action chunking, and generative action decoders [ 12 , 13 , 7 , 1 , 14 , 9 , 2 , 23 ] . Recent visual WAMs inherit strong dynamics priors from pretrained video generation models [ 19 ] , while predictive-action frameworks also show the benefit of coupling action learning with future prediction [ 3 , 6 ] . Yet most WAMs remain primarily visual: the predicted world is largely r",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Figure 3: Main results. The tactile WAM variant substantially improves contact-centric insertion and assembly tasks, especially bolt-nut assembly, gear insertion, power insertion, and USB insertion. Full per-task counts and the earlier evaluation run are provided in Appendix C-B .",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "触觉不是简单加 token 就能提升；接触任务中的 RGB 未来可能视觉上合理但物理上不完整，而无约束触觉注入还可能污染视频和动作预测。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Tactile-WAM relies on time-aligned RGB observations, proprioceptive states, actions, and fingertip tactile streams. This assumption may be restrictive in faster dexterous manipulation, where contact events can occur at a higher temporal resolution than the policy horizon. Future systems may require denser tactile sampling, asynchronous tactile updates, event-triggered tactile anchors, multi-finger sensing, or longer contact-state memory. Our tactile supervision is derived from tactile-image motion proxies rather than calibrated force/torque measurements. These proxies provide useful contact-dy",
+        "locator": "Appendix D Limitations and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (I Introduction) and evaluation (IV Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.26663-C01",
+      "claim": "触觉不是简单加 token 就能提升；接触任务中的 RGB 未来可能视觉上合理但物理上不完整，而无约束触觉注入还可能污染视频和动作预测。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 触觉世界模型",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者指出 insertion、assembly、search、reorientation 依赖 slip、jamming、contact normals 和小对齐误差，这些状态在 RGB 中弱可见或不可见；同时他们定义 tactile pollution：无约束触觉 token 注入会迫使视觉 dynamics model 吸收稀疏局部事件式接触信号，从而退化视频和动作预测。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "In contact-rich manipulation, however, visually plausible futures can be physically incomplete: insertion, assembly, search, and reorientation often depend on slip, jamming, contact normals, or small alignment errors that are weakly visible or hidden in RGB. A natural solution is to predict future tactile states, however, we identify tactile pollution , a failure mode where unconstrained tactile-token injection degrades video and action prediction by forcing a visual dynamics model to absorb sparse, local, event-driven contact signals.",
+      "evidence_type": "method-and-ablation-framing",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (assembly, be, contact, dynamics, futures, incomplete, insertion, jamming). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "This is a high-signal caveat for multimodal fusion: more sensors can add failure modes if fusion geometry/timing is wrong. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

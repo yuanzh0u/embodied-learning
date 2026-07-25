@@ -2,7 +2,7 @@
 id: PROJECT-CONTEXT
 title: 项目上下文词表
 type: glossary
-updated: 2026-07-14
+updated: 2026-07-20
 tags: [context, glossary, embodied-ai, query-planning]
 ---
 
@@ -28,3 +28,19 @@ tags: [context, glossary, embodied-ai, query-planning]
 | review packet | 面向研究者的中预算审计视图，汇总综述范围、证据分布、共识、限制和缺口；它不是读者成稿。 |
 | reader-facing articles | 科研备忘录、知乎解释稿和小红书稿三类表达层。它们共享 accepted evidence，但必须按各自读者和文体独立组织。 |
 | active review run | 由 [文献综述成果目录](knowledge/literature-review-catalog.md) 声明为当前知识卡证据入口的 append-only run；历史 run 保留但不默认加载。 |
+| reactive VLA | 狭义指主要通过行为克隆，把当前观测与语言指令直接映射为下一步或下一段动作、但不显式预测和检验动作后果的 VLA 策略；它不等同于全部 VLA 架构。 |
+| VLA–world-model fusion stack | 知识库对近期跨论文证据的 synthesis：VLA 提供语义理解、任务分解与动作先验，动作条件世界模型负责后果预演、候选排序与失败识别，本体适配器和底层控制器负责可执行落地。 |
+| action-conditioned reliability | 世界模型在给定动作条件下，对真实后果、物理约束、长时一致、失败状态和候选排序保持可靠，并能在可用延迟内支持闭环决策的联合要求。 |
+| loco-manipulation | 移动/行走与操作在同一任务中耦合的全身能力；系统边界应按“任务意图—全身执行”划分，而不是默认拆成彼此独立的上肢和下肢策略。 |
+| world-model authority ladder | 按错误是否可拦截给世界模型分配权限：训练期表征教师、离线排序和数据生成属于低权限；在线候选预演次之；直接控制和安全裁决权限最高，必须满足更强真实闭环门槛。 |
+| function-and-rate aligned fusion | 依据模态的物理功能、采样频率和控制时标选择性耦合：语言约束任务，视觉提供全局语义/几何，触觉与力觉描述接触，本体状态和动作把它们放入同一因果时间轴。 |
+| contact execution stack | 将接触信号依次用于可解释表征、动作条件预测、高频局部纠偏和过程安全验收的分层闭环；增加传感通道本身不等于完成该栈。 |
+| embodied data contamination | 具身数据中的来源、时间、任务、动作、模型版本或评测边界关系失真；既包括近重复、同步错位和训练—评测泄漏，也包括投毒、持久后门及生成扩增中的二次激活。它不是只在入库前发生的样本级脏数据。 |
+| semantic leakage | 训练与评测在场景、任务逻辑、对象布局或指令—动作映射上过度相似，使模型依赖记忆取得高分；即使不存在字节级重复，也会破坏泛化证据的独立性。 |
+| supply-chain persistence | 污染或后门进入基础模型、适配模块或检查点后继续穿过下游干净微调的现象；因此只审计本地新增示教不能证明模型链路无污染。 |
+| secondary activation | 原始数据在入库时看似安全，但经世界模型生成、轨迹扩增或重标注后转化为危险行为并污染下游策略的现象。 |
+| ego-centric behavior data | 人类第一视角视频及其恢复出的手—物轨迹、视点运动和任务结构。它适合提供高覆盖行为先验，但默认不等于机器人控制监督；具体边界见 EA-DATA、EA-XEMBODIMENT 和 EA-MODEL。 |
+| executable supervision | 已对坐标系、尺度、动作接口、运动学可达性、接触结构和动力学可行性做过核验，可被目标机器人训练或闭环评测消费的监督信号。 |
+| visual localization stack | 从地点候选检索，经视觉/几何验证，到 6DoF 位姿估计或局部细化，再到拒识与恢复的完整定位链；不能用单一 Recall@K 代替整链结果。 |
+| recoverability domain | 给定地图、参考覆盖、初始化误差和场景条件时，定位或位姿细化仍能可靠收敛的工作域。超出该域时应拒识、重定位或切换传感器。 |
+| risk–coverage | 同时报告被系统接受的查询覆盖率与这些已接受结果的错误风险；低风险但接近零覆盖不代表系统具备可用定位能力。 |

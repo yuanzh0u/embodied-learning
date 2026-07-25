@@ -1,0 +1,1627 @@
+{
+  "generated_at": "2026-07-19T07:03:04.568497+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年 loco-manipulation 研究进展",
+  "start_date": "2025-07-19",
+  "end_date": "2026-07-19",
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-EVAL",
+    "EA-XEMBODIMENT",
+    "EA-SENSOR"
+  ],
+  "families": [
+    "sim2real",
+    "retargeting",
+    "tactile-force",
+    "vla"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 40,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 160,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 160,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-loco-manipulation-exact",
+        "sim2real-core",
+        "retargeting-robot-manipulation",
+        "tactile-force-tactile-manipulation",
+        "vla-core",
+        "vla-named-models"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-legged-arm-whole-body",
+        "dynamic-humanoid-whole-body-manipulation",
+        "dynamic-mobile-manipulation-coupled",
+        "dynamic-contact-force-tactile",
+        "dynamic-sim-real-reinforcement",
+        "dynamic-evaluation-benchmark",
+        "dynamic-deployment-recovery",
+        "dynamic-cooperative-loco-manipulation",
+        "calibrated-multi-task-loco-manipulation-whole-body-control",
+        "calibrated-collaborative-loco-manipulation",
+        "calibrated-tactile-aware-loco-manipulation",
+        "calibrated-whole-body-visuomotor-policy",
+        "calibrated-whole-body-humanoid-manipulation",
+        "calibration-multitask-loco-manipulation",
+        "calibration-tactile-aware-loco-manipulation",
+        "calibration-whole-body-visuomotor",
+        "sim2real-synthetic-data",
+        "sim2real-correlation",
+        "retargeting-human-to-robot-mapping",
+        "retargeting-dexterous-hand",
+        "retargeting-gripper-demonstration",
+        "tactile-force-force-torque",
+        "tactile-force-slip-detection",
+        "tactile-force-contact-rich",
+        "tactile-force-sensor-fusion",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "dynamic-data-teleop-imitation",
+        "dynamic-language-long-horizon-mobile-manipulation",
+        "sim2real-domain-randomization"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-limit-failure-safety",
+        "retargeting-morphology-gap"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "evaluation-and-validation",
+      "query_labels": [
+        "sim2real-real-validation"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): Loco-manipulation is not a single metadata vocabulary. The run must cover legged loco-manipulation, humanoid/whole-body manipulation, wheeled mobile manipulation, contact-rich control, data collection, evaluation, and deployment."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-loco-manipulation-exact",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"loco-manipulation\" OR all:\"locomanipulation\" OR all:\"loco manipulation\"",
+      "why": "Capture exact spellings used by the field."
+    },
+    {
+      "label": "dynamic-legged-arm-whole-body",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:quadruped OR all:legged) AND (all:manipulation OR all:manipulator) AND all:\"whole-body\"",
+      "why": "Capture arm-equipped quadrupeds and other legged whole-body controllers that omit the exact term loco-manipulation."
+    },
+    {
+      "label": "dynamic-humanoid-whole-body-manipulation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:humanoid AND all:\"whole-body manipulation\"",
+      "why": "Humanoid work often frames integrated locomotion, balance, reaching, and contact as whole-body manipulation."
+    },
+    {
+      "label": "dynamic-mobile-manipulation-coupled",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"mobile manipulation\" AND (all:\"whole-body\" OR all:coupled OR all:visuomotor)",
+      "why": "Cover wheeled systems that jointly learn or optimize base and arm actions."
+    },
+    {
+      "label": "dynamic-contact-force-tactile",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"loco-manipulation\" OR all:\"whole-body manipulation\") AND (all:contact OR all:force OR all:tactile OR all:compliance)",
+      "why": "Recover contact-rich force/tactile/control advances."
+    },
+    {
+      "label": "dynamic-data-teleop-imitation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"whole-body manipulation\" OR all:\"mobile manipulation\") AND (all:teleoperation OR all:demonstration OR all:imitation) AND all:robot",
+      "why": "Cover scalable whole-body data collection and policy learning."
+    },
+    {
+      "label": "dynamic-sim-real-reinforcement",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"loco-manipulation\" OR all:\"whole-body manipulation\") AND (all:\"reinforcement learning\" OR all:\"sim-to-real\")",
+      "why": "Capture the dominant simulation/RL and transfer route."
+    },
+    {
+      "label": "dynamic-evaluation-benchmark",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"mobile manipulation\" OR all:\"whole-body manipulation\" OR all:\"loco-manipulation\") AND (all:benchmark OR all:evaluation OR all:dataset)",
+      "why": "Find benchmark, robot suite, and evaluation papers rather than only positive methods."
+    },
+    {
+      "label": "dynamic-limit-failure-safety",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"mobile manipulation\" OR all:\"whole-body manipulation\" OR all:\"loco-manipulation\") AND (all:failure OR all:limitation OR all:safety OR all:robustness)",
+      "why": "Force coverage of failure modes, safety, robustness, and negative surfaces."
+    },
+    {
+      "label": "dynamic-deployment-recovery",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"mobile manipulation\" OR all:\"loco-manipulation\") AND (all:deployment OR all:\"real-world\" OR all:recovery) AND all:robot",
+      "why": "Cover real-system deployment and recovery evidence."
+    },
+    {
+      "label": "dynamic-cooperative-loco-manipulation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:collaborative OR all:cooperative OR all:multi-robot) AND (all:\"loco-manipulation\" OR all:\"mobile manipulation\")",
+      "why": "Capture coordinated payload manipulation and multi-agent variants."
+    },
+    {
+      "label": "dynamic-language-long-horizon-mobile-manipulation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"mobile manipulation\" AND (all:language OR all:VLA OR all:\"vision-language-action\") AND (all:\"long-horizon\" OR all:planning)",
+      "why": "Cover semantic task planning and long-horizon mobile manipulation, while keeping it separate from motor-control evidence."
+    },
+    {
+      "label": "dynamic-loco-manipulation-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs (loco-manipulation OR whole-body manipulation OR mobile manipulation) robot 2025 2026",
+      "why": "Recover named systems and spelling variants if the API under-recovers."
+    },
+    {
+      "label": "dynamic-loco-manipulation-calibration",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "high",
+      "query": "recent robot loco-manipulation whole-body mobile manipulation 2025 2026",
+      "why": "Calibrate emerging method and benchmark names."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv-abs calibration (high): Exact recent use of multi-task loco-manipulation and whole-body control for an arm-equipped quadruped. Keyword calibration only.",
+    "arxiv-abs calibration (high): Recent use of collaborative loco-manipulation and long-horizon pick-and-place. Keyword calibration only.",
+    "arxiv-abs calibration (high): Recent use of tactile-aware quadrupedal loco-manipulation. Keyword calibration only.",
+    "arxiv-abs calibration (high): Recent use of human-like whole-body manipulation and whole-body visuomotor policies. Keyword calibration only.",
+    "arxiv-abs calibration (high): Recent use of scalable whole-body humanoid manipulation and wearable-exoskeleton data collection. Keyword calibration only."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-loco-manipulation-exact",
+      "tier": "core",
+      "query": "all:\"loco-manipulation\" OR all:\"locomanipulation\" OR all:\"loco manipulation\"",
+      "why": "Capture exact spellings used by the field.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-loco-manipulation-exact"
+      ]
+    },
+    {
+      "label": "dynamic-legged-arm-whole-body",
+      "tier": "mechanism",
+      "query": "(all:quadruped OR all:legged) AND (all:manipulation OR all:manipulator) AND all:\"whole-body\"",
+      "why": "Capture arm-equipped quadrupeds and other legged whole-body controllers that omit the exact term loco-manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-legged-arm-whole-body"
+      ]
+    },
+    {
+      "label": "dynamic-humanoid-whole-body-manipulation",
+      "tier": "adjacent",
+      "query": "all:humanoid AND all:\"whole-body manipulation\"",
+      "why": "Humanoid work often frames integrated locomotion, balance, reaching, and contact as whole-body manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-humanoid-whole-body-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-mobile-manipulation-coupled",
+      "tier": "adjacent",
+      "query": "all:\"mobile manipulation\" AND (all:\"whole-body\" OR all:coupled OR all:visuomotor)",
+      "why": "Cover wheeled systems that jointly learn or optimize base and arm actions.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-mobile-manipulation-coupled"
+      ]
+    },
+    {
+      "label": "dynamic-contact-force-tactile",
+      "tier": "mechanism",
+      "query": "(all:\"loco-manipulation\" OR all:\"whole-body manipulation\") AND (all:contact OR all:force OR all:tactile OR all:compliance)",
+      "why": "Recover contact-rich force/tactile/control advances.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-force-tactile"
+      ]
+    },
+    {
+      "label": "dynamic-data-teleop-imitation",
+      "tier": "representation",
+      "query": "(all:\"whole-body manipulation\" OR all:\"mobile manipulation\") AND (all:teleoperation OR all:demonstration OR all:imitation) AND all:robot",
+      "why": "Cover scalable whole-body data collection and policy learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-data-teleop-imitation"
+      ]
+    },
+    {
+      "label": "dynamic-sim-real-reinforcement",
+      "tier": "sim-real",
+      "query": "(all:\"loco-manipulation\" OR all:\"whole-body manipulation\") AND (all:\"reinforcement learning\" OR all:\"sim-to-real\")",
+      "why": "Capture the dominant simulation/RL and transfer route.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-sim-real-reinforcement"
+      ]
+    },
+    {
+      "label": "dynamic-evaluation-benchmark",
+      "tier": "evaluation",
+      "query": "(all:\"mobile manipulation\" OR all:\"whole-body manipulation\" OR all:\"loco-manipulation\") AND (all:benchmark OR all:evaluation OR all:dataset)",
+      "why": "Find benchmark, robot suite, and evaluation papers rather than only positive methods.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-evaluation-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-limit-failure-safety",
+      "tier": "limitation",
+      "query": "(all:\"mobile manipulation\" OR all:\"whole-body manipulation\" OR all:\"loco-manipulation\") AND (all:failure OR all:limitation OR all:safety OR all:robustness)",
+      "why": "Force coverage of failure modes, safety, robustness, and negative surfaces.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-limit-failure-safety"
+      ]
+    },
+    {
+      "label": "dynamic-deployment-recovery",
+      "tier": "deployment",
+      "query": "(all:\"mobile manipulation\" OR all:\"loco-manipulation\") AND (all:deployment OR all:\"real-world\" OR all:recovery) AND all:robot",
+      "why": "Cover real-system deployment and recovery evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-deployment-recovery"
+      ]
+    },
+    {
+      "label": "dynamic-cooperative-loco-manipulation",
+      "tier": "adjacent",
+      "query": "(all:collaborative OR all:cooperative OR all:multi-robot) AND (all:\"loco-manipulation\" OR all:\"mobile manipulation\")",
+      "why": "Capture coordinated payload manipulation and multi-agent variants.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-cooperative-loco-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-language-long-horizon-mobile-manipulation",
+      "tier": "policy-interface",
+      "query": "all:\"mobile manipulation\" AND (all:language OR all:VLA OR all:\"vision-language-action\") AND (all:\"long-horizon\" OR all:planning)",
+      "why": "Cover semantic task planning and long-horizon mobile manipulation, while keeping it separate from motor-control evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-language-long-horizon-mobile-manipulation"
+      ]
+    },
+    {
+      "label": "calibrated-multi-task-loco-manipulation-whole-body-control",
+      "tier": "calibrated-term",
+      "query": "all:\"multi-task loco-manipulation whole-body control\"",
+      "why": "Exact recent wording for arm-equipped quadruped control.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-multi-task-loco-manipulation-whole-body-control"
+      ]
+    },
+    {
+      "label": "calibrated-collaborative-loco-manipulation",
+      "tier": "calibrated-term",
+      "query": "all:\"collaborative loco-manipulation\"",
+      "why": "Names coordinated single- and multi-robot pick-and-place.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-collaborative-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibrated-tactile-aware-loco-manipulation",
+      "tier": "calibrated-term",
+      "query": "all:\"tactile-aware loco-manipulation\"",
+      "why": "Names the contact-observability branch.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-tactile-aware-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibrated-whole-body-visuomotor-policy",
+      "tier": "calibrated-term",
+      "query": "all:\"whole-body visuomotor policy\"",
+      "why": "Names a data-driven policy branch outside exact loco-manipulation wording.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-whole-body-visuomotor-policy"
+      ]
+    },
+    {
+      "label": "calibrated-whole-body-humanoid-manipulation",
+      "tier": "calibrated-term",
+      "query": "all:\"whole-body humanoid manipulation\"",
+      "why": "Covers humanoid systems whose locomotion and manipulation are integrated but not named loco-manipulation.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-whole-body-humanoid-manipulation"
+      ]
+    },
+    {
+      "label": "calibration-multitask-loco-manipulation",
+      "tier": "calibrated-query",
+      "query": "all:\"multi-task loco-manipulation\" OR all:\"whole-body loco-manipulation\"",
+      "why": "Use current exact vocabulary from recent arXiv papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-multitask-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibration-tactile-aware-loco-manipulation",
+      "tier": "calibrated-query",
+      "query": "all:\"tactile-aware\" AND (all:\"loco-manipulation\" OR all:\"whole-body manipulation\")",
+      "why": "Capture tactile/contact-aware systems.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-tactile-aware-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibration-whole-body-visuomotor",
+      "tier": "calibrated-query",
+      "query": "all:\"whole-body\" AND all:visuomotor AND all:robot",
+      "why": "Capture recent whole-body imitation-policy terminology.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-whole-body-visuomotor"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-loco-manipulation-exact",
+      "tier": "core",
+      "query": "all:\"loco-manipulation\" OR all:\"locomanipulation\" OR all:\"loco manipulation\"",
+      "why": "Capture exact spellings used by the field.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-loco-manipulation-exact"
+      ]
+    },
+    {
+      "label": "dynamic-legged-arm-whole-body",
+      "tier": "mechanism",
+      "query": "(all:quadruped OR all:legged) AND (all:manipulation OR all:manipulator) AND all:\"whole-body\"",
+      "why": "Capture arm-equipped quadrupeds and other legged whole-body controllers that omit the exact term loco-manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-legged-arm-whole-body"
+      ]
+    },
+    {
+      "label": "dynamic-humanoid-whole-body-manipulation",
+      "tier": "adjacent",
+      "query": "all:humanoid AND all:\"whole-body manipulation\"",
+      "why": "Humanoid work often frames integrated locomotion, balance, reaching, and contact as whole-body manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-humanoid-whole-body-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-mobile-manipulation-coupled",
+      "tier": "adjacent",
+      "query": "all:\"mobile manipulation\" AND (all:\"whole-body\" OR all:coupled OR all:visuomotor)",
+      "why": "Cover wheeled systems that jointly learn or optimize base and arm actions.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-mobile-manipulation-coupled"
+      ]
+    },
+    {
+      "label": "dynamic-contact-force-tactile",
+      "tier": "mechanism",
+      "query": "(all:\"loco-manipulation\" OR all:\"whole-body manipulation\") AND (all:contact OR all:force OR all:tactile OR all:compliance)",
+      "why": "Recover contact-rich force/tactile/control advances.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-contact-force-tactile"
+      ]
+    },
+    {
+      "label": "dynamic-data-teleop-imitation",
+      "tier": "representation",
+      "query": "(all:\"whole-body manipulation\" OR all:\"mobile manipulation\") AND (all:teleoperation OR all:demonstration OR all:imitation) AND all:robot",
+      "why": "Cover scalable whole-body data collection and policy learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-data-teleop-imitation"
+      ]
+    },
+    {
+      "label": "dynamic-sim-real-reinforcement",
+      "tier": "sim-real",
+      "query": "(all:\"loco-manipulation\" OR all:\"whole-body manipulation\") AND (all:\"reinforcement learning\" OR all:\"sim-to-real\")",
+      "why": "Capture the dominant simulation/RL and transfer route.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-sim-real-reinforcement"
+      ]
+    },
+    {
+      "label": "dynamic-evaluation-benchmark",
+      "tier": "evaluation",
+      "query": "(all:\"mobile manipulation\" OR all:\"whole-body manipulation\" OR all:\"loco-manipulation\") AND (all:benchmark OR all:evaluation OR all:dataset)",
+      "why": "Find benchmark, robot suite, and evaluation papers rather than only positive methods.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-evaluation-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-limit-failure-safety",
+      "tier": "limitation",
+      "query": "(all:\"mobile manipulation\" OR all:\"whole-body manipulation\" OR all:\"loco-manipulation\") AND (all:failure OR all:limitation OR all:safety OR all:robustness)",
+      "why": "Force coverage of failure modes, safety, robustness, and negative surfaces.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-limit-failure-safety"
+      ]
+    },
+    {
+      "label": "dynamic-deployment-recovery",
+      "tier": "deployment",
+      "query": "(all:\"mobile manipulation\" OR all:\"loco-manipulation\") AND (all:deployment OR all:\"real-world\" OR all:recovery) AND all:robot",
+      "why": "Cover real-system deployment and recovery evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-deployment-recovery"
+      ]
+    },
+    {
+      "label": "dynamic-cooperative-loco-manipulation",
+      "tier": "adjacent",
+      "query": "(all:collaborative OR all:cooperative OR all:multi-robot) AND (all:\"loco-manipulation\" OR all:\"mobile manipulation\")",
+      "why": "Capture coordinated payload manipulation and multi-agent variants.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-cooperative-loco-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-language-long-horizon-mobile-manipulation",
+      "tier": "policy-interface",
+      "query": "all:\"mobile manipulation\" AND (all:language OR all:VLA OR all:\"vision-language-action\") AND (all:\"long-horizon\" OR all:planning)",
+      "why": "Cover semantic task planning and long-horizon mobile manipulation, while keeping it separate from motor-control evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-language-long-horizon-mobile-manipulation"
+      ]
+    },
+    {
+      "label": "calibrated-multi-task-loco-manipulation-whole-body-control",
+      "tier": "calibrated-term",
+      "query": "all:\"multi-task loco-manipulation whole-body control\"",
+      "why": "Exact recent wording for arm-equipped quadruped control.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-multi-task-loco-manipulation-whole-body-control"
+      ]
+    },
+    {
+      "label": "calibrated-collaborative-loco-manipulation",
+      "tier": "calibrated-term",
+      "query": "all:\"collaborative loco-manipulation\"",
+      "why": "Names coordinated single- and multi-robot pick-and-place.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-collaborative-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibrated-tactile-aware-loco-manipulation",
+      "tier": "calibrated-term",
+      "query": "all:\"tactile-aware loco-manipulation\"",
+      "why": "Names the contact-observability branch.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-tactile-aware-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibrated-whole-body-visuomotor-policy",
+      "tier": "calibrated-term",
+      "query": "all:\"whole-body visuomotor policy\"",
+      "why": "Names a data-driven policy branch outside exact loco-manipulation wording.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-whole-body-visuomotor-policy"
+      ]
+    },
+    {
+      "label": "calibrated-whole-body-humanoid-manipulation",
+      "tier": "calibrated-term",
+      "query": "all:\"whole-body humanoid manipulation\"",
+      "why": "Covers humanoid systems whose locomotion and manipulation are integrated but not named loco-manipulation.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-whole-body-humanoid-manipulation"
+      ]
+    },
+    {
+      "label": "calibration-multitask-loco-manipulation",
+      "tier": "calibrated-query",
+      "query": "all:\"multi-task loco-manipulation\" OR all:\"whole-body loco-manipulation\"",
+      "why": "Use current exact vocabulary from recent arXiv papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-multitask-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibration-tactile-aware-loco-manipulation",
+      "tier": "calibrated-query",
+      "query": "all:\"tactile-aware\" AND (all:\"loco-manipulation\" OR all:\"whole-body manipulation\")",
+      "why": "Capture tactile/contact-aware systems.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-tactile-aware-loco-manipulation"
+      ]
+    },
+    {
+      "label": "calibration-whole-body-visuomotor",
+      "tier": "calibrated-query",
+      "query": "all:\"whole-body\" AND all:visuomotor AND all:robot",
+      "why": "Capture recent whole-body imitation-policy terminology.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-abs",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-whole-body-visuomotor"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "tactile-force-tactile-manipulation",
+      "tier": "core",
+      "query": "all:tactile AND all:\"robot manipulation\"",
+      "why": "Find tactile sensing papers tied to manipulation policies or control.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-tactile-manipulation"
+      ]
+    },
+    {
+      "label": "tactile-force-force-torque",
+      "tier": "force",
+      "query": "all:force AND all:torque AND all:robot",
+      "why": "Cover force/torque observability and low-dimensional contact feedback.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-force-torque"
+      ]
+    },
+    {
+      "label": "tactile-force-slip-detection",
+      "tier": "contact-state",
+      "query": "all:\"slip detection\" AND all:robot",
+      "why": "Find tactile and force cues for grasp stability and material interaction.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-slip-detection"
+      ]
+    },
+    {
+      "label": "tactile-force-contact-rich",
+      "tier": "task-family",
+      "query": "all:\"contact-rich\" AND all:manipulation",
+      "why": "Surface high-contact tasks where vision-only policies often fail.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-contact-rich"
+      ]
+    },
+    {
+      "label": "tactile-force-sensor-fusion",
+      "tier": "fusion",
+      "query": "all:\"sensor fusion\" AND all:tactile AND all:robot",
+      "why": "Find multimodal policies combining tactile, force, vision, or proprioception.",
+      "source_key": "tactile-force",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "tactile-force-sensor-fusion"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-loco-manipulation-browser",
+      "query": "site:arxiv.org/abs (loco-manipulation OR whole-body manipulation OR mobile manipulation) robot 2025 2026",
+      "why": "Recover named systems and spelling variants if the API under-recovers.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-core",
+      "query": "site:arxiv.org/abs (sim2real OR \"sim-to-real\" OR \"simulation-to-real\") robot",
+      "why": "Find sim-to-real papers through web/arXiv pages when API search under-recovers variants.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-synthetic-validation",
+      "query": "site:arxiv.org/abs (\"synthetic data\" OR \"domain randomization\" OR simulation) (\"real robot\" OR validation) manipulation",
+      "why": "Find synthetic-data and domain-randomization papers that discuss whether simulated data transfers to real robots.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-eval-gap",
+      "query": "site:arxiv.org/abs (\"sim-real\" OR \"reality gap\" OR \"simulation gap\") (correlation OR evaluation OR benchmark) robot",
+      "why": "Find simulation evaluation and reality-gap discussions that may not use the sim2real keyword.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-loco-manipulation-calibration",
+      "query": "recent robot loco-manipulation whole-body mobile manipulation 2025 2026",
+      "why": "Calibrate emerging method and benchmark names.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-multi-task-loco-manipulation-whole-body-control",
+      "query": "\"multi-task loco-manipulation whole-body control\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: multi-task loco-manipulation whole-body control.",
+      "source_key": "calibration",
+      "source_type": "arxiv-abs",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-collaborative-loco-manipulation",
+      "query": "\"collaborative loco-manipulation\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: collaborative loco-manipulation.",
+      "source_key": "calibration",
+      "source_type": "arxiv-abs",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-tactile-aware-loco-manipulation",
+      "query": "\"tactile-aware loco-manipulation\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: tactile-aware loco-manipulation.",
+      "source_key": "calibration",
+      "source_type": "arxiv-abs",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-whole-body-visuomotor-policy",
+      "query": "\"whole-body visuomotor policy\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: whole-body visuomotor policy.",
+      "source_key": "calibration",
+      "source_type": "arxiv-abs",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-whole-body-humanoid-manipulation",
+      "query": "\"whole-body humanoid manipulation\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: whole-body humanoid manipulation.",
+      "source_key": "calibration",
+      "source_type": "arxiv-abs",
+      "channel": "web_calibration"
+    }
+  ]
+}

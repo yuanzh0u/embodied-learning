@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2508.15663",
+    "title": "Mind and Motion Aligned: A Joint Evaluation IsaacSim Benchmark for Task Planning and Low-Level Policies in Mobile Manipulation",
+    "published": "2025-08-21T15:48:51Z",
+    "url": "https://arxiv.org/abs/2508.15663",
+    "authors": [
+      "Nikita Kachaev",
+      "Andrei Spiridonov",
+      "Andrey Gorodetsky",
+      "Kirill Muravyev",
+      "Nikita Oskolkov",
+      "Aditya Narendra",
+      "Vlad Shakhuro",
+      "Dmitry Makarov",
+      "Aleksandr I. Panov",
+      "Polina Fedotova",
+      "Alexey K. Kovalev"
+    ]
+  },
+  "review": {
+    "question": "2025-07-19 至 2026-07-19 的 loco-manipulation 研究在哪些控制、学习、数据、感知、评测和部署方向取得了可验证进展，其适用边界与未解问题是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-XEMBODIMENT",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "Large language-conditioned household mobile-manipulation benchmark that explicitly separates planning and control evaluation."
+    },
+    "sections_read": [
+      {
+        "locator": "I INTRODUCTION",
+        "role": "problem",
+        "purpose": "Identify fragmented evaluation of planning and execution."
+      },
+      {
+        "locator": "V KITCHEN-R BENCHMARK",
+        "role": "method-or-design",
+        "purpose": "Inspect task scale, modules and interfaces."
+      },
+      {
+        "locator": "VII BASELINE VALIDATION AND RESULTS",
+        "role": "results-or-analysis",
+        "purpose": "Check baseline validation and execution protocol."
+      },
+      {
+        "locator": "VIII CONCLUSION",
+        "role": "conclusion-or-limitations",
+        "purpose": "Record benchmark scope."
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "How can language-conditioned household mobile manipulation be evaluated with planning and execution errors separated?",
+  "contributions": [
+    "A benchmark with more than 500 instructions, about 2,700 trajectories and modular planner/controller evaluation."
+  ],
+  "method": {
+    "summary": "Kitchen-R provides randomized household tasks, logging and modular interfaces for language planning, navigation and manipulation baselines.",
+    "assumptions": [
+      "Ground-truth task structure can be used to isolate execution quality from planner errors."
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "approximately 2,700 benchmark trajectories"
+    ],
+    "tasks": [
+      "more than 500 household instructions"
+    ],
+    "embodiments": [
+      "simulated mobile manipulator"
+    ],
+    "sample_or_scale": "Over 500 language instructions and roughly 2,700 trajectories."
+  },
+  "evaluation": {
+    "design": "Planning and mobile-manipulation baselines are validated in modular and integrated benchmark modes.",
+    "baselines": [
+      "VLM planning baseline",
+      "mobile manipulation baseline"
+    ],
+    "metrics": [
+      "planning metrics",
+      "navigation/manipulation success"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "The benchmark can isolate planning and execution, but its reported execution evaluation uses the ground-truth plan rather than the planner output.",
+      "scope": "The baseline validation protocol reported in this paper.",
+      "locator": "IV METRICS"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "Ground-truth plans are used for execution to isolate planning errors from execution errors.",
+        "locator": "IV METRICS"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Reported component scores should not be read as end-to-end autonomous system reliability.",
+        "basis": "Execution does not consume the predicted plan in the evaluation protocol."
+      }
+    ]
+  },
+  "transfer_boundary": "Useful for controlled diagnosis of modules; additional closed-loop evaluation is needed for full-system claims.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "Large instruction and trajectory coverage.",
+      "Explicitly separates planner and controller failure sources."
+    ],
+    "design_risks": [
+      "Ground-truth-plan execution hides compounding planner-control errors.",
+      "Simulation benchmark may not reflect physical dynamics."
+    ],
+    "baseline_fairness": "Baselines are evaluated through common benchmark interfaces.",
+    "metric_validity": "Module metrics are diagnostic, but do not directly measure end-to-end autonomy.",
+    "reproducibility": "Tasks, modules and logging are extensively described.",
+    "external_validity": "Simulation and household layout assumptions limit physical transfer."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2508.15663-C01",
+      "claim": "Kitchen-R's reported execution evaluation always uses the ground-truth plan to isolate execution from planning error, so its module results are not direct evidence of end-to-end autonomy.",
+      "stance": "limit",
+      "relation": "Clarifies how to interpret recent loco-manipulation benchmark numbers.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The metrics section explicitly states that execution does not use the predicted plan.",
+      "locator": "IV METRICS",
+      "source_context": "to isolate planning errors from execution errors, the ground-truth plan is always used for execution.",
+      "evidence_type": "protocol",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The protocol sentence directly supports the interpretation boundary."
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

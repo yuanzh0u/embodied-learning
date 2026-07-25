@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.03828",
+    "title": "ObjRetarget: An Object-Aware Motion Retargeting Framework with Anthropomorphic Arm Constraints and Polyhedral Hand Modeling",
+    "published": "2026-07-04T11:31:23Z",
+    "url": "https://arxiv.org/abs/2607.03828",
+    "authors": [
+      "Yuanchuan Lai",
+      "Qing Gao",
+      "Ziyan Liang",
+      "Junjie Hu",
+      "Zhaojie Ju"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "从 human RGB-D video 做 object-aware retargeting，直接检验 pose matching、contact geometry 与 hand-arm coordination 的困难。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "确认 free-space pose mapping 对 contact manipulation 的不足。"
+      },
+      {
+        "locator": "III ObjRetarget > III-A Object-Aware Motion Retargeting Framework",
+        "role": "method-or-design",
+        "purpose": "核验 hand-arm 解耦与 contact phase detection。"
+      },
+      {
+        "locator": "III ObjRetarget > III-C Polyhedral Hand Modeling",
+        "role": "method-or-design",
+        "purpose": "核验多指接触几何不变量。"
+      },
+      {
+        "locator": "IV Experiments > IV-B Comparative Experiments on Motion Retargeting > IV-B 1 Multi-method comparison",
+        "role": "results-or-analysis",
+        "purpose": "核验六任务真实机器人比较。"
+      },
+      {
+        "locator": "IV Experiments > IV-C Ablation Study > IV-C 1 Hand–object geometric consistency module",
+        "role": "results-or-analysis",
+        "purpose": "核验 contact geometry 消融。"
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录动态反馈、force feedback 和 whole-body 边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "从人类视频 retarget 到灵巧机器人时，如何同时保持 global arm motion、local contact geometry 与物理可执行性？",
+  "contributions": [
+    "将 arm global motion 与 contact-sensitive hand manipulation 解耦。",
+    "用 polytope clusters 保持多指 hand-object contact invariants。",
+    "在六类真实双臂任务中比较 pose/object-graph baselines。"
+  ],
+  "method": {
+    "summary": "从 RGB-D 视频恢复人体、对象点云与交互距离；arm 以 reference trajectory + anthropomorphic constraint 优化，hand 在接触阶段启用 polytope-cluster geometric invariants，统一 scheduler 协调执行。",
+    "assumptions": [
+      "contact 可由 hand-object distance threshold 可靠检测。",
+      "RGB-D 与对象点云足以表征多指接触几何。",
+      "位置控制与预规划轨迹能承担主要动态误差。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "human RGB-D demonstrations from three demonstrators"
+    ],
+    "tasks": [
+      "six dexterous manipulation tasks"
+    ],
+    "embodiments": [
+      "human upper limb",
+      "RealMan dual-arm robot with Inspire hands"
+    ],
+    "sample_or_scale": "每任务 20 次真实机器人 trials；六任务平均成功率与三种消融。"
+  },
+  "evaluation": {
+    "design": "在随机对象初始位姿和 clutter 中比较 OKAMI/ORION，并消融 hand geometry、initial retargeting 与 arm-plane regularization。",
+    "baselines": [
+      "OKAMI",
+      "ORION",
+      "without initial retargeting",
+      "without hand geometry",
+      "without arm-plane optimization"
+    ],
+    "metrics": [
+      "task success",
+      "object slip distance",
+      "geometric consistency",
+      "MPJPE",
+      "trajectory Fréchet distance"
+    ],
+    "ablations": [
+      "hand-object geometry",
+      "arm initialization",
+      "anthropomorphic regularization"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "传统 pose/joint retargeting 在 free space 可用，但没有显式 contact structure 时 sustained manipulation 容易滑移和失败。",
+      "scope": "upper-limb RGB-D dexterous retargeting。",
+      "locator": "I Introduction"
+    },
+    {
+      "finding": "去除 hand geometry 后 object slip 从 0.012 m 升至 0.045 m，任务成功率从 75.8% 降至 53.3%。",
+      "scope": "六类真实任务的 contact geometry 消融。",
+      "locator": "IV Experiments > IV-C Ablation Study > IV-C 1 Hand–object geometric consistency module"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "尚未充分利用复杂交互中的 dynamic feedback，当前仅限 upper-limb manipulation；未来需 adaptive force feedback。",
+        "locator": "V Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "基于距离阈值和几何不变量的接触模型不能替代力/触觉闭环。",
+        "basis": "方法用 0.05 cm 距离阈值切换接触模式，作者将 force feedback 列为未来工作。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于 RGB-D、对象点云可得、上肢轨迹可预规划且接触几何可由距离近似的任务；对动态载荷、滑移、柔性物和 whole-body interaction 证据不足。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "真实机器人、随机对象位姿和多 demonstrators。",
+      "用 slip、geometry 和 success 三类指标直接测试 contact module。"
+    ],
+    "design_risks": [
+      "contact threshold 极精细，实际 perception noise 下的稳健性不充分。",
+      "缺少力/触觉反馈和动态控制对照。"
+    ],
+    "baseline_fairness": "作者为 ORION 适配 dexterous control，仍可能因原方法面向 gripper 而处于不利接口。",
+    "metric_validity": "object slip 与 success 直接对应接触稳定性；未报告力峰值、安全或实时计算延迟。",
+    "reproducibility": "公式和任务较清楚，依赖 SLAHMR/VLM/object tracking 以及未量化的 perception accuracy。",
+    "external_validity": "支持 object-aware contact retargeting 的必要性，不支持该几何方法覆盖所有动态/触觉任务。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.03828-C01",
+      "claim": "Ego-human motion 的 pose/joint 对齐只能保证自由空间几何相似；不显式建模 hand-object contact，就难以保持持续接触、物体交换和多阶段操作。",
+      "stance": "limit",
+      "relation": "区分 motion transfer 与 contact transfer。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "相关工作和引言都指出现有方法多假设 object-free/weak-contact，忽略手臂与手的不同功能。",
+      "locator": "II-B Human-to-Robot Motion Retargeting",
+      "source_context": "most methods assume object-free or weak-contact settings and focus on geometric consistency or joint error minimization",
+      "evidence_type": "problem-statement",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接限定传统 retargeting 的适用域；主张未宣称所有 contact-aware 方法都失败。"
+      }
+    },
+    {
+      "card_id": "2607.03828-C02",
+      "claim": "显式 contact geometry 在该系统中显著减少滑移并提高成功率，说明接触结构是 Ego-centric 数据转成可执行监督的独立质量维度。",
+      "stance": "conditional",
+      "relation": "支持对 retargeted trajectories 增加 contact-consistency gate。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "去除 hand geometry 后 object slip 变大且 success 下降，full ObjRetarget 最好。",
+      "locator": "IV-C 1 Hand–object geometric consistency module",
+      "source_context": "also removing geometric consistency causes significant slippage, contact failures, and posture collapse",
+      "evidence_type": "ablation",
+      "quantitative": {
+        "metric": "object slip and task success",
+        "value_or_direction": "0.012 m and 75.8% versus 0.045 m and 53.3%",
+        "comparator": "full ObjRetarget versus without hand geometry",
+        "task_or_sample": "six real-world dexterous tasks",
+        "locator": "IV Experiments > IV-C Ablation Study > IV-C 1 Hand–object geometric consistency module"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表 II 给出 slip、geometry 和 success 的同一消融数值，支持接触几何在该系统内的贡献。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "该文是 retargeting/evidence boundary，相邻但直接服务 Ego-centric human-video action conversion。"
+}
