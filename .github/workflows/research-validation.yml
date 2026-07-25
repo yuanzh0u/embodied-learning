@@ -1,0 +1,110 @@
+name: Research knowledge validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: research-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate repository and evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for suite in \
+            tests \
+            skills/embodied-ai-query-planner/tests \
+            skills/embodied-ai-literature-hub/tests \
+            skills/embodied-ai-paper-reader/tests \
+            skills/embodied-ai-literature-review/tests \
+            skills/embodied-ai-review-writer/tests
+          do
+            python3 -m unittest discover -s "$suite" -v
+          done
+
+      - name: Validate current research knowledge
+        run: python3 scripts/validate_current_reviews.py --root .
+
+      - name: Check changed-file hygiene
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${BASE_SHA}" || "${BASE_SHA}" =~ ^0+$ ]]; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+          git diff --check "${BASE_SHA}...${GITHUB_SHA}"
+          python3 - "${BASE_SHA}...${GITHUB_SHA}" <<'PY'
+          import re
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          revision_range = sys.argv[1]
+          numstat = subprocess.check_output(
+              ["git", "diff", "--numstat", revision_range], text=True
+          )
+          binary_files = []
+          for line in numstat.splitlines():
+              added, deleted, path = line.split("\t", 2)
+              if added == "-" or deleted == "-":
+                  binary_files.append(path)
+          if binary_files:
+              raise SystemExit("binary files are not allowed:\n- " + "\n- ".join(binary_files))
+
+          changed = subprocess.check_output(
+              ["git", "diff", "--name-only", "--diff-filter=AM", "-z", revision_range]
+          ).decode().split("\0")
+          oversized = []
+          for name in filter(None, changed):
+              path = Path(name)
+              if path.is_file() and path.stat().st_size > 20 * 1024 * 1024:
+                  oversized.append(f"{name} ({path.stat().st_size} bytes)")
+          if oversized:
+              raise SystemExit("files over 20 MiB are not allowed:\n- " + "\n- ".join(oversized))
+
+          diff = subprocess.check_output(
+              ["git", "diff", "--no-ext-diff", "--unified=0", revision_range],
+              text=True,
+              errors="replace",
+          )
+          added_text = "\n".join(
+              line[1:]
+              for line in diff.splitlines()
+              if line.startswith("+") and not line.startswith("+++")
+          )
+          secret_patterns = {
+              "private key": r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
+              "GitHub token": r"gh[pousr]_[A-Za-z0-9]{20,}",
+              "AWS access key": r"AKIA[0-9A-Z]{16}",
+              "Slack token": r"xox[baprs]-[A-Za-z0-9-]{20,}",
+          }
+          matches = [label for label, pattern in secret_patterns.items() if re.search(pattern, added_text)]
+          if matches:
+              raise SystemExit("potential secrets detected: " + ", ".join(matches))
+          PY
