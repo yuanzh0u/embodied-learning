@@ -86,6 +86,14 @@ class CheckRunBundleTest(unittest.TestCase):
         )
         self.assertEqual(check_run_bundle.check_run_bundle(run_dir), [])
 
+    def test_declared_survey_scope_passes(self) -> None:
+        run_dir = make_run(
+            self.tmp,
+            deliverables=["review-packet.md"],
+            manifest_extra={"style": "survey", "scope_note": "用户只要求第一阶段可审计 survey"},
+        )
+        self.assertEqual(check_run_bundle.check_run_bundle(run_dir), [])
+
     def test_declared_scope_without_note_fails(self) -> None:
         run_dir = make_run(
             self.tmp,

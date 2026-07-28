@@ -1,0 +1,397 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.26217",
+    "title": "Fast LeWorldModel",
+    "published": "2026-06-24",
+    "url": "https://arxiv.org/abs/2606.26217",
+    "authors": [
+      "Yuntian Gao",
+      "Xiangyu Xu"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 如何把从像素学习的 JEPA 表征、动作条件潜空间动力学和在线规划连接成可控闭环？其稳定、端到端、轻量和快规划分别由什么机制与实验证据支持，又有哪些限制和迁移边界？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文是 LeWM 技术线的直接算法后续：它保持 LeWM 的视觉 encoder、SIGReg、终端 latent goal cost 和 CEM 协议，只把一步自回归 dynamics 改为 action-prefix 并行多 horizon 预测，因而可以相对清楚地分析速度来源、误差累积与质量—速度边界。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract and 1 Introduction",
+        "role": "problem",
+        "purpose": "界定 LeWM 候选序列评估中的顺序 rollout 成本和中间 latent 误差递归累积问题。"
+      },
+      {
+        "locator": "2 Related Work",
+        "role": "relevant-core",
+        "purpose": "把 action-prefix dynamics 接口放回 JEPA、Dreamer/TD-MPC 与 reward-free CEM planning 背景。"
+      },
+      {
+        "locator": "3.1 Reward-Free Latent World Models and 3.2 Autoregressive Rollout in LeWorldModel",
+        "role": "method-or-design",
+        "purpose": "核对继承的离线无奖励设定、goal latent cost、SIGReg 与 LeWM 一步预测基线。"
+      },
+      {
+        "locator": "3.3 Fast LeWorldModel",
+        "role": "method-or-design",
+        "purpose": "核对从 observed anchor latent 和 action prefix 直接预测各 horizon future latent 的核心改动。"
+      },
+      {
+        "locator": "3.4 Action-Prefix Encoder and 3.5 Parallel Latent Predictor",
+        "role": "method-or-design",
+        "purpose": "核对 causal prefix token、current-state token、无未来动作泄漏与并行 predictor 接口。"
+      },
+      {
+        "locator": "3.6 Dense Prefix Prediction Objective",
+        "role": "method-or-design",
+        "purpose": "核对每个 partial prefix 的 latent target、terminal/intermediate supervision 与保留 SIGReg。"
+      },
+      {
+        "locator": "3.7 Planning with Action Prefixes and Self-Consistency",
+        "role": "method-or-design",
+        "purpose": "核对 CEM/终端 latent distance 未变、可选 self-consistency penalty 和成功率主表。"
+      },
+      {
+        "locator": "4 Experiments and 4.1 Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "核对与 LeWM 相同的四环境、离线数据、预处理、H=5、action skip=5、CEM/MPC 协议、模型规模和训练设置。"
+      },
+      {
+        "locator": "4.2 Planning Performance and Efficiency",
+        "role": "results-or-analysis",
+        "purpose": "核对成功率、model calls、dynamics time、full CEM time、GPU 和同预算条件。"
+      },
+      {
+        "locator": "4.3 Open-Loop Latent Prediction",
+        "role": "results-or-analysis",
+        "purpose": "核对一窗口直接预测、两窗口组合、latent loss 起点与增长斜率，以及 decoder 可视化边界。"
+      },
+      {
+        "locator": "4.4 Physical State Probing",
+        "role": "results-or-analysis",
+        "purpose": "核对 Push-T 三个物理变量的 linear/MLP probe，并区分可恢复信息与物理理解。"
+      },
+      {
+        "locator": "4.5 Ablation Studies",
+        "role": "results-or-analysis",
+        "purpose": "核对 Long-Action、terminal-only、dense prefix supervision 与 state token 的机制消融。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论，并确认全文未单列自身方法的 limitations/future-work 段。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "relevant-core",
+        "reason": "参考文献只用于识别 LeWM、PLDM、DINO-WM 等前序；本篇投影事件均由本文方法或实验直接支持。"
+      },
+      {
+        "locator": "Appendix or supplement",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: arXiv HTML v1 没有附录或补充材料；全部方法、实现、表格与消融均在正文。"
+      }
+    ]
+  },
+  "research_question": "在不改变 LeWM 的视觉表征、SIGReg、goal cost 与 CEM 预算时，能否用 action-prefix 的一次并行多 horizon 预测替代一步模型的顺序 rollout，从而同时降低候选评估时延和误差累积；这一收益在何种 prefix 长度、数据监督、绝对时延和评测范围内成立？",
+  "contributions": [
+    "把 LeWM 的局部一步转移接口改为 action-prefix prediction：每个未来 latent 都由 observed anchor latent 与相应动作前缀直接预测，避免同一窗口内把预测 latent 递归喂回模型。",
+    "提出 causal action-prefix Transformer、current-state token 和并行 latent predictor；对每个 prefix 配置中间 latent target，形成 dense multi-horizon supervision。",
+    "保持 LeWM 的 SIGReg、终端 latent distance、CEM 与 MPC 协议，并增加可选 self-consistency penalty，让 CEM 偏好不同 prefix 分解下终点预测一致的候选。",
+    "在 LeWM 四个仿真任务上报告成功率、单 GPU dynamics/full-CEM 时延、open-loop latent loss、physical probes 和关键消融。"
+  ],
+  "method": {
+    "summary": "视觉 encoder 与 anti-collapse SIGReg 沿用 LeWM，主要改动是 dynamics module。一个三层、六头 causal Transformer 读取 current latent 经两层 MLP 得到的 state token 和未来动作 tokens；第 k 个输出只能访问前 k 个动作，形成 horizon-specific prefix token。六层 action-modulated residual MLP 以同一个 observed anchor latent 和各 prefix token 并行预测所有 future latents。训练时每个 prefix 都对齐相应 future observation 的 encoder latent，并保留 SIGReg；horizon 自适应但截断在 1–5，history size 为 1。规划仍以终端 latent 到 goal latent 的平方欧氏距离运行相同预算 CEM；可选 self-consistency 比较直接 25-step 终点预测与经 10-step 中间 latent 分解得到的终点预测。",
+    "assumptions": [
+      "离线轨迹含足够密集的未来 observation/action segment，可为每个 prefix 提供 ground-truth latent target。",
+      "同一 prefix 的效果取决于 current state，单个 current latent state token 足以消除关键歧义；部分可观测任务不在验证范围。",
+      "训练范围 1–5 个 prefix steps 足以覆盖规划窗口；更长时域仍需组合多个窗口。",
+      "并行预测各 horizon 时共享 observed anchor 能减少窗口内误差递归，但不会消除跨窗口组合、encoder 或模型偏差。",
+      "终端 latent 欧氏距离、CEM 预算、action skip 和 MPC schedule 继承自 LeWM，故 Fast-LeWM 没有解决 goal-cost 可达性错配。",
+      "可选 self-consistency 的自一致性与真实准确性足够相关；论文没有报告该 variant 的单独时延。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LeWM Two-Room offline dataset",
+      "LeWM Push-T offline dataset",
+      "LeWM Reacher offline dataset",
+      "LeWM OGBench-Cube offline dataset"
+    ],
+    "tasks": [
+      "Two-Room goal-conditioned navigation",
+      "Reacher continuous reaching",
+      "Push-T contact-rich pushing",
+      "OGBench-Cube manipulation",
+      "open-loop latent prediction",
+      "Push-T physical-state probing"
+    ],
+    "embodiments": [
+      "the same four simulated continuous-control embodiments used by LeWorldModel"
+    ],
+    "sample_or_scale": "四个 LeWM 仿真任务与相同 offline datasets/preprocessing；训练 10 epochs，batch size 通常 128、Cube 为 32，训练 prefix horizon 截断为 1–5。控制 H=5、action skip=5，因此单个规划窗口覆盖 25 primitive environment steps。正文没有报告训练 seeds、成功率评测 episode 数或置信区间。"
+  },
+  "evaluation": {
+    "design": "以 LeWM 为主要对照，保持相同离线数据、观察预处理、goal-conditioned planning、action skip、H=5、MPC schedule 和 CEM budget。比较 base Fast-LeWM 与 Fast-LeWM+self-consistency 的四任务 success rate；在 Two-Room 单张 NVIDIA 4090 上分解 dynamics-evaluation 与 full CEM time；用四任务 open-loop latent loss/斜率、Push-T probes 和 Long-Action/terminal-only/state-token 消融检验机制。",
+    "baselines": [
+      "LeWorldModel",
+      "PLDM",
+      "DINO-WM",
+      "Long-Action LeWM",
+      "terminal-only Fast-LeWM",
+      "Fast-LeWM without current-state token"
+    ],
+    "metrics": [
+      "per-environment and average planning success rate",
+      "dynamics model calls",
+      "dynamics-evaluation time",
+      "full CEM solve time",
+      "open-loop latent prediction loss and least-squares growth slope",
+      "linear/MLP probe MSE and correlation"
+    ],
+    "ablations": [
+      "naively increasing LeWM action block from 5 to 25 primitive actions",
+      "terminal-only versus dense prefix supervision",
+      "with versus without current-state token",
+      "goal-only versus optional self-consistency candidate scoring"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Fast-LeWM 不靠缩小模型或替换 CEM 加速；它把 LeWM 每个 H=5 候选的五次顺序 dynamics 调用变为一次 prefix encoding 和并行 latent prediction。",
+      "scope": "同一 CEM budget、Four LeWM tasks；模型 17.9M 参数，与 released LeWM checkpoint 的 18.0M 近似。",
+      "locator": "3.3–3.7 Method and 4.1 Model architecture"
+    },
+    {
+      "finding": "base Fast-LeWM 的四任务平均 success 从 LeWM 的 85.8% 提升到 90.5%，可选 self-consistency 达 92.0%；各单环境均不低于 LeWM。",
+      "scope": "相同 H=5/action-skip-5 协议；正文没有 seeds、误差条或 episode 数，self-consistency 的单独时延未报告。",
+      "locator": "3.7 Table 1 and 4.2 Planning Performance and Efficiency"
+    },
+    {
+      "finding": "在 Two-Room、同 CEM budget、单张 NVIDIA 4090 上，dynamics time 从 31.4s 降到 8.0s，full CEM time 从 54.4s 降到 28.3s。",
+      "scope": "速度主要来自 model calls 5→1；图像编码、score 和数据操作不变，使端到端求解只下降 48%，绝对 28.3s 仍非高频实时控制。",
+      "locator": "4.2 Table 2"
+    },
+    {
+      "finding": "Fast-LeWM 在四任务的 open-loop latent loss 起点和增长斜率均低于 LeWM，说明窗口内 anchor-based prefix prediction 减少递归误差。",
+      "scope": "直接 prefix window 最长 H=5；更长的 t=50 点仍组合两次最大窗口预测，因此并未消除任意时域的误差累积。",
+      "locator": "4.3 Open-Loop Latent Prediction"
+    },
+    {
+      "finding": "简单把 LeWM action block 从 5 放大到 25 表现很差；terminal-only prefix 模型优于该 naive baseline 但仍低于 dense prefix 完整模型，state token 也有增益。",
+      "scope": "四个同协议仿真任务；说明速度与质量依赖有序 prefix 表示、密集中间监督和起始状态条件，而非只减少调用次数。",
+      "locator": "4.5 Ablation Studies, Table 4"
+    },
+    {
+      "finding": "Push-T probing 中，Fast-LeWM 的 linear probes 约等于 LeWM，MLP probes 在三个变量上更好；作者把它归因于 prefix-level training。",
+      "scope": "probe 只表明 latent 中信息可恢复，机制归因缺少直接干预，且不等于真实接触或安全控制能力。",
+      "locator": "4.4 Physical State Probing, Table 3"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "Fast-LeWM 只消除单个训练 prefix window 内的顺序依赖，不是任意长 horizon 的一次预测器。",
+        "basis": "训练 horizon 截断在 1–5；4.3 明确 t=25 是一个最大窗口，而 t=50 需要组合两次最大窗口预测。"
+      },
+      {
+        "boundary": "最快时延与最高成功率不能直接合并为同一个系统点。",
+        "basis": "Table 2 只报告 base Fast-LeWM 的 28.3s CEM time；92.0% 来自额外计算另一条 prefix 分解的 self-consistency variant，论文没有报告其时延。"
+      },
+      {
+        "boundary": "相对 LeWM 的 48% full-CEM 加速仍留下 28.3s 绝对求解时间，不能称为实时机器人控制。",
+        "basis": "Table 2 把 image encoding、score 和 data operations 纳入 full CEM time；这些非 dynamics 开销没有被 prefix 并行化。"
+      },
+      {
+        "boundary": "history size=1 假定当前视觉 latent 足以表示动力学状态，部分可观测、遮挡或需要速度历史的任务可能失效。",
+        "basis": "4.1 明确因每次预测 anchor 在 current observed latent 而把所有环境 history size 设为 1；未做 history/occlusion 消融。"
+      },
+      {
+        "boundary": "成功率改进缺少统计不确定性，不能判断小幅单任务差异是否稳健。",
+        "basis": "Table 1 给出点估计但全文未报告训练/evaluation seeds、episode 数、方差、置信区间或显著性检验。"
+      },
+      {
+        "boundary": "该接口继承 LeWM 的短 horizon、同轨迹 goal distribution、latent Euclidean goal cost 与 action labels，未扩展到真实机器人或跨本体。",
+        "basis": "实验完全复用 LeWM 的四个仿真 datasets 和 H=5 planning protocol；没有真实系统、分布外目标、长程层级或高维动作验证。"
+      },
+      {
+        "boundary": "open-loop latent loss 与 probe 是内部代理，不能单独证明更安全或更可达的闭环规划。",
+        "basis": "prediction error 以各模型 encoder 产生的 latent target 计算；probe 只检查 Push-T 三个变量的可恢复性。"
+      }
+    ]
+  },
+  "transfer_boundary": "最窄可迁移范围是：沿用 LeWM encoder/SIGReg、拥有密集 observation-action segments、当前单帧 latent 近似 Markov、规划窗口不超过训练的 5 个 action-prefix steps、CEM 需要批量评估大量同长度候选，并且单 GPU 端到端 28.3s 仍可接受的四类仿真 goal-conditioned planning。向更长 horizon、部分可观测历史、不同动作长度/维度、动态真实机器人、严格实时控制、不可达目标、不同 planner 或使用 self-consistency 的最佳质量点迁移，都需要新的时延和闭环验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "与 LeWM 使用相同数据、预处理、goal cost、H=5、action skip、MPC schedule 和 CEM budget，且模型参数量近似，较好隔离了 dynamics-query interface。",
+      "时延拆成 model calls、dynamics time 和 full CEM time，并明确单张 NVIDIA 4090 与 Two-Room，避免把内核加速等同端到端加速。",
+      "Long-Action、terminal-only、dense prefix 与 state-token 消融直接检查“只是扩大 action block”与“只是预测终点”等替代解释。",
+      "除 success rate 外还检查四任务 open-loop loss/斜率和 Push-T probes，验证速度改动没有明显牺牲预测表示。"
+    ],
+    "design_risks": [
+      "全文没有成功率的 seed、episode 数、误差条或显著性，点估计无法量化稳定性。",
+      "直接 prefix 只训练到 H=5；t=50 已需要两窗口组合，长时域优势没有被系统扫描。",
+      "self-consistency 的成功率最佳点需要额外分解预测，但没有配套 timing，质量—速度 Pareto 不完整。",
+      "所有任务 history size=1，没有测试遮挡、速度不可观测或需要多帧状态估计的环境。",
+      "open-loop loss 在各自 latent space内计算，probe/decoder 仍是代理；没有逐候选动作排序、calibration 或错误与闭环失败的对应分析。",
+      "CEM 仍占 28.3s，非 dynamics overhead 已成为瓶颈；方法不保证在不同 GPU、batch size、candidate count 或 planner 上维持比例收益。"
+    ],
+    "baseline_fairness": "LeWM 是最关键且较公平的对照：相同协议、CEM budget、数据与近似模型规模，速度差能主要归因到 5 次顺序调用变 1 次并行调用。Table 1 还列 PLDM/DINO-WM，但它们不是本篇速度实验的等架构对照。论文没有报告所有实现的 kernel 优化、训练 seed 或重复计时方差，因此仍不能把单次硬件结果视为平台无关常数。",
+    "metric_validity": "planning success、dynamics time 与 full CEM time直接对应质量和系统成本；model calls 澄清加速来源。局限是 28.3s 仍不测控制周期可用性，success 缺不确定性，latent loss/斜率只度量内部预测误差，probe 只检验可恢复信息，self-consistency 也可能奖励自洽而非真实准确。",
+    "reproducibility": "论文提供代码链接，报告 action skip、H、self-consistency 设置、模型层数/宽度/参数量、batch、epoch、horizon range、GPU、CEM budget 对齐、完整表格和消融，复现入口较好。缺少 seeds、evaluation episode 数、计时重复次数/方差和硬件软件栈细节，独立复现仍是必要门槛。",
+    "external_validity": "证据只覆盖 LeWM 的四个仿真任务、单帧视觉状态、连续低维动作、25 primitive-step planning window 和单 NVIDIA 4090。没有真实机器人、部分可观测、多相机、跨本体、高维灵巧手、长程层级、强不可逆接触或边缘硬件证据。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.26217-C01",
+      "claim": "Fast-LeWM replaces LeWM's within-window autoregressive latent chain with action-prefix prediction: every future latent is predicted directly from the same observed anchor latent and its causal action prefix, so all queried horizons can be produced in parallel.",
+      "stance": "support",
+      "relation": "界定 Fast-LeWM 真正改变的是 dynamics-query interface，而不是 CEM、goal cost 或更小模型。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.3 明确给出 anchor latent、prefix token、dense horizon targets 与并行预测，并说明 future predictions 不再顺序依赖彼此。",
+      "locator": "3.3 Fast LeWorldModel",
+      "source_context": "Fast-LeWM addresses these limitations by reducing the sequential dependence among predicted future states. Instead of producing through an autoregressive chain, our key idea is to predict each future state directly from the observed anchor latent and the action prefix that leads to that state. Under this view, different future states are not generated by feeding one predicted state into the next; they can be queried independently once their corresponding action prefixes are encoded. This motivates the design of an action-prefix encoder together with a parallel latent predictor. Figure 2 gives an overview of the resulting training pipeline. For a candidate action sequence , each horizon corresponds to the prefix (8) The target associated with this prefix is the latent state reached after executing these actions, namely . Fast-LeWM maps each prefix to a learned prefix token (9) where summarizes the accumulated effect of the first actions. The latent predictor then uses the anchor latent and each prefix token to predict the corresponding future latent: (10) This design has two direct benefits. During training, dense supervision over all prefix tokens forces the model to learn how action effects accumulate over different horizons, rather than only fitting local one-step state evolution. During rollout, all action prefixes can be processed together and their corresponding future states can be generated in parallel. Because these predictions are anchored at the observed latent and do not depend sequentially on one another, the model reduces recurrent error accumulation while accelerating rollout through parallel state-evolution prediction.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐项包含 observed anchor、action prefix、independent future queries、dense prefix supervision 与 parallel generation；主张只覆盖单个 encoded prefix window，没有扩展到任意长 horizon。"
+      }
+    },
+    {
+      "card_id": "2606.26217-C02",
+      "claim": "Under the same four-task LeWM planning protocol, base Fast-LeWM increased average success from 85.8% to 90.5%, and optional self-consistency increased it to 92.0%; no environment had lower point-estimate success than LeWM.",
+      "stance": "support",
+      "relation": "提供并行 prefix interface 没有以主表闭环质量换速度、且可选一致性评分进一步增益的直接证据。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Table 1 完整列出四环境和平均成功率，base 与 self-consistency variant 在每列都不低于 LeWM。",
+      "locator": "3.7 Planning with Action Prefixes and Self-Consistency",
+      "source_context": "Table 1 : Planning success rate (%) across environments. Fast-LeWM uses the same planning objective as LeWM and improves the average success rate from 85.8% to 90.5%. The optional self-consistency term provides an auxiliary model-consistency signal during candidate scoring and further improves the average success rate to 92.0%. Method Two-Room Reacher PushT OGBench-Cube Avg. PLDM Sobal et al. ( 2025 ) 97 78 78 65 79.5 DINO-WM Zhou et al. ( 2025 ) 100 79 74 86 84.8 LeWM Maes et al. ( 2026 ) 87 86 96 74 85.8 Fast-LeWM 98 88 96 80 90.5 Fast-LeWM+Self-Consistency 98 90 98 82 92.0",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "planning success rate",
+        "value_or_direction": "average 85.8% to 90.5%; 92.0% with self-consistency; per-task point estimates non-decreasing",
+        "comparator": "LeWorldModel",
+        "task_or_sample": "Two-Room, Reacher, PushT and OGBench-Cube under the same planning objective",
+        "locator": "3.7 Planning with Action Prefixes and Self-Consistency"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "Table 1 原文显示 LeWM、Fast-LeWM 与 self-consistency 的四列和平均值；逐列核对均不下降。主张只称 point estimate，未补造未报告的 seeds、误差条或显著性。"
+      }
+    },
+    {
+      "card_id": "2606.26217-C03",
+      "claim": "On Two-Room with the same CEM budget and one NVIDIA 4090, one prefix-model call reduced dynamics time from 31.4s to 8.0s, but unchanged encoding/scoring/data overhead limited the full CEM solve reduction from 54.4s to 28.3s.",
+      "stance": "conditional",
+      "relation": "精确分解 Fast-LeWM 的速度来源与端到端上限，避免把 dynamics 内核加速写成实时控制。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Table 2 报告相同 CEM budget、GPU、model calls、dynamics time 与 full solve time；正文说明 full CEM 还含图像编码、评分和数据操作。",
+      "locator": "4.2 Planning Performance and Efficiency, Table 2",
+      "source_context": "Table 2 shows that the improved success rate also comes with substantially lower planning cost. Unlike LeWM, which applies its dynamics predictor sequentially across the planning horizon, Fast-LeWM evaluates each candidate sequence using one action-prefix encoding pass followed by parallel latent prediction. We report both the dynamics-evaluation time, which includes action encoding and latent prediction, and the full CEM solve time. As in LeWM, the latter additionally includes goal- and observation-image encoding, score computation, and other data-operation overhead. Fast-LeWM reduces dynamics-evaluation time from 31.4s to 8.0s and CEM solve time from 54.4s to 28.3s. Because all tasks use the same image resolution and latent dimensionality, their dynamics-evaluation costs are nearly identical to Two-Room. Overall, Fast-LeWM improves planning accuracy while directly reducing the repeated dynamics-evaluation cost that dominates sampling-based latent planning. Table 2 : Planning efficiency under the same CEM budget on Two-Room. Dynamics time includes action encoding and latent prediction only. Times are measured on a single NVIDIA 4090. Method Model calls Dynamics time CEM time LeWM 31.4s 54.4s Fast-LeWM 8.0s 28.3s",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "model calls, dynamics-evaluation time and full CEM solve time",
+        "value_or_direction": "5 to 1 model calls; 31.4s to 8.0s dynamics; 54.4s to 28.3s full CEM",
+        "comparator": "LeWorldModel",
+        "task_or_sample": "Two-Room, same CEM budget, single NVIDIA 4090",
+        "locator": "4.2 Planning Performance and Efficiency, Table 2"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "正文和表注直接给出全部时间、same CEM budget、Two-Room 与单 4090，并列出 full-CEM 额外开销；主张明确保留 28.3s 绝对时延，不外推到其他硬件或 planner。"
+      }
+    },
+    {
+      "card_id": "2606.26217-C04",
+      "claim": "Across all four tasks, Fast-LeWM had lower initial open-loop latent error and a smaller least-squares error-growth slope than LeWM, while qualitative decoded rollouts showed less long-horizon drift.",
+      "stance": "support",
+      "relation": "提供 prefix 并行不仅减少调用次数、也降低窗口内递归误差的预测证据。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.3 以 ground-truth future-frame latents 对齐，比较 loss curve 起点、增长斜率和 decoder rollout。",
+      "locator": "4.3 Open-Loop Latent Prediction",
+      "source_context": "We first quantitatively evaluate open-loop prediction in latent space. Given the true initial frame and a future action sequence, each model predicts latent states along the open-loop trajectory, and we plot the latent loss against the corresponding ground-truth future latents over time. Because the planning horizon is with an action skip of 5, corresponds to one maximum-horizon prediction for Fast-LeWM, while requires two such predictions. In contrast, LeWM reaches these horizons by applying its local transition model autoregressively for 5 and 10 steps, respectively. As shown in Figure 3 , Fast-LeWM achieves substantially lower initial latent error across all four tasks. We further fit the loss curve with least squares and use its slope to measure how quickly prediction error grows as the state evolves along the real trajectory. The slope of Fast-LeWM is consistently smaller than that of LeWM, showing that action-prefix prediction mitigates open-loop error accumulation and learns a more accurate, continuous model of state evolution. We also provide a qualitative comparison by visualizing predicted latents with a decoder following LeWM. Both models are conditioned on the initial observation at and the same future action sequence. As shown in Figure 4 , the decoded predictions from Fast-LeWM remain more consistent with the target trajectory, while LeWM exhibits visible drift over longer horizons due to accumulated rollout error.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "open-loop latent prediction loss and least-squares loss-growth slope",
+        "value_or_direction": "lower initial error and consistently smaller slope for Fast-LeWM",
+        "comparator": "LeWorldModel",
+        "task_or_sample": "all four LeWM tasks, true initial frame and the same future action sequence",
+        "locator": "4.3 Open-Loop Latent Prediction, Figures 3 and 4"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确报告 all four tasks、lower initial latent error、least-squares slope consistently smaller 与 less drift；主张不提供图中未在文本列出的斜率数值，也不把 latent loss 等同闭环安全。"
+      }
+    },
+    {
+      "card_id": "2606.26217-C05",
+      "claim": "Fast-LeWM removes sequential dependence only within one maximum encoded prefix window; the paper's longer open-loop evaluation already requires composing two maximum-horizon predictions, so long-range recurrence is reduced rather than eliminated.",
+      "stance": "limit",
+      "relation": "限定“parallel multi-horizon”不能被扩写为无限时域一次前向预测。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "4.3 明确区分一个 maximum-horizon prediction 与需要两次该预测的更远时间点。",
+      "locator": "4.3 Open-Loop Latent Prediction",
+      "source_context": "Because the planning horizon is with an action skip of 5, corresponds to one maximum-horizon prediction for Fast-LeWM, while requires two such predictions. In contrast, LeWM reaches these horizons by applying its local transition model autoregressively for 5 and 10 steps, respectively.",
+      "evidence_type": "scope-limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "上下文直接说明 one maximum-horizon prediction 与 two such predictions 的区别；主张只推导出窗口外仍需组合，不声称论文未测量的具体长程失败率。"
+      }
+    },
+    {
+      "card_id": "2606.26217-C06",
+      "claim": "The quality-speed gain depends on structured prefixes and intermediate supervision: simply enlarging LeWM's action block performed poorly, terminal-only Fast-LeWM remained below the dense-prefix model, and conditioning the prefix encoder on the current-state token improved results.",
+      "stance": "conditional",
+      "relation": "说明速度并非来自粗暴减少调用；有序 prefix、dense targets 与状态条件是保持质量的必要设计。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.5 的三组消融分别否定 naive long-action、terminal-only 和无 state token 的简化方案。",
+      "locator": "4.5 Ablation Studies",
+      "source_context": "We ablate the components of Fast-LeWM in Table 4 . A naive way to speed up LeWM is to enlarge its action block, which we instantiate as Long-Action LeWM by changing the original frame-skipped action encoding from 5 to 25 primitive actions. This variant still uses LeWM’s next-state prediction interface: one model step directly predicts the terminal latent after the longer action block. As shown in Table 4 , this naive modification performs poorly, indicating that faster planning cannot be achieved by simply making each LeWM transition cover a longer temporal span. Accordingly, we also remove dense prefix supervision from Fast-LeWM and train a terminal-only variant that supervises only the final latent prediction. Terminal-only Fast-LeWM still substantially outperforms Long-Action LeWM, showing that action prefixes provide a fast and effective representation for long-horizon rollout. Rather than directly concatenating all actions into one large block, Fast-LeWM represents the sequence through progressively accumulated prefixes, explicitly exposing its internal order structure and cumulative action effects while still producing the terminal prediction in one forward pass. However, terminal-only Fast-LeWM still underperforms the full model because the final-state loss does not explicitly constrain the intermediate prefix tokens to correspond to meaningful partial action outcomes. Dense prefix supervision addresses this by assigning a latent target to each prefix, forcing the action encoder and predictor to model state evolution throughout the sequence rather than only its endpoint. We also observe better performance when the action-prefix encoder is conditioned on the current state token. This design introduces only a small overhead: a lightweight two-layer MLP maps the current latent into one additional token in the prefix encoder. With this minor cost, the model can interpret the same open-loop action prefix under different initial positions, object configurations, scene geometry, and contact constraints. The state token therefore provides the context needed to disambiguate action effects, improving the predicted effect of each prefix on the future latent state.",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "消融段逐项报告 Long-Action poor、terminal-only below full、dense prefix targets 与 state token benefit；主张没有把相关性扩大为跨任务充分性，也未补造未报告的统计不确定性。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "六遍 scoping 阅读覆盖全部正文；该 v1 无 appendix/limitation section，因此作者限制状态记为 not-found，迁移边界均作为 reader-inferred 单列。缓存 LaTeXML HTML 用于核对 extraction 扁平文本省略的 H=5、beta=1、17.9M/18.0M 等 MathML/实现细节；所有投影卡 source_context 仍严格来自 extraction.text。"
+}

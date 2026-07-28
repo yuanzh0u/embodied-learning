@@ -1,0 +1,1419 @@
+{
+  "generated_at": "2026-07-24T15:31:11.829102+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "LeWorldModel 技术谱系：JEPA 潜空间世界模型到规划控制",
+  "start_date": "2026-01-24",
+  "end_date": "2026-07-24",
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-EVAL"
+  ],
+  "families": [
+    "world-model"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 40,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 140,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 140,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-lewm-exact",
+        "dynamic-fast-lewm",
+        "dynamic-lewm-amortized-planning",
+        "dynamic-dino-wm-pldm",
+        "world-model-robot",
+        "ea-model-vla",
+        "ea-model-named-foundation",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-lejepa-sigreg",
+        "dynamic-end-to-end-jepa-world-model",
+        "dynamic-latent-planning-mpc",
+        "dynamic-latent-cost-alignment",
+        "dynamic-action-fidelity-jepa",
+        "dynamic-vjepa-robot-planning",
+        "dynamic-latent-world-model-efficiency",
+        "calibrated-leworldmodel",
+        "calibrated-lewm",
+        "calibrated-fast-lewm",
+        "calibrated-action-prefix-prediction",
+        "calibrated-gc-idm",
+        "calibrated-sigreg",
+        "calibration-lewm-family",
+        "calibration-lewm-planning",
+        "calibration-sigreg",
+        "world-model-video-prediction",
+        "world-model-planning",
+        "ea-model-finetuning",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model",
+        "ea-eval-sim-real-correlation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-jepa-collapse-limit",
+        "dynamic-latent-rollout-error",
+        "world-model-contact",
+        "world-model-long-horizon"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): The user narrowed the review to the LeWorldModel lineage. Static world-model taxonomy needs exact LeWM names, its anti-collapse mechanism, direct planning follow-ups, and negative/evaluation surfaces."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-lewm-exact",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"LeWorldModel\" OR all:\"LeWM\"",
+      "why": "Recover the focal paper, direct variants, follow-ups, and papers that evaluate or reuse LeWM."
+    },
+    {
+      "label": "dynamic-fast-lewm",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"Fast LeWorldModel\" OR all:\"Fast-LeWM\"",
+      "why": "Capture the direct multi-horizon/prefix-prediction response to LeWM rollout cost and error accumulation."
+    },
+    {
+      "label": "dynamic-lewm-amortized-planning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"Latent Geometry Beyond Search\" OR (all:\"LeWorldModel\" AND all:\"inverse dynamics\")",
+      "why": "Capture learned inverse-dynamics planning that replaces online search in a pretrained LeWM latent space."
+    },
+    {
+      "label": "dynamic-lejepa-sigreg",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"LeJEPA\" OR all:\"Sketched Isotropic Gaussian Regularization\" OR all:\"SIGReg\"",
+      "why": "Recover the anti-collapse theory and regularizer inherited by LeWM."
+    },
+    {
+      "label": "dynamic-end-to-end-jepa-world-model",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:JEPA OR all:\"joint embedding predictive\") AND all:\"world model\" AND (all:\"end-to-end\" OR all:pixels)",
+      "why": "Find end-to-end predictive-embedding world models and alternatives to frozen foundation encoders."
+    },
+    {
+      "label": "dynamic-jepa-collapse-limit",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:JEPA OR all:\"joint embedding\") AND (all:collapse OR all:stability OR all:regularization) AND (all:dynamics OR all:video)",
+      "why": "Find collapse, stability, and geometry critiques relevant to LeWM's core training claim."
+    },
+    {
+      "label": "dynamic-latent-planning-mpc",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"latent world model\" AND (all:planning OR all:MPC OR all:\"cross entropy method\") AND (all:pixel OR all:visual)",
+      "why": "Map the planning mechanism and comparable latent-space planners."
+    },
+    {
+      "label": "dynamic-latent-rollout-error",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"latent dynamics\" AND (all:\"error accumulation\" OR all:\"multi-step\" OR all:\"long horizon\") AND (all:planning OR all:control)",
+      "why": "Recover evidence on autoregressive rollout drift and multi-step alternatives."
+    },
+    {
+      "label": "dynamic-latent-cost-alignment",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"latent distance\" AND (all:goal OR all:cost) AND (all:planning OR all:control)",
+      "why": "Test when distance in a learned latent space is aligned with task progress and control utility."
+    },
+    {
+      "label": "dynamic-action-fidelity-jepa",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:JEPA OR all:\"predictive embedding\") AND all:action AND (all:fidelity OR all:counterfactual OR all:control)",
+      "why": "Cover action sensitivity, counterfactual futures, and decision utility rather than visual prediction alone."
+    },
+    {
+      "label": "dynamic-dino-wm-pldm",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"DINO-WM\" OR all:\"planning with latent dynamics models\" OR all:PLDM",
+      "why": "Recover LeWM's frozen-backbone and prior end-to-end planning baselines."
+    },
+    {
+      "label": "dynamic-vjepa-robot-planning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"V-JEPA 2\" OR all:\"V-JEPA\") AND (all:robot OR all:planning OR all:control)",
+      "why": "Provide the video-JEPA predecessor and its action-conditioned robotics bridge."
+    },
+    {
+      "label": "dynamic-latent-world-model-efficiency",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"latent world model\" AND (all:efficient OR all:lightweight OR all:\"real-time\") AND (all:planning OR all:control)",
+      "why": "Audit LeWM's efficiency and deployment-relevance claims under comparable planning budgets."
+    },
+    {
+      "label": "dynamic-lewm-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs (\"LeWorldModel\" OR \"Fast-LeWM\" OR \"Latent Geometry Beyond Search\")",
+      "why": "Exact-family fallback if arXiv API tokenization under-recovers the LeWM name."
+    },
+    {
+      "label": "dynamic-lewm-limit-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs LeWorldModel (limitation OR collapse OR rollout OR planning)",
+      "why": "Discover direct critiques, evaluations, and extensions of the focal model."
+    },
+    {
+      "label": "dynamic-lewm-calibration",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "high",
+      "query": "\"LeWorldModel\" JEPA SIGReg latent planning",
+      "why": "Confirm exact method, mechanism, and follow-up terminology."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): Official arXiv record confirms LeWorldModel, LeWM, end-to-end JEPA, and the stable-from-pixels framing.",
+    "arxiv calibration (high): Official arXiv record confirms Fast LeWorldModel / Fast-LeWM and action-prefix prediction.",
+    "arxiv calibration (high): Official arXiv record confirms the direct LeWM planning follow-up and the Goal-Conditioned Inverse Dynamics Model (GC-IDM) term.",
+    "arxiv calibration (high): Official arXiv record confirms LeJEPA and Sketched Isotropic Gaussian Regularization (SIGReg), the anti-collapse mechanism used by LeWM."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-lewm-exact",
+      "tier": "named-method",
+      "query": "all:\"LeWorldModel\" OR all:\"LeWM\"",
+      "why": "Recover the focal paper, direct variants, follow-ups, and papers that evaluate or reuse LeWM.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lewm-exact"
+      ]
+    },
+    {
+      "label": "dynamic-fast-lewm",
+      "tier": "named-variant",
+      "query": "all:\"Fast LeWorldModel\" OR all:\"Fast-LeWM\"",
+      "why": "Capture the direct multi-horizon/prefix-prediction response to LeWM rollout cost and error accumulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-fast-lewm"
+      ]
+    },
+    {
+      "label": "dynamic-lewm-amortized-planning",
+      "tier": "named-variant",
+      "query": "all:\"Latent Geometry Beyond Search\" OR (all:\"LeWorldModel\" AND all:\"inverse dynamics\")",
+      "why": "Capture learned inverse-dynamics planning that replaces online search in a pretrained LeWM latent space.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lewm-amortized-planning"
+      ]
+    },
+    {
+      "label": "dynamic-lejepa-sigreg",
+      "tier": "mechanism",
+      "query": "all:\"LeJEPA\" OR all:\"Sketched Isotropic Gaussian Regularization\" OR all:\"SIGReg\"",
+      "why": "Recover the anti-collapse theory and regularizer inherited by LeWM.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lejepa-sigreg"
+      ]
+    },
+    {
+      "label": "dynamic-end-to-end-jepa-world-model",
+      "tier": "mechanism",
+      "query": "(all:JEPA OR all:\"joint embedding predictive\") AND all:\"world model\" AND (all:\"end-to-end\" OR all:pixels)",
+      "why": "Find end-to-end predictive-embedding world models and alternatives to frozen foundation encoders.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-end-to-end-jepa-world-model"
+      ]
+    },
+    {
+      "label": "dynamic-jepa-collapse-limit",
+      "tier": "limitation",
+      "query": "(all:JEPA OR all:\"joint embedding\") AND (all:collapse OR all:stability OR all:regularization) AND (all:dynamics OR all:video)",
+      "why": "Find collapse, stability, and geometry critiques relevant to LeWM's core training claim.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-jepa-collapse-limit"
+      ]
+    },
+    {
+      "label": "dynamic-latent-planning-mpc",
+      "tier": "planning",
+      "query": "all:\"latent world model\" AND (all:planning OR all:MPC OR all:\"cross entropy method\") AND (all:pixel OR all:visual)",
+      "why": "Map the planning mechanism and comparable latent-space planners.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-planning-mpc"
+      ]
+    },
+    {
+      "label": "dynamic-latent-rollout-error",
+      "tier": "limitation",
+      "query": "all:\"latent dynamics\" AND (all:\"error accumulation\" OR all:\"multi-step\" OR all:\"long horizon\") AND (all:planning OR all:control)",
+      "why": "Recover evidence on autoregressive rollout drift and multi-step alternatives.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-rollout-error"
+      ]
+    },
+    {
+      "label": "dynamic-latent-cost-alignment",
+      "tier": "evaluation",
+      "query": "all:\"latent distance\" AND (all:goal OR all:cost) AND (all:planning OR all:control)",
+      "why": "Test when distance in a learned latent space is aligned with task progress and control utility.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-cost-alignment"
+      ]
+    },
+    {
+      "label": "dynamic-action-fidelity-jepa",
+      "tier": "evaluation",
+      "query": "(all:JEPA OR all:\"predictive embedding\") AND all:action AND (all:fidelity OR all:counterfactual OR all:control)",
+      "why": "Cover action sensitivity, counterfactual futures, and decision utility rather than visual prediction alone.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-fidelity-jepa"
+      ]
+    },
+    {
+      "label": "dynamic-dino-wm-pldm",
+      "tier": "named-baseline",
+      "query": "all:\"DINO-WM\" OR all:\"planning with latent dynamics models\" OR all:PLDM",
+      "why": "Recover LeWM's frozen-backbone and prior end-to-end planning baselines.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dino-wm-pldm"
+      ]
+    },
+    {
+      "label": "dynamic-vjepa-robot-planning",
+      "tier": "adjacent",
+      "query": "(all:\"V-JEPA 2\" OR all:\"V-JEPA\") AND (all:robot OR all:planning OR all:control)",
+      "why": "Provide the video-JEPA predecessor and its action-conditioned robotics bridge.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vjepa-robot-planning"
+      ]
+    },
+    {
+      "label": "dynamic-latent-world-model-efficiency",
+      "tier": "deployment",
+      "query": "all:\"latent world model\" AND (all:efficient OR all:lightweight OR all:\"real-time\") AND (all:planning OR all:control)",
+      "why": "Audit LeWM's efficiency and deployment-relevance claims under comparable planning budgets.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-world-model-efficiency"
+      ]
+    },
+    {
+      "label": "calibrated-leworldmodel",
+      "tier": "calibrated-term",
+      "query": "all:LeWorldModel",
+      "why": "Canonical focal method name.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-leworldmodel"
+      ]
+    },
+    {
+      "label": "calibrated-lewm",
+      "tier": "calibrated-term",
+      "query": "all:LeWM",
+      "why": "Canonical abbreviation used by the focal paper and follow-ups.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-lewm"
+      ]
+    },
+    {
+      "label": "calibrated-fast-lewm",
+      "tier": "calibrated-term",
+      "query": "all:\"Fast-LeWM\"",
+      "why": "Direct LeWM variant addressing autoregressive rollout cost and accumulated latent error.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-fast-lewm"
+      ]
+    },
+    {
+      "label": "calibrated-action-prefix-prediction",
+      "tier": "calibrated-term",
+      "query": "all:\"action-prefix prediction\"",
+      "why": "Mechanism name used by Fast-LeWM.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-action-prefix-prediction"
+      ]
+    },
+    {
+      "label": "calibrated-gc-idm",
+      "tier": "calibrated-term",
+      "query": "all:\"GC-IDM\"",
+      "why": "Goal-conditioned inverse-dynamics controller used to amortize planning over a pretrained LeWM.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-gc-idm"
+      ]
+    },
+    {
+      "label": "calibrated-sigreg",
+      "tier": "calibrated-term",
+      "query": "all:SIGReg",
+      "why": "Sketched Isotropic Gaussian Regularization is the anti-collapse mechanism central to LeJEPA and LeWM.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-sigreg"
+      ]
+    },
+    {
+      "label": "calibration-lewm-family",
+      "tier": "calibrated-query",
+      "query": "all:\"LeWorldModel\" OR all:\"LeWM\" OR all:\"Fast-LeWM\"",
+      "why": "Exact family-name recovery.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-lewm-family"
+      ]
+    },
+    {
+      "label": "calibration-lewm-planning",
+      "tier": "calibrated-query",
+      "query": "all:\"LeWorldModel\" AND (all:\"GC-IDM\" OR all:\"inverse dynamics\" OR all:\"action-prefix\")",
+      "why": "Recover direct planning and rollout extensions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-lewm-planning"
+      ]
+    },
+    {
+      "label": "calibration-sigreg",
+      "tier": "calibrated-query",
+      "query": "all:\"SIGReg\" OR all:\"Sketched Isotropic Gaussian Regularization\"",
+      "why": "Recover the inherited representation-regularization mechanism and critiques.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-sigreg"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-lewm-exact",
+      "tier": "named-method",
+      "query": "all:\"LeWorldModel\" OR all:\"LeWM\"",
+      "why": "Recover the focal paper, direct variants, follow-ups, and papers that evaluate or reuse LeWM.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lewm-exact"
+      ]
+    },
+    {
+      "label": "dynamic-fast-lewm",
+      "tier": "named-variant",
+      "query": "all:\"Fast LeWorldModel\" OR all:\"Fast-LeWM\"",
+      "why": "Capture the direct multi-horizon/prefix-prediction response to LeWM rollout cost and error accumulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-fast-lewm"
+      ]
+    },
+    {
+      "label": "dynamic-lewm-amortized-planning",
+      "tier": "named-variant",
+      "query": "all:\"Latent Geometry Beyond Search\" OR (all:\"LeWorldModel\" AND all:\"inverse dynamics\")",
+      "why": "Capture learned inverse-dynamics planning that replaces online search in a pretrained LeWM latent space.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lewm-amortized-planning"
+      ]
+    },
+    {
+      "label": "dynamic-lejepa-sigreg",
+      "tier": "mechanism",
+      "query": "all:\"LeJEPA\" OR all:\"Sketched Isotropic Gaussian Regularization\" OR all:\"SIGReg\"",
+      "why": "Recover the anti-collapse theory and regularizer inherited by LeWM.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lejepa-sigreg"
+      ]
+    },
+    {
+      "label": "dynamic-end-to-end-jepa-world-model",
+      "tier": "mechanism",
+      "query": "(all:JEPA OR all:\"joint embedding predictive\") AND all:\"world model\" AND (all:\"end-to-end\" OR all:pixels)",
+      "why": "Find end-to-end predictive-embedding world models and alternatives to frozen foundation encoders.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-end-to-end-jepa-world-model"
+      ]
+    },
+    {
+      "label": "dynamic-jepa-collapse-limit",
+      "tier": "limitation",
+      "query": "(all:JEPA OR all:\"joint embedding\") AND (all:collapse OR all:stability OR all:regularization) AND (all:dynamics OR all:video)",
+      "why": "Find collapse, stability, and geometry critiques relevant to LeWM's core training claim.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-jepa-collapse-limit"
+      ]
+    },
+    {
+      "label": "dynamic-latent-planning-mpc",
+      "tier": "planning",
+      "query": "all:\"latent world model\" AND (all:planning OR all:MPC OR all:\"cross entropy method\") AND (all:pixel OR all:visual)",
+      "why": "Map the planning mechanism and comparable latent-space planners.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-planning-mpc"
+      ]
+    },
+    {
+      "label": "dynamic-latent-rollout-error",
+      "tier": "limitation",
+      "query": "all:\"latent dynamics\" AND (all:\"error accumulation\" OR all:\"multi-step\" OR all:\"long horizon\") AND (all:planning OR all:control)",
+      "why": "Recover evidence on autoregressive rollout drift and multi-step alternatives.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-rollout-error"
+      ]
+    },
+    {
+      "label": "dynamic-latent-cost-alignment",
+      "tier": "evaluation",
+      "query": "all:\"latent distance\" AND (all:goal OR all:cost) AND (all:planning OR all:control)",
+      "why": "Test when distance in a learned latent space is aligned with task progress and control utility.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-cost-alignment"
+      ]
+    },
+    {
+      "label": "dynamic-action-fidelity-jepa",
+      "tier": "evaluation",
+      "query": "(all:JEPA OR all:\"predictive embedding\") AND all:action AND (all:fidelity OR all:counterfactual OR all:control)",
+      "why": "Cover action sensitivity, counterfactual futures, and decision utility rather than visual prediction alone.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-fidelity-jepa"
+      ]
+    },
+    {
+      "label": "dynamic-dino-wm-pldm",
+      "tier": "named-baseline",
+      "query": "all:\"DINO-WM\" OR all:\"planning with latent dynamics models\" OR all:PLDM",
+      "why": "Recover LeWM's frozen-backbone and prior end-to-end planning baselines.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dino-wm-pldm"
+      ]
+    },
+    {
+      "label": "dynamic-vjepa-robot-planning",
+      "tier": "adjacent",
+      "query": "(all:\"V-JEPA 2\" OR all:\"V-JEPA\") AND (all:robot OR all:planning OR all:control)",
+      "why": "Provide the video-JEPA predecessor and its action-conditioned robotics bridge.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vjepa-robot-planning"
+      ]
+    },
+    {
+      "label": "dynamic-latent-world-model-efficiency",
+      "tier": "deployment",
+      "query": "all:\"latent world model\" AND (all:efficient OR all:lightweight OR all:\"real-time\") AND (all:planning OR all:control)",
+      "why": "Audit LeWM's efficiency and deployment-relevance claims under comparable planning budgets.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-latent-world-model-efficiency"
+      ]
+    },
+    {
+      "label": "calibrated-leworldmodel",
+      "tier": "calibrated-term",
+      "query": "all:LeWorldModel",
+      "why": "Canonical focal method name.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-leworldmodel"
+      ]
+    },
+    {
+      "label": "calibrated-lewm",
+      "tier": "calibrated-term",
+      "query": "all:LeWM",
+      "why": "Canonical abbreviation used by the focal paper and follow-ups.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-lewm"
+      ]
+    },
+    {
+      "label": "calibrated-fast-lewm",
+      "tier": "calibrated-term",
+      "query": "all:\"Fast-LeWM\"",
+      "why": "Direct LeWM variant addressing autoregressive rollout cost and accumulated latent error.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-fast-lewm"
+      ]
+    },
+    {
+      "label": "calibrated-action-prefix-prediction",
+      "tier": "calibrated-term",
+      "query": "all:\"action-prefix prediction\"",
+      "why": "Mechanism name used by Fast-LeWM.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-action-prefix-prediction"
+      ]
+    },
+    {
+      "label": "calibrated-gc-idm",
+      "tier": "calibrated-term",
+      "query": "all:\"GC-IDM\"",
+      "why": "Goal-conditioned inverse-dynamics controller used to amortize planning over a pretrained LeWM.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-gc-idm"
+      ]
+    },
+    {
+      "label": "calibrated-sigreg",
+      "tier": "calibrated-term",
+      "query": "all:SIGReg",
+      "why": "Sketched Isotropic Gaussian Regularization is the anti-collapse mechanism central to LeJEPA and LeWM.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-sigreg"
+      ]
+    },
+    {
+      "label": "calibration-lewm-family",
+      "tier": "calibrated-query",
+      "query": "all:\"LeWorldModel\" OR all:\"LeWM\" OR all:\"Fast-LeWM\"",
+      "why": "Exact family-name recovery.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-lewm-family"
+      ]
+    },
+    {
+      "label": "calibration-lewm-planning",
+      "tier": "calibrated-query",
+      "query": "all:\"LeWorldModel\" AND (all:\"GC-IDM\" OR all:\"inverse dynamics\" OR all:\"action-prefix\")",
+      "why": "Recover direct planning and rollout extensions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-lewm-planning"
+      ]
+    },
+    {
+      "label": "calibration-sigreg",
+      "tier": "calibrated-query",
+      "query": "all:\"SIGReg\" OR all:\"Sketched Isotropic Gaussian Regularization\"",
+      "why": "Recover the inherited representation-regularization mechanism and critiques.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-sigreg"
+      ]
+    },
+    {
+      "label": "world-model-robot",
+      "tier": "core",
+      "query": "all:\"world model\" AND all:robot",
+      "why": "Find robot papers that explicitly use world-model terminology.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-robot"
+      ]
+    },
+    {
+      "label": "world-model-video-prediction",
+      "tier": "prediction",
+      "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+      "why": "Capture predictive visual models used for planning or offline rollout.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-video-prediction"
+      ]
+    },
+    {
+      "label": "world-model-planning",
+      "tier": "planning",
+      "query": "all:planning AND all:\"world model\" AND all:robot",
+      "why": "Find papers where a predictive model is used to choose actions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-planning"
+      ]
+    },
+    {
+      "label": "world-model-contact",
+      "tier": "physical-limitation",
+      "query": "all:contact AND all:\"world model\" AND all:manipulation",
+      "why": "Search for contact realism and physical executability limitations.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "world-model-contact"
+      ]
+    },
+    {
+      "label": "world-model-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+      "why": "Find long-horizon consistency and compounding-error discussions.",
+      "source_key": "world-model",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "world-model-long-horizon"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-lewm-browser",
+      "query": "site:arxiv.org/abs (\"LeWorldModel\" OR \"Fast-LeWM\" OR \"Latent Geometry Beyond Search\")",
+      "why": "Exact-family fallback if arXiv API tokenization under-recovers the LeWM name.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-lewm-limit-browser",
+      "query": "site:arxiv.org/abs LeWorldModel (limitation OR collapse OR rollout OR planning)",
+      "why": "Discover direct critiques, evaluations, and extensions of the focal model.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-lewm-calibration",
+      "query": "\"LeWorldModel\" JEPA SIGReg latent planning",
+      "why": "Confirm exact method, mechanism, and follow-up terminology.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-leworldmodel",
+      "query": "\"LeWorldModel\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: LeWorldModel.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-lewm",
+      "query": "\"LeWM\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: LeWM.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-fast-lewm",
+      "query": "\"Fast-LeWM\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: Fast-LeWM.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-action-prefix-prediction",
+      "query": "\"action-prefix prediction\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: action-prefix prediction.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-gc-idm",
+      "query": "\"GC-IDM\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: GC-IDM.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-sigreg",
+      "query": "\"SIGReg\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: SIGReg.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

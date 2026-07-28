@@ -1,0 +1,389 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.08732",
+    "title": "Latent Geometry Beyond Search: Amortizing Planning in World Models",
+    "published": "2026-05-09",
+    "url": "https://arxiv.org/abs/2605.08732",
+    "authors": [
+      "Hoang Nguyen",
+      "Xiaohao Xu",
+      "Xiaonan Huang"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 技术谱系中，JEPA/SIGReg 产生的潜空间几何如何支撑世界模型与规划控制，现有实验证据、限制和迁移边界是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文直接研究预训练 LeWorldModel 的正则化潜空间能否把在线搜索摊销为目标条件逆动力学，是 LeWM 从表征/预测走向规划控制的直接后续。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定 cheap prediction 与 expensive action search 之间的 planning tax，并核对论文的主问题和贡献。"
+      },
+      {
+        "locator": "3 Preliminaries",
+        "role": "data-or-setting",
+        "purpose": "核对目标条件控制形式、冻结 encoder/predictor，以及 SIGReg 权重与潜空间正则之间的关系。"
+      },
+      {
+        "locator": "4 Method: Goal-Conditioned Inverse Dynamics Model (GC-IDM)",
+        "role": "method-or-design",
+        "purpose": "核对训练元组、冻结 LeWM 表征、horizon conditioning、每步重编码和无搜索推理流程。"
+      },
+      {
+        "locator": "5.1 Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "核对四个环境、两种评测协议、相同冻结 LeWM checkpoint 与对照条件。"
+      },
+      {
+        "locator": "5.3 Main Results",
+        "role": "results-or-analysis",
+        "purpose": "核对 GC-IDM 与 CEM 的主结果、例外项和接触任务解释。"
+      },
+      {
+        "locator": "5.4 Comparison with MPPI, iCEM, and Gradient-Based Planners",
+        "role": "results-or-analysis",
+        "purpose": "检查结论是否仅针对 CEM，及其他采样/梯度规划器的对照范围。"
+      },
+      {
+        "locator": "5.5 Ablation Studies",
+        "role": "results-or-analysis",
+        "purpose": "检查 CEM compute frontier 与规划预算解释。"
+      },
+      {
+        "locator": "6 Conclusion and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论以及长程接触、高维动作、不同 latent architecture 的未来工作边界。"
+      },
+      {
+        "locator": "Appendix A Why GC-IDM Works: Mechanism Analysis",
+        "role": "appendix-or-supplement",
+        "purpose": "检查每步重编码相对 commit window 的误差传播论证。"
+      },
+      {
+        "locator": "Appendix B Theoretical Analysis: Isotropy and Inverse-Dynamics Conditioning",
+        "role": "appendix-or-supplement",
+        "purpose": "核对 isotropy、local bi-Lipschitz、action identifiability、near-isometry 等附加假设及未验证项。"
+      },
+      {
+        "locator": "E.1 Data Efficiency",
+        "role": "appendix-or-supplement",
+        "purpose": "核对各环境的数据效率差异，尤其 Push-T 未饱和。"
+      },
+      {
+        "locator": "E.3 Role of the Horizon Embedding",
+        "role": "appendix-or-supplement",
+        "purpose": "检查 horizon embedding 是否为负载机制而非网络容量效应。"
+      },
+      {
+        "locator": "E.7 Evaluation Budget and Long-Horizon Control",
+        "role": "appendix-or-supplement",
+        "purpose": "核对超出训练 horizon 的长预算退化。"
+      },
+      {
+        "locator": "E.8 Held-Out Validation",
+        "role": "appendix-or-supplement",
+        "purpose": "核对 episode-level holdout，排查轨迹记忆解释。"
+      },
+      {
+        "locator": "Appendix G More Limitations and Future Works",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对单一 backbone、动作维度和 reactive-policy 的作者明示限制。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "relevant-core",
+        "reason": "引用表只用于确认 LeWM 与 LeJEPA 两条关键前序，不承担本篇实证主张。"
+      },
+      {
+        "locator": "Appendix C More Qualitative Comparisons",
+        "role": "appendix-or-supplement",
+        "reason": "定性视频/图像不用于本次事件投影；主表、solver sweep、holdout 和限制附录已覆盖证据问题。"
+      },
+      {
+        "locator": "NeurIPS Paper Checklist",
+        "role": "appendix-or-supplement",
+        "reason": "行政性检查清单不提供独立技术证据。"
+      }
+    ]
+  },
+  "research_question": "在冻结的 LeWorldModel 潜表示上，目标条件逆动力学能否用一次学习推理替代逐步 rollout/search；若能，效果依赖哪些潜空间、数据、闭环和任务条件？",
+  "contributions": [
+    "提出 GC-IDM：从当前 latent、目标 latent 与剩余 horizon 直接预测下一动作，用离线监督拟合替代每个控制步的在线轨迹优化。",
+    "在四个 LeWM benchmark、两种协议和多类 test-time planners 上比较成功率与推理开销，并补充 CEM compute sweep、episode holdout 与机制消融。",
+    "把收益解释为每步真实观测重编码与结构化 latent 上的局部逆映射，同时明确该几何解释仍是带额外假设且未做 non-isotropic 因果消融的条件性理论。"
+  ],
+  "method": {
+    "summary": "冻结预训练 LeWM encoder（以及供搜索基线使用的 predictor），从同一离线 demonstration trajectory 采样当前帧、未来目标帧和 horizon；用一个 horizon-conditioned MLP 对下一动作做 MSE 回归。测试时目标只编码一次，当前真实观测每步重新编码，GC-IDM 以单次前向给出动作，不生成 imagined latent trajectory，也不运行 CEM/MPPI/iCEM/gradient optimization。",
+    "assumptions": [
+      "训练与测试的当前/目标 latent 都来自冻结 encoder 的真实观测输出，且离线演示覆盖了需要的局部动作—目标关系。",
+      "剩余 horizon 在训练范围内有监督；超出范围时会被 clamp，因此远长于训练 horizon 的控制不是无条件外推。",
+      "几何解释额外假设局部可微、bi-Lipschitz、动作 Jacobian 满列秩，并在更强解释中假设 encoder Jacobian 近等距；SIGReg 的分布各向同性本身不推出这些性质。",
+      "GC-IDM 是 reactive、每步重规划的局部逆策略，不显式评估不可逆多步后果。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LeWorldModel 各 benchmark 的离线 demonstration datasets"
+    ],
+    "tasks": [
+      "Two-Room goal-conditioned navigation",
+      "Push-T contact-rich pushing",
+      "OGBench-Cube 3D object manipulation",
+      "Reacher continuous reaching"
+    ],
+    "embodiments": [
+      "stable-worldmodel simulated control environments"
+    ],
+    "sample_or_scale": "四个图像观测环境；主表使用 n=50 与 n=200 两种评测协议，GC-IDM 与 CEM 的成功率均汇总三个种子；另有 episode-level held-out 验证和规划预算/数据量/网络结构消融。"
+  },
+  "evaluation": {
+    "design": "固定同一 LeWM checkpoint，GC-IDM 使用额外环境内离线监督拟合；与 LeWM 默认 CEM 以及 stable_worldmodel 默认 MPPI、iCEM、GradientSolver 比较，并做 CEM 计算预算扫描、相同 episode 对照、长预算、holdout、噪声、数据比例、horizon 与网络容量消融。",
+    "baselines": [
+      "CEM",
+      "iCEM",
+      "MPPI",
+      "GradientSolver",
+      "pairwise IDM pilot",
+      "next-frame-only goal-conditioned behavior-cloning equivalent"
+    ],
+    "metrics": [
+      "success rate",
+      "milliseconds per episode",
+      "milliseconds per plan call",
+      "wall-clock and plan-call speedup",
+      "action jerk",
+      "latent monotonicity"
+    ],
+    "ablations": [
+      "CEM compute frontier",
+      "training-data fraction",
+      "embedding-noise level and schedule",
+      "horizon embedding",
+      "MLP width and depth",
+      "evaluation budget",
+      "episode-level held-out split"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "GC-IDM 在冻结 LeWM latent 上把在线序列搜索改写成 current/goal/horizon 到下一动作的监督逆映射，并通过每步重编码真实观测保持闭环纠偏。",
+      "scope": "只适用于有相同形式离线 demonstrations、可编码目标观测且每步可获得新观测的 goal-conditioned control。",
+      "locator": "4 Method: Goal-Conditioned Inverse Dynamics Model (GC-IDM)"
+    },
+    {
+      "finding": "主结果中 GC-IDM 在八个 environment–protocol cells 的七个达到或超过 CEM；多 solver 对比说明结果不只针对 CEM 的采样形式。",
+      "scope": "四个 stable_worldmodel/LeWM benchmark，固定同一 LeWM backbone；并非跨 world model 或真实机器人结论。",
+      "locator": "5.3 Main Results"
+    },
+    {
+      "finding": "作者没有验证 LeWM 完整满足附录的几何条件，也没有做 non-isotropic baseline，因此不能把实证增益因果归因为 SIGReg/isotropy。",
+      "scope": "限制的是几何机制解释，不否定主实验中 GC-IDM 与 planners 的比较结果。",
+      "locator": "Appendix B Theoretical Analysis: Isotropy and Inverse-Dynamics Conditioning"
+    },
+    {
+      "finding": "Push-T 在更长评测预算上由 25 步时 93.0% 降到 100 步时 75.0%，与训练范围外 horizon clamp 一致。",
+      "scope": "特定于 Push-T、该 checkpoint/训练分布和预算设置；其他三个环境在同一预算扫描中更稳定。",
+      "locator": "E.7 Evaluation Budget and Long-Horizon Control"
+    },
+    {
+      "finding": "单一 LeWM backbone、低维动作 benchmark 与 reactive policy 构成外推边界；严重不可逆任务可能需要 GC-IDM proposal 加偶发 CEM correction。",
+      "scope": "作者提出的是未验证的未来方向，而非已证实的混合控制收益。",
+      "locator": "Appendix G More Limitations and Future Works"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "附录的 isotropy→逆动力学可学习性分析是条件性的；论文未验证 LeWM 完整满足这些条件，也未与 non-isotropic latent baseline 做消融。",
+        "locator": "Appendix B Theoretical Analysis: Isotropy and Inverse-Dynamics Conditioning"
+      },
+      {
+        "limitation": "实验主要集中在一个 LeWM backbone 与 stable-worldmodel benchmark suite；其他 JEPA world model 的 representation shape 可能需要非平凡的 GC-IDM 架构修改。",
+        "locator": "Appendix G More Limitations and Future Works"
+      },
+      {
+        "limitation": "GC-IDM 不显式推理多步后果，严重不可逆任务可能需要把它作为快速 proposal 并让 CEM 偶发纠正。",
+        "locator": "Appendix G More Limitations and Future Works"
+      },
+      {
+        "limitation": "更长接触结构、更高维动作空间和不同 latent architecture 尚待验证。",
+        "locator": "6 Conclusion and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "该文证明的是“在既定 LeWM benchmark 与演示分布内，额外离线拟合可摊销在线搜索成本”，不是“任意世界模型的 structured latent 都无需规划器”。",
+        "basis": "GC-IDM 按环境使用同一 demonstration dataset 额外训练，评测只有单一 backbone；跨模型泛化被作者列为开放问题。"
+      },
+      {
+        "boundary": "success 与 latent monotonicity 不能单独证明 latent geometry 具有因果可逆性或真实物理安全性。",
+        "basis": "没有 non-isotropic latent 对照，全部任务为 benchmark 仿真，且无碰撞、接触力、真实机器人鲁棒性或安全恢复评测。"
+      },
+      {
+        "boundary": "相对 CEM 的速度优势包含 offline fitting 与 online search 的摊销取舍，不能解释为零额外训练成本。",
+        "basis": "GC-IDM 每环境额外在单 GPU 上训练约 20 分钟，而 CEM 直接使用预训练 LeWM 在线优化；论文明确把比较描述为 amortized offline fitting 对 repeated online search。"
+      }
+    ]
+  },
+  "transfer_boundary": "可迁移主张应限于：有可读目标观测、相近 offline demonstrations、冻结 latent 对局部动作敏感、每步可重编码真实观测、动作维度与 horizon 未显著越出训练分布的闭环任务。跨 world model、真实机器人、高维动作、强不可逆/长接触任务，以及把 SIGReg 视作收益的充分因果原因，都需要额外验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "GC-IDM 与主要搜索基线共享同一冻结 LeWM backbone，隔离了 action-selection mechanism 的差异。",
+      "不仅比较默认 CEM，还覆盖 MPPI、iCEM、gradient solver、12 组 CEM compute sweep，并报告 per-plan 与 per-episode timing。",
+      "horizon、数据比例、噪声、网络容量、预算、holdout 等消融直接检查了多个替代解释。",
+      "episode-level held-out 评测降低了简单轨迹记忆解释，每步真实观测重编码机制也有明确误差传播分析。"
+    ],
+    "design_risks": [
+      "GC-IDM 需要按环境额外监督拟合，baseline 资源并非完全同构；结果是 amortization trade-off，而非无需训练的 planner replacement。",
+      "多 solver 使用库默认超参数；虽然 CEM 做了预算扫描，其他 solver 没有等深的任务特定调优。",
+      "Push-T 等困难任务的数据未饱和，且网络深度影响明显，说明收益并非仅由 latent geometry 决定。",
+      "缺少 non-isotropic/SIGReg-off 对照，无法识别正则化几何对 GC-IDM 成功的因果贡献。"
+    ],
+    "baseline_fairness": "同一 frozen LeWM checkpoint、相同 episode 和明确 solver 配置提高了公平性；但 GC-IDM 获得了环境特定 offline demonstration supervision 和约 20 分钟额外训练，其他 planner 主要付出在线计算，因而公平解释应是离线摊销与在线搜索的系统级比较。",
+    "metric_validity": "成功率与实际规划时间直接对应 benchmark 效用；jerk/latent monotonicity补充轨迹品质。但 latent monotonicity 是表征内代理指标，jerk 也不等于接触安全；没有真实机器人安全、恢复和分布外目标评测。",
+    "reproducibility": "论文提供代码链接、结构与超参数附录、种子汇总、solver 配置、完整表格和 holdout；仍需独立复现来确认硬件计时、环境版本与 checkpoint 依赖。",
+    "external_validity": "外部有效性受单一 LeWM backbone、四个仿真环境、演示分布、低维动作与目标图像接口限制；跨模型、跨本体、真实接触和不可逆长程任务尚未建立。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.08732-C01",
+      "claim": "GC-IDM freezes the LeWorldModel representation and amortizes planning into a horizon-conditioned inverse map from current and goal latents to the next action; at test time it re-encodes the actual observation each step and performs no latent rollout or online search.",
+      "stance": "support",
+      "relation": "说明 LeWM 技术线如何从 SIGReg 正则化表征转向一次前向的闭环控制器，而不改动预训练世界模型。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法图和正文明确给出冻结 LeWM embeddings、随机 horizon 训练元组、只更新 inverse module，以及逐步重编码/单次前向的推理路径。",
+      "locator": "4 Method: Goal-Conditioned Inverse Dynamics Model (GC-IDM)",
+      "source_context": "Figure 2 : Pipeline overview. Left: World model encoder training process, which follows LeWM (Maes et al., 2026 ) . Center: Goal-conditioned inverse dynamics model (GC-IDM) training. From a trajectory , a tuple is sampled at random horizon using frozen LeWM embeddings; the IDM is trained by MSE regression with gradients flowing only into the inverse dynamics module, i.e., . Right: GC-IDM planning. The current observation is re-encoded at every step; the goal embedding is encoded once and cached. The concatenated pair passes through a -layer MLP modulated by the remaining horizon via AdaLN-Zero, producing estimated action in a single forward inference pass with no search or rollout.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐项包含 frozen LeWM embeddings、仅 inverse module 接收梯度、每步重编码、goal 缓存、horizon modulation 与 no search or rollout；主张未扩展到跨模型或无演示条件。"
+      }
+    },
+    {
+      "card_id": "2605.08732-C02",
+      "claim": "On the eight environment–protocol cells in the main LeWM benchmark comparison, GC-IDM matched or outperformed CEM in seven, with Push-T as the lone exception.",
+      "stance": "support",
+      "relation": "提供用学习逆动力学替代 CEM 的直接闭环效果证据，同时保留接触任务例外。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "主结果按 environment–protocol cell 汇总，明确报告 seven of eight，并指出 Push-T 是唯一例外。",
+      "locator": "5.3 Main Results",
+      "source_context": "Table 1 summarizes this comparative analysis . GC-IDM matches or outperforms CEM in seven of the eight environment–protocol cells while reducing the planning cost by – per decision. The strongest gains occur on OGBench-Cube and Reacher, where GC-IDM is much faster and significantly more successful. The only exception is Push-T at , where CEM is modestly better in mean success but remains more than two orders of magnitude slower in terms of planning time.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "matches or outperforms",
+        "value_or_direction": "seven of the eight environment–protocol cells",
+        "comparator": "CEM",
+        "task_or_sample": "the eight cells in Table 1 across the four LeWM benchmark environments and two protocols",
+        "locator": "5.3 Main Results"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.3 的精确上下文直接报告 seven of the eight，并明确唯一例外为 Push-T；主张没有复原 HTML 抽取中缺失的公式化速度数值，也没有把该结果外推到其他 backbone。"
+      }
+    },
+    {
+      "card_id": "2605.08732-C03",
+      "claim": "The paper's explanation that isotropic LeWM geometry makes inverse dynamics well conditioned is explicitly conditional: the authors did not verify that LeWM fully satisfies the stated geometric assumptions and did not ablate against a non-isotropic baseline.",
+      "stance": "conditional",
+      "relation": "限制把 GC-IDM 的实证成功因果归因为 SIGReg/isotropy；区分相关机制叙事与已验证因果。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "理论附录开头明确将分析标为 conditional，并把假设验证与 non-isotropic 对照列为未完成。",
+      "locator": "Appendix B Theoretical Analysis: Isotropy and Inverse-Dynamics Conditioning",
+      "source_context": "Under idealized conditions on the latent geometry, the inverse-dynamics problem has a favorable first-order form. This analysis is conditional : it identifies geometric properties that would make inverse dynamics easier to learn, but we have not verified that LeWM’s latent space satisfies these conditions in full, nor have we ablated against a non-isotropic baseline. The empirical results in the main paper stand independently of this theoretical framing.",
+      "evidence_type": "theoretical-limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "上下文逐字包含 conditional、not verified in full 与 no non-isotropic baseline；主张只限制机制归因，不否认独立成立的 benchmark 实验。"
+      }
+    },
+    {
+      "card_id": "2605.08732-C04",
+      "claim": "For Push-T, GC-IDM success peaked at 93.0% with a 25-step evaluation budget and declined to 75.0% at 100 steps, which the authors associate with clamped horizon inputs outside the training-time range.",
+      "stance": "limit",
+      "relation": "给出 learned planner 在超出训练 horizon 时的具体长程外推边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Table J 的预算扫描提供 Push-T 的完整序列，正文将长预算退化与未在训练中出现的 clamped horizon signal 联系起来。",
+      "locator": "E.7 Evaluation Budget and Long-Horizon Control",
+      "source_context": "Push-T is the notable case: it peaks at 93% at budget 25 and drops to 75% at budget 100, consistent with the clamping effect—at budgets exceeding , the first steps receive a clamped horizon signal that was not seen during training. Table J : Success rate vs. evaluation budget. Two-Room saturates at by budget and remains flat to budget . Push-T peaks at at budget and mildly degrades to – at larger budgets. Reacher climbs to at budget and holds through . Budget (steps) 5 10 15 25 50 75 100 Two-Room 55.5 92.5 99.5 100.0 100.0 100.0 100.0 Push-T 11.5 28.0 59.0 93.0 84.5 77.5 75.0 OGB-Cube 43.0 49.0 68.0 99.5 99.0 97.0 96.0 Reacher 48.5 94.0 97.5 98.0 99.5 99.5 99.5",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Success rate",
+        "value_or_direction": "93.0 at budget 25 to 75.0 at budget 100",
+        "comparator": "the same GC-IDM controller at a longer evaluation budget",
+        "task_or_sample": "Push-T in the Table J evaluation-budget sweep",
+        "locator": "E.7 Evaluation Budget and Long-Horizon Control, Table J"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "正文和 Table J 同时给出 Push-T 在预算 25/100 的 93.0/75.0，并明确提出 clamping explanation；主张保留为该任务/设置的限制而非普遍长程失败。"
+      }
+    },
+    {
+      "card_id": "2605.08732-C05",
+      "claim": "The evaluation is confined mainly to one LeWM backbone and the stable-worldmodel suite, and GC-IDM does not reason about multi-step consequences; cross-world-model transfer and severely irreversible tasks therefore remain open.",
+      "stance": "limit",
+      "relation": "界定把 amortized inverse control 迁移到其他 latent architecture、真实机器人或不可逆长程任务时的证据缺口。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "限制附录直接列出单 backbone、跨模型架构修改和 reactive-policy 无多步后果推理，并把 hybrid GC-IDM+CEM 留作未来方向。",
+      "locator": "Appendix G More Limitations and Future Works",
+      "source_context": "In this paper, we focused mainly on a single world model backbone (LeWM) and stable-worldmodel benchmark suite. Three extensions remain open, with in-depth experiments showing the feasibility and strong performance of GC-IDM. In the future, we will expand our work toward: (i) Cross-world-model generalization: JEPA-style world models with different representation shapes, such as DINO-WM producing -patch spatial features rather than a single CLS token, require a non-trivial architecture change to GC-IDM. (ii) Higher-dimensional action spaces: our four environments span – DoF, and benchmarks such as LIBERO with DoF would test whether an MLP suffices at higher dimensionalities. (iii) Reactive-policy limits: GC-IDM does not reason about multi-step consequences, so for tasks with severe irreversibility a hybrid scheme using GC-IDM as a fast proposal with CEM as an occasional corrector would be a natural extension.",
+      "evidence_type": "author-stated-limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "Appendix G 明示 single LeWM backbone、cross-world-model open extension、reactive-policy 不推理 multi-step consequences 与 severe irreversibility；主张没有把建议的 hybrid 方案写成已验证结果。"
+      }
+    }
+  ],
+  "core_citations": [
+    {
+      "title": "LeWorldModel: Stable End-to-End Joint-Embedding Predictive Architecture from Pixels",
+      "arxiv_id": "2603.19312",
+      "reason": "提供冻结的 LeWM encoder/predictor、benchmark 与 SIGReg 世界模型骨干，是本篇方法和所有对照的直接前提。"
+    },
+    {
+      "title": "LeJEPA: Provable and Scalable Self-Supervised Learning Without the Heuristics",
+      "arxiv_id": "2511.08544",
+      "reason": "提供 LeWM 继承的 SIGReg/isotropic-Gaussian regularization；该引用承载潜空间几何解释。"
+    }
+  ],
+  "notes": "按 scoping 六遍法精读完整 arXiv HTML v2；定量事件只使用抽取文本中可见的数值/措辞。HTML 数学节点在纯文本中有部分符号缺失，因此未恢复或推断摘要中的速度倍数。"
+}

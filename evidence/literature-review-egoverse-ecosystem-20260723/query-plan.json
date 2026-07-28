@@ -1,0 +1,1998 @@
+{
+  "generated_at": "2026-07-23T02:35:11.080821+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "EgoVerse ecosystem: egocentric human data, human-to-robot transfer, evaluation, and industry collaboration",
+  "start_date": "2021-01-01",
+  "end_date": "2026-07-23",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-XEMBODIMENT",
+    "EA-EVAL",
+    "EA-MODEL",
+    "EA-BIZ"
+  ],
+  "families": [
+    "droid-ego4d",
+    "retargeting",
+    "teleoperation-demo-quality",
+    "vla"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.HC",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 200,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 200,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-egoverse-core",
+        "dynamic-named-lineage",
+        "droid-robot-manipulation",
+        "ego4d-robot-learning",
+        "retargeting-robot-manipulation",
+        "teleop-imitation-learning",
+        "teleop-demonstration-quality",
+        "vla-core",
+        "vla-named-models",
+        "ea-data-robot-demonstrations",
+        "ea-xembodiment-cross-embodiment",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-danfei-egocentric-lineage",
+        "dynamic-emergent-human-robot-transfer",
+        "dynamic-egocentric-action-supervision",
+        "dynamic-dataset-composition-alignment",
+        "dynamic-cross-lab-evaluation",
+        "dynamic-rss26-adjacent",
+        "calibrated-human-to-robot-transfer",
+        "calibrated-data-centric-robotics",
+        "calibrated-training-validated-data",
+        "calibrated-living-dataset",
+        "calibration-data-centric-robotics",
+        "calibration-living-dataset",
+        "droid-ego-egocentric-video",
+        "droid-ego-in-the-wild",
+        "droid-ego-data-mixture",
+        "retargeting-human-to-robot-mapping",
+        "retargeting-dexterous-hand",
+        "retargeting-gripper-demonstration",
+        "teleop-operator-burden",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action",
+        "vla-finetuning-policy",
+        "vla-data-mixture",
+        "ea-data-in-the-wild",
+        "ea-data-dataset-curation",
+        "ea-xembodiment-retargeting-dexterous",
+        "ea-xembodiment-human-to-robot",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-human-data-negative-transfer",
+        "dynamic-egocentric-contact-limit",
+        "retargeting-morphology-gap",
+        "teleop-latency",
+        "vla-negative-transfer"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "deployment-and-operations",
+      "query_labels": [
+        "dynamic-data-governance-license"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "teleop-action-interface",
+        "ea-xembodiment-action-representation"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "agent dynamic expansion (high): Expansion derived from the EgoVerse paper, official project pages, RSS 2026 program, and the repository seed survey."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-egoverse-core",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:EgoVerse",
+      "why": "Recover the core paper and follow-on work that explicitly names the living dataset ecosystem."
+    },
+    {
+      "label": "dynamic-danfei-egocentric-lineage",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "au:\"Danfei Xu\" AND all:(egocentric OR human-to-robot OR cross-embodiment)",
+      "why": "Cover the direct research lineage without using the author as evidence by authority."
+    },
+    {
+      "label": "dynamic-named-lineage",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:(EgoMimic OR EgoBridge OR EMMA OR EgoScale) AND all:(robot OR manipulation)",
+      "why": "Recover the capture, alignment, mobile-manipulation, and dexterous-scaling lineage around EgoVerse."
+    },
+    {
+      "label": "dynamic-emergent-human-robot-transfer",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"human to robot transfer\" AND all:(VLA OR \"vision-language-action\" OR pretraining)",
+      "why": "Test the hypothesis that diverse robot pretraining creates embodiment-agnostic transfer from human data."
+    },
+    {
+      "label": "dynamic-egocentric-action-supervision",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"egocentric human data\" AND all:(action OR trajectory OR retargeting OR policy)",
+      "why": "Find how human video is converted into robot-action supervision rather than used only for perception pretraining."
+    },
+    {
+      "label": "dynamic-dataset-composition-alignment",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"dataset composition\" AND all:(robot OR manipulation) AND all:(alignment OR diversity OR retrieval)",
+      "why": "Cover target relevance and diversity composition instead of treating hours as a sufficient quality measure."
+    },
+    {
+      "label": "dynamic-cross-lab-evaluation",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:(\"cross-lab\" OR \"multiple labs\" OR reproducible) AND all:(robot learning OR manipulation) AND all:evaluation",
+      "why": "Find multi-site evaluation designs and limits relevant to EgoVerse's consortium-scale study."
+    },
+    {
+      "label": "dynamic-human-data-negative-transfer",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:(\"human video\" OR \"human data\") AND all:robot AND all:(\"negative transfer\" OR limitation OR failure OR mismatch)",
+      "why": "Actively search for counterevidence and transfer failures."
+    },
+    {
+      "label": "dynamic-egocentric-contact-limit",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:egocentric AND all:robot AND all:(contact OR tactile OR occlusion) AND all:(transfer OR imitation)",
+      "why": "Cover states that vision/pose-only human data may not observe reliably."
+    },
+    {
+      "label": "dynamic-data-governance-license",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:(robotics OR egocentric) AND all:dataset AND all:(license OR privacy OR provenance OR versioning)",
+      "why": "Cover governance and reproducibility limits of living, multi-provider datasets."
+    },
+    {
+      "label": "dynamic-rss26-adjacent",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "all:(\"robot-free egocentric\" OR \"human demonstrations\" OR \"cross-embodiment transfer\") AND all:(manipulation OR imitation)",
+      "why": "Recover RSS 2026-adjacent routes without using venue acceptance as scientific evidence."
+    },
+    {
+      "label": "dynamic-egoverse-browser",
+      "channel": "browser_fallback",
+      "source": "agent",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs EgoVerse egocentric human robot transfer",
+      "why": "Recover the core paper and explicit follow-ons if API metadata lags."
+    },
+    {
+      "label": "dynamic-lineage-browser",
+      "channel": "browser_fallback",
+      "source": "agent",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs (EgoMimic OR EgoBridge OR EMMA OR EgoScale) robot",
+      "why": "Recover named lineage papers and their identifiers."
+    },
+    {
+      "label": "dynamic-counterevidence-browser",
+      "channel": "browser_fallback",
+      "source": "agent",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs egocentric human data robot (failure OR limitation OR negative transfer)",
+      "why": "Find limiting or contradictory evidence that may be under-indexed."
+    },
+    {
+      "label": "dynamic-rss-calibration",
+      "channel": "web_calibration",
+      "source": "agent",
+      "confidence": "high",
+      "query": "site:roboticsconference.org 2026 EgoVerse human data imitation learning",
+      "why": "Calibrate official venue terminology and adjacent session names."
+    }
+  ],
+  "calibration_notes": [
+    "rss-official calibration (high): Confirms EgoVerse as RSS 2026 Paper 92 in Datasets and Benchmarks.",
+    "rss-workshop-official calibration (high): Calibrates data-centric robotics terms: sources, quality versus scale, composition, evaluation, and data flywheels.",
+    "project-page calibration (medium): Confirms living dataset/ecosystem vocabulary and current partner list.",
+    "author-homepage calibration (medium): Confirms named lineage: EgoMimic, EgoBridge, EMMA, Emergence, and EgoVerse.",
+    "social-calibration calibration (low): Used only to discover new partner names and current ecosystem vocabulary."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-egoverse-core",
+      "tier": "named-project",
+      "query": "all:EgoVerse",
+      "why": "Recover the core paper and follow-on work that explicitly names the living dataset ecosystem.",
+      "source_key": "dynamic,calibration",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egoverse-core",
+        "calibrated-egoverse",
+        "calibration-egoverse"
+      ]
+    },
+    {
+      "label": "dynamic-danfei-egocentric-lineage",
+      "tier": "author-lineage",
+      "query": "au:\"Danfei Xu\" AND all:(egocentric OR human-to-robot OR cross-embodiment)",
+      "why": "Cover the direct research lineage without using the author as evidence by authority.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-danfei-egocentric-lineage"
+      ]
+    },
+    {
+      "label": "dynamic-named-lineage",
+      "tier": "named-method",
+      "query": "all:(EgoMimic OR EgoBridge OR EMMA OR EgoScale) AND all:(robot OR manipulation)",
+      "why": "Recover the capture, alignment, mobile-manipulation, and dexterous-scaling lineage around EgoVerse.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-named-lineage"
+      ]
+    },
+    {
+      "label": "dynamic-emergent-human-robot-transfer",
+      "tier": "mechanism",
+      "query": "all:\"human to robot transfer\" AND all:(VLA OR \"vision-language-action\" OR pretraining)",
+      "why": "Test the hypothesis that diverse robot pretraining creates embodiment-agnostic transfer from human data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-emergent-human-robot-transfer"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-action-supervision",
+      "tier": "mechanism",
+      "query": "all:\"egocentric human data\" AND all:(action OR trajectory OR retargeting OR policy)",
+      "why": "Find how human video is converted into robot-action supervision rather than used only for perception pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-action-supervision"
+      ]
+    },
+    {
+      "label": "dynamic-dataset-composition-alignment",
+      "tier": "data-quality",
+      "query": "all:\"dataset composition\" AND all:(robot OR manipulation) AND all:(alignment OR diversity OR retrieval)",
+      "why": "Cover target relevance and diversity composition instead of treating hours as a sufficient quality measure.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dataset-composition-alignment"
+      ]
+    },
+    {
+      "label": "dynamic-cross-lab-evaluation",
+      "tier": "evaluation",
+      "query": "all:(\"cross-lab\" OR \"multiple labs\" OR reproducible) AND all:(robot learning OR manipulation) AND all:evaluation",
+      "why": "Find multi-site evaluation designs and limits relevant to EgoVerse's consortium-scale study.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-cross-lab-evaluation"
+      ]
+    },
+    {
+      "label": "dynamic-human-data-negative-transfer",
+      "tier": "limitation",
+      "query": "all:(\"human video\" OR \"human data\") AND all:robot AND all:(\"negative transfer\" OR limitation OR failure OR mismatch)",
+      "why": "Actively search for counterevidence and transfer failures.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-data-negative-transfer"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-contact-limit",
+      "tier": "limitation",
+      "query": "all:egocentric AND all:robot AND all:(contact OR tactile OR occlusion) AND all:(transfer OR imitation)",
+      "why": "Cover states that vision/pose-only human data may not observe reliably.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-contact-limit"
+      ]
+    },
+    {
+      "label": "dynamic-data-governance-license",
+      "tier": "deployment-governance",
+      "query": "all:(robotics OR egocentric) AND all:dataset AND all:(license OR privacy OR provenance OR versioning)",
+      "why": "Cover governance and reproducibility limits of living, multi-provider datasets.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-data-governance-license"
+      ]
+    },
+    {
+      "label": "dynamic-rss26-adjacent",
+      "tier": "adjacent-venue",
+      "query": "all:(\"robot-free egocentric\" OR \"human demonstrations\" OR \"cross-embodiment transfer\") AND all:(manipulation OR imitation)",
+      "why": "Recover RSS 2026-adjacent routes without using venue acceptance as scientific evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-rss26-adjacent"
+      ]
+    },
+    {
+      "label": "calibrated-human-to-robot-transfer",
+      "tier": "calibrated-term",
+      "query": "all:\"human-to-robot transfer\"",
+      "why": "Canonical scientific outcome used by the paper and related lineage.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "rss-official",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-human-to-robot-transfer"
+      ]
+    },
+    {
+      "label": "calibrated-data-centric-robotics",
+      "tier": "calibrated-term",
+      "query": "all:\"data-centric robotics\"",
+      "why": "Umbrella framing for source, composition, quality, evaluation, and flywheel questions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "rss-workshop-official",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-data-centric-robotics"
+      ]
+    },
+    {
+      "label": "calibrated-training-validated-data",
+      "tier": "calibrated-term",
+      "query": "all:\"training-validated data\"",
+      "why": "Current ecosystem claim that requires a scientific operational definition.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "social-calibration",
+      "calibration_confidence": "low",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-training-validated-data"
+      ]
+    },
+    {
+      "label": "calibrated-living-dataset",
+      "tier": "calibrated-term",
+      "query": "all:\"living dataset\"",
+      "why": "Signals versioning, contribution, governance, and reproducibility questions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "project-page",
+      "calibration_confidence": "medium",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-living-dataset"
+      ]
+    },
+    {
+      "label": "calibration-data-centric-robotics",
+      "tier": "calibrated-query",
+      "query": "all:\"data-centric robotics\" OR (all:\"dataset composition\" AND all:robot)",
+      "why": "Translate workshop framing into paper-search vocabulary.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "rss-workshop-official",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-data-centric-robotics"
+      ]
+    },
+    {
+      "label": "calibration-living-dataset",
+      "tier": "calibrated-query",
+      "query": "all:\"living dataset\" AND all:(robot OR egocentric)",
+      "why": "Find work on continuously growing datasets and versioned ecosystems.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "project-page",
+      "calibration_confidence": "medium",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-living-dataset"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "teleop-imitation-learning",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"imitation learning\" AND all:robot",
+      "why": "Find the main literature surface connecting teleoperation to robot policy learning.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-imitation-learning"
+      ]
+    },
+    {
+      "label": "teleop-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface trace consistency, operator skill, and data acceptance criteria.",
+      "source_key": "teleoperation-demo-quality,EA-DATA",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-demonstration-quality",
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "teleop-operator-burden",
+      "tier": "human-factor",
+      "query": "all:operator AND all:burden AND all:teleoperation",
+      "why": "Find papers about human workload and collection throughput.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.HC",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-operator-burden"
+      ]
+    },
+    {
+      "label": "teleop-latency",
+      "tier": "system-limitation",
+      "query": "all:latency AND all:teleoperation AND all:robot",
+      "why": "Capture delay and synchronization limits that affect demonstration fidelity.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-latency"
+      ]
+    },
+    {
+      "label": "teleop-action-interface",
+      "tier": "policy-interface",
+      "query": "all:\"action interface\" AND all:robot AND all:demonstration",
+      "why": "Find work where action-space choices determine whether demonstrations transfer.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-action-interface"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-egoverse-core",
+      "tier": "named-project",
+      "query": "all:EgoVerse",
+      "why": "Recover the core paper and follow-on work that explicitly names the living dataset ecosystem.",
+      "source_key": "dynamic,calibration",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egoverse-core",
+        "calibrated-egoverse",
+        "calibration-egoverse"
+      ]
+    },
+    {
+      "label": "dynamic-danfei-egocentric-lineage",
+      "tier": "author-lineage",
+      "query": "au:\"Danfei Xu\" AND all:(egocentric OR human-to-robot OR cross-embodiment)",
+      "why": "Cover the direct research lineage without using the author as evidence by authority.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-danfei-egocentric-lineage"
+      ]
+    },
+    {
+      "label": "dynamic-named-lineage",
+      "tier": "named-method",
+      "query": "all:(EgoMimic OR EgoBridge OR EMMA OR EgoScale) AND all:(robot OR manipulation)",
+      "why": "Recover the capture, alignment, mobile-manipulation, and dexterous-scaling lineage around EgoVerse.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-named-lineage"
+      ]
+    },
+    {
+      "label": "dynamic-emergent-human-robot-transfer",
+      "tier": "mechanism",
+      "query": "all:\"human to robot transfer\" AND all:(VLA OR \"vision-language-action\" OR pretraining)",
+      "why": "Test the hypothesis that diverse robot pretraining creates embodiment-agnostic transfer from human data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-emergent-human-robot-transfer"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-action-supervision",
+      "tier": "mechanism",
+      "query": "all:\"egocentric human data\" AND all:(action OR trajectory OR retargeting OR policy)",
+      "why": "Find how human video is converted into robot-action supervision rather than used only for perception pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-action-supervision"
+      ]
+    },
+    {
+      "label": "dynamic-dataset-composition-alignment",
+      "tier": "data-quality",
+      "query": "all:\"dataset composition\" AND all:(robot OR manipulation) AND all:(alignment OR diversity OR retrieval)",
+      "why": "Cover target relevance and diversity composition instead of treating hours as a sufficient quality measure.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dataset-composition-alignment"
+      ]
+    },
+    {
+      "label": "dynamic-cross-lab-evaluation",
+      "tier": "evaluation",
+      "query": "all:(\"cross-lab\" OR \"multiple labs\" OR reproducible) AND all:(robot learning OR manipulation) AND all:evaluation",
+      "why": "Find multi-site evaluation designs and limits relevant to EgoVerse's consortium-scale study.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-cross-lab-evaluation"
+      ]
+    },
+    {
+      "label": "dynamic-human-data-negative-transfer",
+      "tier": "limitation",
+      "query": "all:(\"human video\" OR \"human data\") AND all:robot AND all:(\"negative transfer\" OR limitation OR failure OR mismatch)",
+      "why": "Actively search for counterevidence and transfer failures.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-data-negative-transfer"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-contact-limit",
+      "tier": "limitation",
+      "query": "all:egocentric AND all:robot AND all:(contact OR tactile OR occlusion) AND all:(transfer OR imitation)",
+      "why": "Cover states that vision/pose-only human data may not observe reliably.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-contact-limit"
+      ]
+    },
+    {
+      "label": "dynamic-data-governance-license",
+      "tier": "deployment-governance",
+      "query": "all:(robotics OR egocentric) AND all:dataset AND all:(license OR privacy OR provenance OR versioning)",
+      "why": "Cover governance and reproducibility limits of living, multi-provider datasets.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-data-governance-license"
+      ]
+    },
+    {
+      "label": "dynamic-rss26-adjacent",
+      "tier": "adjacent-venue",
+      "query": "all:(\"robot-free egocentric\" OR \"human demonstrations\" OR \"cross-embodiment transfer\") AND all:(manipulation OR imitation)",
+      "why": "Recover RSS 2026-adjacent routes without using venue acceptance as scientific evidence.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "agent",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-rss26-adjacent"
+      ]
+    },
+    {
+      "label": "calibrated-human-to-robot-transfer",
+      "tier": "calibrated-term",
+      "query": "all:\"human-to-robot transfer\"",
+      "why": "Canonical scientific outcome used by the paper and related lineage.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "rss-official",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-human-to-robot-transfer"
+      ]
+    },
+    {
+      "label": "calibrated-data-centric-robotics",
+      "tier": "calibrated-term",
+      "query": "all:\"data-centric robotics\"",
+      "why": "Umbrella framing for source, composition, quality, evaluation, and flywheel questions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "rss-workshop-official",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-data-centric-robotics"
+      ]
+    },
+    {
+      "label": "calibrated-training-validated-data",
+      "tier": "calibrated-term",
+      "query": "all:\"training-validated data\"",
+      "why": "Current ecosystem claim that requires a scientific operational definition.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "social-calibration",
+      "calibration_confidence": "low",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-training-validated-data"
+      ]
+    },
+    {
+      "label": "calibrated-living-dataset",
+      "tier": "calibrated-term",
+      "query": "all:\"living dataset\"",
+      "why": "Signals versioning, contribution, governance, and reproducibility questions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "project-page",
+      "calibration_confidence": "medium",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-living-dataset"
+      ]
+    },
+    {
+      "label": "calibration-data-centric-robotics",
+      "tier": "calibrated-query",
+      "query": "all:\"data-centric robotics\" OR (all:\"dataset composition\" AND all:robot)",
+      "why": "Translate workshop framing into paper-search vocabulary.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "rss-workshop-official",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-data-centric-robotics"
+      ]
+    },
+    {
+      "label": "calibration-living-dataset",
+      "tier": "calibrated-query",
+      "query": "all:\"living dataset\" AND all:(robot OR egocentric)",
+      "why": "Find work on continuously growing datasets and versioned ecosystems.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "project-page",
+      "calibration_confidence": "medium",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-living-dataset"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "teleop-imitation-learning",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"imitation learning\" AND all:robot",
+      "why": "Find the main literature surface connecting teleoperation to robot policy learning.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-imitation-learning"
+      ]
+    },
+    {
+      "label": "teleop-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface trace consistency, operator skill, and data acceptance criteria.",
+      "source_key": "teleoperation-demo-quality,EA-DATA",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-demonstration-quality",
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "teleop-operator-burden",
+      "tier": "human-factor",
+      "query": "all:operator AND all:burden AND all:teleoperation",
+      "why": "Find papers about human workload and collection throughput.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.HC",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-operator-burden"
+      ]
+    },
+    {
+      "label": "teleop-latency",
+      "tier": "system-limitation",
+      "query": "all:latency AND all:teleoperation AND all:robot",
+      "why": "Capture delay and synchronization limits that affect demonstration fidelity.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-latency"
+      ]
+    },
+    {
+      "label": "teleop-action-interface",
+      "tier": "policy-interface",
+      "query": "all:\"action interface\" AND all:robot AND all:demonstration",
+      "why": "Find work where action-space choices determine whether demonstrations transfer.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-action-interface"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-egoverse-browser",
+      "query": "site:arxiv.org/abs EgoVerse egocentric human robot transfer",
+      "why": "Recover the core paper and explicit follow-ons if API metadata lags.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-lineage-browser",
+      "query": "site:arxiv.org/abs (EgoMimic OR EgoBridge OR EMMA OR EgoScale) robot",
+      "why": "Recover named lineage papers and their identifiers.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-counterevidence-browser",
+      "query": "site:arxiv.org/abs egocentric human data robot (failure OR limitation OR negative transfer)",
+      "why": "Find limiting or contradictory evidence that may be under-indexed.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-rss-calibration",
+      "query": "site:roboticsconference.org 2026 EgoVerse human data imitation learning",
+      "why": "Calibrate official venue terminology and adjacent session names.",
+      "source_key": "dynamic",
+      "source_type": "agent",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-egoverse",
+      "query": "\"EgoVerse\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: EgoVerse.",
+      "source_key": "calibration",
+      "source_type": "rss-official",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-human-to-robot-transfer",
+      "query": "\"human-to-robot transfer\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: human-to-robot transfer.",
+      "source_key": "calibration",
+      "source_type": "rss-official",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-data-centric-robotics",
+      "query": "\"data-centric robotics\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: data-centric robotics.",
+      "source_key": "calibration",
+      "source_type": "rss-workshop-official",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-training-validated-data",
+      "query": "\"training-validated data\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: training-validated data.",
+      "source_key": "calibration",
+      "source_type": "social-calibration",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-living-dataset",
+      "query": "\"living dataset\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: living dataset.",
+      "source_key": "calibration",
+      "source_type": "project-page",
+      "channel": "web_calibration"
+    }
+  ]
+}

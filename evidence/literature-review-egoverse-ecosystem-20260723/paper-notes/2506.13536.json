@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2506.13536",
+    "title": "What Matters in Learning from Large-Scale Datasets for Robot Manipulation",
+    "published": "2025-06-16",
+    "url": "https://arxiv.org/abs/2506.13536",
+    "authors": [
+      "Vaibhav Saxena",
+      "Matthew Bronars",
+      "Nadun Ranawaka Arachchige",
+      "Kuancheng Wang",
+      "Woo Chul Shin",
+      "Soroush Nasiriany",
+      "Ajay Mandlekar",
+      "Danfei Xu"
+    ]
+  },
+  "review": {
+    "question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接研究大型机器人数据集的多样性、目标对齐与检索方式，并提供规模增加反而失败的反例。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认大规模数据集构成问题与 collector/retriever 两种视角。"
+      },
+      {
+        "locator": "3 MimicLabs Study Design > 3.2 Dimensions of Variation (DVs) and Co-Training Settings",
+        "role": "method-or-design",
+        "purpose": "核对受控数据构成变量与联合训练设置。"
+      },
+      {
+        "locator": "5 Core Results > 5.4 Real World Experiments > 5.4.2 Retriever’s Perspective (Real World) using DROID",
+        "role": "results-or-analysis",
+        "purpose": "核对全量 DROID 与目标相关检索数据的真实机器人结果。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者总结及其适用范围。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "核心问题、方法、结果和边界章节已完整核对；未使用与本综述主张无关的附录内容。"
+      }
+    ]
+  },
+  "research_question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+  "contributions": [
+    "用可控合成数据系统研究相机、空间、物体等多样性维度对策略迁移的影响。",
+    "在真实 DROID 使用场景中显示，全量多样数据并不总是优于面向目标的检索数据。"
+  ],
+  "method": {
+    "summary": "构建 MimicLabs 程序化数据生成器，在 collector 与 retriever 两种使用场景中控制数据多样性和目标对齐，再用七个真实机器人任务校验部分发现。",
+    "assumptions": [
+      "合成环境中受控的数据构成变化能为真实机器人数据选择提供有用先验。",
+      "DROID 元数据足以支持对目标任务的近似相关性检索。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "MimicLabs",
+      "DROID"
+    ],
+    "tasks": [
+      "controlled simulated manipulation",
+      "seven real-world manipulation tasks"
+    ],
+    "embodiments": [
+      "simulation robots",
+      "real robot used for DROID retrieval evaluation"
+    ],
+    "sample_or_scale": "MimicLabs 近百万轨迹、三千余任务实例；真实校验覆盖七个任务。"
+  },
+  "evaluation": {
+    "design": "受控模拟研究后，用真实机器人 collector/retriever 实验检验对数据构成的推断。",
+    "baselines": [
+      "target-only training",
+      "co-training with all of DROID",
+      "metadata-based retrieval subsets"
+    ],
+    "metrics": [
+      "task success",
+      "relative improvement"
+    ],
+    "ablations": [
+      "camera pose",
+      "spatial arrangement",
+      "object type",
+      "object texture",
+      "retrieval composition"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在论文测试的六个 DROID 检索任务中，用整个 DROID 数据集联合训练均未学会目标任务，说明与目标不对齐的额外多样性可能导致训练不稳定和性能下降。",
+      "scope": "论文的六个真实机器人 DROID 检索任务、元数据处理和训练配置。",
+      "locator": "5.4.2 Retriever’s Perspective (Real World) using DROID"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "“全量数据失败”不能外推为大数据必然有害；结果依赖数据重平衡、策略容量和目标任务分布。",
+        "basis": "论文比较的是特定 DROID 子集选择与训练配方，没有穷尽其他模型和采样机制。"
+      }
+    ]
+  },
+  "transfer_boundary": "可支持目标对齐和检索的重要性，不能将单组任务上的失败解释为所有多任务数据混合都会失败。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "受控模拟因素研究与真实机器人校验结合，并包含对“更多数据更好”的直接反例。"
+    ],
+    "design_risks": [
+      "模拟到真实的映射和 DROID 元数据质量限制了可推广性。"
+    ],
+    "baseline_fairness": "仅保留论文报告的对照结果；本综述未复跑基线，也不假设不同方法拥有完全相同的调参预算。",
+    "metric_validity": "任务分数或成功率只解释为论文规定任务与初始化条件下的策略表现，不视为通用具身能力代理。",
+    "reproducibility": "方法、数据处理和评测章节均有定位；完整复现仍取决于作者公开的代码、数据、硬件配置与训练细节。",
+    "external_validity": "结论限定于论文报告的数据、任务、本体、传感与评测条件；未直接测试的跨域、跨本体或长期部署效果不外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2506.13536-C01",
+      "claim": "在论文测试的六个 DROID 检索任务中，用整个 DROID 数据集联合训练均未学会目标任务，说明与目标不对齐的额外多样性可能导致训练不稳定和性能下降。",
+      "stance": "limit",
+      "relation": "回答 EgoVerse 生态综述中的数据规模、目标对齐或人机迁移条件问题。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "数据供应和数据采购不能只看规模；数据与目标任务的相关性及检索机制会改变训练有效性。",
+      "locator": "5.4.2 Retriever’s Perspective (Real World) using DROID",
+      "source_context": "All of the models we co-trained with all of DROID failed to learn the tasks, showing that too much diversity in co-training datasets can potentially lead to unstable training and diminished performance.",
+      "evidence_type": "controlled-study+real-robot experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已人工核对完整非 OCR 全文中的章节、原文上下文、实验对象与外推边界；主张只保留原文直接支持的方向、数值或条件。"
+      },
+      "notes": "作为 EgoVerse 规模论述的反例与数据供应商“训练有效性”问题的核心证据。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "作为 EgoVerse 规模论述的反例与数据供应商“训练有效性”问题的核心证据。"
+}

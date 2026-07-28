@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.12547",
+    "title": "Mind the Gap: Promises and Pitfalls of Hierarchical Planning in LeWorldModel",
+    "published": "2026-07-14T09:18:44Z",
+    "url": "https://arxiv.org/abs/2607.12547",
+    "authors": [
+      "Niccolò Caselli",
+      "Francesco Massafra",
+      "Samuele Punzo",
+      "Salvatore Lo Sardo",
+      "Ippokratis Pantelidis",
+      "Sathya Kamesh Bhethanabhotla"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 技术谱系中，潜空间世界模型的表征、可达性约束与分层规划机制如何影响预测、长时程规划和控制？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文直接检验把时间抽象层轻量叠加到冻结 LeWM 上是否改善长时程规划，并把失败定位到 CEM 搜索超出训练 macro-action 支持、生成 subgoal 质量和执行时序，提供本轮分层规划技术点的正反证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定 flat LeWM 的长时程 rollout/search 困难，以及最小层级化 retrofit 的研究问题。"
+      },
+      {
+        "locator": "2 Method: Hi-LeWM and High-Level Planning",
+        "role": "method-or-design",
+        "purpose": "核对冻结低层 LeWM、增加 macro-action encoder 与高层 latent predictor 的整体接口。"
+      },
+      {
+        "locator": "Appendix B Hi-LeWM Training Details > B.1 High-Level Architecture",
+        "role": "method-or-design",
+        "purpose": "记录高层 transformer macro-action encoder、预测器、冻结模块与潜变量接口。"
+      },
+      {
+        "locator": "Appendix B Hi-LeWM Training Details > B.2 Waypoint Sampling Strategy",
+        "role": "method-or-design",
+        "purpose": "核对随机 waypoint 和变时长 action chunk 如何定义时间抽象。"
+      },
+      {
+        "locator": "Appendix B Hi-LeWM Training Details > B.3 Optimization Details",
+        "role": "method-or-design",
+        "purpose": "核对冻结/可训练参数、训练精度、epoch 和联合训练负结果。"
+      },
+      {
+        "locator": "3 Benchmark Results > 3.1 Preliminary Results: Naive High-Level Planning Falls Short",
+        "role": "results-or-analysis",
+        "purpose": "检查 flat baseline 与 naive hierarchy 的初步比较。"
+      },
+      {
+        "locator": "3.2 Failure Analysis: Subgoal Quality and Planner Exploitation",
+        "role": "results-or-analysis",
+        "purpose": "核对 oracle/generated subgoal acting decomposition 与高层 CEM 支持错配诊断。"
+      },
+      {
+        "locator": "3.3 Planning-Side Mitigations",
+        "role": "results-or-analysis",
+        "purpose": "核对 empirical-macro CEM 与 online/staged execution 的干预逻辑和边界。"
+      },
+      {
+        "locator": "Appendix C Evaluation Configurations > C.1 Cube Results and Scope",
+        "role": "data-or-setting",
+        "purpose": "确认 Cube 仅作稳健性检查且不驱动长时程失效主张。"
+      },
+      {
+        "locator": "Appendix C Evaluation Configurations > C.2 Evaluation Protocol",
+        "role": "data-or-setting",
+        "purpose": "记录基于 expert trajectory 的 start-goal episode、offset 难度、50 episodes 与三种子均值。"
+      },
+      {
+        "locator": "Appendix C Evaluation Configurations > C.3 LeWM Baseline Configurations",
+        "role": "results-or-analysis",
+        "purpose": "核对各 offset 的 flat LeWM 最佳配置和完整 Hi-LeWM/Hi-LeWM-C sweep 数值。"
+      },
+      {
+        "locator": "Appendix C Evaluation Configurations > C.6 Empirical-Macro CEM Details",
+        "role": "method-or-design",
+        "purpose": "核对经验 anchor bank、局部 residual、elite refit 和 sequence-level staged sampling 的实现。"
+      },
+      {
+        "locator": "Appendix D Diagnostic Details > D.1 Latent-to-Pixel Decoder Probe",
+        "role": "results-or-analysis",
+        "purpose": "确认 decoder 只作诊断，且 predicted latents 仍具视觉可解码性，避免把故障简单归因于信息完全丢失。"
+      },
+      {
+        "locator": "4 Discussion and Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取 support constraint、执行时序、PushT/Cube 范围、VQ 与模型规模限制。"
+      },
+      {
+        "locator": "Appendix A Reproducibility and Code Availability > A.1 Computational Resources",
+        "role": "appendix-or-supplement",
+        "purpose": "记录训练硬件、耗时与每 run 的评测 episode 数。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: cited literature was not used as evidence for Hi-LeWM's own empirical claims"
+      }
+    ]
+  },
+  "research_question": "在不重训低层 LeWM 的最小改动下，高层潜 subgoal 与 macro-action 时间抽象何时能改善长时程控制，为什么无约束高层 CEM 会失败，数据支持约束和执行模式能修复到什么程度？",
+  "contributions": [
+    "提出 Hi-LeWM：冻结预训练 LeWM 低层组件，仅增加潜 macro-action encoder 和高层 waypoint predictor。",
+    "通过 oracle/generated subgoal acting decomposition 和 decoder probe，把 naive hierarchy 的主瓶颈定位到高层目标质量与搜索支持错配。",
+    "提出 empirical-macro CEM，在真实训练轨迹编码出的 macro-action 序列附近进行局部残差搜索。",
+    "比较 online replanning 与 staged execution，显示层级化收益取决于 goal offset、支持约束和 subgoal 提交时长。"
+  ],
+  "method": {
+    "summary": "Hi-LeWM 以冻结 LeWM latent encoder/predictor/low-level planner 为基础，用 transformer 把 waypoint 间 primitive action chunk 压成连续 macro-action，再由高层 predictor 预测下一 latent waypoint。标准高层 CEM 自由搜索连续 macro-actions；修复版 empirical-macro CEM 从训练轨迹构造 macro-action sequence bank，每轮围绕重采样的经验 anchor 只拟合局部 residual。执行可在线反复重规划，也可一次生成有序 subgoal scaffold 后分阶段执行。",
+    "assumptions": [
+      "冻结低层 LeWM 能够执行质量足够且时间对齐的中间 latent targets。",
+      "训练轨迹编码出的 macro-actions 定义了有控制意义的支持邻域，局部 residual 不会大幅离开该支持。",
+      "高层预测器在 waypoint 时间尺度上的 rollout 足以给 CEM 提供相对排序信号。",
+      "固定阶段时长与任务所需时间尺度匹配；否则 staged commitment 会放大早期 subgoal 误差。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "PushT expert demonstration trajectories",
+      "OGBCube-v0 expert demonstration trajectories"
+    ],
+    "tasks": [
+      "goal-conditioned latent MPC",
+      "hierarchical latent waypoint planning",
+      "longer-horizon control under increasing start-goal offsets"
+    ],
+    "embodiments": [
+      "planar pushing",
+      "cube manipulation benchmark"
+    ],
+    "sample_or_scale": "每个规划配置评测固定 50 episodes，除另有说明外报告三个随机种子均值；最终 Hi-LeWM 在 PushT 单 A100 训练 7.56 小时，在 Cube 单 H100 训练 12.80 小时。"
+  },
+  "evaluation": {
+    "design": "先复现并按 offset 调优 flat LeWM，再对连续 Hi-LeWM 与支持约束 Hi-LeWM-C 做完整规划 sweep；用 oracle/generated subgoal decomposition、macro-action forecast、latent-to-pixel probe、online/staged execution 和 Cube robustness check 分析失败与修复。",
+    "baselines": [
+      "flat LeWM",
+      "naive continuous Hi-LeWM",
+      "Hi-LeWM-C with empirical-macro CEM",
+      "oracle-subgoal acting",
+      "generated-subgoal acting",
+      "fixed-stride macro-actions",
+      "reduced latent macro-action dimension",
+      "VQ macro-action exploratory variant"
+    ],
+    "metrics": [
+      "closed-loop success rate",
+      "success across goal offsets",
+      "decoded subgoal visual quality",
+      "decoder probe pixel MSE/PSNR/SSIM",
+      "training/evaluation wall-clock resources"
+    ],
+    "ablations": [
+      "unconstrained versus empirical-macro CEM",
+      "online replanning versus staged execution",
+      "oracle versus generated subgoals",
+      "continuous latent dimensions",
+      "random versus fixed-stride waypoints",
+      "VQ macro-action representation",
+      "frozen versus attempted joint end-to-end training"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Naive 高层规划并不自动改善 frozen flat LeWM；oracle 中间 subgoal 常可由低层执行，而生成 subgoal 更弥散、定位差且与可达中间配置不一致。",
+      "scope": "论文的 PushT acting decomposition 与 latent decoder 诊断。",
+      "locator": "3.2 Failure Analysis: Subgoal Quality and Planner Exploitation"
+    },
+    {
+      "finding": "Empirical-macro CEM 通过在训练轨迹 macro-action 序列附近进行局部 residual 搜索，产生更清晰且更贴近可达配置的 subgoal。",
+      "scope": "论文训练数据支持和高层 predictor 的范围；不保证 anchor bank 未覆盖区域的可达性。",
+      "locator": "3.3 Planning-Side Mitigations"
+    },
+    {
+      "finding": "在 PushT offset 100 的完整 sweep 中，最佳支持约束 Hi-LeWM-C 达到 64.0±3.3%，高于调优 flat LeWM 的 52.7±5.0%；offset 150 时最佳在线 Hi-LeWM-C 为 32.7±3.8%，高于 flat 的 18.0±2.0%。",
+      "scope": "每配置 50 episodes、三个种子、论文在各模型/offset 内选择的最佳 sweep 配置；不是预注册的单一超参数比较。",
+      "locator": "Appendix C Evaluation Configurations > C.3 LeWM Baseline Configurations, Tables 3–4"
+    },
+    {
+      "finding": "Staged execution 在中等时域最有用，但在最长时域低于 online constrained replanning，说明 commitment 的有效时长需要与 subgoal rollout 可靠尺度匹配。",
+      "scope": "PushT 的论文 planning sweep；Cube 不呈现同样单调的 flat-planning collapse。",
+      "locator": "3.3 Planning-Side Mitigations"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "主要使用 PushT 研究长时程失效，仍需更广环境检验结论的泛化。",
+        "locator": "4 Discussion and Conclusion"
+      },
+      {
+        "limitation": "VQ macro-actions 等需要重训练的表示选择没有被充分评估，当前结果不能排除离散层级的潜力。",
+        "locator": "4 Discussion and Conclusion"
+      },
+      {
+        "limitation": "模型规模是解释条件；更高容量 DINO-WM 的强 PushT 结果意味着本文不能把观察推广为 hierarchy 的一般局限。",
+        "locator": "4 Discussion and Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Empirical-macro CEM 的收益依赖训练轨迹 bank 的覆盖和质量，不能证明对组合新路径或分布外宏动作仍有效。",
+        "basis": "方法显式围绕训练 action stream 编码的 empirical anchors 搜索，并把数据支持作为核心修复机制。"
+      },
+      {
+        "boundary": "各 offset 内从较大规划 sweep 选取最佳配置可能高估部署时无需调参即可获得的收益。",
+        "basis": "附录表 4 为多超参数 sweep，主文报告每个模型与 offset 的最佳配置，未见独立选择集。"
+      },
+      {
+        "boundary": "Oracle subgoal 可执行只证明低层控制器能跟随数据轨迹上的目标，不证明它能跟随任意高层预测或分布外目标。",
+        "basis": "oracle targets 来自数据集真实未来 latent，而失败恰好发生在 CEM 生成 latent 的支持错配。"
+      }
+    ]
+  },
+  "transfer_boundary": "证据最直接适用于紧凑、冻结的 LeWM-style 低层规划器和可从训练轨迹构造 macro-action bank 的离线目标控制；迁移到更大模型、不同层级表示、分布外任务、组合新技能或安全关键机器人前，必须独立验证 subgoal 支持、执行时长、在线重规划与超参数选择，不能把 temporal abstraction 本身当作自动长时程修复。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "冻结 encoder、低层 predictor 和低层 action encoder，使层级化效果归因更清楚。",
+      "oracle/generated subgoal decomposition 能区分低层 executability 与高层目标质量。",
+      "Empirical-macro CEM 是针对诊断出的支持错配所做的局部干预，机制与修复对应。",
+      "online/staged 对比揭示了时域 commitment 的边界，而不是只报告最佳层级结果。",
+      "Cube 被明确降级为 robustness check，作者没有用不诊断长时程 collapse 的任务夸大主张。"
+    ],
+    "design_risks": [
+      "主结论高度依赖 PushT，环境和模型家族较窄。",
+      "每个 offset 和模型报告较大 sweep 中的最佳配置，若无独立验证集可能产生选择偏差。",
+      "Oracle future latents 来自专家轨迹，较生成 subgoal 享有强数据支持，分解不能完全隔离所有时间对齐混杂。",
+      "Decoder probe 为定性辅助，视觉可解码性不能保证 subgoal 的动力学可达性。",
+      "VQ 与联合训练等替代架构探索不充分，不能据此比较连续支持约束与重新学习层级表示的优劣。"
+    ],
+    "baseline_fairness": "flat LeWM 与 Hi-LeWM 共享 episode 构造、goal 定义和低层组件，并分别进行规划超参数 sweep；这对评估最优可达性能较公平。但不同层级配置的 CEM 预算与搜索维度不同，且结果按各自 sweep 最佳值汇报，部署成本与选择程序应单独比较。",
+    "metric_validity": "闭环成功率直接反映目标达到；offset 提供可控时域难度。Decoder MSE/PSNR/SSIM 只说明视觉信息仍可读，不直接测可达性或控制质量。对 support mismatch 的判断主要由 acting decomposition 和 subgoal 可视化支撑，缺少像 SCSA 那样的同候选定量排序审计。",
+    "reproducibility": "附录给出架构、训练资源、评测 episode 数、CEM 预算、完整 sweep 和 empirical bank/residual 机制，信息较充分；但纯文本抽取省略部分公式超参数数值，本轮未独立运行代码。",
+    "external_validity": "PushT 显示有条件收益，Cube 仅作稳健性检查。真实机器人、多技能组合、长时间恢复、不同数据 bank 与更大世界模型均未覆盖，作者也明确限制了外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.12547-C01",
+      "claim": "在冻结低层 LeWM 的 Hi-LeWM 中，简单增加时间抽象层并不足以改善长时程控制；数据轨迹上的 oracle 中间 subgoal 通常可执行，而生成 subgoal 更不可靠、时间错位并对高层搜索空间敏感。",
+      "stance": "limit",
+      "relation": "限制“层级化或更长预测时域本身就能修复 flat latent planning”的主张，并把注意力转向 subgoal 支持与接口匹配。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "引言综合了 acting decomposition 的结论，并明确 naive hierarchy 经常低于 flat LeWM。",
+      "locator": "1 Introduction",
+      "source_context": "Oracle intermediate subgoals are often executable, whereas generated subgoals are less reliable, temporally misaligned, and sensitive to the high-level search space. Constraining high-level search with data-supported macro-actions and choosing an appropriate execution mode recovers useful behavior in some settings, but does not provide a general solution.",
+      "evidence_type": "failure analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确对比 oracle 与 generated subgoals，并用 does not provide a general solution 限定修复；本卡没有把诊断扩大到所有 hierarchical world models。"
+      }
+    },
+    {
+      "card_id": "2607.12547-C02",
+      "claim": "Empirical-macro CEM 不在连续潜 macro-action 空间中无约束搜索，而从训练轨迹编码的 macro-action 序列 bank 采样 anchor，并只在其附近拟合局部 residual。",
+      "stance": "support",
+      "relation": "支持把高层规划的 train–test support mismatch 作为可操作的推理时故障，并用数据支持约束修复搜索接口。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.3 节给出方法动机，附录 C.6 进一步说明每轮重采样 anchor、只 refit residual 并保留零残差候选。",
+      "locator": "3.3 Planning-Side Mitigations",
+      "source_context": "Instead of sampling high-level candidate sequences directly from an unconstrained Gaussian, we build a bank of macro-action sequences encoded from training trajectories and sample candidates as local residual perturbations around these empirical anchors.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "句子逐项包含 unconstrained Gaussian、training-trajectory bank、empirical anchors 与 local residual perturbations，本卡严格复述该推理时约束。"
+      }
+    },
+    {
+      "card_id": "2607.12547-C03",
+      "claim": "Support-constrained high-level search 的收益取决于执行模式和时间尺度：staged execution 在中等时域最有帮助，但在最长 PushT 时域低于 online constrained replanning。",
+      "stance": "conditional",
+      "relation": "说明长时程层级规划不仅需要数据支持的 macro-actions，还需要让 subgoal 提交时长匹配高层 rollout 的可靠范围。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "3.3 节在同一 PushT sweep 中比较 online 与 staged，并明确把最长时域的 staged 退化解释为方法自然边界。",
+      "locator": "3.3 Planning-Side Mitigations",
+      "source_context": "At , however, staged execution falls to , below online Hi-LeWM-C. Thus the fix has a natural limit: support-constrained search helps, but committing to a long staged sequence helps only when the temporal scale is appropriate.",
+      "evidence_type": "execution-mode ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "虽因 HTML 数学节点省略具体 offset 和数值，原句仍明确报告 staged 低于 online Hi-LeWM-C 并给出 temporal-scale 条件；本卡不补造缺失数字。"
+      }
+    },
+    {
+      "card_id": "2607.12547-C04",
+      "claim": "Hi-LeWM 的正面结论不能外推为 hierarchy 的一般优势：主分析集中于 PushT，VQ macro-actions 尚未充分评估，而且更高容量世界模型可能呈现不同结果。",
+      "stance": "limit",
+      "relation": "限制把紧凑 frozen LeWM 上的 support-constrained hierarchy 结论推广到其他模型规模、离散层级或广泛机器人任务。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "讨论节逐项说明环境范围、未充分探索的 VQ 路线和模型规模条件。",
+      "locator": "4 Discussion and Conclusion",
+      "source_context": "We primarily use PushT because varying the goal offset gives a controlled way to study longer-horizon planning; broader environments are needed to test how far the conclusions generalize. We also leave retraining-based representation choices, especially VQ macro-actions, to future work.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确要求 broader environments 并把 VQ 留作未来工作；同节另说明模型规模条件，本卡据此界定外推范围而非推断方法失败。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "精读基于完整高质量 arXiv HTML。部分公式和内嵌数学数值在纯文本抽取中为空，因此投影卡避免引用缺失数字；完整 sweep 数值只在 note 的 findings 中按附录可见表格记录。"
+}

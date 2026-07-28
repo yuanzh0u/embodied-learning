@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.01544",
+    "title": "An Efficient Metric for Data Quality Measurement in Imitation Learning",
+    "published": "2026-05-02",
+    "url": "https://arxiv.org/abs/2605.01544",
+    "authors": [
+      "Noushad Sojib",
+      "Momotaz Begum"
+    ]
+  },
+  "review": {
+    "question": "近半年 UMI 数据质量",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 近半年 UMI 数据质量."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "I INTRODUCTION",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "III-C Frequency-Domain Analysis of a Signal",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "VI-C Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '近半年 UMI 数据质量', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "面向部署环境的 end-user 示教，低质量常表现为过度纠正、振荡和突兀调整；轨迹功率谱密度 PSD 可作为无需 rollout、专家标签或重新训练的快速质量排序指标。"
+  ],
+  "method": {
+    "summary": "Imitation Learning is experiencing its heyday, catalyzed by incredible progress in large data collection [ 9 , 23 ] , compact visual representation learning [ 14 , 5 ] , sim2real [ 19 , 25 ] , and end-to-end policy learning [ 8 , 26 , 28 ] . There has been no better time to think about deployment of IL-powered robots in homes to benefit older adults or people with disabilities in their activities of daily living [ 22 ] . One of the primary impediments toward field deployment of IL policies is their inability to deal with out of distribution (OOD) scenarios which are unavoidable at run-time, especially in natural home environments. Recent progress in IL policy learning has primarily been driv",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "For an aperiodic time-domain signal with samples, the discrete Fourier transform (DFT) is computed as [ 18 ] : (1) with frequency . The power spectral density (PSD) of the signal is proportional to its frequency content: (2) The noisy (i.e., high-frequency) version of a signal – e.g. the trajectory of a task as shown in Fig. 2 – has higher PSD than its non-noisy (i.e., low-frequency) version. Non-expert trajectories typically contain motion artifacts — such as oscillations, abrupt corrections, and erratic adjustments — that elevate their frequency content relative to expert demonstrations (e.g., Fig. 2 ). That makes PSD comparison between two trajectories of the same task a reliable proxy fo",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "面向部署环境的 end-user 示教，低质量常表现为过度纠正、振荡和突兀调整；轨迹功率谱密度 PSD 可作为无需 rollout、专家标签或重新训练的快速质量排序指标。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (I INTRODUCTION) and evaluation (III-C Frequency-Domain Analysis of a Signal)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.01544-C01",
+      "claim": "面向部署环境的 end-user 示教，低质量常表现为过度纠正、振荡和突兀调整；轨迹功率谱密度 PSD 可作为无需 rollout、专家标签或重新训练的快速质量排序指标。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 近半年 UMI 数据质量",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文把 poor-quality end-user demonstrations 具体化为 excessive corrective motions、oscillations 和 abrupt adjustments，并提出基于 demonstration trajectories PSD 的自动排序指标；实验比较未筛选、oracle、现有排序和 jerk/path-length 等 baseline，研究 PSD 筛选对下游 IL 成功率和平滑性的影响。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Imitation learning (IL) has seen remarkable progress, yet field deployment of IL-powered robots remains hindered by the challenge of out-of-distribution (OOD) scenarios. Fine-tuning pre-trained policies with end-user demonstrations collected in deployment environments is a promising strategy to address this challenge. However, end-user demonstrations are frequently of poor quality, characterized by excessive corrective motions, oscillations, and abrupt adjustments that degrade both learned and fine-tuned policy performance. Existing automated approaches for curating demonstration data require policy rollouts in the environment, making them computationally expensive and impractical for real-world deployment. In this paper, we propose a fast, efficient, and fully automated demonstration ranking metric based on the power spectral density (PSD) of demonstration trajectories. The PSD metric requires no policy learning, environment interaction, or expert labeling, making it well-suited for scalable, in-the-field data curation. Lower PSD values correspond to smoother, higher-qualit",
+      "evidence_type": "metric+experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (abrupt, adjustments, corrective, demonstration, demonstrations, end-user, excessive, il). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Metric is positioned for scalable in-field curation; applicability to contact-rich industrial tasks still needs task-specific validation. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

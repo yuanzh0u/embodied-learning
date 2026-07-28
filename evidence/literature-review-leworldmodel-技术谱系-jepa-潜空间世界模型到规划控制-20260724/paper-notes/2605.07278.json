@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.07278",
+    "title": "Predictive but Not Plannable: RC-aux for Latent World Models",
+    "published": "2026-05-08T05:43:33Z",
+    "url": "https://arxiv.org/abs/2605.07278",
+    "authors": [
+      "Wenyuan Li",
+      "Guang Li",
+      "Keisuke Maeda",
+      "Takahiro Ogawa",
+      "Miki Haseyama"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 技术谱系中，潜空间世界模型的表征、可达性约束与分层规划机制如何影响预测、长时程规划和控制？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文直接研究 LeWorldModel 中“可预测但不可规划”的训练—推理错配，并分别干预开放环多步预测、有限预算可达性几何与测试时搜索，正面回答本轮关于潜空间世界模型如何走向规划控制的问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定短期预测准确与长时程规划可用性之间的时空错配，并确认论文主张的适用边界。"
+      },
+      {
+        "locator": "3 Method > 3.1 Time alignment: open-loop multi-horizon prediction",
+        "role": "method-or-design",
+        "purpose": "核对开放环多时域监督如何匹配规划器滚动使用预测潜变量的方式。"
+      },
+      {
+        "locator": "3 Method > 3.2 Space alignment: budget-conditioned reachability",
+        "role": "method-or-design",
+        "purpose": "核对有向、预算条件可达性标签及其轨迹代理含义。"
+      },
+      {
+        "locator": "3.4 Planner family",
+        "role": "method-or-design",
+        "purpose": "核对可达性信号如何与基础终端潜距离代价耦合，以及基础规划器如何作为特例恢复。"
+      },
+      {
+        "locator": "4 Experiments > 4.1 Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "记录五个像素目标控制任务、固定评测组、延续训练控制与 LIBERO-Goal 迁移设置。"
+      },
+      {
+        "locator": "4 Experiments > 4.2 Main Results",
+        "role": "results-or-analysis",
+        "purpose": "复核主表中的同家族匹配比较、成功率和 Wall 上的主要增益。"
+      },
+      {
+        "locator": "4.3 Ablation Study",
+        "role": "results-or-analysis",
+        "purpose": "分离训练侧表示修正与测试侧可达性感知搜索的贡献。"
+      },
+      {
+        "locator": "4.5 LIBERO-Goal Extension",
+        "role": "results-or-analysis",
+        "purpose": "检查 RC-aux 表征在非 CEM 的 OFT-style 动作头设置中的迁移证据。"
+      },
+      {
+        "locator": "Appendix E Additional Quantitative Results > E.1 Paired Fixed-Episode Outcomes",
+        "role": "results-or-analysis",
+        "purpose": "核对同一固定 episode 上的成败配对，排除评测 episode 差异这一混杂因素。"
+      },
+      {
+        "locator": "Appendix G Latent and Physical Diagnostics > G.2 Push-T Physical Probe",
+        "role": "results-or-analysis",
+        "purpose": "检查可达性修正是否明显损害潜变量中的基本物理信息。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者明确承认的轨迹代理、简单门控与进一步不确定性建模限制。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: bibliography was used only for provenance, not as evidence for this paper's own results"
+      },
+      {
+        "locator": "NeurIPS Paper Checklist",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: administrative checklist does not add result-bearing evidence beyond the inspected method and experimental appendices"
+      }
+    ]
+  },
+  "research_question": "在保持 LeWM 主干不变时，面向规划查询的开放环多步监督、有限预算可达性几何和测试时可达性评分，能否让潜空间从“能预测”转为“可用于规划”，其增益在哪些任务和接口上成立？",
+  "contributions": [
+    "提出 RC-aux，用多时域开放环预测和预算条件可达性联合修正潜空间训练目标。",
+    "提出将剩余预算可达性与终端潜距离软耦合的规划器族，且基础终端潜距离规划是其特例。",
+    "在同一 LeWM 主干下通过延续训练控制、固定 episode 配对和规划器消融区分训练侧与搜索侧贡献。",
+    "补充 LIBERO-Goal 动作头迁移与物理 probe，检查规划收益是否伴随更广泛的表征退化。"
+  ],
+  "method": {
+    "summary": "RC-aux 不更换 LeWM 编码器与动力学主干，而以多时域开放环滚动损失替代局部一步预测监督，并从轨迹时间偏移构造预算条件可达性正例、时间硬负例和批内负例；测试时可选择用剩余预算可达性对基础终端潜距离代价进行软折扣。",
+    "assumptions": [
+      "训练轨迹中的时间偏移可以作为有限预算可达性的有用代理，即使它不等于环境中的最短路径可达性。",
+      "训练数据覆盖了规划器需要辨别的可行与不可行转移，否则可达性头会把数据缺失误当成不可达。",
+      "在预测潜变量对上施加的可达性监督能够迁移到规划时的开放环分布。",
+      "基础潜距离仍提供有意义的目标方向，可达性信号只对其进行软偏置而非完全替代。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "TwoRoom",
+      "Reacher",
+      "Push-T",
+      "Wall",
+      "Cube",
+      "LIBERO-Goal"
+    ],
+    "tasks": [
+      "pixel-based goal-conditioned control",
+      "latent CEM planning",
+      "representation transfer with an OFT-style action head"
+    ],
+    "embodiments": [
+      "2D navigation/control environments",
+      "planar manipulation",
+      "robot manipulation in LIBERO-Goal"
+    ],
+    "sample_or_scale": "本地 LeWM-family 结果按五个固定评测组汇总；固定 episode 配对表每项共 250 个 episode；LIBERO-Goal 报告全任务平均成功率。"
+  },
+  "evaluation": {
+    "design": "五个像素目标控制任务上的同协议 LeWM-family 比较，包含可获得时的 continuation control；再以训练侧/规划侧消融、同 episode 配对、计算开销、物理 probe 和 LIBERO-Goal 动作头迁移形成多层证据链。",
+    "baselines": [
+      "LeWM",
+      "LeWM-cont",
+      "DINO-WM",
+      "PLDM",
+      "DINO-WM+prop",
+      "GCBC",
+      "IQL",
+      "IVL",
+      "OpenVLA-OFT (external reference)"
+    ],
+    "metrics": [
+      "task success rate",
+      "paired episode outcomes",
+      "planner cost-call latency",
+      "active scoring-time parameters",
+      "linear/MLP probe MSE",
+      "LIBERO-Goal mean success"
+    ],
+    "ablations": [
+      "RC-aux-trained model with base terminal latent-distance planning versus reachability-aware planning",
+      "continuation-trained LeWM control",
+      "fixed-episode paired outcomes",
+      "selected latent and physical diagnostics"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "RC-aux 在五个匹配 LeWM-family 比较中改善四项，Wall 的匹配成功率增益最大，为 33.2 个百分点。",
+      "scope": "五个像素目标控制任务及论文所述的匹配本地协议；Wall 比较使用 from-scratch LeWM，因为没有可延续的任务专用 checkpoint。",
+      "locator": "4 Experiments > 4.2 Main Results, Table 1"
+    },
+    {
+      "finding": "在 Wall 上，仅使用 RC-aux 训练而保留基础终端潜距离规划已把成功率从 50.4 提高到 72.4；再加入可达性感知评分达到 83.6。",
+      "scope": "Wall 任务、表 2 的 LeWM-family 消融，不代表所有任务均由训练侧和规划侧得到同等增益。",
+      "locator": "4.3 Ablation Study, Table 2"
+    },
+    {
+      "finding": "在 LIBERO-Goal 的可训练 no-repeat OFT-style 动作头协议中，RC-aux 表征的全任务平均成功率为 0.812，高于 LeWM 的 0.712。",
+      "scope": "动作头迁移接口而非潜 CEM 规划；repeat tuning 的 0.864 属于额外调参结果。",
+      "locator": "4.5 LIBERO-Goal Extension, Table 5"
+    },
+    {
+      "finding": "同一固定 episode 的配对结果显示 Wall 上 RC-aux-only 成功 85 次、LeWM-only 成功 2 次，主增益不由 episode 抽样差异解释。",
+      "scope": "论文固定评测组中的配对 episode，不等同于独立大样本部署试验。",
+      "locator": "Appendix E Additional Quantitative Results > E.1 Paired Fixed-Episode Outcomes, Table 9"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "轨迹时间偏移只是轨迹诱导的监督，并非底层 MDP 中真实最短路径可达性；未观察到的更短路径可能存在。",
+        "locator": "3 Method > 3.2 Space alignment: budget-conditioned reachability"
+      },
+      {
+        "limitation": "当前测试时规划器使用简单可达性门控而非完整的决策论可行性处理。",
+        "locator": "5 Conclusion"
+      },
+      {
+        "limitation": "工作主要是离线 benchmark 研究，真实机器人部署仍需要安全约束、不确定性处理和额外验证。",
+        "locator": "Appendix H Broader Impacts"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "当训练轨迹没有覆盖替代路径或失败恢复时，时间偏移标签可能把“未观察”与“不可达”混为一谈。",
+        "basis": "作者明确把轨迹偏移描述为经验代理而非真实最短路径；该监督的正确性因而依赖数据覆盖。"
+      },
+      {
+        "boundary": "Wall 上的大幅增益不能直接外推到接触丰富、原始规划已饱和或需要在线恢复的任务。",
+        "basis": "Push-T 的匹配增益为 -0.4，且论文在不同任务上报告的训练侧和规划侧贡献并不一致。"
+      },
+      {
+        "boundary": "LIBERO-Goal 结果支持表征迁移，但不能证明 RC-aux 在该套任务上改善了潜空间搜索。",
+        "basis": "LIBERO 实验使用 OFT-style 动作预测头，而非主实验的 CEM 潜规划接口。"
+      }
+    ]
+  },
+  "transfer_boundary": "证据最直接适用于使用完整非 OCR 视觉轨迹离线训练、以潜空间终端代价进行有限预算目标规划的紧凑 LeWM-style 模型；向真实机器人、稀疏覆盖数据、强接触任务或不同策略接口迁移时，应重新验证可达性标签、开放环滚动校准和闭环收益，不能只复用 Wall 上的成功率增益。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "保持 LeWM 主干不变，并在可获得时加入 continuation control，减少“只是多训练了更久”的混杂。",
+      "训练侧与测试侧消融把表示修正和可达性感知搜索的贡献分开。",
+      "固定 episode 配对、失败可视化、物理 probe 和计算成本共同补足单一成功率指标。",
+      "明确报告 Push-T 的非增益和轨迹标签代理性质，没有把方法描述为无条件提升。"
+    ],
+    "design_risks": [
+      "Wall 没有 task-specific continuation checkpoint，主匹配比较改用 from-scratch LeWM，和其余任务的控制条件不完全一致。",
+      "轨迹偏移监督可能编码行为数据分布而非环境真实可达性，尤其对未观察捷径和恢复路径不稳健。",
+      "主要本地结果来自五个固定评测组，外部随机种子、不同数据覆盖和更长闭环时域仍不足。",
+      "作者团队提出并评测方法，尚缺独立复现。"
+    ],
+    "baseline_fairness": "同家族本地对照总体较强：相同任务协议、可用时使用 LeWM-cont，并清楚声明 Wall 只能与 from-scratch LeWM 比较。跨论文基线用于背景，预训练数据、模型规模和评测实现并非完全等资源，因此不应把表 1 的跨方法行当作严格排名。",
+    "metric_validity": "成功率直接对应目标控制结果，固定 episode 配对增强了因果解释；但潜距离、PCA 和物理 probe 只诊断表示，不等同于闭环规划效用。LIBERO 平均成功率测的是动作头迁移，不是可达性规划本身。",
+    "reproducibility": "论文给出代码地址、任务协议、参数/时延表和附录细节，且报告固定评测组；但当前精读未独立运行代码，表中部分比较仍依赖论文提供的本地 checkpoint 与实现。",
+    "external_validity": "跨五个控制任务和 LIBERO 动作头提供一定宽度，但最强证据集中于 Wall 与 TwoRoom。真实机器人、安全关键规划、超出数据支持的路径和不确定动态尚未验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.07278-C01",
+      "claim": "RC-aux 通过多时域开放环预测修正时间错配，并以预算条件、方向敏感的轨迹可达性监督修正空间几何；测试时还可按剩余预算把可达性作为显式搜索信号。",
+      "stance": "support",
+      "relation": "支持“潜空间世界模型的规划能力取决于训练查询是否与长时程搜索接口对齐，而不只取决于一步预测误差”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "引言明确把 RC-aux 分成时间与空间两条监督轴，并说明测试时规划器如何使用可达性信号。",
+      "locator": "1 Introduction",
+      "source_context": "It corrects the temporal mismatch by training the dynamics model on multi-horizon open-loop rollouts. It corrects the spatial mismatch by learning a budget-conditioned reachability predicate that estimates whether a target latent is attainable from a source latent within a finite horizon.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐项陈述多时域开放环监督与预算条件可达性监督；本卡仅复述方法接口，没有把实验效果或真实最短路性质附加进去。"
+      }
+    },
+    {
+      "card_id": "2605.07278-C02",
+      "claim": "在论文的五个匹配 LeWM-family 比较中，RC-aux 改善四项；Wall 成功率从 50.4±6.5 提升到 83.6±3.6，即提高 33.2 个百分点。",
+      "stance": "support",
+      "relation": "支持在障碍约束、有限预算可达性尤其重要的任务上，规划对齐监督可显著改善闭环控制。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "表 1 同时给出 LeWM、RC-aux 和 matched delta，正文说明 Wall 是最大增益且该任务没有 continuation checkpoint。",
+      "locator": "4.2 Main Results",
+      "source_context": "LeWM (Maes et al. , 2026 ) 88.8 3.0 81.2 7.9 90.4 3.0 50.4 6.5 72.4 5.9 LeWM-cont (Maes et al. , 2026 ) 88.8 3.0 82.8 7.2 91.2 3.9 – 72.8 5.2 \\rowcolor gray!30 RC-aux 98.0 1.4 87.2 6.4 90.8 3.3 83.6 3.6 76.0 7.5 Matched \\cellcolor red!50 +9.2 \\cellcolor red!30 +4.4 \\cellcolor blue!5 -0.4 \\cellcolor red!65 +33.2 \\cellcolor red!15 +3.2",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "task success rate",
+        "value_or_direction": "50.4±6.5 to 83.6±3.6; +33.2 percentage points",
+        "comparator": "LeWM versus RC-aux on Wall",
+        "task_or_sample": "Wall pixel-based goal-conditioned control, five fixed evaluation groups",
+        "locator": "4 Experiments > 4.2 Main Results, Table 1"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表 1 的 Wall 列直接给出 LeWM 50.4±6.5、RC-aux 83.6±3.6 和 matched +33.2；正文另明确四项改善、Wall 最大，本卡未外推到其他协议。"
+      }
+    },
+    {
+      "card_id": "2605.07278-C03",
+      "claim": "Wall 消融中，RC-aux 训练后的模型即使仍用基础终端潜距离规划也达到 72.4±3.6%，高于 LeWM-family control 的 50.4±6.5%；加入可达性感知规划后进一步达到 83.6±3.6%。",
+      "stance": "conditional",
+      "relation": "表明收益同时来自训练侧潜空间修正和测试侧搜索信号，但该分解目前只在所列任务和协议中成立。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "表 2 在相同任务上并列 control、RC-aux-trained/base planner 与完整 RC-aux，能区分两层干预。",
+      "locator": "4.2 Main Results",
+      "source_context": "Table 2: Ablation of RC-aux training and reachability-aware planning. evaluates the RC-aux-trained model with standard terminal latent-distance planning. Full RC-aux uses reachability-aware planner scoring. Task LeWM-family control RC-aux, RC-aux full TwoRoom 88.8 3.0 93.2 1.1 98.0 1.4 Reacher 82.8 7.2 81.2 5.4 87.2 6.4 Wall 50.4 6.5 72.4 3.6 83.6 3.6",
+      "evidence_type": "ablation",
+      "quantitative": {
+        "metric": "task success rate",
+        "value_or_direction": "50.4±6.5 control; 72.4±3.6 training-side; 83.6±3.6 full",
+        "comparator": "LeWM-family control versus RC-aux-trained base planner versus full RC-aux",
+        "task_or_sample": "Wall under the paper's local LeWM-family protocol",
+        "locator": "4 Experiments > 4.2 Main Results, Table 2"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表 2 的三列和 Wall 行逐一对应本卡三组数值；正文 4.3 明确解释中间列隔离训练目标效果，因此因果措辞限定为该消融。"
+      }
+    },
+    {
+      "card_id": "2605.07278-C04",
+      "claim": "在 LIBERO-Goal 的可训练 no-repeat OFT-style 动作头协议中，RC-aux 表征的平均成功率为 0.812，高于 LeWM 表征的 0.712；repeat tuning 后 RC-aux 为 0.864。",
+      "stance": "conditional",
+      "relation": "支持可达性修正表征能迁移到动作头训练，但不等价于在 LIBERO 上验证了潜 CEM 规划。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "表 5 明确区分 matched no-repeat 比较、repeat-tuned 结果和外部 OpenVLA-OFT 参考。",
+      "locator": "4.4 Model Size and Computational Overhead, Table 5",
+      "source_context": "Table 5: LIBERO-Goal extension with an OFT-style action head. The main matched comparison is between trainable LeWM and trainable RC-aux under the no-repeat protocol. Method Setting Mean success LeWM + OFT-style head Trainable, no-repeat 0.712 RC-aux + OFT-style head Trainable, no-repeat 0.812 RC-aux + OFT-style head Repeat-tuned 0.864 OpenVLA-OFT 7B (Kim et al. , 2025 , 2024 ) External reference 0.970",
+      "evidence_type": "transfer-experiment",
+      "quantitative": {
+        "metric": "LIBERO-Goal all-task mean success",
+        "value_or_direction": "0.712 to 0.812 under matched no-repeat; 0.864 repeat-tuned",
+        "comparator": "trainable LeWM versus trainable RC-aux representation with the same OFT-style head protocol",
+        "task_or_sample": "LIBERO-Goal all-task mean",
+        "locator": "4.4 Model Size and Computational Overhead, Table 5"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表 5 直接报告三项成功率并把 no-repeat 声明为主匹配比较；本卡显式保留动作头接口和 repeat tuning 条件，未与主 CEM 结果混同。"
+      }
+    },
+    {
+      "card_id": "2605.07278-C05",
+      "claim": "RC-aux 的当前可达性监督仍以轨迹派生标签代理真实环境可达性，测试时也只采用简单可达性门控，因此尚未解决未观察捷径、不确定性和完整可行性决策。",
+      "stance": "limit",
+      "relation": "限制将 RC-aux 视为真实环境可达性模型或通用安全规划器的结论。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论明确列出轨迹代理和简单门控两项当前限制，并把不确定性感知可达性列为后续方向。",
+      "locator": "5 Conclusion",
+      "source_context": "The current formulation still uses trajectory-derived reachability labels as a proxy for true environment-level attainability, and the test-time planner uses a simple reachability gate rather than a full decision-theoretic treatment of feasibility.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "本卡严格保留作者的 proxy 与 simple gate 限定；未把它扩大为实验已证明的失败，只据此界定尚未覆盖的规划能力。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "精读基于完整高质量 arXiv HTML 抽取。公式中的部分数学符号在纯文本抽取中省略，因此数值卡只使用完整可见的表格行，并把接口解释与数值结果分卡记录。"
+}

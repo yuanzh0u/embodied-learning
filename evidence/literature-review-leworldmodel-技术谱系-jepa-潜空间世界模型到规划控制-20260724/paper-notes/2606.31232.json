@@ -1,0 +1,438 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.31232",
+    "title": "Delta-JEPA: Learning Action-Sensitive World Models via Latent Difference Decoding",
+    "published": "2026-06-30",
+    "url": "https://arxiv.org/abs/2606.31232",
+    "authors": [
+      "Zhenghao Zhang",
+      "Yuanxiang Wang",
+      "Zhenyu Guan",
+      "Yujia Yang",
+      "Bingkang Shi",
+      "Tianyu Zong",
+      "Hongzhu Yi",
+      "Guoqing Chao",
+      "Xingchen Chen",
+      "Tiankun Yang",
+      "Chenxi Bao",
+      "Tao Yu",
+      "Jingjing Zhou",
+      "Jungang Xu"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 技术谱系中，纯潜空间预测/正则化是否保留控制相关信息，动作敏感性缺失的机制、修复方式、实验边界与迁移条件是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文直接针对 LeWorldModel/SIGReg 只保证不塌缩却未显式约束 action sensitivity 的缺口，以 latent-difference action decoding 提供替代训练信号并在同一类 benchmark 上验证规划结果。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "确认论文主问题、LDAD 核心机制与四任务规划主张。"
+      },
+      {
+        "locator": "Introduction",
+        "role": "problem",
+        "purpose": "梳理 LeWM 的分布正则、PLDM endpoint inverse decoder 与 action-insensitive transition 之间的技术缺口。"
+      },
+      {
+        "locator": "Method > Problem Formulation",
+        "role": "data-or-setting",
+        "purpose": "核对 reward-free offline trajectories、未知行为策略与无 pixel reconstruction 的问题边界。"
+      },
+      {
+        "locator": "Method > Latent Forward Dynamics Predictor",
+        "role": "method-or-design",
+        "purpose": "检查纯 latent MSE 的常量塌缩解及 LDAD 所针对的退化。"
+      },
+      {
+        "locator": "Method > Latent Difference Action Decoder (LDAD)",
+        "role": "method-or-design",
+        "purpose": "核对从相邻 latent displacement 回归 executed action 的定义。"
+      },
+      {
+        "locator": "Method > Latent Difference Action Decoder (LDAD) > Action-Supervised Displacement Mechanism.",
+        "role": "method-or-design",
+        "purpose": "检查“动作可恢复→局部 transition geometry 必须编码动作”的机制链及规划意义。"
+      },
+      {
+        "locator": "Method > Latent Difference Action Decoder (LDAD) > Effects of Displacement-Based Action Decoding.",
+        "role": "method-or-design",
+        "purpose": "检查 anti-collapse、减少 single-state cue shortcut 与 action-conditioned rollout 三个效应。"
+      },
+      {
+        "locator": "Method > Multi-Step Action Decoding",
+        "role": "method-or-design",
+        "purpose": "核对 long-horizon displacement 到 action sequence 的扩展。"
+      },
+      {
+        "locator": "Method > Joint Optimization and End-to-End Training",
+        "role": "method-or-design",
+        "purpose": "核对仅 prediction/action reconstruction 两项损失及 balancing weight。"
+      },
+      {
+        "locator": "Experiments > Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "核对四环境、LeWM/Sub-JEPA/PLDM baselines、共享架构与 action decoder 规模。"
+      },
+      {
+        "locator": "Experiments > Planning Performance",
+        "role": "results-or-analysis",
+        "purpose": "核对训练轮数、测试轨迹、种子与主规划增益。"
+      },
+      {
+        "locator": "Experiments > Ablation Study > Action Reconstruction Weight.",
+        "role": "results-or-analysis",
+        "purpose": "检查 LDAD 是否为 load-bearing signal 及权重过小/过大的边界。"
+      },
+      {
+        "locator": "Experiments > Ablation Study > Displacement-Based Action Decoding.",
+        "role": "results-or-analysis",
+        "purpose": "在相同协议下隔离 displacement 与 endpoint concatenation 的差异。"
+      },
+      {
+        "locator": "Experiments > Ablation Study > LDAD Decoding Target.",
+        "role": "results-or-analysis",
+        "purpose": "检查 raw action 与 state-delta proxy 的对比和 target alignment。"
+      },
+      {
+        "locator": "Experiments > Action-Sensitive Latent Dynamics",
+        "role": "results-or-analysis",
+        "purpose": "核对固定历史、只变化 action 的 predictor-response 诊断与 LeWM 对照。"
+      },
+      {
+        "locator": "Experiments > Physical and State-Delta Probing",
+        "role": "results-or-analysis",
+        "purpose": "核对 trajectory-split probes、样本量和物理/transition 信息指标。"
+      },
+      {
+        "locator": "Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论是否超出四任务与 reward-free offline setting。"
+      },
+      {
+        "locator": "Appendix A Additional Probe and Attention Results > A.1 Physical State Probing",
+        "role": "appendix-or-supplement",
+        "purpose": "检查 Push-T、Reacher、OGB-Cube 的完整物理状态 probe 范围。"
+      },
+      {
+        "locator": "Appendix A Additional Probe and Attention Results > A.2 State-Delta Probing",
+        "role": "appendix-or-supplement",
+        "purpose": "检查跨环境 latent displacement 对真实 state delta 的诊断范围。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "relevant-core",
+        "reason": "仅用于确认 LeWM、LeJEPA 与 Sub-JEPA 前序，不能替代本篇直接实验。"
+      },
+      {
+        "locator": "Experiments > Latent Diversity and Collapse Prevention",
+        "role": "results-or-analysis",
+        "reason": "PCA 展开为定性 anti-collapse 提示；更直接的 LDAD weight ablation、action-response intervention 与规划表已纳入证据。"
+      },
+      {
+        "locator": "Experiments > Task-Relevant Attention Patterns; Appendix A.3 Layer-Wise Attention Specialization",
+        "role": "appendix-or-supplement",
+        "reason": "注意力热图为定性解释，不承担本次动作敏感性或规划因果卡。"
+      }
+    ]
+  },
+  "research_question": "在不使用 pixel reconstruction、reward 或 Gaussian distribution matching 的前提下，能否通过从 latent displacement 解码 executed action，使 JEPA world model 的局部 transition geometry 对动作敏感并改善 rollout planning；这种证据在哪些数据/任务条件下成立？",
+  "contributions": [
+    "提出 LDAD：只从相邻 latent 的差分而非 endpoint concatenation 重建 executed action，迫使 transition change 本身携带动作信息。",
+    "构建只含 latent forward prediction 与 action reconstruction 的端到端 reward-free world model，无 frozen encoder、stop-gradient 或 distribution-matching regularizer。",
+    "在四个视觉连续控制环境中比较 LeWM、Sub-JEPA、PLDM，并用同协议 decoder-input ablation、weight sensitivity、固定历史变动作响应和物理/state-delta probes 诊断机制。"
+  ],
+  "method": {
+    "summary": "从无 reward 的离线 image-action trajectories 端到端训练共享视觉 encoder、action-conditioned latent predictor 与 LDAD。Forward loss 预测下一 latent；LDAD 只接收相邻 encoded observations 的 displacement，并回归导致该变化的连续 action。多步版本从较长时间间隔的 latent displacement 解码 action sequence；总损失用一个权重平衡 prediction 与 action reconstruction。",
+    "assumptions": [
+      "离线数据中的 executed action 必须能从视觉可见的局部或多步状态变化中被辨识；若多个动作产生相同观测变化，inverse objective 本身可能不可辨识。",
+      "未知 behavior policy 需要覆盖足够的动作和 transition，使不同 action-conditioned outcomes 可被学习和用于规划。",
+      "动作重建约束只直接监督 controllable transition structure，不提供 reward relevance、exogenous task rule 或安全代价信号。",
+      "端点差分被视为比 endpoint concatenation 更少 single-state shortcut，但并不形式化保证去除全部 policy/state correlation shortcut。",
+      "规划改进是在与 LeWM 一致的四个 benchmark、架构和协议上测得，未建立跨真实机器人或大规模预训练 world model 的普遍性。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Push-T offline image-action trajectories",
+      "DMC Reacher offline image-action trajectories",
+      "OGBench Cube offline image-action trajectories",
+      "Two-Room offline image-action trajectories"
+    ],
+    "tasks": [
+      "2D contact-rich non-prehensile pushing",
+      "continuous planar-arm reaching",
+      "3D gripper cube relocation",
+      "2D continuous navigation",
+      "latent rollout planning",
+      "physical-state and state-delta probing"
+    ],
+    "embodiments": [
+      "simulated planar pusher",
+      "two-link planar arm",
+      "simulated gripper",
+      "continuous-navigation agent"
+    ],
+    "sample_or_scale": "每环境随机取 50 条 validation trajectories 与 500 条 test trajectories；各方法从头训练 50 epochs，主规划结果独立运行 3 个随机种子。Probe 使用每任务 20,000 observations 或 consecutive pairs，并按 trajectory 切分 train/test。"
+  },
+  "evaluation": {
+    "design": "共享 LeWM 的 encoder/predictor architecture 与 evaluation protocol；比较 LeWM、Sub-JEPA、PLDM。除主 planning success 外，做 LDAD weight sensitivity、displacement-vs-concat 唯一差异消融、decoding-target 消融、固定 history 只改变 action 的 predictor intervention，以及 trajectory-split physical/state-delta probes。",
+    "baselines": [
+      "LeWorldModel",
+      "Sub-JEPA",
+      "PLDM",
+      "endpoint-concatenation inverse decoder",
+      "Delta-JEPA without or with weak LDAD weight",
+      "state-delta proxy decoding targets"
+    ],
+    "metrics": [
+      "planning success rate",
+      "planning-success percentage-point gain",
+      "action-wise latent response separation",
+      "physical-state probe MSE and Pearson correlation",
+      "state-delta probe MSE and Pearson correlation",
+      "PCA/attention qualitative diagnostics"
+    ],
+    "ablations": [
+      "action reconstruction weight",
+      "latent displacement versus endpoint concatenation",
+      "raw action versus physical state-delta decoding target",
+      "fixed-history action intervention",
+      "physical-state and transition probes"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "LDAD 只看 latent displacement，因此成功回归 executed action 要求局部 transition change 编码动作，并减少从单端点 action-correlated cue 走捷径的空间。",
+      "scope": "机制只约束数据中可辨识、被 behavior policy 覆盖的动作—状态变化；不保证奖励充分性。",
+      "locator": "Method > Latent Difference Action Decoder (LDAD) > Action-Supervised Displacement Mechanism."
+    },
+    {
+      "finding": "Delta-JEPA 在四个 benchmark 的 mean planning success 均最高；OGB-Cube 相对最强 baseline 高 15.14 个百分点，Push-T 相对 LeWM 高 4.54 个百分点。",
+      "scope": "相同 LeWM 风格架构、50 epochs、每环境 500 test trajectories、3 seeds；不是跨真实机器人结论。",
+      "locator": "Experiments > Planning Performance"
+    },
+    {
+      "finding": "只把 inverse decoder 输入从 endpoint concatenation 改成 latent displacement，在其余协议相同的消融中提升四个环境的 planning success。",
+      "scope": "支持 decoder input 的局部机制贡献；仍与整个 Delta-JEPA training/data setting 绑定。",
+      "locator": "Experiments > Ablation Study > Displacement-Based Action Decoding."
+    },
+    {
+      "finding": "去掉或弱化 LDAD 会在 Push-T 几乎塌缩/表现差；权重进入合理区间后改善并较稳定，但过大又退化。",
+      "scope": "表明动作重建信号负载机制且需要权衡，不是完全免调参方案。",
+      "locator": "Experiments > Ablation Study > Action Reconstruction Weight."
+    },
+    {
+      "finding": "固定 Two-Room history 只改变 action 时，Delta-JEPA 的 action-wise predictor responses 分离，而 LeWM 的均值靠近原点且重叠。",
+      "scope": "这是单环境 PCA/response 诊断，支持 action conditioning 一致性，但不是对所有潜变量的定量因果证明。",
+      "locator": "Experiments > Action-Sensitive Latent Dynamics"
+    },
+    {
+      "finding": "Delta-JEPA 的目标不含 reward，只保证 latent 对 executed action 和预测变化敏感；它没有证明保留与动作独立但对任务/奖励关键的 exogenous feature。",
+      "scope": "这是从完整训练目标和 problem formulation 得出的 reader inference；需要 reward/exogenous-feature 实验才能推翻或细化。",
+      "locator": "Method > Problem Formulation"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "动作可恢复性不是任务充分性：LDAD 可能强化 controllable transition information，同时仍丢失 reward-relevant、action-independent 或 exogenous 状态。",
+        "basis": "论文明确采用 reward-free offline setting，总损失只有 latent prediction 与 action reconstruction；没有 reward-conditioned retention test。"
+      },
+      {
+        "boundary": "inverse dynamics 在视觉 aliasing、动作冗余、摩擦/接触不可观测或 behavior policy 缺覆盖时可能多解，LDAD 未给出 identifiability theorem。",
+        "basis": "decoder 从单个 displacement 回归 executed action；论文未分析不同 action 导致同一观测 change 的情况。"
+      },
+      {
+        "boundary": "固定历史变动作的 PCA 分离与 attention maps 是诊断性/定性证据，不能替代 calibrated action-effect metric、counterfactual ground truth 或真实闭环安全。",
+        "basis": "Figure 6 使用 PCA mean responses；没有报告跨环境 action-response separation 数值、置信区间或真实反事实误差。"
+      },
+      {
+        "boundary": "主表只报告三个种子的均值，缺少显著性检验与 per-seed variance；官方配置也可能给予不同 baseline 不同调优预算。",
+        "basis": "Planning Performance 说明各方法 3 seeds 且总结 mean success；对 baseline 采用各自 official configuration。"
+      },
+      {
+        "boundary": "四个环境均为 benchmark/simulation，未报告真实机器人、OOD objects、sensor noise、long-horizon irreversibility 或 safety/recovery。",
+        "basis": "Experimental Setup 与全文结构只覆盖 Push-T、Reacher、Cube、Two-Room 和 offline planning/probes。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于 reward-free offline image-action data 中，动作有充分覆盖、视觉 transition 可辨识、目标是让 latent rollout 对候选动作差异敏感的场景。若任务依赖 exogenous reward rule、隐藏接触状态、多解 inverse dynamics、跨本体动作语义、真实传感噪声或安全约束，LDAD 的 action sensitivity 不是充分条件，必须增加 reward/task grounding、额外传感或闭环验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "与 LeWM 共享 encoder/predictor architecture 和 evaluation protocol，减少 backbone 差异。",
+      "displacement-vs-endpoint 消融只改变 decoder input，较好隔离核心设计。",
+      "LDAD weight sensitivity 显示该信号既是 load-bearing 也有过强退化区间。",
+      "固定 history、只替换 final action 的诊断比普通 PCA 更接近 action-response intervention。",
+      "规划结果由 physical-state/state-delta probes 与跨环境附录补充，避免只看 success rate。"
+    ],
+    "design_risks": [
+      "没有正式 limitations section，也没有 reward/exogenous feature retention 实验，容易把 action sensitivity 与 control sufficiency 混同。",
+      "主结果只有三个种子的均值，缺少置信区间、显著性检验和 failure-case 分析。",
+      "基线沿用各自 official configuration，无法确认总调参预算和训练稳定性资源完全等价。",
+      "LDAD 仍可能利用 behavior-policy correlations；从 displacement 回归 action 并不保证 counterfactual transition causality。",
+      "PCA/attention 解释是定性证据，不能单独证明 collapse-resistant、physical causality 或规划 admissibility。"
+    ],
+    "baseline_fairness": "共享 LeWM 风格架构、50 epochs、相同 validation/test 样本和种子数有利于公平比较；但 PLDM/Sub-JEPA/LeWM 使用各自官方配置，Delta-JEPA 的 action-loss weight 有专门敏感度分析，未证明各 baseline 获得等量调优。",
+    "metric_validity": "planning success 直接面向 benchmark 控制效用；action-response intervention 与 state-delta probe 更贴近动作敏感性。PCA、attention 和 probe 可解码性仍是代理指标，未测反事实动力学校准、安全、长期误差或恢复。",
+    "reproducibility": "完整全文给出模型层数、attention heads、数据划分、epochs、seeds、主要超参数与多张附录表；数学节点在当前 HTML 纯文本中部分缺失，独立复现仍需代码/原始表和 planner 配置。",
+    "external_validity": "只在四个 simulated visual continuous-control benchmarks、ViT-Tiny 与离线 reward-free data 上验证；向真实机器人、大模型、离散/跨本体动作、高维触觉或强不可逆任务外推尚无证据。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.31232-C01",
+      "claim": "LDAD decodes the executed action from the latent displacement alone, so successful recovery requires local transition geometry to encode the action and encourages different actions to induce distinguishable latent changes for planning.",
+      "stance": "support",
+      "relation": "给出相对 LeWM 全局分布正则更直接的 action-sensitivity supervision mechanism。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法段明确将 action decoder 的唯一输入设为 displacement，并解释 action recovery、transition distinguishability 与 planner candidate comparison 的关系。",
+      "locator": "Action-Supervised Displacement Mechanism.",
+      "source_context": "Since the decoder observes only the displacement, successful action recovery requires the local transition geometry to encode the executed action, thereby encouraging action-induced displacements to become distinguishable. The top-right panel depicts the intended effect of this supervision: different actions induce separated transition directions and next embeddings. This geometry is particularly important for planning. When different candidate actions lead to similar latent endpoints, rollouts provide little evidence for comparing their consequences and can therefore cause the planner to select ambiguous or incorrect actions. By contrast, separated action-conditioned transitions make candidate rollouts more action-controllable and more informative for planning.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "连续原文直接包含 decoder-only displacement、successful action recovery requires transition geometry、different actions separated，以及 planning comparison；主张没有扩写成 reward sufficiency 或全局因果可逆性。"
+      }
+    },
+    {
+      "card_id": "2606.31232-C02",
+      "claim": "Across the four evaluated environments, Delta-JEPA had the highest mean planning success; it exceeded the strongest OGB-Cube baseline by 15.14 percentage points and LeWM on Push-T by 4.54 points.",
+      "stance": "support",
+      "relation": "提供 latent-difference action supervision 相对 LeWM/Sub-JEPA/PLDM 的闭环规划结果。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "主结果段给出四环境全部最高及 OGB-Cube、Push-T 的明确百分点差。",
+      "locator": "Planning Performance",
+      "source_context": "Delta-JEPA achieves the highest mean planning success rate across all four environments. The improvement is most pronounced on OGB-Cube, where Delta-JEPA exceeds the strongest baseline by 15.14 percentage points, and on Two-Room, where it improves over PLDM by 6.27 points. On Push-T, Delta-JEPA improves over LeWM by 4.54 points, indicating that LDAD benefits contact-rich manipulation. On Reacher, where Sub-JEPA already performs strongly, Delta-JEPA still obtains the best mean result with a smaller margin.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "mean planning success rate",
+        "value_or_direction": "15.14 percentage points on OGB-Cube and 4.54 points on Push-T",
+        "comparator": "the strongest OGB-Cube baseline and LeWM on Push-T",
+        "task_or_sample": "four continuous-control environments; 500 test trajectories per environment; three random seeds",
+        "locator": "Planning Performance"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接报告 highest mean across all four、15.14 percentage points 和 4.54 points，并命名 comparator；样本/种子来自同一 section 前文，主张未外推到真实机器人。"
+      }
+    },
+    {
+      "card_id": "2606.31232-C03",
+      "claim": "With the training and planning protocol held fixed, decoding actions from latent displacements improved planning relative to decoding from concatenated endpoint embeddings in every evaluated environment.",
+      "stance": "support",
+      "relation": "隔离 LDAD 的 displacement input 是否比标准 endpoint inverse decoder 更有效。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "该消融明确说明两变体只在 action-decoder input 上不同，并报告 displacement variant 跨四环境一致改善。",
+      "locator": "Ablation Study > Displacement-Based Action Decoding.",
+      "source_context": "Both variants use the same training and evaluation protocol and differ only in the action-decoder input, allowing us to isolate how this design choice affects planning success. Table 2: Ablation of the action-decoder input representation. The concat variant decodes actions from , whereas LDAD decodes actions from . Values are planning success rates (%) over three seeds. Action-Decoder Input Two-Room Reacher Push-T OGB-Cube (LDAD) Gain As shown in Table 2 , using as the action-decoder input improves planning success on all four environments.",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "上下文明确 same protocol、differ only in decoder input 及 improves on all four environments；由于 HTML 数学节点缺失，主张不重建各行具体数值。"
+      }
+    },
+    {
+      "card_id": "2606.31232-C04",
+      "claim": "When the starting history is fixed and only the action input is varied, Delta-JEPA produces separated action-wise predictor responses, whereas LeWM's responses remain concentrated near the origin and substantially overlap.",
+      "stance": "support",
+      "relation": "提供比静态 representation diversity 更直接的 action-conditioned predictor diagnostic。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者固定 512 个 Two-Room histories 并逐 action 干预 predictor，比较 action-wise mean displacement。",
+      "locator": "Action-Sensitive Latent Dynamics",
+      "source_context": "To directly test whether the predictor responds consistently to action changes, we sample 512 Two-Room starting histories and keep each history representation fixed while varying only the final action input. For each candidate action , we compute the predicted next representation and measure its displacement relative to the zero-action prediction, . Figure 6 shows a zoomed view centered on the zero-action response, making the action-wise mean markers easier to distinguish. Delta-JEPA produces well-separated action-wise mean responses, with larger action magnitudes generally inducing larger predicted shifts. In contrast, LeWM’s action-wise means remain concentrated near the origin and substantially overlap, indicating that changing the action does not induce a stable directional change in its prediction.",
+      "evidence_type": "diagnostic-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "精确上下文包含 fixed history/vary only action、Delta separated means 与 LeWM near-origin overlap；主张限于 Two-Room predictor response，不当作跨环境定量因果证明。"
+      }
+    },
+    {
+      "card_id": "2606.31232-C05",
+      "claim": "LDAD is load-bearing but requires balance: removing or weakening its action-reconstruction term yields near-collapse or poor Push-T planning, while an excessively large weight also degrades performance.",
+      "stance": "conditional",
+      "relation": "说明动作敏感性修复不是无权衡免费项，并保留超参数边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Push-T weight sweep 同时显示 zero/weak signal 失败、合理区间稳定和 excessive weight 退化。",
+      "locator": "Action Reconstruction Weight.",
+      "source_context": "As shown in Figure 3 , setting removes LDAD entirely, and the resulting model nearly collapses, yielding only a negligible planning success rate. When , the LDAD signal remains too weak to provide effective regularization, and the model still performs poorly. In contrast, once falls within a reasonable range, the planning performance becomes substantially higher and remains relatively stable, with the best result obtained at . Performance degrades again when the action reconstruction weight is excessively large.",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐项给出 remove→near collapse、weak→poor、reasonable range→higher/stable、excessive→degrade；主张未补写抽取中缺失的权重数值。"
+      }
+    },
+    {
+      "card_id": "2606.31232-C06",
+      "claim": "Delta-JEPA does not establish that action-sensitive latents are sufficient for task control: its offline training data contain no rewards, and its two losses supervise only latent prediction and executed-action reconstruction.",
+      "stance": "limit",
+      "relation": "防止把 controllable/action-sensitive transition geometry 等同于 reward/task sufficiency，连接预测目标缺陷议题。",
+      "confidence": "inference",
+      "claim_basis": "reader-inference",
+      "summary": "Problem formulation 明示 reward-free/unknown-policy data；完整 method map 显示总目标仅 prediction + action reconstruction，未测试 exogenous reward-relevant feature retention。",
+      "locator": "Problem Formulation",
+      "source_context": "Following the standard paradigm of unsupervised latent world models, we focus on the problem of world model learning in a reward-free, offline setting (Maes et al. 2026 ) . We are given an offline dataset consisting of trajectories with alternating high-dimensional raw image observations and continuous actions . Crucially, contains no task-specific reward signals and is collected by arbitrary, unknown behavior policies. Our goal is to learn a compact latent representation space with an action-sensitive latent dynamics predictor, without reconstructing pixels or using task rewards.",
+      "evidence_type": "scope-inference",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接支持 reward-free、no task-specific rewards 与 action-sensitive predictor 目标；若全文含 reward/exogenous-feature retention 实验会削弱充分性限制，但六遍结构 map 和 joint objective 均未发现该信号。"
+      },
+      "notes": "Premises: reward-free problem formulation plus the two-objective joint loss. This inference would be weakened by a direct test that LDAD preserves action-independent reward-relevant features; no such test appears in the complete text."
+    }
+  ],
+  "core_citations": [
+    {
+      "title": "LeWorldModel: Stable End-to-End Joint-Embedding Predictive Architecture from Pixels",
+      "arxiv_id": "2603.19312",
+      "reason": "Delta-JEPA 的主要 baseline、共享架构/评测协议和被批评的 Gaussian-regularized action-insensitivity 来源。"
+    },
+    {
+      "title": "LeJEPA: Provable and Scalable Self-Supervised Learning Without the Heuristics",
+      "arxiv_id": "2511.08544",
+      "reason": "提供 LeWM 使用的 SIGReg 源机制，用于对比全局 anti-collapse 与 transition-level action supervision。"
+    }
+  ],
+  "notes": "按 scoping 六遍法精读完整 arXiv HTML v1。表格中的部分数学单元在纯文本抽取中缺失；事件只使用正文可见的明确百分点、方向与实验条件，不从摘要或原始 HTML alttext 重建不可审计数值。"
+}

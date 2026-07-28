@@ -28,6 +28,7 @@ STYLE_TO_FILE = {
     "scientific-memo": "scientific-memo_keyan.md",
     "expert-explainer": "zhihu-explainer_zhihu.md",
     "kol-thread": "xiaohongshu-post_xiaohongshu.md",
+    "survey": "review-packet.md",
 }
 APPENDIX = "evidence-appendix.md"
 REQUIRED_FIELDS = ["run", "topic", "time_range", "event_count", "files"]
@@ -175,7 +176,7 @@ def check_run_bundle(run_dir: Path) -> list[str]:
     if style:
         if style not in STYLE_TO_FILE:
             problems.append(
-                f"run.json: style `{style}` is not a formal style ({', '.join(sorted(STYLE_TO_FILE))})"
+                f"run.json: style `{style}` is not a supported settled scope ({', '.join(sorted(STYLE_TO_FILE))})"
             )
             required = []
         else:
