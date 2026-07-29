@@ -1,0 +1,51 @@
+name: Deploy KB Graph to GitHub Pages
+
+on:
+  # Rebuild when the knowledge base or the generator changes
+  push:
+    branches: [main]
+    paths:
+      - 'knowledge/**'
+      - 'evidence/**'
+      - 'scripts/visualize_kb_index.py'
+      - '.github/workflows/deploy-kb-graph.yml'
+  # Allow manual trigger
+  workflow_dispatch:
+
+# Grant GITHUB_TOKEN the permissions needed for Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Single concurrent deployment
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate KB graph HTML
+        run: |
+          python3 scripts/visualize_kb_index.py \
+            --no-open \
+            --output _site/index.html
+
+      - name: Add .nojekyll
+        run: touch _site/.nojekyll
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages-action@v4
