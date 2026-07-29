@@ -58,6 +58,43 @@ class CandidateRegistryAndCoverageTest(unittest.TestCase):
         self.assertEqual({"core", "limit"}, labels)
         self.assertEqual(3, len(result["batches"]))
 
+    def test_citation_results_get_a_truthful_channel_and_carry_coupling_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            citation_file = root / "citation-round-1.json"
+            citation_file.write_text(
+                json.dumps(
+                    {
+                        "batch": "citation-2401.01339",
+                        "papers": [
+                            {
+                                "arxiv_id": "2401.09999",
+                                "title": "Shared World Model Paper",
+                                "query_label": "citation:2401.01339:references,citation:2401.02222:references",
+                                "shared_seed_count": 2,
+                                "connected_seeds": ["2401.01339", "2401.02222"],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = registry_module.build_registry([], [], citation_results=[citation_file])
+
+        self.assertEqual(1, result["candidate_count"])
+        candidate = result["candidates"][0]
+        self.assertEqual("2401.09999", candidate["arxiv_id"])
+        self.assertEqual(2, candidate["shared_seed_count"])
+        self.assertEqual(["2401.01339", "2401.02222"], candidate["connected_seeds"])
+        discovery = candidate["discoveries"][0]
+        self.assertEqual("citation-graph", discovery["channel"])
+        self.assertEqual(
+            {"citation:2401.01339:references", "citation:2401.02222:references"},
+            set(discovery["query_labels"]),
+        )
+        self.assertEqual(["citation-graph"], [b["channel"] for b in result["batches"]])
+
     def test_coverage_requires_targets_dimensions_and_saturation(self) -> None:
         plan = {
             "review_mode": "rapid",

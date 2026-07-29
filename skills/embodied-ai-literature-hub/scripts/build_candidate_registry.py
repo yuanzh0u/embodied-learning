@@ -26,6 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--search-result", action="append", default=[], help="search_arxiv.py JSON; repeat by round.")
     parser.add_argument("--browser-result", action="append", default=[], help="parse_browser_candidates.py JSON; repeatable.")
+    parser.add_argument("--citation-result", action="append", default=[], help="expand_via_citations.py JSON; repeatable.")
     parser.add_argument("--screening-file", help="Optional JSON candidate/status updates.")
     parser.add_argument("--output", required=True)
     return parser.parse_args()
@@ -122,6 +123,42 @@ def load_browser_results(paths: list[Path], registry: dict[str, dict[str, Any]])
     return batches
 
 
+def load_citation_results(paths: list[Path], registry: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge expand_via_citations.py output: citation/co-citation-derived candidates.
+
+    Shares load_api_results()'s "papers" shape (same arxiv_id/title/authors/
+    published/summary/categories/query_label fields) but tags the discovery
+    channel truthfully as "citation-graph" and carries through the
+    shared_seed_count/connected_seeds coupling signal for future screening use.
+    """
+    batches: list[dict[str, Any]] = []
+    for index, path in enumerate(paths, start=1):
+        data = load_json(path)
+        batch = str(data.get("batch") or path.stem or f"citation-{index}")
+        ids: list[str] = []
+        for raw in data.get("papers", []):
+            if not isinstance(raw, dict):
+                continue
+            arxiv_id = normalize_id(raw.get("arxiv_id"))
+            if not arxiv_id:
+                continue
+            ids.append(arxiv_id)
+            record = registry.setdefault(arxiv_id, candidate_base(arxiv_id))
+            merge_metadata(record, raw)
+            if raw.get("shared_seed_count") is not None:
+                record["shared_seed_count"] = max(int(raw["shared_seed_count"]), int(record.get("shared_seed_count", 0)))
+            connected = raw.get("connected_seeds")
+            if isinstance(connected, list):
+                current = record.setdefault("connected_seeds", [])
+                for seed in connected:
+                    if seed not in current:
+                        current.append(seed)
+            labels = [label for label in str(raw.get("query_label") or "").split(",") if label]
+            add_discovery(record, batch=batch, channel="citation-graph", labels=labels, source=str(path))
+        batches.append({"batch": batch, "channel": "citation-graph", "candidate_ids": sorted(set(ids)), "source": str(path)})
+    return batches
+
+
 def load_screening(path: Path | None) -> dict[str, dict[str, Any]]:
     if path is None:
         return {}
@@ -157,10 +194,12 @@ def build_registry(
     search_results: list[Path],
     browser_results: list[Path],
     screening_file: Path | None = None,
+    citation_results: list[Path] | None = None,
 ) -> dict[str, Any]:
     registry: dict[str, dict[str, Any]] = {}
     batches = load_api_results(search_results, registry)
     batches.extend(load_browser_results(browser_results, registry))
+    batches.extend(load_citation_results(citation_results or [], registry))
     apply_screening(registry, load_screening(screening_file))
     candidates = [registry[key] for key in sorted(registry)]
     status_counts: dict[str, int] = {}
@@ -179,12 +218,13 @@ def build_registry(
 
 def main() -> int:
     args = parse_args()
-    if not args.search_result and not args.browser_result:
-        raise SystemExit("provide at least one --search-result or --browser-result")
+    if not args.search_result and not args.browser_result and not args.citation_result:
+        raise SystemExit("provide at least one --search-result, --browser-result, or --citation-result")
     result = build_registry(
         [Path(path) for path in args.search_result],
         [Path(path) for path in args.browser_result],
         Path(args.screening_file) if args.screening_file else None,
+        [Path(path) for path in args.citation_result],
     )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -35,6 +35,7 @@ description: Discover and recover large embodied-AI literature pools through mul
    - For registries with hundreds of papers, use `scripts/screen_candidates.py` to create a reproducible title/abstract priority queue. Prior evidence may seed ranking, but the script never marks a paper accepted.
    - Run `scripts/assess_review_coverage.py` after each round. Continue until candidate, full-text, accepted-paper, dimension, and saturation checks all pass. A target count alone never stops the run.
    - Browser/web results remain discovery-only candidates.
+   - Keyword search alone under-covers a broad topic's sub-themes. Once a keyword round saturates but coverage still feels thin, run `scripts/expand_via_citations.py` against a handful of `accepted`/`full-text-queued` candidates as seeds to chase citation relationships (Semantic Scholar). It ranks 1-hop neighbors by bibliographic coupling/co-citation against the seed set — not a flat per-seed cap — to avoid citation-graph explosion, merges into the registry via `build_candidate_registry.py --citation-result`, and can emit a `--dynamic-file` for `$embodied-ai-query-planner` so the terms it finds widen the next keyword round. Read `references/citation-expansion.md` before using it.
 4. Extract full text through one gateway:
    - Run `scripts/extract_arxiv_content.py`, which tries structured HTML, flat HTML, then text-layer PDF.
    - Use `--ocr-mode never`. Scan-only or unreadable PDFs are outside this project's scope and remain `unavailable`.
@@ -112,6 +113,21 @@ python skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --pape
 python skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl evidence.jsonl --brief-out brief.md
 ```
 
+Once a keyword round saturates, chase citation relationships from vetted candidates to find sub-topics the taxonomy missed (see [citation-expansion.md](references/citation-expansion.md)):
+
+```bash
+python skills/embodied-ai-literature-hub/scripts/expand_via_citations.py \
+  --seed-registry work/<run>/candidate-registry.json --seed-status accepted \
+  --output work/<run>/citation-candidates.json \
+  --graph-output work/<run>/citation-graph.json \
+  --dynamic-output work/<run>/citation-dynamic.json
+python skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
+  --search-result /tmp/umi-arxiv-candidates.json \
+  --citation-result work/<run>/citation-candidates.json \
+  --output work/<run>/candidate-registry.json
+```
+
+
 Legacy query-plan callers can still use:
 
 ```bash
@@ -126,3 +142,4 @@ That command delegates to `$embodied-ai-query-planner` and keeps old `search_arx
 - Read [full-text-fallback.md](references/full-text-fallback.md) whenever HTML is missing or extraction quality is not high.
 - Read [evidence-schema.md](references/evidence-schema.md) before creating or validating events.
 - Read [browser-fallback.md](references/browser-fallback.md) after API failure or query under-recovery.
+- Read [citation-expansion.md](references/citation-expansion.md) before running `expand_via_citations.py` to widen discovery beyond keyword search.

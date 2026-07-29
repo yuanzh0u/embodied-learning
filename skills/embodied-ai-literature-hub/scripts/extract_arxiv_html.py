@@ -18,15 +18,12 @@ import math
 import os
 import re
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-DEFAULT_CACHE_DIR = os.path.join(
-    os.environ.get("TMPDIR") or "/private/tmp",
-    "embodied-ai-literature-hub",
-    "html",
-)
+DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "html")
 SKIP_TAGS = {"script", "style", "noscript", "svg", "math"}
 SECTION_CLASSES = (
     "ltx_section",
