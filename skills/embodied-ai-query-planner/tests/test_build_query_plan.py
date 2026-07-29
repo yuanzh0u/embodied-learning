@@ -38,6 +38,22 @@ def load_search_module():
     return module
 
 
+def load_planner_module():
+    # build_query_plan.py does `from query_taxonomy import ...`, which needs its
+    # own directory on sys.path (subprocess invocation gets this for free since
+    # Python adds the script's directory automatically; direct exec_module here
+    # does not).
+    scripts_dir = str(PLANNER.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    spec = importlib.util.spec_from_file_location("build_query_plan", PLANNER)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Unable to load build_query_plan module")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class QueryPlannerTests(unittest.TestCase):
     def test_maps_chinese_topic_to_ea_data_and_umi_family(self) -> None:
         plan = run_json("--topic", "UMI 数据可用性", "--max-queries", "50")
@@ -255,6 +271,47 @@ class QueryPlannerTests(unittest.TestCase):
             )
             self.assertEqual(len(loaded), len(data["queries"]))
             self.assertTrue(all({"label", "query"} <= set(item) for item in loaded))
+
+
+class CoverageGroupTests(unittest.TestCase):
+    """Regression tests for coverage_group() classifying by the tier string's own
+    keywords, not by taxonomy-alias-normalizing it first (see the docstring in
+    build_query_plan.coverage_group for the bug this guards against: tier words
+    like "evaluation"/"closed-loop"/"deployment"/"tracking" are ALSO taxonomy
+    aliases, and normalize_key() used to swap in an uppercase EA-* id that broke
+    every lowercase substring check, silently misrouting queries into
+    "adjacent-and-transfer")."""
+
+    def setUp(self) -> None:
+        self.planner = load_planner_module()
+
+    def test_tier_words_that_double_as_taxonomy_aliases_still_classify_correctly(self) -> None:
+        cases = {
+            "evaluation": "evaluation-and-validation",
+            "closed-loop": "evaluation-and-validation",
+            "benchmark": "evaluation-and-validation",
+            "deployment": "deployment-and-operations",
+            "tracking": "mechanisms-and-interfaces",
+        }
+        for tier, expected in cases.items():
+            with self.subTest(tier=tier):
+                self.assertEqual(self.planner.coverage_group(tier), expected)
+
+    def test_plain_keyword_tiers_still_classify_correctly(self) -> None:
+        cases = {
+            "limitation": "limits-and-counterevidence",
+            "failure": "limits-and-counterevidence",
+            "gap": "limits-and-counterevidence",
+            "core": "direct-topic",
+            "exact-lineage": "direct-topic",
+            "method": "mechanisms-and-interfaces",
+            "representation": "mechanisms-and-interfaces",
+            "production": "deployment-and-operations",
+            "generative-adjacent": "adjacent-and-transfer",
+        }
+        for tier, expected in cases.items():
+            with self.subTest(tier=tier):
+                self.assertEqual(self.planner.coverage_group(tier), expected)
 
 
 if __name__ == "__main__":
