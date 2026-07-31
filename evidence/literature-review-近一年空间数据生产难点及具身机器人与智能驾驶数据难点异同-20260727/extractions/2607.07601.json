@@ -1,0 +1,1451 @@
+{
+  "generated_at": "2026-07-27T09:52:47.310746+00:00",
+  "paper_id": "2607.07601",
+  "html_url": "https://arxiv.org/html/2607.07601",
+  "available": true,
+  "cache_file": "/var/folders/ls/zh16jcvx1xx2wdft3d4yg4m00000gn/T/embodied-ai-literature-hub/html/2607.07601.html",
+  "structure": "latexml",
+  "text_chars": 28648,
+  "sections": [
+    {
+      "index": 0,
+      "id": "abstract1",
+      "kind": "ltx_abstract",
+      "title": "Abstract",
+      "path": "Abstract",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 1768
+    },
+    {
+      "index": 1,
+      "id": "S1",
+      "kind": "ltx_section",
+      "title": "I INTRODUCTION",
+      "path": "I INTRODUCTION",
+      "level": 1,
+      "para_count": 9,
+      "char_count": 4988
+    },
+    {
+      "index": 2,
+      "id": "S2",
+      "kind": "ltx_section",
+      "title": "II RELATED WORK",
+      "path": "II RELATED WORK",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    },
+    {
+      "index": 3,
+      "id": "S2.SS1",
+      "kind": "ltx_subsection",
+      "title": "II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "path": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "level": 2,
+      "para_count": 3,
+      "char_count": 2430
+    },
+    {
+      "index": 4,
+      "id": "S3",
+      "kind": "ltx_section",
+      "title": "III METHODOLOGY",
+      "path": "III METHODOLOGY",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    },
+    {
+      "index": 5,
+      "id": "S3.SS1",
+      "kind": "ltx_subsection",
+      "title": "III-A Geometry-Consistent Driving Scenario Reconstruction",
+      "path": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction",
+      "level": 2,
+      "para_count": 5,
+      "char_count": 2166
+    },
+    {
+      "index": 6,
+      "id": "S3.SS2",
+      "kind": "ltx_subsection",
+      "title": "III-B LLM-Driven Corner Case Analysis and Synthesis",
+      "path": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis",
+      "level": 2,
+      "para_count": 7,
+      "char_count": 3477
+    },
+    {
+      "index": 7,
+      "id": "S3.SS3",
+      "kind": "ltx_subsection",
+      "title": "III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting",
+      "path": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting",
+      "level": 2,
+      "para_count": 5,
+      "char_count": 3200
+    },
+    {
+      "index": 8,
+      "id": "S4",
+      "kind": "ltx_section",
+      "title": "IV EXPERIMENTS",
+      "path": "IV EXPERIMENTS",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    },
+    {
+      "index": 9,
+      "id": "S4.SS1",
+      "kind": "ltx_subsection",
+      "title": "IV-A Experimental Setup",
+      "path": "IV EXPERIMENTS > IV-A Experimental Setup",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 893
+    },
+    {
+      "index": 10,
+      "id": "S4.SS2",
+      "kind": "ltx_subsection",
+      "title": "IV-B Quantitative Evaluation",
+      "path": "IV EXPERIMENTS > IV-B Quantitative Evaluation",
+      "level": 2,
+      "para_count": 4,
+      "char_count": 2497
+    },
+    {
+      "index": 11,
+      "id": "S4.SS3",
+      "kind": "ltx_subsection",
+      "title": "IV-C Qualitative Results",
+      "path": "IV EXPERIMENTS > IV-C Qualitative Results",
+      "level": 2,
+      "para_count": 7,
+      "char_count": 5070
+    },
+    {
+      "index": 12,
+      "id": "S5",
+      "kind": "ltx_section",
+      "title": "V Computational Cost Analysis",
+      "path": "V Computational Cost Analysis",
+      "level": 1,
+      "para_count": 2,
+      "char_count": 1053
+    },
+    {
+      "index": 13,
+      "id": "S6",
+      "kind": "ltx_section",
+      "title": "VI CONCLUSIONS",
+      "path": "VI CONCLUSIONS",
+      "level": 1,
+      "para_count": 2,
+      "char_count": 1106
+    },
+    {
+      "index": 14,
+      "id": "bib",
+      "kind": "ltx_bibliography",
+      "title": "References",
+      "path": "References",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    }
+  ],
+  "ranked_sections": [
+    {
+      "section_index": 12,
+      "path": "V Computational Cost Analysis",
+      "score": 13.958,
+      "hits": 10,
+      "matched_terms": [
+        "3D",
+        "collection",
+        "generation",
+        "map",
+        "simulation"
+      ],
+      "text": "The CARLA-GS pipeline consists of several stages. To evaluate its practical feasibility, we summarize the computational cost of each component here. Prior information, such as depth, normal, and mask maps, is prepared in advance and excluded from the online deployment time. The main bottleneck is 3DGS reconstruction, which takes about 2 hours for a 100-frame, 3-camera scene on a single RTX 4090 GPU. LLM calls require about 40–50 seconds for scene reasoning and 10 seconds for trajectory generation. CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS safer and more time-efficient than real-world data collection."
+    },
+    {
+      "section_index": 1,
+      "path": "I INTRODUCTION",
+      "score": 12.26,
+      "hits": 18,
+      "matched_terms": [
+        "3D",
+        "4D",
+        "generation",
+        "limitation",
+        "occlusion",
+        "simulation"
+      ],
+      "text": "Autonomous driving (AD) operates in open-world traffic where safety evaluation is inherently a rare-event problem, known as the Curse of Rarity [ 15 ] . This motivates simulation pipelines that intentionally expose corner cases. Meanwhile, camera-centric AD systems require simulators to provide not only trajectory rollouts but also photorealistic observations for reliable closed-loop evaluation [ 23 ] . This requirement has renewed interest in scalable driving-scene reconstruction for safety-oriented simulation. NeRF-based methods achieve high-fidelity view synthesis but remain expensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] . In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] . Moreover, corner-case generation is not purely a visual problem. It requires semantic reasoning over agent intent, interaction context, and future motion evolution. Prior work synthesizes corner cases through data-driven, knowledge-based, or learning-based pipelines [ 33 , 5 , 16 ] . However, these approaches often lack semantic scene understanding and high-level decision reasoning for identifying plausible risky interactions, limiting their flexibility in generating targeted behaviors. Inspired by [ 17 ] , we adopt LLM-based reasoning as a semantic planning module for corner-case synthesis. LLMs provide macro-level scene understanding and prompt-driven behavioral control, enabling intent-level risk specification while automatically selecting interacting agents from the scene. After scene-level analysis, the next step is to generate vehicle trajectories and execute them under realistic kinematic and dynamic constraints. While LLMs are effective for high-level trajectory planning, they are not well suited to produce dynamically feasible control signals or guarantee collision-valid outcomes. Embedding physics directly into 3DGS is also challenging, as Gaussian primitives are unstructured and lack the rigid topology required by conventional dynamics solvers. Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited. This motivates a modular design that delegates physics-consistent motion to dedicated simulators such as CARLA [ 4 ] . To overcome the above limitations, we propose CARLA-GS , a modular pipeline for safety-critical corner-case synthesis. The key idea is to decouple visual representation, semantic reasoning, and physics-based simulation while preserving cross-module consistency. Specifically, we adopt Street Gaussians [ 32 ] as the backbone, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing. We further introduce geometry-consistent constraints to improve structural coherence of the reconstructed scene. In parallel, a multi-agent LLM performs semantic scene analysis to identify the collision zone around the ego vehicle and select a target adversarial vehicle, and then generates an intent-level corner-case trajectory in waypoint form. The resulting trajectories are then executed in CARLA, where a PID controller enforces kinematic and dynamic feasibility. Finally, the simulated vehicle states are re-injected into the geometry-consistent 3DGS scene, refined with a 3D foundation model, to render ego-centric photorealistic observations. The overall framework is shown in Fig. 1 . This design leverages the complementary strengths of each module: Gaussian Splatting provides spatiotemporal consistency and high-fidelity visual representation, LLMs enable high-level semantic reasoning and flexible control, and CARLA ensures reliable vehicle physics, resulting in a controllable and scalable framework for corner-case generation. Our main contributions are summarized as follows: • We present CARLA-GS, a modular framework for driving corner-case synthesis that decouples visual representation, semantic reasoning, and physics simulation, enabling spatiotemporally consistent video generation. • We design a multi-agent LLM reasoning module for semantic scene understanding and intent-level trajectory planning, enabling automatic discovery of risky interactions and flexible prompt-driven adversarial control. • We develop a plug-and-play CARLA-Gaussian integration through state re-projection, allowing physically simulated vehicle motions to be reflected in photorealistic renderings."
+    },
+    {
+      "section_index": 3,
+      "path": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "score": 10.799,
+      "hits": 10,
+      "matched_terms": [
+        "3D",
+        "dataset",
+        "generation",
+        "limitation",
+        "simulation"
+      ],
+      "text": "A practical autonomous driving simulator should provide realistic perception inputs and support spatio-temporal reasoning [ 6 ] . Neural scene representations enable photorealistic rendering from captured data, where NeRF models scenes as implicit radiance fields [ 18 , 7 ] and can be enhanced with structured depth or scene priors for improved novel-view synthesis [ 13 , 27 , 14 ] . Recently, diffusion-based world models have also been explored for scalable and controllable driving-scene generation [ 25 , 20 ] . However, NeRF-based pipelines are often computationally expensive for large-scale simulation, while diffusion models may hallucinate structures and struggle to maintain strict geometric consistency and deterministic control. More recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient alternative by representing scenes with explicit Gaussian primitives and enabling high-throughput rendering [ 36 ] . It has been extended to driving-scene synthesis, editing, dynamic modeling, real-time SLAM, and model alignment [ 34 , 19 , 31 , 12 , 28 , 1 ] . Nevertheless, for safety-oriented corner-case synthesis, vanilla 3DGS remains insufficient because it lacks guarantees on geometric stability, actionable semantics, and physically consistent interactions [ 8 , 2 ] . Corner cases expose safety-critical behaviors that rarely appear in naturalistic driving data. Existing generation methods can be broadly divided into data-driven, knowledge-based, and LLM-based approaches. Data-driven methods synthesize realistic safety-critical scenarios from large-scale driving datasets [ 24 , 22 , 33 ] , but often lack explicit control over failure modes and interaction intent. Knowledge-based methods transform common scenarios into corner cases using structured representations such as scene graphs [ 5 ] , while their diversity and realism are limited by the coverage and correctness of symbolic rules. Recent LLM-based methods introduce high-level reasoning and multimodal understanding for generating risky scenarios or adversarial behaviors [ 16 , 17 ] . However, translating semantic intent into dynamically feasible vehicle behaviors remains challenging. Our work addresses these limitations by grounding LLM-driven reasoning in CARLA’s physics-executable backend and integrating 3DGS-based visual reconstruction into a modular yet integrated pipeline for controllable and scalable corner-case generation."
+    },
+    {
+      "section_index": 11,
+      "path": "IV EXPERIMENTS > IV-C Qualitative Results",
+      "score": 8.93,
+      "hits": 14,
+      "matched_terms": [
+        "3D",
+        "generation",
+        "limitation",
+        "simulation"
+      ],
+      "text": "Reconstruction Evaluation. Fig. 5 shows that the geometric consistency constraint produces smoother surfaces and normals closer to the ground truth. Table I further reports PSNR, SSIM, LPIPS, Normal L1 MAE, and Normal Cos MAE under different constraints. Compared with the baseline, the proposed constraints substantially reduce normal errors while causing only negligible changes in rendering quality, demonstrating improved geometric consistency without sacrificing photometric fidelity. Figure 6: Visualization of LLM-driven corner-case trajectory generation. Left: historical and predicted trajectories of the ego vehicle and the selected vehicle. Green and light-green points denote the ego vehicle’s past and future trajectories, while blue and color-gradient points denote the selected vehicle’s past and LLM-generated future trajectories. The green cross indicates the collision target point. Right: corresponding 3D scene snapshots over time, where the red box highlights the selected vehicle. The generated trajectories exhibit representative corner-case behaviors (sudden brake, cut-in, and lane drift), providing reference motion cues for downstream CARLA-based kinematic simulation. Figure 7: CARLA-based realization of LLM-generated trajectories. Left: PID tracking performance along x (front) and y (left). Right: CARLA simulation. The ego trajectory is shown in green, and the selected vehicle follows the red reference points under continuous PID control. LLM Corner Case Generation. Figure 8: Behavior risk analysis results produced by the LLM agent. Given the starting analysis frame and scene context, the Agent Zone outputs the target vehicle, collision zone, risk level, and TTC. We manually define three corner-case types, sudden brake, cut-in, and lane drift, and provide them to the LLM to analyze the scene and generate reference trajectories. Fig. 8 shows the outputs of Agent Zone , while Fig. 6 visualizes the past and predicted trajectories of the ego vehicle and the selected vehicle produced by Agent Trajectory . Case 1. Starting from frame 60, Agent Zone identifies vehicle 6 ahead of the ego vehicle, selects the collision zone as “front”, and estimates TTC as 1.0 s. Agent Trajectory then generates a braking trajectory toward the collision target point, producing a near rear-end interaction compared with the safe headway observed in the original trajectory. Case 2 and Case 3. The remaining cases illustrate cut-in and lane-drift behaviors: vehicle 4 performs a rapid lane change under short headway, and oncoming vehicle 84 crosses the lane toward the ego vehicle. These examples show that the LLM agents can identify risky participants and generate behavior-consistent trajectories for subsequent simulation in CARLA. Figure 9: Final Gaussian renderings of the three synthesized corner cases. Left: raw input frames. Right: edited renderings after LLM-driven reasoning and CARLA-based physical simulation. For one case, we show both the vanilla version and the result after replacing the vehicle with a 3D asset reconstructed by SAM-3D. The results demonstrate that the proposed pipeline can generate realistic and semantically consistent corner-case scenarios, while model replacement further improves the geometric and visual consistency of the rendered vehicles. CARLA Simulation. We feed the LLM-generated reference waypoints into CARLA and enforce physically plausible vehicle motion using a PID controller. Specifically, we implement a frame-by-frame tracking controller that drives the selected vehicle to follow the reference trajectory. Fig. 7 illustrates this process. The left plot shows PID tracking performance, while the right panel presents the corresponding CARLA snapshots. The results demonstrate that CARLA can reproduce the LLM-generated trajectory while providing physically realistic motion through its physics engine. Due to the inherent limitations of PID control, a small tracking gap exists between the executed and reference trajectories. This discrepancy does not affect the validity of the simulation, since the goal of our framework is to synthesize previously unseen corner cases from real-world data. To further reduce tracking error, PID tracking is initialized from frame 0 rather than the LLM input start frame, allowing the controller to stabilize before the corner-case generation interval. Sim-to-Real: From CARLA to Gaussian Splatting. After obtaining the simulated trajectories and poses from CARLA, we re-project them into the Gaussian representation. Owing to the independent vehicle modeling, the simulated states can be seamlessly injected by replacing the selected vehicle’s data. Fig. 9 shows the final Gaussian renderings for all three cases, demonstrating faithful alignment with both the LLM reasoning outcomes and the CARLA-based physically consistent motions, resulting in high-fidelity and semantically consistent corner-case scenarios. The replacement of vehicles with SAM-3D reconstructed models further improves the geometric and visual consistency of the rendered vehicles."
+    },
+    {
+      "section_index": 6,
+      "path": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis",
+      "score": 7.562,
+      "hits": 10,
+      "matched_terms": [
+        "generation",
+        "simulation",
+        "spatial"
+      ],
+      "text": "To automatically construct safety-critical scenarios beyond simple trajectory perturbation, we develop a multi-agent LLM-driven corner case generation framework (as shown in Fig. 3 ) that explicitly targets collision-prone regions around the ego vehicle, enabling more controllable and spatially grounded safety-critical scenario synthesis. Given multi-vehicle tracking data and ego poses, we follow a chain-of-thought prompting paradigm [ 26 ] and design a pipeline consisting of the following stages: Collision Zone Modeling. We first define four rectangular collision zones tightly surrounding the ego vehicle in the ego-centric coordinate frame: (3) Each zone is parameterized by spatial bounds determined by the ego vehicle length and width . These zones serve as explicit spatial targets for risk maximization and provide structured guidance to the language model. Risk Analysis and Collision Zone Selection. Given a user-specified dangerous behavior selected from a predefined behavior library, we employ a language model to perform scene-aware reasoning and identify both the most plausible adversarial vehicle and the most threatening collision region. Let the ego vehicle be located at the origin of the ego-centric coordinate frame, and let denote the set of observed background vehicles in the scene. For each vehicle , we construct its recent motion state (4) where denotes the position in the ego-centric frame, is the speed, and is the heading over the past frames. The ego vehicle state is constructed in the same form and denoted by . The LLM agent then performs behavior-conditioned risk reasoning over all candidate vehicles. Formally, the decision process can be written as (5) where is the selected adversarial vehicle, is the predicted target collision zone chosen from the predefined zone set around the ego vehicle, denotes the estimated time-to-collision in seconds assuming the dangerous behavior occurs, and represents the risk level. In addition, the behavior can be either user-specified or automatically inferred by the LLM agent. Conditioning on a given behavior hypothesis narrows the reasoning space and improves generation controllability. Figure 3: Overview of the LLM-driven corner-case generation pipeline. The system models ego-centric collision zones, performs risk analysis to select an adversarial vehicle and target zone, and synthesizes a waypoint-based collision-oriented trajectory that is later executed by CARLA for physically feasible simulation. Collision-Oriented Trajectory Synthesis. Conditioned on the selected adversarial vehicle and target zone , we generate a reference trajectory using the LLM. Instead of predicting dynamically feasible control signals, which lies outside the core competency of language models, we delegate low-level feasibility to a downstream controller and allow the LLM to focus on high-level waypoint generation. Let denote the current position of vehicle in the ego-centric frame, and let and denote the historical trajectory of the adversarial vehicle and the predicted future ego trajectory, respectively. A collision target point is sampled within the selected zone . The waypoint generation process is formulated as (6) where (7) is the generated time-stamped waypoint sequence over the prediction horizon. The final waypoint is constrained to coincide with the sampled collision target. The resulting waypoint sequence can be directly interfaced with CARLA for vehicle kinematic simulation."
+    },
+    {
+      "section_index": 7,
+      "path": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting",
+      "score": 7.319,
+      "hits": 9,
+      "matched_terms": [
+        "3D",
+        "map",
+        "simulation"
+      ],
+      "text": "To obtain physically consistent corner-case visualizations, we adopt a Real-Sim-Real pipeline that bridges the LLM-generated trajectory, CARLA vehicle dynamics, and Gaussian-based rendering. CARLA-based Kinematic Simulation. Given the LLM-generated waypoint sequence from the last step, we first import the trajectory into CARLA as a reference path. Then we design a PID controller that tracks the reference waypoints in continuous time for the selected vehicle . Specifically, the control command at time is computed as (8) where and denote the current and reference vehicle poses, respectively. The simulator then evolves the vehicle state according to its internal kinematic model (9) producing a physically feasible trajectory (10) This step ensures dynamic realism and smooth vehicle motion. In practice, we employ the built-in VehiclePIDController to track the reference path. Back-Projection to Gaussian Space. After simulation, the CARLA-generated trajectory is mapped back to the Gaussian scene representation. For each timestamp, we update the pose of the corresponding Gaussian actor using the simulated position and heading . The modified Gaussian scene is finally rendered using the differentiable Gaussian renderer. Figure 4: Vehicle replacement pipeline. We first select frames where the target vehicle is close to the camera, and reconstruct a 3D Gaussian model using SAM 3D. The reconstructed asset is aligned with the original vehicle geometry and replaces it. TABLE I: Ablation study on rendering quality and geometry consistency. Components PSNR SSIM LPIPS Normal L1 MAE Normal Cos MAE Baseline 29.703 0.907 0.219 0.682 0.984 + 29.828 0.908 0.215 0.677 0.957 + 29.521 0.906 0.217 0.361 0.482 + 29.027 0.900 0.223 0.350 0.480 Figure 5: Surface normal renderings. Our geometry-consistency constraints produce finer surface details and fewer artifacts than the baseline. Vehicle Replacement with 3D Foundation Models. Since the Gaussian model is trained from limited camera views, rendering unseen viewpoints may introduce tearing artifacts, especially for near-field vehicles with insufficient observations (see Fig. 9 ). To mitigate this, we replace such vehicles with high-quality assets reconstructed by SAM-3D [ 3 ] , as shown in Fig. 4 . Specifically, we use SAM-3D [ 3 ] to reconstruct a 3D Gaussian representation from close-range frames containing the target vehicle. To align the reconstructed asset with the original object, we denote the original and replacement point sets as and . Both point clouds are first centered. Their yaw orientations and are estimated from the minimum-area bounding boxes of their XY projections, producing a relative yaw difference . To account for symmetry ambiguity, we evaluate a small set of candidate rotations . The object scale is matched by comparing the bounding-box extents and and computing the scale factor . The final alignment is selected by minimizing (11) where is the transformed replacement point set and denotes the bidirectional nearest-neighbor distance between the two point clouds. This procedure enables the reconstructed vehicle to replace the original object while preserving geometric consistency and visual realism."
+    },
+    {
+      "section_index": 9,
+      "path": "IV EXPERIMENTS > IV-A Experimental Setup",
+      "score": 7.268,
+      "hits": 4,
+      "matched_terms": [
+        "dataset",
+        "generation",
+        "simulation"
+      ],
+      "text": "We adopt Street Gaussians [ 32 ] as our baseline, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing in our setting. We conduct experiments on the Waymo Open Dataset [ 21 ] , selecting 8 sequences to synthesize 85 corner-case scenarios. For Gaussian training, we follow the training protocol of [ 32 ] for most settings, with a total of 50,000 iterations. To reduce training time, we only use three cameras, [front, front left, front right], and incorporate the three proposed geometric consistency loss terms, each weighted by 0.1. For LLM-based corner-case reference trajectory generation, we use the ChatGPT-5.2 API. Both Gaussian rendering and LLM trajectory planning are executed at 24 FPS. For vehicle physical simulation, we use CARLA 0.9.16, with the longitudinal and lateral PID gains set to , , , and a simulation step size of ."
+    },
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 6.011,
+      "hits": 6,
+      "matched_terms": [
+        "dataset",
+        "generation"
+      ],
+      "text": "Abstract Safety evaluation for autonomous driving is dominated by rare, safety-critical interactions, motivating simulators that can deliberately synthesize corner cases with photorealistic observations. Corner-case generation is inherently a multi-source problem spanning visual representation, scene reasoning, and vehicle trajectory generation and control. Prior knowledge- and model-based approaches typically focus on scene or trajectory components in isolation, while diffusion-based methods attempt end-to-end generation but still struggle to ensure spatiotemporal consistency and physical realism. To unify these aspects within a single framework, we propose CARLA-GS, a modular corner-case synthesis pipeline that decouples visual representation, semantic reasoning, and physics-based execution while maintaining tight cross-module coupling. Starting from real driving data, we reconstruct an editable gaussian scene with additional geometry-consistent constraints. A multi-agent LLM then performs scene-level reasoning to identify risky interactions and generate intent-level waypoint trajectories, while the low-level motion control is delegated to CARLA, where a PID controller ensures kinematic and dynamic feasibility. The simulated vehicle states are finally re-projected into the gaussian scene for ego-centric rendering. This design enables high-level semantic reasoning, low-level physically executable motion, and photorealistic corner-case generation within a unified pipeline. Experiments on the Waymo Open Dataset show, both quantitatively and qualitatively, that our framework enables controllable corner-case generation and produces photorealistic, spatiotemporally consistent videos aligned with semantic intent and physically feasible motion."
+    },
+    {
+      "section_index": 5,
+      "path": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction",
+      "score": 4.496,
+      "hits": 4,
+      "matched_terms": [
+        "3D",
+        "map"
+      ],
+      "text": "Due to the limited viewpoints of onboard driving cameras (typically 3-6 poses), vanilla 3DGS often produces geometrically inconsistent and bumpy surfaces [ 30 , 21 ] . We therefore introduce geometry-consistent regularization to enforce surface continuity and smoothness. Flattening Constraints. Following prior 2DGS and surface reconstruction works [ 8 , 2 , 35 ] , we introduce a flattening regularization by constraining the anisotropic scaling of each Gaussian. The covariance of the -th Gaussian is parameterized by a diagonal scaling matrix , where denote the principal-axis scales and is the total number of Gaussians. The flattening loss is defined as (1) which encourages each Gaussian to collapse along its least significant axis and thus promotes locally smooth surface structures. Figure 2: Construction of the supervision mask for geometry-consistent reconstruction. The raw image is processed by a depth foundation model to produce a reference depth map, from which a normal map is computed. The RANSAC-derived ground mask is fused with the preprocessed object mask to obtain the final supervision mask. Normal and Geometry Constraints. To stabilize optimization in physically meaningful regions, we construct a supervision mask by combining foreground objects and planar ground regions. Detailed construction is illustrated in Fig. 2 . Given the rendered normals and the depth-derived reference normals , the normal constraint is defined via an angular loss (2) where denotes the normal at pixel , and represents the cosine similarity. This term enforces orientation consistency between rendered and geometry-induced normals. To further encourage local surface coherence, we introduce a geometry consistency loss inspired by [ 30 ] . Let be the rendered depth map. We compute its Sobel gradient magnitude and normalize it to obtain a smoothness weight . We then compare each predicted normal with the locally averaged normal obtained via a mean filter: By restricting supervision to mask and jointly enforcing normal alignment and local geometric smoothness, the proposed constraints significantly improve surface quality on vehicles and road regions."
+    },
+    {
+      "section_index": 13,
+      "path": "VI CONCLUSIONS",
+      "score": 4.134,
+      "hits": 2,
+      "matched_terms": [
+        "dataset",
+        "generation"
+      ],
+      "text": "This paper presented CARLA-GS, a modular framework for safety-critical corner-case synthesis that tightly integrates Gaussian-based visual reconstruction, LLM-driven semantic reasoning, and physics-consistent execution in CARLA. By explicitly decoupling representation, reasoning, and dynamics while preserving cross-module consistency, the proposed pipeline enables controllable and physically valid generation of rare but safety-critical traffic interactions from real-world data. Experiments on the Waymo Open Dataset demonstrate that CARLA-GS can reliably synthesize diverse corner cases, while maintaining photorealistic rendering quality and kinematic feasibility. The results highlight the effectiveness of leveraging complementary strengths of neural rendering, large language models, and mature vehicle simulators within a unified framework. Future work will explore stronger view-consistency constraints under sparse camera settings, closed-loop verification of LLM reasoning, large-scale automatic mining of high-risk scenarios from long-horizon traffic data, and evaluation on downstream tasks."
+    }
+  ],
+  "term_matches": [
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 1528,
+      "snippet": "nally re-projected into the gaussian scene for ego-centric rendering. This design enables high-level semantic reasoning, low-level physically executable motion, and photorealistic corner-case generation within a unified pipeline. Experiments on the Waymo Open Dataset show, both quantitatively and qualitatively, that our framework enables controllable corner-case generation and produces photorealistic, spatiotemporally consistent videos aligned with semantic intent and physically feasible motion."
+    },
+    {
+      "term": "generation",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 216,
+      "snippet": "Abstract Safety evaluation for autonomous driving is dominated by rare, safety-critical interactions, motivating simulators that can deliberately synthesize corner cases with photorealistic observations. Corner-case generation is inherently a multi-source problem spanning visual representation, scene reasoning, and vehicle trajectory generation and control. Prior knowledge- and model-based approaches typically focus on scene or trajectory components in isolation, while diffusion-ba"
+    },
+    {
+      "term": "generation",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 336,
+      "snippet": "ty-critical interactions, motivating simulators that can deliberately synthesize corner cases with photorealistic observations. Corner-case generation is inherently a multi-source problem spanning visual representation, scene reasoning, and vehicle trajectory generation and control. Prior knowledge- and model-based approaches typically focus on scene or trajectory components in isolation, while diffusion-based methods attempt end-to-end generation but still struggle to ensure spatiotemporal consistency and physical realism."
+    },
+    {
+      "term": "generation",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 517,
+      "snippet": "roblem spanning visual representation, scene reasoning, and vehicle trajectory generation and control. Prior knowledge- and model-based approaches typically focus on scene or trajectory components in isolation, while diffusion-based methods attempt end-to-end generation but still struggle to ensure spatiotemporal consistency and physical realism. To unify these aspects within a single framework, we propose CARLA-GS, a modular corner-case synthesis pipeline that decouples visual representation, semantic reasoning, and physics"
+    },
+    {
+      "term": "generation",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 1460,
+      "snippet": "nematic and dynamic feasibility. The simulated vehicle states are finally re-projected into the gaussian scene for ego-centric rendering. This design enables high-level semantic reasoning, low-level physically executable motion, and photorealistic corner-case generation within a unified pipeline. Experiments on the Waymo Open Dataset show, both quantitatively and qualitatively, that our framework enables controllable corner-case generation and produces photorealistic, spatiotemporally consistent videos aligned with semantic"
+    },
+    {
+      "term": "generation",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 1633,
+      "snippet": "ntic reasoning, low-level physically executable motion, and photorealistic corner-case generation within a unified pipeline. Experiments on the Waymo Open Dataset show, both quantitatively and qualitatively, that our framework enables controllable corner-case generation and produces photorealistic, spatiotemporally consistent videos aligned with semantic intent and physically feasible motion."
+    },
+    {
+      "term": "3D",
+      "locator": "I INTRODUCTION ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 845,
+      "snippet": "expensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] . In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking in"
+    },
+    {
+      "term": "3D",
+      "locator": "I INTRODUCTION ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 1048,
+      "snippet": "y under real-time constraints [ 25 , 20 ] . In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] . Moreover, corner-case generation is not pure"
+    },
+    {
+      "term": "3D",
+      "locator": "I INTRODUCTION ¶ S1.p4",
+      "section_index": 1,
+      "char_start": 2405,
+      "snippet": "hem under realistic kinematic and dynamic constraints. While LLMs are effective for high-level trajectory planning, they are not well suited to produce dynamically feasible control signals or guarantee collision-valid outcomes. Embedding physics directly into 3DGS is also challenging, as Gaussian primitives are unstructured and lack the rigid topology required by conventional dynamics solvers. Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes"
+    },
+    {
+      "term": "3D",
+      "locator": "I INTRODUCTION ¶ S1.p5",
+      "section_index": 1,
+      "char_start": 3840,
+      "snippet": "intent-level corner-case trajectory in waypoint form. The resulting trajectories are then executed in CARLA, where a PID controller enforces kinematic and dynamic feasibility. Finally, the simulated vehicle states are re-injected into the geometry-consistent 3DGS scene, refined with a 3D foundation model, to render ego-centric photorealistic observations. The overall framework is shown in Fig. 1 . This design leverages the complementary strengths of each module: Gaussian Splatting provides spatiotemporal consistency"
+    },
+    {
+      "term": "3D",
+      "locator": "I INTRODUCTION ¶ S1.p5",
+      "section_index": 1,
+      "char_start": 3867,
+      "snippet": "rajectory in waypoint form. The resulting trajectories are then executed in CARLA, where a PID controller enforces kinematic and dynamic feasibility. Finally, the simulated vehicle states are re-injected into the geometry-consistent 3DGS scene, refined with a 3D foundation model, to render ego-centric photorealistic observations. The overall framework is shown in Fig. 1 . This design leverages the complementary strengths of each module: Gaussian Splatting provides spatiotemporal consistency and high-fidelity visual r"
+    },
+    {
+      "term": "4D",
+      "locator": "I INTRODUCTION ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 848,
+      "snippet": "ensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] . In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking insta"
+    },
+    {
+      "term": "occlusion",
+      "locator": "I INTRODUCTION ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 1222,
+      "snippet": "making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] . Moreover, corner-case generation is not purely a visual problem. It requires semantic reasoning over agent intent, interaction context, and future motion evolution. Prior work synthesizes corner cases through data-driven, kno"
+    },
+    {
+      "term": "generation",
+      "locator": "I INTRODUCTION ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1288,
+      "snippet": ". However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] . Moreover, corner-case generation is not purely a visual problem. It requires semantic reasoning over agent intent, interaction context, and future motion evolution. Prior work synthesizes corner cases through data-driven, knowledge-based, or learning-based pipelines [ 33 , 5 , 16 ] . However"
+    },
+    {
+      "term": "generation",
+      "locator": "I INTRODUCTION ¶ S1.p5",
+      "section_index": 1,
+      "char_start": 4319,
+      "snippet": "latting provides spatiotemporal consistency and high-fidelity visual representation, LLMs enable high-level semantic reasoning and flexible control, and CARLA ensures reliable vehicle physics, resulting in a controllable and scalable framework for corner-case generation. Our main contributions are summarized as follows: • We present CARLA-GS, a modular framework for driving corner-case synthesis that decouples visual representation, semantic reasoning, and physics simulation, enabling spatiotemporally consistent video genera"
+    },
+    {
+      "term": "generation",
+      "locator": "I INTRODUCTION ¶ S1.I1.i1.p1",
+      "section_index": 1,
+      "char_start": 4583,
+      "snippet": "ration. Our main contributions are summarized as follows: • We present CARLA-GS, a modular framework for driving corner-case synthesis that decouples visual representation, semantic reasoning, and physics simulation, enabling spatiotemporally consistent video generation. • We design a multi-agent LLM reasoning module for semantic scene understanding and intent-level trajectory planning, enabling automatic discovery of risky interactions and flexible prompt-driven adversarial control. • We develop a plug-and-play CARLA-Gaussi"
+    },
+    {
+      "term": "simulation",
+      "locator": "I INTRODUCTION ¶ S1.p1",
+      "section_index": 1,
+      "char_start": 168,
+      "snippet": "Autonomous driving (AD) operates in open-world traffic where safety evaluation is inherently a rare-event problem, known as the Curse of Rarity [ 15 ] . This motivates simulation pipelines that intentionally expose corner cases. Meanwhile, camera-centric AD systems require simulators to provide not only trajectory rollouts but also photorealistic observations for reliable closed-loop evaluation [ 23 ] . This requirement has renewed in"
+    },
+    {
+      "term": "simulation",
+      "locator": "I INTRODUCTION ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 506,
+      "snippet": "-centric AD systems require simulators to provide not only trajectory rollouts but also photorealistic observations for reliable closed-loop evaluation [ 23 ] . This requirement has renewed interest in scalable driving-scene reconstruction for safety-oriented simulation. NeRF-based methods achieve high-fidelity view synthesis but remain expensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-vie"
+    },
+    {
+      "term": "simulation",
+      "locator": "I INTRODUCTION ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 1001,
+      "snippet": "physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] . In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] . Moreo"
+    },
+    {
+      "term": "simulation",
+      "locator": "I INTRODUCTION ¶ S1.p4",
+      "section_index": 1,
+      "char_start": 2638,
+      "snippet": "ding physics directly into 3DGS is also challenging, as Gaussian primitives are unstructured and lack the rigid topology required by conventional dynamics solvers. Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited. This motivates a modular design that delegates physics-consistent motion to dedicated simulators such as CARLA [ 4 ] . To overcome the above limitations, we propose CARLA-GS"
+    },
+    {
+      "term": "simulation",
+      "locator": "I INTRODUCTION ¶ S1.p4",
+      "section_index": 1,
+      "char_start": 2707,
+      "snippet": "itives are unstructured and lack the rigid topology required by conventional dynamics solvers. Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited. This motivates a modular design that delegates physics-consistent motion to dedicated simulators such as CARLA [ 4 ] . To overcome the above limitations, we propose CARLA-GS , a modular pipeline for safety-critical corner-case synthesis. The"
+    },
+    {
+      "term": "simulation",
+      "locator": "I INTRODUCTION ¶ S1.p5",
+      "section_index": 1,
+      "char_start": 3062,
+      "snippet": "otion to dedicated simulators such as CARLA [ 4 ] . To overcome the above limitations, we propose CARLA-GS , a modular pipeline for safety-critical corner-case synthesis. The key idea is to decouple visual representation, semantic reasoning, and physics-based simulation while preserving cross-module consistency. Specifically, we adopt Street Gaussians [ 32 ] as the backbone, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing. We further introduce geometry-consistent cons"
+    },
+    {
+      "term": "simulation",
+      "locator": "I INTRODUCTION ¶ S1.I1.i1.p1",
+      "section_index": 1,
+      "char_start": 4528,
+      "snippet": "ontrollable and scalable framework for corner-case generation. Our main contributions are summarized as follows: • We present CARLA-GS, a modular framework for driving corner-case synthesis that decouples visual representation, semantic reasoning, and physics simulation, enabling spatiotemporally consistent video generation. • We design a multi-agent LLM reasoning module for semantic scene understanding and intent-level trajectory planning, enabling automatic discovery of risky interactions and flexible prompt-driven adversa"
+    },
+    {
+      "term": "limitation",
+      "locator": "I INTRODUCTION ¶ S1.p5",
+      "section_index": 1,
+      "char_start": 2876,
+      "snippet": ", 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited. This motivates a modular design that delegates physics-consistent motion to dedicated simulators such as CARLA [ 4 ] . To overcome the above limitations, we propose CARLA-GS , a modular pipeline for safety-critical corner-case synthesis. The key idea is to decouple visual representation, semantic reasoning, and physics-based simulation while preserving cross-module consistency. Specifically, we adopt Street"
+    },
+    {
+      "term": "3D",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p2",
+      "section_index": 3,
+      "char_start": 758,
+      "snippet": "ation [ 25 , 20 ] . However, NeRF-based pipelines are often computationally expensive for large-scale simulation, while diffusion models may hallucinate structures and struggle to maintain strict geometric consistency and deterministic control. More recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient alternative by representing scenes with explicit Gaussian primitives and enabling high-throughput rendering [ 36 ] . It has been extended to driving-scene synthesis, editing, dynamic modeling, real-time SL"
+    },
+    {
+      "term": "3D",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p2",
+      "section_index": 3,
+      "char_start": 781,
+      "snippet": "ever, NeRF-based pipelines are often computationally expensive for large-scale simulation, while diffusion models may hallucinate structures and struggle to maintain strict geometric consistency and deterministic control. More recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient alternative by representing scenes with explicit Gaussian primitives and enabling high-throughput rendering [ 36 ] . It has been extended to driving-scene synthesis, editing, dynamic modeling, real-time SLAM, and model alignment"
+    },
+    {
+      "term": "3D",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p2",
+      "section_index": 3,
+      "char_start": 1142,
+      "snippet": "s and enabling high-throughput rendering [ 36 ] . It has been extended to driving-scene synthesis, editing, dynamic modeling, real-time SLAM, and model alignment [ 34 , 19 , 31 , 12 , 28 , 1 ] . Nevertheless, for safety-oriented corner-case synthesis, vanilla 3DGS remains insufficient because it lacks guarantees on geometric stability, actionable semantics, and physically consistent interactions [ 8 , 2 ] . Corner cases expose safety-critical behaviors that rarely appear in naturalistic driving data. Existing generat"
+    },
+    {
+      "term": "3D",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p3",
+      "section_index": 3,
+      "char_start": 2305,
+      "snippet": "ersarial behaviors [ 16 , 17 ] . However, translating semantic intent into dynamically feasible vehicle behaviors remains challenging. Our work addresses these limitations by grounding LLM-driven reasoning in CARLA’s physics-executable backend and integrating 3DGS-based visual reconstruction into a modular yet integrated pipeline for controllable and scalable corner-case generation."
+    },
+    {
+      "term": "dataset",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p3",
+      "section_index": 3,
+      "char_start": 1592,
+      "snippet": "aviors that rarely appear in naturalistic driving data. Existing generation methods can be broadly divided into data-driven, knowledge-based, and LLM-based approaches. Data-driven methods synthesize realistic safety-critical scenarios from large-scale driving datasets [ 24 , 22 , 33 ] , but often lack explicit control over failure modes and interaction intent. Knowledge-based methods transform common scenarios into corner cases using structured representations such as scene graphs [ 5 ] , while their diversity and realism"
+    },
+    {
+      "term": "generation",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p1",
+      "section_index": 3,
+      "char_start": 493,
+      "snippet": "es as implicit radiance fields [ 18 , 7 ] and can be enhanced with structured depth or scene priors for improved novel-view synthesis [ 13 , 27 , 14 ] . Recently, diffusion-based world models have also been explored for scalable and controllable driving-scene generation [ 25 , 20 ] . However, NeRF-based pipelines are often computationally expensive for large-scale simulation, while diffusion models may hallucinate structures and struggle to maintain strict geometric consistency and deterministic control. More recently, 3D Ga"
+    },
+    {
+      "term": "generation",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p3",
+      "section_index": 3,
+      "char_start": 1397,
+      "snippet": "illa 3DGS remains insufficient because it lacks guarantees on geometric stability, actionable semantics, and physically consistent interactions [ 8 , 2 ] . Corner cases expose safety-critical behaviors that rarely appear in naturalistic driving data. Existing generation methods can be broadly divided into data-driven, knowledge-based, and LLM-based approaches. Data-driven methods synthesize realistic safety-critical scenarios from large-scale driving datasets [ 24 , 22 , 33 ] , but often lack explicit control over failure mo"
+    },
+    {
+      "term": "generation",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p3",
+      "section_index": 3,
+      "char_start": 2419,
+      "snippet": "remains challenging. Our work addresses these limitations by grounding LLM-driven reasoning in CARLA’s physics-executable backend and integrating 3DGS-based visual reconstruction into a modular yet integrated pipeline for controllable and scalable corner-case generation."
+    },
+    {
+      "term": "simulation",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p1",
+      "section_index": 3,
+      "char_start": 600,
+      "snippet": "roved novel-view synthesis [ 13 , 27 , 14 ] . Recently, diffusion-based world models have also been explored for scalable and controllable driving-scene generation [ 25 , 20 ] . However, NeRF-based pipelines are often computationally expensive for large-scale simulation, while diffusion models may hallucinate structures and struggle to maintain strict geometric consistency and deterministic control. More recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient alternative by representing scenes with explicit Gaussi"
+    },
+    {
+      "term": "limitation",
+      "locator": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation ¶ S2.SS1.p3",
+      "section_index": 3,
+      "char_start": 2205,
+      "snippet": "ds introduce high-level reasoning and multimodal understanding for generating risky scenarios or adversarial behaviors [ 16 , 17 ] . However, translating semantic intent into dynamically feasible vehicle behaviors remains challenging. Our work addresses these limitations by grounding LLM-driven reasoning in CARLA’s physics-executable backend and integrating 3DGS-based visual reconstruction into a modular yet integrated pipeline for controllable and scalable corner-case generation."
+    },
+    {
+      "term": "3D",
+      "locator": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction ¶ S3.SS1.p1",
+      "section_index": 5,
+      "char_start": 88,
+      "snippet": "Due to the limited viewpoints of onboard driving cameras (typically 3-6 poses), vanilla 3DGS often produces geometrically inconsistent and bumpy surfaces [ 30 , 21 ] . We therefore introduce geometry-consistent regularization to enforce surface continuity and smoothness. Flattening Constraints. Following prior 2DGS and surface reconstruction works"
+    },
+    {
+      "term": "map",
+      "locator": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction ¶ S3.SS1.p2",
+      "section_index": 5,
+      "char_start": 964,
+      "snippet": "se along its least significant axis and thus promotes locally smooth surface structures. Figure 2: Construction of the supervision mask for geometry-consistent reconstruction. The raw image is processed by a depth foundation model to produce a reference depth map, from which a normal map is computed. The RANSAC-derived ground mask is fused with the preprocessed object mask to obtain the final supervision mask. Normal and Geometry Constraints. To stabilize optimization in physically meaningful regions, we construct a s"
+    },
+    {
+      "term": "map",
+      "locator": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction ¶ S3.SS1.p2",
+      "section_index": 5,
+      "char_start": 989,
+      "snippet": "icant axis and thus promotes locally smooth surface structures. Figure 2: Construction of the supervision mask for geometry-consistent reconstruction. The raw image is processed by a depth foundation model to produce a reference depth map, from which a normal map is computed. The RANSAC-derived ground mask is fused with the preprocessed object mask to obtain the final supervision mask. Normal and Geometry Constraints. To stabilize optimization in physically meaningful regions, we construct a supervision mask by combin"
+    },
+    {
+      "term": "map",
+      "locator": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction ¶ S3.SS1.p4",
+      "section_index": 5,
+      "char_start": 1775,
+      "snippet": "d represents the cosine similarity. This term enforces orientation consistency between rendered and geometry-induced normals. To further encourage local surface coherence, we introduce a geometry consistency loss inspired by [ 30 ] . Let be the rendered depth map. We compute its Sobel gradient magnitude and normalize it to obtain a smoothness weight . We then compare each predicted normal with the locally averaged normal obtained via a mean filter: By restricting supervision to mask and jointly enforcing normal alignm"
+    },
+    {
+      "term": "spatial",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p1",
+      "section_index": 6,
+      "char_start": 286,
+      "snippet": "safety-critical scenarios beyond simple trajectory perturbation, we develop a multi-agent LLM-driven corner case generation framework (as shown in Fig. 3 ) that explicitly targets collision-prone regions around the ego vehicle, enabling more controllable and spatially grounded safety-critical scenario synthesis. Given multi-vehicle tracking data and ego poses, we follow a chain-of-thought prompting paradigm [ 26 ] and design a pipeline consisting of the following stages: Collision Zone Modeling. We first define four rect"
+    },
+    {
+      "term": "spatial",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p2",
+      "section_index": 6,
+      "char_start": 684,
+      "snippet": "ting paradigm [ 26 ] and design a pipeline consisting of the following stages: Collision Zone Modeling. We first define four rectangular collision zones tightly surrounding the ego vehicle in the ego-centric coordinate frame: (3) Each zone is parameterized by spatial bounds determined by the ego vehicle length and width . These zones serve as explicit spatial targets for risk maximization and provide structured guidance to the language model. Risk Analysis and Collision Zone Selection. Given a user-specified dangerous beh"
+    },
+    {
+      "term": "spatial",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p2",
+      "section_index": 6,
+      "char_start": 778,
+      "snippet": "Modeling. We first define four rectangular collision zones tightly surrounding the ego vehicle in the ego-centric coordinate frame: (3) Each zone is parameterized by spatial bounds determined by the ego vehicle length and width . These zones serve as explicit spatial targets for risk maximization and provide structured guidance to the language model. Risk Analysis and Collision Zone Selection. Given a user-specified dangerous behavior selected from a predefined behavior library, we employ a language model to perform scene"
+    },
+    {
+      "term": "generation",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p1",
+      "section_index": 6,
+      "char_start": 140,
+      "snippet": "To automatically construct safety-critical scenarios beyond simple trajectory perturbation, we develop a multi-agent LLM-driven corner case generation framework (as shown in Fig. 3 ) that explicitly targets collision-prone regions around the ego vehicle, enabling more controllable and spatially grounded safety-critical scenario synthesis. Given multi-vehicle tracking data and ego poses, we follow a chain-of"
+    },
+    {
+      "term": "generation",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p5",
+      "section_index": 6,
+      "char_start": 2146,
+      "snippet": "onds assuming the dangerous behavior occurs, and represents the risk level. In addition, the behavior can be either user-specified or automatically inferred by the LLM agent. Conditioning on a given behavior hypothesis narrows the reasoning space and improves generation controllability. Figure 3: Overview of the LLM-driven corner-case generation pipeline. The system models ego-centric collision zones, performs risk analysis to select an adversarial vehicle and target zone, and synthesizes a waypoint-based collision-oriented"
+    },
+    {
+      "term": "generation",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p5",
+      "section_index": 6,
+      "char_start": 2223,
+      "snippet": "n addition, the behavior can be either user-specified or automatically inferred by the LLM agent. Conditioning on a given behavior hypothesis narrows the reasoning space and improves generation controllability. Figure 3: Overview of the LLM-driven corner-case generation pipeline. The system models ego-centric collision zones, performs risk analysis to select an adversarial vehicle and target zone, and synthesizes a waypoint-based collision-oriented trajectory that is later executed by CARLA for physically feasible simulation"
+    },
+    {
+      "term": "generation",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p6",
+      "section_index": 6,
+      "char_start": 2882,
+      "snippet": "nce trajectory using the LLM. Instead of predicting dynamically feasible control signals, which lies outside the core competency of language models, we delegate low-level feasibility to a downstream controller and allow the LLM to focus on high-level waypoint generation. Let denote the current position of vehicle in the ego-centric frame, and let and denote the historical trajectory of the adversarial vehicle and the predicted future ego trajectory, respectively. A collision target point is sampled within the selected zone ."
+    },
+    {
+      "term": "generation",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p7",
+      "section_index": 6,
+      "char_start": 3166,
+      "snippet": "he current position of vehicle in the ego-centric frame, and let and denote the historical trajectory of the adversarial vehicle and the predicted future ego trajectory, respectively. A collision target point is sampled within the selected zone . The waypoint generation process is formulated as (6) where (7) is the generated time-stamped waypoint sequence over the prediction horizon. The final waypoint is constrained to coincide with the sampled collision target. The resulting waypoint sequence can be directly interfaced wit"
+    },
+    {
+      "term": "simulation",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p5",
+      "section_index": 6,
+      "char_start": 2483,
+      "snippet": "generation pipeline. The system models ego-centric collision zones, performs risk analysis to select an adversarial vehicle and target zone, and synthesizes a waypoint-based collision-oriented trajectory that is later executed by CARLA for physically feasible simulation. Collision-Oriented Trajectory Synthesis. Conditioned on the selected adversarial vehicle and target zone , we generate a reference trajectory using the LLM. Instead of predicting dynamically feasible control signals, which lies outside the core competency of"
+    },
+    {
+      "term": "simulation",
+      "locator": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis ¶ S3.SS2.p7",
+      "section_index": 6,
+      "char_start": 3466,
+      "snippet": "where (7) is the generated time-stamped waypoint sequence over the prediction horizon. The final waypoint is constrained to coincide with the sampled collision target. The resulting waypoint sequence can be directly interfaced with CARLA for vehicle kinematic simulation."
+    },
+    {
+      "term": "3D",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p3",
+      "section_index": 7,
+      "char_start": 1360,
+      "snippet": "the simulated position and heading . The modified Gaussian scene is finally rendered using the differentiable Gaussian renderer. Figure 4: Vehicle replacement pipeline. We first select frames where the target vehicle is close to the camera, and reconstruct a 3D Gaussian model using SAM 3D. The reconstructed asset is aligned with the original vehicle geometry and replaces it. TABLE I: Ablation study on rendering quality and geometry consistency. Components PSNR SSIM LPIPS Normal L1 MAE Normal Cos MAE Baseline 29.703"
+    },
+    {
+      "term": "3D",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p3",
+      "section_index": 7,
+      "char_start": 1388,
+      "snippet": "heading . The modified Gaussian scene is finally rendered using the differentiable Gaussian renderer. Figure 4: Vehicle replacement pipeline. We first select frames where the target vehicle is close to the camera, and reconstruct a 3D Gaussian model using SAM 3D. The reconstructed asset is aligned with the original vehicle geometry and replaces it. TABLE I: Ablation study on rendering quality and geometry consistency. Components PSNR SSIM LPIPS Normal L1 MAE Normal Cos MAE Baseline 29.703 0.907 0.219 0.682 0.984 + 29"
+    },
+    {
+      "term": "3D",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p4",
+      "section_index": 7,
+      "char_start": 1913,
+      "snippet": "8 0.908 0.215 0.677 0.957 + 29.521 0.906 0.217 0.361 0.482 + 29.027 0.900 0.223 0.350 0.480 Figure 5: Surface normal renderings. Our geometry-consistency constraints produce finer surface details and fewer artifacts than the baseline. Vehicle Replacement with 3D Foundation Models. Since the Gaussian model is trained from limited camera views, rendering unseen viewpoints may introduce tearing artifacts, especially for near-field vehicles with insufficient observations (see Fig. 9 ). To mitigate this, we replace such v"
+    },
+    {
+      "term": "3D",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p4",
+      "section_index": 7,
+      "char_start": 2229,
+      "snippet": "d from limited camera views, rendering unseen viewpoints may introduce tearing artifacts, especially for near-field vehicles with insufficient observations (see Fig. 9 ). To mitigate this, we replace such vehicles with high-quality assets reconstructed by SAM-3D [ 3 ] , as shown in Fig. 4 . Specifically, we use SAM-3D [ 3 ] to reconstruct a 3D Gaussian representation from close-range frames containing the target vehicle. To align the reconstructed asset with the original object, we denote the original and replacement"
+    },
+    {
+      "term": "3D",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p5",
+      "section_index": 7,
+      "char_start": 2286,
+      "snippet": "may introduce tearing artifacts, especially for near-field vehicles with insufficient observations (see Fig. 9 ). To mitigate this, we replace such vehicles with high-quality assets reconstructed by SAM-3D [ 3 ] , as shown in Fig. 4 . Specifically, we use SAM-3D [ 3 ] to reconstruct a 3D Gaussian representation from close-range frames containing the target vehicle. To align the reconstructed asset with the original object, we denote the original and replacement point sets as and . Both point clouds are first centered"
+    },
+    {
+      "term": "3D",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p5",
+      "section_index": 7,
+      "char_start": 2312,
+      "snippet": "facts, especially for near-field vehicles with insufficient observations (see Fig. 9 ). To mitigate this, we replace such vehicles with high-quality assets reconstructed by SAM-3D [ 3 ] , as shown in Fig. 4 . Specifically, we use SAM-3D [ 3 ] to reconstruct a 3D Gaussian representation from close-range frames containing the target vehicle. To align the reconstructed asset with the original object, we denote the original and replacement point sets as and . Both point clouds are first centered. Their yaw orientations a"
+    },
+    {
+      "term": "map",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p3",
+      "section_index": 7,
+      "char_start": 970,
+      "snippet": "feasible trajectory (10) This step ensures dynamic realism and smooth vehicle motion. In practice, we employ the built-in VehiclePIDController to track the reference path. Back-Projection to Gaussian Space. After simulation, the CARLA-generated trajectory is mapped back to the Gaussian scene representation. For each timestamp, we update the pose of the corresponding Gaussian actor using the simulated position and heading . The modified Gaussian scene is finally rendered using the differentiable Gaussian renderer. Fig"
+    },
+    {
+      "term": "simulation",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p2",
+      "section_index": 7,
+      "char_start": 213,
+      "snippet": "To obtain physically consistent corner-case visualizations, we adopt a Real-Sim-Real pipeline that bridges the LLM-generated trajectory, CARLA vehicle dynamics, and Gaussian-based rendering. CARLA-based Kinematic Simulation. Given the LLM-generated waypoint sequence from the last step, we first import the trajectory into CARLA as a reference path. Then we design a PID controller that tracks the reference waypoints in continuous time for the selected vehicle . Specifically, the c"
+    },
+    {
+      "term": "simulation",
+      "locator": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting ¶ S3.SS3.p3",
+      "section_index": 7,
+      "char_start": 924,
+      "snippet": "nal kinematic model (9) producing a physically feasible trajectory (10) This step ensures dynamic realism and smooth vehicle motion. In practice, we employ the built-in VehiclePIDController to track the reference path. Back-Projection to Gaussian Space. After simulation, the CARLA-generated trajectory is mapped back to the Gaussian scene representation. For each timestamp, we update the pose of the corresponding Gaussian actor using the simulated position and heading . The modified Gaussian scene is finally rendered using th"
+    },
+    {
+      "term": "dataset",
+      "locator": "IV EXPERIMENTS > IV-A Experimental Setup ¶ S4.SS1.p1",
+      "section_index": 9,
+      "char_start": 213,
+      "snippet": "We adopt Street Gaussians [ 32 ] as our baseline, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing in our setting. We conduct experiments on the Waymo Open Dataset [ 21 ] , selecting 8 sequences to synthesize 85 corner-case scenarios. For Gaussian training, we follow the training protocol of [ 32 ] for most settings, with a total of 50,000 iterations. To reduce training time, we only use three cameras, [front, front lef"
+    },
+    {
+      "term": "generation",
+      "locator": "IV EXPERIMENTS > IV-A Experimental Setup ¶ S4.SS1.p1",
+      "section_index": 9,
+      "char_start": 635,
+      "snippet": "with a total of 50,000 iterations. To reduce training time, we only use three cameras, [front, front left, front right], and incorporate the three proposed geometric consistency loss terms, each weighted by 0.1. For LLM-based corner-case reference trajectory generation, we use the ChatGPT-5.2 API. Both Gaussian rendering and LLM trajectory planning are executed at 24 FPS. For vehicle physical simulation, we use CARLA 0.9.16, with the longitudinal and lateral PID gains set to , , , and a simulation step size of ."
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-A Experimental Setup ¶ S4.SS1.p1",
+      "section_index": 9,
+      "char_start": 772,
+      "snippet": "the three proposed geometric consistency loss terms, each weighted by 0.1. For LLM-based corner-case reference trajectory generation, we use the ChatGPT-5.2 API. Both Gaussian rendering and LLM trajectory planning are executed at 24 FPS. For vehicle physical simulation, we use CARLA 0.9.16, with the longitudinal and lateral PID gains set to , , , and a simulation step size of ."
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-A Experimental Setup ¶ S4.SS1.p1",
+      "section_index": 9,
+      "char_start": 868,
+      "snippet": "-case reference trajectory generation, we use the ChatGPT-5.2 API. Both Gaussian rendering and LLM trajectory planning are executed at 24 FPS. For vehicle physical simulation, we use CARLA 0.9.16, with the longitudinal and lateral PID gains set to , , , and a simulation step size of ."
+    },
+    {
+      "term": "generation",
+      "locator": "IV EXPERIMENTS > IV-B Quantitative Evaluation ¶ S4.SS2.p1",
+      "section_index": 10,
+      "char_start": 489,
+      "snippet": "initial relative vehicle positions, while the random policy uses stochastic perturbations without semantic reasoning. All methods use identical initial conditions and horizons. Since few existing methods closely match our task design and in-scene corner-case generation is inherently stochastic, direct comparison with other state-of-the-art methods is difficult. Table II reports three metrics: Zone Hit (whether the trajectory reaches the target collision zone), Success (whether a safety-critical interaction occurs with s), a"
+    },
+    {
+      "term": "3D",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p1",
+      "section_index": 11,
+      "char_start": 922,
+      "snippet": "light-green points denote the ego vehicle’s past and future trajectories, while blue and color-gradient points denote the selected vehicle’s past and LLM-generated future trajectories. The green cross indicates the collision target point. Right: corresponding 3D scene snapshots over time, where the red box highlights the selected vehicle. The generated trajectories exhibit representative corner-case behaviors (sudden brake, cut-in, and lane drift), providing reference motion cues for downstream CARLA-based kinematic"
+    },
+    {
+      "term": "3D",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p4",
+      "section_index": 11,
+      "char_start": 3044,
+      "snippet": "renderings of the three synthesized corner cases. Left: raw input frames. Right: edited renderings after LLM-driven reasoning and CARLA-based physical simulation. For one case, we show both the vanilla version and the result after replacing the vehicle with a 3D asset reconstructed by SAM-3D. The results demonstrate that the proposed pipeline can generate realistic and semantically consistent corner-case scenarios, while model replacement further improves the geometric and visual consistency of the rendered vehicles."
+    },
+    {
+      "term": "3D",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p4",
+      "section_index": 11,
+      "char_start": 3074,
+      "snippet": "sized corner cases. Left: raw input frames. Right: edited renderings after LLM-driven reasoning and CARLA-based physical simulation. For one case, we show both the vanilla version and the result after replacing the vehicle with a 3D asset reconstructed by SAM-3D. The results demonstrate that the proposed pipeline can generate realistic and semantically consistent corner-case scenarios, while model replacement further improves the geometric and visual consistency of the rendered vehicles. CARLA Simulation. We feed the"
+    },
+    {
+      "term": "3D",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p7",
+      "section_index": 11,
+      "char_start": 4967,
+      "snippet": "gs for all three cases, demonstrating faithful alignment with both the LLM reasoning outcomes and the CARLA-based physically consistent motions, resulting in high-fidelity and semantically consistent corner-case scenarios. The replacement of vehicles with SAM-3D reconstructed models further improves the geometric and visual consistency of the rendered vehicles."
+    },
+    {
+      "term": "generation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p1",
+      "section_index": 11,
+      "char_start": 551,
+      "snippet": "osed constraints substantially reduce normal errors while causing only negligible changes in rendering quality, demonstrating improved geometric consistency without sacrificing photometric fidelity. Figure 6: Visualization of LLM-driven corner-case trajectory generation. Left: historical and predicted trajectories of the ego vehicle and the selected vehicle. Green and light-green points denote the ego vehicle’s past and future trajectories, while blue and color-gradient points denote the selected vehicle’s past and LLM-gener"
+    },
+    {
+      "term": "generation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p2",
+      "section_index": 11,
+      "char_start": 1489,
+      "snippet": "of LLM-generated trajectories. Left: PID tracking performance along x (front) and y (left). Right: CARLA simulation. The ego trajectory is shown in green, and the selected vehicle follows the red reference points under continuous PID control. LLM Corner Case Generation. Figure 8: Behavior risk analysis results produced by the LLM agent. Given the starting analysis frame and scene context, the Agent Zone outputs the target vehicle, collision zone, risk level, and TTC. We manually define three corner-case types, sudden brake,"
+    },
+    {
+      "term": "generation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p6",
+      "section_index": 11,
+      "char_start": 4348,
+      "snippet": "f our framework is to synthesize previously unseen corner cases from real-world data. To further reduce tracking error, PID tracking is initialized from frame 0 rather than the LLM input start frame, allowing the controller to stabilize before the corner-case generation interval. Sim-to-Real: From CARLA to Gaussian Splatting. After obtaining the simulated trajectories and poses from CARLA, we re-project them into the Gaussian representation. Owing to the independent vehicle modeling, the simulated states can be seamlessly in"
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p1",
+      "section_index": 11,
+      "char_start": 1184,
+      "snippet": "scene snapshots over time, where the red box highlights the selected vehicle. The generated trajectories exhibit representative corner-case behaviors (sudden brake, cut-in, and lane drift), providing reference motion cues for downstream CARLA-based kinematic simulation. Figure 7: CARLA-based realization of LLM-generated trajectories. Left: PID tracking performance along x (front) and y (left). Right: CARLA simulation. The ego trajectory is shown in green, and the selected vehicle follows the red reference points under conti"
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p1",
+      "section_index": 11,
+      "char_start": 1335,
+      "snippet": "(sudden brake, cut-in, and lane drift), providing reference motion cues for downstream CARLA-based kinematic simulation. Figure 7: CARLA-based realization of LLM-generated trajectories. Left: PID tracking performance along x (front) and y (left). Right: CARLA simulation. The ego trajectory is shown in green, and the selected vehicle follows the red reference points under continuous PID control. LLM Corner Case Generation. Figure 8: Behavior risk analysis results produced by the LLM agent. Given the starting analysis frame an"
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p4",
+      "section_index": 11,
+      "char_start": 2738,
+      "snippet": ": vehicle 4 performs a rapid lane change under short headway, and oncoming vehicle 84 crosses the lane toward the ego vehicle. These examples show that the LLM agents can identify risky participants and generate behavior-consistent trajectories for subsequent simulation in CARLA. Figure 9: Final Gaussian renderings of the three synthesized corner cases. Left: raw input frames. Right: edited renderings after LLM-driven reasoning and CARLA-based physical simulation. For one case, we show both the vanilla version and the result"
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p4",
+      "section_index": 11,
+      "char_start": 2935,
+      "snippet": "s and generate behavior-consistent trajectories for subsequent simulation in CARLA. Figure 9: Final Gaussian renderings of the three synthesized corner cases. Left: raw input frames. Right: edited renderings after LLM-driven reasoning and CARLA-based physical simulation. For one case, we show both the vanilla version and the result after replacing the vehicle with a 3D asset reconstructed by SAM-3D. The results demonstrate that the proposed pipeline can generate realistic and semantically consistent corner-case scenarios, wh"
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p5",
+      "section_index": 11,
+      "char_start": 3313,
+      "snippet": "reconstructed by SAM-3D. The results demonstrate that the proposed pipeline can generate realistic and semantically consistent corner-case scenarios, while model replacement further improves the geometric and visual consistency of the rendered vehicles. CARLA Simulation. We feed the LLM-generated reference waypoints into CARLA and enforce physically plausible vehicle motion using a PID controller. Specifically, we implement a frame-by-frame tracking controller that drives the selected vehicle to follow the reference trajecto"
+    },
+    {
+      "term": "simulation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p6",
+      "section_index": 11,
+      "char_start": 4060,
+      "snippet": "rajectory while providing physically realistic motion through its physics engine. Due to the inherent limitations of PID control, a small tracking gap exists between the executed and reference trajectories. This discrepancy does not affect the validity of the simulation, since the goal of our framework is to synthesize previously unseen corner cases from real-world data. To further reduce tracking error, PID tracking is initialized from frame 0 rather than the LLM input start frame, allowing the controller to stabilize befor"
+    },
+    {
+      "term": "limitation",
+      "locator": "IV EXPERIMENTS > IV-C Qualitative Results ¶ S4.SS3.p6",
+      "section_index": 11,
+      "char_start": 3902,
+      "snippet": "D tracking performance, while the right panel presents the corresponding CARLA snapshots. The results demonstrate that CARLA can reproduce the LLM-generated trajectory while providing physically realistic motion through its physics engine. Due to the inherent limitations of PID control, a small tracking gap exists between the executed and reference trajectories. This discrepancy does not affect the validity of the simulation, since the goal of our framework is to synthesize previously unseen corner cases from real-world data"
+    },
+    {
+      "term": "3D",
+      "locator": "V Computational Cost Analysis ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 298,
+      "snippet": "ral stages. To evaluate its practical feasibility, we summarize the computational cost of each component here. Prior information, such as depth, normal, and mask maps, is prepared in advance and excluded from the online deployment time. The main bottleneck is 3DGS reconstruction, which takes about 2 hours for a 100-frame, 3-camera scene on a single RTX 4090 GPU. LLM calls require about 40–50 seconds for scene reasoning and 10 seconds for trajectory generation. CARLA simulation time depends on the synthesized trajecto"
+    },
+    {
+      "term": "3D",
+      "locator": "V Computational Cost Analysis ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 697,
+      "snippet": "nds for scene reasoning and 10 seconds for trajectory generation. CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthes"
+    },
+    {
+      "term": "3D",
+      "locator": "V Computational Cost Analysis ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 731,
+      "snippet": "onds for trajectory generation. CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS sa"
+    },
+    {
+      "term": "3D",
+      "locator": "V Computational Cost Analysis ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 762,
+      "snippet": "CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS safer and more time-efficient tha"
+    },
+    {
+      "term": "3D",
+      "locator": "V Computational Cost Analysis ¶ S5.p2",
+      "section_index": 12,
+      "char_start": 802,
+      "snippet": "nthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS safer and more time-efficient than real-world data collection."
+    },
+    {
+      "term": "3D",
+      "locator": "V Computational Cost Analysis ¶ S5.p2",
+      "section_index": 12,
+      "char_start": 873,
+      "snippet": "e PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS safer and more time-efficient than real-world data collection."
+    },
+    {
+      "term": "collection",
+      "locator": "V Computational Cost Analysis ¶ S5.p2",
+      "section_index": 12,
+      "char_start": 1042,
+      "snippet": "pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS safer and more time-efficient than real-world data collection."
+    },
+    {
+      "term": "map",
+      "locator": "V Computational Cost Analysis ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 200,
+      "snippet": "The CARLA-GS pipeline consists of several stages. To evaluate its practical feasibility, we summarize the computational cost of each component here. Prior information, such as depth, normal, and mask maps, is prepared in advance and excluded from the online deployment time. The main bottleneck is 3DGS reconstruction, which takes about 2 hours for a 100-frame, 3-camera scene on a single RTX 4090 GPU. LLM calls require about 40–50 seconds for scene reasoning an"
+    },
+    {
+      "term": "generation",
+      "locator": "V Computational Cost Analysis ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 491,
+      "snippet": "d excluded from the online deployment time. The main bottleneck is 3DGS reconstruction, which takes about 2 hours for a 100-frame, 3-camera scene on a single RTX 4090 GPU. LLM calls require about 40–50 seconds for scene reasoning and 10 seconds for trajectory generation. CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the"
+    },
+    {
+      "term": "simulation",
+      "locator": "V Computational Cost Analysis ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 509,
+      "snippet": "e online deployment time. The main bottleneck is 3DGS reconstruction, which takes about 2 hours for a 100-frame, 3-camera scene on a single RTX 4090 GPU. LLM calls require about 40–50 seconds for scene reasoning and 10 seconds for trajectory generation. CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library"
+    },
+    {
+      "term": "dataset",
+      "locator": "VI CONCLUSIONS ¶ S6.p1",
+      "section_index": 13,
+      "char_start": 513,
+      "snippet": "representation, reasoning, and dynamics while preserving cross-module consistency, the proposed pipeline enables controllable and physically valid generation of rare but safety-critical traffic interactions from real-world data. Experiments on the Waymo Open Dataset demonstrate that CARLA-GS can reliably synthesize diverse corner cases, while maintaining photorealistic rendering quality and kinematic feasibility. The results highlight the effectiveness of leveraging complementary strengths of neural rendering, large lang"
+    },
+    {
+      "term": "generation",
+      "locator": "VI CONCLUSIONS ¶ S6.p1",
+      "section_index": 13,
+      "char_start": 401,
+      "snippet": "construction, LLM-driven semantic reasoning, and physics-consistent execution in CARLA. By explicitly decoupling representation, reasoning, and dynamics while preserving cross-module consistency, the proposed pipeline enables controllable and physically valid generation of rare but safety-critical traffic interactions from real-world data. Experiments on the Waymo Open Dataset demonstrate that CARLA-GS can reliably synthesize diverse corner cases, while maintaining photorealistic rendering quality and kinematic feasibility."
+    }
+  ],
+  "citation_contexts": [
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib21"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Autonomous driving (AD) operates in open-world traffic where safety evaluation is inherently a rare-event problem, known as the Curse of Rarity [ 15 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib28"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Meanwhile, camera-centric AD systems require simulators to provide not only trajectory rollouts but also photorealistic observations for reliable closed-loop evaluation [ 23 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib17"
+      ],
+      "arxiv_ids": [
+        "2210.00379"
+      ],
+      "sentence": "NeRF-based methods achieve high-fidelity view synthesis but remain expensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib41",
+        "bib.bib24"
+      ],
+      "arxiv_ids": [
+        "2503.20523"
+      ],
+      "sentence": "NeRF-based methods achieve high-fidelity view synthesis but remain expensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib1",
+        "bib.bib30"
+      ],
+      "arxiv_ids": [],
+      "sentence": "In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib44",
+        "bib.bib34",
+        "bib.bib33"
+      ],
+      "arxiv_ids": [],
+      "sentence": "In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib4",
+        "bib.bib5"
+      ],
+      "arxiv_ids": [],
+      "sentence": "However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p3",
+      "bib_keys": [
+        "bib.bib9",
+        "bib.bib10",
+        "bib.bib8"
+      ],
+      "arxiv_ids": [
+        "2309.09844",
+        "2412.00243"
+      ],
+      "sentence": "Prior work synthesizes corner cases through data-driven, knowledge-based, or learning-based pipelines [ 33 , 5 , 16 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p3",
+      "bib_keys": [
+        "bib.bib7"
+      ],
+      "arxiv_ids": [
+        "2505.00972"
+      ],
+      "sentence": "Inspired by [ 17 ] , we adopt LLM-based reasoning as a semantic planning module for corner-case synthesis."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p4",
+      "bib_keys": [
+        "bib.bib32",
+        "bib.bib46",
+        "bib.bib42"
+      ],
+      "arxiv_ids": [
+        "2605.13591"
+      ],
+      "sentence": "Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p4",
+      "bib_keys": [
+        "bib.bib2",
+        "bib.bib43"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p4",
+      "bib_keys": [
+        "bib.bib15"
+      ],
+      "arxiv_ids": [],
+      "sentence": "This motivates a modular design that delegates physics-consistent motion to dedicated simulators such as CARLA [ 4 ] ."
+    },
+    {
+      "section": "I INTRODUCTION",
+      "para": "S1.p5",
+      "bib_keys": [
+        "bib.bib34"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Specifically, we adopt Street Gaussians [ 32 ] as the backbone, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p1",
+      "bib_keys": [
+        "bib.bib16"
+      ],
+      "arxiv_ids": [
+        "2506.06218"
+      ],
+      "sentence": "A practical autonomous driving simulator should provide realistic perception inputs and support spatio-temporal reasoning [ 6 ] ."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p1",
+      "bib_keys": [
+        "bib.bib22",
+        "bib.bib17"
+      ],
+      "arxiv_ids": [
+        "2210.00379"
+      ],
+      "sentence": "Neural scene representations enable photorealistic rendering from captured data, where NeRF models scenes as implicit radiance fields [ 18 , 7 ] and can be enhanced with structured depth or scene priors for improved novel-view synthesis [ 13 , 27 , 14 ] ."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p1",
+      "bib_keys": [
+        "bib.bib20",
+        "bib.bib31",
+        "bib.bib19"
+      ],
+      "arxiv_ids": [
+        "2312.16108"
+      ],
+      "sentence": "Neural scene representations enable photorealistic rendering from captured data, where NeRF models scenes as implicit radiance fields [ 18 , 7 ] and can be enhanced with structured depth or scene priors for improved novel-view synthesis [ 13 , 27 , 14 ] ."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p1",
+      "bib_keys": [
+        "bib.bib41",
+        "bib.bib24"
+      ],
+      "arxiv_ids": [
+        "2503.20523"
+      ],
+      "sentence": "Recently, diffusion-based world models have also been explored for scalable and controllable driving-scene generation [ 25 , 20 ] ."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p2",
+      "bib_keys": [
+        "bib.bib38"
+      ],
+      "arxiv_ids": [
+        "2410.12262"
+      ],
+      "sentence": "More recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient alternative by representing scenes with explicit Gaussian primitives and enabling high-throughput rendering [ 36 ] ."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p2",
+      "bib_keys": [
+        "bib.bib44",
+        "bib.bib23",
+        "bib.bib33",
+        "bib.bib18",
+        "bib.bib30",
+        "bib.bib12"
+      ],
+      "arxiv_ids": [
+        "2505.23158"
+      ],
+      "sentence": "It has been extended to driving-scene synthesis, editing, dynamic modeling, real-time SLAM, and model alignment [ 34 , 19 , 31 , 12 , 28 , 1 ] ."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p2",
+      "bib_keys": [
+        "bib.bib4",
+        "bib.bib5"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Nevertheless, for safety-oriented corner-case synthesis, vanilla 3DGS remains insufficient because it lacks guarantees on geometric stability, actionable semantics, and physically consistent interactions [ 8 , 2 ] ."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p3",
+      "bib_keys": [
+        "bib.bib27",
+        "bib.bib29",
+        "bib.bib9"
+      ],
+      "arxiv_ids": [
+        "2509.13164"
+      ],
+      "sentence": "Data-driven methods synthesize realistic safety-critical scenarios from large-scale driving datasets [ 24 , 22 , 33 ] , but often lack explicit control over failure modes and interaction intent."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p3",
+      "bib_keys": [
+        "bib.bib10"
+      ],
+      "arxiv_ids": [
+        "2309.09844"
+      ],
+      "sentence": "Knowledge-based methods transform common scenarios into corner cases using structured representations such as scene graphs [ 5 ] , while their diversity and realism are limited by the coverage and correctness of symbolic rules."
+    },
+    {
+      "section": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "para": "S2.SS1.p3",
+      "bib_keys": [
+        "bib.bib8",
+        "bib.bib7"
+      ],
+      "arxiv_ids": [
+        "2412.00243",
+        "2505.00972"
+      ],
+      "sentence": "Recent LLM-based methods introduce high-level reasoning and multimodal understanding for generating risky scenarios or adversarial behaviors [ 16 , 17 ] ."
+    },
+    {
+      "section": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction",
+      "para": "S3.SS1.p1",
+      "bib_keys": [
+        "bib.bib2",
+        "bib.bib3"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Due to the limited viewpoints of onboard driving cameras (typically 3-6 poses), vanilla 3DGS often produces geometrically inconsistent and bumpy surfaces [ 30 , 21 ] ."
+    },
+    {
+      "section": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction",
+      "para": "S3.SS1.p2",
+      "bib_keys": [
+        "bib.bib4",
+        "bib.bib5",
+        "bib.bib43"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Following prior 2DGS and surface reconstruction works [ 8 , 2 , 35 ] , we introduce a flattening regularization by constraining the anisotropic scaling of each Gaussian."
+    },
+    {
+      "section": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction",
+      "para": "S3.SS1.p4",
+      "bib_keys": [
+        "bib.bib2"
+      ],
+      "arxiv_ids": [],
+      "sentence": "To further encourage local surface coherence, we introduce a geometry consistency loss inspired by [ 30 ] ."
+    },
+    {
+      "section": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis",
+      "para": "S3.SS2.p1",
+      "bib_keys": [
+        "bib.bib11"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Given multi-vehicle tracking data and ego poses, we follow a chain-of-thought prompting paradigm [ 26 ] and design a pipeline consisting of the following stages: Collision Zone Modeling."
+    },
+    {
+      "section": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting",
+      "para": "S3.SS3.p4",
+      "bib_keys": [
+        "bib.bib45"
+      ],
+      "arxiv_ids": [
+        "2511.16624"
+      ],
+      "sentence": "To mitigate this, we replace such vehicles with high-quality assets reconstructed by SAM-3D [ 3 ] , as shown in Fig."
+    },
+    {
+      "section": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting",
+      "para": "S3.SS3.p5",
+      "bib_keys": [
+        "bib.bib45"
+      ],
+      "arxiv_ids": [
+        "2511.16624"
+      ],
+      "sentence": "Specifically, we use SAM-3D [ 3 ] to reconstruct a 3D Gaussian representation from close-range frames containing the target vehicle."
+    },
+    {
+      "section": "IV EXPERIMENTS > IV-A Experimental Setup",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib34"
+      ],
+      "arxiv_ids": [],
+      "sentence": "We adopt Street Gaussians [ 32 ] as our baseline, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing in our setting."
+    },
+    {
+      "section": "IV EXPERIMENTS > IV-A Experimental Setup",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib3"
+      ],
+      "arxiv_ids": [],
+      "sentence": "We conduct experiments on the Waymo Open Dataset [ 21 ] , selecting 8 sequences to synthesize 85 corner-case scenarios."
+    },
+    {
+      "section": "IV EXPERIMENTS > IV-A Experimental Setup",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib34"
+      ],
+      "arxiv_ids": [],
+      "sentence": "For Gaussian training, we follow the training protocol of [ 32 ] for most settings, with a total of 50,000 iterations."
+    }
+  ],
+  "reference_hints": [
+    {
+      "arxiv_id": "2309.09844",
+      "snippet": "[5] G. Drayson, E. Panagiotaki, D. Omeiza, and L. Kunze (2023) Cc-sgg: corner case scenario generation using learned scene graphs . arXiv preprint arXiv:2309.09844 . Cited by: §I , § II-A ."
+    },
+    {
+      "arxiv_id": "2506.06218",
+      "snippet": "[6] C. Fruhwirth-Reisinger, D. Malić, W. Lin, D. Schinagl, S. Schulter, and H. Possegger (2025) Stsbench: a spatio-temporal scenario benchmark for multi-modal large language models in autonomous driving . arXiv preprint arXiv:2506.06218 . Cited by: § II-A ."
+    },
+    {
+      "arxiv_id": "2210.00379",
+      "snippet": "[7] K. Gao, Y. Gao, H. He, D. Lu, L. Xu, and J. Li (2022) Nerf: neural radiance field in 3d vision, a comprehensive review . arXiv preprint arXiv:2210.00379 . Cited by: §I , § II-A ."
+    },
+    {
+      "arxiv_id": "2505.23158",
+      "snippet": "[12] J. Kulhanek, M. Rakotosaona, F. Manhardt, C. Tsalicoglou, M. Niemeyer, T. Sattler, S. Peng, and F. Tombari (2025) LODGE: level-of-detail large-scale gaussian splatting with efficient rendering . arXiv preprint arXiv:2505.23158 . Cited by: § II-A ."
+    },
+    {
+      "arxiv_id": "2312.16108",
+      "snippet": "[14] T. Li, P. Jia, B. Wang, L. Chen, K. Jiang, J. Yan, and H. Li (2023) Lanesegnet: map learning with lane segment perception for autonomous driving . arXiv preprint arXiv:2312.16108 . Cited by: § II-A ."
+    },
+    {
+      "arxiv_id": "2503.20523",
+      "snippet": "[20] L. Russell, A. Hu, L. Bertoni, G. Fedoseev, J. Shotton, E. Arani, and G. Corrado (2025) Gaia-2: a controllable multi-view generative world model for autonomous driving . arXiv preprint arXiv:2503.20523 . Cited by: §I , § II-A ."
+    },
+    {
+      "arxiv_id": "2509.13164",
+      "snippet": "[22] J. Wang, H. Sun, X. Yan, S. Feng, J. Gao, and H. X. Liu (2025) TeraSim-world: worldwide safety-critical data synthesis for end-to-end autonomous driving . arXiv preprint arXiv:2509.13164 . Cited by: § II-A ."
+    },
+    {
+      "arxiv_id": "2410.12262",
+      "snippet": "[36] S. Zhu, G. Wang, X. Kong, D. Kong, and H. Wang (2024) 3d gaussian splatting in robotics: a survey . arXiv preprint arXiv:2410.12262 . Cited by: § II-A ."
+    },
+    {
+      "arxiv_id": "2511.16624",
+      "snippet": "[3] X. Chen, F. Chu, P. Gleize, K. J. Liang, A. Sax, H. Tang, W. Wang, M. Guo, T. Hardin, X. Li, et al. (2025) Sam 3d: 3dfy anything in images . arXiv preprint arXiv:2511.16624 . Cited by: § III-C , § III-C ."
+    },
+    {
+      "arxiv_id": "2605.13591",
+      "snippet": "[9] K. Huang, T. Azfar, W. Shi, and R. Ke (2026) Real2Sim: a physics-driven and editable gaussian splatting framework for autonomous driving scenes . arXiv preprint arXiv:2605.13591 . Cited by: §I ."
+    },
+    {
+      "arxiv_id": "2505.00972",
+      "snippet": "[17] Y. Mei, T. Nie, J. Sun, and Y. Tian (2025) Seeking to collide: online safety-critical scenario generation for autonomous driving with retrieval augmented large language models . arXiv preprint arXiv:2505.00972 . Cited by: §I , § II-A ."
+    },
+    {
+      "arxiv_id": "2412.00243",
+      "snippet": "[16] Q. Lu, M. Ma, X. Dai, X. Wang, and S. Feng (2024) Realistic corner case generation for autonomous vehicles with multimodal large language model . arXiv preprint arXiv:2412.00243 . Cited by: §I , § II-A ."
+    }
+  ],
+  "text": "## Abstract\nAbstract Safety evaluation for autonomous driving is dominated by rare, safety-critical interactions, motivating simulators that can deliberately synthesize corner cases with photorealistic observations. Corner-case generation is inherently a multi-source problem spanning visual representation, scene reasoning, and vehicle trajectory generation and control. Prior knowledge- and model-based approaches typically focus on scene or trajectory components in isolation, while diffusion-based methods attempt end-to-end generation but still struggle to ensure spatiotemporal consistency and physical realism. To unify these aspects within a single framework, we propose CARLA-GS, a modular corner-case synthesis pipeline that decouples visual representation, semantic reasoning, and physics-based execution while maintaining tight cross-module coupling. Starting from real driving data, we reconstruct an editable gaussian scene with additional geometry-consistent constraints. A multi-agent LLM then performs scene-level reasoning to identify risky interactions and generate intent-level waypoint trajectories, while the low-level motion control is delegated to CARLA, where a PID controller ensures kinematic and dynamic feasibility. The simulated vehicle states are finally re-projected into the gaussian scene for ego-centric rendering. This design enables high-level semantic reasoning, low-level physically executable motion, and photorealistic corner-case generation within a unified pipeline. Experiments on the Waymo Open Dataset show, both quantitatively and qualitatively, that our framework enables controllable corner-case generation and produces photorealistic, spatiotemporally consistent videos aligned with semantic intent and physically feasible motion.\n\n## I INTRODUCTION\nAutonomous driving (AD) operates in open-world traffic where safety evaluation is inherently a rare-event problem, known as the Curse of Rarity [ 15 ] . This motivates simulation pipelines that intentionally expose corner cases. Meanwhile, camera-centric AD systems require simulators to provide not only trajectory rollouts but also photorealistic observations for reliable closed-loop evaluation [ 23 ] . This requirement has renewed interest in scalable driving-scene reconstruction for safety-oriented simulation. NeRF-based methods achieve high-fidelity view synthesis but remain expensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] . In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] . Moreover, corner-case generation is not purely a visual problem. It requires semantic reasoning over agent intent, interaction context, and future motion evolution. Prior work synthesizes corner cases through data-driven, knowledge-based, or learning-based pipelines [ 33 , 5 , 16 ] . However, these approaches often lack semantic scene understanding and high-level decision reasoning for identifying plausible risky interactions, limiting their flexibility in generating targeted behaviors. Inspired by [ 17 ] , we adopt LLM-based reasoning as a semantic planning module for corner-case synthesis. LLMs provide macro-level scene understanding and prompt-driven behavioral control, enabling intent-level risk specification while automatically selecting interacting agents from the scene. After scene-level analysis, the next step is to generate vehicle trajectories and execute them under realistic kinematic and dynamic constraints. While LLMs are effective for high-level trajectory planning, they are not well suited to produce dynamically feasible control signals or guarantee collision-valid outcomes. Embedding physics directly into 3DGS is also challenging, as Gaussian primitives are unstructured and lack the rigid topology required by conventional dynamics solvers. Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited. This motivates a modular design that delegates physics-consistent motion to dedicated simulators such as CARLA [ 4 ] . To overcome the above limitations, we propose CARLA-GS , a modular pipeline for safety-critical corner-case synthesis. The key idea is to decouple visual representation, semantic reasoning, and physics-based simulation while preserving cross-module consistency. Specifically, we adopt Street Gaussians [ 32 ] as the backbone, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing. We further introduce geometry-consistent constraints to improve structural coherence of the reconstructed scene. In parallel, a multi-agent LLM performs semantic scene analysis to identify the collision zone around the ego vehicle and select a target adversarial vehicle, and then generates an intent-level corner-case trajectory in waypoint form. The resulting trajectories are then executed in CARLA, where a PID controller enforces kinematic and dynamic feasibility. Finally, the simulated vehicle states are re-injected into the geometry-consistent 3DGS scene, refined with a 3D foundation model, to render ego-centric photorealistic observations. The overall framework is shown in Fig. 1 . This design leverages the complementary strengths of each module: Gaussian Splatting provides spatiotemporal consistency and high-fidelity visual representation, LLMs enable high-level semantic reasoning and flexible control, and CARLA ensures reliable vehicle physics, resulting in a controllable and scalable framework for corner-case generation. Our main contributions are summarized as follows: • We present CARLA-GS, a modular framework for driving corner-case synthesis that decouples visual representation, semantic reasoning, and physics simulation, enabling spatiotemporally consistent video generation. • We design a multi-agent LLM reasoning module for semantic scene understanding and intent-level trajectory planning, enabling automatic discovery of risky interactions and flexible prompt-driven adversarial control. • We develop a plug-and-play CARLA-Gaussian integration through state re-projection, allowing physically simulated vehicle motions to be reflected in photorealistic renderings.\n\n## II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation\nA practical autonomous driving simulator should provide realistic perception inputs and support spatio-temporal reasoning [ 6 ] . Neural scene representations enable photorealistic rendering from captured data, where NeRF models scenes as implicit radiance fields [ 18 , 7 ] and can be enhanced with structured depth or scene priors for improved novel-view synthesis [ 13 , 27 , 14 ] . Recently, diffusion-based world models have also been explored for scalable and controllable driving-scene generation [ 25 , 20 ] . However, NeRF-based pipelines are often computationally expensive for large-scale simulation, while diffusion models may hallucinate structures and struggle to maintain strict geometric consistency and deterministic control. More recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient alternative by representing scenes with explicit Gaussian primitives and enabling high-throughput rendering [ 36 ] . It has been extended to driving-scene synthesis, editing, dynamic modeling, real-time SLAM, and model alignment [ 34 , 19 , 31 , 12 , 28 , 1 ] . Nevertheless, for safety-oriented corner-case synthesis, vanilla 3DGS remains insufficient because it lacks guarantees on geometric stability, actionable semantics, and physically consistent interactions [ 8 , 2 ] . Corner cases expose safety-critical behaviors that rarely appear in naturalistic driving data. Existing generation methods can be broadly divided into data-driven, knowledge-based, and LLM-based approaches. Data-driven methods synthesize realistic safety-critical scenarios from large-scale driving datasets [ 24 , 22 , 33 ] , but often lack explicit control over failure modes and interaction intent. Knowledge-based methods transform common scenarios into corner cases using structured representations such as scene graphs [ 5 ] , while their diversity and realism are limited by the coverage and correctness of symbolic rules. Recent LLM-based methods introduce high-level reasoning and multimodal understanding for generating risky scenarios or adversarial behaviors [ 16 , 17 ] . However, translating semantic intent into dynamically feasible vehicle behaviors remains challenging. Our work addresses these limitations by grounding LLM-driven reasoning in CARLA’s physics-executable backend and integrating 3DGS-based visual reconstruction into a modular yet integrated pipeline for controllable and scalable corner-case generation.\n\n## III-A Geometry-Consistent Driving Scenario Reconstruction\nDue to the limited viewpoints of onboard driving cameras (typically 3-6 poses), vanilla 3DGS often produces geometrically inconsistent and bumpy surfaces [ 30 , 21 ] . We therefore introduce geometry-consistent regularization to enforce surface continuity and smoothness. Flattening Constraints. Following prior 2DGS and surface reconstruction works [ 8 , 2 , 35 ] , we introduce a flattening regularization by constraining the anisotropic scaling of each Gaussian. The covariance of the -th Gaussian is parameterized by a diagonal scaling matrix , where denote the principal-axis scales and is the total number of Gaussians. The flattening loss is defined as (1) which encourages each Gaussian to collapse along its least significant axis and thus promotes locally smooth surface structures. Figure 2: Construction of the supervision mask for geometry-consistent reconstruction. The raw image is processed by a depth foundation model to produce a reference depth map, from which a normal map is computed. The RANSAC-derived ground mask is fused with the preprocessed object mask to obtain the final supervision mask. Normal and Geometry Constraints. To stabilize optimization in physically meaningful regions, we construct a supervision mask by combining foreground objects and planar ground regions. Detailed construction is illustrated in Fig. 2 . Given the rendered normals and the depth-derived reference normals , the normal constraint is defined via an angular loss (2) where denotes the normal at pixel , and represents the cosine similarity. This term enforces orientation consistency between rendered and geometry-induced normals. To further encourage local surface coherence, we introduce a geometry consistency loss inspired by [ 30 ] . Let be the rendered depth map. We compute its Sobel gradient magnitude and normalize it to obtain a smoothness weight . We then compare each predicted normal with the locally averaged normal obtained via a mean filter: By restricting supervision to mask and jointly enforcing normal alignment and local geometric smoothness, the proposed constraints significantly improve surface quality on vehicles and road regions.\n\n## III-B LLM-Driven Corner Case Analysis and Synthesis\nTo automatically construct safety-critical scenarios beyond simple trajectory perturbation, we develop a multi-agent LLM-driven corner case generation framework (as shown in Fig. 3 ) that explicitly targets collision-prone regions around the ego vehicle, enabling more controllable and spatially grounded safety-critical scenario synthesis. Given multi-vehicle tracking data and ego poses, we follow a chain-of-thought prompting paradigm [ 26 ] and design a pipeline consisting of the following stages: Collision Zone Modeling. We first define four rectangular collision zones tightly surrounding the ego vehicle in the ego-centric coordinate frame: (3) Each zone is parameterized by spatial bounds determined by the ego vehicle length and width . These zones serve as explicit spatial targets for risk maximization and provide structured guidance to the language model. Risk Analysis and Collision Zone Selection. Given a user-specified dangerous behavior selected from a predefined behavior library, we employ a language model to perform scene-aware reasoning and identify both the most plausible adversarial vehicle and the most threatening collision region. Let the ego vehicle be located at the origin of the ego-centric coordinate frame, and let denote the set of observed background vehicles in the scene. For each vehicle , we construct its recent motion state (4) where denotes the position in the ego-centric frame, is the speed, and is the heading over the past frames. The ego vehicle state is constructed in the same form and denoted by . The LLM agent then performs behavior-conditioned risk reasoning over all candidate vehicles. Formally, the decision process can be written as (5) where is the selected adversarial vehicle, is the predicted target collision zone chosen from the predefined zone set around the ego vehicle, denotes the estimated time-to-collision in seconds assuming the dangerous behavior occurs, and represents the risk level. In addition, the behavior can be either user-specified or automatically inferred by the LLM agent. Conditioning on a given behavior hypothesis narrows the reasoning space and improves generation controllability. Figure 3: Overview of the LLM-driven corner-case generation pipeline. The system models ego-centric collision zones, performs risk analysis to select an adversarial vehicle and target zone, and synthesizes a waypoint-based collision-oriented trajectory that is later executed by CARLA for physically feasible simulation. Collision-Oriented Trajectory Synthesis. Conditioned on the selected adversarial vehicle and target zone , we generate a reference trajectory using the LLM. Instead of predicting dynamically feasible control signals, which lies outside the core competency of language models, we delegate low-level feasibility to a downstream controller and allow the LLM to focus on high-level waypoint generation. Let denote the current position of vehicle in the ego-centric frame, and let and denote the historical trajectory of the adversarial vehicle and the predicted future ego trajectory, respectively. A collision target point is sampled within the selected zone . The waypoint generation process is formulated as (6) where (7) is the generated time-stamped waypoint sequence over the prediction horizon. The final waypoint is constrained to coincide with the sampled collision target. The resulting waypoint sequence can be directly interfaced with CARLA for vehicle kinematic simulation.\n\n## III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting\nTo obtain physically consistent corner-case visualizations, we adopt a Real-Sim-Real pipeline that bridges the LLM-generated trajectory, CARLA vehicle dynamics, and Gaussian-based rendering. CARLA-based Kinematic Simulation. Given the LLM-generated waypoint sequence from the last step, we first import the trajectory into CARLA as a reference path. Then we design a PID controller that tracks the reference waypoints in continuous time for the selected vehicle . Specifically, the control command at time is computed as (8) where and denote the current and reference vehicle poses, respectively. The simulator then evolves the vehicle state according to its internal kinematic model (9) producing a physically feasible trajectory (10) This step ensures dynamic realism and smooth vehicle motion. In practice, we employ the built-in VehiclePIDController to track the reference path. Back-Projection to Gaussian Space. After simulation, the CARLA-generated trajectory is mapped back to the Gaussian scene representation. For each timestamp, we update the pose of the corresponding Gaussian actor using the simulated position and heading . The modified Gaussian scene is finally rendered using the differentiable Gaussian renderer. Figure 4: Vehicle replacement pipeline. We first select frames where the target vehicle is close to the camera, and reconstruct a 3D Gaussian model using SAM 3D. The reconstructed asset is aligned with the original vehicle geometry and replaces it. TABLE I: Ablation study on rendering quality and geometry consistency. Components PSNR SSIM LPIPS Normal L1 MAE Normal Cos MAE Baseline 29.703 0.907 0.219 0.682 0.984 + 29.828 0.908 0.215 0.677 0.957 + 29.521 0.906 0.217 0.361 0.482 + 29.027 0.900 0.223 0.350 0.480 Figure 5: Surface normal renderings. Our geometry-consistency constraints produce finer surface details and fewer artifacts than the baseline. Vehicle Replacement with 3D Foundation Models. Since the Gaussian model is trained from limited camera views, rendering unseen viewpoints may introduce tearing artifacts, especially for near-field vehicles with insufficient observations (see Fig. 9 ). To mitigate this, we replace such vehicles with high-quality assets reconstructed by SAM-3D [ 3 ] , as shown in Fig. 4 . Specifically, we use SAM-3D [ 3 ] to reconstruct a 3D Gaussian representation from close-range frames containing the target vehicle. To align the reconstructed asset with the original object, we denote the original and replacement point sets as and . Both point clouds are first centered. Their yaw orientations and are estimated from the minimum-area bounding boxes of their XY projections, producing a relative yaw difference . To account for symmetry ambiguity, we evaluate a small set of candidate rotations . The object scale is matched by comparing the bounding-box extents and and computing the scale factor . The final alignment is selected by minimizing (11) where is the transformed replacement point set and denotes the bidirectional nearest-neighbor distance between the two point clouds. This procedure enables the reconstructed vehicle to replace the original object while preserving geometric consistency and visual realism.\n\n## IV-A Experimental Setup\nWe adopt Street Gaussians [ 32 ] as our baseline, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing in our setting. We conduct experiments on the Waymo Open Dataset [ 21 ] , selecting 8 sequences to synthesize 85 corner-case scenarios. For Gaussian training, we follow the training protocol of [ 32 ] for most settings, with a total of 50,000 iterations. To reduce training time, we only use three cameras, [front, front left, front right], and incorporate the three proposed geometric consistency loss terms, each weighted by 0.1. For LLM-based corner-case reference trajectory generation, we use the ChatGPT-5.2 API. Both Gaussian rendering and LLM trajectory planning are executed at 24 FPS. For vehicle physical simulation, we use CARLA 0.9.16, with the longitudinal and lateral PID gains set to , , , and a simulation step size of .\n\n## IV-B Quantitative Evaluation\nCorner-case Controllability and Success. We evaluate the controllability and effectiveness of generated corner cases against rule-based and random trajectory baselines. The rule-based policy triggers predefined maneuvers from the initial relative vehicle positions, while the random policy uses stochastic perturbations without semantic reasoning. All methods use identical initial conditions and horizons. Since few existing methods closely match our task design and in-scene corner-case generation is inherently stochastic, direct comparison with other state-of-the-art methods is difficult. Table II reports three metrics: Zone Hit (whether the trajectory reaches the target collision zone), Success (whether a safety-critical interaction occurs with s), and MinTTC (the minimum time-to-collision in the scenario). Our method achieves the best controllability, with a Zone Hit rate of , exceeding the rule-based ( ) and random ( ) baselines. It also produces the most critical interactions, achieving the highest Success rate ( ) and lowest MinTTC ( s), demonstrating the effectiveness of the proposed multi-agent LLM framework. However, LLM instability can still limit planning reliability. As indicated by the zone hit rate and variance, the LLM may fail to reach the target zone under multiple constraints, even with explicit prompts, as shown in Case 3 of Fig. 6 . Manual inspection shows that 29.4% of LLM-generated outputs are valid. TABLE II: Corner-case controllability and success statistics. Results are reported as mean std. Method Zone Hit Success MinTTC (s) Rule-based Random Ours (Multi-agent LLM) TABLE III: Feasibility and ride-comfort metrics. Method ComfortViol (%) LLM-only Ours (LLM+CARLA) Trajectory Feasibility and Ride Comfort. We further evaluate the physical feasibility and ride comfort of generated trajectories. Three commonly used kinematic indicators are computed from time-resampled trajectories: the -percentile lateral acceleration , the -percentile curvature-rate measuring steering smoothness, and the percentage of comfort violations (ComfortViol) where m/s 2 . Table III compares trajectories generated directly by the LLM and those executed through CARLA. By delegating motion execution to CARLA, the proposed pipeline improves all metrics, reducing ( ) and ( ), and slightly decreasing comfort violations. This indicates that physics-based control effectively regularizes LLM-generated trajectories and yields smoother and more feasible vehicle behaviors.\n\n## IV-C Qualitative Results\nReconstruction Evaluation. Fig. 5 shows that the geometric consistency constraint produces smoother surfaces and normals closer to the ground truth. Table I further reports PSNR, SSIM, LPIPS, Normal L1 MAE, and Normal Cos MAE under different constraints. Compared with the baseline, the proposed constraints substantially reduce normal errors while causing only negligible changes in rendering quality, demonstrating improved geometric consistency without sacrificing photometric fidelity. Figure 6: Visualization of LLM-driven corner-case trajectory generation. Left: historical and predicted trajectories of the ego vehicle and the selected vehicle. Green and light-green points denote the ego vehicle’s past and future trajectories, while blue and color-gradient points denote the selected vehicle’s past and LLM-generated future trajectories. The green cross indicates the collision target point. Right: corresponding 3D scene snapshots over time, where the red box highlights the selected vehicle. The generated trajectories exhibit representative corner-case behaviors (sudden brake, cut-in, and lane drift), providing reference motion cues for downstream CARLA-based kinematic simulation. Figure 7: CARLA-based realization of LLM-generated trajectories. Left: PID tracking performance along x (front) and y (left). Right: CARLA simulation. The ego trajectory is shown in green, and the selected vehicle follows the red reference points under continuous PID control. LLM Corner Case Generation. Figure 8: Behavior risk analysis results produced by the LLM agent. Given the starting analysis frame and scene context, the Agent Zone outputs the target vehicle, collision zone, risk level, and TTC. We manually define three corner-case types, sudden brake, cut-in, and lane drift, and provide them to the LLM to analyze the scene and generate reference trajectories. Fig. 8 shows the outputs of Agent Zone , while Fig. 6 visualizes the past and predicted trajectories of the ego vehicle and the selected vehicle produced by Agent Trajectory . Case 1. Starting from frame 60, Agent Zone identifies vehicle 6 ahead of the ego vehicle, selects the collision zone as “front”, and estimates TTC as 1.0 s. Agent Trajectory then generates a braking trajectory toward the collision target point, producing a near rear-end interaction compared with the safe headway observed in the original trajectory. Case 2 and Case 3. The remaining cases illustrate cut-in and lane-drift behaviors: vehicle 4 performs a rapid lane change under short headway, and oncoming vehicle 84 crosses the lane toward the ego vehicle. These examples show that the LLM agents can identify risky participants and generate behavior-consistent trajectories for subsequent simulation in CARLA. Figure 9: Final Gaussian renderings of the three synthesized corner cases. Left: raw input frames. Right: edited renderings after LLM-driven reasoning and CARLA-based physical simulation. For one case, we show both the vanilla version and the result after replacing the vehicle with a 3D asset reconstructed by SAM-3D. The results demonstrate that the proposed pipeline can generate realistic and semantically consistent corner-case scenarios, while model replacement further improves the geometric and visual consistency of the rendered vehicles. CARLA Simulation. We feed the LLM-generated reference waypoints into CARLA and enforce physically plausible vehicle motion using a PID controller. Specifically, we implement a frame-by-frame tracking controller that drives the selected vehicle to follow the reference trajectory. Fig. 7 illustrates this process. The left plot shows PID tracking performance, while the right panel presents the corresponding CARLA snapshots. The results demonstrate that CARLA can reproduce the LLM-generated trajectory while providing physically realistic motion through its physics engine. Due to the inherent limitations of PID control, a small tracking gap exists between the executed and reference trajectories. This discrepancy does not affect the validity of the simulation, since the goal of our framework is to synthesize previously unseen corner cases from real-world data. To further reduce tracking error, PID tracking is initialized from frame 0 rather than the LLM input start frame, allowing the controller to stabilize before the corner-case generation interval. Sim-to-Real: From CARLA to Gaussian Splatting. After obtaining the simulated trajectories and poses from CARLA, we re-project them into the Gaussian representation. Owing to the independent vehicle modeling, the simulated states can be seamlessly injected by replacing the selected vehicle’s data. Fig. 9 shows the final Gaussian renderings for all three cases, demonstrating faithful alignment with both the LLM reasoning outcomes and the CARLA-based physically consistent motions, resulting in high-fidelity and semantically consistent corner-case scenarios. The replacement of vehicles with SAM-3D reconstructed models further improves the geometric and visual consistency of the rendered vehicles.\n\n## V Computational Cost Analysis\nThe CARLA-GS pipeline consists of several stages. To evaluate its practical feasibility, we summarize the computational cost of each component here. Prior information, such as depth, normal, and mask maps, is prepared in advance and excluded from the online deployment time. The main bottleneck is 3DGS reconstruction, which takes about 2 hours for a 100-frame, 3-camera scene on a single RTX 4090 GPU. LLM calls require about 40–50 seconds for scene reasoning and 10 seconds for trajectory generation. CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS safer and more time-efficient than real-world data collection.\n\n## VI CONCLUSIONS\nThis paper presented CARLA-GS, a modular framework for safety-critical corner-case synthesis that tightly integrates Gaussian-based visual reconstruction, LLM-driven semantic reasoning, and physics-consistent execution in CARLA. By explicitly decoupling representation, reasoning, and dynamics while preserving cross-module consistency, the proposed pipeline enables controllable and physically valid generation of rare but safety-critical traffic interactions from real-world data. Experiments on the Waymo Open Dataset demonstrate that CARLA-GS can reliably synthesize diverse corner cases, while maintaining photorealistic rendering quality and kinematic feasibility. The results highlight the effectiveness of leveraging complementary strengths of neural rendering, large language models, and mature vehicle simulators within a unified framework. Future work will explore stronger view-consistency constraints under sparse camera settings, closed-loop verification of LLM reasoning, large-scale automatic mining of high-risk scenarios from long-horizon traffic data, and evaluation on downstream tasks.",
+  "quality": {
+    "grade": "high",
+    "text_chars": 28648,
+    "structure": "latexml"
+  },
+  "extraction_method": "html-latexml",
+  "source_format": "html",
+  "evidence_eligible": true,
+  "needs_visual_validation": false,
+  "selected_passages": [
+    {
+      "section_index": 12,
+      "path": "V Computational Cost Analysis",
+      "score": 13.958,
+      "hits": 10,
+      "matched_terms": [
+        "3D",
+        "collection",
+        "generation",
+        "map",
+        "simulation"
+      ],
+      "text": "The CARLA-GS pipeline consists of several stages. To evaluate its practical feasibility, we summarize the computational cost of each component here. Prior information, such as depth, normal, and mask maps, is prepared in advance and excluded from the online deployment time. The main bottleneck is 3DGS reconstruction, which takes about 2 hours for a 100-frame, 3-camera scene on a single RTX 4090 GPU. LLM calls require about 40–50 seconds for scene reasoning and 10 seconds for trajectory generation. CARLA simulation time depends on the synthesized trajectory length and vehicle kinematic settings, but a single PID-controlled rollout usually takes less than 60 seconds. Backprojection and SAM-3D replacement are excluded since 3DGS rendering is fast and the 3D asset library is pre-built. Overall, 3DGS training dominates the cost but can be accelerated by recent fast 3DGS pipelines. Other stages are lightweight, and multiple corner cases can be synthesized per scene, making CARLA-GS safer and more time-efficient than real-world data collection."
+    },
+    {
+      "section_index": 1,
+      "path": "I INTRODUCTION",
+      "score": 12.26,
+      "hits": 18,
+      "matched_terms": [
+        "3D",
+        "4D",
+        "generation",
+        "limitation",
+        "occlusion",
+        "simulation"
+      ],
+      "text": "Autonomous driving (AD) operates in open-world traffic where safety evaluation is inherently a rare-event problem, known as the Curse of Rarity [ 15 ] . This motivates simulation pipelines that intentionally expose corner cases. Meanwhile, camera-centric AD systems require simulators to provide not only trajectory rollouts but also photorealistic observations for reliable closed-loop evaluation [ 23 ] . This requirement has renewed interest in scalable driving-scene reconstruction for safety-oriented simulation. NeRF-based methods achieve high-fidelity view synthesis but remain expensive for large-scale optimization and rendering [ 7 ] , while diffusion-based world models provide strong generative diversity yet still struggle with physical plausibility and multi-view consistency under real-time constraints [ 25 , 20 ] . In contrast, 3D/4D Gaussian Splatting (GS) [ 11 , 28 ] enables real-time differentiable rendering with explicit scene primitives, making it attractive for urban driving simulation [ 34 , 32 , 31 ] . However, vanilla 3DGS is designed for photometric reconstruction, lacking instance-level control over traffic participants and remaining sensitive to reconstruction artifacts that may affect occlusion or collision outcomes [ 8 , 2 ] . Moreover, corner-case generation is not purely a visual problem. It requires semantic reasoning over agent intent, interaction context, and future motion evolution. Prior work synthesizes corner cases through data-driven, knowledge-based, or learning-based pipelines [ 33 , 5 , 16 ] . However, these approaches often lack semantic scene understanding and high-level decision reasoning for identifying plausible risky interactions, limiting their flexibility in generating targeted behaviors. Inspired by [ 17 ] , we adopt LLM-based reasoning as a semantic planning module for corner-case synthesis. LLMs provide macro-level scene understanding and prompt-driven behavioral control, enabling intent-level risk specification while automatically selecting interacting agents from the scene. After scene-level analysis, the next step is to generate vehicle trajectories and execute them under realistic kinematic and dynamic constraints. While LLMs are effective for high-level trajectory planning, they are not well suited to produce dynamically feasible control signals or guarantee collision-valid outcomes. Embedding physics directly into 3DGS is also challenging, as Gaussian primitives are unstructured and lack the rigid topology required by conventional dynamics solvers. Although recent works augment Gaussians with physical attributes [ 29 , 9 , 10 ] or reconstruct simulation scenes via meshes [ 30 , 35 ] , faithful vehicle dynamics simulation remains limited. This motivates a modular design that delegates physics-consistent motion to dedicated simulators such as CARLA [ 4 ] . To overcome the above limitations, we propose CARLA-GS , a modular pipeline for safety-critical corner-case synthesis. The key idea is to decouple visual representation, semantic reasoning, and physics-based simulation while preserving cross-module consistency. Specifically, we adopt Street Gaussians [ 32 ] as the backbone, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing. We further introduce geometry-consistent constraints to improve structural coherence of the reconstructed scene. In parallel, a multi-agent LLM performs semantic scene analysis to identify the collision zone around the ego vehicle and select a target adversarial vehicle, and then generates an intent-level corner-case trajectory in waypoint form. The resulting trajectories are then executed in CARLA, where a PID controller enforces kinematic and dynamic feasibility. Finally, the simulated vehicle states are re-injected into the geometry-consistent 3DGS scene, refined with a 3D foundation model, to render ego-centric photorealistic observations. The overall framework is shown in Fig. 1 . This design leverages the complementary strengths of each module: Gaussian Splatting provides spatiotemporal consistency and high-fidelity visual representation, LLMs enable high-level semantic reasoning and flexible control, and CARLA ensures reliable vehicle physics, resulting in a controllable and scalable framework for corner-case generation. Our main contributions are summarized as follows: • We present CARLA-GS, a modular framework for driving corner-case synthesis that decouples visual representation, semantic reasoning, and physics simulation, enabling spatiotemporally consistent video generation. • We design a multi-agent LLM reasoning module for semantic scene understanding and intent-level trajectory planning, enabling automatic discovery of risky interactions and flexible prompt-driven adversarial control. • We develop a plug-and-play CARLA-Gaussian integration through state re-projection, allowing physically simulated vehicle motions to be reflected in photorealistic renderings."
+    },
+    {
+      "section_index": 3,
+      "path": "II RELATED WORK > II-A Autonomous Driving Scene Reconstruction and Corner-Case Generation",
+      "score": 10.799,
+      "hits": 10,
+      "matched_terms": [
+        "3D",
+        "dataset",
+        "generation",
+        "limitation",
+        "simulation"
+      ],
+      "text": "A practical autonomous driving simulator should provide realistic perception inputs and support spatio-temporal reasoning [ 6 ] . Neural scene representations enable photorealistic rendering from captured data, where NeRF models scenes as implicit radiance fields [ 18 , 7 ] and can be enhanced with structured depth or scene priors for improved novel-view synthesis [ 13 , 27 , 14 ] . Recently, diffusion-based world models have also been explored for scalable and controllable driving-scene generation [ 25 , 20 ] . However, NeRF-based pipelines are often computationally expensive for large-scale simulation, while diffusion models may hallucinate structures and struggle to maintain strict geometric consistency and deterministic control. More recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient alternative by representing scenes with explicit Gaussian primitives and enabling high-throughput rendering [ 36 ] . It has been extended to driving-scene synthesis, editing, dynamic modeling, real-time SLAM, and model alignment [ 34 , 19 , 31 , 12 , 28 , 1 ] . Nevertheless, for safety-oriented corner-case synthesis, vanilla 3DGS remains insufficient because it lacks guarantees on geometric stability, actionable semantics, and physically consistent interactions [ 8 , 2 ] . Corner cases expose safety-critical behaviors that rarely appear in naturalistic driving data. Existing generation methods can be broadly divided into data-driven, knowledge-based, and LLM-based approaches. Data-driven methods synthesize realistic safety-critical scenarios from large-scale driving datasets [ 24 , 22 , 33 ] , but often lack explicit control over failure modes and interaction intent. Knowledge-based methods transform common scenarios into corner cases using structured representations such as scene graphs [ 5 ] , while their diversity and realism are limited by the coverage and correctness of symbolic rules. Recent LLM-based methods introduce high-level reasoning and multimodal understanding for generating risky scenarios or adversarial behaviors [ 16 , 17 ] . However, translating semantic intent into dynamically feasible vehicle behaviors remains challenging. Our work addresses these limitations by grounding LLM-driven reasoning in CARLA’s physics-executable backend and integrating 3DGS-based visual reconstruction into a modular yet integrated pipeline for controllable and scalable corner-case generation."
+    },
+    {
+      "section_index": 11,
+      "path": "IV EXPERIMENTS > IV-C Qualitative Results",
+      "score": 8.93,
+      "hits": 14,
+      "matched_terms": [
+        "3D",
+        "generation",
+        "limitation",
+        "simulation"
+      ],
+      "text": "Reconstruction Evaluation. Fig. 5 shows that the geometric consistency constraint produces smoother surfaces and normals closer to the ground truth. Table I further reports PSNR, SSIM, LPIPS, Normal L1 MAE, and Normal Cos MAE under different constraints. Compared with the baseline, the proposed constraints substantially reduce normal errors while causing only negligible changes in rendering quality, demonstrating improved geometric consistency without sacrificing photometric fidelity. Figure 6: Visualization of LLM-driven corner-case trajectory generation. Left: historical and predicted trajectories of the ego vehicle and the selected vehicle. Green and light-green points denote the ego vehicle’s past and future trajectories, while blue and color-gradient points denote the selected vehicle’s past and LLM-generated future trajectories. The green cross indicates the collision target point. Right: corresponding 3D scene snapshots over time, where the red box highlights the selected vehicle. The generated trajectories exhibit representative corner-case behaviors (sudden brake, cut-in, and lane drift), providing reference motion cues for downstream CARLA-based kinematic simulation. Figure 7: CARLA-based realization of LLM-generated trajectories. Left: PID tracking performance along x (front) and y (left). Right: CARLA simulation. The ego trajectory is shown in green, and the selected vehicle follows the red reference points under continuous PID control. LLM Corner Case Generation. Figure 8: Behavior risk analysis results produced by the LLM agent. Given the starting analysis frame and scene context, the Agent Zone outputs the target vehicle, collision zone, risk level, and TTC. We manually define three corner-case types, sudden brake, cut-in, and lane drift, and provide them to the LLM to analyze the scene and generate reference trajectories. Fig. 8 shows the outputs of Agent Zone , while Fig. 6 visualizes the past and predicted trajectories of the ego vehicle and the selected vehicle produced by Agent Trajectory . Case 1. Starting from frame 60, Agent Zone identifies vehicle 6 ahead of the ego vehicle, selects the collision zone as “front”, and estimates TTC as 1.0 s. Agent Trajectory then generates a braking trajectory toward the collision target point, producing a near rear-end interaction compared with the safe headway observed in the original trajectory. Case 2 and Case 3. The remaining cases illustrate cut-in and lane-drift behaviors: vehicle 4 performs a rapid lane change under short headway, and oncoming vehicle 84 crosses the lane toward the ego vehicle. These examples show that the LLM agents can identify risky participants and generate behavior-consistent trajectories for subsequent simulation in CARLA. Figure 9: Final Gaussian renderings of the three synthesized corner cases. Left: raw input frames. Right: edited renderings after LLM-driven reasoning and CARLA-based physical simulation. For one case, we show both the vanilla version and the result after replacing the vehicle with a 3D asset reconstructed by SAM-3D. The results demonstrate that the proposed pipeline can generate realistic and semantically consistent corner-case scenarios, while model replacement further improves the geometric and visual consistency of the rendered vehicles. CARLA Simulation. We feed the LLM-generated reference waypoints into CARLA and enforce physically plausible vehicle motion using a PID controller. Specifically, we implement a frame-by-frame tracking controller that drives the selected vehicle to follow the reference trajectory. Fig. 7 illustrates this process. The left plot shows PID tracking performance, while the right panel presents the corresponding CARLA snapshots. The results demonstrate that CARLA can reproduce the LLM-generated trajectory while providing physically realistic motion through its physics engine. Due to the inherent limitations of PID control, a small tracking gap exists between the executed and reference trajectories. This discrepancy does not affect the validity of the simulation, since the goal of our framework is to synthesize previously unseen corner cases from real-world data. To further reduce tracking error, PID tracking is initialized from frame 0 rather than the LLM input start frame, allowing the controller to stabilize before the corner-case generation interval. Sim-to-Real: From CARLA to Gaussian Splatting. After obtaining the simulated trajectories and poses from CARLA, we re-project them into the Gaussian representation. Owing to the independent vehicle modeling, the simulated states can be seamlessly injected by replacing the selected vehicle’s data. Fig. 9 shows the final Gaussian renderings for all three cases, demonstrating faithful alignment with both the LLM reasoning outcomes and the CARLA-based physically consistent motions, resulting in high-fidelity and semantically consistent corner-case scenarios. The replacement of vehicles with SAM-3D reconstructed models further improves the geometric and visual consistency of the rendered vehicles."
+    },
+    {
+      "section_index": 6,
+      "path": "III METHODOLOGY > III-B LLM-Driven Corner Case Analysis and Synthesis",
+      "score": 7.562,
+      "hits": 10,
+      "matched_terms": [
+        "generation",
+        "simulation",
+        "spatial"
+      ],
+      "text": "To automatically construct safety-critical scenarios beyond simple trajectory perturbation, we develop a multi-agent LLM-driven corner case generation framework (as shown in Fig. 3 ) that explicitly targets collision-prone regions around the ego vehicle, enabling more controllable and spatially grounded safety-critical scenario synthesis. Given multi-vehicle tracking data and ego poses, we follow a chain-of-thought prompting paradigm [ 26 ] and design a pipeline consisting of the following stages: Collision Zone Modeling. We first define four rectangular collision zones tightly surrounding the ego vehicle in the ego-centric coordinate frame: (3) Each zone is parameterized by spatial bounds determined by the ego vehicle length and width . These zones serve as explicit spatial targets for risk maximization and provide structured guidance to the language model. Risk Analysis and Collision Zone Selection. Given a user-specified dangerous behavior selected from a predefined behavior library, we employ a language model to perform scene-aware reasoning and identify both the most plausible adversarial vehicle and the most threatening collision region. Let the ego vehicle be located at the origin of the ego-centric coordinate frame, and let denote the set of observed background vehicles in the scene. For each vehicle , we construct its recent motion state (4) where denotes the position in the ego-centric frame, is the speed, and is the heading over the past frames. The ego vehicle state is constructed in the same form and denoted by . The LLM agent then performs behavior-conditioned risk reasoning over all candidate vehicles. Formally, the decision process can be written as (5) where is the selected adversarial vehicle, is the predicted target collision zone chosen from the predefined zone set around the ego vehicle, denotes the estimated time-to-collision in seconds assuming the dangerous behavior occurs, and represents the risk level. In addition, the behavior can be either user-specified or automatically inferred by the LLM agent. Conditioning on a given behavior hypothesis narrows the reasoning space and improves generation controllability. Figure 3: Overview of the LLM-driven corner-case generation pipeline. The system models ego-centric collision zones, performs risk analysis to select an adversarial vehicle and target zone, and synthesizes a waypoint-based collision-oriented trajectory that is later executed by CARLA for physically feasible simulation. Collision-Oriented Trajectory Synthesis. Conditioned on the selected adversarial vehicle and target zone , we generate a reference trajectory using the LLM. Instead of predicting dynamically feasible control signals, which lies outside the core competency of language models, we delegate low-level feasibility to a downstream controller and allow the LLM to focus on high-level waypoint generation. Let denote the current position of vehicle in the ego-centric frame, and let and denote the historical trajectory of the adversarial vehicle and the predicted future ego trajectory, respectively. A collision target point is sampled within the selected zone . The waypoint generation process is formulated as (6) where (7) is the generated time-stamped waypoint sequence over the prediction horizon. The final waypoint is constrained to coincide with the sampled collision target. The resulting waypoint sequence can be directly interfaced with CARLA for vehicle kinematic simulation."
+    },
+    {
+      "section_index": 7,
+      "path": "III METHODOLOGY > III-C Real-Sim-Real: Bridging CARLA and Gaussian Splatting",
+      "score": 7.319,
+      "hits": 9,
+      "matched_terms": [
+        "3D",
+        "map",
+        "simulation"
+      ],
+      "text": "To obtain physically consistent corner-case visualizations, we adopt a Real-Sim-Real pipeline that bridges the LLM-generated trajectory, CARLA vehicle dynamics, and Gaussian-based rendering. CARLA-based Kinematic Simulation. Given the LLM-generated waypoint sequence from the last step, we first import the trajectory into CARLA as a reference path. Then we design a PID controller that tracks the reference waypoints in continuous time for the selected vehicle . Specifically, the control command at time is computed as (8) where and denote the current and reference vehicle poses, respectively. The simulator then evolves the vehicle state according to its internal kinematic model (9) producing a physically feasible trajectory (10) This step ensures dynamic realism and smooth vehicle motion. In practice, we employ the built-in VehiclePIDController to track the reference path. Back-Projection to Gaussian Space. After simulation, the CARLA-generated trajectory is mapped back to the Gaussian scene representation. For each timestamp, we update the pose of the corresponding Gaussian actor using the simulated position and heading . The modified Gaussian scene is finally rendered using the differentiable Gaussian renderer. Figure 4: Vehicle replacement pipeline. We first select frames where the target vehicle is close to the camera, and reconstruct a 3D Gaussian model using SAM 3D. The reconstructed asset is aligned with the original vehicle geometry and replaces it. TABLE I: Ablation study on rendering quality and geometry consistency. Components PSNR SSIM LPIPS Normal L1 MAE Normal Cos MAE Baseline 29.703 0.907 0.219 0.682 0.984 + 29.828 0.908 0.215 0.677 0.957 + 29.521 0.906 0.217 0.361 0.482 + 29.027 0.900 0.223 0.350 0.480 Figure 5: Surface normal renderings. Our geometry-consistency constraints produce finer surface details and fewer artifacts than the baseline. Vehicle Replacement with 3D Foundation Models. Since the Gaussian model is trained from limited camera views, rendering unseen viewpoints may introduce tearing artifacts, especially for near-field vehicles with insufficient observations (see Fig. 9 ). To mitigate this, we replace such vehicles with high-quality assets reconstructed by SAM-3D [ 3 ] , as shown in Fig. 4 . Specifically, we use SAM-3D [ 3 ] to reconstruct a 3D Gaussian representation from close-range frames containing the target vehicle. To align the reconstructed asset with the original object, we denote the original and replacement point sets as and . Both point clouds are first centered. Their yaw orientations and are estimated from the minimum-area bounding boxes of their XY projections, producing a relative yaw difference . To account for symmetry ambiguity, we evaluate a small set of candidate rotations . The object scale is matched by comparing the bounding-box extents and and computing the scale factor . The final alignment is selected by minimizing (11) where is the transformed replacement point set and denotes the bidirectional nearest-neighbor distance between the two point clouds. This procedure enables the reconstructed vehicle to replace the original object while preserving geometric consistency and visual realism."
+    },
+    {
+      "section_index": 9,
+      "path": "IV EXPERIMENTS > IV-A Experimental Setup",
+      "score": 7.268,
+      "hits": 4,
+      "matched_terms": [
+        "dataset",
+        "generation",
+        "simulation"
+      ],
+      "text": "We adopt Street Gaussians [ 32 ] as our baseline, whose object-background modeling strategy provides a strong foundation for instance-level vehicle editing in our setting. We conduct experiments on the Waymo Open Dataset [ 21 ] , selecting 8 sequences to synthesize 85 corner-case scenarios. For Gaussian training, we follow the training protocol of [ 32 ] for most settings, with a total of 50,000 iterations. To reduce training time, we only use three cameras, [front, front left, front right], and incorporate the three proposed geometric consistency loss terms, each weighted by 0.1. For LLM-based corner-case reference trajectory generation, we use the ChatGPT-5.2 API. Both Gaussian rendering and LLM trajectory planning are executed at 24 FPS. For vehicle physical simulation, we use CARLA 0.9.16, with the longitudinal and lateral PID gains set to , , , and a simulation step size of ."
+    },
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 6.011,
+      "hits": 6,
+      "matched_terms": [
+        "dataset",
+        "generation"
+      ],
+      "text": "Abstract Safety evaluation for autonomous driving is dominated by rare, safety-critical interactions, motivating simulators that can deliberately synthesize corner cases with photorealistic observations. Corner-case generation is inherently a multi-source problem spanning visual representation, scene reasoning, and vehicle trajectory generation and control. Prior knowledge- and model-based approaches typically focus on scene or trajectory components in isolation, while diffusion-based methods attempt end-to-end generation but still struggle to ensure spatiotemporal consistency and physical realism. To unify these aspects within a single framework, we propose CARLA-GS, a modular corner-case synthesis pipeline that decouples visual representation, semantic reasoning, and physics-based execution while maintaining tight cross-module coupling. Starting from real driving data, we reconstruct an editable gaussian scene with additional geometry-consistent constraints. A multi-agent LLM then performs scene-level reasoning to identify risky interactions and generate intent-level waypoint trajectories, while the low-level motion control is delegated to CARLA, where a PID controller ensures kinematic and dynamic feasibility. The simulated vehicle states are finally re-projected into the gaussian scene for ego-centric rendering. This design enables high-level semantic reasoning, low-level physically executable motion, and photorealistic corner-case generation within a unified pipeline. Experiments on the Waymo Open Dataset show, both quantitatively and qualitatively, that our framework enables controllable corner-case generation and produces photorealistic, spatiotemporally consistent videos aligned with semantic intent and physically feasible motion."
+    },
+    {
+      "section_index": 5,
+      "path": "III METHODOLOGY > III-A Geometry-Consistent Driving Scenario Reconstruction",
+      "score": 4.496,
+      "hits": 4,
+      "matched_terms": [
+        "3D",
+        "map"
+      ],
+      "text": "Due to the limited viewpoints of onboard driving cameras (typically 3-6 poses), vanilla 3DGS often produces geometrically inconsistent and bumpy surfaces [ 30 , 21 ] . We therefore introduce geometry-consistent regularization to enforce surface continuity and smoothness. Flattening Constraints. Following prior 2DGS and surface reconstruction works [ 8 , 2 , 35 ] , we introduce a flattening regularization by constraining the anisotropic scaling of each Gaussian. The covariance of the -th Gaussian is parameterized by a diagonal scaling matrix , where denote the principal-axis scales and is the total number of Gaussians. The flattening loss is defined as (1) which encourages each Gaussian to collapse along its least significant axis and thus promotes locally smooth surface structures. Figure 2: Construction of the supervision mask for geometry-consistent reconstruction. The raw image is processed by a depth foundation model to produce a reference depth map, from which a normal map is computed. The RANSAC-derived ground mask is fused with the preprocessed object mask to obtain the final supervision mask. Normal and Geometry Constraints. To stabilize optimization in physically meaningful regions, we construct a supervision mask by combining foreground objects and planar ground regions. Detailed construction is illustrated in Fig. 2 . Given the rendered normals and the depth-derived reference normals , the normal constraint is defined via an angular loss (2) where denotes the normal at pixel , and represents the cosine similarity. This term enforces orientation consistency between rendered and geometry-induced normals. To further encourage local surface coherence, we introduce a geometry consistency loss inspired by [ 30 ] . Let be the rendered depth map. We compute its Sobel gradient magnitude and normalize it to obtain a smoothness weight . We then compare each predicted normal with the locally averaged normal obtained via a mean filter: By restricting supervision to mask and jointly enforcing normal alignment and local geometric smoothness, the proposed constraints significantly improve surface quality on vehicles and road regions."
+    },
+    {
+      "section_index": 13,
+      "path": "VI CONCLUSIONS",
+      "score": 4.134,
+      "hits": 2,
+      "matched_terms": [
+        "dataset",
+        "generation"
+      ],
+      "text": "This paper presented CARLA-GS, a modular framework for safety-critical corner-case synthesis that tightly integrates Gaussian-based visual reconstruction, LLM-driven semantic reasoning, and physics-consistent execution in CARLA. By explicitly decoupling representation, reasoning, and dynamics while preserving cross-module consistency, the proposed pipeline enables controllable and physically valid generation of rare but safety-critical traffic interactions from real-world data. Experiments on the Waymo Open Dataset demonstrate that CARLA-GS can reliably synthesize diverse corner cases, while maintaining photorealistic rendering quality and kinematic feasibility. The results highlight the effectiveness of leveraging complementary strengths of neural rendering, large language models, and mature vehicle simulators within a unified framework. Future work will explore stronger view-consistency constraints under sparse camera settings, closed-loop verification of LLM reasoning, large-scale automatic mining of high-risk scenarios from long-horizon traffic data, and evaluation on downstream tasks."
+    }
+  ],
+  "attempts": [
+    {
+      "method": "html-latexml",
+      "available": true,
+      "quality": "high"
+    }
+  ],
+  "fallback_reason": ""
+}

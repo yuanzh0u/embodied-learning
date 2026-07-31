@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.11291",
+    "title": "H-WM: Robotic Task and Motion Planning Guided by Hierarchical World Model",
+    "published": "2026-02-11T19:08:36Z",
+    "url": "https://arxiv.org/abs/2602.11291",
+    "authors": ["Jinbang Huang", "Wenyuan Chen", "Zhiyuan Li", "Oscar Pang", "Xiao Hu", "Lingfeng Zhang", "Yuanzhao Hu", "Zhanguang Zhang", "Mark Coates", "Tongtong Cao", "Xingyue Quan", "Yingxue Zhang"]
+  },
+  "review": {
+    "question": "近半年 VLA 在具身领域最大的技术突破是什么；与反应式 VLA 相比，哪些机制带来可验证的闭环增益，边界是什么？",
+    "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-4D", "EA-ALIGN"],
+    "mode": "scoping"
+  },
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {"decision": "include", "reason": "直接比较端到端 VLA、语言子任务、逻辑规划和逻辑—视觉分层世界模型在长时程操作中的差异。"},
+    "sections_read": [
+      {"locator": "I Introduction", "role": "problem", "purpose": "确认长时程误差累积、语言歧义和纯视觉生成的边界。"},
+      {"locator": "IV-A to IV-D Methodology", "role": "method-or-design", "purpose": "核对逻辑世界模型、潜在视觉子目标、VLA 交叉注意与子任务完成检测。"},
+      {"locator": "V-A to V-E Experiments and VI Results", "role": "results-or-analysis", "purpose": "核对数据标注、LIBERO-LoHo/RoboCerebra/实机设置、基线和消融。"},
+      {"locator": "VII Conclusion", "role": "conclusion-or-limitations", "purpose": "核对训练复杂度与符号化任务假设。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何同时利用符号逻辑的长时程一致性和视觉潜变量的感知 grounding 来指导 VLA？",
+  "contributions": [
+    "学习逻辑状态/动作转移，用其提供全局子任务序列。",
+    "仅在每个子任务开始预测一次潜在视觉子目标，避免像素级逐步生成的误差累积。",
+    "通过子任务完成检测器在低频世界模型与高频 VLA 控制之间切换。"
+  ],
+  "method": {
+    "summary": "H-WM 用微调 LLM 提案并评分符号逻辑转移，再用条件于逻辑动作/未来逻辑状态的视觉世界模型预测子任务终点潜特征；低层 VLA 用 flow matching 生成 action chunk，完成检测器决定子任务转移。",
+    "assumptions": ["任务可以转成有限逻辑谓词与动作的结构化状态空间。", "逻辑标注、视觉观测和机器人状态能够准确时间对齐。", "子任务完成可被视觉/指令分类器可靠检测。"]
+  },
+  "study_context": {
+    "datasets": ["logically synchronized LIBERO", "RoboCerebra", "40 real-world UR5e trajectories"],
+    "tasks": ["LIBERO-10", "five LIBERO-LoHo tasks with 5-7 steps", "RoboCerebra tasks up to 20 steps", "8-step real-world table cleaning"],
+    "embodiments": ["LIBERO simulated arm", "RoboCerebra platforms", "UR5e with RealSense"],
+    "sample_or_scale": "LIBERO-LoHo reports per-task success and Q-score; real-world validation uses one 8-step task and 40 training trajectories."
+  },
+  "evaluation": {
+    "design": "对比端到端 VLA、LLM-guided、logic-only、像素级 Stable-Diffusion 子目标与默认逻辑+潜在视觉双层引导。",
+    "baselines": ["OpenVLA", "OpenVLA-OFT", "X-VLA", "GR00T-N1.5", "LLM-guided", "Logic-guided", "H-WM-Stable-Diffusion"],
+    "metrics": ["task success rate", "Q-score", "step-wise real-robot success"],
+    "ablations": ["logic-only", "pixel-level image generation versus latent visual feature prediction"]
+  },
+  "findings": [
+    {"finding": "在 LIBERO-LoHo 上，H-WM 平均成功率为 64.8%，logic-only 为 48.4%，像素级视觉子目标版为 54.4%。", "scope": "五个 5-7 步 LIBERO-LoHo 任务。", "locator": "IV-D Table I and VI Results"},
+    {"finding": "在较短的 LIBERO-10 上增益较小，论文将其归因于基础 VLA 已能学到较短流程。", "scope": "LIBERO-10 短时程任务。", "locator": "VI Results, effectiveness and baseline comparison"},
+    {"finding": "潜在视觉子目标优于 Stable-Diffusion 像素级生成引导，整体成功率高超过 10 个百分点。", "scope": "LIBERO-LoHo 方法内部消融。", "locator": "V-E Ablation Studies and VI Results"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "额外模型组件和训练阶段增加了训练成本和系统复杂度。", "locator": "VII Conclusion"},
+      {"limitation": "逻辑世界模型依赖结构化逻辑状态，假设任务可以有意义地符号化。", "locator": "VII Conclusion"}
+    ],
+    "reader_inferred": [
+      {"boundary": "高度非结构化、长尾对象与无法预定谓词的任务上，逻辑层可能变成瓶颈。", "basis": "训练使用预设谓词分类器、人工校正逻辑标注和统一动作/谓词空间。"},
+      {"boundary": "实机结果不足以证明广泛部署可靠性。", "basis": "实机仅一个 UR5e 8 步桌面整理任务，且全部模型只用 40 条手工轨迹训练。"}
+    ]
+  },
+  "transfer_boundary": "证据最适用于可分解、可符号化、子任务边界清晰的长时程操作；对开放世界、连续接触和难以定义逻辑谓词的任务不能直接外推。",
+  "critical_appraisal": {
+    "design_strengths": ["有 logic-only 和 pixel-generation 消融，能分离高层逻辑与视觉 grounding 的增益。", "专门构造 5-7 步 LIBERO-LoHo，并在 RoboCerebra 和实机上补充验证。"],
+    "design_risks": ["LIBERO-LoHo 由作者从已知 benchmark 扩展，存在训练—评测结构近似性。", "逻辑标注管线需预设谓词分类器和人工检查，规模化成本高。", "实机结果主要以步骤成功图呈现，统计细节有限。"],
+    "baseline_fairness": "公开 VLA 基线、LLM-guided 和方法内部消融覆盖较广；但底层 VLA 名称在提取文本中有部分丢失，并且额外标注/计算预算未做统一成本对照。",
+    "metric_validity": "Success Rate 直接度量整任务完成，Q-Score 补充长时程部分进度；但 Q-Score 可能掩盖关键顺序错误和不可逆失败。",
+    "reproducibility": "报告了基础模型、训练步数、数据标注流程与主要模块；但人工标注与实机环境使完整复现成本较高。",
+    "external_validity": "对结构化长时程桌面操作有支持；对动态开放世界、无法符号化任务和强接触场景尚不足。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.11291-C01",
+      "claim": "H-WM 用低频符号逻辑转移维持全局顺序，用潜在视觉子目标把逻辑状态落到感知空间，再由高频 VLA 执行动作 chunk。",
+      "stance": "support",
+      "relation": "支持 VLA 的突破是从单层反应式动作映射转向逻辑—视觉—控制分层。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法定义了逻辑世界模型、视觉世界模型、低层 VLA 和子任务完成检测的两时间尺度接口。",
+      "locator": "IV-C Hierarchical World Model Guidance for VLA",
+      "source_context": "The hierarchical information at multiple abstraction level enables the VLA to maintain consistency with long-horizon task structure while remaining responsive to local visual feedback.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "方法四个子节逐项定义了逻辑规划、潜在视觉子目标、VLA 动作生成与子任务转移，主张未扩展到实验外任务。"}
+    },
+    {
+      "card_id": "2602.11291-C02",
+      "claim": "在五个 5-7 步 LIBERO-LoHo 任务上，双层逻辑+潜在视觉引导比仅逻辑引导高 16.4 个成功率百分点，也高于像素级生成引导。",
+      "stance": "conditional",
+      "relation": "为分层世界模型的长时程增益提供消融证据，但依赖可符号化任务。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "H-WM 为 64.8%，logic-only 为 48.4%，H-WM-Stable-Diffusion 为 54.4%。",
+      "locator": "VI Results",
+      "source_context": "Incorporating visual guidance yields consistent additional gains, providing more than 10% further improvement in Q-score and 17% in success rate.",
+      "evidence_type": "experiment",
+      "quantitative": {"metric": "task success rate", "value_or_direction": "64.8%, +16.4 percentage points over logic-only", "comparator": "Logic-guided 48.4%; pixel-level H-WM-Stable-Diffusion 54.4%", "task_or_sample": "five LIBERO-LoHo tasks with 5-7 steps", "locator": "IV-D Table I and VI Results"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "Table I 给出三个直接可比的平均成功率，并在结果段解释逻辑与潜在视觉层各自的增益；已限定于 LIBERO-LoHo。"}
+    },
+    {
+      "card_id": "2602.11291-C03",
+      "claim": "H-WM 的分层收益以额外训练与系统复杂度、以及任务可被结构化逻辑表示为前提。",
+      "stance": "limit",
+      "relation": "限定‘分层世界模型是通用 VLA 升级’的外推。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论明确列出额外组件/训练阶段的代价，以及对符号化状态的依赖。",
+      "locator": "VII Conclusion",
+      "source_context": "The logical world model depends on structured logical state representations, which assume that the task can be meaningfully formulated in a symbolic logical space.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "结论的限制段直接陈述训练/系统复杂度和结构化逻辑空间假设，主张与原文范围一致。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "使用高质量 arXiv HTML 完整文本，无 OCR。"
+}

@@ -1,0 +1,1448 @@
+{
+  "generated_at": "2026-07-25T06:51:56.744594+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近三年具身机器人原子技能的发展及VLA成为主流的技术原因",
+  "start_date": "2023-07-25",
+  "end_date": "2026-07-25",
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-XEMBODIMENT",
+    "EA-EVAL"
+  ],
+  "families": [
+    "vla"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 40,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 144,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 144,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-atomic-skill-direct",
+        "vla-core",
+        "vla-named-models",
+        "ea-model-named-foundation",
+        "ea-xembodiment-cross-embodiment",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-skill-library",
+        "dynamic-skill-chaining",
+        "dynamic-motor-primitives",
+        "dynamic-hierarchical-policy",
+        "dynamic-task-decomposition",
+        "dynamic-skill-segmentation",
+        "dynamic-continual-skills",
+        "dynamic-skill-evaluation",
+        "dynamic-generalist-specialist",
+        "dynamic-vla-atomic-hybrid",
+        "calibrated-skill-guided-mixture-of-experts",
+        "calibrated-continual-skill-acquisition",
+        "calibrated-semantically-grounded-atomic-skill-library",
+        "calibration-atomicvla-moe",
+        "calibration-semantic-atomic",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action",
+        "vla-finetuning-policy",
+        "vla-data-mixture",
+        "ea-model-finetuning",
+        "ea-xembodiment-retargeting-dexterous",
+        "ea-xembodiment-human-to-robot",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model",
+        "ea-eval-sim-real-correlation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-skill-interface-limit",
+        "vla-negative-transfer"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "ea-model-action-tokenization",
+        "ea-xembodiment-action-representation"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): ‘原子技能’在论文中并非统一标签，需同时覆盖 atomic skill、skill primitive、motor primitive、skill library、skill chaining、hierarchical policy、option/behavior tree 以及长时程任务分解。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-atomic-skill-direct",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"atomic skill\" OR all:\"atomic skills\") AND (all:robot OR all:robotic)",
+      "why": "直接覆盖近年以 atomic skill 命名的机器人方法。"
+    },
+    {
+      "label": "dynamic-skill-library",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"skill library\" AND (all:\"robot manipulation\" OR all:\"embodied control\")",
+      "why": "覆盖可复用技能库的构建、检索、扩展与组合。"
+    },
+    {
+      "label": "dynamic-skill-chaining",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"skill chaining\" OR all:\"skill composition\") AND all:robot",
+      "why": "原子技能的技术价值取决于长时程组合与子任务依赖。"
+    },
+    {
+      "label": "dynamic-motor-primitives",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"motor primitive\" OR all:\"behavior primitive\" OR all:\"action primitive\") AND (all:manipulation OR all:robot)",
+      "why": "覆盖不使用 atomic skill 命名的相邻技术谱系。"
+    },
+    {
+      "label": "dynamic-hierarchical-policy",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"hierarchical policy\" AND (all:\"robot manipulation\" OR all:\"long-horizon manipulation\")",
+      "why": "覆盖高层技能选择与低层连续控制的分层方法。"
+    },
+    {
+      "label": "dynamic-task-decomposition",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"task decomposition\" OR all:\"subtask decomposition\") AND (all:robot OR all:embodied) AND all:manipulation",
+      "why": "覆盖用语言模型或规划器将长任务拆成技能的路线。"
+    },
+    {
+      "label": "dynamic-skill-segmentation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"skill segmentation\" OR all:\"skill discovery\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖从演示中自动发现技能边界和潜变量的方法。"
+    },
+    {
+      "label": "dynamic-continual-skills",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"continual skill learning\" OR all:\"lifelong robot learning\") AND (all:manipulation OR all:control)",
+      "why": "检验技能库在持续扩展、遗忘与新技能接入上的优势和成本。"
+    },
+    {
+      "label": "dynamic-skill-interface-limit",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"skill library\" OR all:\"skill primitive\") AND (all:limitation OR all:failure OR all:scalability) AND all:robot",
+      "why": "寻找固定技能语义、接口脆弱、组合误差和扩展成本等反方证据。"
+    },
+    {
+      "label": "dynamic-skill-evaluation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"skill composition\" OR all:\"hierarchical manipulation\") AND (all:benchmark OR all:evaluation OR all:\"real robot\")",
+      "why": "寻找对长时程组合、真机闭环和失败恢复的评测证据。"
+    },
+    {
+      "label": "dynamic-generalist-specialist",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:generalist AND all:specialist) AND (all:\"robot policy\" OR all:\"robot manipulation\")",
+      "why": "对照统一通才模型与专用技能专家的取舍。"
+    },
+    {
+      "label": "dynamic-vla-atomic-hybrid",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:\"atomic skill\" OR all:\"skill library\" OR all:\"mixture of experts\")",
+      "why": "直接寻找 VLA 与技能库、专家路由结合的融合路线。"
+    },
+    {
+      "label": "browser-atomic-skills",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs robot atomic skill library manipulation",
+      "why": "补充 arXiv API 对新命名和短语的召回。"
+    },
+    {
+      "label": "browser-composable-skills",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs robot composable skills skill chaining long-horizon manipulation",
+      "why": "补充组合技能和长时程语彙。"
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): AtomicVLA 将 atomic skill library、skill-guided mixture-of-experts、continual skill acquisition 和 long-horizon planning 绑定在同一语汇中。",
+    "arxiv calibration (high): 论文使用 atomic skill library construction、dynamic update 与 VLA fine-tuning 词汇。",
+    "arxiv calibration (high): LRLL 使用 composable and generalizable skills、skill abstractor 与 lifelong robot library learning 词汇。"
+  ],
+  "queries": [
+    {
+      "label": "dynamic-atomic-skill-direct",
+      "tier": "core",
+      "query": "(all:\"atomic skill\" OR all:\"atomic skills\") AND (all:robot OR all:robotic)",
+      "why": "直接覆盖近年以 atomic skill 命名的机器人方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-atomic-skill-direct"
+      ]
+    },
+    {
+      "label": "dynamic-skill-library",
+      "tier": "mechanism",
+      "query": "all:\"skill library\" AND (all:\"robot manipulation\" OR all:\"embodied control\")",
+      "why": "覆盖可复用技能库的构建、检索、扩展与组合。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-library"
+      ]
+    },
+    {
+      "label": "dynamic-skill-chaining",
+      "tier": "mechanism",
+      "query": "(all:\"skill chaining\" OR all:\"skill composition\") AND all:robot",
+      "why": "原子技能的技术价值取决于长时程组合与子任务依赖。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-chaining"
+      ]
+    },
+    {
+      "label": "dynamic-motor-primitives",
+      "tier": "adjacent",
+      "query": "(all:\"motor primitive\" OR all:\"behavior primitive\" OR all:\"action primitive\") AND (all:manipulation OR all:robot)",
+      "why": "覆盖不使用 atomic skill 命名的相邻技术谱系。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-motor-primitives"
+      ]
+    },
+    {
+      "label": "dynamic-hierarchical-policy",
+      "tier": "mechanism",
+      "query": "all:\"hierarchical policy\" AND (all:\"robot manipulation\" OR all:\"long-horizon manipulation\")",
+      "why": "覆盖高层技能选择与低层连续控制的分层方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hierarchical-policy"
+      ]
+    },
+    {
+      "label": "dynamic-task-decomposition",
+      "tier": "mechanism",
+      "query": "(all:\"task decomposition\" OR all:\"subtask decomposition\") AND (all:robot OR all:embodied) AND all:manipulation",
+      "why": "覆盖用语言模型或规划器将长任务拆成技能的路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-task-decomposition"
+      ]
+    },
+    {
+      "label": "dynamic-skill-segmentation",
+      "tier": "mechanism",
+      "query": "(all:\"skill segmentation\" OR all:\"skill discovery\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖从演示中自动发现技能边界和潜变量的方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-segmentation"
+      ]
+    },
+    {
+      "label": "dynamic-continual-skills",
+      "tier": "deployment",
+      "query": "(all:\"continual skill learning\" OR all:\"lifelong robot learning\") AND (all:manipulation OR all:control)",
+      "why": "检验技能库在持续扩展、遗忘与新技能接入上的优势和成本。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-continual-skills"
+      ]
+    },
+    {
+      "label": "dynamic-skill-interface-limit",
+      "tier": "limitation",
+      "query": "(all:\"skill library\" OR all:\"skill primitive\") AND (all:limitation OR all:failure OR all:scalability) AND all:robot",
+      "why": "寻找固定技能语义、接口脆弱、组合误差和扩展成本等反方证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-interface-limit"
+      ]
+    },
+    {
+      "label": "dynamic-skill-evaluation",
+      "tier": "evaluation",
+      "query": "(all:\"skill composition\" OR all:\"hierarchical manipulation\") AND (all:benchmark OR all:evaluation OR all:\"real robot\")",
+      "why": "寻找对长时程组合、真机闭环和失败恢复的评测证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-evaluation"
+      ]
+    },
+    {
+      "label": "dynamic-generalist-specialist",
+      "tier": "adjacent",
+      "query": "(all:generalist AND all:specialist) AND (all:\"robot policy\" OR all:\"robot manipulation\")",
+      "why": "对照统一通才模型与专用技能专家的取舍。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-generalist-specialist"
+      ]
+    },
+    {
+      "label": "dynamic-vla-atomic-hybrid",
+      "tier": "adjacent",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:\"atomic skill\" OR all:\"skill library\" OR all:\"mixture of experts\")",
+      "why": "直接寻找 VLA 与技能库、专家路由结合的融合路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-atomic-hybrid"
+      ]
+    },
+    {
+      "label": "calibrated-skill-guided-mixture-of-experts",
+      "tier": "calibrated-term",
+      "query": "all:\"skill-guided mixture-of-experts\"",
+      "why": "新近原子技能工作将技能专家路由与 VLA 联系起来。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-skill-guided-mixture-of-experts"
+      ]
+    },
+    {
+      "label": "calibrated-continual-skill-acquisition",
+      "tier": "calibrated-term",
+      "query": "all:\"continual skill acquisition\"",
+      "why": "技能库路线的一个主要差异化目标。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-continual-skill-acquisition"
+      ]
+    },
+    {
+      "label": "calibrated-semantically-grounded-atomic-skill-library",
+      "tier": "calibrated-term",
+      "query": "all:\"semantically grounded atomic skill library\"",
+      "why": "覆盖技能分段、语义一致性和可组合性。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-semantically-grounded-atomic-skill-library"
+      ]
+    },
+    {
+      "label": "calibration-atomicvla-moe",
+      "tier": "calibrated-query",
+      "query": "(all:\"skill-guided mixture-of-experts\" OR all:\"continual skill acquisition\") AND all:robot",
+      "why": "捕获 AtomicVLA 及相邻融合路线。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-atomicvla-moe"
+      ]
+    },
+    {
+      "label": "calibration-semantic-atomic",
+      "tier": "calibrated-query",
+      "query": "all:\"semantic atomic skill\" OR all:\"semantically grounded atomic skill\"",
+      "why": "捕获语义技能分段与组合路线。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-semantic-atomic"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-atomic-skill-direct",
+      "tier": "core",
+      "query": "(all:\"atomic skill\" OR all:\"atomic skills\") AND (all:robot OR all:robotic)",
+      "why": "直接覆盖近年以 atomic skill 命名的机器人方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-atomic-skill-direct"
+      ]
+    },
+    {
+      "label": "dynamic-skill-library",
+      "tier": "mechanism",
+      "query": "all:\"skill library\" AND (all:\"robot manipulation\" OR all:\"embodied control\")",
+      "why": "覆盖可复用技能库的构建、检索、扩展与组合。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-library"
+      ]
+    },
+    {
+      "label": "dynamic-skill-chaining",
+      "tier": "mechanism",
+      "query": "(all:\"skill chaining\" OR all:\"skill composition\") AND all:robot",
+      "why": "原子技能的技术价值取决于长时程组合与子任务依赖。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-chaining"
+      ]
+    },
+    {
+      "label": "dynamic-motor-primitives",
+      "tier": "adjacent",
+      "query": "(all:\"motor primitive\" OR all:\"behavior primitive\" OR all:\"action primitive\") AND (all:manipulation OR all:robot)",
+      "why": "覆盖不使用 atomic skill 命名的相邻技术谱系。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-motor-primitives"
+      ]
+    },
+    {
+      "label": "dynamic-hierarchical-policy",
+      "tier": "mechanism",
+      "query": "all:\"hierarchical policy\" AND (all:\"robot manipulation\" OR all:\"long-horizon manipulation\")",
+      "why": "覆盖高层技能选择与低层连续控制的分层方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hierarchical-policy"
+      ]
+    },
+    {
+      "label": "dynamic-task-decomposition",
+      "tier": "mechanism",
+      "query": "(all:\"task decomposition\" OR all:\"subtask decomposition\") AND (all:robot OR all:embodied) AND all:manipulation",
+      "why": "覆盖用语言模型或规划器将长任务拆成技能的路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-task-decomposition"
+      ]
+    },
+    {
+      "label": "dynamic-skill-segmentation",
+      "tier": "mechanism",
+      "query": "(all:\"skill segmentation\" OR all:\"skill discovery\") AND (all:robot OR all:manipulation)",
+      "why": "覆盖从演示中自动发现技能边界和潜变量的方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-segmentation"
+      ]
+    },
+    {
+      "label": "dynamic-continual-skills",
+      "tier": "deployment",
+      "query": "(all:\"continual skill learning\" OR all:\"lifelong robot learning\") AND (all:manipulation OR all:control)",
+      "why": "检验技能库在持续扩展、遗忘与新技能接入上的优势和成本。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-continual-skills"
+      ]
+    },
+    {
+      "label": "dynamic-skill-interface-limit",
+      "tier": "limitation",
+      "query": "(all:\"skill library\" OR all:\"skill primitive\") AND (all:limitation OR all:failure OR all:scalability) AND all:robot",
+      "why": "寻找固定技能语义、接口脆弱、组合误差和扩展成本等反方证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-interface-limit"
+      ]
+    },
+    {
+      "label": "dynamic-skill-evaluation",
+      "tier": "evaluation",
+      "query": "(all:\"skill composition\" OR all:\"hierarchical manipulation\") AND (all:benchmark OR all:evaluation OR all:\"real robot\")",
+      "why": "寻找对长时程组合、真机闭环和失败恢复的评测证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-skill-evaluation"
+      ]
+    },
+    {
+      "label": "dynamic-generalist-specialist",
+      "tier": "adjacent",
+      "query": "(all:generalist AND all:specialist) AND (all:\"robot policy\" OR all:\"robot manipulation\")",
+      "why": "对照统一通才模型与专用技能专家的取舍。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-generalist-specialist"
+      ]
+    },
+    {
+      "label": "dynamic-vla-atomic-hybrid",
+      "tier": "adjacent",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:\"atomic skill\" OR all:\"skill library\" OR all:\"mixture of experts\")",
+      "why": "直接寻找 VLA 与技能库、专家路由结合的融合路线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vla-atomic-hybrid"
+      ]
+    },
+    {
+      "label": "calibrated-skill-guided-mixture-of-experts",
+      "tier": "calibrated-term",
+      "query": "all:\"skill-guided mixture-of-experts\"",
+      "why": "新近原子技能工作将技能专家路由与 VLA 联系起来。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-skill-guided-mixture-of-experts"
+      ]
+    },
+    {
+      "label": "calibrated-continual-skill-acquisition",
+      "tier": "calibrated-term",
+      "query": "all:\"continual skill acquisition\"",
+      "why": "技能库路线的一个主要差异化目标。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-continual-skill-acquisition"
+      ]
+    },
+    {
+      "label": "calibrated-semantically-grounded-atomic-skill-library",
+      "tier": "calibrated-term",
+      "query": "all:\"semantically grounded atomic skill library\"",
+      "why": "覆盖技能分段、语义一致性和可组合性。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-semantically-grounded-atomic-skill-library"
+      ]
+    },
+    {
+      "label": "calibration-atomicvla-moe",
+      "tier": "calibrated-query",
+      "query": "(all:\"skill-guided mixture-of-experts\" OR all:\"continual skill acquisition\") AND all:robot",
+      "why": "捕获 AtomicVLA 及相邻融合路线。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-atomicvla-moe"
+      ]
+    },
+    {
+      "label": "calibration-semantic-atomic",
+      "tier": "calibrated-query",
+      "query": "all:\"semantic atomic skill\" OR all:\"semantically grounded atomic skill\"",
+      "why": "捕获语义技能分段与组合路线。",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-semantic-atomic"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "browser-atomic-skills",
+      "query": "site:arxiv.org/abs robot atomic skill library manipulation",
+      "why": "补充 arXiv API 对新命名和短语的召回。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-composable-skills",
+      "query": "site:arxiv.org/abs robot composable skills skill chaining long-horizon manipulation",
+      "why": "补充组合技能和长时程语彙。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "web-calibrated-skill-guided-mixture-of-experts",
+      "query": "\"skill-guided mixture-of-experts\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: skill-guided mixture-of-experts.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-continual-skill-acquisition",
+      "query": "\"continual skill acquisition\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: continual skill acquisition.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-semantically-grounded-atomic-skill-library",
+      "query": "\"semantically grounded atomic skill library\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: semantically grounded atomic skill library.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

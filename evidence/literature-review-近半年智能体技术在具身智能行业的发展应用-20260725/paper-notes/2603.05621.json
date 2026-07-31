@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2603.05621", "title": "RACAS: Controlling Diverse Robots With a Single Agentic System", "published": "2026-03-05", "url": "https://arxiv.org/abs/2603.05621", "authors": ["Dylan R. Ashley", "Jan Przepióra", "Yimeng Chen", "Ali Abualsaud", "Nurzhan Yesmagambet", "Shinkyu Park", "Eric Feron", "Jürgen Schmidhuber"]},
+  "review": {"question": "近半年智能体技术在具身智能行业中形成了哪些可验证的技术架构、应用方式、部署收益与失败边界？", "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-BIZ"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted", "paper_type": "system",
+    "relevance": {"decision": "include", "reason": "直接展示以自然语言接口实现的单一智能体系统跨三类本体复用，并报告真实时延与感知限制。"},
+    "sections_read": [
+      {"locator": "I INTRODUCTION", "role": "problem", "purpose": "核对跨本体控制问题。"},
+      {"locator": "III METHODOLOGY", "role": "method-or-design", "purpose": "核对监视器、控制器、记忆整理器与硬件抽象。"},
+      {"locator": "IV EXPERIMENTAL SETUP", "role": "data-or-setting", "purpose": "核对三平台、任务和模型调用设置。"},
+      {"locator": "V RESULTS & DISCUSSION", "role": "results-or-analysis", "purpose": "核对任务完成和步数。"},
+      {"locator": "VII LIMITATIONS AND FUTURE WORK", "role": "conclusion-or-limitations", "purpose": "核对导航范围、时延和深度限制。"}
+    ],
+    "sections_skipped": [{"locator": "II RELATED WORK", "reason": "背景不承担核心结果。"}, {"locator": "Appendix A", "reason": "Blackjack 记忆测试与机器人产业问题仅邻接。"}]
+  },
+  "research_question": "自然语言描述、动作清单和图像流能否让同一智能体控制逻辑跨根本不同的机器人本体？",
+  "contributions": ["以 Monitor、Controller、Memory Curator 三个 LLM/VLM 模块形成闭环。", "仅更换提示配置就覆盖轮式机器人、机械肢体和水下机器人。"],
+  "method": {"summary": "控制器生成任务相关视觉查询，监视器用 VLM 输出自然语言场景描述，控制器选单步动作，记忆整理器把交互压缩为有界持久记忆。", "assumptions": ["每个机器人已有可调用的离散动作 API。", "自然语言视觉描述足以替代显式几何状态。", "云端 GPT-4.1 系列可用于逐步控制。"]},
+  "study_context": {"datasets": [], "tasks": ["target localization and navigation"], "embodiments": ["Clearpath Dingo simulation and real world", "novel multi-jointed robotic limb", "BlueROV2 small tank and large pool"], "sample_or_scale": "Three radically different platforms, five experimental settings, relatively simple localization/navigation tasks."},
+  "evaluation": {"design": "比较 RACAS 与随机基线和不可达的 oracle 最小步数；部分设置因安全原因不运行随机基线。", "baselines": ["random action policy where safe", "oracle minimum steps"], "metrics": ["steps to task completion", "task completion"], "ablations": ["platform/prompt configuration"]},
+  "findings": [
+    {"finding": "不修改控制逻辑、模型权重或奖励，仅换机器人描述和动作定义即可完成三类平台上的目标定位。", "scope": "简单导航/搜索任务。", "locator": "III-B; V RESULTS & DISCUSSION"},
+    {"finding": "逐步控制约 5–10 秒一次动作，时间主要耗在 API 调用和搜索目标。", "scope": "GPT-4.1/mini 云端推理设置。", "locator": "IV-D Implementation Details; V RESULTS & DISCUSSION"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "只覆盖定位和导航，接触操作因逐步推理成本而过慢。", "locator": "VII LIMITATIONS AND FUTURE WORK"},
+      {"limitation": "缺少深度信息导致碰撞概率判断过度或不足自信。", "locator": "VII LIMITATIONS AND FUTURE WORK"}
+    ],
+    "reader_inferred": [{"boundary": "跨本体证明来自动作 API 的抽象一致性，不代表连续动力学或复杂操作技能零样本迁移。", "basis": "任务是离散导航/搜索，动作列表由平台提示定义。"}]
+  },
+  "transfer_boundary": "适合快速验证已有动作 API 的搜索、巡检和导航原型；不适合高频闭环、接触操作或安全关键避碰。",
+  "critical_appraisal": {
+    "design_strengths": ["跨三个形态与环境差异大的平台。", "包含真实 Dingo 和水池实验。", "给出时延与成本。"],
+    "design_risks": ["任务非常简单且主要是找目标。", "部分实验无基线。", "一步 5–10 秒远低于多数生产控制需求。"],
+    "baseline_fairness": "随机基线只在安全可行的设置运行，跨平台结果不完全可比。",
+    "metric_validity": "完成步数适合导航搜索，不衡量接触质量、稳定运行和安全。",
+    "reproducibility": "提供源代码，机器人和云端模型仍影响复现。",
+    "external_validity": "对巡检/搜索原型有价值，对复杂工厂操作的外推性弱。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.05621-C01", "claim": "RACAS 在三类差异显著的机器人上复用同一控制逻辑；适配只需更换机器人、动作和环境的提示配置。", "stance": "support", "relation": "支持智能体编排层通过统一自然语言/工具接口降低跨本体原型成本。", "confidence": "direct", "claim_basis": "reported-result", "summary": "轮式、机械肢体和水下平台均完成目标定位任务。", "locator": "III-B System Architecture", "source_context": "Adapting the system to a new robot requires only replacing the prompt configuration files (the robot description , the action definitions , and the environment context), with no modification to the control logic itself.", "evidence_type": "experiment", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核架构与结果段：更换内容、三类平台和目标定位任务范围均清楚，未外推到连续操作技能迁移。"}
+    },
+    {
+      "card_id": "2603.05621-C02", "claim": "当前系统约每 5–10 秒才执行一个动作；作者认为这种逐步推理成本让长时接触操作实验慢到不可行。", "stance": "limit", "relation": "指出云端智能体控制不能承担实时或细粒度操作环。", "confidence": "direct", "claim_basis": "reported-result", "summary": "时延由 API 推理主导，作者建议把操作原语作为更粗粒度工具。", "locator": "IV-D Implementation Details; VII LIMITATIONS AND FUTURE WORK", "source_context": "The control loop executes at approximately one action per 5–10 seconds", "evidence_type": "deployment-limitation", "quantitative": {"metric": "control-step latency", "value_or_direction": "approximately 5–10 seconds per action", "comparator": "not applicable", "task_or_sample": "RACAS across tested platforms", "locator": "IV-D Implementation Details"}, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核实现细节与限制段：5–10 秒数值、API 主因和接触操作过慢的结论相互对应，未扩展到其他系统。"}
+    },
+    {
+      "card_id": "2603.05621-C03", "claim": "缺少显式深度使 VLM 对碰撞风险的判断过度或不足自信，说明自然语言视觉接口不能替代安全几何感知。", "stance": "limit", "relation": "限定通用智能体感知接口在工业安全场景的适用性。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者把深度不足列为持续损害系统能力的问题。", "locator": "VII LIMITATIONS AND FUTURE WORK", "source_context": "such inferences were sub-optimal", "evidence_type": "limitation", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核限制段：深度缺失、碰撞置信偏差和引入 LIDAR 的补救被直接连接，主张保持在该平台设置内。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "跨本体结果只在相对简单的目标定位/导航任务上成立。"
+}

@@ -1,0 +1,1033 @@
+{
+  "generated_at": "2026-07-27T09:56:28.158472+00:00",
+  "paper_id": "2606.04271",
+  "html_url": "https://arxiv.org/html/2606.04271",
+  "available": true,
+  "cache_file": "/var/folders/ls/zh16jcvx1xx2wdft3d4yg4m00000gn/T/embodied-ai-literature-hub/html/2606.04271.html",
+  "structure": "latexml",
+  "text_chars": 12249,
+  "sections": [
+    {
+      "index": 0,
+      "id": "abstract1",
+      "kind": "ltx_abstract",
+      "title": "Abstract",
+      "path": "Abstract",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 1459
+    },
+    {
+      "index": 1,
+      "id": "S1",
+      "kind": "ltx_section",
+      "title": "1 Introduction",
+      "path": "1 Introduction",
+      "level": 1,
+      "para_count": 4,
+      "char_count": 3256
+    },
+    {
+      "index": 2,
+      "id": "S2",
+      "kind": "ltx_section",
+      "title": "2 Related Work",
+      "path": "2 Related Work",
+      "level": 1,
+      "para_count": 1,
+      "char_count": 510
+    },
+    {
+      "index": 3,
+      "id": "S3",
+      "kind": "ltx_section",
+      "title": "3 The StandardE2E framework",
+      "path": "3 The StandardE2E framework",
+      "level": 1,
+      "para_count": 1,
+      "char_count": 1003
+    },
+    {
+      "index": 4,
+      "id": "S3.SS1",
+      "kind": "ltx_subsection",
+      "title": "3.1 The adapter chain",
+      "path": "3 The StandardE2E framework > 3.1 The adapter chain",
+      "level": 2,
+      "para_count": 2,
+      "char_count": 1639
+    },
+    {
+      "index": 5,
+      "id": "S3.SS2",
+      "kind": "ltx_subsection",
+      "title": "3.2 Segment-context aggregators",
+      "path": "3 The StandardE2E framework > 3.2 Segment-context aggregators",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 746
+    },
+    {
+      "index": 6,
+      "id": "S3.SS3",
+      "kind": "ltx_subsection",
+      "title": "3.3 Indexing and scenario filtering",
+      "path": "3 The StandardE2E framework > 3.3 Indexing and scenario filtering",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 675
+    },
+    {
+      "index": 7,
+      "id": "S3.SS4",
+      "kind": "ltx_subsection",
+      "title": "3.4 The UnifiedE2EDataset",
+      "path": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 790
+    },
+    {
+      "index": 8,
+      "id": "S3.SS5",
+      "kind": "ltx_subsection",
+      "title": "3.5 Two-stage architecture and reproducibility",
+      "path": "3 The StandardE2E framework > 3.5 Two-stage architecture and reproducibility",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 830
+    },
+    {
+      "index": 9,
+      "id": "S3.SS6",
+      "kind": "ltx_subsection",
+      "title": "3.6 Flexibility as the value proposition",
+      "path": "3 The StandardE2E framework > 3.6 Flexibility as the value proposition",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 885
+    },
+    {
+      "index": 10,
+      "id": "S3.SS7",
+      "kind": "ltx_subsection",
+      "title": "3.7 Adding a new dataset",
+      "path": "3 The StandardE2E framework > 3.7 Adding a new dataset",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 456
+    },
+    {
+      "index": 11,
+      "id": "bib",
+      "kind": "ltx_bibliography",
+      "title": "References",
+      "path": "References",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    }
+  ],
+  "ranked_sections": [
+    {
+      "section_index": 1,
+      "path": "1 Introduction",
+      "score": 18.904,
+      "hits": 31,
+      "matched_terms": [
+        "3D",
+        "calibration",
+        "dataset",
+        "map"
+      ],
+      "text": "End-to-end (E2E) autonomous driving has emerged as an alternative to the modular perception–prediction–planning pipeline: a single trainable model maps raw sensor inputs (cameras, LiDAR) directly to vehicle control or planning targets, often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibration convention, and modality coverage [ 13 , 10 , 12 , 4 , 2 ] . In practice, this fragmentation imposes a recurring tax on end-to-end driving research. Per project, researchers re-implement preprocessing pipelines from raw protobuf, parquet, pickled-frame, or city-wide GPKG sources into a representation their model can consume. Cross-dataset experimentation — say, pretraining on Argoverse 2 Sensor before fine-tuning on Waymo End-to-End — is rare not because the science is uninteresting but because writing adapters from scratch is expensive and brittle. Existing unification efforts target adjacent problems: trajdata [ 6 ] provides a unified API for trajectories and vector maps but explicitly excludes sensor data. We address this gap with StandardE2E , a unified preprocessing and loading framework that takes raw E2E driving datasets and produces a shared on-disk representation (Figure 1 ). The central design choice is that the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the last added since our initial release, validating the claim that the per-dataset surface is small. Figure 1: StandardE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is when adding a new dataset."
+    },
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 13.392,
+      "hits": 15,
+      "matched_terms": [
+        "3D",
+        "dataset",
+        "map"
+      ],
+      "text": "Abstract Autonomous driving has shifted from modular perception–prediction–planning stacks toward end-to-end (E2E) models that map sensor inputs directly to vehicle control, often regularized by auxiliary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM (OpenScene-v1.1), and WayveScenes101 — and is released as the open-source standard-e2e Python package, available at https://github.com/stepankonev/StandardE2E . This document is an extended abstract; a full version with cross-dataset analyses is in preparation."
+    },
+    {
+      "section_index": 3,
+      "path": "3 The StandardE2E framework",
+      "score": 9.892,
+      "hits": 8,
+      "matched_terms": [
+        "3D",
+        "dataset",
+        "map"
+      ],
+      "text": "StandardE2E centers on a canonical intermediate schema and a single configurable transformation chain that turns raw frames into a training-ready, on-disk cache. A StandardFrameData object represents one frame from one dataset in the canonical format. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( MapElementType , a strict superset of trajdata ’s four), five detection classes ( DetectionType ), and the columns of the unified Trajectory container. Sections 3.1 – 3.7 describe how raw frames flow through this schema to the cache and into a PyTorch DataLoader ."
+    },
+    {
+      "section_index": 4,
+      "path": "3 The StandardE2E framework > 3.1 The adapter chain",
+      "score": 6.156,
+      "hits": 4,
+      "matched_terms": [
+        "dataset",
+        "map",
+        "spatial"
+      ],
+      "text": "The adapter chain is the configurable transformation layer between StandardFrameData and the final TransformedFrameData that is written to disk. It is an ordered list of adapters , specified per preprocessing run in a YAML config; each adapter reads the canonical frame, produces or rewrites one modality payload, and passes the frame to the next. Two kinds of adapter make up the chain. Identity (pass-through) adapters cache a modality at the source dataset’s native fidelity. Resolution and format adapters reshape a modality to exactly what the model consumes — panoramic multi-camera stitching with a configurable maximum image size, point-cloud subsampling, LiDAR bird’s-eye-view (BEV) rasterization with a configurable resolution and spatial extent, and HD-map BEV rasterization of the thirteen-channel vector taxonomy with a configurable extent and channel subset. Conceptually, the chain is the framework’s primary configurability surface : because the chain alone decides what is computed and written, a user opts into exactly the modalities and resolutions their model requires, and only those land in the cache. Adding a custom transformation does not require modifying the framework: a user-defined adapter subclasses a small AbstractAdapter interface (a single transform method over StandardFrameData ) and registers under a string name in the YAML schema, after which the same chain mechanism that ships with the library picks it up. The chain runs once over every raw frame; its output, a TransformedFrameData object, is serialized as one npz file per frame and is exactly what the PyTorch Dataset returns at training time."
+    },
+    {
+      "section_index": 7,
+      "path": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset",
+      "score": 5.979,
+      "hits": 6,
+      "matched_terms": [
+        "dataset"
+      ],
+      "text": "The UnifiedE2EDataset is a PyTorch Dataset that takes the parquet index (possibly the concatenation of per-dataset indices), one or more configured frame loaders that fetch and shape per-frame payloads from the cache, a list of index filters, a list of frame augmentations, and a ModalityDefaults dictionary specifying how to fill modalities a given dataset does not ship. It is fully PyTorch-native and supports the standard DataLoader multiprocessing model; a companion batch class defines collation for variable-length modalities (point clouds, detection sets, trajectories). The same model code can therefore run on frames from several datasets in a single epoch, with modalities a dataset lacks zero-filled by the corresponding default and exposed through a per-modality presence flag."
+    },
+    {
+      "section_index": 10,
+      "path": "3 The StandardE2E framework > 3.7 Adding a new dataset",
+      "score": 5.801,
+      "hits": 3,
+      "matched_terms": [
+        "dataset",
+        "map"
+      ],
+      "text": "The framework’s central design claim is that adding a dataset is a localized, well-scoped contribution: the only user-side code is one processor class implementing the Raw StandardFrameData mapping, plus a thin converter that exposes an iterator over raw frames in segment order. The adapter chain, the cache and index writers, the segment-context aggregators, the modality-defaults machinery, and the UnifiedE2EDataset are all reused without modification."
+    },
+    {
+      "section_index": 9,
+      "path": "3 The StandardE2E framework > 3.6 Flexibility as the value proposition",
+      "score": 5.098,
+      "hits": 3,
+      "matched_terms": [
+        "map",
+        "spatial"
+      ],
+      "text": "Because the adapter chain alone determines what is computed and stored, flexibility follows directly, with consequences for both runtime cost and reproducibility. First, modality opt-out : dropping the LiDAR adapter means the cache simply does not carry LiDAR — no preprocessing time is spent, no disk is consumed, no I/O is performed at training, and no memory is allocated at inference; the same holds for HD-map BEV, segment-context aggregation, and every other modality. Second, per-adapter resolution knobs : camera adapters take a maximum image size; the BEV adapters take a resolution and spatial extent; the HD-map BEV adapter additionally accepts a channel subset. A user who trains on -pixel panoramas and a m / -pixel-per-meter BEV pays for exactly that, not the full-resolution multi-sensor payload that native APIs return by default. Native APIs typically support neither."
+    },
+    {
+      "section_index": 6,
+      "path": "3 The StandardE2E framework > 3.3 Indexing and scenario filtering",
+      "score": 3.863,
+      "hits": 3,
+      "matched_terms": [
+        "dataset"
+      ],
+      "text": "After preprocessing, every cached frame is described by one row in a parquet index table ( segment_id , frame_id , timestamp , filename , split , dataset_name , plus arbitrary extra columns for dataset-specific scenario tags). The index is what the UnifiedE2EDataset sees, and it is what enables scenario-level filtering at training time. A family of composable index filters lets a user define training and validation splits as predicates over the index — for instance, “Waymo Perception frames where the ego is moving and a three-second future window exists, plus all NAVSIM frames tagged as urban” — without re-running preprocessing, since the cache is shared across runs."
+    },
+    {
+      "section_index": 8,
+      "path": "3 The StandardE2E framework > 3.5 Two-stage architecture and reproducibility",
+      "score": 2.957,
+      "hits": 2,
+      "matched_terms": [
+        "dataset"
+      ],
+      "text": "StandardE2E is structured as two stages. Stage 1 runs once per dataset and preprocessing config: it materializes the cache by running the adapter chain on every raw frame and writing one npz per frame plus the parquet index. Stage 2 runs at every training or inference epoch: a flat array load per frame, with no native-API ceremony, no global state, and no per-frame raw-format parsing. The cache is the unit of reproducibility — the same configuration YAML deterministically produces the same npz layout. Identity adapters preserve modality values bit-for-bit, while resolution and format adapters document their transform explicitly. Per-dataset processor unit tests verify fixture-level equivalence between raw inputs and cached outputs, and a pre-commit pipeline enforces formatting, linting, and type checks on every change."
+    },
+    {
+      "section_index": 2,
+      "path": "2 Related Work",
+      "score": 2.441,
+      "hits": 1,
+      "matched_terms": [
+        "map"
+      ],
+      "text": "End-to-end autonomous driving. A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] . These models routinely consume four to seven modalities (multi-camera images, LiDAR point clouds or BEVs, HD-map raster or vector input, and ego state), creating downstream demand for unified multimodal data access."
+    }
+  ],
+  "term_matches": [
+    {
+      "term": "3D",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 219,
+      "snippet": "Abstract Autonomous driving has shifted from modular perception–prediction–planning stacks toward end-to-end (E2E) models that map sensor inputs directly to vehicle control, often regularized by auxiliary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentati"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 346,
+      "snippet": "acks toward end-to-end (E2E) models that map sensor inputs directly to vehicle control, often regularized by auxiliary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a s"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 460,
+      "snippet": "iary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under on"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 503,
+      "snippet": "ecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multipl"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 654,
+      "snippet": "PIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces ad"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 697,
+      "snippet": "overage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 772,
+      "snippet": "reprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstr"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 822,
+      "snippet": "present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 932,
+      "snippet": "E2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM ("
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 956,
+      "snippet": "-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM (OpenScene-v1.1), and Way"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 1090,
+      "snippet": "pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM (OpenScene-v1.1), and WayveScenes101 — and is released as the open-source standard-e2e Python package, available at https://github.com/stepankonev/StandardE2E"
+    },
+    {
+      "term": "dataset",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 1424,
+      "snippet": "Sensor, Argoverse 2 LiDAR, NAVSIM (OpenScene-v1.1), and WayveScenes101 — and is released as the open-source standard-e2e Python package, available at https://github.com/stepankonev/StandardE2E . This document is an extended abstract; a full version with cross-dataset analyses is in preparation."
+    },
+    {
+      "term": "map",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 127,
+      "snippet": "Abstract Autonomous driving has shifted from modular perception–prediction–planning stacks toward end-to-end (E2E) models that map sensor inputs directly to vehicle control, often regularized by auxiliary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file format"
+    },
+    {
+      "term": "map",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 260,
+      "snippet": "Abstract Autonomous driving has shifted from modular perception–prediction–planning stacks toward end-to-end (E2E) models that map sensor inputs directly to vehicle control, often regularized by auxiliary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessin"
+    },
+    {
+      "term": "map",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 964,
+      "snippet": "preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM (OpenScene-v1.1), and WayveSc"
+    },
+    {
+      "term": "3D",
+      "locator": "1 Introduction ¶ S1.p1",
+      "section_index": 1,
+      "char_start": 309,
+      "snippet": "s an alternative to the modular perception–prediction–planning pipeline: a single trainable model maps raw sensor inputs (cameras, LiDAR) directly to vehicle control or planning targets, often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibratio"
+    },
+    {
+      "term": "3D",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2389,
+      "snippet": "; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-au"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p1",
+      "section_index": 1,
+      "char_start": 496,
+      "snippet": "often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibration convention, and modality coverage [ 13 , 10 , 12 , 4 , 2 ] . In practice, this fragmentation imposes a recurring tax on end-to-end driving research. Per project, researchers re-implement pre"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 906,
+      "snippet": "this fragmentation imposes a recurring tax on end-to-end driving research. Per project, researchers re-implement preprocessing pipelines from raw protobuf, parquet, pickled-frame, or city-wide GPKG sources into a representation their model can consume. Cross-dataset experimentation — say, pretraining on Argoverse 2 Sensor before fine-tuning on Waymo End-to-End — is rare not because the science is uninteresting but because writing adapters from scratch is expensive and brittle. Existing unification efforts target adjacent"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1404,
+      "snippet": "ation efforts target adjacent problems: trajdata [ 6 ] provides a unified API for trajectories and vector maps but explicitly excludes sensor data. We address this gap with StandardE2E , a unified preprocessing and loading framework that takes raw E2E driving datasets and produces a shared on-disk representation (Figure 1 ). The central design choice is that the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, i"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1518,
+      "snippet": "explicitly excludes sensor data. We address this gap with StandardE2E , a unified preprocessing and loading framework that takes raw E2E driving datasets and produces a shared on-disk representation (Figure 1 ). The central design choice is that the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader —"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1740,
+      "snippet": "al design choice is that the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified prepr"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1764,
+      "snippet": "the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figur"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1788,
+      "snippet": "de a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1837,
+      "snippet": "rames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1900,
+      "snippet": "wnstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1924,
+      "snippet": "hain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer and parquet index, segme"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2059,
+      "snippet": "ostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans c"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2272,
+      "snippet": "ing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLo"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2298,
+      "snippet": "n which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset ov"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2486,
+      "snippet": "faults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argo"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2517,
+      "snippet": "the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiD"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2555,
+      "snippet": "ss datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the l"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2687,
+      "snippet": "ate, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the last added since our initial release, validating the claim that the per-dataset surface is small. Figure 1: StandardE2E dataflow. The"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2893,
+      "snippet": "ndex, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the last added since our initial release, validating the claim that the per-dataset surface is small. Figure 1: StandardE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2964,
+      "snippet": "he box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the last added since our initial release, validating the claim that the per-dataset surface is small. Figure 1: StandardE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is w"
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 3005,
+      "snippet": "on, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the last added since our initial release, validating the claim that the per-dataset surface is small. Figure 1: StandardE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is when adding a new dataset."
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 3153,
+      "snippet": "dataset surface is small. Figure 1: StandardE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is when adding a new dataset."
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 3196,
+      "snippet": "dE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is when adding a new dataset."
+    },
+    {
+      "term": "dataset",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 3248,
+      "snippet": "or writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is when adding a new dataset."
+    },
+    {
+      "term": "calibration",
+      "locator": "1 Introduction ¶ S1.p1",
+      "section_index": 1,
+      "char_start": 561,
+      "snippet": "such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibration convention, and modality coverage [ 13 , 10 , 12 , 4 , 2 ] . In practice, this fragmentation imposes a recurring tax on end-to-end driving research. Per project, researchers re-implement preprocessing pipelines from raw protobuf, parquet, pickled-frame, or ci"
+    },
+    {
+      "term": "map",
+      "locator": "1 Introduction ¶ S1.p1",
+      "section_index": 1,
+      "char_start": 147,
+      "snippet": "End-to-end (E2E) autonomous driving has emerged as an alternative to the modular perception–prediction–planning pipeline: a single trainable model maps raw sensor inputs (cameras, LiDAR) directly to vehicle control or planning targets, often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this para"
+    },
+    {
+      "term": "map",
+      "locator": "1 Introduction ¶ S1.p1",
+      "section_index": 1,
+      "char_start": 349,
+      "snippet": "on–prediction–planning pipeline: a single trainable model maps raw sensor inputs (cameras, LiDAR) directly to vehicle control or planning targets, often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibration convention, and modality coverage [ 13"
+    },
+    {
+      "term": "map",
+      "locator": "1 Introduction ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 1250,
+      "snippet": "on Waymo End-to-End — is rare not because the science is uninteresting but because writing adapters from scratch is expensive and brittle. Existing unification efforts target adjacent problems: trajdata [ 6 ] provides a unified API for trajectories and vector maps but explicitly excludes sensor data. We address this gap with StandardE2E , a unified preprocessing and loading framework that takes raw E2E driving datasets and produces a shared on-disk representation (Figure 1 ). The central design choice is that the only"
+    },
+    {
+      "term": "map",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 1559,
+      "snippet": "ess this gap with StandardE2E , a unified preprocessing and loading framework that takes raw E2E driving datasets and produces a shared on-disk representation (Figure 1 ). The central design choice is that the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across"
+    },
+    {
+      "term": "map",
+      "locator": "1 Introduction ¶ S1.SS0.SSS0.Px1.p1",
+      "section_index": 1,
+      "char_start": 2366,
+      "snippet": "ntire user-side surface; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on t"
+    },
+    {
+      "term": "map",
+      "locator": "2 Related Work ¶ S2.SS0.SSS0.Px1.p1",
+      "section_index": 2,
+      "char_start": 404,
+      "snippet": "xiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] . These models routinely consume four to seven modalities (multi-camera images, LiDAR point clouds or BEVs, HD-map raster or vector input, and ego state), creating downstream demand for unified multimodal data access."
+    },
+    {
+      "term": "3D",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 509,
+      "snippet": "t. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( MapElementType , a strict supers"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 219,
+      "snippet": "StandardE2E centers on a canonical intermediate schema and a single configurable transformation chain that turns raw frames into a training-ready, on-disk cache. A StandardFrameData object represents one frame from one dataset in the canonical format. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElemen"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 292,
+      "snippet": "al intermediate schema and a single configurable transformation chain that turns raw frames into a training-ready, on-disk cache. A StandardFrameData object represents one frame from one dataset in the canonical format. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 625,
+      "snippet": "ptional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( MapElementType , a strict superset of trajdata ’s four), five detection classes ( DetectionType ), and the columns of the unified Trajectory container. S"
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 456,
+      "snippet": "nts one frame from one dataset in the canonical format. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channe"
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 477,
+      "snippet": "e dataset in the canonical format. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( M"
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 724,
+      "snippet": "ist of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( MapElementType , a strict superset of trajdata ’s four), five detection classes ( DetectionType ), and the columns of the unified Trajectory container. Sections 3.1 – 3.7 describe how raw frames flow through this schema to the cache and into a PyTo"
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework ¶ S3.p1",
+      "section_index": 3,
+      "char_start": 739,
+      "snippet": "pElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( MapElementType , a strict superset of trajdata ’s four), five detection classes ( DetectionType ), and the columns of the unified Trajectory container. Sections 3.1 – 3.7 describe how raw frames flow through this schema to the cache and into a PyTorch DataLoader"
+    },
+    {
+      "term": "spatial",
+      "locator": "3 The StandardE2E framework > 3.1 The adapter chain ¶ S3.SS1.p1",
+      "section_index": 4,
+      "char_start": 741,
+      "snippet": "solution and format adapters reshape a modality to exactly what the model consumes — panoramic multi-camera stitching with a configurable maximum image size, point-cloud subsampling, LiDAR bird’s-eye-view (BEV) rasterization with a configurable resolution and spatial extent, and HD-map BEV rasterization of the thirteen-channel vector taxonomy with a configurable extent and channel subset. Conceptually, the chain is the framework’s primary configurability surface : because the chain alone decides what is computed and writt"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.1 The adapter chain ¶ S3.SS1.p1",
+      "section_index": 4,
+      "char_start": 452,
+      "snippet": "er preprocessing run in a YAML config; each adapter reads the canonical frame, produces or rewrites one modality payload, and passes the frame to the next. Two kinds of adapter make up the chain. Identity (pass-through) adapters cache a modality at the source dataset’s native fidelity. Resolution and format adapters reshape a modality to exactly what the model consumes — panoramic multi-camera stitching with a configurable maximum image size, point-cloud subsampling, LiDAR bird’s-eye-view (BEV) rasterization with a config"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.1 The adapter chain ¶ S3.SS1.p2",
+      "section_index": 4,
+      "char_start": 1606,
+      "snippet": "name in the YAML schema, after which the same chain mechanism that ships with the library picks it up. The chain runs once over every raw frame; its output, a TransformedFrameData object, is serialized as one npz file per frame and is exactly what the PyTorch Dataset returns at training time."
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework > 3.1 The adapter chain ¶ S3.SS1.p1",
+      "section_index": 4,
+      "char_start": 764,
+      "snippet": "pters reshape a modality to exactly what the model consumes — panoramic multi-camera stitching with a configurable maximum image size, point-cloud subsampling, LiDAR bird’s-eye-view (BEV) rasterization with a configurable resolution and spatial extent, and HD-map BEV rasterization of the thirteen-channel vector taxonomy with a configurable extent and channel subset. Conceptually, the chain is the framework’s primary configurability surface : because the chain alone decides what is computed and written, a user opts int"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.2 Segment-context aggregators ¶ S3.SS2.p1",
+      "section_index": 5,
+      "char_start": 632,
+      "snippet": "frame in a split. Two aggregators ship with the framework: one composes per-frame ego SE(2) poses into past- and future-trajectory tensors anchored at each frame’s local origin, and one aggregates per-agent detection trajectories across the segment. Both are dataset-agnostic, operate on the canonical schema, and fan out across segments via process pools to amortize cost."
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.3 Indexing and scenario filtering ¶ S3.SS3.p1",
+      "section_index": 6,
+      "char_start": 146,
+      "snippet": "After preprocessing, every cached frame is described by one row in a parquet index table ( segment_id , frame_id , timestamp , filename , split , dataset_name , plus arbitrary extra columns for dataset-specific scenario tags). The index is what the UnifiedE2EDataset sees, and it is what enables scenario-level filtering at training time. A family of composable index filters lets a user define training and valid"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.3 Indexing and scenario filtering ¶ S3.SS3.p1",
+      "section_index": 6,
+      "char_start": 194,
+      "snippet": "After preprocessing, every cached frame is described by one row in a parquet index table ( segment_id , frame_id , timestamp , filename , split , dataset_name , plus arbitrary extra columns for dataset-specific scenario tags). The index is what the UnifiedE2EDataset sees, and it is what enables scenario-level filtering at training time. A family of composable index filters lets a user define training and validation splits as predicates over the index — for"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.3 Indexing and scenario filtering ¶ S3.SS3.p1",
+      "section_index": 6,
+      "char_start": 259,
+      "snippet": "After preprocessing, every cached frame is described by one row in a parquet index table ( segment_id , frame_id , timestamp , filename , split , dataset_name , plus arbitrary extra columns for dataset-specific scenario tags). The index is what the UnifiedE2EDataset sees, and it is what enables scenario-level filtering at training time. A family of composable index filters lets a user define training and validation splits as predicates over the index — for instance, “Waymo Perception frames where the ego is moving and a"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset ¶ S3.SS4.p1",
+      "section_index": 7,
+      "char_start": 14,
+      "snippet": "The UnifiedE2EDataset is a PyTorch Dataset that takes the parquet index (possibly the concatenation of per-dataset indices), one or more configured frame loaders that fetch and shape per-frame payloads from the cache, a list of index filters, a list of frame augmentations, and a M"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset ¶ S3.SS4.p1",
+      "section_index": 7,
+      "char_start": 35,
+      "snippet": "The UnifiedE2EDataset is a PyTorch Dataset that takes the parquet index (possibly the concatenation of per-dataset indices), one or more configured frame loaders that fetch and shape per-frame payloads from the cache, a list of index filters, a list of frame augmentations, and a ModalityDefaults dicti"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset ¶ S3.SS4.p1",
+      "section_index": 7,
+      "char_start": 107,
+      "snippet": "The UnifiedE2EDataset is a PyTorch Dataset that takes the parquet index (possibly the concatenation of per-dataset indices), one or more configured frame loaders that fetch and shape per-frame payloads from the cache, a list of index filters, a list of frame augmentations, and a ModalityDefaults dictionary specifying how to fill modalities a given dataset does not ship. I"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset ¶ S3.SS4.p1",
+      "section_index": 7,
+      "char_start": 350,
+      "snippet": "atenation of per-dataset indices), one or more configured frame loaders that fetch and shape per-frame payloads from the cache, a list of index filters, a list of frame augmentations, and a ModalityDefaults dictionary specifying how to fill modalities a given dataset does not ship. It is fully PyTorch-native and supports the standard DataLoader multiprocessing model; a companion batch class defines collation for variable-length modalities (point clouds, detection sets, trajectories). The same model code can therefore run"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset ¶ S3.SS4.p1",
+      "section_index": 7,
+      "char_start": 640,
+      "snippet": "ully PyTorch-native and supports the standard DataLoader multiprocessing model; a companion batch class defines collation for variable-length modalities (point clouds, detection sets, trajectories). The same model code can therefore run on frames from several datasets in a single epoch, with modalities a dataset lacks zero-filled by the corresponding default and exposed through a per-modality presence flag."
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset ¶ S3.SS4.p1",
+      "section_index": 7,
+      "char_start": 686,
+      "snippet": "DataLoader multiprocessing model; a companion batch class defines collation for variable-length modalities (point clouds, detection sets, trajectories). The same model code can therefore run on frames from several datasets in a single epoch, with modalities a dataset lacks zero-filled by the corresponding default and exposed through a per-modality presence flag."
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.5 Two-stage architecture and reproducibility ¶ S3.SS5.p1",
+      "section_index": 8,
+      "char_start": 63,
+      "snippet": "StandardE2E is structured as two stages. Stage 1 runs once per dataset and preprocessing config: it materializes the cache by running the adapter chain on every raw frame and writing one npz per frame plus the parquet index. Stage 2 runs at every training or inference epoch: a flat array load per frame, with no native-API ceremo"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.5 Two-stage architecture and reproducibility ¶ S3.SS5.p1",
+      "section_index": 8,
+      "char_start": 641,
+      "snippet": "rsing. The cache is the unit of reproducibility — the same configuration YAML deterministically produces the same npz layout. Identity adapters preserve modality values bit-for-bit, while resolution and format adapters document their transform explicitly. Per-dataset processor unit tests verify fixture-level equivalence between raw inputs and cached outputs, and a pre-commit pipeline enforces formatting, linting, and type checks on every change."
+    },
+    {
+      "term": "spatial",
+      "locator": "3 The StandardE2E framework > 3.6 Flexibility as the value proposition ¶ S3.SS6.p1",
+      "section_index": 9,
+      "char_start": 596,
+      "snippet": "t training, and no memory is allocated at inference; the same holds for HD-map BEV, segment-context aggregation, and every other modality. Second, per-adapter resolution knobs : camera adapters take a maximum image size; the BEV adapters take a resolution and spatial extent; the HD-map BEV adapter additionally accepts a channel subset. A user who trains on -pixel panoramas and a m / -pixel-per-meter BEV pays for exactly that, not the full-resolution multi-sensor payload that native APIs return by default. Native APIs typi"
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework > 3.6 Flexibility as the value proposition ¶ S3.SS6.p1",
+      "section_index": 9,
+      "char_start": 411,
+      "snippet": "ducibility. First, modality opt-out : dropping the LiDAR adapter means the cache simply does not carry LiDAR — no preprocessing time is spent, no disk is consumed, no I/O is performed at training, and no memory is allocated at inference; the same holds for HD-map BEV, segment-context aggregation, and every other modality. Second, per-adapter resolution knobs : camera adapters take a maximum image size; the BEV adapters take a resolution and spatial extent; the HD-map BEV adapter additionally accepts a channel subset."
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework > 3.6 Flexibility as the value proposition ¶ S3.SS6.p1",
+      "section_index": 9,
+      "char_start": 619,
+      "snippet": "ry is allocated at inference; the same holds for HD-map BEV, segment-context aggregation, and every other modality. Second, per-adapter resolution knobs : camera adapters take a maximum image size; the BEV adapters take a resolution and spatial extent; the HD-map BEV adapter additionally accepts a channel subset. A user who trains on -pixel panoramas and a m / -pixel-per-meter BEV pays for exactly that, not the full-resolution multi-sensor payload that native APIs return by default. Native APIs typically support neith"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.7 Adding a new dataset ¶ S3.SS7.p1",
+      "section_index": 10,
+      "char_start": 54,
+      "snippet": "The framework’s central design claim is that adding a dataset is a localized, well-scoped contribution: the only user-side code is one processor class implementing the Raw StandardFrameData mapping, plus a thin converter that exposes an iterator over raw frames in segment order. The adapter chain, the cache and index wr"
+    },
+    {
+      "term": "dataset",
+      "locator": "3 The StandardE2E framework > 3.7 Adding a new dataset ¶ S3.SS7.p1",
+      "section_index": 10,
+      "char_start": 412,
+      "snippet": "mplementing the Raw StandardFrameData mapping, plus a thin converter that exposes an iterator over raw frames in segment order. The adapter chain, the cache and index writers, the segment-context aggregators, the modality-defaults machinery, and the UnifiedE2EDataset are all reused without modification."
+    },
+    {
+      "term": "map",
+      "locator": "3 The StandardE2E framework > 3.7 Adding a new dataset ¶ S3.SS7.p1",
+      "section_index": 10,
+      "char_start": 190,
+      "snippet": "The framework’s central design claim is that adding a dataset is a localized, well-scoped contribution: the only user-side code is one processor class implementing the Raw StandardFrameData mapping, plus a thin converter that exposes an iterator over raw frames in segment order. The adapter chain, the cache and index writers, the segment-context aggregators, the modality-defaults machinery, and the UnifiedE2EDataset are all reused without modificati"
+    }
+  ],
+  "citation_contexts": [
+    {
+      "section": "1 Introduction",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib2",
+        "bib.bib3",
+        "bib.bib4",
+        "bib.bib6",
+        "bib.bib7"
+      ],
+      "arxiv_ids": [
+        "2406.06978"
+      ],
+      "sentence": "End-to-end (E2E) autonomous driving has emerged as an alternative to the modular perception–prediction–planning pipeline: a single trainable model maps raw sensor inputs (cameras, LiDAR) directly to vehicle control or planning targets, often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib9",
+        "bib.bib10",
+        "bib.bib11",
+        "bib.bib12",
+        "bib.bib13"
+      ],
+      "arxiv_ids": [
+        "2510.26125"
+      ],
+      "sentence": "Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibration convention, and modality coverage [ 13 , 10 , 12 , 4 , 2 ] ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Existing unification efforts target adjacent problems: trajdata [ 6 ] provides a unified API for trajectories and vector maps but explicitly excludes sensor data."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.SS0.SSS0.Px1.p1",
+      "bib_keys": [
+        "bib.bib2"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.SS0.SSS0.Px1.p1",
+      "bib_keys": [
+        "bib.bib3"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.SS0.SSS0.Px1.p1",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.SS0.SSS0.Px1.p1",
+      "bib_keys": [
+        "bib.bib5"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.SS0.SSS0.Px1.p1",
+      "bib_keys": [
+        "bib.bib6"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.SS0.SSS0.Px1.p1",
+      "bib_keys": [
+        "bib.bib7",
+        "bib.bib8"
+      ],
+      "arxiv_ids": [
+        "2406.06978",
+        "2503.12820"
+      ],
+      "sentence": "A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] ."
+    }
+  ],
+  "reference_hints": [
+    {
+      "arxiv_id": "2407.08280",
+      "snippet": "[15] J. Zürn, P. Gladkov, S. Dudas, F. Cotter, S. Toteva, J. Shotton, V. Simaiaki, and N. Mohan (2024) WayveScenes101: a dataset and benchmark for novel view synthesis in autonomous driving . arXiv preprint arXiv:2407.08280 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2406.06978",
+      "snippet": "[9] Z. Li, K. Li, S. Wang, S. Lan, Z. Yu, Y. Ji, Z. Li, Z. Zhu, J. Kautz, Z. Wu, Y. Jiang, and J. M. Alvarez (2024) Hydra-MDP: end-to-end multimodal planning with multi-target hydra-distillation . arXiv preprint arXiv:2406.06978 . Cited by: §1 , §2 ."
+    },
+    {
+      "arxiv_id": "2503.12820",
+      "snippet": "[8] K. Li, Z. Li, S. Lan, Y. Xie, Z. Zhang, J. Liu, Z. Wu, Z. Yu, and J. M. Alvarez (2025) Hydra-MDP++: advancing end-to-end driving via expert-guided hydra-distillation . arXiv preprint arXiv:2503.12820 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2510.26125",
+      "snippet": "[13] R. Xu, H. Lin, W. Jeon, H. Feng, Y. Zou, L. Sun, J. Gorman, E. Tolstaya, S. Tang, B. White, B. Sapp, M. Tan, J. Hwang, and D. Anguelov (2025) WOD-E2E: waymo open dataset for end-to-end driving in challenging long-tail scenarios . arXiv preprint arXiv:2510.26125 . Cited by: §1 , §2 ."
+    }
+  ],
+  "text": "## Abstract\nAbstract Autonomous driving has shifted from modular perception–prediction–planning stacks toward end-to-end (E2E) models that map sensor inputs directly to vehicle control, often regularized by auxiliary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM (OpenScene-v1.1), and WayveScenes101 — and is released as the open-source standard-e2e Python package, available at https://github.com/stepankonev/StandardE2E . This document is an extended abstract; a full version with cross-dataset analyses is in preparation.\n\n## 1 Introduction\nEnd-to-end (E2E) autonomous driving has emerged as an alternative to the modular perception–prediction–planning pipeline: a single trainable model maps raw sensor inputs (cameras, LiDAR) directly to vehicle control or planning targets, often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibration convention, and modality coverage [ 13 , 10 , 12 , 4 , 2 ] . In practice, this fragmentation imposes a recurring tax on end-to-end driving research. Per project, researchers re-implement preprocessing pipelines from raw protobuf, parquet, pickled-frame, or city-wide GPKG sources into a representation their model can consume. Cross-dataset experimentation — say, pretraining on Argoverse 2 Sensor before fine-tuning on Waymo End-to-End — is rare not because the science is uninteresting but because writing adapters from scratch is expensive and brittle. Existing unification efforts target adjacent problems: trajdata [ 6 ] provides a unified API for trajectories and vector maps but explicitly excludes sensor data. We address this gap with StandardE2E , a unified preprocessing and loading framework that takes raw E2E driving datasets and produces a shared on-disk representation (Figure 1 ). The central design choice is that the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the last added since our initial release, validating the claim that the per-dataset surface is small. Figure 1: StandardE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is when adding a new dataset.\n\n## 2 Related Work\nEnd-to-end autonomous driving. A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] . These models routinely consume four to seven modalities (multi-camera images, LiDAR point clouds or BEVs, HD-map raster or vector input, and ego state), creating downstream demand for unified multimodal data access.\n\n## 3 The StandardE2E framework\nStandardE2E centers on a canonical intermediate schema and a single configurable transformation chain that turns raw frames into a training-ready, on-disk cache. A StandardFrameData object represents one frame from one dataset in the canonical format. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( MapElementType , a strict superset of trajdata ’s four), five detection classes ( DetectionType ), and the columns of the unified Trajectory container. Sections 3.1 – 3.7 describe how raw frames flow through this schema to the cache and into a PyTorch DataLoader .\n\n## 3.1 The adapter chain\nThe adapter chain is the configurable transformation layer between StandardFrameData and the final TransformedFrameData that is written to disk. It is an ordered list of adapters , specified per preprocessing run in a YAML config; each adapter reads the canonical frame, produces or rewrites one modality payload, and passes the frame to the next. Two kinds of adapter make up the chain. Identity (pass-through) adapters cache a modality at the source dataset’s native fidelity. Resolution and format adapters reshape a modality to exactly what the model consumes — panoramic multi-camera stitching with a configurable maximum image size, point-cloud subsampling, LiDAR bird’s-eye-view (BEV) rasterization with a configurable resolution and spatial extent, and HD-map BEV rasterization of the thirteen-channel vector taxonomy with a configurable extent and channel subset. Conceptually, the chain is the framework’s primary configurability surface : because the chain alone decides what is computed and written, a user opts into exactly the modalities and resolutions their model requires, and only those land in the cache. Adding a custom transformation does not require modifying the framework: a user-defined adapter subclasses a small AbstractAdapter interface (a single transform method over StandardFrameData ) and registers under a string name in the YAML schema, after which the same chain mechanism that ships with the library picks it up. The chain runs once over every raw frame; its output, a TransformedFrameData object, is serialized as one npz file per frame and is exactly what the PyTorch Dataset returns at training time.\n\n## 3.2 Segment-context aggregators\nSome E2E supervision signals — notably past and future ego trajectories and aggregated per-agent detection trajectories — are often not present in raw per-frame data and must be derived from the surrounding frames in a segment. StandardE2E computes these in a second, post-frame stage of segment-context aggregators that runs once after the adapter chain has written every frame in a split. Two aggregators ship with the framework: one composes per-frame ego SE(2) poses into past- and future-trajectory tensors anchored at each frame’s local origin, and one aggregates per-agent detection trajectories across the segment. Both are dataset-agnostic, operate on the canonical schema, and fan out across segments via process pools to amortize cost.\n\n## 3.3 Indexing and scenario filtering\nAfter preprocessing, every cached frame is described by one row in a parquet index table ( segment_id , frame_id , timestamp , filename , split , dataset_name , plus arbitrary extra columns for dataset-specific scenario tags). The index is what the UnifiedE2EDataset sees, and it is what enables scenario-level filtering at training time. A family of composable index filters lets a user define training and validation splits as predicates over the index — for instance, “Waymo Perception frames where the ego is moving and a three-second future window exists, plus all NAVSIM frames tagged as urban” — without re-running preprocessing, since the cache is shared across runs.\n\n## 3.4 The UnifiedE2EDataset\nThe UnifiedE2EDataset is a PyTorch Dataset that takes the parquet index (possibly the concatenation of per-dataset indices), one or more configured frame loaders that fetch and shape per-frame payloads from the cache, a list of index filters, a list of frame augmentations, and a ModalityDefaults dictionary specifying how to fill modalities a given dataset does not ship. It is fully PyTorch-native and supports the standard DataLoader multiprocessing model; a companion batch class defines collation for variable-length modalities (point clouds, detection sets, trajectories). The same model code can therefore run on frames from several datasets in a single epoch, with modalities a dataset lacks zero-filled by the corresponding default and exposed through a per-modality presence flag.\n\n## 3.5 Two-stage architecture and reproducibility\nStandardE2E is structured as two stages. Stage 1 runs once per dataset and preprocessing config: it materializes the cache by running the adapter chain on every raw frame and writing one npz per frame plus the parquet index. Stage 2 runs at every training or inference epoch: a flat array load per frame, with no native-API ceremony, no global state, and no per-frame raw-format parsing. The cache is the unit of reproducibility — the same configuration YAML deterministically produces the same npz layout. Identity adapters preserve modality values bit-for-bit, while resolution and format adapters document their transform explicitly. Per-dataset processor unit tests verify fixture-level equivalence between raw inputs and cached outputs, and a pre-commit pipeline enforces formatting, linting, and type checks on every change.\n\n## 3.6 Flexibility as the value proposition\nBecause the adapter chain alone determines what is computed and stored, flexibility follows directly, with consequences for both runtime cost and reproducibility. First, modality opt-out : dropping the LiDAR adapter means the cache simply does not carry LiDAR — no preprocessing time is spent, no disk is consumed, no I/O is performed at training, and no memory is allocated at inference; the same holds for HD-map BEV, segment-context aggregation, and every other modality. Second, per-adapter resolution knobs : camera adapters take a maximum image size; the BEV adapters take a resolution and spatial extent; the HD-map BEV adapter additionally accepts a channel subset. A user who trains on -pixel panoramas and a m / -pixel-per-meter BEV pays for exactly that, not the full-resolution multi-sensor payload that native APIs return by default. Native APIs typically support neither.\n\n## 3.7 Adding a new dataset\nThe framework’s central design claim is that adding a dataset is a localized, well-scoped contribution: the only user-side code is one processor class implementing the Raw StandardFrameData mapping, plus a thin converter that exposes an iterator over raw frames in segment order. The adapter chain, the cache and index writers, the segment-context aggregators, the modality-defaults machinery, and the UnifiedE2EDataset are all reused without modification.",
+  "quality": {
+    "grade": "high",
+    "text_chars": 12249,
+    "structure": "latexml"
+  },
+  "extraction_method": "html-latexml",
+  "source_format": "html",
+  "evidence_eligible": true,
+  "needs_visual_validation": false,
+  "selected_passages": [
+    {
+      "section_index": 1,
+      "path": "1 Introduction",
+      "score": 18.904,
+      "hits": 31,
+      "matched_terms": [
+        "3D",
+        "calibration",
+        "dataset",
+        "map"
+      ],
+      "text": "End-to-end (E2E) autonomous driving has emerged as an alternative to the modular perception–prediction–planning pipeline: a single trainable model maps raw sensor inputs (cameras, LiDAR) directly to vehicle control or planning targets, often regularized by auxiliary supervision on intermediate tasks such as 3D detection, motion forecasting, or HD-map perception [ 5 , 7 , 11 , 3 , 9 ] . Progress in this paradigm has been propelled by an expanding ecosystem of large-scale, sensor-rich driving datasets, each released with its own native API, on-disk format, calibration convention, and modality coverage [ 13 , 10 , 12 , 4 , 2 ] . In practice, this fragmentation imposes a recurring tax on end-to-end driving research. Per project, researchers re-implement preprocessing pipelines from raw protobuf, parquet, pickled-frame, or city-wide GPKG sources into a representation their model can consume. Cross-dataset experimentation — say, pretraining on Argoverse 2 Sensor before fine-tuning on Waymo End-to-End — is rare not because the science is uninteresting but because writing adapters from scratch is expensive and brittle. Existing unification efforts target adjacent problems: trajdata [ 6 ] provides a unified API for trajectories and vector maps but explicitly excludes sensor data. We address this gap with StandardE2E , a unified preprocessing and loading framework that takes raw E2E driving datasets and produces a shared on-disk representation (Figure 1 ). The central design choice is that the only per-dataset code a contributor writes is the mapping from raw frames to our canonical StandardFrameData object ; everything downstream — the adapter chain, indexing, segment-context aggregation, modality defaults, the PyTorch Dataset , and the multi-dataset DataLoader — is dataset-agnostic and shared across all supported datasets. This minimizes the marginal cost of supporting a new dataset and makes cross-dataset training a single-config-file operation. Contributions. (1) A unified preprocessing pipeline (Figure 1 ) in which a single per-dataset node ( Raw StandardFrameData ) is the entire user-side surface; the adapter chain, the cache writer and parquet index, segment-context aggregators, modality defaults, scenario filtering, and the UnifiedE2EDataset are reused across datasets. The schema spans cameras, LiDAR (point cloud and BEV), HD maps (vector and BEV), 3D detections, driving command, ego state, and past/future trajectories. (2) A PyTorch UnifiedE2EDataset that combines multiple datasets in one DataLoader , with per-dataset oversampling, modality whitelisting, scenario-level filtering on the index, and frame-augmentation hooks. (3) Six supported datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM, and WayveScenes101 — the last added since our initial release, validating the claim that the per-dataset surface is small. Figure 1: StandardE2E dataflow. The only per-dataset code a contributor writes is the dataset-specific Raw StandardFrameData processing (left). All downstream nodes — the adapter chain, the npz cache, the parquet index, the UnifiedE2EDataset , and the PyTorch DataLoader — are dataset-agnostic and reused as-is when adding a new dataset."
+    },
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 13.392,
+      "hits": 15,
+      "matched_terms": [
+        "3D",
+        "dataset",
+        "map"
+      ],
+      "text": "Abstract Autonomous driving has shifted from modular perception–prediction–planning stacks toward end-to-end (E2E) models that map sensor inputs directly to vehicle control, often regularized by auxiliary tasks such as 3D detection, motion forecasting, and HD-map perception. Progress is driven by a fast-growing ecosystem of sensor-rich driving datasets, yet each ships its own file formats, APIs, coordinate conventions, and modality coverage, leaving cross-dataset experimentation and even basic per-dataset preprocessing to be re-implemented per project. We present StandardE2E , a framework that provides a single unified interface over E2E driving datasets. StandardE2E (i) standardizes per-dataset preprocessing under one shared data schema; (ii) combines multiple datasets in a single PyTorch DataLoader for cross-dataset pretraining, auxiliary-task supervision, and scenario-level filtering; and (iii) reduces adding a new dataset to a single per-dataset mapping from raw frames to the canonical schema, leaving the entire downstream pipeline unchanged. The framework supports six datasets out of the box — Waymo End-to-End, Waymo Perception, Argoverse 2 Sensor, Argoverse 2 LiDAR, NAVSIM (OpenScene-v1.1), and WayveScenes101 — and is released as the open-source standard-e2e Python package, available at https://github.com/stepankonev/StandardE2E . This document is an extended abstract; a full version with cross-dataset analyses is in preparation."
+    },
+    {
+      "section_index": 3,
+      "path": "3 The StandardE2E framework",
+      "score": 9.892,
+      "hits": 8,
+      "matched_terms": [
+        "3D",
+        "dataset",
+        "map"
+      ],
+      "text": "StandardE2E centers on a canonical intermediate schema and a single configurable transformation chain that turns raw frames into a training-ready, on-disk cache. A StandardFrameData object represents one frame from one dataset in the canonical format. It carries five mandatory identifiers ( dataset_name , split , segment_id , frame_id , timestamp ) and a set of optional, Pydantic-validated modality slots: cameras (keyed by CameraDirection ), LiDAR, HD map (a list of typed MapElement polylines/polygons), 3D detections, driving command ( intent ), global position, and past/future ego states, plus free-form aux_data for dataset-specific metadata. Canonical enums name the modalities ( Modality ), a thirteen-channel HD-map taxonomy ( MapElementType , a strict superset of trajdata ’s four), five detection classes ( DetectionType ), and the columns of the unified Trajectory container. Sections 3.1 – 3.7 describe how raw frames flow through this schema to the cache and into a PyTorch DataLoader ."
+    },
+    {
+      "section_index": 4,
+      "path": "3 The StandardE2E framework > 3.1 The adapter chain",
+      "score": 6.156,
+      "hits": 4,
+      "matched_terms": [
+        "dataset",
+        "map",
+        "spatial"
+      ],
+      "text": "The adapter chain is the configurable transformation layer between StandardFrameData and the final TransformedFrameData that is written to disk. It is an ordered list of adapters , specified per preprocessing run in a YAML config; each adapter reads the canonical frame, produces or rewrites one modality payload, and passes the frame to the next. Two kinds of adapter make up the chain. Identity (pass-through) adapters cache a modality at the source dataset’s native fidelity. Resolution and format adapters reshape a modality to exactly what the model consumes — panoramic multi-camera stitching with a configurable maximum image size, point-cloud subsampling, LiDAR bird’s-eye-view (BEV) rasterization with a configurable resolution and spatial extent, and HD-map BEV rasterization of the thirteen-channel vector taxonomy with a configurable extent and channel subset. Conceptually, the chain is the framework’s primary configurability surface : because the chain alone decides what is computed and written, a user opts into exactly the modalities and resolutions their model requires, and only those land in the cache. Adding a custom transformation does not require modifying the framework: a user-defined adapter subclasses a small AbstractAdapter interface (a single transform method over StandardFrameData ) and registers under a string name in the YAML schema, after which the same chain mechanism that ships with the library picks it up. The chain runs once over every raw frame; its output, a TransformedFrameData object, is serialized as one npz file per frame and is exactly what the PyTorch Dataset returns at training time."
+    },
+    {
+      "section_index": 7,
+      "path": "3 The StandardE2E framework > 3.4 The UnifiedE2EDataset",
+      "score": 5.979,
+      "hits": 6,
+      "matched_terms": [
+        "dataset"
+      ],
+      "text": "The UnifiedE2EDataset is a PyTorch Dataset that takes the parquet index (possibly the concatenation of per-dataset indices), one or more configured frame loaders that fetch and shape per-frame payloads from the cache, a list of index filters, a list of frame augmentations, and a ModalityDefaults dictionary specifying how to fill modalities a given dataset does not ship. It is fully PyTorch-native and supports the standard DataLoader multiprocessing model; a companion batch class defines collation for variable-length modalities (point clouds, detection sets, trajectories). The same model code can therefore run on frames from several datasets in a single epoch, with modalities a dataset lacks zero-filled by the corresponding default and exposed through a per-modality presence flag."
+    },
+    {
+      "section_index": 10,
+      "path": "3 The StandardE2E framework > 3.7 Adding a new dataset",
+      "score": 5.801,
+      "hits": 3,
+      "matched_terms": [
+        "dataset",
+        "map"
+      ],
+      "text": "The framework’s central design claim is that adding a dataset is a localized, well-scoped contribution: the only user-side code is one processor class implementing the Raw StandardFrameData mapping, plus a thin converter that exposes an iterator over raw frames in segment order. The adapter chain, the cache and index writers, the segment-context aggregators, the modality-defaults machinery, and the UnifiedE2EDataset are all reused without modification."
+    },
+    {
+      "section_index": 9,
+      "path": "3 The StandardE2E framework > 3.6 Flexibility as the value proposition",
+      "score": 5.098,
+      "hits": 3,
+      "matched_terms": [
+        "map",
+        "spatial"
+      ],
+      "text": "Because the adapter chain alone determines what is computed and stored, flexibility follows directly, with consequences for both runtime cost and reproducibility. First, modality opt-out : dropping the LiDAR adapter means the cache simply does not carry LiDAR — no preprocessing time is spent, no disk is consumed, no I/O is performed at training, and no memory is allocated at inference; the same holds for HD-map BEV, segment-context aggregation, and every other modality. Second, per-adapter resolution knobs : camera adapters take a maximum image size; the BEV adapters take a resolution and spatial extent; the HD-map BEV adapter additionally accepts a channel subset. A user who trains on -pixel panoramas and a m / -pixel-per-meter BEV pays for exactly that, not the full-resolution multi-sensor payload that native APIs return by default. Native APIs typically support neither."
+    },
+    {
+      "section_index": 6,
+      "path": "3 The StandardE2E framework > 3.3 Indexing and scenario filtering",
+      "score": 3.863,
+      "hits": 3,
+      "matched_terms": [
+        "dataset"
+      ],
+      "text": "After preprocessing, every cached frame is described by one row in a parquet index table ( segment_id , frame_id , timestamp , filename , split , dataset_name , plus arbitrary extra columns for dataset-specific scenario tags). The index is what the UnifiedE2EDataset sees, and it is what enables scenario-level filtering at training time. A family of composable index filters lets a user define training and validation splits as predicates over the index — for instance, “Waymo Perception frames where the ego is moving and a three-second future window exists, plus all NAVSIM frames tagged as urban” — without re-running preprocessing, since the cache is shared across runs."
+    },
+    {
+      "section_index": 8,
+      "path": "3 The StandardE2E framework > 3.5 Two-stage architecture and reproducibility",
+      "score": 2.957,
+      "hits": 2,
+      "matched_terms": [
+        "dataset"
+      ],
+      "text": "StandardE2E is structured as two stages. Stage 1 runs once per dataset and preprocessing config: it materializes the cache by running the adapter chain on every raw frame and writing one npz per frame plus the parquet index. Stage 2 runs at every training or inference epoch: a flat array load per frame, with no native-API ceremony, no global state, and no per-frame raw-format parsing. The cache is the unit of reproducibility — the same configuration YAML deterministically produces the same npz layout. Identity adapters preserve modality values bit-for-bit, while resolution and format adapters document their transform explicitly. Per-dataset processor unit tests verify fixture-level equivalence between raw inputs and cached outputs, and a pre-commit pipeline enforces formatting, linting, and type checks on every change."
+    },
+    {
+      "section_index": 2,
+      "path": "2 Related Work",
+      "score": 2.441,
+      "hits": 1,
+      "matched_terms": [
+        "map"
+      ],
+      "text": "End-to-end autonomous driving. A growing line of work trains a single model from sensor inputs to planning or control targets, typically with auxiliary perception losses for regularization: UniAD [ 5 ] , VAD [ 7 ] , ParaDrive [ 11 ] , GenAD [ 14 ] , TransFuser [ 3 ] , and Hydra-MDP [ 9 , 8 ] . These models routinely consume four to seven modalities (multi-camera images, LiDAR point clouds or BEVs, HD-map raster or vector input, and ego state), creating downstream demand for unified multimodal data access."
+    }
+  ],
+  "attempts": [
+    {
+      "method": "html-latexml",
+      "available": true,
+      "quality": "high"
+    }
+  ],
+  "fallback_reason": ""
+}

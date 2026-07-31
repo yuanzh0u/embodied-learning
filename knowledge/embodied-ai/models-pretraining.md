@@ -3,7 +3,7 @@ id: EA-MODEL
 title: 模型与预训练
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-20
+updated: 2026-07-26
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -39,6 +39,9 @@ source:
   - id: RUN-MULTIMODAL-TRAINING-20260720
     file: ../../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/evidence.jsonl
     locator: EA-TWM-READ-0001..0014; EA-ALIGN-READ-0001..0015; EA-VLABREAK-2026-0001..0007
+  - id: RUN-PRETRAIN-DATA-SOURCES-20260726
+    file: ../../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/evidence.jsonl
+    locator: EA-PRETRAIN-DATA-2026-0001..0006; EA-EGO-2026-0007..0009; EA-DQ-YEAR-READ-0009
 tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, hierarchical-world-model, sparse-future, latent-planning, action-fidelity, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
 aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, 分层世界模型, 稀疏未来, 世界模型权限阶梯, latent planning, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
 load_when:
@@ -89,6 +92,7 @@ confidence: working
 - 世界动作模型必须同时验证想象与实际动作的同步；BadWAM 将评测成功率从 96.5% 降至 43.1%，表明视觉上合理的未来不能替代 action fidelity。
 - 世界模型权限应按错误可拦截性逐级开放：训练期几何/4D 教师和离线策略排序优先，在线预演次之，直接控制与安全裁决最后。
 - 多模态 backbone 不应无条件融合全部传感器；语言/视觉、触觉/力觉与控制状态应按功能和频率选择性耦合，并以动作条件状态变化作为共享接口。
+- 异构预训练的稳定收益来自“多源覆盖 + 显式对齐”：相机坐标系、本体形态、物理时间和标签可靠性应分别条件化，有噪声人类伪动作不应与传感器记录动作等权。
 
 ## 指标与检核
 

@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.06256",
+    "title": "Diagnosing Semantic Handoff Failures in Agent-Orchestrated Vision-Language-Action Skill Composition",
+    "published": "2026-07-07T13:24:37Z",
+    "url": "https://arxiv.org/abs/2607.06256",
+    "authors": [
+      "Ke Rui",
+      "Yushen Zuo",
+      "Jiawei Wang",
+      "Haoran Jia",
+      "Jinming Ma",
+      "Weitao Zhou",
+      "Minglei Li"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "理解长时程 VLA skill composition 中的 semantic handoff problem。"
+      },
+      {
+        "locator": "III Semantic Execution Harness",
+        "role": "method-or-design",
+        "purpose": "核验类型化技能合约与 Plan-Act-Verify-Replan 流程。"
+      },
+      {
+        "locator": "IV Diagnostic Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "对照策划快照能力与组合状态稳健性，归因 handoff 失败。"
+      },
+      {
+        "locator": "V Discussion > V-B Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录仿真任务、checkpoint、诊断器和真机外推边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "在长时程任务中，单个 VLA 技能的快照能力为何不能自动转化为可靠的技能链？",
+  "contributions": [
+    "定义 semantic handoff problem",
+    "用类型化技能合约、有界验证和重规划诊断 VLA 技能组合失败"
+  ],
+  "method": {
+    "summary": "Agent 把长任务分解为 VLA skills，每个技能用类型化前置/后置条件表达，在步级执行中验证目标接地、控制提交和下一技能就绪状态。",
+    "assumptions": [
+      "技能的前置和后置条件能被类型化并在仿真中查询",
+      "诊断器的误差可与 VLA 控制失败分账"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "BEHAVIOR-1K diagnostic tasks"
+    ],
+    "tasks": [
+      "家庭长时程导航与操作技能组合"
+    ],
+    "embodiments": [
+      "BEHAVIOR simulation mobile manipulator"
+    ],
+    "sample_or_scale": "初步诊断设置，使用有限官方任务实例和多轮 rollout。"
+  },
+  "evaluation": {
+    "design": "先从人工筛选快照状态测单技能，再在完整组合中追踪下一技能就绪、目标接地、控制/提交和恢复失败。",
+    "baselines": [
+      "curated snapshot skill evaluation",
+      "untyped agent-orchestrated execution"
+    ],
+    "metrics": [
+      "task score",
+      "skills completed",
+      "handoff failure counts",
+      "grounding/control/readiness failure attribution"
+    ],
+    "ablations": [
+      "reached-area vs arm-reach navigation handoff criterion"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在初步 BEHAVIOR-1K 诊断中，单技能在策划快照上的能力无法保持到连续组合状态，技能交接点出现大量可执行性失配。",
+      "scope": "论文所选 BEHAVIOR-1K 任务与 VLA checkpoint",
+      "locator": "VII Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "证据仍是初步仿真诊断，受任务实例数、checkpoint 和 verifier 正确性限制。",
+        "locator": "V Discussion > V-B Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "原子技能若没有前置条件、后置条件、置信度和恢复合约，‘会单技能’不等于‘能可靠组合’。",
+        "basis": "快照状态和组合状态性能的诊断差距集中于 handoff。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论是对长时程技能组合的诊断证据，不可用于否定单技能 VLA 本身的短时程能力，也不证明该失败率适用于真机。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "分开快照能力与链式状态稳健性",
+      "将失败归因到接地、就绪、控制与提交",
+      "对交接验收标准做受控消融"
+    ],
+    "design_risks": [
+      "仿真 verifier 可能自身制造假失败",
+      "任务和 checkpoint 范围较小"
+    ],
+    "baseline_fairness": "快照与组合共用技能 checkpoint，能较好隔离状态交接影响；但 agent 编排和 verifier 额外影响仍存在。",
+    "metric_validity": "失败分类和任务分数直接围绕技能组合，比单技能成功率更贴近评审问题。",
+    "reproducibility": "合约、失败类型和附录诊断较详细，但完整 agent-VLA 仿真栈复现依赖指定环境。",
+    "external_validity": "对任意技能编排系统都有接口启示，但具体诊断数值仅适用该仿真任务。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.06256-C01",
+      "claim": "技能组合的瓶颈不只是单技能准确率：该诊断显示快照状态下的 VLA skill competence 与链式执行的 chained-state robustness 存在缺口，需要类型化前后置条件、步级验证和恢复。",
+      "stance": "limit",
+      "relation": "解释独立原子技能库为何会将规模化问题转化为接口与验证工程。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论直接概括快照能力与组合状态稳健性之间的诊断差距。",
+      "locator": "VII Conclusion",
+      "source_context": "a gap between snapshot skill competence and chained-state robustness.",
+      "evidence_type": "diagnostic-evaluation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文结论以相同术语表述该差距；主张未把初步仿真结果外推为普遍失败率。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

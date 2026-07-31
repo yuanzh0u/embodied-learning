@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2505.00527",
+    "title": "DeCo: Task Decomposition and Skill Composition for Zero-Shot Generalization in Long-Horizon 3D Manipulation",
+    "published": "2025-05-01T13:52:19Z",
+    "url": "https://arxiv.org/abs/2505.00527",
+    "authors": [
+      "Zixuan Chen",
+      "Junhui Yin",
+      "Yangtao Chen",
+      "Jing Huo",
+      "Pinzhuo Tian",
+      "Jieqi Shi",
+      "Yiwen Hou",
+      "Yinchuan Li",
+      "Yang Gao"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "理解已学原子任务不能自动组合成新长任务的问题。"
+      },
+      {
+        "locator": "III Method",
+        "role": "method-or-design",
+        "purpose": "核验物理分解、VLM 调度与空间感知 skill chaining。"
+      },
+      {
+        "locator": "V Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核验原子任务与新长任务表现及 VLM 负面影响。"
+      },
+      {
+        "locator": "VI Conclusion and Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "界定可组合泛化、计划不稳定与仿真外推边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "已学会原子任务的 3D 操作策略，能否在不重新训练的情况下组合成新的长时程任务？",
+  "contributions": [
+    "提出基于物理交互的任务分解与原子技能学习",
+    "用 VLM 调度技能并以空间感知转移连接技能"
+  ],
+  "method": {
+    "summary": "在 3D 仿真中学习可复用原子策略，VLM 负责视觉语义规划和技能排序，空间成本图在前后技能的 goal/start pose 之间构建可执行转移。",
+    "assumptions": [
+      "新长任务可分解为训练过的原子技能",
+      "VLM 能正确识别状态前置条件与调度顺序"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "DeCoBench"
+    ],
+    "tasks": [
+      "10 个原子任务",
+      "12 个新长时程组合任务"
+    ],
+    "embodiments": [
+      "3D 操作仿真机器人"
+    ],
+    "sample_or_scale": "在 10 原子任务训练后评估 12 个新组合任务。"
+  },
+  "evaluation": {
+    "design": "将 DeCo 集成到多种 3D 操作策略，分别评估原子任务和新长任务，并消融分解、调度和空间连接。",
+    "baselines": [
+      "RVT-2",
+      "3DDA",
+      "ARP",
+      "base multi-task imitation policies"
+    ],
+    "metrics": [
+      "atomic-task success",
+      "long-horizon task success",
+      "zero-shot compositional generalization"
+    ],
+    "ablations": [
+      "VLM planning",
+      "spatially-aware chaining",
+      "physical-interaction decomposition"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "DeCo 能提升新长任务的组合泛化，但 VLM 的状态幻觉和指令分布偏移会让部分原子任务性能下降。",
+      "scope": "DeCoBench 与所选仿真策略",
+      "locator": "V Experiments > V-B Generalization Performance on DeCoBench"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "VLM 视觉语义接地误差会触发过度规划或生成偏离训练分布的指令。",
+        "locator": "V Experiments > V-B Generalization Performance on DeCoBench"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "技能组合不是只需正确的语义顺序，还需要前一技能终点落入后一技能的可达状态分布。",
+        "basis": "DeCo 专门增加空间感知 skill chaining 模块来修补转移断层。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论限于新任务可由已学原子策略组成、VLM 能识别前置条件且空间连接可计算的 3D 环境。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "分别评估原子能力和未见组合",
+      "显式建模技能边界的空间可达性",
+      "报告 VLM 引入的负面结果"
+    ],
+    "design_risks": [
+      "仿真结果对真实接触和视觉偏移的外推有限",
+      "VLM 与底层策略的训练分布不一致"
+    ],
+    "baseline_fairness": "DeCo 作为模型无关插件加到多个基线，较好隔离了组合框架的贡献。",
+    "metric_validity": "同时报告原子与长时程成功率，能暴露‘规划变好、单技能变差’的取舍。",
+    "reproducibility": "基准和模块定义较清楚，但 VLM 版本与 prompt 可影响复现。",
+    "external_validity": "对 3D 长时程组合有直接意义，但真机、异构动作和高接触迁移需另行验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2505.00527-C01",
+      "claim": "DeCo 暴露了原子技能路线的核心成本：即使技能库可以零样本组合新长任务，VLM 规划的状态幻觉和指令分布偏移仍会降低部分原子任务表现。",
+      "stance": "limit",
+      "relation": "说明技能分解不会自动消除高低层接口错误，这也是独立技能栈未成为单一主流的原因之一。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "原子任务表中部分任务下降，作者将其归因于 VLM 计划不稳定。",
+      "locator": "V-B Generalization Performance on DeCoBench",
+      "source_context": "This drop primarily stems from VLM visual-semantic grounding errors:",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确报告下降并给出两类 VLM 原因；主张仅归纳该实验中的接口风险。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

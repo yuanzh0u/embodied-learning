@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.07601",
+    "title": "CARLA-GS: Decoupling Representation, Reasoning, and Physics Simulation for Autonomous Driving Corner-Case Synthesis",
+    "published": "2026-07-08",
+    "url": "https://arxiv.org/abs/2607.07601",
+    "authors": [
+      "Kaicong Huang",
+      "Meng Ma",
+      "Ruimin Ke"
+    ]
+  },
+  "review": {
+    "question": "近一年空间数据的生产难点在哪里，具身机器人与智能驾驶的异同是什么？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-4D",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper exposes why synthetic corner-case data requires separate visual, semantic and physics modules and quantifies residual LLM validity and sparse-view geometry problems."
+    },
+    "sections_read": [
+      {"locator": "I INTRODUCTION", "role": "problem", "purpose": "Map rare-event, geometry, semantic-control and physical-feasibility constraints."},
+      {"locator": "III-A Geometry-Consistent Driving Scenario Reconstruction; III-B LLM-Driven Corner Case Analysis and Synthesis; III-C Real-Sim-Real", "role": "method-or-design", "purpose": "Inspect reconstruction, reasoning and simulator coupling."},
+      {"locator": "IV-B Quantitative Evaluation; IV-C Qualitative Results; V Computational Cost Analysis", "role": "results-or-analysis", "purpose": "Assess validity, feasibility, rendering and cost."},
+      {"locator": "VI CONCLUSIONS", "role": "conclusion-or-limitations", "purpose": "Record sparse-view and closed-loop verification gaps."}
+    ],
+    "sections_skipped": [
+      {"locator": "References", "role": "appendix-or-supplement", "reason": "not-applicable: no separate appendix is present and the scoping claims rely on the paper's own experiments."}
+    ]
+  },
+  "research_question": "How can photorealistic, semantically targeted and physically executable driving corner cases be synthesized from real logs?",
+  "contributions": [
+    "Decouples 3D Gaussian reconstruction, LLM intent reasoning and CARLA dynamics while reprojecting simulated states back into the visual scene.",
+    "Reports that sparse views and LLM instability remain important validity limits despite modular physics grounding."
+  ],
+  "method": {
+    "summary": "Reconstructs editable Waymo scenes with geometry-regularized Gaussians, has an LLM select adversarial vehicles and waypoint intents, executes them with CARLA PID control, and renders the simulated poses in the reconstructed scene.",
+    "assumptions": ["Reconstructed scenes preserve safety-relevant geometry", "LLM-selected risk intent is meaningful", "CARLA dynamics and PID execution adequately represent vehicle feasibility"]
+  },
+  "study_context": {
+    "datasets": ["Waymo Open Dataset scenes"],
+    "tasks": ["Corner-case synthesis", "Vehicle trajectory control", "Ego-view rendering"],
+    "embodiments": ["Autonomous-driving simulation with CARLA and Gaussian scenes"],
+    "sample_or_scale": "Eight sequences and 85 synthesized corner cases; three behavior types are inspected."
+  },
+  "evaluation": {
+    "design": "Compares LLM, rule and random trajectory generation; ablates geometry constraints; compares LLM-only with CARLA-executed motion.",
+    "baselines": ["Rule-based corner cases", "Random trajectory perturbation", "Vanilla Street Gaussians", "LLM-only trajectories"],
+    "metrics": ["Zone hit", "Corner-case success", "MinTTC", "Comfort violation", "PSNR", "SSIM", "LPIPS", "Normal error"],
+    "ablations": ["Flattening, normal and geometry constraints", "LLM-only versus LLM+CARLA"]
+  },
+  "findings": [
+    {"finding": "No single generator supplies visual fidelity, semantic intent and physically valid execution; the system delegates these to different modules.", "scope": "CARLA-GS design and evaluated Waymo scenes.", "locator": "I INTRODUCTION; III METHODOLOGY"},
+    {"finding": "LLM intent generation remains unstable: manual inspection finds only 29.4% of generated outputs valid, and closed-loop verification is future work.", "scope": "Eight Waymo sequences and the paper's prompting setup.", "locator": "IV-B Quantitative Evaluation; VI CONCLUSIONS"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "Sparse onboard camera views cause geometry artifacts, LLM outputs are unstable under multiple constraints, and closed-loop verification of reasoning remains future work.", "locator": "I INTRODUCTION; IV-B Quantitative Evaluation; VI CONCLUSIONS"}
+    ],
+    "reader_inferred": [
+      {"boundary": "Photorealistic rendering and kinematic feasibility do not by themselves establish accurate sensor physics or safe policy ranking.", "basis": "Evaluation uses rendering, trajectory and risk-intent metrics on a small scene set without downstream closed-loop policy validation."}
+    ]
+  },
+  "transfer_boundary": "Evidence supports modular offline synthesis of visual corner cases; not a validated replacement for multi-sensor real-world long-tail collection or safety certification.",
+  "critical_appraisal": {
+    "design_strengths": ["Explicitly separates semantics from low-level physics", "Reports manual validity and component-specific failures"],
+    "design_risks": ["Only eight scenes and 85 cases", "No direct state-of-the-art comparison and limited behavior library", "Manual validity criterion is not fully standardized"],
+    "baseline_fairness": "Rule and random baselines share initial conditions, but few directly comparable systems exist.",
+    "metric_validity": "Zone hit, TTC and comfort measure intended interactions and feasibility; they do not validate sensor response or policy safety.",
+    "reproducibility": "Versions and major compute costs are reported, but dependence on an API LLM and reconstruction tooling can introduce drift.",
+    "external_validity": "Results are preliminary for a small Waymo subset and three prompted corner-case types."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.07601-C01",
+      "claim": "Synthetic driving corner cases still require human or programmatic validation: even with explicit collision zones and CARLA execution, the LLM may fail under multiple constraints and only 29.4% of generated outputs were judged valid by manual inspection.",
+      "stance": "limit",
+      "relation": "Limits claims that generative models can automatically scale rare-event data without a quality-control loop.",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "The evaluation directly reports LLM instability and manual validity for the generated outputs.",
+      "locator": "IV-B Quantitative Evaluation",
+      "source_context": "However, LLM instability can still limit planning reliability. As indicated by the zone hit rate and variance, the LLM may fail to reach the target zone under multiple constraints, even with explicit prompts, as shown in Case 3 of Fig. 6 . Manual inspection shows that 29.4% of LLM-generated outputs are valid.",
+      "evidence_type": "reported evaluation limitation",
+      "quantitative": {"metric": "manual output validity", "value_or_direction": "29.4% valid", "comparator": "all LLM-generated outputs inspected", "task_or_sample": "corner-case trajectory generation on eight Waymo sequences", "locator": "IV-B Quantitative Evaluation"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The exact result states the 29.4% validity and associates failure with multi-constraint LLM instability; the claim does not generalize beyond the paper's setup."}
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

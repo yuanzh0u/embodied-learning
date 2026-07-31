@@ -3,7 +3,7 @@ id: EA-XEMBODIMENT
 title: 跨本体与数据迁移
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-20
+updated: 2026-07-26
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -24,6 +24,9 @@ source:
   - id: RUN-MULTIMODAL-TRAINING-20260720
     file: ../../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/evidence.jsonl
     locator: EA-ALIGN-READ-0001..0005; EA-TWM-READ-0001..0003; EA-TWM-READ-0010..0011; EA-LOCOMANIP-2026-0006; EA-LOCOMANIP-2026-0012; EA-LOCOMANIP-2026-0018; EA-LOCOMANIP-2026-0021
+  - id: RUN-PRETRAIN-DATA-SOURCES-20260726
+    file: ../../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/evidence.jsonl
+    locator: EA-PRETRAIN-DATA-2026-0001..0002; EA-DQ-YEAR-READ-0009; EA-EGO-2026-0007..0013; EA-ALIGN-READ-0001
 tags: [embodied-ai, cross-embodiment, retargeting, dexterous-hand, gripper, action-space, sensor-adaptation, state-change]
 aliases: [跨本体, Retargeting, 人手迁移, 灵巧手, 夹爪, 动作空间, 状态变化接口, 目标硬件适配]
 load_when:
@@ -60,6 +63,7 @@ confidence: working
 - 人体示范的结构化扩增可显著提升任务策略，但技能分段、环境模型、成功判据和固定技能顺序会把迁移成本转移到任务工程。
 - 多模态迁移也应区分“可共享状态”与“硬件特定观测”：视觉语义和动作条件状态变化可作为中间接口，触觉图样、六维载荷、采样频率与漂移不能直接跨平台等同。
 - 硬件依赖模态更适合用少量目标传感器数据适配既有视觉/动作策略，而不是要求预训练阶段穷尽所有传感器形态。
+- 跨本体预训练应扩大本体覆盖但同时管理分布均衡；本体 ID 或形态先验、控制器、动作坐标和物理时间需显式条件化，并以少量目标机器人数据锚定可执行性。
 
 ## 指标与检核
 

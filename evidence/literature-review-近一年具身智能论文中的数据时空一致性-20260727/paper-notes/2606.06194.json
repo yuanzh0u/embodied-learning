@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.06194",
+    "title": "ActiveMimic: Egocentric Video Pretraining with Active Perception",
+    "published": "2026-06-04T14:01:01Z",
+    "url": "https://arxiv.org/abs/2606.06194",
+    "authors": [
+      "Xingyao Lin",
+      "Guojin Zhong",
+      "Tianyi Lu",
+      "Ziyi Ye",
+      "Yichen Zhu",
+      "Zuxuan Wu",
+      "Yu-Gang Jiang"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "把 egocentric camera motion 从噪声改写为 viewpoint action，直接揭示视点—手腕耦合、标签可靠性和 active-perception transfer。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认 human-video pretraining 相对 robot data 的差距和 camera motion 缺失。"
+      },
+      {
+        "locator": "3 Method > 3.1 From Egocentric Video to Unified Action Space",
+        "role": "method-or-design",
+        "purpose": "核验 camera/wrist trajectory recovery、尺度和共同参考系。"
+      },
+      {
+        "locator": "4 Experiments > 4.2 Comparison with Baselines",
+        "role": "results-or-analysis",
+        "purpose": "核验四个真实任务的比较。"
+      },
+      {
+        "locator": "4 Experiments > 4.3 Egocentric Video Yields Effective Pretraining Labels",
+        "role": "data-or-setting",
+        "purpose": "核验 RGB-only labels 的 recovery rate。"
+      },
+      {
+        "locator": "4 Experiments > 4.4 The Head Camera Enables Pretrained Active Perception",
+        "role": "results-or-analysis",
+        "purpose": "核验 head camera 和 pretraining 来源。"
+      },
+      {
+        "locator": "Appendix D Limitations and Future Directions",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录当前语料仅约 10 小时。"
+      },
+      {
+        "locator": "Appendix C Experimental Details > C.3 Failure Case Analysis",
+        "role": "appendix-or-supplement",
+        "purpose": "核验移除 head camera 后的具体失败模式。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Ego-centric 视频中的相机自运动究竟是噪声还是可迁移的 active-perception action，如何与 hand motion 解耦？",
+  "contributions": [
+    "从单个 body-worn RGB camera 恢复同步 camera/wrist trajectories。",
+    "在共同 chunk-relative frame 中构造 27D viewpoint + bimanual wrist action。",
+    "证明 camera-motion supervision 可在 robot adaptation 后提升 active-perception tasks。"
+  ],
+  "method": {
+    "summary": "用 VGGT/UniDepth/SAM-3D-Body 从 Ego4D 估计 camera 与双 wrist pose，恢复 metric scale 并在共同 chunk frame 解耦两类运动；flow VLA 预训练预测 27D action，随后以目标机器人数据微调。",
+    "assumptions": [
+      "RGB-only camera/depth/body estimation 的错误仍足以形成有效预训练信号。",
+      "头/身视点变化可作为机器人 head/waist action 的先验。",
+      "目标机器人有可移动 head/waist 与 head camera 来承接 active perception。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "filtered Ego4D",
+      "HOT3D for label validation"
+    ],
+    "tasks": [
+      "Restocking",
+      "Reaching",
+      "Finding",
+      "Pouring"
+    ],
+    "embodiments": [
+      "human head/body camera",
+      "AGIBOT G1 upper-body robot"
+    ],
+    "sample_or_scale": "约 10 小时过滤后 ego manipulation video；目标任务分别 270/30/60/90 条 robot demos。"
+  },
+  "evaluation": {
+    "design": "四个真实任务比较 wrist-only、SFT-only、mixed human/robot 和 robot-data pretrained models；另验证 HOT3D pose labels、head-camera ablation 与 representation overlap。",
+    "baselines": [
+      "ActiveMimic wrist-only",
+      "ActiveMimic sft-only",
+      "MotoVLA",
+      "robot-data-pretrained model"
+    ],
+    "metrics": [
+      "end-to-end success rate",
+      "Restocking point score",
+      "pose recovery rate",
+      "activation overlap"
+    ],
+    "ablations": [
+      "camera motion supervision",
+      "head camera removal",
+      "pretraining versus SFT"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "wrist pose 与 camera motion 在原始 ego 坐标中耦合，直接当动作标签会同时污染 hand 和 viewpoint action。",
+      "scope": "单 body-worn RGB camera 的 trajectory recovery。",
+      "locator": "3 Method"
+    },
+    {
+      "finding": "严格阈值下 head pose recovery 为 78.82%，左右 wrist 为 65.93%/61.72%，反映 scale-fidelity tradeoff。",
+      "scope": "随机 10% HOT3D 视频的外部标签验证。",
+      "locator": "4 Experiments > 4.3 Egocentric Video Yields Effective Pretraining Labels"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "预训练语料目前只有约 10 小时，尚未验证完整 Ego4D/Ego-Exo4D 规模。",
+        "locator": "Appendix D Limitations and Future Directions"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "模型仍需 30–270 条目标机器人示范，且 active perception 收益依赖机器人具有可控 head/waist 和 head camera。",
+        "basis": "实验设置明确列出每任务 robot demos 与主动视点硬件。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于 head/body motion 能映射为机器人 viewpoint action、可恢复 metric camera/wrist trajectories 且目标机器人具备主动视点控制的任务；固定相机机械臂或无机器人适配数据不能直接套用。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把 camera motion supervision 单独消融，并在真实机器人 active-perception tasks 验证。",
+      "用 HOT3D ground truth 量化自动标签 fidelity。"
+    ],
+    "design_risks": [
+      "标签 recovery rate 并不高，未分离各视觉模块错误对最终策略的贡献。",
+      "语料仅约 10 小时，模型/任务可能高度选择性过滤。"
+    ],
+    "baseline_fairness": "内部 wrist-only/SFT-only 对照最有解释力；外部 robot-pretraining 基线的数据规模与动作空间不完全等价。",
+    "metric_validity": "真实任务成功率和 head-camera intervention 能验证因果链；activation overlap 只是 representation proxy。",
+    "reproducibility": "方法依赖多种 off-the-shelf 视觉模型与 Ego4D 过滤规则，关键实现细节在附录。",
+    "external_validity": "支持 active-perception-aware ego pretraining 的特定硬件路线，不代表所有 camera motion 都应作为动作。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.06194-C01",
+      "claim": "Ego-centric wrist trajectory 与相机自运动天然耦合；若不统一参考系，动作监督会把 camera rotation/translation 错算为 hand motion。",
+      "stance": "limit",
+      "relation": "揭示头戴相机数据特有的坐标与动作语义污染。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法段明确说明 current-frame wrist pose 与 first-frame camera path 的坐标差异会混合两类位移。",
+      "locator": "3 Method",
+      "source_context": "using these wrist poses directly as action supervision would therefore conflate wrist movement with camera motion",
+      "evidence_type": "method-limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句直接描述未解耦 supervision 的错误机制；主张限定于 body-worn camera pose convention。"
+      }
+    },
+    {
+      "card_id": "2606.06194-C02",
+      "claim": "自动 RGB-only ego 标签存在明显 fidelity ceiling：严格阈值下左右 wrist pose recovery 仅约 66% 和 62%，规模化以噪声为代价。",
+      "stance": "conditional",
+      "relation": "量化 proxy-action label 的可靠性边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "HOT3D ground truth 上的 10% sample 验证给出 head/wrist 三类严格阈值 recovery rate。",
+      "locator": "4.3 Egocentric Video Yields Effective Pretraining Labels",
+      "source_context": "Under the strict tier ( , rot6d L2 ), head recovery reaches 78.82%, with left and right wrist recovery at 65.93% and 61.72%, respectively;",
+      "evidence_type": "label-validation",
+      "quantitative": {
+        "metric": "pose recovery rate",
+        "value_or_direction": "78.82% head; 65.93% left wrist; 61.72% right wrist",
+        "comparator": "strict translation and rotation tolerance",
+        "task_or_sample": "random 10% subset of HOT3D videos",
+        "locator": "4 Experiments > 4.3 Egocentric Video Yields Effective Pretraining Labels"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "结果段直接给出 sample、strict tier 和三类数值；主张仅用于说明标签 fidelity，不等价为策略成功率。"
+      }
+    },
+    {
+      "card_id": "2606.06194-C03",
+      "claim": "把 camera motion 当作 viewpoint action 可提供真实的 active-perception prior，但能力必须在有 head-camera/robot fine-tuning 的系统中承接。",
+      "stance": "conditional",
+      "relation": "说明相机自运动不是应被一律平滑掉的噪声。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Restocking 中 egocentric-pretrained model 的 placement 为 24/27，SFT-only 为 6/27；移除 head camera 降到 1/27。",
+      "locator": "4.4 The Head Camera Enables Pretrained Active Perception",
+      "source_context": "ActiveMimic scores 24 out of 27 on placement, whereas ActiveMimic sft-only achieves only 6 out of 27",
+      "evidence_type": "intervention-ablation",
+      "quantitative": {
+        "metric": "Restocking placement points",
+        "value_or_direction": "24/27 versus 6/27; 1/27 without head camera",
+        "comparator": "egocentric pretraining versus SFT-only and head-camera removal",
+        "task_or_sample": "Restocking real-robot task",
+        "locator": "4 Experiments > 4.4 The Head Camera Enables Pretrained Active Perception"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "干预实验直接区分 pretraining 来源和 head-camera 承载通道；结论限定于具有主动视点需求的任务。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "没有 Abstract heading 是 HTML 结构特征，不影响完整正文。"
+}

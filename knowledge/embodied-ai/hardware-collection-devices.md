@@ -3,7 +3,7 @@ id: EA-HARDWARE
 title: 采集硬件与设备路线
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-15
+updated: 2026-07-26
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -15,6 +15,9 @@ source:
   - id: RUN-VLOC-20260715
     file: ../../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/evidence.jsonl
     locator: EA-VLOC-2026-0001..0010; EA-VLOC-2026-0014
+  - id: RUN-PRETRAIN-DATA-SOURCES-20260726
+    file: ../../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/evidence.jsonl
+    locator: EA-PRETRAIN-DATA-2026-0003..0006; EA-EGO-2026-0014..0018; EA-UMI-READ-0004
 tags: [embodied-ai, hardware, monocular, stereo, arkit, slam, tracking, umi, glove, visual-localization, localization-map]
 aliases: [采集硬件, 单目, 双目, ARKit, SLAM, Tracking, UMI, 指套, 手套, 定位地图, SCR, 3DGS]
 load_when:
@@ -47,6 +50,8 @@ confidence: working
 - 灵巧操作若采集端和部署端共享末端、传感器与动作空间，可减少 retargeting 失真。
 - 3DGS/SCR 等神经地图可以降低某些建图或查询成本，但渲染质量不等于几何可定位性，地图表示必须按对应唯一性和位姿可恢复性验收。
 - 3DGS 位姿细化通常是局部优化，前端 Top-K 召回、初始位姿和局部几何质量仍是系统级依赖。
+- 近一年预训练证据不支持单一摄像头分辨率、帧率、码率、FOV 或机位标准；设备可异构，但要保证关键交互可见、硬件时间对齐、机位角色与内外参可追溯。
+- 原始采集规格、传输/预处理规格和模型输入规格应分层记录；224×224、256×256 或 240×320 等模型输入不能倒推为采集硬件上限。
 
 ## 指标与检核
 

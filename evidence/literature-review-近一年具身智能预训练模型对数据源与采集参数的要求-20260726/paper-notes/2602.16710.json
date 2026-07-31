@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.16710",
+    "title": "EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data",
+    "published": "2026-02-18T18:59:05Z",
+    "url": "https://arxiv.org/abs/2602.16710",
+    "authors": [
+      "Ruijie Zheng",
+      "Dantong Niu",
+      "Yuqi Xie",
+      "Jing Wang",
+      "Mengda Xu",
+      "Yunfan Jiang",
+      "Fernando Castañeda",
+      "Fengyuan Hu",
+      "You Liang Tan",
+      "Letian Fu",
+      "Trevor Darrell",
+      "Furong Huang",
+      "Yuke Zhu",
+      "Danfei Xu",
+      "Linxi Fan"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "大规模 egocentric human action pretraining 的直接证据，同时把噪声、算力、动作表征和 human-robot alignment 作为训练条件。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认 scaling 与 embodiment alignment 的研究假设。"
+      },
+      {
+        "locator": "2 Method > 2.1 Human Action Representation",
+        "role": "method-or-design",
+        "purpose": "核验相对 wrist motion 与 high-DoF retargeting。"
+      },
+      {
+        "locator": "2 Method > 2.2 Human Data Sources and Processing",
+        "role": "data-or-setting",
+        "purpose": "核验 20,854 小时 noisy data 与 50 小时 aligned data 的分工。"
+      },
+      {
+        "locator": "3 Experiment > 3.2 Large-Scale Human Pretraining Is Key to Strong Dexterous Manipulation Policy Performance",
+        "role": "results-or-analysis",
+        "purpose": "核验 human pretraining 与 mid-training 消融。"
+      },
+      {
+        "locator": "3 Experiment > 3.3 Policy Performance Scales with Pretraining Data Size",
+        "role": "results-or-analysis",
+        "purpose": "核验 scaling law 与真实机器人相关性。"
+      },
+      {
+        "locator": "3 Experiment > 3.6 Hand Action Space Design for Human Pretraining",
+        "role": "results-or-analysis",
+        "purpose": "核验动作表征导致的接触失败。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录作者结论和未解决问题。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "4 Related Work",
+        "role": "relevant-core",
+        "reason": "仅作领域定位；已核验本文方法、数据、实验与结论。"
+      }
+    ]
+  },
+  "research_question": "大规模 egocentric 人类动作数据在何种 supervision、alignment 和 action-space 条件下能转移到高自由度机器人？",
+  "contributions": [
+    "在 20,854 小时 action-labeled egocentric 数据上建立 scaling evidence。",
+    "提出大规模 human pretraining + 小规模 aligned human-robot mid-training + robot post-training。",
+    "比较 wrist-only、fingertip 和 retargeted joint-space action supervision。"
+  ],
+  "method": {
+    "summary": "从头戴 RGB、SLAM 和手势估计得到相对 wrist motion 与 retargeted 22-DoF hand actions，用 20K 小时人类数据预训练 flow VLA；再用视角/动作对齐的人—机数据 mid-train，最后以目标机器人示范 post-train。",
+    "assumptions": [
+      "off-the-shelf SLAM/hand pose noise 可由数据规模部分吸收。",
+      "相对 wrist motion 与 retargeted hand joints 在本体间具有可复用结构。",
+      "有资源进行 256 张 GB200 规模预训练和目标机器人后训练。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "20,854 hours in-the-wild egocentric mixture",
+      "829 hours EgoDex",
+      "aligned human-robot play dataset"
+    ],
+    "tasks": [
+      "5 dexterous bimanual tasks",
+      "2 one-shot tasks",
+      "2 cross-embodiment G1 tasks"
+    ],
+    "embodiments": [
+      "Galaxea R1Pro with 22-DoF Sharpa hands",
+      "Unitree G1 tri-finger hand"
+    ],
+    "sample_or_scale": "1K–20K 小时预训练消融；344 aligned tasks；约 50 小时 human + 4 小时 robot mid-training。"
+  },
+  "evaluation": {
+    "design": "比较 scratch、midtrain-only、human-pretrain 和 pretrain+midtrain；另做数据规模、one-shot、cross-embodiment 与 hand action representation 消融。",
+    "baselines": [
+      "scratch",
+      "aligned mid-training only",
+      "human pretraining only",
+      "wrist-only",
+      "fingertip representation"
+    ],
+    "metrics": [
+      "task completion score",
+      "success rate",
+      "human action validation loss"
+    ],
+    "ablations": [
+      "1K–20K hours",
+      "mid-training",
+      "robot embodiment",
+      "hand action representation"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "平均任务完成度随人类数据从 1K 小时的 0.30 单调升至 20K 小时的 0.71，离线 human-action loss 与真实机器人表现同步改善。",
+      "scope": "同一模型与五个 dexterous tasks 的测量区间，作者未外推超过 20K 小时。",
+      "locator": "3 Experiment > 3.3 Policy Performance Scales with Pretraining Data Size"
+    },
+    {
+      "finding": "human pretraining 与 aligned mid-training 互补，二者组合最好；仅 wrist 或 fingertip action 表征在接触任务中不稳定。",
+      "scope": "R1Pro/Sharpa 与 G1 的实验配置。",
+      "locator": "3 Experiment > 3.6 Hand Action Space Design for Human Pretraining"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "尚未解决弱标注/无标注视频利用、长程规划与组合泛化，零样本执行仍是未来方向。",
+        "locator": "6 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "scaling 结论依赖大规模显式动作标签和极高训练算力，不能直接等价为 raw video scaling law。",
+        "basis": "方法用 SLAM/hand pose 生成监督，并报告 256 张 GB200、100K steps 的训练资源。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于能恢复 wrist/hand actions、可构建少量精确 human-robot alignment 且有显著算力预算的 dexterous pretraining；不证明 action-free 视频或无 robot alignment 可获得同样收益。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "跨多个数据尺度测量离线与真实闭环相关性。",
+      "同时消融 alignment、action representation 和新本体。"
+    ],
+    "design_risks": [
+      "训练资源极高，工程复现门槛大。",
+      "in-the-wild 标签由未完全量化误差的视觉管线生成。"
+    ],
+    "baseline_fairness": "scratch/midtrain/pretrain 对照清晰；不同阶段数据量与算力目的不同，不能简单比较单位数据效率。",
+    "metric_validity": "真实任务完成度和成功率能检验控制效用；验证 loss 与下游相关性仅在同一系统和 1K–20K 区间成立。",
+    "reproducibility": "数据/训练规模披露较充分，但完整 20K 小时语料、估计管线和算力难以独立复现。",
+    "external_validity": "支持‘规模 + 显式动作 + 对齐’的组合规律，不支持只靠视频数量消除本体差距。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.16710-C01",
+      "claim": "在 EgoScale 的测量区间内，egocentric human action pretraining 确有规模收益：1K 到 20K 小时使真实机器人平均任务完成度从 0.30 升到 0.71。",
+      "stance": "support",
+      "relation": "确认 Ego-centric 数据不是只能做语义预训练，显式动作监督可形成可预测 motor prior。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "五个数据规模的同架构实验报告单调提升，并限制结论不外推到测量区间之外。",
+      "locator": "3.3 Policy Performance Scales with Pretraining Data Size",
+      "source_context": "Average task completion rises monotonically from 0.30 at 1k hours to 0.71 at 20k hours",
+      "evidence_type": "scaling-experiment",
+      "quantitative": {
+        "metric": "average task completion",
+        "value_or_direction": "0.30 to 0.71",
+        "comparator": "1K versus 20K hours of human pretraining",
+        "task_or_sample": "five real-robot dexterous manipulation tasks",
+        "locator": "3 Experiment > 3.3 Policy Performance Scales with Pretraining Data Size"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "结果段直接给出两端数值并说明无饱和；主张严格限定于同一系统的 1K–20K 小时测量区间。"
+      }
+    },
+    {
+      "card_id": "2602.16710-C02",
+      "claim": "大规模 human pretraining 仍需少量精确 aligned human-robot mid-training 才能最好地落到可执行控制；规模和本体对齐是互补条件。",
+      "stance": "conditional",
+      "relation": "限制‘规模可替代 alignment’的说法。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "四类 checkpoint 的消融中，pretrain+midtrain 最好；human pretraining 提供结构，mid-training 负责控制锚定。",
+      "locator": "3.2 Large-Scale Human Pretraining Is Key to Strong Dexterous Manipulation Policy Performance",
+      "source_context": "combining human pretraining with a small amount of aligned mid-training yields the best overall performance",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "结果段明确陈述组合效果和两阶段分工；主张没有声称 mid-training 可被完全消除。"
+      }
+    },
+    {
+      "card_id": "2602.16710-C03",
+      "claim": "Ego-centric 数据的动作接口会决定训练成败：wrist-only 缺失手指/接触时序，小 fingertip 误差又会映射成不合理关节和接触丢失。",
+      "stance": "limit",
+      "relation": "揭示 action representation 不是中性格式选择。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "动作空间消融中 wrist-only 普遍较差，fingertip mapping 在 Cards/Bottle 等接触敏感任务不稳定。",
+      "locator": "3.6 Hand Action Space Design for Human Pretraining",
+      "source_context": "Small errors in fingertip pose often lead to implausible joint configurations after mapping",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句直接解释 fingertip 表征失败机制，前文同时报告 wrist-only 的弱表现；结论限定于论文比较的三种 action representation。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "将 scaling 事件与 alignment/action-space 限制分开投影。"
+}

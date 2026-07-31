@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.19161",
+    "title": "HT-Bench: Benchmarking and Learning Dexterous Full-Hand Tactile Representations with Egocentric Vision",
+    "published": "2026-06-17",
+    "url": "https://arxiv.org/abs/2606.19161",
+    "authors": [
+      "Yuzhe Huang",
+      "Jiaping Wu",
+      "Jiaming Jiang",
+      "Hezhe Lin",
+      "Aikebaier Aierken",
+      "Yunlong Wang",
+      "Kun Cheng",
+      "Ziyuan Jiao",
+      "Yuanxin Zhong"
+    ]
+  },
+  "review": {
+    "question": "近一年触觉在具身机器人领域的发展体现在哪些传感器、表征、策略、评测与部署变化中？",
+    "topic_ids": ["EA-SENSOR", "EA-DATA", "EA-MODEL", "EA-EVAL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "论文直接覆盖过去一年触觉表征的数据规模、全手传感、视觉—触觉对齐、OOD 评测及其不等同于闭环机器人能力的边界。"
+    },
+    "sections_read": [
+      {"locator": "Abstract and 1 Introduction", "role": "problem", "purpose": "确认触觉数据异构性、全手触觉—第一视角配对路线和主要规模主张。"},
+      {"locator": "3 HT-Bench: A Multi-Task Tactile Evaluation Benchmark", "role": "method-or-design", "purpose": "核验数据划分与四项评测任务。"},
+      {"locator": "4 HandTouch and 4.1-4.3", "role": "method-or-design", "purpose": "核验空间、跨模态和时间三阶段表征学习设计。"},
+      {"locator": "5 Experiment and 5.1 Comparison with Baseline Encoders", "role": "results-or-analysis", "purpose": "核验基线公平性、主结果和 OOD 局部重建反例。"},
+      {"locator": "6 Limitations and Future Work", "role": "conclusion-or-limitations", "purpose": "核验传感器/本体覆盖、消融、闭环性能和同步维护边界。"},
+      {"locator": "7 Conclusion", "role": "conclusion-or-limitations", "purpose": "核验作者最终主张与未解决方向。"}
+    ],
+    "sections_skipped": [
+      {"locator": "References", "reason": "not required for the two directly verified claims"}
+    ]
+  },
+  "research_question": "在触觉传感器与机器人本体高度异构的前提下，如何用大规模第一视角视觉—全手触觉数据建立多任务表征基准，并学习兼顾空间接触结构、跨模态对齐与时间动态的编码器？",
+  "contributions": [
+    "提出 HT-Bench，以第一视角视觉和全手触觉配对数据构建多任务、任务级 OOD 的表征评测。",
+    "提出 HandTouch，通过离散化空间重建、跨模态掩码补全和多模态触觉帧预测逐步学习触觉表征。",
+    "明确承认当前评测仍停留在表征层，尚不能直接证明闭环灵巧操作收益。"
+  ],
+  "method": {
+    "summary": "HT-Bench 用细粒度触觉检索、掩码触觉补全、视觉到触觉合成和多模态触觉帧预测四项任务评估接触几何、视觉—触觉对齐和时间接触建模；HandTouch 以共享离散码本和分阶段训练对应这些能力。",
+    "assumptions": [
+      "第一视角视觉与全手触觉的配对数据可作为可扩展触觉学习路线。",
+      "表征层任务能分别测量空间结构、跨模态对齐和时间动态，但不等价于策略闭环效用。",
+      "任务级 OOD 划分能作为未见交互任务泛化的有限代理。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["HT-Bench"],
+    "tasks": ["fine-grained tactile similarity retrieval", "masked tactile inpainting", "vision-to-tactile synthesis", "multimodal tactile frame prediction"],
+    "embodiments": ["dexterous full-hand tactile sensing paired with egocentric vision"],
+    "sample_or_scale": "约 1000 万 RGB 帧、780 万触觉帧，覆盖 226 项交互任务，并使用任务级 OOD 划分。"
+  },
+  "evaluation": {
+    "design": "所有代表性基线在同一训练划分上预训练，并在标准测试与任务级 OOD 划分上比较；静态任务使用检索、RMSE 和 contact IoU，时间任务单列触觉帧预测。",
+    "baselines": ["CNN-based encoder", "ResNet-18", "VQ-VAE", "ViT-based encoder"],
+    "metrics": ["Hit@1", "Recall@5", "RMSE", "contact IoU (cIoU)"],
+    "ablations": ["作者明确称消融仍属初步，码本、掩码课程、交叉注意力、hand-specific token、时间预测模块与规模敏感性尚需更完整分析。"]
+  },
+  "findings": [
+    {"finding": "HandTouch 在检索、补全和视觉到触觉合成的大多数指标上优于所列基线，并在任务级 OOD 上保持较强全图结构表现。", "scope": "仅限 HT-Bench 的表征评测轨道。", "locator": "5.1 Comparison with Baseline Encoders, Table 2"},
+    {"finding": "在未见任务的严重局部缺失区域，ResNet-18 的局部补全优于 HandTouch，显示全图指标优势不能掩盖局部接触重建困难。", "scope": "HT-Bench OOD masked-hole metrics。", "locator": "5.1 Comparison with Baseline Encoders"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "HT-Bench 不是通用触觉基准，不覆盖指尖光学触觉、力/力矩、皮肤式 taxel 或非手部本体。", "locator": "6 Limitations and Future Work"},
+      {"limitation": "当前四项评测是表征层任务，未直接测量真实机器人灵巧操作的闭环性能。", "locator": "6 Limitations and Future Work"},
+      {"limitation": "同步视觉—触觉大数据仍需要仔细标定和维护。", "locator": "6 Limitations and Future Work"}
+    ],
+    "reader_inferred": [
+      {"boundary": "不能把 HandTouch 的表征指标增益外推为抓取、插入、滑移恢复或安全收益。", "basis": "论文没有下游策略训练或真机闭环实验，作者亦明确将其列为未来工作。"},
+      {"boundary": "跨传感器和跨本体通用性尚未成立。", "basis": "数据与基准限定于第一视角视觉配对的全手触觉路线，其他传感原理未覆盖。"}
+    ]
+  },
+  "transfer_boundary": "结论适用于 HT-Bench 的全手触觉—第一视角视觉数据和四项表征任务；不适用于未覆盖的触觉硬件、本体，也不能替代真实闭环操作、安全或维护周期评测。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把空间结构、跨模态对齐、时间预测和任务级 OOD 分开评测，避免单一任务定义触觉表征。",
+      "基线使用同一训练划分，且报告了局部 OOD 反例。",
+      "数据规模和多场景覆盖显著高于小样本单任务触觉数据集。"
+    ],
+    "design_risks": [
+      "SSIM 诱导的检索排名仍是工程代理，不必然对应接触控制语义。",
+      "作者自己的消融不足，尚不能稳健归因各训练阶段或码本设计的贡献。",
+      "缺少真机闭环下游任务，使策略价值和部署价值未被验证。"
+    ],
+    "baseline_fairness": "同一训练划分提高可比性；但基线集合以通用 CNN/ResNet/VQ-VAE/ViT 为主，无法确认是否覆盖所有近期触觉专用编码器。",
+    "metric_validity": "RMSE/cIoU/检索指标适合测表征结构和合成质量；对真实操作成功、安全、滑移恢复和接触力控制的效度有限。",
+    "reproducibility": "正文提供数据规模、划分和任务定义；本轮未核验公开代码、权重及数据许可。",
+    "external_validity": "对全手触觉—第一视角视觉路线有直接价值；跨指尖光学触觉、力/力矩、机器人皮肤、非手本体和部署寿命的外部效度尚未建立。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.19161-C01",
+      "claim": "近一年触觉表征研究开始从小规模单任务管线走向大规模全手触觉—第一视角配对数据和多任务、任务级 OOD 基准；HT-Bench 以约 1000 万 RGB 帧、780 万触觉帧和 226 项任务测量接触结构、跨模态对齐与时间动态。",
+      "stance": "support",
+      "relation": "支持触觉发展已进入数据与表征规模化阶段。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "摘要和基准设计章节直接给出数据规模、四项评测任务与任务级 OOD 划分。",
+      "locator": "Abstract; 3 HT-Bench: A Multi-Task Tactile Evaluation Benchmark",
+      "source_context": "comprising 10M RGB frames and 7.8M tactile frames collected across 226 tasks.",
+      "evidence_type": "benchmark",
+      "quantitative": {
+        "metric": "dataset scale",
+        "value_or_direction": "10M RGB frames; 7.8M tactile frames; 226 tasks",
+        "comparator": "descriptive benchmark scale; no direct comparator",
+        "task_or_sample": "dexterous full-hand tactile sensing paired with egocentric vision",
+        "locator": "Abstract"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "摘要与第 3 节均明确报告相同数据规模、评测轨道和 OOD 划分；主张未外推到策略闭环性能。"
+      }
+    },
+    {
+      "card_id": "2606.19161-C02",
+      "claim": "HT-Bench 的进步仍停留在表征层：当前四项任务没有直接测量真实机器人闭环操作，因此不能据此宣称策略或部署收益。",
+      "stance": "limit",
+      "relation": "限制把大规模触觉表征基准等同于通用机器人能力。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在限制章节明确列出硬件/本体覆盖和闭环下游评测缺失。",
+      "locator": "6 Limitations and Future Work",
+      "source_context": "While these tasks assess structural, cross-modal, and temporal understanding, they do not directly measure downstream robotic performance.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "主张逐项复述作者列出的限制，没有把本轮未覆盖误写成领域普遍结论。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "HT-Bench 是表征与评测证据，不作为闭环操作增益证据。"
+}

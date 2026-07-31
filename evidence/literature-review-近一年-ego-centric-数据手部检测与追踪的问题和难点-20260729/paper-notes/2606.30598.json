@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.30598",
+    "title": "Towards in-the-wild Egocentric 3D Hand-Object Pose Estimation",
+    "published": "2026-06-29",
+    "url": "https://arxiv.org/abs/2606.30598",
+    "authors": [
+      "Siddhant Bansal",
+      "Zhifan Zhu",
+      "Shashank Tripathi",
+      "Jiahe Zhao",
+      "Michael J. Black",
+      "Dima Damen"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别野外手物重遮挡、接触歧义和 3D 监督稀缺。"
+      },
+      {
+        "locator": "3 EPIC-Contact Dataset",
+        "role": "data-or-setting",
+        "purpose": "核查接触对应与姿态网格标注管线。"
+      },
+      {
+        "locator": "4.2 Learning-based Pose Estimation",
+        "role": "method-or-design",
+        "purpose": "核查手先验条件化物体位姿的交叉注意。"
+      },
+      {
+        "locator": "5.5 Results",
+        "role": "results-or-analysis",
+        "purpose": "核查受控 ARCTIC 与野外 EPIC-Contact 结果。"
+      },
+      {
+        "locator": "10 Limitations and Future Directions",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查标注传播、物体类别和关节物体边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "在无 MoCap 的野外 egocentric 视频中，如何生产手物 3D 接触真值并联合估计双手与物体姿态？",
+  "contributions": [
+    "构建 EPIC-Contact 的双向 3D 手–物接触对应和姿态网格，并提出 HOPformer 联合位姿模型。"
+  ],
+  "method": {
+    "summary": "在 EPIC-Grasps 稳定抓取 clip 中人工涂抹 MANO 接触顶点，将接触轴映射到类别物体网格，再优化姿态网格；HOPformer 用 WiLoR 手特征交叉注意调制物体特征。",
+    "assumptions": [
+      "抓取 clip 内接触保持稳定，可将中心帧的手工接触标注传播至全 clip。",
+      "物体属于已知类别和网格池。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EPIC-Contact",
+      "ARCTIC",
+      "EPIC-Grasps"
+    ],
+    "tasks": [
+      "3D 双手–物体位姿",
+      "接触对应",
+      "物体类别/网格检索"
+    ],
+    "embodiments": [
+      "人类单目 egocentric RGB"
+    ],
+    "sample_or_scale": "EPIC-Contact 含多个野外稳定抓取 clip/帧和若干物体类别；原文 LaTeX 部分数值未被 HTML 完整渲染。"
+  },
+  "evaluation": {
+    "design": "在 ARCTIC 受控集与 EPIC-Contact 野外集上比较接触、相对位置、运动、手姿和物体成功率，并做交叉注意与损失消融。",
+    "baselines": [
+      "ArcticNet-SF",
+      "JointTransformer"
+    ],
+    "metrics": [
+      "CDev",
+      "MRRPE",
+      "MDev",
+      "ACC",
+      "MPJPE",
+      "AAE",
+      "SR@0.05/0.1"
+    ],
+    "ablations": [
+      "接触/关键点/物体损失",
+      "交叉注意与简单拼接",
+      "手特征",
+      "decoder depth",
+      "ARCTIC pretraining"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "野外手物 3D 监督的核心缺口是便宜真值；MoCap 高成本且环境单一，纯单目又存在遮挡和接触歧义。",
+      "scope": "EPIC-Contact 设计动机。",
+      "locator": "1 Introduction"
+    },
+    {
+      "finding": "单中心帧接触传播会受手边别错误和相机跳变影响，且模型当前只覆盖有限物体类别。",
+      "scope": "EPIC-Contact/HOPformer 限制。",
+      "locator": "10 Limitations and Future Directions"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "每个中心帧的接触标注仍耗时，且传播会被 WiLoR 手边别错误或相机跳变污染。",
+        "locator": "10 Limitations and Future Directions"
+      },
+      {
+        "limitation": "HOPformer 只估计有限数量的已知物体类别，且未评测野外可关节物体。",
+        "locator": "10 Limitations and Future Directions"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "接触传播的 per-frame confidence 必须与姿态标签一起保留，否则实际上是把单帧标签假设为整个轨迹真值。",
+        "basis": "作者承认传播会因上游手姿和相机跳变而有噪声，并发布每帧置信度供过滤。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于已知物体类别和稳定抓取 clip 的野外 3D 手物姿态；类别开放、非稳定接触、工具转换和长时追踪需额外方法。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "将接触标注与手/物体联合位姿放在同一数据与评测框架中，并报告野外下降。"
+    ],
+    "design_risks": [
+      "依赖 WiLoR、VLM 尺度估计、类别网格池和中心帧传播，真值并非独立 MoCap。"
+    ],
+    "baseline_fairness": "JointTransformer 与 HOPformer 共用 DINOv2 对象特征，有助于隔离手条件交叉注意的增益。",
+    "metric_validity": "接触、相对位置、运动和姿态多指标较完整，但部分真值来自优化/传播而非物理测量。",
+    "reproducibility": "数据、代码和检查点承诺公开；标注管线多组件且有手工成本。",
+    "external_validity": "比受控 MoCap 数据更接近真实 egocentric 环境，但只覆盖有限物体类别和稳定抓取。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.30598-C01",
+      "claim": "野外 egocentric 手物 3D 估计的主要数据瓶颈是重遮挡与接触歧义下缺少便宜、可扩展的 3D 监督。",
+      "stance": "gap",
+      "relation": "指向从受控 MoCap 到真实环境真值的核心数据难点。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "该句所在段落将野外遮挡/接触歧义与 MoCap 成本、环境空洞联系起来。",
+      "locator": "1 Introduction",
+      "source_context": "A central bottleneck is the availability of supervision.",
+      "evidence_type": "gap",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2606.30598-C02",
+      "claim": "将中心帧的接触标注传播到整个 clip 会受手边别错误和相机跳变污染，需保留每帧置信度。",
+      "stance": "limit",
+      "relation": "支持时序伪真值必须带置信度和错误谱系。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在限制中明确列出了标签传播的两类时序噪声。",
+      "locator": "10 Limitations and Future Directions",
+      "source_context": "Additionally, we propagate manually-verified ground-truth from a single frame to a clip. Propagation can be noisy due to errors in hand pose estimates from WiLoR [ Potamias_2025_CVPR_wilor ] (hand-side errors or camera placement jumps).",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

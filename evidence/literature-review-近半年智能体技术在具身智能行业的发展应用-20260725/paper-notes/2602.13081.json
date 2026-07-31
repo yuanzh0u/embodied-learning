@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.13081",
+    "title": "Agentic AI for Robot Control: Flexible but still Fragile",
+    "published": "2026-02-13",
+    "url": "https://arxiv.org/abs/2602.13081",
+    "authors": ["Oscar Lima", "Marc Vinci", "Martin Günther", "Marian Renz", "Alexander Sung", "Sebastian Stock", "Johannes Brust", "Lennart Niecksch", "Zongyao Yi", "Felix Igelbrink", "Benjamin Kisliuk", "Martin Atzmueller", "Joachim Hertzberg"]
+  },
+  "review": {"question": "近半年智能体技术在具身智能行业中形成了哪些可验证的技术架构、应用方式、部署收益与失败边界？", "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-BIZ"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted", "paper_type": "system",
+    "relevance": {"decision": "include", "reason": "给出真实机器人智能体控制的完整工程前提、跨平台迁移路径和长时执行失败面。"},
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "核对部分可观测与事件恢复问题。"},
+      {"locator": "3 Agentic Control Architecture", "role": "method-or-design", "purpose": "核对规划执行、批评器和工具接口。"},
+      {"locator": "4-5 Real-World Robotic Execution", "role": "data-or-setting", "purpose": "核对技能 API、状态快照和部署前提。"},
+      {"locator": "6 Qualitative Validation on a Physical Robot with Simulated Transfer", "role": "results-or-analysis", "purpose": "核对七组验证与失败。"},
+      {"locator": "7 Conclusions", "role": "conclusion-or-limitations", "purpose": "核对延迟、提示敏感和异步抢占边界。"}
+    ],
+    "sections_skipped": [{"locator": "2 Related Work", "reason": "背景不承担本轮核心实证。"}]
+  },
+  "research_question": "一个以 LLM 为高层规划器的机器人智能体，在真实部分可观测环境中需要哪些接口，迁移有多快，脆弱性在哪里？",
+  "contributions": ["把语义状态、技能 API、事件检查和执行批评器组合成真实机器人闭环。", "展示室内真实移动操作与农业平台仿真迁移，并公开失败模式。"],
+  "method": {"summary": "推理模型在单一规划—执行循环中读取语义状态快照、调用参数化技能、检查事件并基于结构化反馈重规划；批评器防止只说不做。", "assumptions": ["底层导航、感知、抓取、运动规划与监控栈已可用。", "每个技能返回可信的成功、失败或错误诊断。", "安全约束能以提示和 API 不变量表达。"]},
+  "study_context": {"datasets": [], "tasks": ["tabletop search/grasp/place/insert", "long-horizon object transport", "agricultural waypoint scan and recharge"], "embodiments": ["Mobipick physical mobile manipulator", "Valdemar agricultural platform via simulation/API transfer"], "sample_or_scale": "Seven proof-of-concept qualitative experiments; not an exhaustive quantitative benchmark."},
+  "evaluation": {"design": "真实 Mobipick 上做定性任务和故障注入；Valdemar 场景在仿真中验证 API/提示迁移。", "baselines": [], "metrics": ["task completion observations", "event response", "operator intervention", "qualitative failure analysis"], "ablations": []},
+  "findings": [
+    {"finding": "跨平台迁移主要改动提示中的领域模型、动作目录与平台技能绑定，Valdemar 适配约一天。", "scope": "室内移动操作到农业导航/扫描的概念验证。", "locator": "6 Qualitative Validation on a Physical Robot with Simulated Transfer"},
+    {"finding": "长时任务中出现陈旧状态、提示约束违背、非确定性选择和不规则事件检查。", "scope": "七个定性实验。", "locator": "Experiment 4; Experiment 6; Qualitative Observations"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "验证是概念证明而非穷尽定量评测。", "locator": "6 Qualitative Validation on a Physical Robot with Simulated Transfer"},
+      {"limitation": "提示敏感且长时执行仍会违反约束；远程推理有成本、网络依赖和延迟。", "locator": "7 Conclusions"},
+      {"limitation": "轮询事件只能在离散动作之间响应，长动作缺乏统一硬抢占。", "locator": "7 Conclusions"}
+    ],
+    "reader_inferred": [{"boundary": "快速迁移证明的是高层接口复用，不是低层技能、感知与控制能力跨本体迁移。", "basis": "低层栈由每个平台预先实现并重新绑定。"}]
+  },
+  "transfer_boundary": "适用于技能成熟、状态可结构化、动作可验证且能提供人工接管的场景；不适用于让 LLM 直接承担高频控制、安全抢占或缺乏低层栈的机器人。",
+  "critical_appraisal": {
+    "design_strengths": ["公开真实机器人长时执行中的具体失败。", "明确区分高层推理与几何/控制栈。", "包含急停、低电量、歧义和无效命令。"],
+    "design_risks": ["缺少定量重复次数、成功率和时延。", "农业平台主要是仿真迁移。", "同一提示体系和少量机器人限制外部效度。"],
+    "baseline_fairness": "没有对照系统，不能归因智能体架构优于经典规划或其他分层方案。",
+    "metric_validity": "定性任务能暴露失败机制，但不足以估算部署可靠性。",
+    "reproducibility": "提供提示、项目页面和 Mobipick 仿真；真实硬件效果仍难完全复现。",
+    "external_validity": "对已有原子技能的物流、巡检和移动操作有参考；对开放世界高接触任务证据不足。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.13081-C01", "claim": "该架构把 LLM 限制在高层决策和技能调用；真实部署的前提是平台已有完整低层栈、语义状态快照及结构化成功/失败信号。", "stance": "conditional", "relation": "界定智能体技术的产业价值在编排与恢复，而非替代底层机器人能力。", "confidence": "direct", "claim_basis": "author-claim", "summary": "论文逐项列出导航、感知、抓取、运动规划、监控和技能返回要求。", "locator": "Real-World Execution Prerequisites", "source_context": "the architectural requirement remains an action API exposing executable skills and returning structured success or failure signals.", "evidence_type": "system-design", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核部署前提与结论：两处都限定 LLM 为高层技能调用者，并逐项给出所依赖的底层机器人能力。"}
+    },
+    {
+      "card_id": "2602.13081-C02", "claim": "同一高层循环在真实 Mobipick 上运行，并在约一天内通过更换提示与技能绑定迁移到 Valdemar 仿真场景。", "stance": "support", "relation": "支持声明式领域模型和统一工具接口降低跨平台原型集成成本。", "confidence": "direct", "claim_basis": "reported-result", "summary": "迁移发生在高层编排层，低层平台 API 分别存在。", "locator": "6 Qualitative Validation on a Physical Robot with Simulated Transfer", "source_context": "within approximately one day of development effort, the same system was adapted", "evidence_type": "deployment-demonstration", "quantitative": {"metric": "integration effort", "value_or_direction": "approximately one day", "comparator": "adaptation from Mobipick workflow to Valdemar API", "task_or_sample": "proof-of-concept simulated transfer", "locator": "6 Qualitative Validation on a Physical Robot with Simulated Transfer"}, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核实验段：约一天的数值、真实 Mobipick 与 Valdemar 仿真迁移边界在同一上下文中，未扩大为双平台真实部署。"}
+    },
+    {
+      "card_id": "2602.13081-C03", "claim": "长时执行仍会出现陈旧世界状态、提示约束违背、非确定性选择和不规则事件检查，因此灵活性没有转化为可预测可靠性。", "stance": "limit", "relation": "直接反驳把自然语言规划能力等同于生产可靠性。", "confidence": "direct", "claim_basis": "reported-result", "summary": "多组实验分别暴露盲放、过期位姿、充电目标随机和事件检查不稳定。", "locator": "Abstract — cross-platform proof-of-concept fragility statement", "source_context": "Across both platforms, our proof-of-concept experiments reveal substantial fragility, including non-deterministic suboptimal behaviour, instruction-following errors, and high sensitivity to prompt specification.", "evidence_type": "failure-analysis", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工逐项复核实验一、四、六及定性观察：各失败均有具体运行上下文，主张未推断其工业发生率。"}
+    },
+    {
+      "card_id": "2602.13081-C04", "claim": "基于轮询的事件检测无法在长动作中即时抢占；物理安全需要并发监控、可取消技能或把动作切成可中断检查点。", "stance": "limit", "relation": "指出软件智能体框架与物理安全控制之间的关键接口缺口。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者明确说明同步工具循环和现代智能体框架缺乏统一中断原语。", "locator": "7 Conclusions", "source_context": "Most contemporary LLM agent frameworks do not provide hard preemption", "evidence_type": "limitation", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核结论段：作者直接连接轮询、长动作不可抢占与三类工程缓解路径，主张保持在接口设计范围。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "摘要称两种物理平台，正文明确 Valdemar 迁移测试在仿真中；本笔记采用正文的更窄表述。"
+}

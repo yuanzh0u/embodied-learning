@@ -1,0 +1,1138 @@
+{
+  "generated_at": "2026-07-29T03:52:15.472460+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年 Ego-centric 数据手部检测与追踪的问题和难点",
+  "start_date": "2025-07-29",
+  "end_date": "2026-07-29",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-SENSOR",
+    "EA-HARDWARE"
+  ],
+  "families": [
+    "droid-ego4d",
+    "retargeting"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 28,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 112,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 112,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-egocentric-hand-detection",
+        "dynamic-egocentric-hand-pose",
+        "droid-robot-manipulation",
+        "ego4d-robot-learning",
+        "retargeting-robot-manipulation",
+        "ea-data-robot-demonstrations",
+        "ea-data-demonstration-quality"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-first-person-hand-tracking",
+        "dynamic-egocentric-hand-object",
+        "dynamic-hand-tracking-benchmark",
+        "dynamic-ego-exo-hand-ground-truth",
+        "dynamic-event-camera-hand-pose",
+        "dynamic-realtime-hoi-industrial",
+        "calibrated-egoev-handpose",
+        "calibrated-ego-exo-3d-hand-tracking",
+        "calibrated-bimanual-occlusion",
+        "calibrated-ego-motion-interference",
+        "calibration-ego-event-hand",
+        "calibration-ego-exo-hand",
+        "droid-ego-egocentric-video",
+        "droid-ego-in-the-wild",
+        "droid-ego-data-mixture",
+        "retargeting-human-to-robot-mapping",
+        "retargeting-dexterous-hand",
+        "retargeting-gripper-demonstration"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-hand-occlusion-motion-blur",
+        "dynamic-bimanual-identity",
+        "retargeting-morphology-gap"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): The static embodied-AI taxonomy under-specifies egocentric hand detection, hand mesh recovery, temporal identity tracking, and hand-object occlusion."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-egocentric-hand-detection",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:egocentric AND (all:\"hand detection\" OR all:\"hand segmentation\")",
+      "why": "Directly retrieves first-person hand localization and segmentation work."
+    },
+    {
+      "label": "dynamic-egocentric-hand-pose",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:egocentric AND (all:\"3D hand pose\" OR all:\"hand pose estimation\" OR all:\"hand mesh\")",
+      "why": "Covers joint and mesh estimation, which are the dominant technical meanings of hand tracking in recent work."
+    },
+    {
+      "label": "dynamic-first-person-hand-tracking",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"first-person\" OR all:egocentric) AND all:hand AND (all:tracking OR all:temporal)",
+      "why": "Finds explicit temporal tracking and sequence-consistency work."
+    },
+    {
+      "label": "dynamic-egocentric-hand-object",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:egocentric AND (all:\"hand-object interaction\" OR all:\"hand object\") AND (all:pose OR all:tracking OR all:detection)",
+      "why": "Interaction is the main source of self/object occlusion and contact ambiguity."
+    },
+    {
+      "label": "dynamic-hand-occlusion-motion-blur",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:egocentric AND all:hand AND (all:occlusion OR all:\"motion blur\" OR all:truncation OR all:\"ego-motion\")",
+      "why": "Targets the dominant failure conditions rather than only successful methods."
+    },
+    {
+      "label": "dynamic-bimanual-identity",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:egocentric AND (all:bimanual OR all:\"two hands\") AND (all:tracking OR all:pose OR all:identity)",
+      "why": "Bimanual overlap and left/right identity swaps are a distinct tracking failure mode."
+    },
+    {
+      "label": "dynamic-hand-tracking-benchmark",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:egocentric AND all:hand AND (all:benchmark OR all:dataset OR all:evaluation) AND (all:pose OR all:tracking)",
+      "why": "Retrieves datasets and evaluation protocols needed to audit annotation and metric gaps."
+    },
+    {
+      "label": "dynamic-ego-exo-hand-ground-truth",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"ego-exo\" OR all:multiview) AND all:hand AND (all:\"ground truth\" OR all:annotation OR all:tracking)",
+      "why": "Multi-view capture is the main route to accurate in-the-wild 3D hand ground truth."
+    },
+    {
+      "label": "dynamic-event-camera-hand-pose",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:egocentric AND all:hand AND (all:event OR all:stereo) AND (all:pose OR all:tracking)",
+      "why": "Event/stereo sensing directly addresses blur, dynamic range, and depth ambiguity."
+    },
+    {
+      "label": "dynamic-realtime-hoi-industrial",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:egocentric AND all:hand AND (all:\"real-time\" OR all:streaming OR all:industrial) AND (all:detection OR all:tracking OR all:interaction)",
+      "why": "Surfaces latency, compute, and cascade-error trade-offs in deployable systems."
+    },
+    {
+      "label": "dynamic-browser-egocentric-hand-2025",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "high",
+      "query": "site:arxiv.org egocentric hand pose tracking occlusion 2025 2026",
+      "why": "Fallback for current papers poorly indexed by the arXiv API."
+    },
+    {
+      "label": "dynamic-web-egocentric-hand",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "high",
+      "query": "egocentric hand tracking benchmark 2025 2026",
+      "why": "Discover current dataset and method names."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv-search calibration (high): Recent terminology includes stereo event streams, KeypointBEV, bimanual occlusion, and ego-motion interference.",
+    "arxiv-search calibration (high): Recent data terminology includes ego-exo 3D hand tracking, mobile multi-camera rig, in-the-wild, and marker-less ground truth.",
+    "arxiv-search calibration (high): Deployment terminology includes streaming egocentric vision, active object detection, cascaded architecture, and real-time industrial domains."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-egocentric-hand-detection",
+      "tier": "core",
+      "query": "all:egocentric AND (all:\"hand detection\" OR all:\"hand segmentation\")",
+      "why": "Directly retrieves first-person hand localization and segmentation work.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-hand-detection"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-hand-pose",
+      "tier": "core",
+      "query": "all:egocentric AND (all:\"3D hand pose\" OR all:\"hand pose estimation\" OR all:\"hand mesh\")",
+      "why": "Covers joint and mesh estimation, which are the dominant technical meanings of hand tracking in recent work.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-hand-pose"
+      ]
+    },
+    {
+      "label": "dynamic-first-person-hand-tracking",
+      "tier": "tracking",
+      "query": "(all:\"first-person\" OR all:egocentric) AND all:hand AND (all:tracking OR all:temporal)",
+      "why": "Finds explicit temporal tracking and sequence-consistency work.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-first-person-hand-tracking"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-hand-object",
+      "tier": "mechanism",
+      "query": "all:egocentric AND (all:\"hand-object interaction\" OR all:\"hand object\") AND (all:pose OR all:tracking OR all:detection)",
+      "why": "Interaction is the main source of self/object occlusion and contact ambiguity.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-hand-object"
+      ]
+    },
+    {
+      "label": "dynamic-hand-occlusion-motion-blur",
+      "tier": "limitation",
+      "query": "all:egocentric AND all:hand AND (all:occlusion OR all:\"motion blur\" OR all:truncation OR all:\"ego-motion\")",
+      "why": "Targets the dominant failure conditions rather than only successful methods.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-occlusion-motion-blur"
+      ]
+    },
+    {
+      "label": "dynamic-bimanual-identity",
+      "tier": "limitation",
+      "query": "all:egocentric AND (all:bimanual OR all:\"two hands\") AND (all:tracking OR all:pose OR all:identity)",
+      "why": "Bimanual overlap and left/right identity swaps are a distinct tracking failure mode.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-bimanual-identity"
+      ]
+    },
+    {
+      "label": "dynamic-hand-tracking-benchmark",
+      "tier": "evaluation",
+      "query": "all:egocentric AND all:hand AND (all:benchmark OR all:dataset OR all:evaluation) AND (all:pose OR all:tracking)",
+      "why": "Retrieves datasets and evaluation protocols needed to audit annotation and metric gaps.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-tracking-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-ego-exo-hand-ground-truth",
+      "tier": "evaluation",
+      "query": "(all:\"ego-exo\" OR all:multiview) AND all:hand AND (all:\"ground truth\" OR all:annotation OR all:tracking)",
+      "why": "Multi-view capture is the main route to accurate in-the-wild 3D hand ground truth.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-exo-hand-ground-truth"
+      ]
+    },
+    {
+      "label": "dynamic-event-camera-hand-pose",
+      "tier": "adjacent",
+      "query": "all:egocentric AND all:hand AND (all:event OR all:stereo) AND (all:pose OR all:tracking)",
+      "why": "Event/stereo sensing directly addresses blur, dynamic range, and depth ambiguity.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-event-camera-hand-pose"
+      ]
+    },
+    {
+      "label": "dynamic-realtime-hoi-industrial",
+      "tier": "deployment",
+      "query": "all:egocentric AND all:hand AND (all:\"real-time\" OR all:streaming OR all:industrial) AND (all:detection OR all:tracking OR all:interaction)",
+      "why": "Surfaces latency, compute, and cascade-error trade-offs in deployable systems.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-realtime-hoi-industrial"
+      ]
+    },
+    {
+      "label": "calibrated-egoev-handpose",
+      "tier": "calibrated-term",
+      "query": "all:\"EgoEV-HandPose\"",
+      "why": "Named 2026 event-camera method and dataset.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-egoev-handpose"
+      ]
+    },
+    {
+      "label": "calibrated-ego-exo-3d-hand-tracking",
+      "tier": "calibrated-term",
+      "query": "all:\"ego-exo 3D hand tracking\"",
+      "why": "Named 2025 annotation route.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-ego-exo-3d-hand-tracking"
+      ]
+    },
+    {
+      "label": "calibrated-bimanual-occlusion",
+      "tier": "calibrated-term",
+      "query": "all:\"bimanual occlusion\"",
+      "why": "Explicit recent failure condition.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-bimanual-occlusion"
+      ]
+    },
+    {
+      "label": "calibrated-ego-motion-interference",
+      "tier": "calibrated-term",
+      "query": "all:\"ego-motion interference\"",
+      "why": "Explicit recent sensing limitation.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-ego-motion-interference"
+      ]
+    },
+    {
+      "label": "calibration-ego-event-hand",
+      "tier": "calibrated-query",
+      "query": "all:EgoEV-HandPose OR (all:egocentric AND all:event AND all:\"hand pose\")",
+      "why": "Recover the method and adjacent event-camera papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-ego-event-hand"
+      ]
+    },
+    {
+      "label": "calibration-ego-exo-hand",
+      "tier": "calibrated-query",
+      "query": "all:\"ego-exo\" AND all:\"hand tracking\"",
+      "why": "Recover the mobile multi-camera ground-truth lineage.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-ego-exo-hand"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-egocentric-hand-detection",
+      "tier": "core",
+      "query": "all:egocentric AND (all:\"hand detection\" OR all:\"hand segmentation\")",
+      "why": "Directly retrieves first-person hand localization and segmentation work.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-hand-detection"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-hand-pose",
+      "tier": "core",
+      "query": "all:egocentric AND (all:\"3D hand pose\" OR all:\"hand pose estimation\" OR all:\"hand mesh\")",
+      "why": "Covers joint and mesh estimation, which are the dominant technical meanings of hand tracking in recent work.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-hand-pose"
+      ]
+    },
+    {
+      "label": "dynamic-first-person-hand-tracking",
+      "tier": "tracking",
+      "query": "(all:\"first-person\" OR all:egocentric) AND all:hand AND (all:tracking OR all:temporal)",
+      "why": "Finds explicit temporal tracking and sequence-consistency work.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-first-person-hand-tracking"
+      ]
+    },
+    {
+      "label": "dynamic-egocentric-hand-object",
+      "tier": "mechanism",
+      "query": "all:egocentric AND (all:\"hand-object interaction\" OR all:\"hand object\") AND (all:pose OR all:tracking OR all:detection)",
+      "why": "Interaction is the main source of self/object occlusion and contact ambiguity.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egocentric-hand-object"
+      ]
+    },
+    {
+      "label": "dynamic-hand-occlusion-motion-blur",
+      "tier": "limitation",
+      "query": "all:egocentric AND all:hand AND (all:occlusion OR all:\"motion blur\" OR all:truncation OR all:\"ego-motion\")",
+      "why": "Targets the dominant failure conditions rather than only successful methods.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-occlusion-motion-blur"
+      ]
+    },
+    {
+      "label": "dynamic-bimanual-identity",
+      "tier": "limitation",
+      "query": "all:egocentric AND (all:bimanual OR all:\"two hands\") AND (all:tracking OR all:pose OR all:identity)",
+      "why": "Bimanual overlap and left/right identity swaps are a distinct tracking failure mode.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-bimanual-identity"
+      ]
+    },
+    {
+      "label": "dynamic-hand-tracking-benchmark",
+      "tier": "evaluation",
+      "query": "all:egocentric AND all:hand AND (all:benchmark OR all:dataset OR all:evaluation) AND (all:pose OR all:tracking)",
+      "why": "Retrieves datasets and evaluation protocols needed to audit annotation and metric gaps.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-tracking-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-ego-exo-hand-ground-truth",
+      "tier": "evaluation",
+      "query": "(all:\"ego-exo\" OR all:multiview) AND all:hand AND (all:\"ground truth\" OR all:annotation OR all:tracking)",
+      "why": "Multi-view capture is the main route to accurate in-the-wild 3D hand ground truth.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-exo-hand-ground-truth"
+      ]
+    },
+    {
+      "label": "dynamic-event-camera-hand-pose",
+      "tier": "adjacent",
+      "query": "all:egocentric AND all:hand AND (all:event OR all:stereo) AND (all:pose OR all:tracking)",
+      "why": "Event/stereo sensing directly addresses blur, dynamic range, and depth ambiguity.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-event-camera-hand-pose"
+      ]
+    },
+    {
+      "label": "dynamic-realtime-hoi-industrial",
+      "tier": "deployment",
+      "query": "all:egocentric AND all:hand AND (all:\"real-time\" OR all:streaming OR all:industrial) AND (all:detection OR all:tracking OR all:interaction)",
+      "why": "Surfaces latency, compute, and cascade-error trade-offs in deployable systems.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-realtime-hoi-industrial"
+      ]
+    },
+    {
+      "label": "calibrated-egoev-handpose",
+      "tier": "calibrated-term",
+      "query": "all:\"EgoEV-HandPose\"",
+      "why": "Named 2026 event-camera method and dataset.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-egoev-handpose"
+      ]
+    },
+    {
+      "label": "calibrated-ego-exo-3d-hand-tracking",
+      "tier": "calibrated-term",
+      "query": "all:\"ego-exo 3D hand tracking\"",
+      "why": "Named 2025 annotation route.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-ego-exo-3d-hand-tracking"
+      ]
+    },
+    {
+      "label": "calibrated-bimanual-occlusion",
+      "tier": "calibrated-term",
+      "query": "all:\"bimanual occlusion\"",
+      "why": "Explicit recent failure condition.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-bimanual-occlusion"
+      ]
+    },
+    {
+      "label": "calibrated-ego-motion-interference",
+      "tier": "calibrated-term",
+      "query": "all:\"ego-motion interference\"",
+      "why": "Explicit recent sensing limitation.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-ego-motion-interference"
+      ]
+    },
+    {
+      "label": "calibration-ego-event-hand",
+      "tier": "calibrated-query",
+      "query": "all:EgoEV-HandPose OR (all:egocentric AND all:event AND all:\"hand pose\")",
+      "why": "Recover the method and adjacent event-camera papers.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-ego-event-hand"
+      ]
+    },
+    {
+      "label": "calibration-ego-exo-hand",
+      "tier": "calibrated-query",
+      "query": "all:\"ego-exo\" AND all:\"hand tracking\"",
+      "why": "Recover the mobile multi-camera ground-truth lineage.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv-search",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-ego-exo-hand"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-browser-egocentric-hand-2025",
+      "query": "site:arxiv.org egocentric hand pose tracking occlusion 2025 2026",
+      "why": "Fallback for current papers poorly indexed by the arXiv API.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-web-egocentric-hand",
+      "query": "egocentric hand tracking benchmark 2025 2026",
+      "why": "Discover current dataset and method names.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-egoev-handpose",
+      "query": "\"EgoEV-HandPose\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: EgoEV-HandPose.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-ego-exo-3d-hand-tracking",
+      "query": "\"ego-exo 3D hand tracking\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: ego-exo 3D hand tracking.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-bimanual-occlusion",
+      "query": "\"bimanual occlusion\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: bimanual occlusion.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-ego-motion-interference",
+      "query": "\"ego-motion interference\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: ego-motion interference.",
+      "source_key": "calibration",
+      "source_type": "arxiv-search",
+      "channel": "web_calibration"
+    }
+  ]
+}

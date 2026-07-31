@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.21531",
+    "title": "LiLo-VLA: Compositional Long-Horizon Manipulation via Linked Object-Centric Policies",
+    "published": "2026-02-25T03:33:39Z",
+    "url": "https://arxiv.org/abs/2602.21531",
+    "authors": [
+      "Yue Yang",
+      "Shuo Cheng",
+      "Yu Fang",
+      "Homanga Bharadhwaj",
+      "Mingyu Ding",
+      "Gedas Bertasius",
+      "Daniel Szafir"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "理解单块 VLA 的组合泛化与级联失败。"
+      },
+      {
+        "locator": "III Methodology",
+        "role": "method-or-design",
+        "purpose": "核验 Reaching、object-centric Interaction、序列执行与恢复。"
+      },
+      {
+        "locator": "IV Simulation Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核验视觉干扰、最多 16 技能扩展与系统消融。"
+      },
+      {
+        "locator": "VI Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录对象分割、技能覆盖与失败检测边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "VLA 已学的局部原子技能如何组合成未训练过的超长任务，并避免环境敏感和级联失败？",
+  "contributions": [
+    "将全局搬运与局部物体交互解耦",
+    "以 object-centric VLA、动态重规划和技能复用实现未见长任务"
+  ],
+  "method": {
+    "summary": "Reaching Module 用几何目标和避障规划负责全局搬运，Interaction Module 只在物体中心局部视野中运行 VLA，技能边界失败时触发重新定位与重试。",
+    "assumptions": [
+      "长任务可分为全局搬运与局部交互",
+      "已学的 interaction skills 可在物体中心视野中重用"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LIBERO-Long++",
+      "Ultra-Long",
+      "real-robot long-horizon suite"
+    ],
+    "tasks": [
+      "最多 16 个技能的仿真组合任务",
+      "未经整任务训练的真机长任务"
+    ],
+    "embodiments": [
+      "仿真操作机器人",
+      "真实机械臂"
+    ],
+    "sample_or_scale": "21 个仿真任务，包含最多 16 技能序列，并补充真机实验。"
+  },
+  "evaluation": {
+    "design": "在视觉干扰和技能数扩展下对比π0.5、OpenVLA-OFT 和去除搬运/遮罩/恢复模块的版本。",
+    "baselines": [
+      "π0.5",
+      "OpenVLA-OFT",
+      "w/o Reaching",
+      "w/o Masking",
+      "w/o Recovery"
+    ],
+    "metrics": [
+      "success rate",
+      "average progress",
+      "skill-count scalability"
+    ],
+    "ablations": [
+      "reaching module",
+      "object-centric masking",
+      "failure recovery"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在所设 21 任务的仿真组合基准上，LiLo-VLA 平均成功率 69%，π0.5 为 28%，OpenVLA-OFT 为 2%，去除恢复模块时平均成功率降至 8%。",
+      "scope": "LIBERO-Long++ 与 Ultra-Long 仿真基准",
+      "locator": "IV Simulation Experiments > IV-B Main Results: Zero-Shot Compositionality and Scalability"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "系统依赖对象掩码、局部 VLA 技能覆盖与可检测的失败条件。",
+        "locator": "VI Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "结果支持混合架构优于单块 VLA，但优势来自对象分割、运动规划和恢复整体栈，不是孤立原子技能标签的效果。",
+        "basis": "消融显示 Reaching、Masking 和 Recovery 均是必要部件。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论适用于物体中心、可分解为搬运与局部交互、且有可用感知和恢复判据的长任务。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "包含超过常规长度的 16 技能任务",
+      "同时报告成功与平均进度",
+      "主要系统部件有消融"
+    ],
+    "design_risks": [
+      "新发布基准与方法可能共享设计偏好",
+      "仿真任务对真实接触的外推有限"
+    ],
+    "baseline_fairness": "比较同时覆盖强 VLA 基线和自身消融，但系统获得了额外几何模块与重试预算。",
+    "metric_validity": "成功率加平均进度能区分完全失败与部分完成，适合超长任务。",
+    "reproducibility": "模块和新基准描述较详细，但完整真机栈复现仍需感知与规划工程。",
+    "external_validity": "对长时程组合的证据强，但任务结构与对象掩码可用性限制开放世界外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.21531-C01",
+      "claim": "LiLo-VLA 在两个长时程仿真套件上以平均 69% 成功率超过 π0.5 的 28% 和 OpenVLA-OFT 的 2%；它通过几何搬运、物体中心局部 VLA、动态重规划和技能复用组合，而非让单一端到端策略直接承担全部长程责任。",
+      "stance": "support",
+      "relation": "支持原子技能正通过模块化恢复和局部 VLA 回归，主流形态是融合栈。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "主结果表在视觉干扰与最多 16 技能扩展下对比 LiLo-VLA 与两个强 VLA 基线。",
+      "locator": "IV-B Main Results: Zero-Shot Compositionality and Scalability",
+      "source_context": "This substantial performance gap highlights the limitations of monolithic policies",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "average success rate",
+        "value_or_direction": "LiLo-VLA 69%",
+        "comparator": "Pi0.5 28%; OpenVLA-OFT 2%",
+        "task_or_sample": "LIBERO-Long++ and Ultra-Long simulation suites, including sequences up to 16 skills",
+        "locator": "IV-B Main Results: Zero-Shot Compositionality and Scalability, Table I"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表 I 和正文报告相同平均成功率，比较对象、套件和任务长度均已限定。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

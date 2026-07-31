@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.20373",
+    "title": "SUGAR: A Scalable Human-Video-Driven Generalizable Humanoid Loco-Manipulation Learning Framework",
+    "published": "2026-05-19T18:24:05Z",
+    "url": "https://arxiv.org/abs/2605.20373",
+    "authors": [
+      "Tianshu Wu",
+      "Xiangqi Kong",
+      "Yue Chen",
+      "Qize Yu",
+      "Hang Ye",
+      "Jia Li",
+      "Yizhou Wang",
+      "Hao Dong"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "把视频提取的人—物 kinematic priors 用物理仿真修正后训练 humanoid，直接研究 occlusion、contact artifacts、retargeting errors 和 physical feasibility。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认 human-video priors 不可直接模仿的物理原因。"
+      },
+      {
+        "locator": "3 Method > 3.2 Scalable Kinematic Interaction Priors from Human Videos",
+        "role": "data-or-setting",
+        "purpose": "核验动作、对象和 contact labels 的自动提取。"
+      },
+      {
+        "locator": "3.3 Refining Kinematic Interaction Priors into Physically Feasible Skills",
+        "role": "method-or-design",
+        "purpose": "核验 privileged physics refiner 与 interaction reward。"
+      },
+      {
+        "locator": "4.4 Component Analysis",
+        "role": "results-or-analysis",
+        "purpose": "核验去除 refiner/contact rewards 的失败。"
+      },
+      {
+        "locator": "4.5 Real-World Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核验真实 humanoid 闭环与恢复。"
+      },
+      {
+        "locator": "Appendix C Limitations and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录 coarse skill、数据利用率和 state-based policy 边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "Appendix D Computation Resources",
+        "role": "appendix-or-supplement",
+        "reason": "只记录资源，不改变主要主张。"
+      }
+    ]
+  },
+  "research_question": "如何把无结构人类视频中的粗糙 motion/contact priors 转成物理可行、可泛化的 humanoid loco-manipulation 训练数据？",
+  "contributions": [
+    "自动恢复 human/object trajectories 和 contact labels。",
+    "用 privileged RL refiner 将 kinematic priors 修正成物理可行示范。",
+    "将精炼示范蒸馏为 command generator + tracker 的分层策略。"
+  ],
+  "method": {
+    "summary": "用 SAMBody/SAMObj/FoundationPose 与 VLM contact labeling 从视频提取粗 kinematic interaction priors，再在仿真中用 mimic/contact/regularization rewards 的 privileged refiner 生成物理一致技能，最后以 BC+RL 和分层策略部署。",
+    "assumptions": [
+      "视频包含足够的人—物运动与接触线索以恢复任务逻辑。",
+      "仿真能用 privileged state 修正视频误差并形成可迁移技能。",
+      "状态式对象 6D pose 在部署时可获得。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "100 human videos per task for training",
+      "30 per task for testing"
+    ],
+    "tasks": [
+      "six humanoid loco-manipulation tasks"
+    ],
+    "embodiments": [
+      "human videos",
+      "Unitree G1 humanoid"
+    ],
+    "sample_or_scale": "20/50/100 trajectories per task 的规模消融；六个真实任务各 10 次。"
+  },
+  "evaluation": {
+    "design": "仿真比较 reference baselines、数据规模和 refiner/PSPI/contact reward 消融，并做真实 G1 zero-shot transfer。",
+    "baselines": [
+      "reference tracking baselines",
+      "without refiner",
+      "without interaction reward",
+      "without robustness enhancement"
+    ],
+    "metrics": [
+      "success rate",
+      "final object position error"
+    ],
+    "ablations": [
+      "training data size",
+      "refiner",
+      "PSPI",
+      "interaction reward",
+      "robustness enhancement"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "原始视频的 occlusion、contact artifacts 和 retargeting errors 使 kinematic priors 不适合直接 policy learning。",
+      "scope": "humanoid whole-body interaction pipeline。",
+      "locator": "1 Introduction"
+    },
+    {
+      "finding": "去掉 physics refiner 或 interaction reward 会明显退化，表明运动相似并不能替代物理一致性。",
+      "scope": "六个仿真 loco-manipulation tasks 的组件消融。",
+      "locator": "4.4 Component Analysis"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "当前只支持较粗技能、数据利用率低，并依赖 state-based policy。",
+        "locator": "Appendix C Limitations and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "物理修正把数据问题转化为仿真、reward 和 privileged-state 工程成本。",
+        "basis": "Refiner 和 interaction reward 是成功的必要组件，且对象 pose/contact labels 在仿真中可直接访问。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于可获得人—物粗轨迹、可构建对象动力学仿真和 state-based policy 的 humanoid 粗粒度任务；精细手指接触、纯视觉 VLA 与弱仿真相关任务尚未覆盖。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "明确对 raw video priors 做物理可行性审计。",
+      "同时提供组件消融与真实硬件零样本转移。"
+    ],
+    "design_risks": [
+      "VLM contact label 和对象 pose 的误差没有独立量化。",
+      "任务以粗粒度 whole-body interaction 为主，精细 manipulation 外推有限。"
+    ],
+    "baseline_fairness": "参考跟踪 baselines 与分层 autonomous policy 目标不同，但去除 refiner/contact reward 的内部消融较有说服力。",
+    "metric_validity": "成功率和对象误差覆盖结果质量；未量化训练成本、接触力或数据筛除率。",
+    "reproducibility": "流程和 reward 架构披露，但仿真资产、VLM 标签和 privileged training 复杂。",
+    "external_validity": "支持 video prior + physics refinement 的路线，不支持原始 ego 轨迹直接用于精细具身策略。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.20373-C01",
+      "claim": "从人类视频恢复的 motion prior 会因遮挡、接触伪影和 retargeting 误差而物理不合理，不能直接当作 humanoid policy 的示范。",
+      "stance": "limit",
+      "relation": "说明 kinematic similarity 与 physical executability 不是同一质量层。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "引言直接列出三类误差并说明它们使数据 unsuitable for direct policy learning。",
+      "locator": "1 Introduction",
+      "source_context": "Severe occlusion, contact artifacts, and retargeting errors render this data physically implausible for direct imitation",
+      "evidence_type": "problem-statement",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接给出误差类型和对训练可用性的判断；本文把范围限定在 video-derived humanoid interaction priors。"
+      }
+    },
+    {
+      "card_id": "2605.20373-C02",
+      "claim": "Physics refiner 和 interaction reward 是把 Ego-centric 视频数据变成可执行技能的必要中间层；只跟踪运动会在接触任务中失败。",
+      "stance": "conditional",
+      "relation": "界定 human-video scaling 需要物理修正基础设施。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "组件消融中去除 Refiner 显著退化，去除 interaction reward 时机器人只模仿弯腰而无法抬起物体。",
+      "locator": "4.4 Component Analysis",
+      "source_context": "Removing the Refiner leads to substantial performance degradation",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "组件分析直接报告退化并给出 contact-rich failure mechanism；主张不超出论文的六类 humanoid tasks。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "论文为 human-video（不全是严格 head-mounted ego）相邻证据，用于物理可执行性边界。"
+}

@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.28887",
+    "title": "OccSim: Multi-kilometer Simulation with Long-horizon Occupancy World Models",
+    "published": "2026-03-30",
+    "url": "https://arxiv.org/abs/2603.28887",
+    "authors": [
+      "Tianran Liu",
+      "Shengwen Zhao",
+      "Mozhgan Pourkeshavarz",
+      "Weican Li",
+      "Nicholas Rhinehart"
+    ]
+  },
+  "review": {
+    "question": "近一年空间数据的生产难点在哪里，具身机器人与智能驾驶的异同是什么？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-4D",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "OccSim studies synthetic 3D occupancy data as a way around finite logs and HD maps while explicitly exposing the remaining semantic-ground-truth and simulator-validity constraints."
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "Map the realism-diversity-interactivity trade-off and long-horizon spatial consistency problem."},
+      {"locator": "3.1 Long-horizon stable generation with W-DiT; 3.2 Multi-kilometer road map fusion from single frames; 3.3 Agent generation and control with static road map", "role": "method-or-design", "purpose": "Inspect geometry-aware rollout, fusion and agent generation."},
+      {"locator": "4.1 Metrics and datasets; 4.2 Main results comparisons; 4.3 Ablation study", "role": "results-or-analysis", "purpose": "Assess realism, diversity, stability and downstream transfer proxies."},
+      {"locator": "5 Conclusion; 10 Potential limitation and Future work", "role": "conclusion-or-limitations", "purpose": "Record data and validity boundaries."},
+      {"locator": "6 Training and metric details; 9 Algorithm details", "role": "appendix-or-supplement", "purpose": "Inspect training and procedural map/traffic details."}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "Can an occupancy world model generate long-horizon 3D driving data without continuous logs or HD maps, and what limits remain?",
+  "contributions": [
+    "Introduces geometry-aware long-horizon occupancy rollout and procedural map fusion from a single initial frame and ego actions.",
+    "Uses generated streams to pretrain occupancy forecasting and reports the semantic-annotation ceiling of the source data."
+  ],
+  "method": {
+    "summary": "W-DiT explicitly warps latent occupancy with rigid ego-motion, completes unseen regions, fuses keyframes into maps, extracts lane topology, samples agent layouts and controls them with routing and 2D-IDM.",
+    "assumptions": ["Planar ego motion and usable latent-space rotation behavior", "Semantic occupancy training data and labels are accurate enough", "Proxy realism and downstream forecasting correlate with simulator utility"]
+  },
+  "study_context": {
+    "datasets": ["Occ3D-nuScenes", "UniOcc-Waymo", "UniOcc-nuScenes", "Generated OccSim streams"],
+    "tasks": ["Static occupancy generation", "Road-map fusion", "Agent simulation", "4D semantic occupancy forecasting pretraining"],
+    "embodiments": ["Autonomous-driving occupancy simulator"],
+    "sample_or_scale": "Rollouts over 3,000 frames and 4 km; source semantic occupancy data stated to be under 100,000 frames."
+  },
+  "evaluation": {
+    "design": "Evaluates conditional fidelity, unconditional realism, diversity, long-horizon stability and zero-shot transfer to two occupancy forecasting models.",
+    "baselines": ["Prior occupancy world models", "CARLA/UniOcc asset-based simulation", "Real-data upper bound"],
+    "metrics": ["FID", "KID", "MMD", "Vendi", "pairwise semantic IoU diversity", "forecasting IoU/mIoU"],
+    "ablations": ["Perception loss", "Dual-head feature injection", "SNR scaling"]
+  },
+  "findings": [
+    {"finding": "Explicit rigid spatial transformations reduce autoregressive geometry drift compared with video-style temporal aggregation.", "scope": "Static occupancy rollout on the evaluated datasets and trajectories.", "locator": "3.1 Long-horizon stable generation with W-DiT; 4.2 Main results comparisons"},
+    {"finding": "Synthetic occupancy data improves transfer over the asset-based simulator baseline but remains below real-data upper bounds and is itself trained on scarce manually labeled semantic occupancy.", "scope": "The two reported forecasting models and available semantic occupancy datasets.", "locator": "4.2 Main results comparisons; 10 Potential limitation and Future work"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "Frame fusion and lane-graph extraction remain heuristic, latent rotation is an assumption, and manually annotated semantic occupancy training data total fewer than 100,000 frames.", "locator": "10 Potential limitation and Future work"}
+    ],
+    "reader_inferred": [
+      {"boundary": "The reported simulator utility is a training-data and realism proxy, not certification for closed-loop safety verdicts.", "basis": "Evaluation focuses on generative metrics and downstream occupancy forecasting; agents are controlled with heuristics and no policy-safety study is reported."}
+    ]
+  },
+  "transfer_boundary": "Strongest for static semantic occupancy pretraining and map-scale generation under planar driving; weaker for sensor photorealism, rare interactive behavior and direct closed-loop safety evaluation.",
+  "critical_appraisal": {
+    "design_strengths": ["Separates static geometry generation from dynamic traffic layout", "Tests downstream transfer instead of only visual realism"],
+    "design_risks": ["Heuristic fusion and agent dynamics may explain part of the result", "Unconditional distribution metrics can hide local physical errors"],
+    "baseline_fairness": "Static generation comparisons control training volume, while simulator transfer comparisons still differ in content-generation mechanisms.",
+    "metric_validity": "Occupancy forecasting transfer is useful but cannot validate safety, causal interaction or exact sensor response.",
+    "reproducibility": "Training datasets and algorithm details are reported; public implementation status was not independently verified in this reading.",
+    "external_validity": "Evidence covers evaluated occupancy datasets and largely planar road motion, not full sensor stacks or global road diversity."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.28887-C01",
+      "claim": "Synthetic occupancy generation does not escape the ground-truth bottleneck: OccSim reports that semantic occupancy still requires manual semantic annotation, leaving fewer than 100,000 training frames and constraining exploration of scaling limits.",
+      "stance": "limit",
+      "relation": "Limits the proposition that generative simulation can cheaply replace real spatial-data production end to end.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The limitations section directly attributes the small training volume to manual semantic occupancy annotation.",
+      "locator": "10 Potential limitation and Future work",
+      "source_context": "Compared to image data, semantic occupancy data requires manual semantic annotation, which limits the total amount of available training data to fewer than 100,000 frames. This volume is significantly smaller than the amount of available RGB video data, and it also restricts our ability to explore the upper limits of the model’s performance.",
+      "evidence_type": "author-stated limitation",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The claim preserves the authors' stated causal link between manual semantic labeling, sub-100k scale and uncertain scaling limits."}
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

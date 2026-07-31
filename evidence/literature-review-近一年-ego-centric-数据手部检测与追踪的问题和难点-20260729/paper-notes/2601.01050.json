@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.01050",
+    "title": "EgoGrasp: World-Space Hand-Object Interaction Estimation from Egocentric Videos",
+    "published": "2026-01-03",
+    "url": "https://arxiv.org/abs/2601.01050",
+    "authors": [
+      "Hongming Fu",
+      "Wenjia Wang",
+      "Xiaozhen Qiao",
+      "Rolandos Alexandros Potamias",
+      "Taku Komura",
+      "Shuo Yang",
+      "Zheng Liu",
+      "Bo Zhao"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别动态相机坐标对 HOI 轨迹、接触和场景几何的破坏。"
+      },
+      {
+        "locator": "3.2 Egocentric Video Preprocess",
+        "role": "method-or-design",
+        "purpose": "核查几何、手和开放词表物体基础模型预处理。"
+      },
+      {
+        "locator": "4.3 World-Space Hand-Object Interaction Estimation",
+        "role": "results-or-analysis",
+        "purpose": "核查世界坐标 HOI 与单帧/6DoF 基线。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查完整方法与应用边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "为何 camera-space 手姿不足以表示 egocentric 手物交互的稳定轨迹？",
+  "contributions": [
+    "定义动态 egocentric 视频中的世界坐标手物交互恢复，并提出开放词表多阶段方法 EgoGrasp。"
+  ],
+  "method": {
+    "summary": "用 Depth-Anything3、WiLoR、SAM3D、光流+PnP 提取相机/手/物体初值，用身体扩散约束双手可达性，用 HOI 扩散补全低置信物体 6DoF，再测试时优化。",
+    "assumptions": [
+      "相机轨迹、深度、手姿和物体网格可由多个基础模型初始化。",
+      "可靠帧可以为扩散补全提供硬锚点。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "H2O",
+      "HOI4D",
+      "GRAB",
+      "PA-HOI",
+      "HIMO"
+    ],
+    "tasks": [
+      "世界坐标手姿",
+      "物体 6DoF",
+      "手物交互恢复"
+    ],
+    "embodiments": [
+      "单目人类 egocentric 视频"
+    ],
+    "sample_or_scale": "H2O/HOI4D 评测；64–256 帧扩散训练序列；复合多模型栈。"
+  },
+  "evaluation": {
+    "design": "分别评测世界手轨迹、物体 6DoF、接触几何和穿透，并做损失与优化消融。",
+    "baselines": [
+      "Dyn-HaMR",
+      "HaWoR",
+      "Any6D + WiLoR",
+      "GenPose2 + WiLoR",
+      "HORT"
+    ],
+    "metrics": [
+      "W-MPJPE",
+      "WA-MPJPE",
+      "PA-MPJPE",
+      "RRE",
+      "RTE",
+      "Chamfer Distance",
+      "Penetration Depth"
+    ],
+    "ablations": [
+      "身体优化损失",
+      "6DoF 优化损失",
+      "无测试时优化"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "相机坐标中的头部抖动与物体运动纠缠，世界坐标能分离水平运动、空间锚点和场景穿透。",
+      "scope": "动态 egocentric HOI 视频。",
+      "locator": "1 Introduction"
+    },
+    {
+      "finding": "开放词表与时序物体 6DoF 需要多阶段感知、生成先验和测试时优化，计算栈较重。",
+      "scope": "EgoGrasp 管线。",
+      "locator": "4.1 Implementation Details & Metrics"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "之前开放词表 HOI 方法的逐实例优化计算成本高，且对遮挡和动态场景敏感。",
+        "locator": "1 Introduction"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "EgoGrasp 是离线恢复管线，不是低延迟在线追踪器。",
+        "basis": "预处理依赖多个大模型，推理使用 200 步 DDIM，并进行 50 步测试时优化。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于离线、动态相机下的世界坐标手物恢复；在线 AR/机器人低延迟控制需更简洁的位姿与接触栈。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时评测手、物体、世界轨迹、接触几何与穿透，避免用单一手姿指标代替 HOI。"
+    ],
+    "design_risks": [
+      "多个冻结基础模型与测试时优化使结果对初值、计算预算和工程组合敏感。"
+    ],
+    "baseline_fairness": "部分基线使用真值相机外参转换到世界坐标，EgoGrasp 使用预测外参；设定不完全对称，但对 EgoGrasp 更严格。",
+    "metric_validity": "手轨迹、旋转/平移、接触几何与穿透指标互补，但未报告真实时延与端侧功耗。",
+    "reproducibility": "方法和附录细节充分；依赖尚新的多个外部基础模型，复现成本高。",
+    "external_validity": "在 H2O/HOI4D 上支持离线 W-HOI，对长时无观测、形变物体与实时应用边界较大。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.01050-C01",
+      "claim": "第一视角的相机坐标会把头部抖动与物体运动混合，稳定 HOI 追踪需要世界坐标锚定。",
+      "stance": "support",
+      "relation": "支持将 camera-space 姿态与 world-space 轨迹分开评估。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文直接描述相机自运动与物体运动的坐标耦合。",
+      "locator": "1 Introduction",
+      "source_context": "In egocentric scenarios, high-frequency camera jitter is entangled with object movement in local views.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2601.01050-C02",
+      "claim": "开放词表世界坐标 HOI 恢复的精度目前以重型离线管线为代价，不等于可实时部署。",
+      "stance": "conditional",
+      "relation": "将高精度 W-HOI 与在线追踪的计算边界分开。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "推理设置明确使用 200 步扩散采样，且前文还有多步测试时优化。",
+      "locator": "4.1 Implementation Details & Metrics",
+      "source_context": "For inference, we applied DDIM [ song2020denoising ] sampling with 200 steps, and downsampled sequences by 3 at preprocessing stage.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

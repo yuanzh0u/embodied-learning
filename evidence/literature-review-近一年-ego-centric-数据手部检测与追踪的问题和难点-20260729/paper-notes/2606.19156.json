@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.19156",
+    "title": "Hand-4DGS: Feed-Forward 3D Gaussian Splatting for 4D Hand Reconstruction from Egocentric Videos",
+    "published": "2026-06-17",
+    "url": "https://arxiv.org/abs/2606.19156",
+    "authors": [
+      "Jeongmin Bae",
+      "Seoha Kim",
+      "Marc Pollefeys",
+      "Mahdi Rad",
+      "Youngjung Uh",
+      "Taein Kwon"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别单视图 4D 手重建的头动、手动、遮挡和深度歧义。"
+      },
+      {
+        "locator": "3.3 Overall Framework",
+        "role": "method-or-design",
+        "purpose": "核查 MANO 网格引导 3DGS 与图像监督。"
+      },
+      {
+        "locator": "4.2 Experiment Results",
+        "role": "results-or-analysis",
+        "purpose": "核查每视频优化与泛化前馈结果。"
+      },
+      {
+        "locator": "B Robustness Analysis of Hand‑4DGS",
+        "role": "results-or-analysis",
+        "purpose": "核查姿态估计器与检测框噪声鲁棒性。"
+      },
+      {
+        "locator": "C.2 Training Setup and Model Architecture",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查可见性筛选和评测排除规则。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "如何从单目 egocentric 视频快速重建 4D 手，该结果是否覆盖最难遮挡/丢检帧？",
+  "contributions": [
+    "提出网格引导、时序卷积的前馈 egocentric Hand-4DGS，以 2D 图像监督减少 3D 真值依赖。"
+  ],
+  "method": {
+    "summary": "从视频特征预测 MANO 网格与平移，将 Gaussians 锚在网格顶点/表面上，通过时序卷积减少抖动，以可微渲染的 2D 图像损失联合调整几何与外观。",
+    "assumptions": [
+      "相机位姿已知。",
+      "上游手检测/姿态器能为训练提供框和伪真值。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "H2O",
+      "ARCTIC",
+      "HoloAssist qualitative"
+    ],
+    "tasks": [
+      "4D 手重建",
+      "3D 手姿估计"
+    ],
+    "embodiments": [
+      "单目 egocentric RGB"
+    ],
+    "sample_or_scale": "H2O/ARCTIC 训练与测试；泛化模型训练 1.3M 步，41 小时。"
+  },
+  "evaluation": {
+    "design": "比较 HUGS/EVA 的每视频优化与 Hand-4DGS 泛化前馈模型，报告 PSNR/SSIM、MPJPE、重建时间和运行帧率。",
+    "baselines": [
+      "HUGS",
+      "EVA",
+      "HaMeR",
+      "WiLoR"
+    ],
+    "metrics": [
+      "PSNR",
+      "SSIM",
+      "MPJPE",
+      "RA-MPJPE",
+      "reconstruction time",
+      "FPS"
+    ],
+    "ablations": [
+      "网格顶点嵌入 vs per-Gaussian",
+      "HaMeR vs WiLoR",
+      "GT vs detector boxes",
+      "temporal convolution"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "前馈 4DGS 能显著减少每视频优化时间，但方法仍依赖上游手姿伪真值和已知相机位姿。",
+      "scope": "Hand-4DGS 训练与测试。",
+      "locator": "4.2 Experiment Results"
+    },
+    {
+      "finding": "评测排除手大部分出框或 HaMeR 无法正确检测双手的帧，因而不覆盖最严重的丢检场景。",
+      "scope": "H2O/ARCTIC 评测过滤。",
+      "locator": "C.2 Training Setup and Model Architecture"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "训练和评测仅在双手足够可见时进行，排除边界出框或检测失败。",
+        "locator": "C.2 Training Setup and Model Architecture"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "60 FPS 的前馈速度不代表完整系统对严重遮挡和丢检的鲁棒性。",
+        "basis": "数据处理明确过滤了超过半框出界和上游 HaMeR 检测双手失败的样本。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于手大部分可见、相机位姿已知的快速外观/4D 重建；不能对完全丢检或长时出画作恢复性声明。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "直接将泛化前馈与每视频优化的质量–时间取舍放在同表中。"
+    ],
+    "design_risks": [
+      "选择性可见帧评测会将严重遮挡失败移出分母，导致鲁棒性高估。"
+    ],
+    "baseline_fairness": "基线改造为 MANO 并使用同一 HaMeR 输入，但都非原生 egocentric 手 4D 方法，比较主要证明架构可行性。",
+    "metric_validity": "PSNR/SSIM 评估外观渲染，MPJPE 评估姿态；都不衡量完整丢检后重获或世界坐标轨迹。",
+    "reproducibility": "训练步数、基线与预处理详细；依赖 HaMeR/WiLoR 伪真值与大规模训练。",
+    "external_validity": "HoloAssist 只提供定性野外结果且使用 TTO；定量证据集中在 H2O/ARCTIC 可见手帧。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.19156-C01",
+      "claim": "Egocentric 4D 手重建同时受移动相机、严重自遮挡、有限视角、快速手动与双手交互影响。",
+      "stance": "support",
+      "relation": "支持将时序重建与单帧姿态估计区分。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文在问题定义中直接列出了移动相机、遮挡、视角、快速运动和双手交互等耦合困难。",
+      "locator": "1 Introduction",
+      "source_context": "Body reconstruction methods typically assume a static camera observing a single person, whereas egocentric scenarios involve a moving camera, severe self-occlusions, limited viewpoints, rapid hand motion, and interactions between two hands.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2606.19156-C02",
+      "claim": "Hand-4DGS 的定量结果排除了手大部分出框或上游无法正确检测双手的帧，因而不能外推到最难丢检场景。",
+      "stance": "limit",
+      "relation": "支持审计评测分母中是否排除检测失败。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "数据处理细节明确列出了两类被排除的高难样本。",
+      "locator": "C.2 Training Setup and Model Architecture",
+      "source_context": "We perform training and evaluation only when both hands are sufficiently visible in the image. Specifically, we exclude instances where more than half of a bounding box area is outside the image or when HaMeR fails to detect both hands correctly.",
+      "evidence_type": "evaluation-limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

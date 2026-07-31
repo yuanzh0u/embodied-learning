@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.05159",
+    "title": "AirGlove: Exploring Egocentric 3D Hand Tracking and Appearance Generalization for Sensing Gloves",
+    "published": "2026-02-05",
+    "url": "https://arxiv.org/abs/2602.05159",
+    "authors": [
+      "Wenhui Cui",
+      "Ziyi Kou",
+      "Chuan Qin",
+      "Ergys Ristani",
+      "Li Guan"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别手套传感器标定与视觉外观域差。"
+      },
+      {
+        "locator": "3 Vision-Based Glove Tracking",
+        "role": "data-or-setting",
+        "purpose": "核查四类手套、Quest 3 视频和 MoCap 真值。"
+      },
+      {
+        "locator": "4 Glove Appearance Generalization",
+        "role": "method-or-design",
+        "purpose": "核查时序视觉网络与外观不变对抗学习。"
+      },
+      {
+        "locator": "5 Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核查裸手模型在多手套上的下降和少样本适配。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查跨外观泛化结论。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "视觉手追踪模型对传感手套外观是否稳定，如何降低每种手套重新标注的成本？",
+  "contributions": [
+    "系统评估裸手预训练模型在多种传感手套上的外观域差，并提出 AirGlove 外观不变学习。"
+  ],
+  "method": {
+    "summary": "在 IMU、压力、MoCap 和触觉手套上收集 Quest 3 双视图与 MoCap 3D 真值，用自回归时序视觉网络和能量式对抗分类器压制手套特定外观。",
+    "assumptions": [
+      "不同手套可作为外观语义类，可通过对抗学习消除设备特定表示。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Multi-sensing glove dataset",
+      "bare-hand dataset"
+    ],
+    "tasks": [
+      "手套 3D 手追踪",
+      "跨手套少样本泛化"
+    ],
+    "embodiments": [
+      "Quest 3",
+      "IMU/pressure/MoCap/haptic gloves"
+    ],
+    "sample_or_scale": "四类手套+裸手，各自数十万到百万级帧，会话级划分。"
+  },
+  "evaluation": {
+    "design": "先零样本测试 MEgATrack/UmeTrack 在手套上的下降，再 leave-one-glove-out 比较 20%–100% 少样本微调和表示不变性。",
+    "baselines": [
+      "MEgATrack",
+      "UmeTrack",
+      "MEgA-scratch"
+    ],
+    "metrics": [
+      "MKPE",
+      "MKPE.T",
+      "F-MKPE",
+      "F-MKPE.T",
+      "glove classification accuracy/F1"
+    ],
+    "ablations": [
+      "有无外观不变对抗损失",
+      "target-glove data fraction"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在大量裸手数据上训练的视觉追踪器在多种传感手套外观上性能显著下降。",
+      "scope": "MEgATrack/UmeTrack 在四类手套数据上的零样本测试。",
+      "locator": "5 Evaluation"
+    },
+    {
+      "finding": "跨手套外观不变学习可在有限新手套标注下提升追踪。",
+      "scope": "leave-one-glove-out 微调。",
+      "locator": "5 Evaluation"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "AirGlove 当前验证的是同一实验体系中的四类手套，不代表任意新外观、照明、磨损和安装状态。",
+        "basis": "每种手套的会话数有限，并依赖 Quest 3 双视图和光学 MoCap 真值。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于手套遥操/数据采集中的视觉辅助追踪；新手套、跨设备相机、长期磨损与标定漂移需继续验收。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "将外观域差从单手套案例扩展到四种功能不同的手套，并使用会话级划分。"
+    ],
+    "design_risks": [
+      "没有明确作者限制章，且未完整评估长时标定、工程维护和手套磨损。"
+    ],
+    "baseline_fairness": "MEgATrack 与 AirGlove 共享视觉编码骨架，适合隔离外观学习效果；UmeTrack 作零样本诊断而非微调主基线。",
+    "metric_validity": "3D 关键点误差直接反映手套视觉追踪，但不反映传感器标定成本、佩戴负担和跨时间漂移。",
+    "reproducibility": "数据规模和会话划分详细；手套硬件、个性化标注和公开状态需发布后核对。",
+    "external_validity": "对所测四种手套有直接证据，对还未覆盖的手套外观和设备变化不能普遍外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.05159-C01",
+      "claim": "裸手预训练的视觉手追踪器在传感手套上存在大幅外观域差，每种新手套都可能需要新的适配数据。",
+      "stance": "limit",
+      "relation": "支持将手套/硬件外观记入数据谱系和跨设备评测。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文在四类手套评测表后直接总结了裸手到手套的性能下降。",
+      "locator": "5 Evaluation",
+      "source_context": "We observe that both MEgATrack and UmeTrack show substantially degraded performance on sensing gloves compared to bare-hands.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

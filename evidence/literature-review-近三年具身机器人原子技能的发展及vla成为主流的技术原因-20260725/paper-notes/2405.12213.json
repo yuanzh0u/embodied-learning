@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2405.12213",
+    "title": "Octo: An Open-Source Generalist Robot Policy",
+    "published": "2024-05-20T17:57:01Z",
+    "url": "https://arxiv.org/abs/2405.12213",
+    "authors": [
+      "Octo Model Team",
+      "Dibya Ghosh",
+      "Homer Walke",
+      "Karl Pertsch",
+      "Kevin Black",
+      "Oier Mees",
+      "Sudeep Dasari",
+      "Joey Hejna",
+      "Tobias Kreiman",
+      "Charles Xu",
+      "Jianlan Luo",
+      "You Liang Tan",
+      "Lawrence Yunliang Chen",
+      "Pannag Sanketi",
+      "Quan Vuong",
+      "Ted Xiao",
+      "Dorsa Sadigh",
+      "Chelsea Finn",
+      "Sergey Levine"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "理解通用机器人策略的跨本体与适配目标。"
+      },
+      {
+        "locator": "III The Octo Model",
+        "role": "method-or-design",
+        "purpose": "核验 block-wise attention、token 布局与可替换 action head。"
+      },
+      {
+        "locator": "IV Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核验多本体控制、新域微调和设计消融。"
+      },
+      {
+        "locator": "V Discussion and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录数据覆盖、动作空间与新输入适配边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "通用机器人策略能否通过广泛数据混合和模块化接口实现跨机器人控制与低成本适配？",
+  "contributions": [
+    "发布可开源的通用 Octo 策略",
+    "用 block-wise attention 实现输入、任务与动作头的可扩展适配"
+  ],
+  "method": {
+    "summary": "以 Transformer 骨干同时处理观测和任务 token，用可替换的读出头生成动作，在 RT-X 宽数据混合上训练并支持新传感器和动作空间微调。",
+    "assumptions": [
+      "不同数据集的观测与动作可通过统一 token 布局和数据配比进行联合训练"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Open X-Embodiment / RT-X mixture",
+      "BridgeData"
+    ],
+    "tasks": [
+      "语言条件操作",
+      "目标图像条件操作",
+      "新域微调"
+    ],
+    "embodiments": [
+      "WidowX",
+      "Google Robot",
+      "Franka 等多种机器人"
+    ],
+    "sample_or_scale": "使用宽跨本体数据混合，并在多种本体上做零样本和微调评测。"
+  },
+  "evaluation": {
+    "design": "评估多本体直接控制、新域少样本微调，以及数据混合、动作头和骨干的消融。",
+    "baselines": [
+      "single-robot Bridge policy",
+      "discretized action prediction",
+      "continuous MSE action prediction",
+      "ResNet-Transformer"
+    ],
+    "metrics": [
+      "task success rate",
+      "data-efficient finetuning"
+    ],
+    "ablations": [
+      "wide vs single-robot data",
+      "diffusion vs discrete/MSE action head",
+      "ViT vs ResNet"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在 WidowX 消融中，宽数据混合、ViT 与 diffusion action head 组合表现最好。",
+      "scope": "四个 WidowX 语言/目标条件任务",
+      "locator": "Appendix F > F-B Model Ablations"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "通用策略的能力仍受制于数据覆盖、动作空间与新输入的适配。",
+        "locator": "V Discussion and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "Octo 的主要优势是可复用预训练和接口适配，不是无条件零样本精细技能。",
+        "basis": "新域评测仍使用目标演示微调。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论适用于与预训练数据有可对齐观测和动作接口的机器人操作，新接触模式或全身动作需要额外适配。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "开源模型和代码",
+      "多本体直接评测与新域微调",
+      "分解数据、架构和动作头影响"
+    ],
+    "design_risks": [
+      "数据混合与模型架构不能完全正交比较",
+      "部分任务试验数较小"
+    ],
+    "baseline_fairness": "消融在共同 WidowX 设置上进行，能较好地隔离主要设计选择。",
+    "metric_validity": "真机任务成功率比开环动作误差更贴近部署目标，但无长时程技能交接指标。",
+    "reproducibility": "模型、代码和数据配方公开，但多真机环境复现仍成本较高。",
+    "external_validity": "多本体和新域适配提供一定外部效度，但任务多为桌面操作。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2405.12213-C01",
+      "claim": "Octo 在 WidowX 消融中表明，宽跨本体数据混合、ViT 骨干和 diffusion action head 的组合优于窄数据或替代动作头，说明 VLA 路线能同时吸收数据规模与连续动作建模收益。",
+      "stance": "support",
+      "relation": "支持 VLA 主流化来自可规模化预训练加可替换动作头的工程优势。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文在同一机器人与任务上消融数据、动作头和视觉架构。",
+      "locator": "Appendix F > F-B Model Ablations",
+      "source_context": "We achieve best performance when using the ViT architecture, diffusion action head, and wide training data mixture.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文表格和紧随总结直接支持该组合在 WidowX 消融中最优；主张已限定评测平台。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

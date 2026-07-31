@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.04271",
+    "title": "StandardE2E: A Unified Framework for End-to-End Autonomous Driving Datasets",
+    "published": "2026-06-02",
+    "url": "https://arxiv.org/abs/2606.04271",
+    "authors": [
+      "Stepan Konev"
+    ]
+  },
+  "review": {
+    "question": "近一年空间数据的生产难点在哪里，具身机器人与智能驾驶的异同是什么？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-4D",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper directly identifies schema, coordinate, calibration and modality fragmentation as a recurring production and reuse cost for driving datasets."
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "Map cross-dataset fragmentation and its engineering cost."},
+      {"locator": "3 The StandardE2E framework; 3.1 The adapter chain", "role": "method-or-design", "purpose": "Inspect the canonical schema and transformation boundary."},
+      {"locator": "3.2 Segment-context aggregators; 3.3 Indexing and scenario filtering; 3.4 The UnifiedE2EDataset", "role": "results-or-analysis", "purpose": "Assess the supported operations and handling of missing modalities and temporal context."},
+      {"locator": "3.5 Two-stage architecture and reproducibility; 3.7 Adding a new dataset", "role": "conclusion-or-limitations", "purpose": "Assess reproducibility claims and scope."}
+    ],
+    "sections_skipped": [
+      {"locator": "Cross-dataset empirical evaluation", "role": "appendix-or-supplement", "reason": "not-applicable: the paper is an extended abstract and states that the full cross-dataset analysis is still in preparation."}
+    ]
+  },
+  "research_question": "Can a canonical schema and adapter chain reduce the repeated engineering cost of turning heterogeneous driving logs into training-ready spatial data?",
+  "contributions": [
+    "Defines a canonical per-frame schema spanning cameras, LiDAR, maps, detections, ego state and trajectories.",
+    "Separates one-time deterministic preprocessing from training-time loading, filtering and multi-dataset mixing."
+  ],
+  "method": {
+    "summary": "Maps each native dataset into StandardFrameData, applies configurable modality adapters and segment-context aggregators, writes deterministic frame caches and a scenario index, then exposes them through a unified PyTorch dataset.",
+    "assumptions": ["Every source dataset can be mapped to the canonical semantics without unacceptable information loss", "Missing modalities can be explicitly flagged and default-filled"]
+  },
+  "study_context": {
+    "datasets": ["Waymo End-to-End", "Waymo Perception", "Argoverse 2 Sensor", "Argoverse 2 LiDAR", "NAVSIM", "WayveScenes101"],
+    "tasks": ["Cross-dataset preprocessing", "Scenario filtering", "Multi-dataset training access"],
+    "embodiments": ["Autonomous-driving datasets with heterogeneous sensor rigs"],
+    "sample_or_scale": "Six supported datasets in the released framework; full empirical cross-dataset analysis not yet reported."
+  },
+  "evaluation": {
+    "design": "System description and fixture-level reproducibility checks rather than a comparative scientific experiment.",
+    "baselines": ["Native per-dataset APIs and project-specific preprocessing"],
+    "metrics": ["Supported datasets and modalities", "Deterministic cache equivalence via unit tests"],
+    "ablations": []
+  },
+  "findings": [
+    {"finding": "Dataset heterogeneity extends beyond file formats to calibration conventions, coordinate systems and missing modality coverage, making cross-dataset reuse expensive and brittle.", "scope": "The six driving datasets supported by the framework and the broader ecosystem described by the paper.", "locator": "Abstract; 1 Introduction"},
+    {"finding": "Canonicalization improves reuse only by making per-dataset mappings explicit; it does not make absent modalities or semantic mismatches disappear.", "scope": "StandardE2E architecture.", "locator": "3 The StandardE2E framework; 3.4 The UnifiedE2EDataset"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "The document is an extended abstract and the full cross-dataset analyses are still in preparation.", "locator": "Abstract"}
+    ],
+    "reader_inferred": [
+      {"boundary": "The work demonstrates interface unification, not that coordinate or label semantics are scientifically equivalent across datasets.", "basis": "Missing modalities are default-filled and each dataset still requires a hand-written raw-to-canonical mapping."}
+    ]
+  },
+  "transfer_boundary": "Useful for reducing integration toil when source semantics are understood; insufficient as evidence that heterogeneous datasets can be mixed without distribution shift or supervision mismatch.",
+  "critical_appraisal": {
+    "design_strengths": ["Makes coordinate, modality and temporal-context handling explicit", "Open-source deterministic preprocessing architecture"],
+    "design_risks": ["No reported cross-dataset model results", "Canonical schemas may hide source-specific uncertainty or semantics"],
+    "baseline_fairness": "No controlled baseline comparison is reported in the extended abstract.",
+    "metric_validity": "Engineering support and determinism measure integration quality, not learning benefit or safety.",
+    "reproducibility": "The package, schemas and unit-test approach are described and publicly linked.",
+    "external_validity": "Applies to supported driving datasets; extension cost and semantic loss for new sensor types remain unquantified."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.04271-C01",
+      "claim": "Driving-data fragmentation is itself a production bottleneck: dataset-specific file formats, APIs, calibration conventions and modality coverage make preprocessing repeatedly reimplemented and cross-dataset experiments expensive and brittle.",
+      "stance": "limit",
+      "relation": "Limits the assumption that once raw spatial data are collected, they are naturally reusable across driving datasets or models.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The introduction explicitly describes recurring per-project preprocessing and brittle adapter work caused by heterogeneous dataset conventions.",
+      "locator": "1 Introduction",
+      "source_context": "In practice, this fragmentation imposes a recurring tax on end-to-end driving research. Per project, researchers re-implement preprocessing pipelines from raw protobuf, parquet, pickled-frame, or city-wide GPKG sources into a representation their model can consume.",
+      "evidence_type": "system problem statement",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The claim closely paraphrases the exact problem statement and does not assert unreported model improvements."}
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

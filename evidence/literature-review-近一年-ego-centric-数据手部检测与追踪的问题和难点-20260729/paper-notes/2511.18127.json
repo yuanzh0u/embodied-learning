@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2511.18127",
+    "title": "SFHand: Learning Embodied Manipulation by Streaming Egocentric 3D Hand Forecasting",
+    "published": "2025-11-22",
+    "url": "https://arxiv.org/abs/2511.18127",
+    "authors": [
+      "Ruicong Liu",
+      "Yifei Huang",
+      "Liangyang Ouyang",
+      "Caixin Kang",
+      "Yoichi Sato"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别离线预测缺少流式输入、语言意图和长时记忆。"
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "核查自回归手状态与 ROI 增强记忆。"
+      },
+      {
+        "locator": "4 EgoHaFL dataset",
+        "role": "data-or-setting",
+        "purpose": "核查视频、3D 手姿和细粒度语言同步数据。"
+      },
+      {
+        "locator": "5.2 Evaluation on 3D hand forecasting",
+        "role": "results-or-analysis",
+        "purpose": "核查流式精度、预测误差和 FPS。"
+      },
+      {
+        "locator": "5.3.2 Ablation on ROI-enhanced memory",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查素朴记忆中的误差传播失败。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "流式 egocentric 手追踪/预测如何利用时序记忆，而不放大自回归误差？",
+  "contributions": [
+    "提出语言引导的流式 3D 手预测架构 SFHand、ROI 增强记忆和 EgoHaFL 数据集。"
+  ],
+  "method": {
+    "summary": "每一流式时刻输入语言、当前帧和上一时刻预测的手类型/框/MANO/轨迹，将历史特征存入 FIFO KV 队列，用当前手 ROI 对记忆检索注意力加偏置。",
+    "assumptions": [
+      "有静态语言指令提供任务意图。",
+      "当前手状态在推理时可由模型自己的上一步预测提供。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoHaFL",
+      "Franka Kitchen",
+      "Adroit"
+    ],
+    "tasks": [
+      "流式 3D 手预测",
+      "操作表征迁移"
+    ],
+    "embodiments": [
+      "人类 egocentric 视频；仿真 Franka 夹爪和 Adroit 灵巧手"
+    ],
+    "sample_or_scale": "EgoHaFL 247K 视频、3.95M 标注帧；精细语言和 3D 手状态同步。"
+  },
+  "evaluation": {
+    "design": "比较静态、离线轨迹/扩散、HaMeR 适配与 SFHand 流式预测，报告 ADE/FDE/JPE/PA-JPE/FPS；并做模态和记忆消融。",
+    "baselines": [
+      "Static",
+      "USST",
+      "EgoH4",
+      "HaMeR",
+      "HaMeR + instruction"
+    ],
+    "metrics": [
+      "ADE",
+      "FDE",
+      "JPE",
+      "PA-JPE",
+      "Recall@0.5",
+      "FPS",
+      "robot success rate"
+    ],
+    "ablations": [
+      "视频/语言/手状态",
+      "无记忆",
+      "素朴记忆",
+      "ROI-enhanced memory",
+      "oracle previous state"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "流式自回归能避免等待整段视频，但历史队列中会存入自己的预测误差。",
+      "scope": "SFHand 推理流。",
+      "locator": "3 Method"
+    },
+    {
+      "finding": "素朴记忆比无记忆更差，ROI 导向手区域检索才能打断背景噪声与自回归误差的放大。",
+      "scope": "ROI 增强记忆消融。",
+      "locator": "5.3.2 Ablation on ROI-enhanced memory"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "素朴记忆会让非关键背景 token 检索并放大已存入的自回归错误。",
+        "locator": "5.3.2 Ablation on ROI-enhanced memory"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "SFHand 主要是预测未来手状态，不是对当前真实手位姿的独立感知追踪。",
+        "basis": "推理使用上一时刻自己的预测作输入，且 oracle 前一状态版显著更好，显示误差累积。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于有任务语言、流式视频和可信手 ROI 的短期手运动预测；长时自回归、上游丢检和真实机器人闭环仍需独立评测。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "明确比较流式/离线、模态、记忆和 oracle 自回归，并报告帧率。"
+    ],
+    "design_risks": [
+      "语言指令、自回归手状态和大规模新数据集同时变化，方法增益的外部可分解性有限。"
+    ],
+    "baseline_fairness": "HaMeR 被适配为预测器，非原生任务；SFHand 同时拥有新数据集和语言输入，比较主要体现系统性能而非单机制。",
+    "metric_validity": "ADE/FDE 和 JPE 衡量预测轨迹/姿态，FPS 衡量在线性；不包含真实机器人闭环延迟与失败恢复。",
+    "reproducibility": "数据与项目页公开；大规模预训练和仿真机器人评测需较高算力。",
+    "external_validity": "下游机器人只在 Franka Kitchen/Adroit 仿真中、每任务单独策略头与 RL 专家示范下验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2511.18127-C01",
+      "claim": "流式手追踪/预测中，素朴时序记忆可能比无记忆更差，因为背景 token 会检索并放大历史队列中的自回归误差。",
+      "stance": "limit",
+      "relation": "支持时序记忆必须与手 ROI/置信度共同设计。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "该句由同节 Table 4 的 ADE/FDE 消融数据直接支持。",
+      "locator": "5.3.2 Ablation on ROI-enhanced memory",
+      "source_context": "The vanilla memory without ROI enhancement performs even worse than the no-memory baseline.",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2511.18127-C02",
+      "claim": "自回归追踪/预测必须显式管理自身误差累积；被存入的错误可以被后续时刻再次检索并放大。",
+      "stance": "limit",
+      "relation": "指向长时序置信度、重置和错误边界需求。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在消融解释中直接给出了记忆导致误差放大的机制。",
+      "locator": "5.3.2 Ablation on ROI-enhanced memory",
+      "source_context": "This can amplify error, as autoregressive prediction errors stored in the memory queue ( ) are retrieved and propagated by non-salient parts of the current query ( ).",
+      "evidence_type": "failure-analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

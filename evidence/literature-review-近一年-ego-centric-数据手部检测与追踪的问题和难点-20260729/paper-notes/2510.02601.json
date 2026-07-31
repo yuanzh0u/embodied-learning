@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2510.02601",
+    "title": "Ego-Exo 3D Hand Tracking in the Wild with a Mobile Multi-Camera Rig",
+    "published": "2025-10-02",
+    "url": "https://arxiv.org/abs/2510.02601",
+    "authors": [
+      "Patrick Rim",
+      "Kun He",
+      "Kevin Harris",
+      "Braden Copple",
+      "Shangchen Han",
+      "Sizhe An",
+      "Ivan Shugurov",
+      "Tomas Hodan",
+      "He Wen",
+      "Xu Xie"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别环境真实性与精确 3D 真值的结构性取舍。"
+      },
+      {
+        "locator": "3.1 Mobile Capture Rig",
+        "role": "method-or-design",
+        "purpose": "核查 10 视图移动采集硬件和坐标系。"
+      },
+      {
+        "locator": "3.2 Automated Hand Annotation",
+        "role": "method-or-design",
+        "purpose": "核查 2D 检测、RANSAC 三角化与个性化网格拟合。"
+      },
+      {
+        "locator": "3.3 Quantitative Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核查与 30 相机 dome 真值的误差和跨数据集泛化。"
+      },
+      {
+        "locator": "4 Conclusion and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查当前数据集边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "如何在真实户外/多场景中获得可验证的 3D 手追踪真值？",
+  "contributions": [
+    "构建便携式 ego–exo 多相机采集架和 marker-less 3D 手真值管线。"
+  ],
+  "method": {
+    "summary": "用背负式 8 个 exo 鱼眼相机 + Quest 3 的 2 个 ego 相机，以 MoCap 追踪头显相对位姿；通过 Sapiens/InterNet 的多视图 2D 关键点、RANSAC 三角化和个性化网格拟合生成 3D 标注。",
+    "assumptions": [
+      "移动采集架的 10 个视图与 MoCap 保持硬件同步和精确标定。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoExo-Hands",
+      "UmeTrack",
+      "HOT3D"
+    ],
+    "tasks": [
+      "3D 手姿真值产生",
+      "跨数据集手跟踪评测"
+    ],
+    "embodiments": [
+      "8kg mobile ego-exo rig",
+      "Quest 3",
+      "OptiTrack"
+    ],
+    "sample_or_scale": "初始 EgoExo-Hands 测试集约 30,000 帧、3 个受试者、室内外环境。"
+  },
+  "evaluation": {
+    "design": "用 30 相机 dome 作 gold standard 报告 MPJPE 中位/P90；将 UmeTrack/HOT3D 训练的跟踪器直接测试于 EgoExo-Hands。",
+    "baselines": [
+      "UmeTrack tracker trained on UmeTrack",
+      "UmeTrack tracker trained on HOT3D",
+      "combined training"
+    ],
+    "metrics": [
+      "MPJPE median/P90",
+      "MKPE"
+    ],
+    "ablations": [
+      "无专门模型消融；重点是真值质量和跨域难度"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "移动多相机采集架可在手物交互中提供亚厘米中位 3D 误差，同时扩大环境真实性。",
+      "scope": "与 30 相机 dome 的控制对照。",
+      "locator": "3.3 Quantitative Evaluation"
+    },
+    {
+      "finding": "现有受控数据训练的跟踪器在 EgoExo-Hands 上误差明显上升。",
+      "scope": "UmeTrack/HOT3D 训练器跨数据集测试。",
+      "locator": "3.3 Quantitative Evaluation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "当前是 extended abstract 与初始数据集，规模仅约 30K 帧、3 人。",
+        "locator": "1 Introduction"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "“野外高质量真值”仍需实体采集基础设施，不是轻量头戴单机自动标注。",
+        "basis": "系统重约 8kg，含 10 个视频视图、5 个 MoCap 相机、硬件同步和移动工作站；坐标系随采集者移动。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于构建高精度、较真实的 3D 手姿标注和跨域测试集；不是可大规模无人值守采集方案。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "用更高覆盖度的 30 相机 dome 独立验证移动系统的标注误差。"
+    ],
+    "design_risks": [
+      "2D 检测器部分使用专有数据训练，可复现性和域偏差不完全可见。"
+    ],
+    "baseline_fairness": "跨数据集比较主要用于表征难度，非模型排名；未在 EgoExo-Hands 上重训基线。",
+    "metric_validity": "MPJPE/MKPE 可衡量 3D 关键点质量，但不涉及触觉、接触力、长时轨迹漂移和采集成本。",
+    "reproducibility": "硬件和标注管线详细；专有检测训练数据和高成本采集架限制重现。",
+    "external_validity": "仅 3 名受试者的初始数据，但室内外与真实环境更多样；尚需更大人群。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2510.02601-C01",
+      "claim": "受控数据上训练的 3D 手追踪器不能保证野外泛化；在 EgoExo-Hands 上的 MKPE 从域内约 9–11 mm 上升到 16.28 mm。",
+      "stance": "limit",
+      "relation": "支持将环境真实性与真值精度联合评估。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "该结论由同节 Table 2 的域内和跨域 MKPE 直接支持。",
+      "locator": "3.3 Quantitative Evaluation",
+      "source_context": "Models trained on existing datasets, UmeTrack [ 9 ] and HOT3D [ 2 ] , generalize significantly worse to EgoExo-Hands, highlighting the increased difficulty of our in-the-wild data.",
+      "evidence_type": "cross-dataset-evaluation",
+      "quantitative": {
+        "metric": "MKPE",
+        "value_or_direction": "EgoExo-Hands 16.28 mm，域内 UmeTrack/HOT3D 为 9.48/10.95 mm",
+        "comparator": "同一追踪器在既有受控数据域内测试",
+        "task_or_sample": "UmeTrack+HOT3D 训练，EgoExo-Hands 约 30K 帧测试",
+        "locator": "3.3 Quantitative Evaluation"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2510.02601-C02",
+      "claim": "在真实环境中获得精确 3D 手真值仍依赖多相机、同步、标定和重型移动采集硬件。",
+      "stance": "conditional",
+      "relation": "支持“真实性–真值精度”之间的数据工程取舍。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文的硬件章节表明高精度真值来自多视图、MoCap、硬同步和标定的组合。",
+      "locator": "3.1 Mobile Capture Rig",
+      "source_context": "All ten monochrome cameras and the five MoCap cameras are hardware-synchronized and precisely calibrated into a shared three-dimensional reference frame.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

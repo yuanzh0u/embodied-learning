@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2603.03148", "title": "From Language to Action: Can LLM-Based Agents Be Used for Embodied Robot Cognition?", "published": "2026-03-03", "url": "https://arxiv.org/abs/2603.03148", "authors": ["Shinas Shaji", "Fabian Huppertz", "Alex Mitrevski", "Sebastian Houben"]},
+  "review": {"question": "近半年智能体技术在具身智能行业中形成了哪些可验证的技术架构、应用方式、部署收益与失败边界？", "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-BIZ"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted", "paper_type": "empirical",
+    "relevance": {"decision": "include", "reason": "直接检验 LLM 作为认知核心、工作/情景记忆、工具调用和失败恢复，并测量成功幻觉。"},
+    "sections_read": [
+      {"locator": "I INTRODUCTION", "role": "problem", "purpose": "核对认知控制问题与研究范围。"},
+      {"locator": "III METHODOLOGY", "role": "method-or-design", "purpose": "核对工具、工作记忆和情景记忆。"},
+      {"locator": "IV EVALUATION", "role": "results-or-analysis", "purpose": "核对真实成功、相信成功和记忆效应。"},
+      {"locator": "V DISCUSSION", "role": "conclusion-or-limitations", "purpose": "核对仿真、实时性和事实核验边界。"}
+    ],
+    "sections_skipped": [{"locator": "II RELATED WORK", "reason": "背景不承担核心结果。"}]
+  },
+  "research_question": "LLM 能否作为具身认知核心，并用记忆改善规划与恢复，而不污染未来决策？",
+  "contributions": ["构建带工作记忆、情景记忆和工具接口的认知架构。", "区分仿真真值成功与智能体自信成功。"],
+  "method": {"summary": "LLM 通过感知、导航、抓取、放置、草稿和记忆检索工具控制模拟移动操作机器人；任务报告写入向量化情景记忆。", "assumptions": ["仿真可直接读取环境状态而非视觉感知。", "机器人自己对任务成功的报告会成为记忆标签。"]},
+  "study_context": {"datasets": [], "tasks": ["place three items in cupboard", "swap mug and cube"], "embodiments": ["simulated omnidirectional mobile manipulator with 7-DoF arm"], "sample_or_scale": "Two static household tasks; four LLM families; all evaluation in PyBullet simulation."},
+  "evaluation": {"design": "多次重复两个任务，以仿真世界状态判真值成功，对比智能体自报成功，并观察最多三条情景记忆的影响。", "baselines": ["no/limited episodic memory across early executions", "four LLMs"], "metrics": ["ground-truth task success", "believed success confusion", "tool-call count"], "ablations": ["memory size", "LLM choice"]},
+  "findings": [
+    {"finding": "模型能在失败工具调用后重规划，但会把失败误报为成功，所有出现失败的模型都显著高估表现。", "scope": "两个静态仿真家庭任务。", "locator": "IV-C Execution Success Evaluation; IV-E Qualitative Observations"},
+    {"finding": "情景记忆对任务成功率的总体影响不确定，但通常减少工具调用。", "scope": "最多累积三次执行记忆。", "locator": "IV-D Benefits of Memory on Planning"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "过度自信会把错误成功标签写入情景记忆，削弱记忆价值。", "locator": "IV-D; V DISCUSSION"},
+      {"limitation": "仅在简化仿真中评测，抽象掉传感噪声、机械磨损和时延。", "locator": "V DISCUSSION"}
+    ],
+    "reader_inferred": [{"boundary": "两个静态任务不足以证明开放环境中的长期自主性。", "basis": "任务与初始状态固定，感知直接读取仿真状态。"}]
+  },
+  "transfer_boundary": "适合作为成功检测与记忆写入门禁的反例证据；不能作为真实机器人、动态视觉感知或生产时延的性能证据。",
+  "critical_appraisal": {
+    "design_strengths": ["把真实成功和自信成功分账。", "直接检验记忆污染机制。"],
+    "design_risks": ["任务仅两个且状态固定。", "抓取与感知高度简化。", "模型试验次数不均。"],
+    "baseline_fairness": "模型在同一环境与任务上运行，但 API 与本地模型响应速度导致样本数差异。",
+    "metric_validity": "仿真世界状态是可靠成功真值，适合检验幻觉；不覆盖真实感知与控制失败。",
+    "reproducibility": "环境与工具描述充分，模型 API/量化版本会影响复现。",
+    "external_validity": "对成功判定和记忆治理有强机制价值，对产业绩效外推弱。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.03148-C01", "claim": "LLM 机器人智能体会在任务未真实完成时相信自己成功；这种误报会直接污染以自报结果标注的情景记忆。", "stance": "limit", "relation": "支持把外部成功检测设为重试、推进和记忆写入的硬门禁。", "confidence": "direct", "claim_basis": "reported-result", "summary": "论文用仿真世界状态对比模型自报状态，并观察到过度自信与错误记忆标签。", "locator": "IV-D Benefits of Memory on Planning", "source_context": "this is possible because memories are labelled with the agent’s belief about its execution success, and this belief can be hallucinated.", "evidence_type": "experiment", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核混淆矩阵与记忆讨论：仿真真值、自报成功和错误标签写入链路均被明确陈述，范围限于两项仿真任务。"}
+    },
+    {
+      "card_id": "2603.03148-C02", "claim": "在该实验中，情景记忆对任务成功率的作用因模型和任务而异，结论不确定；较稳定的收益是减少工具调用。", "stance": "conditional", "relation": "限制把“加记忆”等同于可靠性提升。", "confidence": "direct", "claim_basis": "reported-result", "summary": "部分模型改善、部分任务下降；工具调用数总体减少。", "locator": "IV-D Benefits of Memory on Planning", "source_context": "the overall effect of the memory on the task completion success is inconclusive", "evidence_type": "experiment", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "结果段直接用 inconclusive 描述，并单列工具调用趋势。"}
+    },
+    {
+      "card_id": "2603.03148-C03", "claim": "模型可在占位空间、已占用位置等工具失败后自行重规划，但恢复过程仍可能受幻觉影响而产生新的失败。", "stance": "conditional", "relation": "支持智能体恢复能力，但要求外部状态核验。", "confidence": "direct", "claim_basis": "reported-result", "summary": "定性观察同时记录自动恢复与恢复后误判。", "locator": "IV-E Qualitative Observations", "source_context": "the models tend to automatically replan without any human intervention", "evidence_type": "failure-analysis", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核同一观察段：作者同时报告自动重规划与恢复后的幻觉失败，因此主张保留了条件性和仿真边界。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "表格中的具体成功率在 HTML 数学提取中缺失，因此不投影不可核对数值。"
+}

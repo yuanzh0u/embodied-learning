@@ -1,0 +1,63 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "medium",
+      "notes": "The review needs to connect model-level heterogeneous pretraining with capture-device, viewpoint, temporal, codec, and embodiment-interface constraints."
+    }
+  ],
+  "knowledge_ids": ["EA-DATA", "EA-HARDWARE", "EA-SENSOR", "EA-MODEL", "EA-XEMBODIMENT"],
+  "families": ["vla", "droid-ego4d", "teleoperation-demo-quality", "retargeting", "sim2real"],
+  "queries": [
+    {
+      "label": "dynamic-heterogeneous-vla-pretraining",
+      "tier": "dynamic-association",
+      "query": "(all:\"vision-language-action\" OR all:\"robot foundation model\") AND (all:heterogeneous OR all:\"data mixture\" OR all:\"multi-embodiment\")",
+      "why": "Find recent VLA work that explicitly studies heterogeneous source mixtures and cross-embodiment pretraining.",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-capture-parameters",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot learning\" OR all:\"robot dataset\") AND (all:\"camera resolution\" OR all:\"frame rate\" OR all:\"field of view\")",
+      "why": "Recover dataset and system papers that disclose capture resolution, temporal rate, FOV, and camera placement.",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-viewpoint-camera-domain",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot pretraining\" OR all:\"vision-language-action\") AND (all:viewpoint OR all:\"camera domain\" OR all:egocentric OR all:wrist-camera)",
+      "why": "Test whether viewpoint and camera-domain diversity are learned as invariances or require explicit alignment.",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-negative-transfer-diversity",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot manipulation\" OR all:\"vision-language-action\") AND (all:\"negative transfer\" OR all:\"expert diversity\" OR all:\"embodiment gap\" OR all:\"action mismatch\")",
+      "why": "Find counterevidence to the intuition that every additional source or collection setup improves pretraining.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-specs-browser",
+      "query": "site:arxiv.org/abs robot dataset camera resolution fps FOV wrist camera VLA 2025 2026",
+      "why": "Search full paper records for capture specifications that may be absent from metadata.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-current-data-mixtures-web",
+      "query": "site:arxiv.org/abs 2026 VLA heterogeneous data sources egocentric robot simulation pretraining",
+      "why": "Calibrate current terminology for mixed-source VLA pretraining.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

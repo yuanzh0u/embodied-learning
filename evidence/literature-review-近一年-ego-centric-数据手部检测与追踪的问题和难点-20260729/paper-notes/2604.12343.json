@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2604.12343",
+    "title": "Detecting Precise Hand Touch Moments in Egocentric Video",
+    "published": "2026-04-14",
+    "url": "https://arxiv.org/abs/2604.12343",
+    "authors": [
+      "Huy Anh Nguyen",
+      "Feras Dayoub",
+      "Minh Hoai"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别触碰时刻的自运动、遮挡和近接触歧义。"
+      },
+      {
+        "locator": "3.2 Touch Annotation",
+        "role": "data-or-setting",
+        "purpose": "核查手工和自动触碰标注精度。"
+      },
+      {
+        "locator": "4 Proposed Methodology",
+        "role": "method-or-design",
+        "purpose": "核查手中心特征、时序推理与偏移头。"
+      },
+      {
+        "locator": "5.4 Experiment Results",
+        "role": "results-or-analysis",
+        "purpose": "核查严格帧容差下的结果。"
+      },
+      {
+        "locator": "6 Conclusions and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查应用边界与贡献。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "为何“手已检出”仍不等于能找到精确接触时刻？",
+  "contributions": [
+    "将 first-touch 定义为帧级稀疏事件，引入 TouchMoment 数据集和 HiCE 手中心时空模型。"
+  ],
+  "method": {
+    "summary": "从全帧与左/右手扩展区域提取特征，用交叉注意力融合，再用时序编解码器、分类/偏移头、抓取辅助头和软标签定位首次接触。",
+    "assumptions": [
+      "接触时刻在视频中肉眼可辨且为有意操作。",
+      "手框可由现成检测器提供。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "TouchMoment",
+      "HOI4D",
+      "TACO"
+    ],
+    "tasks": [
+      "首次触碰时刻检测"
+    ],
+    "embodiments": [
+      "头戴 RGB/RGB-D 视角"
+    ],
+    "sample_or_scale": "4,021 段视频，8,456 个触碰时刻，超过 100 万帧。"
+  },
+  "evaluation": {
+    "design": "按 0/1/2 帧容差报告 AP/mAP，比较有无 NMS/SNMS，并在 HOI4D 和 TACO 分别测试。",
+    "baselines": [
+      "E2E-Spot",
+      "UGLF",
+      "T-DEED"
+    ],
+    "metrics": [
+      "AP@0",
+      "AP@1",
+      "AP@2",
+      "mAP"
+    ],
+    "ablations": [
+      "HiCE",
+      "grasp loss",
+      "soft labels",
+      "Gauss-TOR",
+      "clip length",
+      "hand context size"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "近接触帧在强自运动、尺度变化和遮挡下极难与真实接触区分。",
+      "scope": "第一视角操作视频。",
+      "locator": "1 Introduction"
+    },
+    {
+      "finding": "大规模训练标注部分由自动工具生成，手工留出集上平均差 1.94 帧。",
+      "scope": "HOI4D 训练分割。",
+      "locator": "3.2 Touch Annotation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "只包含有意且视觉可明确判定的接触，排除无法可靠观测的时刻。",
+        "locator": "3.2 Touch Annotation"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "该任务检测的是视觉上可标注的 first-touch，不是物理力/触觉真值。",
+        "basis": "标注依赖手运动、物体运动或形变的可观变化，不可见接触被排除。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于可视首次接触的帧级定位；不能替代力/触觉传感器对隐式接触、接触强度和滑移的验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "将容差收紧到 0–2 帧，且分开报告后处理前后结果。"
+    ],
+    "design_risks": [
+      "自动标注差异与严格的帧容差同量级，标签噪声可能限制上限。"
+    ],
+    "baseline_fairness": "基线均从原始帧端到端训练并共用 SNMS，但 UGLF 使用外部视觉–语言对象检测器带来额外空间先验。",
+    "metric_validity": "小容差 AP 能衡量时序精度，但真值仍是视觉标注而非力学接触。",
+    "reproducibility": "代码公开；数据源和标注规则明确。",
+    "external_validity": "覆盖 HOI4D/TACO 的可视操作，不覆盖完全遮挡、无形变接触或真实接触力。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2604.12343-C01",
+      "claim": "精确触碰时刻检测不是普通手检测；它还需区分强自运动、近距遮挡和视觉上几乎相同的近接触帧。",
+      "stance": "limit",
+      "relation": "指向单帧手框之上的微时序与接触歧义。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文直接列出了接触时刻定位中的第一视角特有干扰。",
+      "locator": "1 Introduction",
+      "source_context": "Rapid head motion introduces strong egomotion, while approaching hands often create severe occlusions and perspective distortions at close range.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2604.12343-C02",
+      "claim": "TouchMoment 的自动训练标注与手工标签平均相差 1.94 帧，这与严格评测容差处于同一量级。",
+      "stance": "conditional",
+      "relation": "支持对帧级触碰标签噪声进行独立误差记账。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "原文给出自动工具相对手工标注的帧级差异。",
+      "locator": "3.2 Touch Annotation",
+      "source_context": "On a held-out subset with full manual annotation, this automatic tool differs from manual labels by an average of 1.94 frames, demonstrating sufficient accuracy for large-scale training data.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "difference from manual labels",
+        "value_or_direction": "an average of 1.94 frames",
+        "comparator": "held-out subset with full manual annotation",
+        "task_or_sample": "automatic tool on a held-out subset",
+        "locator": "3.2 Touch Annotation"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}
