@@ -1,0 +1,55 @@
+name: Deploy Research Wiki to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wiki/**'
+      - 'knowledge/**'
+      - 'evidence/**'
+      - 'scripts/build_research_wiki.py'
+      - 'scripts/visualize_kb_index.py'
+      - '.github/workflows/deploy-research-wiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Validate published research snapshot
+        run: python3 scripts/build_research_wiki.py --check --output wiki/data
+
+      - name: Assemble Wiki and knowledge map
+        run: |
+          mkdir -p _site/knowledge-map
+          cp -R wiki/. _site/
+          python3 scripts/visualize_kb_index.py \
+            --no-open \
+            --output _site/knowledge-map/index.html
+          touch _site/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
