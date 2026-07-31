@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.21714",
+    "title": "AVI-HT: Adaptive Vision-IMU Fusion for 3D Hand Tracking",
+    "published": "2026-05-20",
+    "url": "https://arxiv.org/abs/2605.21714",
+    "authors": [
+      "Ziyi Kou",
+      "Ankit Kumar",
+      "Mia Huang",
+      "Taylor Niehues",
+      "Vatsal Mehta",
+      "Ergys Ristani",
+      "Li Guan"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别手物接触遮挡下视觉与 6-DoF IMU 的互补性。"
+      },
+      {
+        "locator": "3.3 Model Architecture",
+        "role": "method-or-design",
+        "purpose": "核查跨传感器注意力与运动学先验。"
+      },
+      {
+        "locator": "5.1 3D Hand Tracking Accuracy",
+        "role": "results-or-analysis",
+        "purpose": "核查与视觉、IMU 和 EKF 基线的比较。"
+      },
+      {
+        "locator": "5.3 Sensitivity Study",
+        "role": "results-or-analysis",
+        "purpose": "核查 IMU 噪声与时间错位敏感性。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查手套外观和跨设备泛化限制。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "视觉–IMU 融合能否缓解手物重遮挡，同步和手套差异会如何限制它？",
+  "contributions": [
+    "提出自适应视觉–12 个 6-DoF IMU 融合的 3D 手追踪方法和 DexGloveHOI 数据集。"
+  ],
+  "method": {
+    "summary": "将双目/单目 egocentric 视觉特征与 200 Hz 手套 IMU 时窗对齐，用受手部运动链约束的层次交叉注意力自适应分配传感器信任。",
+    "assumptions": [
+      "用户可以穿戴特定 12-IMU 手套。",
+      "60 Hz 图像与 200 Hz IMU 时标对齐足够稳定。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "DexGloveHOI"
+    ],
+    "tasks": [
+      "3D 手追踪",
+      "重遮挡 HOI"
+    ],
+    "embodiments": [
+      "Meta Quest",
+      "12-sensor 6-DoF IMU glove",
+      "marker-based MoCap"
+    ],
+    "sample_or_scale": "100K+对齐视觉–IMU–3D 手姿样本，多种日常操作。"
+  },
+  "evaluation": {
+    "design": "在 UMETrack 和 MANO 两种手表示下比较视觉-only、IMU-only、EKF 后融合和学习融合；分析指级 IMU、活动类型、噪声和时间偏移。",
+    "baselines": [
+      "UMETrack",
+      "UMETrack + EKF",
+      "IMU-Tracker",
+      "HaMeR-based MANO"
+    ],
+    "metrics": [
+      "MKPE",
+      "fingertip MKPE",
+      "PUK AUC",
+      "joint-angle error"
+    ],
+    "ablations": [
+      "单指 IMU 组",
+      "活动类型",
+      "IMU 噪声",
+      "视觉–IMU 时间错位"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "视觉提供绝对位置/腕部全局旋转，IMU 提供遮挡不变的高频手指局部动力学。",
+      "scope": "DexGloveHOI 视觉–IMU 融合。",
+      "locator": "1 Introduction"
+    },
+    {
+      "finding": "时间对齐是融合效果的重要条件，高噪声或错位会使误差上升。",
+      "scope": "AVI-HT 敏感性实验。",
+      "locator": "5.3 Sensitivity Study"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "数据手套改变手部外观，可与下游裸手视觉管线产生域差。",
+        "locator": "6 Conclusion"
+      },
+      {
+        "limitation": "尚未验证对不同传感器布局、形态或 IMU 规格手套的泛化。",
+        "locator": "6 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "该方法是以增加可穿戴硬件、标定和同步复杂度换取重遮挡可观性。",
+        "basis": "系统依赖 12 个手套 IMU、200 Hz 采样和 MoCap 真值，且性能对噪声与时间错位敏感。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于允许佩戴传感手套的 AR/VR 或遥操重遮挡场景；裸手、跨手套与长期标定漂移需独立验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "用 MoCap 真值、两种手表示和系统敏感性实验评估重遮挡下的传感器互补。"
+    ],
+    "design_risks": [
+      "手套外观与特定布局可能导致模型学习设备特征而非跨设备手运动规律。"
+    ],
+    "baseline_fairness": "基线覆盖单模态、后处理融合和学习融合，对比具有机制解释力。",
+    "metric_validity": "3D 关键点和指尖误差直接衡量手姿，但不衡量佩戴负担、标定工时或长期漂移。",
+    "reproducibility": "方法、传感器布局和 MoCap 附录详细；手套与数据公开状态需发布后核对。",
+    "external_validity": "在特定手套与绑定实验区域内有证据，对其他手套和无手套环境未验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.21714-C01",
+      "claim": "视觉与 6-DoF IMU 的互补只有在准确同步下成立：视觉锚定全局位置，IMU 补足遮挡下的高频指部运动。",
+      "stance": "conditional",
+      "relation": "支持重遮挡下的多模态可观性，同时强调同步契约。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "该句在上下文中明确指向视觉全局锚点与 IMU 局部动力学的互补。",
+      "locator": "1 Introduction",
+      "source_context": "Therefore, fusing the two recovers what each modality alone cannot.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2605.21714-C02",
+      "claim": "手套型多模态追踪会引入新的外观域差，且对不同手套布局和 IMU 规格的泛化尚未验证。",
+      "stance": "limit",
+      "relation": "指向传感器增加后的设备谱系与维护风险。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文在结论的限制段明确将跨手套泛化列为未验证问题。",
+      "locator": "6 Conclusion",
+      "source_context": "In addition, since our experiments use a specific type of data sensing glove, the generalization to other gloves with different sensor layouts, form factors, or IMU specifications remains to be validated.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

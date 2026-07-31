@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.02956",
+    "title": "The Road Ahead in Autonomous Driving: The KITScenes Multimodal Dataset",
+    "published": "2026-06-01",
+    "url": "https://arxiv.org/abs/2606.02956",
+    "authors": [
+      "Richard Schwarzkopf",
+      "Fabian Immel",
+      "Alexander Blumberg",
+      "Jonas Merkert",
+      "Nils Rack",
+      "Kaiwen Wang",
+      "Fabian Konstantinidis",
+      "Julian Truetsch",
+      "Carlos Fernandez",
+      "Annika Bätz",
+      "Kevin Rösch",
+      "Marlon Steiner",
+      "Willi Poh",
+      "Yinzhe Shen",
+      "Royden Wagner",
+      "Felix Hauser",
+      "Dominik Strutz",
+      "Jaime Villa",
+      "Gleb Stepanov",
+      "Holger Caesar",
+      "Ömer Şahin Taş",
+      "Frank Bieder",
+      "Jan-Hendrik Pauls",
+      "Christoph Stiller"
+    ]
+  },
+  "review": {
+    "question": "近一年空间数据的生产难点在哪里，具身机器人与智能驾驶的异同是什么？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-4D",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "The dataset documents the full production stack for synchronized multimodal sensing, reprojection-accurate HD maps, quality control and closed-loop map validation."
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "Identify missing sensor fidelity, map completeness and geographic diversity."},
+      {"locator": "3 The KITScenes Multimodal Dataset; 3.1 High-Resolution Long-Range Multi-Modal Sensor Setup; 3.2 HD Map Annotation", "role": "method-or-design", "purpose": "Inspect synchronized sensing, calibration and map representation."},
+      {"locator": "4 Benchmarks; Appendix F Closed-loop autonomous driving map verification trials", "role": "results-or-analysis", "purpose": "Check whether maps are validated beyond static annotation metrics."},
+      {"locator": "5 Limitations; 6 Conclusion", "role": "conclusion-or-limitations", "purpose": "Record missing dynamic-object annotations and evidence boundaries."},
+      {"locator": "Appendix A Details on the Sensor Setup; Appendix B Calibration Details; Appendix E Annotation Protocol and Quality Control", "role": "appendix-or-supplement", "purpose": "Audit production, alignment and QA details."}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "What sensing, annotation and validation work is required to produce deployment-grade multimodal spatial data and HD maps?",
+  "contributions": [
+    "Releases hardware-synchronized camera, lidar, radar and localization data with high-fidelity HD maps.",
+    "Documents a multi-source, multi-annotator map QA process and validates maps in planning simulation and closed-loop Autoware trials."
+  ],
+  "method": {
+    "summary": "Combines global-shutter cameras, seven lidars, 4D radars and redundant GNSS/INS with calibration, aerial and street-level mapping sources, manual topology-aware annotation, automated integrity checks and closed-loop map qualification.",
+    "assumptions": ["Access to mapping-authority aerial imagery", "High-accuracy georeferencing and calibration", "Lanelet2 and Autoware-compatible map semantics"]
+  },
+  "study_context": {
+    "datasets": ["KITScenes Multimodal"],
+    "tasks": ["Online HD map construction", "Long-range depth", "Novel-view synthesis", "End-to-end driving"],
+    "embodiments": ["European robotaxi sensor platform"],
+    "sample_or_scale": "Three European cities, 62 km2 of map coverage, multimodal 360-degree sensing and 29 road-feature classes."
+  },
+  "evaluation": {
+    "design": "Four benchmarks plus structural map checks, Autoware planning simulation and representative real closed-loop trials.",
+    "baselines": ["Existing public multimodal and HD-map datasets", "Current task-specific benchmark methods"],
+    "metrics": ["Task-specific map, depth, rendering and trajectory metrics", "Structural/topological map integrity", "Closed-loop compatibility"],
+    "ablations": ["Benchmark-specific comparisons rather than a single production-pipeline ablation"]
+  },
+  "findings": [
+    {"finding": "Sensor fidelity is produced through hardware synchronization, global shutters, cross-modal calibration and high-accuracy pose estimation rather than by nominal sensor count alone.", "scope": "KITScenes recording platform.", "locator": "3.1 High-Resolution Long-Range Multi-Modal Sensor Setup; Appendix B Calibration Details"},
+    {"finding": "HD-map ground truth requires complementary occlusion-free aerial and onboard 3D sources, topology-aware manual annotation, map-change checks, cross-annotator review and structural/planning validation.", "scope": "KITScenes Lanelet2 maps.", "locator": "Appendix E Annotation Protocol and Quality Control; Appendix F Closed-loop autonomous driving map verification trials"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "The current release lacks 3D boxes, tracks and instance segmentation for dynamic agents.", "locator": "5 Limitations"}
+    ],
+    "reader_inferred": [
+      {"boundary": "The documented map quality is expensive to reproduce where recent aerial imagery, expert annotation labor or open-source planning-stack integration are unavailable.", "basis": "The production protocol depends on municipal imagery, multiple annotation passes, automated topology checks and closed-loop qualification."}
+    ]
+  },
+  "transfer_boundary": "Strong evidence for static road/map and synchronized sensor production in European urban domains; incomplete for dynamic-agent ground truth and continual global map refresh at fleet scale.",
+  "critical_appraisal": {
+    "design_strengths": ["Reports production details usually omitted from dataset papers", "Includes topology and planning checks plus closed-loop validation"],
+    "design_risks": ["Some sensor and dataset quantities are lost in the extracted mathematical text", "Closed-loop evidence is representative rather than a quantified fleet reliability study"],
+    "baseline_fairness": "Dataset comparisons document sensor/map capabilities, but hardware, geography and release policies differ across datasets.",
+    "metric_validity": "Reprojection, topology and closed-loop compatibility are closer to deployment utility than perception scores alone, while they still do not establish all-weather safety.",
+    "reproducibility": "Lanelet2 tooling, annotation presets and calibration framework are stated for release; raw municipal imagery availability varies by region.",
+    "external_validity": "Geographic diversity improves over prior datasets but remains three European cities and excludes dynamic-agent labels in the current release."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.02956-C01",
+      "claim": "Production-grade HD-map ground truth is a multi-source and multi-pass QA product: occlusion-free aerial data and onboard 3D sensing must be fused, map changes checked, geometry and topology manually cross-reviewed, and structural consistency validated.",
+      "stance": "support",
+      "relation": "Supports the claim that the hardest part of spatial-data production is maintaining a valid world model and topology, not merely collecting sensor frames.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The annotation appendix describes complementary map passes, fusion, manual review and multiple automated integrity checks.",
+      "locator": "Appendix E Annotation Protocol and Quality Control",
+      "source_context": "Map creation is split into two complementary annotation passes. Road-level content, like lane geometry, road markings, lane topology, crosswalks, as well as BEV traffic light and sign positions, are annotated from aerial imagery, which provides a geo-referenced, occlusion-free top-down view.",
+      "evidence_type": "dataset production protocol",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The exact appendix text states the complementary sources and ambiguity-resolution process; the claim remains bounded to HD-map ground-truth production."}
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

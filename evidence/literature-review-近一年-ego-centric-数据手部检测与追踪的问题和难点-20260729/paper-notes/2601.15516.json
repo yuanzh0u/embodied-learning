@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.15516",
+    "title": "DeltaDorsal: Enhancing Hand Pose Estimation with Dorsal Features in Egocentric Views",
+    "published": "2026-01-21",
+    "url": "https://arxiv.org/abs/2601.15516",
+    "authors": [
+      "William Huang",
+      "Siyou Pei",
+      "Leyi Zou",
+      "Eric J. Gonzalez",
+      "Ishan Chatterjee",
+      "Yang Zhang"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1. Introduction",
+        "role": "problem",
+        "purpose": "识别 egocentric 手指自遮挡与粗粒度轮廓表示的限制。"
+      },
+      {
+        "locator": "3.2. Occlusion Prevalence in Egocentric Data",
+        "role": "results-or-analysis",
+        "purpose": "核查四个数据集的手指遮挡和手背可见性。"
+      },
+      {
+        "locator": "5. Design and Implementation of DeltaDorsal",
+        "role": "method-or-design",
+        "purpose": "核查手背皮肤形变差分特征编码。"
+      },
+      {
+        "locator": "6.1. Pose Estimation Performance Study",
+        "role": "results-or-analysis",
+        "purpose": "核查与 HaMeR/HandOccNet 在遮挡下的比较。"
+      },
+      {
+        "locator": "8. Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查真实场景、高分辨率和部署限制。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "手指被手掌/手物遮挡时，是否存在仍可见的手背皮肤信号来推断手姿？",
+  "contributions": [
+    "量化四个 egocentric 数据集的自遮挡，并提出使用手背皮肤形变的 DeltaDorsal。"
+  ],
+  "method": {
+    "summary": "对中立手势与当前手背图像的稠密视觉特征做差分，用双流编码器预测 3D 手姿，并在点击/捏/静力 click 任务上测试。",
+    "assumptions": [
+      "手背区域在手指遮挡时仍有足够可见面积。",
+      "高分辨率图像能捕捉肌腱与皮肤微形变。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "ARCTIC",
+      "H2O",
+      "EgoExo4D",
+      "AssemblyHands",
+      "DeltaDorsal lab dataset"
+    ],
+    "tasks": [
+      "3D 手姿估计",
+      "遮挡下 tap/pinch",
+      "isometric click"
+    ],
+    "embodiments": [
+      "单目高分辨率 egocentric 相机；裸手"
+    ],
+    "sample_or_scale": "遮挡分析覆盖四数据集数十万帧；实验室数据约 170K 帧、12 人、17 种手势。"
+  },
+  "evaluation": {
+    "design": "用 MANO+Z-buffer 估计手指表面可见性，用 MPJAE/PA-MPJPE 与 HaMeR、HandOccNet 比较，并报告 LOSO 和手势任务。",
+    "baselines": [
+      "HaMeR",
+      "HandOccNet"
+    ],
+    "metrics": [
+      "finger visibility",
+      "MPJAE",
+      "PA-MPJPE",
+      "tap/pinch RMSE",
+      "click accuracy/F1"
+    ],
+    "ablations": [
+      "图像尺寸",
+      "骨干网络",
+      "皮肤色调",
+      "手势类型"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "四个数据集中超过 20% 帧至少一根手指高度自遮挡，而这些帧中手背中位可见面积仍超过 40%。",
+      "scope": "ARCTIC、H2O、EgoExo4D、AssemblyHands 右手可见帧。",
+      "locator": "3.2. Occlusion Prevalence in Egocentric Data"
+    },
+    {
+      "finding": "手背形变只在一部分手背可见、高分辨率场景中有效，不是普适信号。",
+      "scope": "DeltaDorsal 实验室设置与讨论。",
+      "locator": "8. Discussion"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "仅当手背可见时才适用，需要更广人群、光照、毛发和痣痕条件下的真实测试。",
+        "locator": "8. Discussion"
+      },
+      {
+        "limitation": "高分辨率相机与密集特征会增加功耗和计算复杂度。",
+        "locator": "8. Discussion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "手背皮肤是一个条件性补充信号，不能替代全手追踪。",
+        "basis": "训练为静止相机、4K/30 FPS、12 人实验室数据，且部分手势小手指/中环指任务表现反而下降。"
+      }
+    ]
+  },
+  "transfer_boundary": "适合在手背可见、分辨率足够和相机与手距离可控的微手势场景作补充；完全手背遮挡或快速头动时不适用。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "先在多数据集量化问题，再验证新观测信号，并报告部分手势反例。"
+    ],
+    "design_risks": [
+      "位姿评测基于小样本实验室采集，高分辨率与静止相机可以高估真实头戴场景效果。"
+    ],
+    "baseline_fairness": "与 HaMeR/HandOccNet 在新的遮挡实验集上比较，但 DeltaDorsal 使用为手背特化的高分辨率裁剪，输入条件不完全对称。",
+    "metric_validity": "MPJAE 适合评估手指角度，但不衡量腕部绝对平移、世界轨迹或长时身份稳定性。",
+    "reproducibility": "系统宣布开源，标注与手势流程详细；数据规模和装置限制外部复现。",
+    "external_validity": "对手背可见的微手势有直接证据，对广泛头动、遮挡和多人群场景仍是推断。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.15516-C01",
+      "claim": "Egocentric 手指自遮挡是高频现象：跨四个数据集，超过 20% 帧至少有一根手指高度遮挡。",
+      "stance": "support",
+      "relation": "为遮挡难点提供跨数据集的定量证据。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "原文在四数据集分析中直接报告遮挡比例。",
+      "locator": "3.2. Occlusion Prevalence in Egocentric Data",
+      "source_context": "As shown in Figure 3 a, more than 20% of frames across all evaluated datasets exhibit at least one occluded finger, with over 5% containing two or more occluded fingers.",
+      "evidence_type": "cross-dataset-analysis",
+      "quantitative": {
+        "metric": "frames with at least one occluded finger",
+        "value_or_direction": "more than 20%",
+        "comparator": "across all evaluated datasets",
+        "task_or_sample": "frames across all evaluated datasets",
+        "locator": "3.2. Occlusion Prevalence in Egocentric Data"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2601.15516-C02",
+      "claim": "手背皮肤形变只是条件性遮挡补充信号；手背不可见、低分辨率或快速运动会削弱其价值。",
+      "stance": "conditional",
+      "relation": "支持按可见信号自适应选择表示，而非单一方法普适。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在泛化讨论中明确限定手背特征的可见性条件。",
+      "locator": "8. Discussion",
+      "source_context": "Secondly, we acknowledge that our approach leveraging purely dorsal features for pose estimation is only applicable for a portion of in-the-wild scenarios where the dorsum of the hand is visible.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

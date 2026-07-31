@@ -3,7 +3,7 @@ id: EA-SENSOR
 title: 传感器与多模态感知
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-20
+updated: 2026-07-26
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -36,6 +36,9 @@ source:
   - id: RUN-FORCE-SENSE-20260720
     file: ../../evidence/literature-review-近半年力觉在具身机器人领域的发展-20260720/evidence.jsonl
     locator: EA-TWM-READ-0001..0008; EA-TWM-READ-0010..0012; EA-TWM-READ-0014; EA-SENSORERR-READ-0001; EA-SENSORERR-READ-0010; EA-SENSORERR-READ-0012; EA-LOCOMANIP-2026-0012; EA-LOCOMANIP-2026-0021
+  - id: RUN-PRETRAIN-DATA-SOURCES-20260726
+    file: ../../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/evidence.jsonl
+    locator: EA-PRETRAIN-DATA-2026-0003..0006; EA-EGO-2026-0014..0018; EA-UMI-READ-0004; EA-TACTILE-2026-0001..0002
 tags: [embodied-ai, sensors, multimodal, function-rate-alignment, rgb, point-cloud, tactile, force, force-torque, proprioception, perception-error, tactile-world-model, contact-execution-stack, ego-centric, visual-localization]
 aliases: [传感器, 多模态感知, 功能—时标对齐融合, 触觉, 力觉, 力控, 六维力力矩, 接触执行栈, 点云, 3D, RGB, 触觉世界模型, 感知误差, 第一视角感知, VPR]
 load_when:
@@ -81,6 +84,7 @@ confidence: working
 - 腕部六维力/力矩适合表达全局载荷和先行条件，局部触觉力场适合表达接触位置、滑移与形变；两者应在空间标定与时间角色上分别建模。
 - HT-Bench 把全手触觉—第一视角配对数据扩展到约 1,000 万 RGB 帧、780 万触觉帧和 226 项任务，但当前只证明表征评测价值，不能外推为真实机器人闭环收益。
 - 触觉/力觉接入部署系统时，应贯通动作条件预测、候选动作验证和失败附近纠偏；只提高触觉重建或分类分数不构成控制价值证据。
+- 跨数据源可使用不同视觉/深度采样率，但必须保存实际采样时间、时钟源、丢帧/抖动和跨模态对齐误差；训练 action chunk 应按物理时长对齐，不按固定帧数假设同速。
 
 ## 指标与检核
 

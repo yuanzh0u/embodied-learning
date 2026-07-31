@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "paper": {"arxiv_id": "2606.29774", "title": "Analytic Concept-Centric Memory for Agentic Embodied Manipulation", "published": "2026-06-29", "url": "https://arxiv.org/abs/2606.29774", "authors": ["Mingyang Sun", "Xiujian Liang", "Jiude Wei", "Qichen He", "Donglin Wang", "Cewu Lu", "Jianhua Sun"]},
+  "review": {"question": "近半年智能体技术在具身智能行业中形成了哪些可验证的技术架构、应用方式、部署收益与失败边界？", "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-BIZ"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted", "paper_type": "method",
+    "relevance": {"decision": "include", "reason": "直接检验面向物理对象、状态转移和可执行技能的结构化记忆，并包含五个真实桌面任务。"},
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "核对非结构化记忆的物理执行缺口。"},
+      {"locator": "4 Method", "role": "method-or-design", "purpose": "核对对象、场景、转移和技能记忆。"},
+      {"locator": "5 Experiments", "role": "results-or-analysis", "purpose": "核对仿真、概念泛化和真实机器人结果。"},
+      {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "核对扩展与鲁棒性限制。"},
+      {"locator": "Appendix A.3 Real-Robot Experimental Setup", "role": "appendix-or-supplement", "purpose": "核对真实任务设置。"}
+    ],
+    "sections_skipped": [{"locator": "2 Related Work", "reason": "背景不承担核心结果。"}]
+  },
+  "research_question": "具身智能体记忆是否应从对话/向量历史升级为对象—状态—动作—技能的可执行结构？",
+  "contributions": ["构建解析概念中心记忆，把对象、部件、状态、转移和技能连接起来。", "在记忆任务、概念泛化和真实桌面操作中比较非结构化/关键帧记忆。"],
+  "method": {"summary": "静态模板库提供部件与功能先验，动态记忆维护对象身份、场景状态、动作转移和技能；检索先硬过滤物理一致性，再按几何、状态和技能统计排序。", "assumptions": ["对象及部件可被检测、分割、定姿并匹配解析模板。", "技能前置条件和执行结果可核验。", "模板库覆盖目标对象结构。"]},
+  "study_context": {"datasets": ["RMBench", "PartNet-Mobility"], "tasks": ["nine simulated memory-dependent manipulation tasks", "articulated-object transfer", "five real tabletop memory tasks"], "embodiments": ["simulation manipulators", "real tabletop robot setup"], "sample_or_scale": "Nine RMBench tasks plus five real-world tabletop task families; real-world trial counts are not prominently reported in the extracted main text."},
+  "evaluation": {"design": "比较反应式策略、记忆 VLA、MemER 式关键帧检索与结构化记忆；报告成功率、检索准确率、对象重识别和检索努力。", "baselines": ["reactive DP", "Mem-0", "Mem-VLA", "MemER-style keyframe retrieval"], "metrics": ["task success rate", "retrieval accuracy", "retrieval effort", "object re-identification accuracy"], "ablations": ["LLM model sensitivity", "memory components"]},
+  "findings": [
+    {"finding": "五个真实桌面任务的平均成功率从关键帧检索的 56% 提升到 84%，检索准确率从 68% 到 98%，检索努力从 4.5 降至 1.3。", "scope": "需要对象身份、场景关系、状态转移和技能检索的五类桌面任务。", "locator": "5.3 Real-World Memory Evaluation; Table 3"},
+    {"finding": "更强的高层 LLM 提升任务成功和检索准确率，但对象重识别对 LLM 选择较不敏感。", "scope": "四个高层推理模型消融。", "locator": "5.4 Ablation Study; Table 4"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "模板库尚需扩展到可变形物体。", "locator": "6 Conclusion"},
+      {"limitation": "感知噪声和状态漂移的鲁棒性仍需提高。", "locator": "6 Conclusion"}
+    ],
+    "reader_inferred": [{"boundary": "收益依赖模板、部件识别和技能前置条件的工程化；对开放类别和遮挡重的场景尚未证明。", "basis": "方法要求显式模板匹配、部件姿态和硬一致性过滤。"}]
+  },
+  "transfer_boundary": "适合对象结构可建模、状态可验证、技能库可复用的长时操作；不应直接外推到可变形物、开放类别和强感知漂移场景。",
+  "critical_appraisal": {
+    "design_strengths": ["包含真实机器人对照和多个记忆指标。", "把记忆成功与检索质量、重识别分账。", "对 LLM 选择做消融。"],
+    "design_risks": ["真实任务范围窄。", "模板与感知工具带来较强先验。", "主文未充分呈现每任务试验次数与方差。"],
+    "baseline_fairness": "关键帧检索基线能对照结构化记忆，但方法可能获得更多对象结构与模板先验。",
+    "metric_validity": "成功率与检索指标直接对应记忆用途；检索努力是较窄的效率代理。",
+    "reproducibility": "方法与任务协议较完整，模板库和感知组件的实现细节决定复现难度。",
+    "external_validity": "对结构化桌面和工业部件操作有启发，对开放家庭环境仍有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.29774-C01", "claim": "具身智能体记忆可显式连接持久对象、场景状态、动作转移和可执行技能，并用前置条件与预期后果约束技能选择。", "stance": "support", "relation": "支持把记忆从对话历史升级为物理可执行的状态接口。", "confidence": "direct", "claim_basis": "author-claim", "summary": "方法在检索后检查技能前置条件和预测后果，失败则写回并重检索。", "locator": "4.4 Memory-Grounded Reasoning and Execution", "source_context": "This closes the loop between structured retrieval, state-consistent reasoning, physical execution, and memory update.", "evidence_type": "method", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核方法四个子节：对象、场景、转移、技能、前置条件、执行验证和失败写回均有明确操作定义。"}
+    },
+    {
+      "card_id": "2606.29774-C02", "claim": "在五个真实桌面记忆任务上，结构化记忆相对关键帧检索把平均成功率从 56% 提至 84%，检索准确率从 68% 提至 98%，检索努力从 4.5 降至 1.3。", "stance": "support", "relation": "提供结构化物理记忆优于视觉相似检索的真实机器人证据。", "confidence": "direct", "claim_basis": "reported-result", "summary": "最大增益出现在需要对象身份、场景关系和状态转移的任务。", "locator": "5.3 Real-World Memory Evaluation; Table 3", "source_context": "our method improves the average success rate from 56% to 84%", "evidence_type": "experiment", "quantitative": {"metric": "average task success, retrieval accuracy, retrieval effort", "value_or_direction": "56%→84%; 68%→98%; 4.5→1.3", "comparator": "MemER-style keyframe retrieval versus analytic concept-centric memory", "task_or_sample": "five real-world tabletop task families", "locator": "5.3 Real-World Memory Evaluation; Table 3"}, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工核对表 3 的五个真实任务和平均行：三个指标、比较基线与方向均一致，未外推到开放环境。"}
+    },
+    {
+      "card_id": "2606.29774-C03", "claim": "该记忆路线尚未证明可变形物和强感知/状态漂移下的鲁棒性，模板库覆盖是重要边界。", "stance": "limit", "relation": "限制将桌面结构化物体结果外推为开放世界长期记忆。", "confidence": "direct", "claim_basis": "author-claim", "summary": "作者把扩展可变形物与抵抗感知噪声、状态漂移列为未来工作。", "locator": "6 Conclusion", "source_context": "improve robustness to perception noise and state drift", "evidence_type": "limitation", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核结论：可变形物、感知噪声和状态漂移被作者明确列为后续工作，因此只作为未解决边界。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "数值仅按 Table 3 的五类真实任务外推，不代表开放世界平均性能。"
+}

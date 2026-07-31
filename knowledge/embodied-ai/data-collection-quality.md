@@ -3,7 +3,7 @@ id: EA-DATA
 title: 数据采集与数据质量
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-20
+updated: 2026-07-27
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -36,8 +36,14 @@ source:
   - id: RUN-TACTILE-YEAR-20260720
     file: ../../evidence/literature-review-近一年触觉在具身机器人领域的发展-20260720/evidence.jsonl
     locator: EA-TACTILE-2026-0001..0002; EA-TWM-READ-0001; EA-UMI-READ-0002; EA-UMI-READ-0015
-tags: [embodied-ai, data, collection, quality, multimodal, contact-event, hardware-provenance, synchronization, contamination, poisoning, backdoor, provenance, deduplication, scaling, umi, droid, ego4d, occlusion, l0-l3, episode, schema, target-conditioned, recovery]
-aliases: [数据采集, 数据质量, 多模态数据, 接触事件, 硬件谱系, 数据污染, 数据投毒, 后门, 数据谱系, 语义泄漏, UMI, DROID, Ego, Scaling Law, 遮挡率, L0-L3, 无本体采集, episode, 目标条件效用, 监督可靠性]
+  - id: RUN-PRETRAIN-DATA-SOURCES-20260726
+    file: ../../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/evidence.jsonl
+    locator: EA-PRETRAIN-DATA-2026-0001..0006; EA-DQ-YEAR-READ-0003; EA-DQ-YEAR-READ-0008..0010; EA-DQ-YEAR-READ-0015; EA-EGO-2026-0007..0009; EA-UMI-READ-0004
+  - id: RUN-SPATIAL-DATA-ROBOT-AV-20260727
+    file: ../../evidence/literature-review-近一年空间数据生产难点及具身机器人与智能驾驶数据难点异同-20260727/evidence.jsonl
+    locator: EA-SPATIAL-2026-0001..0009; 10 reused reader-backed events
+tags: [embodied-ai, data, collection, quality, multimodal, contact-event, hardware-provenance, synchronization, contamination, poisoning, backdoor, provenance, deduplication, scaling, umi, droid, ego4d, occlusion, l0-l3, episode, schema, target-conditioned, recovery, spatial-data, autonomous-driving, closed-loop]
+aliases: [数据采集, 数据质量, 多模态数据, 接触事件, 硬件谱系, 数据污染, 数据投毒, 后门, 数据谱系, 语义泄漏, UMI, DROID, Ego, Scaling Law, 遮挡率, L0-L3, 无本体采集, episode, 目标条件效用, 监督可靠性, 空间数据, 智能驾驶数据]
 load_when:
   - 问题涉及机器人数据采集、轨迹质量、采集员规范、数据多样性或遮挡评估
   - 问题比较 UMI、Ego、DROID、遥操作、自然场景采集和实验室采集
@@ -45,6 +51,7 @@ load_when:
   - 问题涉及轨迹筛选、质量分、坏数据利用、任务覆盖、失败恢复或异构数据监督
   - 问题涉及数据污染、近重复、时间错位、训练评测泄漏、VLA 后门、模型供应链或生成扩增风险
   - 问题涉及视觉—触觉—力觉同步、接触事件切分、传感器硬件 ID、标定版本或跨实例维护
+  - 问题比较具身机器人与智能驾驶的空间数据生产、长尾覆盖、闭环验收或合成数据边界
 confidence: working
 ---
 
@@ -89,6 +96,10 @@ confidence: working
 - 每条多模态 episode 应记录传感器型号/序列号、安装位置、量程、采样率、时钟源、内外参/力标定、固件和换件维护，避免把硬件漂移误当任务变化。
 - 成功示范不足以训练接触纠错；near-miss、过力、滑移、物体变形、人工接管和恢复轨迹应作为独立事件与监督字段入库。
 - HT-Bench 的大规模同步视觉—触觉数据证明了表征规模化可行性，但跨实例、长期维护和真实机器人闭环仍需目标硬件数据与独立验收。
+- 通用预训练的多样性应投向任务、场景、物体、视点、行为和本体覆盖；一致性应投向坐标、时间、动作语义、机位、标定和监督可靠性等数据契约。
+- 采集设备和原生规格可以异构，但应保留小而高保真的目标机器人锚点集，用对齐观测几何、动作接口和真实闭环校准广泛数据池。
+- 空间数据的稀缺不是像素或点云总量不足，而是缺少可用于决策的时空真值：坐标与时间可追溯、任务关键隐状态可观、动作/意图/拓扑语义正确、失败长尾充分且后果可闭环复验。
+- 具身机器人最难生产的是本体相关的“执行真值”，包括接触、力、滑移、形变、动作可执行性和失败恢复；智能驾驶最难生产的是 ODD 相关的“覆盖真值”，包括地图拓扑与更新、地理/天气覆盖、稀有多体风险和可反应闭环。
 
 ## 指标与检核
 
@@ -110,6 +121,7 @@ confidence: working
 | 投毒与恢复 | clean success、触发 ASR/失效率、检出率、误报率、恢复后能力损失、跨检查点持久性 |
 | 多模态同步 | 跨模态时间残差、丢帧、接触事件完整率、动作—状态因果顺序、时钟漂移 |
 | 硬件谱系 | 传感器/固件/标定版本、换件次数、跨实例退化、重标定工时、长期漂移 |
+| 空间真值有效性 | 坐标/时间残差、关键隐状态可观率、语义/动作字段正确率、风险或恢复事件密度、闭环可复验率 |
 
 ## 适用边界
 
@@ -124,6 +136,7 @@ confidence: working
 - 入库前清洗不能替代基础模型、微调模块、生成轨迹和最终政策的端到端复验。
 - 大规模同步数据不等于跨传感器通用化；硬件实例、标定、磨损和维护分布变化必须单独报告。
 - 表征 benchmark 的提升不能外推为闭环操作收益，除非同一数据/模型在策略排序、纠偏或真实执行中通过验收。
+- 机器人与智驾可共享对齐、谱系、遮挡、长尾和闭环质量框架，但不能共享一个无条件的质量分：机器人数据须绑定本体与控制器，智驾数据须绑定 ODD、地图版本与交通交互分布。
 
 ## 证据锚点
 
@@ -140,6 +153,7 @@ confidence: working
 - RUN-DATA-CONTAMINATION-20260715：`EA-CONTAM-2026-0001..0010` 覆盖状态/视觉/语言/动作窗后门、持久污染、防御边界与世界模型二次激活；`0011..0015` 覆盖视觉—轨迹联合去重、同步与动作—状态检核、任务覆盖、片段级价值和结构化选择。
 - RUN-MULTIMODAL-TRAINING-20260720：`EA-ALIGN-READ-0007..0008`, `0011..0012`, `EA-EGO-2026-0003..0004`, `0007..0009`, `0016..0020`, `EA-TWM-READ-0001`, `0005..0006`, `0008`, `0012` 支持接触事件、同步、监督掩码、硬件/本体锚定和失败数据；结论为跨 run synthesis。
 - RUN-TACTILE-YEAR-20260720：`EA-TACTILE-2026-0001..0002` 支持约 1,000 万 RGB 帧、780 万触觉帧、226 项任务的同步数据规模和“表征不等于闭环”边界；复用事件补充多物理模态与长期维护条件。
+- RUN-SPATIAL-DATA-ROBOT-AV-20260727：`EA-SPATIAL-2026-0001..0009` 支持智驾中的跨模态自动标注、占用生成、地图生产/维护、数据格式碎片、危险场景合成与风险语义长尾；同 run 的 10 条复用事件支持机器人中的坐标/本体对齐、遮挡/接触可观性、失败恢复和稀疏视角 4D 数据生成。机器人“执行真值”与智驾“覆盖真值”的二分是跨论文 `inference`。
 
 ## 待补问题
 

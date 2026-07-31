@@ -1,0 +1,1595 @@
+{
+  "generated_at": "2026-07-26T04:39:25.920901+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年具身智能预训练模型对数据源多样性及相机分辨率帧率码率FOV机位的要求",
+  "start_date": "2025-07-26",
+  "end_date": "2026-07-26",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-HARDWARE",
+    "EA-SENSOR",
+    "EA-MODEL",
+    "EA-XEMBODIMENT"
+  ],
+  "families": [
+    "vla",
+    "droid-ego4d",
+    "teleoperation-demo-quality",
+    "retargeting",
+    "sim2real"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.HC",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 40,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 160,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 160,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-heterogeneous-vla-pretraining",
+        "dynamic-capture-parameters",
+        "dynamic-viewpoint-camera-domain",
+        "dynamic-negative-transfer-diversity",
+        "calibrated-reliability-aware-heterogeneous-pretraining",
+        "calibrated-camera-space-actions",
+        "calibrated-viewpoint-action",
+        "calibrated-motion-transfer",
+        "calibration-reliability-aware-heterogeneous",
+        "calibration-viewpoint-action",
+        "calibration-motion-transfer",
+        "vla-open-x-embodiment",
+        "vla-large-scale-robot-data",
+        "vla-robot-foundation-action",
+        "vla-finetuning-policy",
+        "vla-data-mixture",
+        "droid-ego-egocentric-video",
+        "droid-ego-in-the-wild",
+        "droid-ego-data-mixture",
+        "teleop-operator-burden",
+        "retargeting-human-to-robot-mapping",
+        "retargeting-dexterous-hand",
+        "retargeting-gripper-demonstration",
+        "sim2real-synthetic-data",
+        "sim2real-correlation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "vla-core",
+        "vla-named-models",
+        "droid-robot-manipulation",
+        "ego4d-robot-learning",
+        "teleop-imitation-learning",
+        "teleop-demonstration-quality",
+        "retargeting-robot-manipulation",
+        "sim2real-core",
+        "ea-data-robot-demonstrations"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "vla-negative-transfer",
+        "teleop-latency",
+        "retargeting-morphology-gap"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "teleop-action-interface",
+        "sim2real-domain-randomization"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "evaluation-and-validation",
+      "query_labels": [
+        "sim2real-real-validation"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (medium): The review needs to connect model-level heterogeneous pretraining with capture-device, viewpoint, temporal, codec, and embodiment-interface constraints."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-heterogeneous-vla-pretraining",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"vision-language-action\" OR all:\"robot foundation model\") AND (all:heterogeneous OR all:\"data mixture\" OR all:\"multi-embodiment\")",
+      "why": "Find recent VLA work that explicitly studies heterogeneous source mixtures and cross-embodiment pretraining."
+    },
+    {
+      "label": "dynamic-capture-parameters",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"robot learning\" OR all:\"robot dataset\") AND (all:\"camera resolution\" OR all:\"frame rate\" OR all:\"field of view\")",
+      "why": "Recover dataset and system papers that disclose capture resolution, temporal rate, FOV, and camera placement."
+    },
+    {
+      "label": "dynamic-viewpoint-camera-domain",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"robot pretraining\" OR all:\"vision-language-action\") AND (all:viewpoint OR all:\"camera domain\" OR all:egocentric OR all:wrist-camera)",
+      "why": "Test whether viewpoint and camera-domain diversity are learned as invariances or require explicit alignment."
+    },
+    {
+      "label": "dynamic-negative-transfer-diversity",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "(all:\"robot manipulation\" OR all:\"vision-language-action\") AND (all:\"negative transfer\" OR all:\"expert diversity\" OR all:\"embodiment gap\" OR all:\"action mismatch\")",
+      "why": "Find counterevidence to the intuition that every additional source or collection setup improves pretraining."
+    },
+    {
+      "label": "dynamic-specs-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs robot dataset camera resolution fps FOV wrist camera VLA 2025 2026",
+      "why": "Search full paper records for capture specifications that may be absent from metadata."
+    },
+    {
+      "label": "dynamic-current-data-mixtures-web",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "site:arxiv.org/abs 2026 VLA heterogeneous data sources egocentric robot simulation pretraining",
+      "why": "Calibrate current terminology for mixed-source VLA pretraining."
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): ACE-Ego-0 uses the current terms reliability-aware weighting, camera-space actions, morphology conditioning, and time-aligned action chunking for heterogeneous human/robot/simulation pretraining.",
+    "arxiv calibration (high): ActiveMimic treats egocentric camera motion as a viewpoint action rather than nuisance noise.",
+    "arxiv calibration (high): HumanEgo foregrounds entity-level hand-object interaction and transfer across novel robots, cameras, and environments.",
+    "arxiv calibration (high): Gemini Robotics 1.5 uses motion transfer terminology for heterogeneous multi-embodiment robot data."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-heterogeneous-vla-pretraining",
+      "tier": "dynamic-association",
+      "query": "(all:\"vision-language-action\" OR all:\"robot foundation model\") AND (all:heterogeneous OR all:\"data mixture\" OR all:\"multi-embodiment\")",
+      "why": "Find recent VLA work that explicitly studies heterogeneous source mixtures and cross-embodiment pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-heterogeneous-vla-pretraining"
+      ]
+    },
+    {
+      "label": "dynamic-capture-parameters",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot learning\" OR all:\"robot dataset\") AND (all:\"camera resolution\" OR all:\"frame rate\" OR all:\"field of view\")",
+      "why": "Recover dataset and system papers that disclose capture resolution, temporal rate, FOV, and camera placement.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-capture-parameters"
+      ]
+    },
+    {
+      "label": "dynamic-viewpoint-camera-domain",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot pretraining\" OR all:\"vision-language-action\") AND (all:viewpoint OR all:\"camera domain\" OR all:egocentric OR all:wrist-camera)",
+      "why": "Test whether viewpoint and camera-domain diversity are learned as invariances or require explicit alignment.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-viewpoint-camera-domain"
+      ]
+    },
+    {
+      "label": "dynamic-negative-transfer-diversity",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot manipulation\" OR all:\"vision-language-action\") AND (all:\"negative transfer\" OR all:\"expert diversity\" OR all:\"embodiment gap\" OR all:\"action mismatch\")",
+      "why": "Find counterevidence to the intuition that every additional source or collection setup improves pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-negative-transfer-diversity"
+      ]
+    },
+    {
+      "label": "calibrated-reliability-aware-heterogeneous-pretraining",
+      "tier": "calibrated-term",
+      "query": "all:\"reliability-aware heterogeneous pretraining\"",
+      "why": "Separates source diversity from supervision reliability.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-reliability-aware-heterogeneous-pretraining"
+      ]
+    },
+    {
+      "label": "calibrated-camera-space-actions",
+      "tier": "calibrated-term",
+      "query": "all:\"camera-space actions\"",
+      "why": "A current interface for aligning human and robot visual-action data.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-camera-space-actions"
+      ]
+    },
+    {
+      "label": "calibrated-viewpoint-action",
+      "tier": "calibrated-term",
+      "query": "all:\"viewpoint action\"",
+      "why": "Captures the fact that camera motion may be policy-relevant behavior.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-viewpoint-action"
+      ]
+    },
+    {
+      "label": "calibrated-motion-transfer",
+      "tier": "calibrated-term",
+      "query": "all:\"motion transfer\"",
+      "why": "Current terminology for exploiting heterogeneous multi-embodiment data.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-motion-transfer"
+      ]
+    },
+    {
+      "label": "calibration-reliability-aware-heterogeneous",
+      "tier": "calibrated-query",
+      "query": "all:\"reliability-aware\" AND (all:egocentric OR all:\"vision-language-action\")",
+      "why": "Find methods that explicitly weight heterogeneous pseudo-action supervision by reliability.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-reliability-aware-heterogeneous"
+      ]
+    },
+    {
+      "label": "calibration-viewpoint-action",
+      "tier": "calibrated-query",
+      "query": "all:\"viewpoint action\" OR (all:\"active perception\" AND all:egocentric AND all:robot)",
+      "why": "Find pretraining approaches that model camera motion as behavior.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-viewpoint-action"
+      ]
+    },
+    {
+      "label": "calibration-motion-transfer",
+      "tier": "calibrated-query",
+      "query": "all:\"motion transfer\" AND (all:\"multi-embodiment\" OR all:\"vision-language-action\")",
+      "why": "Find current heterogeneous robot-data alignment mechanisms.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-motion-transfer"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "teleop-imitation-learning",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"imitation learning\" AND all:robot",
+      "why": "Find the main literature surface connecting teleoperation to robot policy learning.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-imitation-learning"
+      ]
+    },
+    {
+      "label": "teleop-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface trace consistency, operator skill, and data acceptance criteria.",
+      "source_key": "teleoperation-demo-quality,EA-DATA",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-demonstration-quality",
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "teleop-operator-burden",
+      "tier": "human-factor",
+      "query": "all:operator AND all:burden AND all:teleoperation",
+      "why": "Find papers about human workload and collection throughput.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.HC",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-operator-burden"
+      ]
+    },
+    {
+      "label": "teleop-latency",
+      "tier": "system-limitation",
+      "query": "all:latency AND all:teleoperation AND all:robot",
+      "why": "Capture delay and synchronization limits that affect demonstration fidelity.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-latency"
+      ]
+    },
+    {
+      "label": "teleop-action-interface",
+      "tier": "policy-interface",
+      "query": "all:\"action interface\" AND all:robot AND all:demonstration",
+      "why": "Find work where action-space choices determine whether demonstrations transfer.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-action-interface"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-heterogeneous-vla-pretraining",
+      "tier": "dynamic-association",
+      "query": "(all:\"vision-language-action\" OR all:\"robot foundation model\") AND (all:heterogeneous OR all:\"data mixture\" OR all:\"multi-embodiment\")",
+      "why": "Find recent VLA work that explicitly studies heterogeneous source mixtures and cross-embodiment pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-heterogeneous-vla-pretraining"
+      ]
+    },
+    {
+      "label": "dynamic-capture-parameters",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot learning\" OR all:\"robot dataset\") AND (all:\"camera resolution\" OR all:\"frame rate\" OR all:\"field of view\")",
+      "why": "Recover dataset and system papers that disclose capture resolution, temporal rate, FOV, and camera placement.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-capture-parameters"
+      ]
+    },
+    {
+      "label": "dynamic-viewpoint-camera-domain",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot pretraining\" OR all:\"vision-language-action\") AND (all:viewpoint OR all:\"camera domain\" OR all:egocentric OR all:wrist-camera)",
+      "why": "Test whether viewpoint and camera-domain diversity are learned as invariances or require explicit alignment.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-viewpoint-camera-domain"
+      ]
+    },
+    {
+      "label": "dynamic-negative-transfer-diversity",
+      "tier": "dynamic-association",
+      "query": "(all:\"robot manipulation\" OR all:\"vision-language-action\") AND (all:\"negative transfer\" OR all:\"expert diversity\" OR all:\"embodiment gap\" OR all:\"action mismatch\")",
+      "why": "Find counterevidence to the intuition that every additional source or collection setup improves pretraining.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-negative-transfer-diversity"
+      ]
+    },
+    {
+      "label": "calibrated-reliability-aware-heterogeneous-pretraining",
+      "tier": "calibrated-term",
+      "query": "all:\"reliability-aware heterogeneous pretraining\"",
+      "why": "Separates source diversity from supervision reliability.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-reliability-aware-heterogeneous-pretraining"
+      ]
+    },
+    {
+      "label": "calibrated-camera-space-actions",
+      "tier": "calibrated-term",
+      "query": "all:\"camera-space actions\"",
+      "why": "A current interface for aligning human and robot visual-action data.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-camera-space-actions"
+      ]
+    },
+    {
+      "label": "calibrated-viewpoint-action",
+      "tier": "calibrated-term",
+      "query": "all:\"viewpoint action\"",
+      "why": "Captures the fact that camera motion may be policy-relevant behavior.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-viewpoint-action"
+      ]
+    },
+    {
+      "label": "calibrated-motion-transfer",
+      "tier": "calibrated-term",
+      "query": "all:\"motion transfer\"",
+      "why": "Current terminology for exploiting heterogeneous multi-embodiment data.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-motion-transfer"
+      ]
+    },
+    {
+      "label": "calibration-reliability-aware-heterogeneous",
+      "tier": "calibrated-query",
+      "query": "all:\"reliability-aware\" AND (all:egocentric OR all:\"vision-language-action\")",
+      "why": "Find methods that explicitly weight heterogeneous pseudo-action supervision by reliability.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-reliability-aware-heterogeneous"
+      ]
+    },
+    {
+      "label": "calibration-viewpoint-action",
+      "tier": "calibrated-query",
+      "query": "all:\"viewpoint action\" OR (all:\"active perception\" AND all:egocentric AND all:robot)",
+      "why": "Find pretraining approaches that model camera motion as behavior.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-viewpoint-action"
+      ]
+    },
+    {
+      "label": "calibration-motion-transfer",
+      "tier": "calibrated-query",
+      "query": "all:\"motion transfer\" AND (all:\"multi-embodiment\" OR all:\"vision-language-action\")",
+      "why": "Find current heterogeneous robot-data alignment mechanisms.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-motion-transfer"
+      ]
+    },
+    {
+      "label": "vla-core",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that directly model robot actions from vision and language.",
+      "source_key": "vla,EA-MODEL",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-core",
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "vla-named-models",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:\"robot learning\"",
+      "why": "Catch named robot foundation model families and comparative work.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-named-models"
+      ]
+    },
+    {
+      "label": "vla-open-x-embodiment",
+      "tier": "data-source",
+      "query": "(all:\"Open X-Embodiment\" OR all:\"Open X Embodiment\") AND all:robot",
+      "why": "Find cross-embodiment robot data mixtures that often form the real-robot layer of VLA data pyramids.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-open-x-embodiment"
+      ]
+    },
+    {
+      "label": "vla-large-scale-robot-data",
+      "tier": "data-scaling",
+      "query": "all:\"large-scale\" AND all:\"robot data\"",
+      "why": "Surface scaling and dataset-layer discussions for robot foundation models.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-large-scale-robot-data"
+      ]
+    },
+    {
+      "label": "vla-robot-foundation-action",
+      "tier": "foundation-model",
+      "query": "all:\"robot foundation model\" AND all:action",
+      "why": "Find broader foundation-model papers whose metadata may not use VLA.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-robot-foundation-action"
+      ]
+    },
+    {
+      "label": "vla-finetuning-policy",
+      "tier": "transfer",
+      "query": "all:\"fine-tuning\" AND all:\"robot policy\"",
+      "why": "Surface evidence about target-task adaptation and data requirements.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-finetuning-policy"
+      ]
+    },
+    {
+      "label": "vla-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot foundation model\"",
+      "why": "Find mixture and dataset composition papers that explain scaling behavior.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-data-mixture"
+      ]
+    },
+    {
+      "label": "vla-negative-transfer",
+      "tier": "limitation",
+      "query": "all:\"negative transfer\" AND all:robot AND all:policy",
+      "why": "Search for failure cases where broad pretraining hurts target deployment.",
+      "source_key": "vla",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "vla-negative-transfer"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "teleop-imitation-learning",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"imitation learning\" AND all:robot",
+      "why": "Find the main literature surface connecting teleoperation to robot policy learning.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-imitation-learning"
+      ]
+    },
+    {
+      "label": "teleop-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface trace consistency, operator skill, and data acceptance criteria.",
+      "source_key": "teleoperation-demo-quality,EA-DATA",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-demonstration-quality",
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "teleop-operator-burden",
+      "tier": "human-factor",
+      "query": "all:operator AND all:burden AND all:teleoperation",
+      "why": "Find papers about human workload and collection throughput.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.HC",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-operator-burden"
+      ]
+    },
+    {
+      "label": "teleop-latency",
+      "tier": "system-limitation",
+      "query": "all:latency AND all:teleoperation AND all:robot",
+      "why": "Capture delay and synchronization limits that affect demonstration fidelity.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "teleop-latency"
+      ]
+    },
+    {
+      "label": "teleop-action-interface",
+      "tier": "policy-interface",
+      "query": "all:\"action interface\" AND all:robot AND all:demonstration",
+      "why": "Find work where action-space choices determine whether demonstrations transfer.",
+      "source_key": "teleoperation-demo-quality",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "teleop-action-interface"
+      ]
+    },
+    {
+      "label": "retargeting-robot-manipulation",
+      "tier": "core",
+      "query": "all:retargeting AND all:\"robot manipulation\"",
+      "why": "Find the broad retargeting literature for manipulation tasks.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-robot-manipulation"
+      ]
+    },
+    {
+      "label": "retargeting-human-to-robot-mapping",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:mapping",
+      "why": "Capture human motion or hand data mapped onto robot embodiments.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-human-to-robot-mapping"
+      ]
+    },
+    {
+      "label": "retargeting-dexterous-hand",
+      "tier": "embodiment",
+      "query": "all:\"dexterous hand\" AND all:retargeting",
+      "why": "Find fine-grained human hand to dexterous hand transfer papers.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-dexterous-hand"
+      ]
+    },
+    {
+      "label": "retargeting-gripper-demonstration",
+      "tier": "embodiment",
+      "query": "all:gripper AND all:\"human demonstration\" AND all:robot",
+      "why": "Search for lower-DOF gripper abstractions of human demonstrations.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "retargeting-gripper-demonstration"
+      ]
+    },
+    {
+      "label": "retargeting-morphology-gap",
+      "tier": "limitation",
+      "query": "all:\"morphology gap\" AND all:robot",
+      "why": "Find papers that name embodiment mismatch as a transfer limit.",
+      "source_key": "retargeting",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "retargeting-morphology-gap"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-specs-browser",
+      "query": "site:arxiv.org/abs robot dataset camera resolution fps FOV wrist camera VLA 2025 2026",
+      "why": "Search full paper records for capture specifications that may be absent from metadata.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-core",
+      "query": "site:arxiv.org/abs (sim2real OR \"sim-to-real\" OR \"simulation-to-real\") robot",
+      "why": "Find sim-to-real papers through web/arXiv pages when API search under-recovers variants.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-synthetic-validation",
+      "query": "site:arxiv.org/abs (\"synthetic data\" OR \"domain randomization\" OR simulation) (\"real robot\" OR validation) manipulation",
+      "why": "Find synthetic-data and domain-randomization papers that discuss whether simulated data transfers to real robots.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-eval-gap",
+      "query": "site:arxiv.org/abs (\"sim-real\" OR \"reality gap\" OR \"simulation gap\") (correlation OR evaluation OR benchmark) robot",
+      "why": "Find simulation evaluation and reality-gap discussions that may not use the sim2real keyword.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-current-data-mixtures-web",
+      "query": "site:arxiv.org/abs 2026 VLA heterogeneous data sources egocentric robot simulation pretraining",
+      "why": "Calibrate current terminology for mixed-source VLA pretraining.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-reliability-aware-heterogeneous-pretraining",
+      "query": "\"reliability-aware heterogeneous pretraining\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: reliability-aware heterogeneous pretraining.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-camera-space-actions",
+      "query": "\"camera-space actions\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: camera-space actions.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-viewpoint-action",
+      "query": "\"viewpoint action\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: viewpoint action.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-motion-transfer",
+      "query": "\"motion transfer\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: motion transfer.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

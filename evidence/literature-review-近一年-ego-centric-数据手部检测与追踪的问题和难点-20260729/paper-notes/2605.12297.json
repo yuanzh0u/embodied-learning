@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.12297",
+    "title": "EgoEV-HandPose: Egocentric 3D Hand Pose Estimation and Gesture Recognition with Stereo Event Cameras",
+    "published": "2026-05-12",
+    "url": "https://arxiv.org/abs/2605.12297",
+    "authors": [
+      "Luming Wang",
+      "Hao Shi",
+      "Jiajun Zhai",
+      "Kailun Yang",
+      "Kaiwei Wang"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "识别帧相机、单目事件、双手遮挡和数据缺口。"
+      },
+      {
+        "locator": "III EgoEVHands: Established Dataset",
+        "role": "data-or-setting",
+        "purpose": "核查双目事件数据与标注。"
+      },
+      {
+        "locator": "IV-B KeypointBEV: Iterative 3D Refinement",
+        "role": "method-or-design",
+        "purpose": "核查双目 BEV 与重投影迭代精化。"
+      },
+      {
+        "locator": "V-D Comparison with State-of-the-Art Methods",
+        "role": "results-or-analysis",
+        "purpose": "核查低光、遮挡与第三视角基线比较。"
+      },
+      {
+        "locator": "V-I Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查功耗、单手偏置和追踪式降算力路线。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "双目事件流能解决哪些 RGB/单目手姿难点，又引入什么部署代价？",
+  "contributions": [
+    "提出双目事件流 3D 双手估计系统 EgoEV-HandPose 和 EgoEVHands 数据集。"
+  ],
+  "method": {
+    "summary": "用双目事件特征和几何约束提升到 BEV，再通过重投影反馈迭代精化双手关键点并联合手势识别。",
+    "assumptions": [
+      "双目事件相机已同步且内外参可靠。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoEVHands",
+      "DHP19"
+    ],
+    "tasks": [
+      "3D 双手姿估计",
+      "手势识别"
+    ],
+    "embodiments": [
+      "头戴双目事件相机"
+    ],
+    "sample_or_scale": "5,419 个标注序列，38 类手势，包含 2D/3D 关键点与分割。"
+  },
+  "evaluation": {
+    "design": "在同一数据集上重训双目 RGB、单/双手事件基线，评测 MPJPE、PA-MPJPE、PCK、复杂度和低光/遮挡情形。",
+    "baselines": [
+      "HandMvNet",
+      "Ev2Hands",
+      "EvHandPose",
+      "EventEgo3D",
+      "BEVFormer"
+    ],
+    "metrics": [
+      "MPJPE",
+      "PA-MPJPE",
+      "PCK AUC",
+      "FLOPs",
+      "FPS"
+    ],
+    "ablations": [
+      "特征/热图输入",
+      "2D 调制/交叉注意/BEV 融合",
+      "迭代精化"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "事件流缓解运动模糊和低动态范围，但头部运动会产生大量背景事件。",
+      "scope": "头戴事件视觉。",
+      "locator": "I Introduction"
+    },
+    {
+      "finding": "双目几何可降低单目深度歧义，但双流和双手结构仍带来端侧算力压力。",
+      "scope": "EgoEV-HandPose 架构。",
+      "locator": "V-I Limitations"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "双视图双手架构对超低功耗设备仍需压缩或量化。",
+        "locator": "V-I Limitations"
+      },
+      {
+        "limitation": "对称双手分支可能对纯单手场景引入冗余偏置。",
+        "locator": "V-I Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "论文主要证明帧级 3D 姿态与手势识别，还未证明完整长时轨迹的重获和身份保持。",
+        "basis": "限制章将关键帧特征+相邻帧 2D 追踪列为未来的降算力方案。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于低光、快速运动与双手遮挡下的双目事件 3D 姿态；端侧功耗、标定维护和长时追踪仍需额外验收。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "将传感器、几何、双手遮挡和计算成本放在同一评测中。"
+    ],
+    "design_risks": [
+      "新数据集上的训练与测试可能高估跨设备、跨人群和长期标定泛化。"
+    ],
+    "baseline_fairness": "主要基线在 EgoEVHands 上重实现和微调，但架构原始设计为第三视角或单手的基线存在任务不对称。",
+    "metric_validity": "MPJPE/PCK 衡量关键点误差，但不直接衡量身份交换、丢失后重获或电池续航。",
+    "reproducibility": "作者承诺公开数据与代码；发布后仍需核对完整可用性。",
+    "external_validity": "证据集中在本数据集与 DHP19 插件式测试，尚不是长时实机部署证据。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.12297-C01",
+      "claim": "事件相机不会自动消除 egocentric 干扰：头部运动生成的背景事件会与手运动信号耦合。",
+      "stance": "limit",
+      "relation": "限制将高时间分辨率等同于稳定追踪。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文直接描述了头部自运动对事件流的混入机制。",
+      "locator": "I Introduction",
+      "source_context": "However, processing such asynchronous event video streams in egocentric settings is fundamentally challenged by ego-motion noise: continuous head movements induce background events that couple with hand-generated signals and severely complicate feature decoupling [ 22 , 34 ] .",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2605.12297-C02",
+      "claim": "双目事件的几何增益以更高硬件、标定和算力成本为代价，超低功耗部署仍需压缩。",
+      "stance": "conditional",
+      "relation": "支持“传感器增益必须与端侧算力联合验收”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在限制章明确承认当前架构对超低功耗部署仍有额外工程需求。",
+      "locator": "V-I Limitations",
+      "source_context": "To facilitate deployment on ultra-low-power wearable devices with stringent power budgets, such overhead can be further mitigated through model compression or quantization techniques.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2509.13883",
+    "title": "EvHand-FPV: Efficient Event-Based 3D Hand Tracking from First-Person View",
+    "published": "2025-09-17",
+    "url": "https://arxiv.org/abs/2509.13883",
+    "authors": [
+      "Zhen Xu",
+      "Guorui Lu",
+      "Chang Gao",
+      "Qinyu Chen"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "识别第一视角事件手追踪的端侧资源与数据瓶颈。"
+      },
+      {
+        "locator": "III-A2 Real-World Data",
+        "role": "data-or-setting",
+        "purpose": "核查真实事件测试数据和 2D 标注。"
+      },
+      {
+        "locator": "III-C Wrist-Based ROI and Lightweight End-to-End Mapping",
+        "role": "method-or-design",
+        "purpose": "核查腕部 ROI 和轻量端到端映射。"
+      },
+      {
+        "locator": "IV-B Comparison with Prior Work",
+        "role": "results-or-analysis",
+        "purpose": "核查第三视角基线的跨视角下降与轻量化收益。"
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查适用范围与结论。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "单目事件相机能否在头戴端做高效 3D 手追踪，真实 3D 评测是否充分？",
+  "contributions": [
+    "提出基于腕部 ROI、LNES-Fast 和轻量多任务网络的 FPV 事件手追踪方法。"
+  ],
+  "method": {
+    "summary": "以合成 MANO 事件+3D 标签训练，用少量真实 DAVIS346 事件+MediaPipe 校准 2D 标签测试；以腕部几何定位 ROI，用 MobileViT V2 预测 MANO PCA、旋转与平移。",
+    "assumptions": [
+      "右手和腕部在事件流中可稳定定位。",
+      "合成训练可以迁移到真实 2D 测试。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EvHand-FPV synthetic",
+      "EvHand-FPV real"
+    ],
+    "tasks": [
+      "3D 手姿追踪"
+    ],
+    "embodiments": [
+      "单目 DAVIS346 第一视角事件相机；右手"
+    ],
+    "sample_or_scale": "720,000 ms 合成训练、60,000 ms 合成测试；真实数据最多 60 秒。"
+  },
+  "evaluation": {
+    "design": "真实数据仅评测 2D-AUCp，合成数据评测 3D-AUCp；与 EventHands 原始、直接迁移和重训版比较。",
+    "baselines": [
+      "EventHands",
+      "ResNet-18",
+      "ShuffleNet V2",
+      "MobileNet V3",
+      "MobileViT V2"
+    ],
+    "metrics": [
+      "2D-AUCp",
+      "3D-AUCp",
+      "parameters",
+      "FLOPs"
+    ],
+    "ablations": [
+      "ROI size",
+      "auxiliary task",
+      "activation/softmax simplification",
+      "backbone"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "第三视角事件手追踪模型直接迁移到第一视角时性能大幅下降。",
+      "scope": "EventHands 直接迁移到 EvHand-FPV。",
+      "locator": "IV-B Comparison with Prior Work"
+    },
+    {
+      "finding": "真实数据的 3D 标注困难使 3D 评测仅在合成数据上完成。",
+      "scope": "EvHand-FPV 评测协议。",
+      "locator": "IV-A2 3D Metric"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "真实数据缺少 3D 标注，真实评测只能报告 2D 指标。",
+        "locator": "IV-A2 3D Metric"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "该结果不足以证明真实场景中的绝对 3D 追踪精度。",
+        "basis": "真实数据只有 2D MediaPipe+人工校正标签，3D 指标只在合成数据上计算。"
+      }
+    ]
+  },
+  "transfer_boundary": "支持轻量级事件手追踪的方法可行性；真实 3D、双手、长时追踪和跨肤色/背景部署仍需新数据。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时报告精度、参数和 FLOPs，且重训第三视角基线以区分视角与容量差异。"
+    ],
+    "design_risks": [
+      "真实数据时长短、只有 2D 标签且是单右手，过度依赖合成 MANO 分布。"
+    ],
+    "baseline_fairness": "EventHands 既报告直接迁移也报告在新数据上重训的结果，有助于区分域差与方法差。",
+    "metric_validity": "2D-AUCp 不能替代绝对深度与世界轨迹误差；合成 3D-AUCp 只能衡量模拟分布。",
+    "reproducibility": "数据和代码公开；真实数据规模小限制复现结论的稳定性。",
+    "external_validity": "主要面向 XR 端侧单目事件相机与右手运动，不足以覆盖手物重遮挡的双手真实 3D。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2509.13883-C01",
+      "claim": "事件手追踪存在显著视角域差：第三视角模型直接用于第一视角时性能会严重下降。",
+      "stance": "limit",
+      "relation": "支持第一视角必须单独数据化和评测。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文在同一表中报告了 EventHands 直接跨视角迁移的下降。",
+      "locator": "IV-B Comparison with Prior Work",
+      "source_context": "However, when applied to our first-person perspective (egocentric) task, its performance drops dramatically to only 0.12 2D-AUCp on real data and 0.17 3D-AUC on synthetic data, demonstrating the significant domain gap between viewpoints and the necessity of EvHand-FPV.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2509.13883-C02",
+      "claim": "真实事件数据缺少 3D 真值，导致该方法的真实 3D 指标无法被直接验证。",
+      "stance": "gap",
+      "relation": "指向真实 3D 手追踪基准的核心缺口。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文明确将 3D 评测限定在合成数据。",
+      "locator": "IV-A2 3D Metric",
+      "source_context": "However, due to the inherent difficulties in obtaining 3D annotations for real-world data, our evaluation of this metric is limited to synthetic data.",
+      "evidence_type": "gap",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.28899",
+    "title": "You Only Touch Once: 6-DoF Object Pose Estimation from Single Tactile Contact",
+    "published": "2026-06-27",
+    "url": "https://arxiv.org/abs/2606.28899",
+    "authors": [
+      "Pengfei Ye",
+      "Yuxiang Ma",
+      "Haonan Chen",
+      "Guangming Wang",
+      "Yixiong Jing",
+      "Brian Sheil",
+      "Yilun Du",
+      "Edward Adelson"
+    ]
+  },
+  "review": {
+    "question": "具身传感器感知误差",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身传感器感知误差."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "Appendix A Dataset and Object Models",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身传感器感知误差', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "物体 6-DoF 位姿误差在遮挡、弱光、反光/透明表面下会让视觉方法失效；单次双触点触觉可作为视觉不可靠时的位姿观测补充。"
+  ],
+  "method": {
+    "summary": "This section details how YOTO acquires per-object surface representations and constructs the virtual tactile patch dataset used in the first stage of training (Sec. 3.3 ). The pipeline takes a consumer-grade 3D scan as input and produces (i) a parent surface point cloud with per-point normals, (ii) a partition of this cloud into surface blocks aligned with the object’s principal axes, and (iii) a large pool of virtual tactile patches with ground-truth contact labels. All four evaluation objects (avocado, drill, squirrel, and monkey) are processed by the same pipeline; the default input throughout this section is the scanned mesh of Sec. A.1 , while for the YOTO (CAD mesh) ablation row of Tab",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate YOTO on four tabletop objects of contrasting geometry (a drill, a squirrel, a monkey, and an avocado), using two 6-DoF AIRBOT Play arms, each carrying a GelSight Mini sensor [ 31 ] on a rigid probe. The dual-arm configuration lets the two sensors contact the object from independently controlled directions, avoiding the near-coaxial geometry of a parallel gripper that makes dual-contact pose recovery ill-conditioned. An OptiTrack motion-capture system provides ground-truth poses for the object and both sensors and is used only for evaluation. Each GelSight contact is converted to a local point cloud with the InvariantCloud reconstruction pipeline [ 30 ] ; the corresponding object-",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "物体 6-DoF 位姿误差在遮挡、弱光、反光/透明表面下会让视觉方法失效；单次双触点触觉可作为视觉不可靠时的位姿观测补充。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "We presented YOTO, a tactile-only system that recovers absolute 6-DoF object pose from a single simultaneous dual-GelSight contact. By representing tactile patches as 3D point clouds and matching them to a surface-block decomposition of the object, YOTO localizes each contact and recovers the pose analytically through a normal-aware SVD solver. A two-stage virtual-then-real training pipeline keeps physical data requirements modest, and the system operates on consumer-grade scanned models in addition to CAD meshes. Across four geometrically diverse objects, YOTO attains a mean contact localizat",
+        "locator": "5 Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (Appendix A Dataset and Object Models) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.28899-C01",
+      "claim": "物体 6-DoF 位姿误差在遮挡、弱光、反光/透明表面下会让视觉方法失效；单次双触点触觉可作为视觉不可靠时的位姿观测补充。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 具身传感器感知误差",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者明确指出视觉位姿估计常在遮挡、差光照、反光或透明表面下失败，并提出 tactile-only pose estimation：把触觉接触表示成局部 3D 点云，结合校准传感器位姿恢复完整 6-DoF object pose；实验在视觉不可靠时优于视觉和几何基线。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Accurate 6-DoF object pose estimation is fundamental to robotic manipulation, yet vision-based methods often fail under occlusion, poor lighting, and reflective or transparent surfaces.",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (6-dof, estimation, fail, methods, object, occlusion, often, pose). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "The result is object-pose-specific; it supports tactile complementarity, not tactile replacement for all perception tasks. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

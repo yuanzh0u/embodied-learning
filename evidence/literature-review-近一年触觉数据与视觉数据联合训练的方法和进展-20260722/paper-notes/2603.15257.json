@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.15257",
+    "title": "HapticVLA: Contact-Rich Manipulation via Vision-Language-Action Model without Inference-Time Tactile Sensing",
+    "published": "2026-03-16T13:24:58Z",
+    "url": "https://arxiv.org/abs/2603.15257",
+    "authors": ["Konstantin Gubernatorov", "Mikhail Sannikov", "Ilya Mikhalchuk", "Egor Kuznetsov", "Makar Artemov", "Ogunwoye Faith Ouwatobi", "Marcelino Fernando", "Artem Asanov", "Ziang Guo", "Dzmitry Tsetserukou"]
+  },
+  "review": {
+    "question": "近一年触觉数据与视觉数据联合训练的方法如何演进，哪些进展已在真实机器人闭环中得到验证？",
+    "topic_ids": ["EA-SENSOR", "EA-ALIGN", "EA-MODEL", "EA-DATA"],
+    "mode": "scoping"
+  },
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {"decision": "include", "reason": "直接研究训练期触觉如何通过奖励加权和蒸馏迁移进只看视觉与状态的部署策略。"},
+    "sections_read": [
+      {"locator": "I INTRODUCTION", "role": "problem", "purpose": "确认无触觉部署的动机与两阶段框架。"},
+      {"locator": "III-A; III-B Tactile Distillation", "role": "method-or-design", "purpose": "核验触觉安全奖励、teacher target 和 blended target。"},
+      {"locator": "III-C Dataset Collection; IV-A Experimental Setup", "role": "data-or-setting", "purpose": "核验成功/失败示教、仿真扩增、传感器和机器人。"},
+      {"locator": "IV-C Main Results; IV-D Ablation Study", "role": "results-or-analysis", "purpose": "核验三任务闭环结果和蒸馏消融。"},
+      {"locator": "V CONCLUSION", "role": "conclusion-or-limitations", "purpose": "核验作者对无触觉部署的结论。"}
+    ],
+    "sections_skipped": [{"locator": "II Related Work", "reason": "相关工作中的二手主张不进入本文证据卡。"}]
+  },
+  "research_question": "触觉能否只作为训练监督，蒸馏到部署时不带触觉传感器的视觉 VLA？",
+  "contributions": [
+    "用离线触觉统计构造安全奖励并对 flow-matching VLA 加权微调。",
+    "把触觉条件 teacher 的动作分布蒸馏给只使用视觉、语言和本体状态的 student。",
+    "在三项易损物体真实任务上比较蒸馏、触觉推理和多个 VLA 基线。"
+  ],
+  "method": {
+    "summary": "训练触觉条件 teacher 时用过力、压力集中、不对称和滑移构造奖励；随后预计算 teacher 动作，与真实示教按 0.5/0.5 混合训练无触觉 student。",
+    "assumptions": ["视觉和本体状态包含足以预测训练分布内接触后果的线索。", "teacher 的触觉条件动作在蒸馏前已通过安全奖励改善。"]
+  },
+  "study_context": {
+    "datasets": ["310 real episodes including successful and faulty trajectories", "1,000 Isaac Sim pick-and-place episodes"],
+    "tasks": ["jar pick-and-place", "waffles pick-and-place", "egg pick-and-place"],
+    "embodiments": ["dual LeRobot SO-101 arms", "three RGB cameras", "200-taxel fingertip tactile arrays at 120 Hz"],
+    "sample_or_scale": "三项真实任务，每个模型每项 20 次闭环测试。"
+  },
+  "evaluation": {
+    "design": "在同一自建数据上比较基础 VLA、触觉奖励 teacher、带/不带触觉蒸馏及同步/异步推理。",
+    "baselines": ["SmolVLA", "X-VLA", "VLA-0", "SA-RWFM teacher without tactile distillation"],
+    "metrics": ["object-intact task success rate"],
+    "ablations": ["tactile distillation", "asynchronous vs synchronous action chunking"]
+  },
+  "findings": [
+    {"finding": "无触觉 student 在三任务上达到 86.7% 平均成功率。", "scope": "每任务 20 次、单一平台和三类物体。", "locator": "IV-C; IV-D Table I"},
+    {"finding": "异步 action chunking 在部分任务中降低性能，作者归因于触觉观察与控制动作的时序错位。", "scope": "本文四个消融配置。", "locator": "IV-D Ablation Study"}
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {"boundary": "只覆盖三类易损物体、单一平台和每项 20 次测试，不能证明视觉能在开放世界替代实时触觉。", "basis": "IV-A–IV-C"},
+      {"boundary": "训练依赖目标硬件触觉数据和离线 teacher；部署无触觉并不等于数据采集无触觉。", "basis": "III-A–III-C"}
+    ]
+  },
+  "transfer_boundary": "适合接触条件较可预测、训练期能采目标硬件触觉数据的任务；滑移、突发扰动或新材料需要实时触觉的程度尚未被本文排除。",
+  "critical_appraisal": {
+    "design_strengths": ["显式纳入过力失败示教。", "对蒸馏与异步时序做消融。", "成功定义同时要求物体完好和到达目标。"],
+    "design_risks": ["每任务仅 20 次。", "基线在该高精度平台上出现 0 成功，可能受实现或适配差异影响。", "没有扰动和新材料测试。"],
+    "baseline_fairness": "所有基线使用同一自建数据微调，但模型规模、预训练与平台适配差异使零成功基线难以单独归因。",
+    "metric_validity": "闭环成功同时包含完整性与放置结果，贴近易损物操作；未报告连续过力、滑移和恢复指标。",
+    "reproducibility": "给出数据量、硬件、奖励构造和蒸馏步骤；传感器校准与实现发布仍是复现关键。",
+    "external_validity": "对训练分布内易损物抓放有直接证据，对动态接触、开放材料和跨硬件迁移有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.15257-C01",
+      "claim": "触觉可以作为训练期 teacher 和安全奖励的监督，再蒸馏进只使用视觉与本体状态的部署 VLA；在三项易损物体任务、每项 20 次测试中，该无触觉 student 达到 86.7% 平均成功率。",
+      "stance": "conditional",
+      "relation": "支持训练期多模态、部署期视觉/状态单模态的触觉蒸馏路线，但证据限于封闭任务分布。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Tactile Distillation 将触觉条件 teacher 的动作目标与真实示教混合训练 student，Table I 报告三任务平均成功率。",
+      "locator": "V CONCLUSION",
+      "source_context": "To enable inference of VLA with SA-RWFM without tactile sensors, HapticVLA employs Tactile Distillation (TD), which distills tactile representations from vision and state inputs. Experiments across diverse real-world tasks show that HapticVLA achieves mean success rate of 86.7% consistently outperforming baselines in manipulating fragile and soft objects without any haptic feedback.",
+      "evidence_type": "method+experiment",
+      "quantitative": {
+        "metric": "mean real-robot task success rate",
+        "value_or_direction": "86.7%",
+        "comparator": "real-world baselines",
+        "task_or_sample": "three contact-rich tasks, 20 trials per task",
+        "locator": "V CONCLUSION"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "结论明确说明从视觉与状态输入蒸馏触觉表示、推理时不使用触觉，并报告 86.7% 平均成功率；三任务与每任务 20 次来自 IV-B–IV-D。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "全文为 arXiv HTML 文本层，未使用 OCR。"
+}

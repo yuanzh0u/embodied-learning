@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2501.15068",
+    "title": "An Atomic Skill Library Construction Method for Data-Efficient Embodied Manipulation",
+    "published": "2025-01-25T04:19:33Z",
+    "url": "https://arxiv.org/abs/2501.15068",
+    "authors": [
+      "Dongjiang Li",
+      "Bo Peng",
+      "Chang Li",
+      "Ning Qiao",
+      "Qi Zheng",
+      "Lei Sun",
+      "Yusen Qin",
+      "Bangguo Li",
+      "Yifeng Luan",
+      "Bo Wu",
+      "Yibing Zhan",
+      "Mingang Sun",
+      "Tong Xu",
+      "Lusong Li",
+      "Hui Shen",
+      "Xiaodong He"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "理解端到端任务数据重复与固定技能库的扩展问题。"
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "核验 VLP—VLA—Atomic Skill 三轮动态更新流程。"
+      },
+      {
+        "locator": "4 Experiment",
+        "role": "results-or-analysis",
+        "purpose": "核验技能库的数据效率、成功率和新任务扩展。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "界定原子技能库的系统结论与 VLA 依赖。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何动态构建可扩展的原子技能库，以减少端到端任务的数据重复？",
+  "contributions": [
+    "用 VLP 拆解任务并归纳原子技能定义",
+    "用 VLA 少样本微调构建可动态更新的技能库"
+  ],
+  "method": {
+    "summary": "三轮迭代流程依次执行任务拆解、技能语义抽象与基于 VLA 微调的技能实现，新任务还可反向扩展技能库。",
+    "assumptions": [
+      "VLP 能产生有用的子任务分解",
+      "VLA 具备足够可塑性与适应性，使单个原子技能可覆盖多场景"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "为各原子技能采集的真机演示"
+    ],
+    "tasks": [
+      "服务机器人多步操作",
+      "新环境和新任务适配"
+    ],
+    "embodiments": [
+      "论文真机操作平台"
+    ],
+    "sample_or_scale": "以有限任务集验证动态技能库与数据效率。"
+  },
+  "evaluation": {
+    "design": "对比端到端任务采集/训练与原子技能库的数据成本、成功率和新任务扩展。",
+    "baselines": [
+      "end-to-end task training",
+      "fixed skill library"
+    ],
+    "metrics": [
+      "task success rate",
+      "demonstration/data cost",
+      "skill-library coverage"
+    ],
+    "ablations": [
+      "VLP decomposition",
+      "VLA skill construction",
+      "library updates"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "原子技能定义的粒度不是固定语义，而取决于所用 VLA 的可塑性和对对象/场景的适应性。",
+      "scope": "论文三轮技能库系统",
+      "locator": "3 Method > 3.3 VLA Wheel"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "该方法并非 VLA 的替代路线，而是把 VLA 当作原子技能的实现器；性能与技能粒度仍受 VLA 能力限制。",
+        "basis": "论文明确把 VLA 可塑性与适应性视为技能粒度决定因素。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论限于 VLP 可正确拆解、VLA 可以用足量目标演示微调的任务，不覆盖无法稳定命名或共享的开放世界技能。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把任务拆解、技能定义与策略学习串成动态闭环",
+      "关注数据成本和技能库扩展"
+    ],
+    "design_risks": [
+      "多个模块使失败责任难隔离",
+      "技能命名和粒度可随 VLA 更换而漂移"
+    ],
+    "baseline_fairness": "系统层面比较能回答数据效率，但各模块算力与人工工程投入难完全配平。",
+    "metric_validity": "成功率和数据量能衡量系统价值，但对技能边界稳定性和组合失败的指标不足。",
+    "reproducibility": "流程和模块描述较清楚，但 VLA 微调所需硬件和真机数据成本高。",
+    "external_validity": "支持动态技能库的可行性，但未证明技能定义能在多本体、多传感器间稳定共享。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2501.15068-C01",
+      "claim": "原子技能库的当代发展已与 VLA 紧密耦合：该方法用 VLP 分解任务、用 VLA 微调实现技能，而且原子技能的粒度直接取决于 VLA 的可塑性和适应性。",
+      "stance": "conditional",
+      "relation": "反驳‘VLA 与原子技能二选一’，同时说明技能库的可扩展性受基模能力限制。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "VLA Wheel 将技能粒度明确绑定到 VLA 可塑性与适应性。",
+      "locator": "3.3 VLA Wheel",
+      "source_context": "The granularity of atomic skills is determined by the performance of VLA models",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "句子直接支持技能粒度受 VLA 性能决定；主张不将此扩展为所有技能库都必须使用 VLA。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

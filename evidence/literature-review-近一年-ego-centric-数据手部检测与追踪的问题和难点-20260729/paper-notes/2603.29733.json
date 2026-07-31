@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.29733",
+    "title": "Leveraging Synthetic Data for Enhancing Egocentric Hand-Object Interaction Detection",
+    "published": "2026-03-31",
+    "url": "https://arxiv.org/abs/2603.29733",
+    "authors": [
+      "Rosario Leonardi",
+      "Antonino Furnari",
+      "Francesco Ragusa",
+      "Giovanni Maria Farinella"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别 HOI 标注成本与合成–真实域差。"
+      },
+      {
+        "locator": "3.1 HOI-Synth Data Generation Pipeline",
+        "role": "method-or-design",
+        "purpose": "核查合成抓取、环境、相机和标注生成。"
+      },
+      {
+        "locator": "4.6 Importance of Accurate Simulation of Hand-Object Interactions",
+        "role": "results-or-analysis",
+        "purpose": "核查真实对齐、接触与背景实验。"
+      },
+      {
+        "locator": "5.1 Limitations and future work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查单帧设定与时序缺口。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "合成数据在什么条件下能改善 egocentric HOI 检测，又为何不能直接替代真实数据？",
+  "contributions": [
+    "构建 HOI-Synth 和合成–真实域适应基准，分析物体、抓取与环境对齐。"
+  ],
+  "method": {
+    "summary": "基于 DexGraspNet、SyntheticHumans 和 HM3D 生成带框、分割、接触和手物关系标签的静态 egocentric 帧，在 VISOR、EgoHOS、ENIGMA-51 上评测 UDA/SSDA/FSDA。",
+    "assumptions": [
+      "静态物理一致的抓取帧可以为单帧 HOI 检测提供有效补充。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "VISOR",
+      "EgoHOS",
+      "ENIGMA-51",
+      "HOI-Synth"
+    ],
+    "tasks": [
+      "手分割",
+      "手物接触",
+      "交互物体分割"
+    ],
+    "embodiments": [
+      "人类第一视角 RGB"
+    ],
+    "sample_or_scale": "三个真实基准及对应合成扩展；VISOR 合成扩展 30,259 帧。"
+  },
+  "evaluation": {
+    "design": "在无监督、半监督和全监督域适应下比较单帧掩码 AP 及接触/侧别 F1。",
+    "baselines": [
+      "Synthetic-only",
+      "Real-only",
+      "UDA",
+      "SSDA",
+      "FSDA"
+    ],
+    "metrics": [
+      "Overall AP",
+      "mask AP",
+      "Contact F1",
+      "Side F1"
+    ],
+    "ablations": [
+      "合成数据量",
+      "物体/抓取/环境/FOV 对齐",
+      "物理模拟与经典增强"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "纯合成数据与真实数据之间仍存在显著域差，少量真实标签或域适应才能缩小。",
+      "scope": "三个单帧 HOI 基准。",
+      "locator": "5 Discussion"
+    },
+    {
+      "finding": "当前生成管线不强制连续帧的手物运动或相机轨迹一致。",
+      "scope": "生成数据与评测任务。",
+      "locator": "5.1 Limitations and future work"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "仅研究单帧 HOS 检测，合成数据无时序一致性。",
+        "locator": "5.1 Limitations and future work"
+      },
+      {
+        "limitation": "互动主要来自 DexGraspNet 抓取，不显式覆盖工具操作或双手协同。",
+        "locator": "5.1 Limitations and future work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "该论文能支持检测/分割的数据补充结论，不能支持轨迹、身份保持或遮挡后重获结论。",
+        "basis": "训练与评测均为单帧，生成管线不生成时序连续性。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于真实标注稀缺的单帧 HOI 检测；若目标是追踪，需另行构建时序一致的轨迹、遮挡与左右手标签。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "跨三个真实数据集、三种监督设定和多个对齐因素做系统分析。"
+    ],
+    "design_risks": [
+      "合成抓取来自机器手数据且仅为静态帧，可能错过真实过渡、接触和失败分布。"
+    ],
+    "baseline_fairness": "论文在统一设定下比较合成、真实和域适应组合；单帧任务不能与追踪方法等价。",
+    "metric_validity": "AP/F1 能衡量帧级分割与接触分类，不衡量连续轨迹、重获和 3D 稳定性。",
+    "reproducibility": "管线、合成数据、代码和工具公开。",
+    "external_validity": "对已见数据集中的单帧交互有支持；对工具、双手协同和时序追踪较弱。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.29733-C01",
+      "claim": "当前纯合成数据不能替代真实 egocentric HOI 数据；它主要是少标签和域适应下的补充资源。",
+      "stance": "conditional",
+      "relation": "支持“合成数据可补覆盖，但必须用真实域锚定”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "讨论章直接给出纯合成方案的边界。",
+      "locator": "5 Discussion",
+      "source_context": "Currently, synthetic data alone cannot fully replace real-world data for egocentric HOI detection.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2603.29733-C02",
+      "claim": "HOI-Synth 的证据是单帧检测证据，不包含轨迹连续性或时序追踪能力。",
+      "stance": "limit",
+      "relation": "限制将单帧合成增益外推到时序追踪。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "限制章明确声明不使用时序信息。",
+      "locator": "5.1 Limitations and future work",
+      "source_context": "Our analysis is restricted to frame-level HOS detection and does not exploit temporal information.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

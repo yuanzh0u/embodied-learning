@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.10790",
+    "title": "A Multimodal RGB and Events Dataset for Hand Detection in First-Person View",
+    "published": "2026-06-09",
+    "url": "https://arxiv.org/abs/2606.10790",
+    "authors": [
+      "Bharghav Kota",
+      "Yulia Sandamirskaya"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "识别事件相机手部检测的数据与表示瓶颈。"
+      },
+      {
+        "locator": "III Dataset Pipeline",
+        "role": "method-or-design",
+        "purpose": "核查从 EgoHands 合成事件流和生成标签的流程。"
+      },
+      {
+        "locator": "IV-C EventEgoHands Hand Detection",
+        "role": "results-or-analysis",
+        "purpose": "核查不同合成参数与检测结果。"
+      },
+      {
+        "locator": "V conclusion and further work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查真实数据与人群多样性缺口。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "事件相机能否缓解第一视角快速运动和低光下的手检测，数据又缺什么？",
+  "contributions": [
+    "从 RGB EgoHands 构建同步 RGB–事件手检测数据集，并比较清洁、噪声与混合合成参数。"
+  ],
+  "method": {
+    "summary": "用 v2e 从 30 FPS EgoHands 视频合成事件流，用微调 YOLOv8 补齐稀疏手工标注，并训练 DAGr 检测器。",
+    "assumptions": [
+      "合成事件参数能近似真实 DVS 非理想性。",
+      "YOLOv8 伪标签可以扩展到全视频。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoHands",
+      "EventEgoHands"
+    ],
+    "tasks": [
+      "第一视角手检测"
+    ],
+    "embodiments": [
+      "头戴视角；RGB+事件相机"
+    ],
+    "sample_or_scale": "48 段 90 秒视频，129,600 帧，393,561 个手检测框；事件由 RGB 合成。"
+  },
+  "evaluation": {
+    "design": "30/10/8 视频训练–验证–测试划分，在共同测试集上比较 COCO mAP。",
+    "baselines": [
+      "DAGr"
+    ],
+    "metrics": [
+      "mAP",
+      "mAP50",
+      "mAP75"
+    ],
+    "ablations": [
+      "分辨率、时间上采样、清洁/噪声/混合事件模型"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "事件相机的低延迟优势会被帧式累积表示和数据稀缺削弱。",
+      "scope": "合成 EventEgoHands 与 DAGr 设置。",
+      "locator": "I Introduction"
+    },
+    {
+      "finding": "作者仍把更广的光照、肤色和活动多样性列为未来工作。",
+      "scope": "数据集边界。",
+      "locator": "V conclusion and further work"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "当前缺少具有更多光照、肤色和活动变化的真实第一视角事件手数据。",
+        "locator": "V conclusion and further work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "该结果证明合成数据上的检测可行性，不能单独证明真实事件相机上的追踪可用性。",
+        "basis": "事件流由 RGB 合成，密集框标签由 YOLOv8 伪标注，且训练窗仍与 30 Hz 帧标签对齐。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于验证合成事件数据的检测价值；真实事件噪声、高频追踪、左右手身份和跨人群泛化仍需独立验收。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "公开了可重现的多参数合成数据管线和同一测试设置。"
+    ],
+    "design_risks": [
+      "合成–真实域差、伪标签误差和单类检测会高估部署可用性。"
+    ],
+    "baseline_fairness": "各版本使用相同视频划分和共同测试集，但没有与大规模真实事件数据直接比较。",
+    "metric_validity": "COCO mAP 衡量单帧检测，不衡量身份保持、轨迹抖动、遮挡恢复或真实高频延迟。",
+    "reproducibility": "数据和训练代码公开；伪标签质量仍需重复核查。",
+    "external_validity": "对真实 DVS、更广肤色、弱纹理和手物遮挡的外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.10790-C01",
+      "claim": "事件手检测的精度仍受慢变信号不可见与将事件流重新帧化的处理低效限制。",
+      "stance": "limit",
+      "relation": "限制“事件相机自然解决所有快速运动检测问题”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文直接列出了事件传感器与处理表示两类瓶颈。",
+      "locator": "I Introduction",
+      "source_context": "But event-based approaches currently face limitations in accuracy due to two main factors: the sensors’ inability to detect slowly changing signals and the inefficiency of existing processing techniques that transform event streams into frame- based formats for analysis using convolutional neural networks [ 31 , 22 , 1 ] .",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2606.10790-C02",
+      "claim": "现有 EventEgoHands 仍缺少光照、肤色和活动多样性，真实数据覆盖是未解问题。",
+      "stance": "gap",
+      "relation": "指向数据多样性与真实事件流的覆盖缺口。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "未来工作明确列出了数据人群与场景多样性边界。",
+      "locator": "V conclusion and further work",
+      "source_context": "Future work includes creating an event-based Hands dataset in first-person view with more variation in lighting conditions, skin tones and activity being performed.",
+      "evidence_type": "gap",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

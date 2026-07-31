@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.17200",
+    "title": "ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining",
+    "published": "2026-06-15T18:40:18Z",
+    "url": "https://arxiv.org/abs/2606.17200",
+    "authors": ["Hao Li", "Ganlong Zhao", "Yufei Liu", "Haotian Hou", "Guoquan Ye", "Tongyan Fang", "Chunxiao Liu", "Siyuan Huang", "Jianbo Liu", "Xiaogang Wang", "Hongsheng Li"]
+  },
+  "review": {
+    "question": "近一年具身智能预训练模型对数据来源多样性与相机分辨率、帧率、码率、FOV、机位有什么证据支持的要求？哪些差异应扩大，哪些接口必须标准化或条件化？",
+    "topic_ids": ["EA-DATA", "EA-HARDWARE", "EA-SENSOR", "EA-MODEL", "EA-XEMBODIMENT"],
+    "mode": "scoping"
+  },
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {"decision": "include", "reason": "直接研究人类视频、多机器人与仿真数据的联合 VLA 预训练，并消融空间、形态、时间和标签可靠性对齐。"},
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "核验多源数据的规模价值与四类不一致问题。"},
+      {"locator": "3.1 Unified Action Representation and 3.2 Reliability-Aware Training Objective", "role": "method-or-design", "purpose": "核验相机坐标系、形态 token、物理时间 chunk 和可靠性加权。"},
+      {"locator": "4.1 Pretraining Data and 4.2 Human Data Processing Pipeline", "role": "data-or-setting", "purpose": "核验 6.0K+ 小时混合数据的来源与监督异质性。"},
+      {"locator": "5.2 Ablation Studies and 5.3 Human Data for Augmented Fine-Tuning", "role": "results-or-analysis", "purpose": "核验对齐组件的必要性与人类视频的覆盖增益。"},
+      {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "记录结论与对长时序、灵巧手和力觉的边界。"},
+      {"locator": "Appendix C Real-World Evaluation Details", "role": "appendix-or-supplement", "purpose": "核验真实双臂评测和任务范围。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何在一个 VLA 预训练体系中联合利用人类第一视角视频、多本体机器人数据和仿真数据，同时不让接口与标签噪声污染动作学习？",
+  "contributions": [
+    "用相机坐标系动作、形态条件和物理时间对齐的 action chunk 统一异构数据。",
+    "将人类视频伪动作作为可靠性加权的辅助监督，以传感器记录的机器人动作锚定主目标。",
+    "在 1.48K 小时人类视频和 4.53K+ 小时机器人/仿真池上评估规模与对齐的组合作用。"
+  ],
+  "method": {
+    "summary": "将六个 egocentric 视频源的人手运动转为伪动作，与多本体机器人/仿真轨迹统一到观测相机坐标系；模型通过形态 token 区分身体，通过物理时间而非帧数组成动作块，并按数据集、时刻和通道可靠性加权人类监督。",
+    "assumptions": ["相机外参可获得且人手重建能提供有用但有噪声的位置监督。", "形态和数据源差异可被显式条件化，而非全部隐式吸收。"]
+  },
+  "study_context": {
+    "datasets": ["Ego4D", "EgoExo4D", "EPIC-KITCHENS-100", "HOI4D", "EgoDex", "Xperience-10M", "AgiBot", "Galaxea", "RoboCasa", "Galbot"],
+    "tasks": ["RoboCasa GR1 TableTop 24 tasks", "RoboTwin 2.0", "six real-world bimanual tasks"],
+    "embodiments": ["human hands", "multiple robot platforms", "ARX bimanual robot"],
+    "sample_or_scale": "6,013.7+ hours total: 1,478.9 hours human pseudo-action video and 4,534.8+ hours robot/simulation data."
+  },
+  "evaluation": {
+    "design": "多仿真基准、六项真实机器人任务、三个对齐/可靠性组件消融，以及少量机器人数据下的人类视频增强。",
+    "baselines": ["GR00T-N1.6/N1.7", "Qwen3PI", "FLARE", "ABot-M0", "JoyAI-RA", "DIAL"],
+    "metrics": ["task success rate", "end-effector workspace coverage"],
+    "ablations": ["without morphology tokens", "without time-aligned action chunking", "without reliability-aware human auxiliary loss"]
+  },
+  "findings": [
+    {"finding": "完整模型 RoboCasa 平均成功率 72.8%；去除形态 token、物理时间对齐 chunk、可靠性人类损失后分别降至 70.9%、71.7%、69.2%。", "scope": "RoboCasa GR1 TableTop，每项移除一个组件。", "locator": "5.2 Ablation Studies, Figure 5(b)"},
+    {"finding": "419 条任务匹配人类视频将平面动作工作空间覆盖从 0.062 扩大到 0.296 平方米，配合 34 条机器人示范将成功率从 10% 提高到 40%。", "scope": "Sweep Cubes 少样本任务微调，每条件 10 次试验。", "locator": "5.3 Human Data for Augmented Fine-Tuning, Figure 6"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [{"limitation": "长时序操作仍受轨迹漂移影响；数据和表示集中于桌面平行夹持/双臂，未覆盖灵巧手与力觉。", "locator": "5.1 Real-World Evaluation and 6 Conclusion"}],
+    "reader_inferred": [{"boundary": "证据支持‘可对齐、可加权的异构性’，不支持将无定位、无时间戳或无质量估计的任意视频直接等权混合。", "basis": "去除可靠性加权的降幅最大，论文也明确以高保真机器人数据锚定主损失。"}]
+  },
+  "transfer_boundary": "对可得相机外参、时间戳和形态先验的桌面操作最有支持；不能直接外推至无校准网络视频、导航、灵巧手或力控任务。",
+  "critical_appraisal": {
+    "design_strengths": ["同时消融空间、形态、时间和标签可靠性对齐。", "包含仿真、真机和少样本增强评估。"],
+    "design_risks": ["人类数据必须经过复杂重建与多阶段质控，成本未与机器人采集完整对比。", "新方法同时改变数据、损失和动作表示，规模增益不能单独归因于源多样性。"],
+    "baseline_fairness": "主基准有多个强基线，但预训练数据和算力并非所有模型完全等化。",
+    "metric_validity": "闭环成功率适合动作学习结论；少样本实验仅 10 次试验，置信区间较宽。",
+    "reproducibility": "数据组成和核心算法描述详细，但部分自采数据和重建管线依赖可能限制复现。",
+    "external_validity": "对异构桌面 VLA 预训练有强直接证据，但无法推出唯一通用的相机规格。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.17200-C01",
+      "claim": "异构来源应扩大，但在联合预训练前必须将空间坐标、本体形态、物理时间和标签可靠性显式对齐或条件化；否则会降低动作学习性能。",
+      "stance": "conditional",
+      "relation": "直接回答‘采集装置要一致还是多样’：可以多样，但数据接口不能未标识地异质。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "三项组件消融均降低 RoboCasa 成功率，其中去掉人类伪动作可靠性加权的降幅最大。",
+      "locator": "5.2 Ablation Studies, Figure 5(b)",
+      "source_context": "Removing morphology tokens makes the success rate drop from 72.8% to 70.9%",
+      "evidence_type": "component-ablation",
+      "quantitative": {"metric": "RoboCasa average success rate", "value_or_direction": "72.8% full; 70.9% without morphology tokens; 71.7% without time alignment; 69.2% without reliability weighting", "comparator": "full ACE-Ego-0 versus one-component removals", "task_or_sample": "RoboCasa GR1 TableTop, 24 tasks", "locator": "5.2 Ablation Studies, Figure 5(b)"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "全文消融段直接报告三项对齐/可靠性机制被移除后的成功率，主张仅限于该混合预训练设定。"}
+    },
+    {
+      "card_id": "2606.17200-C02",
+      "claim": "任务匹配的人类 egocentric 视频能补齐少量机器人示范的动作覆盖空洞，但收益是在对齐与质量加权管线中实现的。",
+      "stance": "support",
+      "relation": "证明来源多样性的价值主要在补覆盖，而非采集硬件本身越乱越好。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "419 条人类视频的工作空间覆盖是 34 条机器人示范的 4.8 倍，联合微调将 10 试验成功率从 10% 提高到 40%。",
+      "locator": "5.3 Human Data for Augmented Fine-Tuning, Figure 6",
+      "source_context": "The 419 episodes of task-matched human video spread across 0.296 m 2 , 4.8 broader coverage",
+      "evidence_type": "data-augmentation-experiment",
+      "quantitative": {"metric": "workspace coverage and real-robot success", "value_or_direction": "0.062 to 0.296 m2 coverage; 10% to 40% success", "comparator": "34 robot demonstrations versus robot plus 419 human episodes", "task_or_sample": "Sweep Cubes, 10 trials per condition", "locator": "5.3 Human Data for Augmented Fine-Tuning, Figure 6"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "全文微调实验直接报告覆盖面积、数据量和闭环成功率；主张保留任务匹配、小样本与对齐管线边界。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "该论文强调的不是设备同型，而是观测坐标、时间语义、形态和监督可靠性可统一解释。"
+}

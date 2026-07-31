@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.12498",
+    "title": "EgoForce: Forearm-Guided Camera-Space 3D Hand Pose from a Monocular Egocentric Camera",
+    "published": "2026-05-12",
+    "url": "https://arxiv.org/abs/2605.12498",
+    "authors": [
+      "Christen Millerdurai",
+      "Shaoxiang Wang",
+      "Yaxu Xie",
+      "Vladislav Golyanik",
+      "Didier Stricker",
+      "Alain Pagani"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1. Introduction",
+        "role": "problem",
+        "purpose": "识别单目深度–尺度歧义、自遮挡与广角镜头变形。"
+      },
+      {
+        "locator": "3. The EgoForce Framework",
+        "role": "method-or-design",
+        "purpose": "核查手–前臂几何与射线空间求解器。"
+      },
+      {
+        "locator": "4.1. Results",
+        "role": "results-or-analysis",
+        "purpose": "核查跨镜头数据集的相机坐标精度与运行速度。"
+      },
+      {
+        "locator": "5. Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查已标定 3D 数据依赖和镜头内参敏感性。"
+      },
+      {
+        "locator": "11. Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查单目精确尺度的不适定性。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "单个头戴相机如何恢复绝对相机坐标手位置，且跨鱼眼/透视镜头泛化？",
+  "contributions": [
+    "引入前臂计量先验、跨镜头裁剪内参 token 与射线空间闭式求解器，从单目图像恢复绝对相机坐标手姿。"
+  ],
+  "method": {
+    "summary": "联合编码手与前臂裁剪，预测根相对 MANO/FARM 几何与 2D 关键点，再从已标定镜头的 bearing rays 通过加权最小二乘求解绝对平移，用 Kalman 滤波稳定。",
+    "assumptions": [
+      "相机模型和内参已知或可近似估计。",
+      "前臂或从手条件化的前臂先验能提供尺度约束。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "H2O",
+      "HOT3D",
+      "ARCTIC",
+      "HO3D",
+      "Re:InterHand",
+      "HandCO"
+    ],
+    "tasks": [
+      "相机坐标 3D 手姿",
+      "前臂几何",
+      "双手实时追踪"
+    ],
+    "embodiments": [
+      "单目透视/鱼眼/宽 FOV 头戴相机"
+    ],
+    "sample_or_scale": "聚合 6 个 3D 数据集训练；HOT3D 自定义 354K/110K 训练–测试帧。"
+  },
+  "evaluation": {
+    "design": "跨 H2O/HOT3D/ARCTIC 比较相机坐标、根相对、Procrustes 误差和加速度；测试内参失配、前臂信息、射线求解与运行时间。",
+    "baselines": [
+      "HaMeR+DepthAnythingV2",
+      "MobRecon",
+      "HandOccNet",
+      "HandDGP",
+      "UmeTrack",
+      "HaWoR"
+    ],
+    "metrics": [
+      "CS-MJE",
+      "RS-MJE",
+      "PS-MJE",
+      "CS-ACC",
+      "RS-ACC",
+      "runtime"
+    ],
+    "ablations": [
+      "前臂输入",
+      "CIT",
+      "RSS/DGP/depth lifting",
+      "Kalman filter",
+      "intrinsic mismatch"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "单目绝对 3D 手位置同时受深度–尺度歧义、自遮挡与镜头/裁剪变形限制。",
+      "scope": "单目头戴相机。",
+      "locator": "1. Introduction"
+    },
+    {
+      "finding": "前臂和射线几何能稳定尺度与跨镜头平移，但仍依赖已标定 3D 数据和相机内参。",
+      "scope": "EgoForce 训练与部署。",
+      "locator": "5. Limitations"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "依赖已标定 3D 数据训练，不能直接利用大规模 2D 手数据，限制野外泛化。",
+        "locator": "5. Limitations"
+      },
+      {
+        "limitation": "仍对相机内参敏感，且单目精确人体尺度在无用户特定线索时不适定。",
+        "locator": "11. Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "跨镜头统一模型并不等于无标定部署；它将标定信息通过射线和裁剪 token 显式引入。",
+        "basis": "RSS 需从 native calibrated projection 反投影出 bearing rays，野外内参估计在鱼眼上仍会退化。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于有相机标定、前臂可见或可用先验填补的单目绝对 3D 手追踪；无内参鱼眼、完全前臂遮挡与用户精确尺度仍有不确定性。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时评估相机坐标精度、时序平滑性、镜头失配和端到端运行时间。"
+    ],
+    "design_risks": [
+      "自定义 HOT3D 划分、大规模 3D 数据聚合与前臂伪标注可带来数据泄漏/偏差风险。"
+    ],
+    "baseline_fairness": "三个相机坐标基线重训于同一聚合数据；UmeTrack/HaWoR 无训练代码，仅基于发布推理设置。",
+    "metric_validity": "CS-MJE 直接衡量绝对位置和尺度，比根相对指标更符合实际交互；仍不含接触力或世界轨迹。",
+    "reproducibility": "方法、数据划分和运行时间附录详细；部分基线只能 best-effort 复现。",
+    "external_validity": "在多镜头类型与三个基准上有支持，但对完全未标定野外数据和个人尺度仍有边界。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.12498-C01",
+      "claim": "单目头戴相机中，绝对 3D 手追踪同时受深度–尺度歧义、自遮挡与宽 FOV/鱼眼变形限制。",
+      "stance": "support",
+      "relation": "支持将根相对姿态与绝对相机坐标追踪分开。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文在问题定义中直接并列了绝对 3D 手追踪的三个主要视觉/几何难点。",
+      "locator": "1. Introduction",
+      "source_context": "However, achieving this from a single egocentric camera is challenging due to depth–scale ambiguity, frequent self-occlusions, and the strong distortions introduced by wide-FOV and fisheye optics (Millerdurai et al. , 2024a , 2025 ) .",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2605.12498-C02",
+      "claim": "跨镜头单网络仍依赖已标定 3D 训练数据和相机内参，不等于无标定野外泛化。",
+      "stance": "limit",
+      "relation": "指向跨设备追踪的标定和 3D 监督成本。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在限制章明确把已标定 3D 训练依赖与野外泛化不足联系起来。",
+      "locator": "5. Limitations",
+      "source_context": "It relies on calibrated 3D datasets for training, preventing the use of large 2D hand datasets common in root-relative methods (Pavlakos et al. , 2024 ; Potamias et al. , 2024 ) and limiting generalization to in-the-wild imagery.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

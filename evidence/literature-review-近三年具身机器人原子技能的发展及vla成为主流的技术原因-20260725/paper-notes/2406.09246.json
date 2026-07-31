@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2406.09246",
+    "title": "OpenVLA: An Open-Source Vision-Language-Action Model",
+    "published": "2024-06-13T15:46:55Z",
+    "url": "https://arxiv.org/abs/2406.09246",
+    "authors": [
+      "Moo Jin Kim",
+      "Karl Pertsch",
+      "Siddharth Karamcheti",
+      "Ted Xiao",
+      "Ashwin Balakrishna",
+      "Suraj Nair",
+      "Rafael Rafailov",
+      "Ethan Foster",
+      "Grace Lam",
+      "Pannag Sanketi",
+      "Quan Vuong",
+      "Thomas Kollar",
+      "Benjamin Burchfiel",
+      "Russ Tedrake",
+      "Dorsa Sadigh",
+      "Sergey Levine",
+      "Percy Liang",
+      "Chelsea Finn"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "理解开源 VLA 与网络预训练先验的动机。"
+      },
+      {
+        "locator": "3 OpenVLA: An Open-Source VLA",
+        "role": "method-or-design",
+        "purpose": "核验 VLM 骨干、动作 token 与训练数据。"
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核验跨本体表现与 10–150 条演示的新机器人适配。"
+      },
+      {
+        "locator": "6 Discussion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录单图像、控制频率与高频灵巧任务边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "开源 VLA 能否把大规模视觉语言先验转化为可复用、可低成本适配的机器人策略？",
+  "contributions": [
+    "发布 7B 开源 OpenVLA",
+    "评估跨本体直接控制与新机器人的全参数/LoRA 适配"
+  ],
+  "method": {
+    "summary": "以预训练 VLM 为骨干，在 Open X-Embodiment 数据上将连续动作离散化成 token 微调，再使用小规模目标任务演示适配新机器人。",
+    "assumptions": [
+      "目标机器人的动作接口能映射到 OpenVLA 的 tokenized action 表示"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Open X-Embodiment",
+      "BridgeData V2",
+      "Franka-Tabletop",
+      "DROID"
+    ],
+    "tasks": [
+      "跨本体操作",
+      "新任务/新机器人适配"
+    ],
+    "embodiments": [
+      "WidowX",
+      "Google Robot",
+      "Franka"
+    ],
+    "sample_or_scale": "7B 参数；目标任务适配使用 10–150 条演示。"
+  },
+  "evaluation": {
+    "design": "比较开箱跨本体性能、不同数量目标演示的适配效果，以及 LoRA 等参数高效微调。",
+    "baselines": [
+      "RT-1-X",
+      "RT-2-X",
+      "Diffusion Policy",
+      "from-scratch policies"
+    ],
+    "metrics": [
+      "task success rate",
+      "adaptation data count",
+      "inference throughput"
+    ],
+    "ablations": [
+      "pretraining data",
+      "vision encoder",
+      "full finetuning vs LoRA"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "OpenVLA 可以用 10–150 条目标任务演示适配新的 Franka 设置。",
+      "scope": "Franka-Tabletop 和 Franka-DROID 的所选任务",
+      "locator": "5 Experiments > 5.2 Data-Efficient Adaptation to New Robot Setups"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "当前模型只支持单帧图像，且推理吞吐量不适合 50Hz 高频双臂等设置。",
+        "locator": "6 Discussion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "OpenVLA 的‘通用’更像可复用初始化与适配基座，而不是无目标数据的技能库替代品。",
+        "basis": "论文将少量目标演示微调视为广泛采用的关键。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于单图像、中低频、可用少量目标演示适配的机器人操作；不可外推为高频接触、双臂或长时程组合已解决。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "开源模型与训练代码",
+      "跨本体和新机器人适配同时评估",
+      "包含参数高效微调实验"
+    ],
+    "design_risks": [
+      "单图像输入与低控制频率限制任务面",
+      "适配性能可能同时受预训练和目标数据影响"
+    ],
+    "baseline_fairness": "对主要 VLA 与从头训练基线做了比较，但各模型算力与预训练来源不完全匹配。",
+    "metric_validity": "真机成功率直接评估闭环表现，但对恢复、失败阶段和安全过程覆盖有限。",
+    "reproducibility": "开源程度高，但 7B 模型和多真机实验仍需显著资源。",
+    "external_validity": "多机器人数据与多设置评估提高外部效度，但时序和传感器范围较窄。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2406.09246-C01",
+      "claim": "OpenVLA 表明，开源预训练 VLA 可作为新机器人的可复用初始化，但实用采用仍依赖 10–150 条目标任务演示的微调。",
+      "stance": "conditional",
+      "relation": "说明 VLA 的生态优势在于可复用预训练与适配工具链，而非完全取消目标技能数据。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "论文将 10–150 条目标演示的全参数微调设为广泛采用的关键实验。",
+      "locator": "5.2 Data-Efficient Adaptation to New Robot Setups",
+      "source_context": "full fine-tuning of all model parameters, using small datasets with 10–150 demonstrations of a target task",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接说明微调数据范围和它对广泛采用的意义；主张未将此写成零样本能力。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

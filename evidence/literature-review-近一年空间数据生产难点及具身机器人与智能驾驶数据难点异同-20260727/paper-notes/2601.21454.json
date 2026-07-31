@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.21454",
+    "title": "4D-CAAL: 4D Radar-Camera Calibration and Auto-Labeling for Autonomous Driving",
+    "published": "2026-01-29",
+    "url": "https://arxiv.org/abs/2601.21454",
+    "authors": [
+      "Shanliang Yao",
+      "Zhuoxiao Li",
+      "Runwei Guan",
+      "Kebin Cao",
+      "Meng Xia",
+      "Fuping Hu",
+      "Sen Xu",
+      "Yong Yue",
+      "Xiaohui Zhu",
+      "Weiping Ding",
+      "Ryan Wen Liu"
+    ]
+  },
+  "review": {
+    "question": "近一年空间数据的生产难点在哪里，具身机器人与智能驾驶的异同是什么？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-4D",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper directly studies two production bottlenecks for spatial driving data: radar-camera extrinsic calibration and scalable point-level auto-labeling."
+    },
+    "sections_read": [
+      {"locator": "I Introduction", "role": "problem", "purpose": "Map sparsity, ambiguity, calibration and annotation bottlenecks."},
+      {"locator": "III Methodology > III-B 4D Radar-Camera Calibration; III-C 4D Radar Point Auto-Labeling", "role": "method-or-design", "purpose": "Inspect the dual-purpose target, cross-modal correspondence and coarse-to-fine labeling pipeline."},
+      {"locator": "IV-B Experimental Results", "role": "results-or-analysis", "purpose": "Check calibration and auto-labeling results and ablations."},
+      {"locator": "IV-C Discussion; V Conclusion", "role": "conclusion-or-limitations", "purpose": "Identify deployment and annotation-quality boundaries."}
+    ],
+    "sections_skipped": [
+      {"locator": "References", "role": "appendix-or-supplement", "reason": "not-applicable: the scoping claim is supported by the paper's own method, experiments and limitations."}
+    ]
+  },
+  "research_question": "How can 4D radar-camera calibration and radar point labeling be integrated to reduce spatial-data production cost?",
+  "contributions": [
+    "Introduces a target visible to both camera and 4D radar and uses the calibrated transform to transfer and refine visual labels on sparse radar points.",
+    "Makes the annotation ceiling explicit: visual-teacher errors, occlusion, lighting, overlap and sensor drift remain production risks."
+  ],
+  "method": {
+    "summary": "A two-stage calibration-and-labeling pipeline aligns checkerboard and corner-reflector observations, projects radar points into image masks, then filters or recovers points using depth, RCS and Doppler consistency.",
+    "assumptions": ["Rigid radar-camera mounting", "Synchronized camera and radar measurements", "A visual instance-segmentation teacher that transfers usable semantics"]
+  },
+  "study_context": {
+    "datasets": ["Real-world outdoor radar-camera calibration and labeling data"],
+    "tasks": ["Extrinsic calibration", "4D radar point auto-labeling"],
+    "embodiments": ["Autonomous-driving sensor rig with Oculii EAGLE radar and Sony camera"],
+    "sample_or_scale": "Multiple calibration poses; radar-camera recordings at 15 Hz and 30 Hz respectively."
+  },
+  "evaluation": {
+    "design": "Compares reprojection error with a targetless calibration baseline and ablates depth, RCS, velocity, out-of-target filtering and in-target completion for point labeling.",
+    "baselines": ["Targetless 4D radar-camera calibration", "Geometric projection-only auto-labeling"],
+    "metrics": ["MRE", "RMSE", "point accuracy", "mIoU"],
+    "ablations": ["Depth, RCS and velocity filters", "Out-of-target filtering", "In-target point completion"]
+  },
+  "findings": [
+    {"finding": "Calibration quality and annotation quality form one dependency chain: projected labels only become meaningful after accurate cross-modal alignment.", "scope": "The tested 4D radar-camera rig and target-based calibration setup.", "locator": "I Introduction; III-A 4D-CAAL Pipeline"},
+    {"finding": "The complete refinement pipeline reports 90.12% point accuracy and 77.83% mIoU, but the discussion states that severe occlusion, extreme lighting and image-plane overlap still bound label quality.", "scope": "The paper's real-world labeling evaluation and visual-teacher setup.", "locator": "IV-B 2 Auto-Labeling Evaluation; IV-C Discussion"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "Calibration depends on target manufacturing/alignment and multi-pose manual placement; auto-labeling is bounded by visual segmentation, severe occlusion, lighting and overlapping instances.", "locator": "IV-C Discussion"}
+    ],
+    "reader_inferred": [
+      {"boundary": "The method lowers manual labeling effort but does not remove a cross-modal teacher ceiling or guarantee fleet-scale online calibration under drift.", "basis": "The system uses pretrained Mask2Former and static extrinsics; online drift handling is future work."}
+    ]
+  },
+  "transfer_boundary": "Transfer to other radar-camera rigs depends on target observability, mounting rigidity, clock alignment and the visual model's classes and domain robustness.",
+  "critical_appraisal": {
+    "design_strengths": ["Integrates calibration and labeling rather than evaluating them independently", "Includes component ablations for point refinement"],
+    "design_risks": ["Calibration baseline uses a different radar and target strategy", "Dataset size and environmental diversity are not established as fleet-scale"],
+    "baseline_fairness": "The calibration comparison is informative but not perfectly controlled because the baseline uses different hardware and a targetless strategy.",
+    "metric_validity": "Reprojection error and point-level PA/mIoU directly measure alignment and label agreement, but do not measure downstream driving safety.",
+    "reproducibility": "Hardware models and processing parameters are reported; source code and a public calibration dataset are not established in the inspected text.",
+    "external_validity": "Evidence is strongest for one outdoor radar-camera rig and weaker for severe weather, long-term sensor drift and broad object taxonomies."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.21454-C01",
+      "claim": "4D radar auto-labeling remains bounded by the quality of the cross-modal teacher and correspondence: severe occlusion or lighting can degrade visual segmentation, while image-plane overlap makes radar point-to-instance assignment ambiguous.",
+      "stance": "limit",
+      "relation": "Limits the proposition that calibration plus automatic projection makes fleet-scale spatial ground truth fully solved.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The discussion explicitly names visual-segmentation degradation and overlap ambiguity as residual annotation limits after the proposed calibration and refinement pipeline.",
+      "locator": "IV-C Discussion",
+      "source_context": "For auto-labeling, annotation quality is bounded by visual instance segmentation performance, which may degrade under severe occlusion or extreme lighting. Additionally, significant object overlap in the image plane leads to ambiguous point-to-instance correspondences.",
+      "evidence_type": "author-stated limitation",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The source context states the same causal limits and the claim is restricted to this visual-to-radar auto-labeling pipeline."}
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

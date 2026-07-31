@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.14609",
+    "title": "Representation-Aligned Tactile Grounding for Contact-Rich Robotic Manipulation",
+    "published": "2026-07-16T06:12:05Z",
+    "url": "https://arxiv.org/abs/2607.14609",
+    "authors": ["Ruilin Chen", "Jingkai Jia", "Tong Yang", "Xinyu Zhou", "Qiao Sun", "Jiangwei Zhong", "Shizeng Zhang", "Nuo Chen", "Bailin He", "Wei Li", "Wenqiang Zhang"]
+  },
+  "review": {
+    "question": "近一年触觉数据与视觉数据联合训练的方法如何演进，哪些进展已在真实机器人闭环中得到验证？",
+    "topic_ids": ["EA-SENSOR", "EA-ALIGN", "EA-MODEL", "EA-DATA"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接研究未来触觉监督应注入 VLA 的哪一层表示，并在真实机器人视觉—触觉联合训练中做接口和目标消融。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确认视觉不可观测的接触变量与表示对齐问题。"},
+      {"locator": "3.2 Diagnosing the Tactile Grounding Interface; 3.3 Latent Tactile Predictor", "role": "method-or-design", "purpose": "核验线性探针、动作专家中间层和未来触觉 latent 监督。"},
+      {"locator": "4.1 Experimental Setup", "role": "data-or-setting", "purpose": "核验五项真实任务、每项 50 条示教、双 RGB 与触觉输入。"},
+      {"locator": "4.2 Main Results; 4.3 Ablation Studies", "role": "results-or-analysis", "purpose": "核验接口对齐、原始触觉预测和多层监督的结果。"},
+      {"locator": "5 Conclusion", "role": "conclusion-or-limitations", "purpose": "核验作者结论及其外推边界。"}
+    ],
+    "sections_skipped": [
+      {"locator": "2 Related Work", "reason": "仅用于定位相邻工作，不作为本文主张的直接证据。"},
+      {"locator": "Appendix B", "reason": "定性成功序列不改变核心定量判断。"}
+    ]
+  },
+  "research_question": "未来触觉结果应在 VLA 的哪个内部表示上形成监督，才能改善视觉—触觉联合策略？",
+  "contributions": [
+    "用冻结线性探针比较 VLM 侧、中间动作专家和最终动作表示对未来触觉的可预测性。",
+    "提出只在训练期使用的 Latent Tactile Predictor，以未来触觉 latent 约束中间动作表示。",
+    "在五项真实接触任务上比较不同监督接口、原始/latent 目标和多层监督。"
+  ],
+  "method": {
+    "summary": "当前图像、语言、触觉和机器人状态进入 VLA；未来触觉序列被编码为 latent，只在训练期监督经探针识别出的动作专家中间层。",
+    "assumptions": ["未来触觉能代表当前 action chunk 的接触后果。", "训练和部署均保留当前触觉输入；被移除的只是未来触觉预测分支。"]
+  },
+  "study_context": {
+    "datasets": ["每项任务 50 条 leader-follower 专家示教"],
+    "tasks": ["Plug Insertion", "USB Drive Insertion", "Whiteboard Wiping", "Deformable Object Grasping", "Light Bulb Unscrewing"],
+    "embodiments": ["ARX R5 single-arm robot", "PaXini tactile sensors", "third-person and wrist RGB cameras"],
+    "sample_or_scale": "5 个真实机器人任务，每项 50 条专家示教。"
+  },
+  "evaluation": {
+    "design": "在相同触觉条件 VLA 设置下比较无触觉 grounding、VLM 侧预测、最终动作态预测、中间动作专家预测、原始触觉目标和多接口监督。",
+    "baselines": ["SmolVLA", "tactile-conditioned VLA", "exUMI-style predictive tactile representation", "VLM-level prediction", "final-action-state prediction", "multi-interface grounding"],
+    "metrics": ["real-robot task success rate"],
+    "ablations": ["grounding interface", "raw vs latent tactile target", "single vs multi-interface supervision"]
+  },
+  "findings": [
+    {"finding": "未来触觉在动作专家中间层最易线性读出，且该接口的策略成功率最高。", "scope": "两种 VLA 设置与五项接触任务。", "locator": "3.2; 4.2"},
+    {"finding": "latent 触觉目标优于原始触觉预测，多层同时加损失也不如单一对齐接口。", "scope": "SmolVLA 消融。", "locator": "4.3"}
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {"boundary": "结果限于单一机器人、单一触觉硬件、五项任务和每项 50 条示教，尚不能证明跨传感器或跨本体通用性。", "basis": "4.1 Experimental Setup"},
+      {"boundary": "方法没有移除部署时的当前触觉输入，只移除了训练用未来触觉预测头。", "basis": "3.3 Latent Tactile Predictor"}
+    ]
+  },
+  "transfer_boundary": "适用于部署时有触觉输入、且可收集同步未来触觉目标的接触丰富 VLA；跨传感器、跨本体和无触觉部署需另行验证。",
+  "critical_appraisal": {
+    "design_strengths": ["在同一任务和输入条件下隔离监督接口。", "包含目标形式与多接口消融。", "使用真实机器人闭环成功率。"],
+    "design_risks": ["试验任务和硬件单一。", "未报告跨随机种子或置信区间。"],
+    "baseline_fairness": "接口受控比较较公平，但更广泛 VLA 基线的训练预算细节仍依赖附录。",
+    "metric_validity": "闭环任务成功率直接对应操作效用，但没有独立的过力、滑移或损伤过程指标。",
+    "reproducibility": "论文给出训练超参数和任务设置；数据与代码可用性需以后续发布核验。",
+    "external_validity": "对接触丰富单臂任务有直接意义，对其他触觉形态、控制频率和本体的外推有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.14609-C01",
+      "claim": "在五项真实接触操作中，把未来触觉 latent 监督施加到动作专家中间层取得 74% 平均成功率，高于 VLM 侧的 58% 和最终动作态的 62%；联合训练的收益取决于监督接口是否与动作条件接触动力学对齐。",
+      "stance": "support",
+      "relation": "支持视觉—触觉联合训练从输入拼接转向动作表示层对齐。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "同一触觉条件 VLA 下的接口控制比较表明，中间动作专家表示优于感知侧和最终动作侧。",
+      "locator": "4.2 Main Results",
+      "source_context": "The key comparison is among future tactile prediction interfaces: VLM-level prediction and final-action-state prediction achieve 58% and 62% average success, whereas grounding the intermediate action-expert representation reaches 74%.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "average real-robot task success rate",
+        "value_or_direction": "74%",
+        "comparator": "58% VLM-level prediction; 62% final-action-state prediction",
+        "task_or_sample": "five real-world contact-rich manipulation tasks",
+        "locator": "4.2 Main Results"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.2 明确报告三种接口的平均成功率；主张限定为五项真实任务，不外推到跨硬件通用性。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "全文为 arXiv HTML 文本层，未使用 OCR。"
+}

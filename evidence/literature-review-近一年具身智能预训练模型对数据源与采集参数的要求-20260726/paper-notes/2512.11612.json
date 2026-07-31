@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2512.11612",
+    "title": "Embodied Image Compression: Towards Codec for Robotic Visual Systems",
+    "published": "2025-12-12T18:59:07Z",
+    "url": "https://arxiv.org/abs/2512.11612",
+    "authors": ["Zhenghao Chen", "Zijie Yue", "Haozhe Li", "Yifan Zhao", "Yunhui Guo", "Zhi Wang"]
+  },
+  "review": {"question": "近一年具身智能预训练模型对数据来源多样性与相机分辨率、帧率、码率、FOV、机位有什么证据支持的要求？哪些差异应扩大，哪些接口必须标准化或条件化？", "topic_ids": ["EA-DATA", "EA-HARDWARE", "EA-SENSOR", "EA-MODEL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {"decision": "include", "reason": "提供编码码率与 VLA 闭环机器人视觉性能的专门基准，并报告真实采集的机位和频率。"},
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "核验人眼/通用机器视觉指标与机器人闭环视觉的失配。"},
+      {"locator": "3 EmbodiedComp and 4 Experimental Setup", "role": "method-or-design", "purpose": "核验 bpp 范围、任务、模型和 codec 设计。"},
+      {"locator": "5.3 Macro/Micro Evaluation", "role": "results-or-analysis", "purpose": "核验 RVS 在 0.10–0.015 bpp 下的非线性下降。"},
+      {"locator": "6 Conclusion and Limitations", "role": "conclusion-or-limitations", "purpose": "记录仅操作任务、仅三个 VLA 的边界。"},
+      {"locator": "Appendix B Simulation Settings and Appendix C Subjective Data Collection", "role": "appendix-or-supplement", "purpose": "核验 10 Hz、腕部/第三人称 RealSense 和对象/任务范围。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "面向人眼或通用语义任务的图像编码指标，能否预测并保障 VLA 在带宽限制下的闭环操作？",
+  "contributions": ["构建将 bpp 与 VLA 闭环成功/步数直接联系的 EmbodiedComp 基准。", "比较像素级、经典学习式和新学习式 codec，显示感知/分割排名不能代替机器人视觉排名。"],
+  "method": {"summary": "在 0.015–0.1 bpp 范围压缩固定基座第三人称和夹爪第一人称图像，对 Pi0.5、Pi0-Fast 和 OpenVLA 进行微调/评估，同时测人眼、分割和机器人闭环指标。", "assumptions": ["目标 VLA 在未压缩图像上已具备可用性能。", "操作基准和选定的三个 VLA 可用于描述初步的码率敏感性。"]},
+  "study_context": {"datasets": ["EmbodiedComp simulation", "UR5 real-world dataset"], "tasks": ["pick", "push", "press", "unseen tabletop objects"], "embodiments": ["UR5e/UR5 with Robotiq gripper"], "sample_or_scale": "2,000 reviewed simulation trajectories, 400 real-world gripper series; wrist and third-person Intel RealSense streams recorded at 10 Hz."},
+  "evaluation": {"design": "在多种 codec 和 4 个主要 bpp 档位上，对比人眼、通用机器视觉与三个 VLA 的 rate-performance 曲线。", "baselines": ["HEVC", "JPEG", "VVC", "WEBP", "Bmshj", "Cheng", "Mbt", "DCAE", "LichPCM", "RWKV"], "metrics": ["bpp", "PSNR/SSIM/LPIPS", "segmentation metrics", "robotic visual system success rate and steps"], "ablations": ["codec family", "bpp sweep", "object/material/background conditions"]},
+  "findings": [
+    {"finding": "在该基准中，VLA 机器人视觉指标从 0.10 到 0.06 bpp 约仅下降 5%，约 0.04 bpp 出现转折，0.02 bpp 附近快速失效。", "scope": "EmbodiedComp 桌面操作、选定 codec 和三个 VLA，不是通用阈值。", "locator": "5 Experiment > 5.3 Experiment Result and Discussions, Figure 7"},
+    {"finding": "真实数据以腕部和第三人称两台 Intel RealSense 在 10 Hz 记录，同步保存关节角和末端增量动作。", "scope": "UR5 真实采集管线。", "locator": "Appendix C Subjective Data Collection"}
+  ],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "基准仅覆盖操作、不含导航，并仅选三个在未压缩场景可用的 VLA。", "locator": "6 Conclusion and Limitations"}], "reader_inferred": [{"boundary": "0.04 bpp 是该评测组合的转折点，不能作为所有摄像头分辨率、codec、模型和任务的通用码率底线。", "basis": "论文自身限制了任务与模型范围，bpp 又与分辨率、帧率、codec 和视图内容耦合。"}]},
+  "transfer_boundary": "可用于证明必须用闭环任务标定码率，并作为带宽受限桌面 VLA 的参考曲线；不能直接外推至导航、高速控制或不同编码链。",
+  "critical_appraisal": {"design_strengths": ["首要门槛是未压缩下游系统先可用，避免把模型本身失败误归因于压缩。", "同时报告人眼、分割和闭环机器人指标，暴露指标错位。"], "design_risks": ["任务为桌面原子操作，模型与相机机位类型有限。", "论文将 IoT 情景映射为 bpp 的假设与具体部署网络未必等价。"], "baseline_fairness": "编码家族广泛，但各 codec 的训练目标与下游 VLA 适配程度不完全相同。", "metric_validity": "闭环成功/步数比 PSNR 更直接，但仅三个 VLA 和特定任务使阈值不稳定。", "reproducibility": "仿真参数、样本规模、采集频率和设备类型均有记录，部分补充参数应以公开代码复核。", "external_validity": "对‘码率存在闭环非线性失效点’有直接证据，对‘0.04 bpp 是行业阈值’没有证据。"},
+  "evidence_cards": [
+    {"card_id": "2512.11612-C01", "claim": "VLA 对压缩往往呈‘轻压缩稳定、越过任务特定转折后骤降’，因此码率验收应看闭环成功曲线，不应只看人眼画质。", "stance": "conditional", "relation": "提供码率要求的实证形式与警戒线。", "confidence": "direct", "claim_basis": "reported-result", "summary": "该基准中 RVS 从 0.10 到 0.06 bpp 约下降 5%，约 0.04 bpp 出现转折，0.02 bpp 附近快速失效。", "locator": "5.3 Experiment Result and Discussions", "source_context": "RVS curves stay flat from 0.10 to 0.06 bpp (5% drop), then kink sharply around 0.04 bpp", "evidence_type": "rate-performance-benchmark", "quantitative": {"metric": "robotic visual system performance versus bpp", "value_or_direction": "about 5% drop from 0.10 to 0.06 bpp; kink near 0.04; unusable near 0.02", "comparator": "normal to ultra-low bitrate sweep", "task_or_sample": "EmbodiedComp manipulation with Pi0.5, Pi0-Fast and OpenVLA", "locator": "5.3 Experiment Result and Discussions"}, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "结果段直接报告 RVS 曲线的平坦区、转折和失效区；主张显式限定为该基准并只引申为闭环标定方法。"}},
+    {"card_id": "2512.11612-C02", "claim": "当动作学习依赖多视图时，数据包应同步保存机位标识、视频、机器人状态和动作；10 Hz 是该 UR5 系统实例，不是预训练的通用帧率。", "stance": "conditional", "relation": "区分公开的采集实例与可泛化的时间/机位数据契约。", "confidence": "direct", "claim_basis": "author-claim", "summary": "真实管线同步记录腕部与第三人称 RealSense、关节角和末端增量动作，频率为 10 Hz。", "locator": "Appendix C Subjective Data Collection", "source_context": "Joint angles, two camera streams (wrist view and third-person view, captured by two Intel realsense cameras), and actions", "evidence_type": "data-collection-protocol", "quantitative": {"metric": "recording frequency", "value_or_direction": "10 Hz", "comparator": "not a comparative experiment", "task_or_sample": "UR5 real-world manipulation collection", "locator": "Appendix C Subjective Data Collection"}, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "附录数据采集段直接列出两个机位、相机类型、状态/动作与 10 Hz；主张将数字限于该实例。"}}
+  ],
+  "core_citations": [],
+  "notes": "bpp 是每像素比特数，不是可直接脱离分辨率和帧率比较的每秒码率。"
+}

@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.12553",
+    "title": "Beyond Dense Futures: World Models as Structured Planners for Robotic Manipulation",
+    "published": "2026-03-13T01:33:48Z",
+    "url": "https://arxiv.org/abs/2603.12553",
+    "authors": ["Minghao Jin", "Mozheng Liao", "Mingfei Han", "Zhihui Li", "Xiaojun Chang"]
+  },
+  "review": {
+    "question": "近半年 VLA 在具身领域最大的技术突破是什么；与反应式 VLA 相比，哪些机制带来可验证的闭环增益，边界是什么？",
+    "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-4D", "EA-ALIGN"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "pdf",
+    "method": "pdf-text",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接将生成式世界模型重构为物理约束的结构化规划器，并在仿真与实机闭环中比较了反应式/密集预测路线。"
+    },
+    "sections_read": [
+      {"locator": "pages 1-3, Introduction", "role": "problem", "purpose": "确认密集未来预测的冗余和长时程漂移问题。"},
+      {"locator": "pages 5-8, Section 3 Method", "role": "method-or-design", "purpose": "核对动力学里程碑抽取、两阶段训练和统一 token 接口。"},
+      {"locator": "pages 8-14, Section 4 Experiments", "role": "results-or-analysis", "purpose": "核对 SimplerEnv、LIBERO、实机长时程任务及历史窗口消融。"},
+      {"locator": "pages 14-15, Conclusion and Limitations", "role": "conclusion-or-limitations", "purpose": "限定实验规模和多域泛化边界。"}
+    ],
+    "sections_skipped": [
+      {"locator": "pages 15-18, References", "role": "appendix-or-supplement", "reason": "参考文献列表不承载本文实验结果。"}
+    ]
+  },
+  "research_question": "世界模型的未来表征应如何从稠密视频或语义子目标转为可执行、低漂移的控制指导？",
+  "contributions": [
+    "用夹爪开合和末端运动转折点自动抽取稀疏结构化帧，作为物理进度里程碑。",
+    "先训练视觉结构化规划，再将其迁移到低层动作 token 预测。",
+    "在仿真和 Franka 实机上评估长时程执行、OOD 物体与动态干预。"
+  ],
+  "method": {
+    "summary": "StructVLA 从离线轨迹中按动力学线索提取结构化帧，用 VLM 做离线去冗余；8.5B 自回归模型在阶段 1 预测下一个结构化帧，阶段 2 改为预测 FAST 动作 token，在共享离散词表中把视觉预见迁移到控制。",
+    "assumptions": [
+      "夹爪状态转换与末端运动转折点能稳定表示任务进度。",
+      "离线 VLM 筛选不会系统性删除重要接触或失败里程碑。",
+      "世界模型预训练先验与两阶段任务数据分布足以支撑迁移。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["BridgeData V2", "LIBERO", "1,152 real-world pick-and-place trajectories", "648 real-world tidy-up trajectories"],
+    "tasks": ["four SimplerEnv-WidowX tasks", "40 LIBERO tasks", "four real-world pick-and-place tasks", "one long-horizon tidy-up task"],
+    "embodiments": ["WidowX", "Franka Emika Panda"],
+    "sample_or_scale": "8.5B-parameter model; real-world evaluations use 10 trials per task and two physical task families."
+  },
+  "evaluation": {
+    "design": "在 SimplerEnv、LIBERO 与 Franka 实机上做闭环成功率对比，加入长时程、OOD 物体、人为干预和历史窗口分析。",
+    "baselines": ["RT-1-X", "Octo", "OpenVLA", "SpatialVLA", "VideoVLA", "DreamVLA", "UniVLA"],
+    "metrics": ["task success rate", "grasp success", "grasp-to-task conversion", "training steps to peak"],
+    "ablations": ["history length 2/3/4", "structured planner versus conventional world-model qualitative rollouts"]
+  },
+  "findings": [
+    {"finding": "稀疏动力学里程碑能将未来预演转成与控制进度对齐的中层目标。", "scope": "夹爪操作、实验覆盖的仿真与 Franka 任务。", "locator": "pages 5-8, Sections 3.1-3.3"},
+    {"finding": "StructVLA 在 LIBERO 平均成功率为 94.8%，在实机 tidy-up 中为 8/10，高于 UniVLA 的 4/10。", "scope": "指定 benchmark 和单一 Franka 硬件配置。", "locator": "pages 8 and 11, Tables 1-2 and real-world deployments"},
+    {"finding": "历史窗口从 2 增到 4 时 StructVLA 由 70.8% 升至 75.0%，而 UniVLA 由 69.8% 降至 66.7%。", "scope": "SimplerEnv 对照实验。", "locator": "pages 13-14, Table 4"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "受计算资源限制，实验规模较小，尚需更大、多域数据验证。", "locator": "page 15, Limitations and Discussion"}
+    ],
+    "reader_inferred": [
+      {"boundary": "结论尚不能外推到非夹爪、强接触、可变形物或实际移动操作。", "basis": "物理里程碑主要来自 gripper transition 与末端速度，实机只覆盖 Franka 桌面操作。"},
+      {"boundary": "不能把增益全部归因于‘结构化规划’。", "basis": "方法同时引入 UniVLA 世界模型初始化、8.5B 规模、两阶段训练与 VLM 离线筛选，消融尚未完全隔离这些因素。"}
+    ]
+  },
+  "transfer_boundary": "证据支持在夹爪桌面操作和有标准轨迹的数据分布中，用动力学稀疏里程碑改善长时程控制；不直接证明跨本体、强接触或开放世界部署的通用性。",
+  "critical_appraisal": {
+    "design_strengths": ["同时覆盖公开仿真 benchmark 与实机闭环。", "将长时程 tidy-up、OOD 物体和人为干预纳入评估。", "报告历史窗口与学习效率分析。"],
+    "design_risks": ["实机每任务只有 10 次试验，未见置信区间。", "离线 GPT-5.2 筛选带来未充分消融的数据策展变量。", "公开 benchmark 可能存在训练—评测结构近似性。"],
+    "baseline_fairness": "表格覆盖多类强基线，实机声称条件相同；但模型规模、预训练来源与总计算预算不完全可比。",
+    "metric_validity": "闭环任务成功率比视频保真度更贴近部署价值；但缺少延迟、安全、方差和长期运行指标。",
+    "reproducibility": "给出模型规模、tokenizer、训练步数、数据量和部分超参；但数据筛选依赖闭源 VLM，实机复现成本高。",
+    "external_validity": "对夹爪桌面操作有较强支持，对多本体、力/触觉接触、可变形物和长时运行仍需独立验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.12553-C01",
+      "claim": "StructVLA 把稠密视频未来压缩成由夹爪转换和运动转折点定义的稀疏结构化帧，再将这种规划表征迁移到低层动作生成。",
+      "stance": "support",
+      "relation": "支持近期突破来自‘可执行的结构化后果表征’，而不是更稠密的视频生成。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法段给出动力学里程碑抽取和 planner-to-action 两阶段优化的完整链路。",
+      "locator": "pages 5-8, Sections 3.1-3.3",
+      "source_context": "Structured frames provide compact progress anchors that connect task intent to executable motion phases.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "全文方法明确定义结构化帧来自动力学线索，阶段 1 预测视觉里程碑，阶段 2 仅对动作 token 优化，主张未超出方法描述。"
+      }
+    },
+    {
+      "card_id": "2603.12553-C02",
+      "claim": "在论文覆盖的设置中，StructVLA 的长时程改进同时出现在 LIBERO-Long 和 Franka 实机 tidy-up，但证据范围仍限于少量夹爪操作任务。",
+      "stance": "conditional",
+      "relation": "为结构化世界模型的闭环价值提供定量支持，同时保留实验规模边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "LIBERO 平均为 94.8%；实机 tidy-up 为 8/10，相同表面的 UniVLA 为 4/10。",
+      "locator": "page 11",
+      "source_context": "StructVLA completes8/10trials,comparedwith4/10forUniVLAand2/10forSpatialVLA, indicating stronger stability over extended execution.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "closed-loop task success",
+        "value_or_direction": "94.8% LIBERO average; 8/10 real-world tidy-up",
+        "comparator": "UniVLA 93.7% LIBERO average and 4/10 real-world tidy-up",
+        "task_or_sample": "40 LIBERO tasks and one Franka tidy-up task with 10 trials",
+        "locator": "pages 8 and 11, Table 2 and real-world deployments"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "页 8 的 LIBERO 表和页 11 的实机结果同时报告了指定指标与对照；主张明确限定于这些任务和试验数。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "采用高质量 PDF 文本层完整阅读；未使用 OCR。"
+}

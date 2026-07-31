@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2410.24164",
+    "title": "$π_0$: A Vision-Language-Action Flow Model for General Robot Control",
+    "published": "2024-10-31T17:22:30Z",
+    "url": "https://arxiv.org/abs/2410.24164",
+    "authors": [
+      "Kevin Black",
+      "Noah Brown",
+      "Danny Driess",
+      "Adnan Esmail",
+      "Michael Equi",
+      "Chelsea Finn",
+      "Niccolo Fusai",
+      "Lachy Groom",
+      "Karol Hausman",
+      "Brian Ichter",
+      "Szymon Jakubczak",
+      "Tim Jones",
+      "Liyiming Ke",
+      "Sergey Levine",
+      "Adrian Li-Bell",
+      "Mohith Mothukuri",
+      "Suraj Nair",
+      "Karl Pertsch",
+      "Lucy Xiaoyang Shi",
+      "James Tanner",
+      "Quan Vuong",
+      "Anna Walling",
+      "Haohuan Wang",
+      "Ury Zhilinsky"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "理解机器人基模对大数据、灵巧性与多阶段任务的目标。"
+      },
+      {
+        "locator": "IV The Model",
+        "role": "method-or-design",
+        "purpose": "核验 VLM 骨干与 flow-matching action expert 的分工。"
+      },
+      {
+        "locator": "VI Experimental Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核验开箱、新灵巧任务与复杂多阶段实验。"
+      },
+      {
+        "locator": "VII Discussion, Limitations, and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录数据规模、外推与后训练边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "机器人基础模型如何在保留网络视觉语言先验的同时，建模高频、多峰的连续动作？",
+  "contributions": [
+    "提出 VLM 骨干加 flow-matching action expert 的 π0 架构",
+    "在大规模多本体灵巧操作数据上预训练并微调复杂长任务"
+  ],
+  "method": {
+    "summary": "用 PaliGemma 初始化的 VLM 编码图像与语言，较小的 action expert 基于 flow matching 生成高频动作 chunk，通过预训练加任务后训练部署。",
+    "assumptions": [
+      "大规模网络语义先验与机器人动作专家可通过联合微调对齐"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "OXE",
+      "DROID",
+      "Bridge",
+      "proprietary dexterous manipulation mixture"
+    ],
+    "tasks": [
+      "衣物折叠",
+      "餐桌收拾",
+      "装袋",
+      "双臂多阶段操作"
+    ],
+    "embodiments": [
+      "7 种机器人配置"
+    ],
+    "sample_or_scale": "论文报告 10,000 小时灵巧操作数据、7 种机器人配置和 68 个任务。"
+  },
+  "evaluation": {
+    "design": "先测试未经后训练的基模，再在新灵巧任务和复杂多阶段任务上微调，对比既有 VLA 与专用策略。",
+    "baselines": [
+      "prior VLA models",
+      "non-VLM baseline",
+      "task-specific dexterous policies"
+    ],
+    "metrics": [
+      "task success",
+      "task score",
+      "multi-stage completion"
+    ],
+    "ablations": [
+      "VLM vs non-VLM backbone",
+      "pretraining mixture",
+      "post-training"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "π0 将网络视觉语言先验与 flow-matching 动作专家结合，以同一预训练模型覆盖多本体与多阶段任务。",
+      "scope": "论文的大规模数据混合与所选真机任务",
+      "locator": "VII Discussion, Limitations, and Future Work"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "对可接受任务泛化、长时程稳定性和新技能数据效率仍有进一步提升空间。",
+        "locator": "VII Discussion, Limitations, and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "π0 实际上已不是单一同质 action token 的端到端模型，而是共享 VLM 骨干加动作专家。",
+        "basis": "架构明确分离语义骨干与连续 action expert。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论适用于具有大规模训练数据和显著算力的机器人基模路线，不表明新技能无需后训练或底层控制。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "数据规模大且覆盖多本体",
+      "同时评估开箱能力与复杂任务后训练",
+      "包含专用灵巧基线"
+    ],
+    "design_risks": [
+      "私有数据与训练资源降低可复现性",
+      "数据规模、架构与后训练效果难完全解耦"
+    ],
+    "baseline_fairness": "包含 VLA 和任务专用基线，但预训练数据与算力难做严格等预算对照。",
+    "metric_validity": "真机任务得分与成功能体现灵巧性和多阶段进度，但失败恢复和安全过程不充分。",
+    "reproducibility": "模型方法描述充分，但数据、算力和真机网络难完整复现。",
+    "external_validity": "覆盖多种双臂/灵巧任务，但仍集中于操作场景且高度依赖自有数据分布。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2410.24164-C01",
+      "claim": "π0 将通用 VLM 骨干与专门的连续动作专家结合，并在 10,000 小时、7 种机器人配置和 68 个任务的混合数据上训练；这表明 VLA 主流架构已通过专家化动作头吸收部分‘技能专用化’思路。",
+      "stance": "support",
+      "relation": "支持‘主流并非纯统一解码器，而是共享骨干与动作专家的融合’。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "论文讨论节明确给出数据规模、本体数和任务数，并描述 VLM 与 flow action expert 分工。",
+      "locator": "VII Discussion, Limitations, and Future Work",
+      "source_context": "Our pre-training mixture consists of 10,000 hours of dexterous manipulation data from 7 different robot configurations and 68 tasks",
+      "evidence_type": "system-description",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接给出预训练规模和架构组成；‘吸收技能专用化’仅指 action expert 分工，未外推其它能力。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.31694",
+    "title": "RCT: A Robot-Collected Touch-Vision-Language Dataset for Tactile Generalization",
+    "published": "2026-06-30T14:05:33Z",
+    "url": "https://arxiv.org/abs/2606.31694",
+    "authors": ["Jingbo He", "Michael Färber", "Roberto Calandra"]
+  },
+  "review": {
+    "question": "近一年触觉数据与视觉数据联合训练的方法如何演进，哪些进展已在真实机器人闭环中得到验证？",
+    "topic_ids": ["EA-SENSOR", "EA-ALIGN", "EA-MODEL", "EA-DATA"],
+    "mode": "scoping"
+  },
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {"decision": "include", "reason": "直接揭示触觉—视觉—语言表示训练中的帧级泄漏、接触序列采样和未见材料泛化边界。"},
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确认 frame-random 与真实物理泛化的区别。"},
+      {"locator": "3 The RCT Dataset; 4 Evaluation Protocol", "role": "method-or-design", "purpose": "核验 contact sequence 数据单元和 held-out 设计。"},
+      {"locator": "3 The RCT Dataset", "role": "data-or-setting", "purpose": "核验三 DIGIT、材料、按压和多模态标注。"},
+      {"locator": "5 Experimental Evaluation; Appendix D", "role": "results-or-analysis", "purpose": "核验序列泄漏、Uniform5 采样和材料/传感器外推。"},
+      {"locator": "7 Limitations and Failure Modes; 8 Conclusion", "role": "conclusion-or-limitations", "purpose": "核验作者声明的任务与标注边界。"}
+    ],
+    "sections_skipped": [{"locator": "2 Related Work", "reason": "二手综述不作为本事件证据。"}, {"locator": "Appendix B", "reason": "描述词表不影响本题结论。"}]
+  },
+  "research_question": "视觉—触觉联合表征训练应以帧还是完整接触事件作为数据与评测单元？",
+  "contributions": [
+    "保存完整机器人按压 contact sequence，并支持材料、类别、传感器、位置和序列 holdout。",
+    "证明按帧随机切分会把同一物理交互的近重复帧放入训练和测试。",
+    "显示沿接触深度均匀采样比密集使用近重复帧更高效。"
+  ],
+  "method": {
+    "summary": "用三枚 DIGIT 对工业参考材料执行多位置、逐深度机器人按压，保留序列 ID；沿用 TVL 对比学习配方，改变 holdout 轴与序列采样密度。",
+    "assumptions": ["一次机器人按压是比单帧更接近独立物理交互的数据单元。", "材料级图像和描述需要多正样本评测而非逐帧一一对应。"]
+  },
+  "study_context": {
+    "datasets": ["RCT", "TVL/HCT audit"],
+    "tasks": ["tactile-to-text retrieval", "tactile-to-vision retrieval", "material category probing", "hard/soft probing"],
+    "embodiments": ["robot arm", "three DIGIT sensor instances", "controlled press protocol"],
+    "sample_or_scale": "122 industrial reference materials, seven categories, 29,279 tactile frames; full contact sequences."
+  },
+  "evaluation": {
+    "design": "比较 frame-random、held-out sequence、held-out material/category/sensor/position，并固定模型配方评估不同训练采样密度。",
+    "baselines": ["released TVL encoder", "random initialization", "raw-pixel nearest neighbor", "full-press sampling", "Deep5 sampling"],
+    "metrics": ["tactile-text Recall@1", "tactile-vision Recall@1", "material separability", "linear-probe accuracy"],
+    "ablations": ["split unit", "contact-sequence frame density", "training data composition", "held-out sensor and position"]
+  },
+  "findings": [
+    {"finding": "frame-random 结果混入同一次按压的近重复观测，不能解释为未见交互或材料泛化。", "scope": "RCT 与公开 TVL/HCT split 审计。", "locator": "5 Experimental Evaluation; 6 Discussion"},
+    {"finding": "Uniform5 用约三分之一训练帧取得 68.18% Tac-text R@1，高于 full press 的 62.44%。", "scope": "相同 held-out-contact-sequence 测试池。", "locator": "5 Experimental Evaluation, Table 5"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "数据限于工业平面参考材料、三枚 DIGIT 和机器人按压，不覆盖任意物体几何、曲面或动态探索。", "locator": "7 Limitations and Failure Modes"},
+      {"limitation": "视觉与语言是材料级监督，不是位姿条件逐帧视觉目标或触觉描述。", "locator": "7 Limitations and Failure Modes"}
+    ],
+    "reader_inferred": [{"boundary": "这是表示学习和评测证据，不直接证明闭环机器人操作收益。", "basis": "3–6 的任务均为 retrieval/probe。"}]
+  },
+  "transfer_boundary": "结论直接适用于以光学触觉帧做对比学习的表示数据集；对动态操作仍应把一次接触事件或完整交互段作为切分单元并另做闭环验收。",
+  "critical_appraisal": {
+    "design_strengths": ["明确隔离序列、材料、传感器和位置 holdout。", "固定 encoder 与评测池排除弱模型解释。", "外部审计公开 TVL/HCT split。"],
+    "design_risks": ["材料和动作协议受控且较窄。", "单一材料图像使触觉—视觉评测必须采用材料级多正样本。", "held-out material 规模小且跨 seed 方差较高。"],
+    "baseline_fairness": "复现 TVL 配方并报告接近原文结果；不同 split 的候选池和多正样本规则需按论文说明比较。",
+    "metric_validity": "Recall 与 probe 能测表示泛化，但不能替代策略成功率、滑移或安全过程指标。",
+    "reproducibility": "论文承诺发布数据、序列 ID 和 split 生成工具，协议与控制较完整。",
+    "external_validity": "对触觉表征数据治理很强，对真实动态操作和非 DIGIT 传感器的控制外推有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.31694-C01",
+      "claim": "视觉—触觉表示训练不能把单帧当独立数据单元：同一次机器人按压的相邻帧是近重复观测，frame-random 切分会把物理交互泄漏到训练和测试，因此至少应按 contact sequence、最好再按材料或传感器实例做 holdout。",
+      "stance": "limit",
+      "relation": "限制以帧级随机切分宣称视觉—触觉跨材料或跨接触泛化。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "RCT 与 TVL/HCT 审计都显示同一按压序列可同时出现在训练和测试，原始像素近邻也能利用该结构。",
+      "locator": "4 Evaluation Protocol",
+      "source_context": "Our evaluation asks whether tactile representations generalize across physical variation that matters in robot deployment. The central unit is the contact sequence : all frames recorded during one robot press on one material, with one sensor, at one contact position. Frames within a sequence are strongly correlated; in RCT, successive frames differ by only a indentation step. A frame-random split can therefore place near-duplicate observations of the same physical interaction in both training and test. Our protocols instead hold out physically meaningful units.",
+      "evidence_type": "benchmark-audit",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "评测协议和讨论章节均明确把一次按压定义为独立物理单元，并将 frame-random 限定为工程诊断而非泛化证据。"}
+    },
+    {
+      "card_id": "2606.31694-C02",
+      "claim": "在相同 held-out-contact-sequence 测试池上，沿一次按压从浅到深均匀取 5 帧只用 7,055 个训练帧，却把触觉—文本 Recall@1 提到 68.18%，高于使用 22,576 帧完整按压的 62.44% 和只取最深 5 帧的 59.52%。",
+      "stance": "support",
+      "relation": "支持按接触事件覆盖采样，而不是用更多近重复帧扩大视觉—触觉训练集。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Uniform5 在相同测试池和模型配方下以更少帧取得更高检索性能。",
+      "locator": "5 Experimental Evaluation, Table 5",
+      "source_context": "Training density Training frames Tac text R@1 Full press ( 16 frames/sequence) 22,576 62.44% Deep5 (five deepest frames) 7,055 59.52% Uniform5 (five frames across press) 7,055 68.18%",
+      "evidence_type": "experiment",
+      "quantitative": {"metric": "tactile-text Recall@1", "value_or_direction": "68.18% using 7,055 frames", "comparator": "62.44% using 22,576 full-press frames; 59.52% for Deep5", "task_or_sample": "held-out-contact-sequence test pool", "locator": "5 Experimental Evaluation, Table 5"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "Table 5 直接给出三种训练密度、帧数和 Tac-text R@1；主张不外推到闭环策略。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "全文为 arXiv HTML 文本层，未使用 OCR。"
+}

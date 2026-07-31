@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.09630",
+    "title": "ReCoVLA: VLM-Guided Reward Compilation for Failure Recovery in Vision-Language-Action Policies",
+    "published": "2026-06-08",
+    "url": "https://arxiv.org/abs/2606.09630",
+    "authors": [
+      "Haodi Hu",
+      "Chung-Ta Huang",
+      "Jing Liu",
+      "Ye Wang",
+      "Kei Suzuki",
+      "Matthew Brand",
+      "Toshiaki Koike-Akino"
+    ]
+  },
+  "review": {
+    "question": "Sparse language, dense vision, and continuous action alignment in VLA systems",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-SENSOR",
+      "EA-XEMBODIMENT",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to Sparse language, dense vision, and continuous action alignment in VLA systems."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4.1 Experiment setup",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question 'Sparse language, dense vision, and continuous action alignment in VLA systems', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "失败恢复可以把认知层(failure mode/recovery stage 判断与 reward 选择)与控制层(residual 纠正)分开;VLM 的失败分类错误由此成为与感知误差独立的认知误差来源。"
+  ],
+  "method": {
+    "summary": "Overview. We propose a failure-conditioned residual recovery framework with three stages. First, we execute the frozen base VLA in simulation and use an external VLM to analyze the full failed rollouts, producing a catalog of simulator-observed failure categories and recovery descriptors. Second, a deterministic reward compiler constructs a reward from object-state reward components and trains one of residual policies in simulation for each recoverable failure category. Third, during real-world deployment, the VLM monitors a history of physical observations. When it detects a known failure category, the system dispatches the corresponding trained residual policy; when the category is unknown",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate all six variants M1–M6 on a Fetch robot in both simulation and physical experiments. The benchmark includes three tabletop tasks spanning distinct recovery regimes: contact-rich toolbox organization, long-horizon vegetable sorting, and short-horizon soda-can disposal. Each task is specified by a language instruction and evaluated over 20 trials. We report both binary success and a normalized goal-fulfillment quality score (Q-score), which assigns partial credit for intermediate recovery progress. Task prompts, Q-score rubrics, and additional experimental details are provided in Appendix A.2 . Figure 3 shows representative task setups, detected failure states, and recovered states",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "失败恢复可以把认知层(failure mode/recovery stage 判断与 reward 选择)与控制层(residual 纠正)分开;VLM 的失败分类错误由此成为与感知误差独立的认知误差来源。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "1 Introduction"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "ReCoVLA requires each recoverable failure category to be reproducible in simulation before deployment. When a new failure mode is observed on the real robot, we can add it to the recovery catalog by reproducing the corresponding state distribution in simulation, compiling a stage-gated reward, and training a new residual policy. However, the current system does not synthesize or train a new recovery policy online during a physical trial. The empirical evaluation is limited in scale. We evaluate three tabletop Fetch manipulation tasks with 20 trials per task and method, covering long-horizon so",
+        "locator": "6 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 Method) and evaluation (4.1 Experiment setup)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.09630-C01",
+      "claim": "失败恢复可以把认知层(failure mode/recovery stage 判断与 reward 选择)与控制层(residual 纠正)分开;VLM 的失败分类错误由此成为与感知误差独立的认知误差来源。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: Sparse language, dense vision, and continuous action alignment in VLA systems",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "ReCoVLA 用外部 VLM 只推断 failure type、recovery stage、active entities、confidence 和 reward mask,不直接生成动作;确定性 reward compiler 做实体 grounding 与 stage gates,residual policy 在冻结 VLA latents 上学纠正。Limitations 明确列出 VLM failure-classification mistakes 与 perception errors、sim-to-real mismatch 并列为失败来源。",
+      "locator": "1 Introduction",
+      "source_context": "Instead, it produces a structured recovery descriptor containing the failure type, recovery stage, active entities, confidence, and reward mask.",
+      "evidence_type": "system-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 1 Introduction contains the paper-specific concepts used by the claim (active, confidence, entities, failure, mask, recovery, reward, stage). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Promoted from candidate on 2026-07-09 via promote_candidates.py digest; cognitive-error side of the perception-vs-cognitive comparison. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

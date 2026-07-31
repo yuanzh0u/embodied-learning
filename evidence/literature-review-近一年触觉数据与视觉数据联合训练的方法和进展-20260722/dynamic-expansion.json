@@ -1,0 +1,95 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "high",
+      "notes": "The review is restricted to training or adapting robot representations, policies, and world models with paired visual and tactile/force data; pure tactile hardware and inference-only sensing are adjacent rather than direct evidence."
+    }
+  ],
+  "knowledge_ids": ["EA-SENSOR", "EA-ALIGN", "EA-MODEL", "EA-DATA", "EA-XEMBODIMENT"],
+  "families": ["tactile-force", "vla", "world-model"],
+  "queries": [
+    {
+      "label": "dynamic-visuotactile-joint-training",
+      "tier": "direct",
+      "query": "all:((visuo-tactile OR vision-tactile) AND (training OR learning)) AND all:(robot AND manipulation)",
+      "why": "Capture papers that explicitly train on visual and tactile streams rather than merely adding a touch sensor at deployment.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-visuotactile-world-model",
+      "tier": "mechanism",
+      "query": "all:((visuo-tactile OR vision-tactile) AND world AND model) AND all:(robot OR manipulation)",
+      "why": "Cover action-conditioned joint prediction of visual and contact futures.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-tactile-vla-grounding",
+      "tier": "policy-interface",
+      "query": "all:(tactile AND (VLA OR vision-language-action) AND (grounding OR action)) AND all:robot",
+      "why": "Find tactile supervision injected into VLA representations or action experts.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-tactile-distillation",
+      "tier": "transfer",
+      "query": "all:(tactile AND distillation AND (vision OR VLA)) AND all:(robot OR manipulation)",
+      "why": "Cover training-time tactile supervision that is distilled into a deployable visual policy.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-contact-gated-asymmetric-fusion",
+      "tier": "mechanism",
+      "query": "all:(tactile AND (gated OR asymmetric) AND fusion) AND all:(robot OR manipulation)",
+      "why": "Capture selective fusion intended to prevent tactile inputs from corrupting visual dynamics.",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-visuotactile-reflex-control",
+      "tier": "deployment",
+      "query": "all:((visuo-tactile OR vision-tactile) AND (reflex OR high-frequency OR residual)) AND all:(robot AND control)",
+      "why": "Cover slow visual planning plus fast tactile residual correction in closed loop.",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-visuotactile-benchmark-generalization",
+      "tier": "evaluation",
+      "query": "all:((visuo-tactile OR touch-vision) AND (benchmark OR dataset OR generalization)) AND all:robot",
+      "why": "Cover paired-data scale, contact-sequence leakage, held-out materials, and closed-loop evaluation boundaries.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-missing-tactile-negative-transfer",
+      "tier": "limitation",
+      "query": "all:(tactile AND (missing-modality OR negative-transfer OR contamination)) AND all:(robot AND manipulation)",
+      "why": "Search counterevidence on sensor absence, unstructured fusion, and deployment mismatch.",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-visuotactile-browser",
+      "query": "site:arxiv.org/abs (visuo-tactile OR vision-tactile) robot manipulation world model VLA",
+      "why": "Recover named methods missed by arXiv metadata wording.",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-latest-visuotactile-calibration",
+      "query": "site:arxiv.org/abs/2607 tactile vision robot manipulation",
+      "why": "Calibrate July 2026 terminology and check the end of the requested window.",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ]
+}

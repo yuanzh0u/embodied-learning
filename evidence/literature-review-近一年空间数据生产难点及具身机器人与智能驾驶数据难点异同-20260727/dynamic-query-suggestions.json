@@ -1,0 +1,134 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "high",
+      "notes": "The static embodied-AI taxonomy lacks autonomous-driving spatial-data production, so this expansion creates balanced robot and driving evidence surfaces."
+    }
+  ],
+  "knowledge_ids": ["EA-DATA", "EA-SENSOR", "EA-4D", "EA-EVAL"],
+  "families": ["teleoperation-demo-quality", "tactile-force", "world-model", "sim2real"],
+  "queries": [
+    {
+      "label": "dynamic-robot-spatial-data-4d",
+      "tier": "core",
+      "query": "(all:\"robot manipulation\" OR all:\"embodied AI\") AND (all:\"4D data\" OR all:\"3D point tracks\" OR all:\"spatiotemporal data\")",
+      "why": "Find papers that make geometry and temporal correspondence explicit in robot data.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-robot-spatial-calibration",
+      "tier": "quality",
+      "query": "all:robot AND (all:\"hand-eye calibration\" OR all:\"sensor calibration\" OR all:\"time synchronization\") AND (all:dataset OR all:demonstration)",
+      "why": "Cover coordinate-frame and synchronization failures during robot dataset production.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-robot-occlusion-contact-data",
+      "tier": "limitation",
+      "query": "all:\"robot manipulation\" AND (all:occlusion OR all:contact OR all:deformable) AND (all:dataset OR all:data OR all:demonstration)",
+      "why": "Cover spatial state that vision cannot directly observe during contact-rich manipulation.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-robot-auto-annotation-3d",
+      "tier": "production",
+      "query": "all:robot AND (all:\"automatic annotation\" OR all:\"pseudo label\" OR all:\"data engine\") AND (all:3D OR all:spatial)",
+      "why": "Find scalable robot spatial labeling and its error modes.",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-driving-spatial-data-core",
+      "tier": "core",
+      "query": "(all:\"autonomous driving\" OR all:\"self-driving\") AND (all:\"spatial data\" OR all:\"3D data\" OR all:\"4D data\") AND (all:dataset OR all:annotation OR all:generation)",
+      "why": "Direct autonomous-driving spatial-data production surface.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-driving-occupancy-data",
+      "tier": "representation",
+      "query": "all:\"autonomous driving\" AND (all:\"3D occupancy\" OR all:\"4D occupancy\" OR all:\"occupancy flow\") AND (all:dataset OR all:label OR all:benchmark)",
+      "why": "Occupancy is a major spatial representation whose ground truth is difficult to produce under occlusion.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-driving-hd-map-production",
+      "tier": "production",
+      "query": "all:\"autonomous driving\" AND (all:\"HD map\" OR all:\"online mapping\" OR all:\"map update\") AND (all:dataset OR all:annotation OR all:construction)",
+      "why": "Cover map creation, freshness, localization, and update costs.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-driving-calibration-sync",
+      "tier": "quality",
+      "query": "all:\"autonomous driving\" AND (all:\"sensor calibration\" OR all:\"time synchronization\" OR all:\"multi-sensor dataset\")",
+      "why": "Cover fleet-scale multi-sensor alignment and drift.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-driving-auto-labeling",
+      "tier": "production",
+      "query": "all:\"autonomous driving\" AND (all:\"automatic annotation\" OR all:\"auto-labeling\" OR all:\"pseudo label\") AND (all:3D OR all:LiDAR OR all:occupancy)",
+      "why": "Cover scalable 3D labeling and teacher/model bias.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-driving-long-tail-mining",
+      "tier": "limitation",
+      "query": "all:\"autonomous driving\" AND (all:\"long tail\" OR all:\"rare scenario\" OR all:\"corner case\") AND (all:dataset OR all:\"data mining\")",
+      "why": "Cover event rarity and log-selection difficulty rather than average road coverage.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-driving-generative-simulation",
+      "tier": "sim-real",
+      "query": "all:\"autonomous driving\" AND (all:\"world model\" OR all:\"generative simulation\" OR all:\"synthetic data\") AND (all:evaluation OR all:closed-loop OR all:sim2real)",
+      "why": "Cover generated spatial data, controllability, realism, and closed-loop validity.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-driving-adverse-weather-data",
+      "tier": "deployment",
+      "query": "all:\"autonomous driving\" AND (all:\"adverse weather\" OR all:night OR all:\"sensor degradation\") AND (all:dataset OR all:data)",
+      "why": "Cover environmental domain gaps and sensor failure regimes.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-cross-domain-spatial-ground-truth",
+      "tier": "evaluation",
+      "query": "(all:robotics OR all:\"autonomous driving\") AND (all:\"spatial ground truth\" OR all:\"ground truth quality\" OR all:\"label uncertainty\")",
+      "why": "Find methods and critiques about imperfect spatial ground truth across both domains.",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-driving-spatial-data-browser",
+      "query": "site:arxiv.org autonomous driving spatial data production occupancy auto labeling dataset 2025 2026",
+      "why": "Fallback discovery for driving papers under vocabulary missed by API queries.",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-robot-spatial-data-browser",
+      "query": "site:arxiv.org robot manipulation 4D spatial data collection calibration contact dataset 2025 2026",
+      "why": "Fallback discovery for embodied spatial-data production papers.",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ],
+  "web_calibration_queries": []
+}

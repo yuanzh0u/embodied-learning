@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.18553",
+    "title": "StableHand: Quality-Aware Flow Matching for World-Space Dual-Hand Motion Estimation from Egocentric Video",
+    "published": "2026-05-18",
+    "url": "https://arxiv.org/abs/2605.18553",
+    "authors": [
+      "Huajian Zeng",
+      "Chaohua Yao",
+      "Yuantai Zhang",
+      "Jiaqi Yang",
+      "Rolandos Alexandros Potamias",
+      "Xingxing Zuo"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据中的手部检测与追踪面临哪些问题、难点、评测缺口和部署约束？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-HARDWARE"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "全文直接涉及 egocentric 手检测、姿态、追踪、真值生产或时序失败。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别世界坐标双手轨迹的出画、遮挡和质量异质性。"
+      },
+      {
+        "locator": "3 Methodology",
+        "role": "method-or-design",
+        "purpose": "核查分手/分部件质量信号与生成先验。"
+      },
+      {
+        "locator": "4.2 Comparison on HOT3D and ARCTIC",
+        "role": "results-or-analysis",
+        "purpose": "核查长时丢失与持久接触遮挡两种失败模式。"
+      },
+      {
+        "locator": "Appendix H Additional Qualitative Results",
+        "role": "conclusion-or-limitations",
+        "purpose": "核查无观测锚点时的失败案例。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "参考文献列表不是本轮主张证据面；已按需读取与主张有关的附录。"
+      }
+    ]
+  },
+  "research_question": "如何在手指遮挡、手出画和头部 SLAM 漂移下维持世界坐标双手轨迹？",
+  "contributions": [
+    "将每帧观测质量分解为左/右手的腕部和手指四个通道，并用质量感知流匹配恢复轨迹。"
+  ],
+  "method": {
+    "summary": "用质量网络从手姿观测、检测置信与相机位姿预测四通道误差，再通过每通道噪声日程锚定高质量观测、重生成低质量通道。",
+    "assumptions": [
+      "至少部分时段/通道仍有可靠观测用于锚定。",
+      "上游手姿与几何模型可供提案和相机位姿。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "HOT3D",
+      "ARCTIC",
+      "8-corpus quality pretraining"
+    ],
+    "tasks": [
+      "世界坐标 4D 双手运动恢复"
+    ],
+    "embodiments": [
+      "人类双手 egocentric 视频"
+    ],
+    "sample_or_scale": "质量网络预训练聚合 8 个 egocentric 语料约 10M 帧。"
+  },
+  "evaluation": {
+    "design": "在 HOT3D 长出画与 ARCTIC 持久双手–物体遮挡下比较 SLAM 直接变换与 native-world 时序方法，并分层报告轨迹、关节、平滑性与双手相对位置。",
+    "baselines": [
+      "HaMeR-SLAM",
+      "WiLoR-SLAM",
+      "HMP-SLAM",
+      "Dyn-HaMR",
+      "HaWoR",
+      "UniHand"
+    ],
+    "metrics": [
+      "PA-MPJPE",
+      "W-MPJPE",
+      "WA-MPJPE",
+      "AccEr",
+      "MRRPE"
+    ],
+    "ablations": [
+      "质量网络",
+      "每通道日程",
+      "四 token 分解",
+      "质量来源",
+      "ODE 步数"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "腕部全局漂移和手指关节误差的尺度不同，且左右手遮挡不对称，单一质量分数会混淆失败。",
+      "scope": "世界坐标双手恢复。",
+      "locator": "1 Introduction"
+    },
+    {
+      "finding": "当某手整段无观测，或双手在接触段同时退化时，生成先验会产生合理但错误的轨迹。",
+      "scope": "HOT3D/ARCTIC 失败案例。",
+      "locator": "Appendix H Additional Qualitative Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "完全无上游观测锚点时，生成先验可以输出合理但不正确的轨迹。",
+        "locator": "Appendix H Additional Qualitative Results"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "质量感知生成不是对不可观状态的真值恢复，而是有观测锚点时的条件补全。",
+        "basis": "失败案例表明整段无观测或双手同时退化会迫使模型只依赖先验。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于存在局部可靠观测的长出画或非对称遮挡恢复；双手同时完全不可观时必须拒识或引入外部传感器。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "直接针对两种不同失败模式，且按手和部件分解质量并报告失败案例。"
+    ],
+    "design_risks": [
+      "依赖冻结 WiLoR 和几何基础模型，上游偏差、视角缺失和不可观性会汇入生成先验。"
+    ],
+    "baseline_fairness": "native-world 基线在对应训练集重训；UniHand 因代码未开源只引用原论文数字，该比较较弱。",
+    "metric_validity": "W-/WA-MPJPE、AccEr 和 MRRPE 同时覆盖漂移、运动平滑性与双手相对几何，比单帧 MPJPE 更适合追踪。",
+    "reproducibility": "有详细消融、质量校准和失败案例；较大的上游模型栈使复现成本高。",
+    "external_validity": "主要在 HOT3D/ARCTIC 上验证，对全新场景、长时部署和无观测段落不可外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.18553-C01",
+      "claim": "Ego 双手追踪的观测质量具有左/右手与腕部/手指两个轴的异质性，不能用单一置信度概括。",
+      "stance": "support",
+      "relation": "支持分手、分部件的质量与失败记账。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文直接给出单一质量分数会混淆的两类异质性。",
+      "locator": "1 Introduction",
+      "source_context": "A single scalar quality per hand would average wrist global drift with finger articulation error and ignore asymmetric bimanual occlusion, informing our four-channel signal indexed by hand and component.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    },
+    {
+      "card_id": "2605.18553-C02",
+      "claim": "当上游视觉完全没有可靠观测锚点时，生成恢复只能产生合理先验，可能形成错误轨迹。",
+      "stance": "limit",
+      "relation": "指向不可观性下的结构性上限与拒识需求。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在失败案例中明确区分了“合理”与“正确”。",
+      "locator": "Appendix H Additional Qualitative Results",
+      "source_context": "In both cases the generative process synthesizes a plausible but incorrect trajectory from the prior alone, illustrating the limit of our method when the upstream visual stream provides no observation to anchor a channel.",
+      "evidence_type": "failure-case",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已回到完整正文的指定章节核对；主张只保留该论文的数据、任务、传感器和评测边界，未外推到未测试场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "已按 scoping 模式完成结构映射、问题导向深读、局限与迁移边界核验。"
+}

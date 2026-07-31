@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2509.21986",
+    "title": "Developing Vision-Language-Action Model from Egocentric Videos",
+    "published": "2025-09-26T07:09:33Z",
+    "url": "https://arxiv.org/abs/2509.21986",
+    "authors": [
+      "Tomoya Yoshida",
+      "Shuhei Kurita",
+      "Taichi Nishimura",
+      "Shinsuke Mori"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接把四类 raw egocentric 数据转为 VLA 预训练轨迹，并系统暴露无 gripper state、轨迹噪声、筛选阈值和视觉域差距。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "确认 raw egocentric video 到 VLA 的研究问题。"
+      },
+      {
+        "locator": "III Method > III-B Pre-training Dataset Construction",
+        "role": "method-or-design",
+        "purpose": "核验 6DoF object trajectory 抽取和规则筛选。"
+      },
+      {
+        "locator": "III Method > III-C Policy Training",
+        "role": "data-or-setting",
+        "purpose": "核验动作表示、缺失 gripper state 与数据合并。"
+      },
+      {
+        "locator": "IV Experiments > IV-B Results",
+        "role": "results-or-analysis",
+        "purpose": "核验 real-robot/simulation 迁移和 latent-action 对照。"
+      },
+      {
+        "locator": "IV Experiments > IV-C Ablation Study",
+        "role": "results-or-analysis",
+        "purpose": "核验规模—质量阈值与视觉域差距。"
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核验作者结论边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "没有辅助硬件记录的 raw egocentric 视频能否自动构造成 VLA 可用的显式动作预训练数据？",
+  "contributions": [
+    "将 EgoScaler 扩展到 Ego4D、Ego-Exo4D、HD-EPIC 和 Nymeria。",
+    "从 124,559 个初始 episode 筛出 45,157 个 6DoF object-motion episode。",
+    "比较显式轨迹监督、latent action 和机器人数据预训练。"
+  ],
+  "method": {
+    "summary": "用 VLM 定位动作片段和对象，结合分割、dense 3D point tracking、点云配准与旋转估计恢复 6DoF object trajectory，再用位移与背景轨迹相似度规则过滤错误并用于 π0 类 VLA 预训练。",
+    "assumptions": [
+      "物体运动可以近似末端执行器运动。",
+      "对象可被稳定检测、分割和跨帧配准。",
+      "缺失 gripper state 可通过 9D object displacement 训练而不致完全失效。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Ego4D",
+      "Ego-Exo4D",
+      "HD-EPIC",
+      "Nymeria",
+      "BridgeData V2"
+    ],
+    "tasks": [
+      "SIMPLER pick-and-place",
+      "4 ALOHA real-robot pick-and-place tasks"
+    ],
+    "embodiments": [
+      "human egocentric video",
+      "ALOHA"
+    ],
+    "sample_or_scale": "124,559 初始 episodes，筛选后 45,157；真实机器人后训练 800 episodes。"
+  },
+  "evaluation": {
+    "design": "比较 scratch、latent-action、human-trajectory、robot-dataset 与 mixed pretraining，并消融数据规模和 BGTS 阈值。",
+    "baselines": [
+      "scratch",
+      "LAPA",
+      "BridgeData V2",
+      "BC-Z",
+      "Fractal"
+    ],
+    "metrics": [
+      "success rate",
+      "two-stage real-robot score"
+    ],
+    "ablations": [
+      "dataset ratio",
+      "BGTS threshold",
+      "human+robot mixture"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "自动轨迹恢复需要强筛选，原始候选的大多数未进入最终训练集。",
+      "scope": "四个公开 egocentric 数据集上的 EgoScaler pipeline。",
+      "locator": "III Method > III-B Pre-training Dataset Construction"
+    },
+    {
+      "finding": "放宽噪声筛选阈值从 45,157 增到 86,427 episodes，却使 real-robot 分数从 55.0 降到 38.8。",
+      "scope": "BGTS 阈值消融；具体任务和模型固定。",
+      "locator": "IV Experiments > IV-C Ablation Study"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "object-motion action 不包含 gripper state，难以支撑接触时序、开合与力相关技能。",
+        "basis": "方法段明确将 gripper state 作为不可获得字段，并用 9D object displacement 代替。"
+      },
+      {
+        "boundary": "更多 ego 数据在视觉域不匹配的仿真环境中可能负迁移。",
+        "basis": "规模消融中 full dataset 在 simulation 略差，作者归因于 visual domain gap。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于目标物体可追踪、物体运动能近似机器人动作且后续有机器人数据校准的操作；不适用于需要显式 gripper/contact/force supervision 或目标不可稳定分割的场景。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时在仿真和真实机器人评估。",
+      "公开报告筛选阈值和数据规模的反向效应。"
+    ],
+    "design_risks": [
+      "物体轨迹近似 end-effector action 会系统遗漏手—物接触与夹爪状态。",
+      "规则阈值依赖当前视觉模型和任务分布。"
+    ],
+    "baseline_fairness": "在同一 VLA 架构上实现 LAPA，有助于隔离监督类型；不同机器人数据集规模仍不完全匹配。",
+    "metric_validity": "真实闭环 success/score 能反映训练效用，但每任务 10 rollout 统计不确定性较大。",
+    "reproducibility": "数据处理步骤和阈值公开，依赖 GPT-4o、COLMAP 与多视觉模型版本。",
+    "external_validity": "支持显式轨迹预训练的条件价值，不支持所有 raw ego video 都可自动转成高质量控制标签。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2509.21986-C01",
+      "claim": "从 egocentric 视频恢复的 object trajectory 不是完整机器人动作：该路线无法获得 gripper state，只能把动作表示为 9D 物体位姿增量。",
+      "stance": "limit",
+      "relation": "揭示 Ego-centric 监督字段缺失和动作语义不完整。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "策略训练段明确说明 gripper state 缺失，并以 object pose displacement 作为替代动作。",
+      "locator": "III-C Policy Training",
+      "source_context": "Because gripper states cannot be obtained from Section III-B , each action is represented by a 9-dimensional vector",
+      "evidence_type": "method-limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "方法段直接描述不可获得的字段和替代维数；主张未外推到论文没有评估的触觉或力觉。"
+      }
+    },
+    {
+      "card_id": "2509.21986-C02",
+      "claim": "Ego-centric 轨迹构建存在规模—质量冲突：保留更多疑似背景/错误轨迹会显著降低真实机器人表现。",
+      "stance": "limit",
+      "relation": "限制‘数据越多越好’，强调自动筛选阈值是训练性能变量。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "BGTS=1.0 保留 86,427 episodes 但真实机器人分数低于 BGTS=0.7 的 45,157 episodes。",
+      "locator": "IV-C Ablation Study",
+      "source_context": "Setting an appropriate curation threshold is crucial to balancing the scale and quality of our dataset",
+      "evidence_type": "ablation",
+      "quantitative": {
+        "metric": "real-robot score",
+        "value_or_direction": "55.0 versus 38.8",
+        "comparator": "BGTS 0.7 versus BGTS 1.0",
+        "task_or_sample": "four ALOHA pick-and-place tasks",
+        "locator": "IV Experiments > IV-C Ablation Study"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表 III 同时给出 episode 数与真实机器人结果，支持只在该筛选阈值消融内陈述规模—质量冲突。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "论文没有独立 limitation 段，边界来自方法字段与消融。"
+}

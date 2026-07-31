@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.19510",
+    "title": "ALRM: Agentic LLM for Robotic Manipulation",
+    "published": "2026-01-27",
+    "url": "https://arxiv.org/abs/2601.19510",
+    "authors": ["Vitor Gaboardi dos Santos", "Ibrahim Khadraoui", "Ibrahim Farhat", "Hamza Yous", "Samy Teffahi", "Hakim Hacid"]
+  },
+  "review": {
+    "question": "近半年智能体技术在具身智能行业中形成了哪些可验证的技术架构、应用方式、部署收益与失败边界？",
+    "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-BIZ"],
+    "mode": "scoping"
+  },
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {"decision": "include", "reason": "直接比较代码生成与工具调用两种智能体执行接口，并报告多步机器人任务的成功率—延迟权衡。"},
+    "sections_read": [
+      {"locator": "I Introduction", "role": "problem", "purpose": "界定静态 LLM 控制缺少闭环反思的问题。"},
+      {"locator": "III LLM-Based Robotic Agent Architecture for Task Planning and Execution", "role": "method-or-design", "purpose": "核对规划器、执行器和 API 三层结构。"},
+      {"locator": "V Experimental Setup", "role": "data-or-setting", "purpose": "核对任务、模型、指标和代理评测设置。"},
+      {"locator": "VI Results", "role": "results-or-analysis", "purpose": "核对成功率、延迟和模型规模差异。"},
+      {"locator": "VII Conclusion", "role": "conclusion-or-limitations", "purpose": "核对仿真与任务范围限制。"}
+    ],
+    "sections_skipped": [{"locator": "II Related Work", "reason": "背景文献不承担本轮核心结果主张。"}]
+  },
+  "research_question": "ReAct 式规划—执行闭环中，代码生成和逐步工具调用各自适合什么机器人部署条件？",
+  "contributions": ["提出规划器—执行器—机器人 API 的模块化 ALRM 架构。", "在 56 条多步指令上比较 10 个 LLM 的 Code-as-Policy 与 Tool-as-Policy。"],
+  "method": {
+    "summary": "任务规划智能体按 ReAct 循环生成子任务，执行智能体以一次性代码或嵌套工具调用驱动机器人 API，并把执行结果反馈给规划器。",
+    "assumptions": ["底层感知、抓取、运动规划已被封装为可靠 API。", "轻量仿真中的格式正确动作可作为执行成功代理。"]
+  },
+  "study_context": {
+    "datasets": ["56-instruction ALRM benchmark"],
+    "tasks": ["multi-step pick-and-place", "linguistic paraphrase", "high-level reasoning"],
+    "embodiments": ["Interbotix wx250s arm in Gazebo validation"],
+    "sample_or_scale": "56 instructions, three simulated environments, ten LLMs, two execution modes."
+  },
+  "evaluation": {
+    "design": "统一任务上比较 CaP 与 TaP；动作序列由三个独立 LLM 多数表决评分，地面真值动作在 Gazebo 验证。",
+    "baselines": ["Code-as-Policy", "Tool-as-Policy", "ten closed/open LLMs"],
+    "metrics": ["task success score", "average latency", "success by paraphrase category"],
+    "ablations": ["execution mode", "model scale", "language category"]
+  },
+  "findings": [
+    {"finding": "大模型通常从逐步工具调用获得更高成功率，但延迟显著增加。", "scope": "56 条轻量仿真指令。", "locator": "VI-A Operation Mode Comparison"},
+    {"finding": "小型模型在一次性代码生成上可有竞争力，但连续嵌套工具调用明显脆弱。", "scope": "最多 8B 参数的六个开源模型。", "locator": "VI-A Operation Mode Comparison"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "结果依赖提示设计。", "locator": "VII Conclusion"},
+      {"limitation": "仅覆盖三个环境和以取放为主的任务，未整合真实机器人与真实感知。", "locator": "VII Conclusion"}
+    ],
+    "reader_inferred": [{"boundary": "LLM-as-judge 对动作序列的评分不能代表真实闭环的碰撞、抓取和恢复可靠性。", "basis": "V-B 与 V-C 明确采用动作序列代理评分及占位位姿。"}]
+  },
+  "transfer_boundary": "适用于已有稳定技能 API 的高层任务编排原型；不能据此证明真实工厂中的实时性、安全性或连续运行可靠性。",
+  "critical_appraisal": {
+    "design_strengths": ["同一任务面比较十个模型和两种执行接口。", "同时报告成功与延迟而非只报准确率。"],
+    "design_risks": ["动作执行大部分由轻量仿真代理。", "LLM-as-judge 可能高估物理可执行性。"],
+    "baseline_fairness": "所有模型使用相同任务和两种接口，比较较公平；但模型 API、推理方式和本地部署资源不同。",
+    "metric_validity": "适合衡量高层动作序列生成，不足以衡量真实机器人闭环成功。",
+    "reproducibility": "给出环境、任务、模型与代码链接，复现基础较好；商业 API 版本可能漂移。",
+    "external_validity": "对工业、高接触、动态场景的外推性弱。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.19510-C01",
+      "claim": "ALRM 将高层规划、执行与机器人 API 分层，并通过动作结果回传形成可修订计划的闭环。",
+      "stance": "support",
+      "relation": "支持具身智能体作为技能编排层，而非直接替代低层控制。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "规划器按思考—动作—观察循环拆解任务，执行器把结果作为观察返回。",
+      "locator": "III LLM-Based Robotic Agent Architecture for Task Planning and Execution",
+      "source_context": "These interactive steps continue until the original user task is fulfilled, or it reaches the maximum number of steps.",
+      "evidence_type": "system-design",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核架构段：规划器、执行器、API 和结果回传链路均被明确陈述，主张未超出高层编排范围。"}
+    },
+    {
+      "card_id": "2601.19510-C02",
+      "claim": "在该 56 指令仿真基准上，Claude-4.1-Opus 的 TaP 成功率为 93.5%，CaP 为 92.6%，但平均延迟由 33.44 秒增至 82.60 秒。",
+      "stance": "conditional",
+      "relation": "说明逐步工具调用的收益伴随显著推理延迟，且收益并非所有模型都成立。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "同一模型在两种执行接口上的成功率差异很小，而延迟超过两倍。",
+      "locator": "VI-A Operation Mode Comparison",
+      "source_context": "Claude-4.1-Opus reached the highest average success rate using TaP (93.5%), representing a 0.9% improvement over CaP, while latency increased from 33.44s to 82.60s.",
+      "evidence_type": "experiment",
+      "quantitative": {"metric": "average success rate and latency", "value_or_direction": "93.5% vs 92.6%; 82.60s vs 33.44s", "comparator": "Tool-as-Policy versus Code-as-Policy", "task_or_sample": "56 simulated multistep instructions", "locator": "VI-A Operation Mode Comparison"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "表 III 与结果段报告相同模型、相同任务集的成功率和延迟。"}
+    },
+    {
+      "card_id": "2601.19510-C03",
+      "claim": "该研究不能证明真实机器人部署可靠性，因为主要评测使用占位位姿和动作序列代理，作者也把真实机器人与感知整合列为后续工作。",
+      "stance": "limit",
+      "relation": "限制将高仿真成功率外推为工业落地能力。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "评测目标是高层动作质量，不覆盖真实动力学、感知和连续运行。",
+      "locator": "V-C Evaluation Design; VII Conclusion",
+      "source_context": "integrating real robots and perception components would offer a clearer understanding",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "人工复核评测设计与结论：二者均明确限定为仿真和动作序列代理，未将结果外推为真实部署性能。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "不把论文中的模型排行榜外推为通用机器人能力排序。"
+}

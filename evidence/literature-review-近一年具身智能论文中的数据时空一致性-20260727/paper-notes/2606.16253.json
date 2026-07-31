@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.16253",
+    "title": "SPARC: Spatially Adaptive Rate Control for Vision-Language-Action Models",
+    "published": "2026-06-15T03:38:29Z",
+    "url": "https://arxiv.org/abs/2606.16253",
+    "authors": ["SangYun Chung", "Mincheol Shin", "Jihyun Kim", "Sangpil Kim"]
+  },
+  "review": {"question": "近一年具身智能预训练模型对数据来源多样性与相机分辨率、帧率、码率、FOV、机位有什么证据支持的要求？哪些差异应扩大，哪些接口必须标准化或条件化？", "topic_ids": ["EA-DATA", "EA-HARDWARE", "EA-SENSOR", "EA-MODEL"], "mode": "scoping"},
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {"decision": "include", "reason": "直接将多相机 VLA 的码率分配与闭环成功率绑定，提供机位之间信息价值不均匀的证据。"},
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "核验多相机传输瓶颈与均匀码率分配问题。"},
+      {"locator": "3 Method", "role": "method-or-design", "purpose": "核验时序空间 mask、倾斜 rate loss 和 VLA 动作目标。"},
+      {"locator": "4 Experiments and 5.5 Real-world Experiment", "role": "results-or-analysis", "purpose": "核验 bpp-成功率曲线、真实三机位和延迟收益。"},
+      {"locator": "6 Conclusion and Limitations", "role": "conclusion-or-limitations", "purpose": "记录语言条件与极端通信条件的未覆盖边界。"},
+      {"locator": "Appendix C Ablation Study > C.1 Analysis of Key Components and Appendix E Visual Quality Assessment", "role": "appendix-or-supplement", "purpose": "核验定量消融与感知质量指标失配。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何在限制总通信码率下，按机位和画面区域对动作的价值自适应分配比特，以保持 VLA 闭环控制？",
+  "contributions": ["提出面向 VLA 动作目标的时序空间自适应码率控制。", "在多基准和真实远程三相机机器人上评估码率-成功率-延迟取舍。"],
+  "method": {"summary": "在学习式图像编码器的 latent 上让轻量时序 mask 选择器根据过去视觉与机器人状态为不同机位/区域分配码率，直接优化动作失真和传输开销。", "assumptions": ["下游 VLA 可在未压缩图像上达到有意义的性能。", "压缩器可针对固定下游 VLA 和相机组合训练。"]},
+  "study_context": {"datasets": ["RoboCasa365", "VLABench", "LIBERO", "real-world teleoperation dataset"], "tasks": ["simulation manipulation", "three real-world long-horizon tasks"], "embodiments": ["simulated robots", "AgileX PiPER with Omega 80 gripper"], "sample_or_scale": "Real-world: 60 training episodes and 10 evaluation trials per task; side, top and wrist cameras at 224x224 model input."},
+  "evaluation": {"design": "与通用图像/视频编码和学习压缩方法比较 bpp-成功率曲线，在真实远程控制中评估多机位与延迟。", "baselines": ["JPEG", "H.265", "MS-ILLM", "other learned codecs"], "metrics": ["bits per pixel", "task success", "action distortion", "end-to-end latency", "PSNR/SSIM/LPIPS"], "ablations": ["without warm-up", "without feature memory", "without robot states"]},
+  "findings": [
+    {"finding": "VLABench 消融中 SPARC 在 0.0333/0.0685 bpp 下成功率为 37.5%/38.3%，未压缩为 40.5%；但在更低 bpp 下所有变体都表现很低。", "scope": "VLABench 与该下游 VLA/编码器设定。", "locator": "Appendix C Ablation Study > C.1 Analysis of Key Components, Table 3"},
+    {"finding": "三个 224×224 视图分别位于侧面、顶部和腕部；单一编码器可服务所有视图，但码率需按视图和空间区域的任务价值分配。", "scope": "AgileX PiPER 真实远程三机位系统。", "locator": "5.5 Real-world Experiment, Figure 6"}
+  ],
+  "limitations": {"author_status": "found", "author_stated": [{"limitation": "未直接建模语言 grounding，也未验证水下/太空等极端动态信道。", "locator": "6 Conclusion and Limitations"}], "reader_inferred": [{"boundary": "论文支持任务相关码率分配，不支持把某个 bpp 值当成跨模型、任务、分辨率和编码器的固定采集规格。", "basis": "bpp 性能来自特定下游 VLA 和基准，且文中显示不同视图/区域价值不均匀。"}]},
+  "transfer_boundary": "结论适用于多相机、边缘-云端 VLA 控制且可为目标模型训练编码器的场景；不是原始数据归档的通用无损保真结论。",
+  "critical_appraisal": {"design_strengths": ["使用闭环成功率而非仅用人眼画质。", "同时覆盖多仿真基准与真实远程机器人。"], "design_risks": ["编码器对下游 VLA 和摄像头分布可能过拟合。", "真实任务和试验数较少。"], "baseline_fairness": "在统一通信预算下对比多类 codec，但学习式方法的训练信息与通用 codec 不对称。", "metric_validity": "bpp、闭环成功率和延迟直接对应工程问题；单帧画质指标被证明不充分。", "reproducibility": "主要训练配置和实验设置有记录，真实网络拓扑和硬件细节仍影响复现。", "external_validity": "强烈支持‘按任务价值分配码率’，不足以支持一个通用最低 bpp。"},
+  "evidence_cards": [
+    {"card_id": "2606.16253-C01", "claim": "多相机 VLA 不应把码率在机位和画面区域间均分；应优先保留对当前动作有用的视图和区域。", "stance": "support", "relation": "给出码率要求的核心形式：对任务条件化，而非全局固定。", "confidence": "direct", "claim_basis": "author-claim", "summary": "论文指出不同机位和图像区域对控制的价值不均匀，SPARC 通过时序 mask 自适应分配比特。", "locator": "1 Introduction and 3 Method", "source_context": "Uniform bitrate allocation across cameras and image regions is therefore fundamentally inefficient.", "evidence_type": "method-and-multiview-evaluation", "quantitative": false, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "该句是全文方法的直接动机，并由多基准和三机位真机的 bpp-成功率评估支撑；主张不外推至原始归档。"}},
+    {"card_id": "2606.16253-C02", "claim": "带宽要求必须在目标 VLA 和任务上用闭环成功率标定，感知画质或单一固定 bpp 不能替代。", "stance": "conditional", "relation": "限定码率数字的可迁移性。", "confidence": "direct", "claim_basis": "reported-result", "summary": "VLABench 中 0.0333/0.0685 bpp 的 SPARC 成功率接近但低于未压缩，而极低 bpp 下所有变体失效。", "locator": "C.1 Analysis of Key Components", "source_context": "SPARC (Ours) 0.0333 37.5 0.0685 38.3 Uncompressed - 40.5 - 40.5", "evidence_type": "bitrate-success-ablation", "quantitative": {"metric": "bits per pixel and success rate", "value_or_direction": "37.5% at 0.0333 bpp; 38.3% at 0.0685 bpp; 40.5% uncompressed", "comparator": "SPARC compressed versus uncompressed", "task_or_sample": "VLABench downstream VLA setting", "locator": "C.1 Analysis of Key Components"}, "verification": {"status": "passed", "checked_against": "full-text", "rationale": "附录表 3 直接给出 bpp 与成功率，同段明言极低 bpp 下全部变体很低；主张因此仅要求针对目标系统标定。"}}
+  ],
+  "core_citations": [],
+  "notes": "224×224 是该系统的模型输入分辨率，不应误写为原始摄像头物理分辨率。"
+}

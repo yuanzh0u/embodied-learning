@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.16943",
+    "title": "SinD 2.0: A Multi-City UAV Dataset with Semantic Risk Annotations for SOTIF-Oriented Safety Validation at Signalized Intersections",
+    "published": "2026-07-18",
+    "url": "https://arxiv.org/abs/2607.16943",
+    "authors": [
+      "Yunwei Li",
+      "Shengjie Fu",
+      "Chunrong Chen",
+      "Chengxiang Zhao",
+      "Yuchen Fan",
+      "Mingyu Zhu",
+      "Yanchao Xu",
+      "Yuxin Zhang",
+      "Lan Yang",
+      "Chuzhao Li",
+      "Jie Ji",
+      "Yi He",
+      "Abhijit Sarkar",
+      "Akash Sonth",
+      "Hong Wang",
+      "Jun Li"
+    ]
+  },
+  "review": {
+    "question": "近一年空间数据的生产难点在哪里，具身机器人与智能驾驶的异同是什么？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-4D",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "SinD 2.0 directly studies the rarity, geographic bias, occlusion and missing risk semantics that make safety-critical spatial data hard to produce and validate."
+    },
+    "sections_read": [
+      {"locator": "I Introduction", "role": "problem", "purpose": "Map geographic homogeneity, critical-event sparsity and missing trigger semantics."},
+      {"locator": "III-A Data Collection and Scenario Distribution; III-B Multi-Source Data Alignment; V-A Hierarchical Semantic Labeling Framework", "role": "method-or-design", "purpose": "Inspect drone collection, world-coordinate alignment, maps/SPaT and risk labeling."},
+      {"locator": "VI-D Dataset Open-Loop Evaluation on Semantic Scenarios; VI-E Closed-loop Testing in Reactive Testing Environment", "role": "results-or-analysis", "purpose": "Compare nominal, semantic-stress and reactive closed-loop evaluation."},
+      {"locator": "VII Conclusion; V-E Narrow Feasible-Area Scenarios", "role": "conclusion-or-limitations", "purpose": "Record upstream label errors and simulation drift boundaries."},
+      {"locator": "Appendix A Detailed Criteria for Safety-Critical Event Extraction", "role": "appendix-or-supplement", "purpose": "Inspect scenario extraction criteria."}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "How can rare, safety-critical intersection interactions be captured, semantically indexed and turned into repeatable closed-loop tests?",
+  "contributions": [
+    "Uses drone top-down collection across four cities to reduce onboard occlusion and geographic homogeneity.",
+    "Aligns trajectories, HD maps and signal phases, mines risk events and provides open-loop and reactive closed-loop evaluation modes."
+  ],
+  "method": {
+    "summary": "Extracts and smooths multi-agent trajectories from 4K drone video, projects them to world coordinates, binds vector maps and signal timing, then applies deterministic rules to label risk triggers and convert them into executable test cases.",
+    "assumptions": ["Drone view and calibration recover sufficiently accurate global trajectories", "Map and signal bindings are correct", "Risk thresholds capture useful safety triggers"]
+  },
+  "study_context": {
+    "datasets": ["SinD 2.0"],
+    "tasks": ["Trajectory prediction", "Safety-critical scenario mining", "Open-loop replay", "Reactive closed-loop testing"],
+    "embodiments": ["Signalized-intersection traffic observed by hovering drones"],
+    "sample_or_scale": "Six intersections in four Chinese cities, 53k tracks, 22.8 hours and 32,682 mined safety-critical events."
+  },
+  "evaluation": {
+    "design": "Compares models across datasets and stress-tests policies on raw, kinematic-risk, visual-shielding, narrow-feasible-area and reactive closed-loop scenarios.",
+    "baselines": ["RiskIDM", "ASAPRL", "QCNet", "Diffuser"],
+    "metrics": ["ADE", "FDE", "miss rate", "TTC", "collision", "off-road", "traffic violations", "rollout anomaly"],
+    "ablations": ["Raw versus semantic risk subsets", "Open-loop versus reactive closed-loop"]
+  },
+  "findings": [
+    {"finding": "Naturalistic logs overproduce routine driving and underproduce geographically diverse, semantically identified critical events.", "scope": "The datasets and intersection domains compared by SinD 2.0.", "locator": "I Introduction"},
+    {"finding": "Semantic stress subsets and reactive background traffic expose failures that nominal replay misses, but deterministic labels inherit upstream spatial and signal errors.", "scope": "SinD 2.0 toolchain and current label audit status.", "locator": "V-E Narrow Feasible-Area Scenarios; VI-D Dataset Open-Loop Evaluation on Semantic Scenarios; VI-E Closed-loop Testing in Reactive Testing Environment"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "Semantic labels inherit map, signal-binding and trajectory-estimation errors; a larger manual precision/recall and threshold-sensitivity audit remains future validation.", "locator": "V-E Narrow Feasible-Area Scenarios"},
+      {"limitation": "Reactive generative background traffic can drift semantically under severe edge-case contention.", "locator": "VII Conclusion"}
+    ],
+    "reader_inferred": [
+      {"boundary": "Drone-based global interaction truth complements but cannot replace vehicle-view sensor data for perception failures, weather and onboard sensing artifacts.", "basis": "The core dataset is 4K top-down trajectory data; camera-view rendering is presented only as an auxiliary extension."}
+    ]
+  },
+  "transfer_boundary": "Strong for intersection trajectory and SOTIF trigger testing; weaker for ego-sensor perception, non-intersection ODDs and safety claims without external manual label audits.",
+  "critical_appraisal": {
+    "design_strengths": ["Connects data capture, semantic mining and reactive evaluation", "Makes label evidence and thresholds inspectable"],
+    "design_risks": ["Deterministic semantic labels lack a completed large manual accuracy audit", "Closed-loop background behavior is still modeled"],
+    "baseline_fairness": "Released checkpoints and mixed protocols make results toolchain transfer tests rather than a standardized leaderboard.",
+    "metric_validity": "Collision, off-road, rule and TTC metrics are safety-relevant; simulator and labeling errors can still confound them.",
+    "reproducibility": "Dataset, annotations, extraction rules and toolchain are publicly linked.",
+    "external_validity": "Four cities improve coverage but the evidence is limited to Chinese signalized intersections and drone-observable behavior."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.16943-C01",
+      "claim": "Safety-critical driving data is hard to produce because the desired distribution conflicts with natural occurrence: geographic coverage is narrow, routine safe interactions dominate, and raw trajectories lack semantic labels for triggers such as occlusion and constrained maneuver space.",
+      "stance": "limit",
+      "relation": "Limits the assumption that scaling ordinary fleet logs automatically yields adequate long-tail safety coverage.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The introduction explicitly identifies geographic homogeneity, rare critical events and missing trigger semantics as separate data limitations.",
+      "locator": "I Introduction",
+      "source_context": "Effective safety validation also requires a high degree of criticality, which conflicts with the sparsity of dangerous scenarios in naturalistic driving data. Rigorous evaluation must push the system to its performance boundaries, yet naturalistic datasets are dominated by safe, routine interactions.",
+      "evidence_type": "dataset gap analysis",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The exact text states the distributional conflict between criticality and routine naturalistic data; adjacent introduction text separately establishes geographic and semantic gaps."}
+    },
+    {
+      "card_id": "2607.16943-C02",
+      "claim": "Rule-generated risk labels remain provisional ground truth because they inherit errors from trajectories, maps and signal binding; auditability does not substitute for manual accuracy and threshold-sensitivity validation.",
+      "stance": "limit",
+      "relation": "Limits claims that automatic semantic scenario mining fully solves long-tail annotation.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The paper explicitly describes the inheritance of upstream errors and the unfinished manual audit.",
+      "locator": "V-E Narrow Feasible-Area Scenarios",
+      "source_context": "This design makes each label reproducible and inspectable, but it also means that the labels inherit map, signal-binding, and trajectory-estimation errors. We therefore use the semantic layer as a queryable scenario-mining index whose thresholds and evidence can be inspected and revised, rather than as a finalized benchmark of human-verified annotation accuracy.",
+      "evidence_type": "author-stated limitation",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The claim preserves the authors' distinction between reproducible scenario indices and human-verified benchmark truth."}
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

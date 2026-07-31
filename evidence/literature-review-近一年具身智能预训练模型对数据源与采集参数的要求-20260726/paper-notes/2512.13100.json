@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2512.13100",
+    "title": "OXE-AugE: A Large-Scale Robot Augmentation of OXE for Scaling Cross-Embodiment Policy Learning",
+    "published": "2025-12-15",
+    "url": "https://arxiv.org/abs/2512.13100",
+    "authors": [
+      "Guanhua Ji",
+      "Harsha Polavaram",
+      "Lawrence Yunliang Chen",
+      "Sandeep Bajamahal",
+      "Zehan Ma",
+      "Simeon Adebola",
+      "Chenfeng Xu",
+      "Ken Goldberg"
+    ]
+  },
+  "review": {
+    "question": "近一年已发表论文中的具身智能数据质量",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 近一年已发表论文中的具身智能数据质量."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "4.1 Preliminaries: Cross-Painting Framework",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "2.3 Study of Scaling in Robot Learning",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "7 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '近一年已发表论文中的具身智能数据质量', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "跨本体机器人数据的质量问题不只是轨迹数量，而是本体/夹爪分布是否均衡；高度不平衡的数据集会让策略过拟合少数 robot-scene 组合。"
+  ],
+  "method": {
+    "summary": "Cross-painting chen2024mirage ; chen2024roviaug ; lepert2025phantomtrainingrobotsrobots is a three-stage pipeline applied to each image in a robot trajectory: (i) source-robot segmentation , (ii) background inpainting , and (iii) augmented-robot replay and compositing . The goal is to replace the robot embodiment in each frame while preserving task and scene context. Existing implementations differ mainly in how each stage is realized. Learning-based methods use diffusion models to modify the robot directly in pixel space chen2024roviaug , requiring no explicit calibration and producing visually realistic results. However, they lack kinematic guarantees and scale poorly to many target robots",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "Several recent studies have analyzed how performance in robot learning scales with data volume and model capacity sartor2024neural . Models like VIMA jiang2022vima , RT-1 brohan2023rt1 , Octo octo_2023 , and HPT wang2024scaling report consistent gains when increasing dataset size and model scale. For data scaling, Lin et al. lin2024data show approximate power-law improvements in generalization as the number of environments and objects increases, with diversity often more valuable than additional demonstrations per setting. Saxena et al. saxena2024matters further dissect scaling effects by quantifying contributions from camera viewpoint, spatial layout, and object variety. For robot embodimen",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "跨本体机器人数据的质量问题不只是轨迹数量，而是本体/夹爪分布是否均衡；高度不平衡的数据集会让策略过拟合少数 robot-scene 组合。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (4.1 Preliminaries: Cross-Painting Framework) and evaluation (2.3 Study of Scaling in Robot Learning)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2512.13100-C01",
+      "claim": "跨本体机器人数据的质量问题不只是轨迹数量，而是本体/夹爪分布是否均衡；高度不平衡的数据集会让策略过拟合少数 robot-scene 组合。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 近一年已发表论文中的具身智能数据质量",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "论文指出 OXE 聚合 60 多个机器人数据集，但 top four robot types 占超过 85% 真实数据，带来过拟合风险；OXE-AugE 用 9 种不同机器人本体扩增 16 个 OXE 子集，形成 4.4M trajectories，并研究扩增对 cross-embodiment learning 的影响。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Large and diverse datasets are needed for training generalist robot policies that have potential to control a variety of robot embodiments—robot arm and gripper combinations—across diverse tasks and environments. As re-collecting demonstrations and retraining for each new hardware platform are prohibitively costly, we show that existing robot data can be augmented for transfer and generalization. The Open X-Embodiment (OXE) dataset, which aggregates demonstrations from over 60 robot datasets, has been widely used as the foundation for training generalist policies. However, it is highly imbalanced: the top four robot types account for over 85% of its real data, which risks overfitting to robot–scene combinations. We present AugE-Toolkit, a scalable robot augmentation pipeline, and OXE-AugE, a high-quality open-source dataset that augments OXE with 9 different robot embodiments. OXE-AugE provides over 4.4 million trajectories, more than triple the size of the original OXE. We conduct a systematic study of how scaling robot augmentation impacts cross-embodiment learning. Result",
+      "evidence_type": "dataset+experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (60, 85, account, cross-embodiment, four, learning, oxe, oxe-auge). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Use as evidence for embodiment-balance as a data-quality dimension."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

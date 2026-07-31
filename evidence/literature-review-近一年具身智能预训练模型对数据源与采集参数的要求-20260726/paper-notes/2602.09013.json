@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.09013",
+    "title": "Dexterous Manipulation Policies from RGB Human Videos via 3D Hand-Object Trajectory Reconstruction",
+    "published": "2026-02-09T18:56:02Z",
+    "url": "https://arxiv.org/abs/2602.09013",
+    "authors": [
+      "Hongyi Chen",
+      "Tony Dong",
+      "Tiancheng Wu",
+      "Liquan Wang",
+      "Yash Jangir",
+      "Yaru Niu",
+      "Yufei Ye",
+      "Homanga Bharadhwaj",
+      "Zackory Erickson",
+      "Jeffrey Ichnowski"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接从 RGB 人类视频重建 hand-object 4D trajectories，并展示几何、接触、相机和遮挡误差如何影响机器人策略训练。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "确认无设备视频到灵巧策略的数据瓶颈。"
+      },
+      {
+        "locator": "III Method > III-A 3D Hand-Object Trajectory Reconstruction from Video",
+        "role": "method-or-design",
+        "purpose": "核验深度、mesh、pose、retargeting 与重力对齐。"
+      },
+      {
+        "locator": "III Method > III-B Dexterous Grasp and Manipulation Learning",
+        "role": "method-or-design",
+        "purpose": "核验 contact optimization 与 trajectory synthesis。"
+      },
+      {
+        "locator": "IV Experiments > IV-A Grasping Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核验遮挡/力闭合失败与多视频消融。"
+      },
+      {
+        "locator": "IV Experiments > IV-B Manipulation Experiments",
+        "role": "data-or-setting",
+        "purpose": "核验真实机器人任务、闭环点云假设和成功率。"
+      },
+      {
+        "locator": "V Conclusion, Limitations, and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录视觉链路、动态相机和遮挡限制。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "能否把单个 RGB 人类视频恢复为物理有效、可扩增且能训练灵巧手策略的 3D hand-object 轨迹？",
+  "contributions": [
+    "联合恢复物体 mesh/pose、人手 mesh 与机器人 retargeting。",
+    "通过 contact optimization 修正穿模和无效接触。",
+    "从单条视频轨迹用 3D 等变变换合成训练示范。"
+  ],
+  "method": {
+    "summary": "以 MoGe-2、SAM2、MeshyAI、FoundationPose、HaMeR 等恢复统一 3D hand-object 轨迹，重力对齐后 retarget 到机器人；用 ContactOpt 修正抓取接触，并用 DemoGen 扩增后训练 grasp 与 manipulation policies。",
+    "assumptions": [
+      "对象 mesh、尺度和 6D pose 可由单目视频可靠估计。",
+      "初始抓取后 hand-object 相对位姿在执行中近似保持。",
+      "静态或近静态相机足以支持轨迹重建。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "20 human grasp videos",
+      "7 single-video manipulation tasks"
+    ],
+    "tasks": [
+      "grasping",
+      "pouring",
+      "drawer closing",
+      "pick-and-place",
+      "hat hanging",
+      "bulb screwing"
+    ],
+    "embodiments": [
+      "Inspire hand in simulation",
+      "LEAP Hand on xArm"
+    ],
+    "sample_or_scale": "每个对象/任务一条源视频；DemoGen 合成最多 1000 条轨迹；真实任务每项 10 次评测。"
+  },
+  "evaluation": {
+    "design": "仿真抓取与真实机器人 manipulation 双层评测，含接触优化、多视角视频和合成轨迹数消融。",
+    "baselines": [
+      "unoptimized grasp data",
+      "LVP",
+      "LVP(-H)",
+      "π0-DROID"
+    ],
+    "metrics": [
+      "grasp success",
+      "task success"
+    ],
+    "ablations": [
+      "ContactOpt",
+      "additional human viewpoints",
+      "DemoGen trajectory count",
+      "gravity alignment"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "重建轨迹会因 mesh 尺度、pose 和 hand geometry 错误形成穿模或无效接触；ContactOpt 把 20-object 抓取成功率从 30.7% 提至 63.75%。",
+      "scope": "IsaacGym Inspire-hand 抓取评测。",
+      "locator": "IV Experiments > IV-A Grasping Experiments"
+    },
+    {
+      "finding": "严重手部遮挡导致物体 pose 错误，缺乏 force awareness 会产生几何可行但不闭合的抓取。",
+      "scope": "五类低成功对象的失败分析。",
+      "locator": "IV Experiments > IV-A Grasping Experiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "多视觉模型串联会产生累积误差，目前依赖近似 egocentric、静态相机和 hand-object 固定相对位姿假设。",
+        "locator": "V Conclusion, Limitations, and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "单视频 + 合成扩增不能创造未被观测的接触力与滑移状态。",
+        "basis": "失败分析明确指出 force awareness 缺失，方法的 contact map 仍是几何距离代理。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于刚体、对象可重建、相机近静态且接触关系相对稳定的 dexterous manipulation；对快速动态相机、严重遮挡、可变形物和力闭合敏感任务证据不足。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把视觉重建误差连接到接触优化与真实闭环结果。",
+      "同时报告遮挡、重力对齐和轨迹合成的失败/消融。"
+    ],
+    "design_risks": [
+      "依赖多级专有/通用视觉模型，误差归因难完全分离。",
+      "真实任务每项仅 10 次，且每任务单独训练策略。"
+    ],
+    "baseline_fairness": "LVP 与 π0-DROID 的动作接口/预训练本体不同，比较有现实意义但并非完全等资源。",
+    "metric_validity": "任务成功率直接反映物理可执行性；未报告接触力、滑移和安全过程指标。",
+    "reproducibility": "算法组件描述充分，但 MeshyAI/GPT-4.1 和对象 mesh 质量可能影响复现。",
+    "external_validity": "支持几何重建 + 物理修正的条件可行性，不支持任意网络视频直接变成通用策略数据。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.09013-C01",
+      "claim": "单目 RGB 人类视频恢复出的 hand-object 轨迹常不具物理可执行性；对象几何、手尺度/姿态误差会形成穿模、无效接触和抓取失败。",
+      "stance": "limit",
+      "relation": "说明视觉重建准确不等于控制监督可执行。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法段明确说明重建运动正确时，机器人—对象交互仍可能因几何误差而无效。",
+      "locator": "III-B Dexterous Grasp and Manipulation Learning",
+      "source_context": "the resulting robot–object interactions are not always physically feasible due to reconstruction errors",
+      "evidence_type": "method-limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句位于训练方法的动机段，后续抓取消融与穿模案例直接验证；主张限制在几何重建管线。"
+      }
+    },
+    {
+      "card_id": "2602.09013-C02",
+      "claim": "当前 VideoManip 依赖静态或近静态相机，并在真实闭环中用固定 hand-object 相对位姿绕过手部遮挡，限制了动态第一视角数据的可用范围。",
+      "stance": "limit",
+      "relation": "揭示 camera motion 与 deployment-time occlusion 的双重边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在限制段明确列出 dynamic camera 未覆盖；实验段说明对象点云被 LEAP Hand 遮挡时采用固定相对位姿近似。",
+      "locator": "V Conclusion, Limitations, and Future Work",
+      "source_context": "The current framework assumes static or approximately static camera setups",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "限制段直接陈述静态相机假设；闭环遮挡近似在实验段另有说明，本文未把该限制外推到所有 3D 方法。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "正文标题写 3D reconstruction；检索结果别名含 4D，事件使用论文正式标题。"
+}

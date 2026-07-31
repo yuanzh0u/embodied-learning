@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.19201",
+    "title": "OmniVTA: Visuo-Tactile World Modeling for Contact-Rich Robotic Manipulation",
+    "published": "2026-03-19T17:52:42Z",
+    "url": "https://arxiv.org/abs/2603.19201",
+    "authors": ["Yuhang Zheng", "Songen Gu", "Weize Li", "Yupeng Zheng", "Yujie Zang", "Shuai Tian", "Xiang Li", "Ce Hao", "Chen Gao", "Si Liu", "Haoran Li", "Yilun Chen", "Shuicheng Yan", "Wenchao Ding"]
+  },
+  "review": {
+    "question": "近一年触觉数据与视觉数据联合训练的方法如何演进，哪些进展已在真实机器人闭环中得到验证？",
+    "topic_ids": ["EA-SENSOR", "EA-ALIGN", "EA-MODEL", "EA-DATA"],
+    "mode": "scoping"
+  },
+  "extraction": {"source_format": "html", "method": "html-latexml", "quality": "high", "full_text_available": true, "ocr_pages": [], "visual_validation": "not-required"},
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {"decision": "include", "reason": "同时给出大规模视觉—触觉—动作数据、双流世界模型、接触门控策略和 60 Hz 触觉反射控制，是联合训练进入完整闭环栈的直接证据。"},
+    "sections_read": [
+      {"locator": "I Introduction", "role": "problem", "purpose": "确认数据规模、预测接触和快速反馈三类瓶颈。"},
+      {"locator": "III The OmniViTac Dataset", "role": "data-or-setting", "purpose": "核验双本体、同构夹爪、同步管线和数据规模。"},
+      {"locator": "IV-B–IV-E", "role": "method-or-design", "purpose": "核验触觉 VAE、双流世界模型、门控策略和反射控制器。"},
+      {"locator": "V-B Overall Performance; V-C Component Analysis", "role": "results-or-analysis", "purpose": "核验六任务闭环、泛化、扰动和组件消融。"},
+      {"locator": "VI Conclusion", "role": "conclusion-or-limitations", "purpose": "核验作者对完整栈的结论。"}
+    ],
+    "sections_skipped": [{"locator": "II Related Works", "reason": "二手综述不用于本文事件。"}, {"locator": "VII Acknowledgments", "reason": "与研究问题无关。"}]
+  },
+  "research_question": "视觉—触觉联合训练能否从被动融合升级为预测接触并由高频触觉闭环纠偏的完整系统？",
+  "contributions": [
+    "发布 21,879 条视觉—触觉—动作轨迹，覆盖 86 个任务、126 个物体和六类接触模式。",
+    "提出触觉 VAE 与双流视觉—触觉世界模型预测短时接触演化。",
+    "用接触门控融合策略和 60 Hz 反射控制器把预测与真实触觉差异转成动作修正。"
+  ],
+  "method": {
+    "summary": "TactileVAE 编码局部触觉场；双流世界模型联合生成视觉与触觉未来；门控扩散策略按预测接触状态调整视觉/触觉权重；60 Hz 控制器根据预测与观测触觉差异做 residual 修正。",
+    "assumptions": ["短时触觉未来可从视觉、触觉和动作联合预测。", "共享末端执行器能降低 TacUMI 人类数据到机器人数据的本体差异。"]
+  },
+  "study_context": {
+    "datasets": ["OmniViTac"],
+    "tasks": ["wiping", "peeling", "cutting", "assembly", "grasping", "in-hand adjustment"],
+    "embodiments": ["xArm-7", "TacUMI handheld collector", "identical parallel-jaw grippers", "Xense/GelSight Mini/DM-Tac/Tac3D sensors"],
+    "sample_or_scale": "21,879 trajectories, 86 tasks, 126 objects, six interaction patterns."
+  },
+  "evaluation": {
+    "design": "六类真实机器人任务分别测试物体多样性、未见几何/工具泛化和扰动；并消融 tactile VAE、联合生成、动作表示、动态加权、预测长度、LTD、门控、视觉生成和反射控制。",
+    "baselines": ["Diffusion Policy", "DP+tactile", "KineDex", "ForceMimic", "RDP", "OmniVTA without RLTC"],
+    "metrics": ["task success rate", "tactile reconstruction L2/cosine", "tactile prediction L2/cosine", "inference latency", "contact deformation"],
+    "ablations": ["joint visual-tactile generation", "future tactile horizon", "LTD encoder", "contact gating", "visual generation", "60 Hz reflex controller"]
+  },
+  "findings": [
+    {"finding": "闭环 OmniVTA 在六类物体多样性任务上均优于移除反射控制器的版本。", "scope": "单一评测平台下六类真实任务。", "locator": "V-B Overall Performance, Table III"},
+    {"finding": "门控比直接拼接平均提高约 7 个百分点，预测触觉越差，策略的接触判断和权重分配越差。", "scope": "wiping 与 peeling 组件消融。", "locator": "V-C 3, Table VIII and Figure 16"}
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {"boundary": "数据虽跨四种触觉传感器和两种采集本体，但策略闭环仍在特定硬件栈和六类任务内验证。", "basis": "III; V-A"},
+      {"boundary": "视觉生成分支未带来显著策略增益且把慢策略延迟从 230 ms 增至 480 ms，最终策略仍只用当前视觉。", "basis": "V-C 3, Table IX"}
+    ]
+  },
+  "transfer_boundary": "适用于有同步视觉—触觉—动作数据、可运行双速控制栈的接触任务；对跨硬件长期漂移、开放世界材料和算力受限部署仍需独立验证。",
+  "critical_appraisal": {
+    "design_strengths": ["数据、模型、策略和控制器逐层消融。", "包含未见物体/几何和外部扰动。", "用开环版本隔离高频控制器价值。"],
+    "design_risks": ["系统组件多，整体增益可能依赖较高工程复杂度。", "没有报告长期磨损、换件和标定漂移。", "闭环平台与训练数据仍由同一系统族生成。"],
+    "baseline_fairness": "比较覆盖纯视觉、加触觉、反应式策略和开放环自身版本；不同方法的模型容量和控制频率未必完全等价。",
+    "metric_validity": "闭环成功、扰动恢复和接触形变共同覆盖任务效用与接触安全，优于只看生成质量。",
+    "reproducibility": "方法与数据统计较完整，作者承诺公开数据、模型和代码；最终复现仍依赖实际发布。",
+    "external_validity": "对接触丰富任务具有强系统证据，但跨工厂、跨传感器实例和长期维护外推有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.19201-C01",
+      "claim": "OmniViTac 将视觉—触觉—动作联合训练的数据底座扩展到 21,879 条轨迹、86 个任务和 126 个物体，覆盖六类接触交互模式。",
+      "stance": "support",
+      "relation": "支持联合训练的数据单元从小规模配对帧扩展到跨任务、跨采集本体的同步接触轨迹。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Table I 报告任务、轨迹、物体、视觉、触觉和采集设置的规模。",
+      "locator": "III-A 2 Dual-Embodiment Data Collection",
+      "source_context": "OmniViTac (Ours) 86 21,879 126 RealSense/Fisheye Xense/Gelsight Mini/DM-Tac/Tac3D 3 30 60 ✓ UMI-style/Kinesthetic Teaching",
+      "evidence_type": "dataset",
+      "quantitative": {"metric": "dataset scale", "value_or_direction": "21,879 trajectories; 86 tasks; 126 objects", "comparator": "visuo-tactile datasets listed in Table I", "task_or_sample": "six contact interaction patterns", "locator": "III-A 2 Dual-Embodiment Data Collection"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "Table I 给出三项规模，方法章节说明六类交互模式；主张未把规模直接等同为策略泛化。"}
+    },
+    {
+      "card_id": "2603.19201-C02",
+      "claim": "在 OmniVTA 的真实机器人评测中，60 Hz 触觉反射闭环相对移除该控制器的开放环版本，把擦拭成功率从 0.66 提到 0.80、切割从 0.50 提到 0.85；预测触觉只有连接到快速纠偏才形成完整控制收益。",
+      "stance": "support",
+      "relation": "支持视觉负责较慢全局动作、触觉负责高频局部残差的双速闭环。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Table III 的 object-diversity 列隔离了移除 RLTC 的开放环变体，两个代表任务均显著提升。",
+      "locator": "V-B Overall Performance",
+      "source_context": "OmniVTA w/o RLTC 0.66 0.40 0.25 0.40 0.30 0.20 0.50 0.50 0.20 0.40 0.35 0.20 0.70 0.40 0.30 OmniVTA 0.80 0.58 0.60 0.55 0.48 0.63 0.85 0.83 0.60 0.60 0.50 0.40 0.90 0.65 0.65",
+      "evidence_type": "experiment",
+      "quantitative": {"metric": "real-robot task success rate", "value_or_direction": "wipe 0.80 vs 0.66; cut 0.85 vs 0.50", "comparator": "OmniVTA w/o RLTC", "task_or_sample": "object-diversity setting for wiping and cutting", "locator": "V-B Overall Performance"},
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "Table III 的列顺序和两行数据直接支持所列任务的 object-diversity 成功率；未外推到全部任务或跨平台。"}
+    }
+  ],
+  "core_citations": [],
+  "notes": "HTML 全文恢复成功；大型 PDF 下载超时后改用 arXiv HTML，未使用 OCR。"
+}

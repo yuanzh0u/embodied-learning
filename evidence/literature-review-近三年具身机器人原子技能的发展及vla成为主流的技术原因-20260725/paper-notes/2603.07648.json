@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.07648",
+    "title": "AtomicVLA: Unlocking the Potential of Atomic Skill Learning in Robots",
+    "published": "2026-03-08T14:18:56Z",
+    "url": "https://arxiv.org/abs/2603.07648",
+    "authors": [
+      "Likui Zhang",
+      "Tao Tang",
+      "Zhihao Zhan",
+      "Xiuwei Chen",
+      "Zisheng Chen",
+      "Jianhua Han",
+      "Jiangtong Zhu",
+      "Pei Xu",
+      "Hang Xu",
+      "Hefeng Wu",
+      "Liang Lin",
+      "Xiaodan Liang"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "理解 VLA 多技能共训干扰、长任务和持续学习问题。"
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "核验 Think-Act、atomic skill abstraction、SG-MoE 和新专家扩展。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核验 LIBERO/CALVIN、真机长任务与持续技能增量。"
+      },
+      {
+        "locator": "A.2 Future Work and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录计划正确性、专家质量与新技能演示需求。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何在 VLA 中建立可扩展原子技能专家，缓解多技能共训干扰与持续学习遗忘？",
+  "contributions": [
+    "统一高层任务链、原子技能抽象和低层动作生成",
+    "以 Skill-Guided Mixture-of-Experts 构建可扩展技能库并只训练新专家"
+  ],
+  "method": {
+    "summary": "在 π0 基础上让 VLM 在关键转换点输出 task chain 和 atomic skill abstraction，skill router 用该抽象选择一个专用 action expert，并与共享 expert 联合输出动作 chunk。",
+    "assumptions": [
+      "VLM 能稳定生成正确原子技能抽象",
+      "技能可以由语义专家分工而不丧失必要共享"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "LIBERO",
+      "LIBERO-LONG",
+      "CALVIN",
+      "real-world Franka demonstrations"
+    ],
+    "tasks": [
+      "原子技能共训",
+      "长时程多步任务",
+      "持续学习新技能"
+    ],
+    "embodiments": [
+      "Franka Research 3",
+      "LIBERO/CALVIN simulation robots"
+    ],
+    "sample_or_scale": "LIBERO 和 CALVIN 公开任务；真机 3 个长任务每个 100 轨迹，5 个短任务每个 50 轨迹。"
+  },
+  "evaluation": {
+    "design": "仿真比较 π0/π0.5 与 MoE 变体，真机评估多任务共训、长时程执行和增量加入 open 技能后的遗忘。",
+    "baselines": [
+      "π0",
+      "π0.5",
+      "standard token-level MoE",
+      "timestep-conditioned MoDE"
+    ],
+    "metrics": [
+      "success rate",
+      "average completed task length",
+      "old-skill retention",
+      "new-skill success"
+    ],
+    "ablations": [
+      "non-MoE",
+      "token-level MoE",
+      "timestep routing",
+      "skill-guided routing"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在 LIBERO-LONG 消融中，skill-guided routing 为 95.2%，token-level MoE 低 6.6 个百分点，MoDE 低 5.7 个百分点。",
+      "scope": "LIBERO-LONG 仿真消融",
+      "locator": "4 Experiments > 4.4 Ablation Study"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "系统依赖任务规划模块产生准确原子技能抽象，且新任务仍需大量人类演示做模仿学习。",
+        "locator": "A.2 Future Work and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "AtomicVLA 证明的不是放弃 VLA，而是在 VLA 共享骨干内引入原子技能语义路由和专家。",
+        "basis": "共享 expert、π0 基座、VLM 规划与 atomic experts 共同构成完整系统。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论限于原子技能可稳定标注、路由且每个新技能有足够演示的任务；开放世界技能命名与零样本新技能未解决。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时有仿真、真机、长任务和持续学习评估",
+      "将语义 skill routing 与 token/timestep MoE 直接对比",
+      "显式报告技能干扰和遗忘"
+    ],
+    "design_risks": [
+      "技能标签来自特定轨迹分解和 VLM 生成流程",
+      "真机任务数仍较小"
+    ],
+    "baseline_fairness": "在相同 π0 基座上比较不同 MoE 路由，对核心机制的归因较强。",
+    "metric_validity": "成功率、连续任务长度和旧技能保留分别覆盖执行、长时程和持续学习，指标与主张对齐。",
+    "reproducibility": "公开基准与训练设置详细，但训练使用 8 张 H200，真机数据与计算成本较高。",
+    "external_validity": "跨 LIBERO、CALVIN 与 Franka 提供一定外部效度，但技能库仅覆盖少数通用操作动词。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.07648-C01",
+      "claim": "AtomicVLA 在 LIBERO-LONG 中表明，用语义原子技能路由专家的 SG-MoE 达到 95.2% 成功率，比 token-level MoE 高 6.6 个百分点；原子技能的新进展正是进入 VLA 内部成为专家路由单元。",
+      "stance": "support",
+      "relation": "支持‘原子技能未被忽视，而是以技能专家形式融入 VLA’。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "同一 LIBERO-LONG 消融将 skill-guided routing 与 token-level 和 timestep routing 对照。",
+      "locator": "4.4 Ablation Study",
+      "source_context": "AtomicVLA achieves a success rate of 95.2%, outperforming the MoE baseline by 6.6%",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "LIBERO-LONG success rate",
+        "value_or_direction": "SG-MoE 95.2%",
+        "comparator": "token-level MoE 88.6%; timestep-conditioned MoDE 89.5%",
+        "task_or_sample": "LIBERO-LONG benchmark",
+        "locator": "4.4 Ablation Study, Table 5"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "正文和表 5 数字一致，且比较使用相同基座；主张仅归纳该基准的路由优势。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}

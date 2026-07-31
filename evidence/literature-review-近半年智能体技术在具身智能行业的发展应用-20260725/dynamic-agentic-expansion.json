@@ -1,0 +1,95 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "medium",
+      "notes": "智能体在具身系统中的新近表述分散在 agentic control、embodied reasoning、skill graph、memory、success detection 与 multi-agent collaboration，需要跨词族检索。"
+    }
+  ],
+  "knowledge_ids": ["EA-MODEL", "EA-EVAL", "EA-BIZ"],
+  "families": ["vla", "world-model", "industrial-deployment"],
+  "queries": [
+    {
+      "label": "dynamic-agentic-robot-control",
+      "tier": "core",
+      "query": "all:\"agentic AI\" AND (all:robot OR all:robotics)",
+      "why": "直接覆盖以智能体为上层控制器的机器人系统。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-embodied-reasoning-tool-use",
+      "tier": "mechanism",
+      "query": "all:\"embodied reasoning\" AND (all:\"tool use\" OR all:\"tool calling\" OR all:planning)",
+      "why": "覆盖高层推理、工具调用和技能选择。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-robot-skill-graph-agent-os",
+      "tier": "mechanism",
+      "query": "(all:\"skill graph\" OR all:\"agent OS\" OR all:orchestration) AND (all:robot OR all:embodied)",
+      "why": "覆盖技能图、运行时编排和资源调度。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-embodied-agent-memory",
+      "tier": "mechanism",
+      "query": "all:\"embodied agent\" AND (all:\"episodic memory\" OR all:\"spatial memory\" OR all:\"working memory\")",
+      "why": "覆盖长时任务中的经历记忆、空间记忆和工作记忆。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-success-detection-replanning",
+      "tier": "evaluation",
+      "query": "(all:\"success detection\" OR all:\"failure detection\") AND (all:robot OR all:embodied) AND (all:replanning OR all:retry)",
+      "why": "智能体闭环的关键不是计划生成，而是执行后判定、重试和重规划。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-multi-agent-robot-collaboration",
+      "tier": "adjacent",
+      "query": "(all:\"multi-agent\" OR all:\"multi-robot\") AND (all:\"embodied intelligence\" OR all:\"robot manipulation\") AND all:collaboration",
+      "why": "覆盖多个物理智能体的协作、分工和无显式通信协调。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-agentic-robot-fragility",
+      "tier": "limitation",
+      "query": "(all:agentic OR all:\"LLM agent\") AND all:robot AND (all:fragile OR all:hallucination OR all:failure OR all:safety)",
+      "why": "主动寻找幻觉、误判成功、脆弱性和安全限制。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-agentic-industrial-deployment",
+      "tier": "deployment",
+      "query": "(all:agentic OR all:\"physical agent\") AND all:robot AND (all:industrial OR all:warehouse OR all:manufacturing) AND (all:deployment OR all:production)",
+      "why": "覆盖工厂、仓储和制造业中的智能体化机器人部署。",
+      "source": "llm",
+      "confidence": "high"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-agentic-robotics-browser",
+      "query": "site:arxiv.org/abs 2026 (agentic OR embodied reasoning) robot planning memory",
+      "why": "API 欠召回时发现 agentic robotics 新论文。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-physical-agent-industry-web",
+      "query": "2026 physical agent embodied reasoning robot deployment official",
+      "why": "校准产业界对 physical agent 与 embodied reasoning 的实际用法。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

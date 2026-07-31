@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.17080",
+    "title": "HRDX: A Large-Scale Vector HD-Map Dataset",
+    "published": "2026-06-11",
+    "url": "https://arxiv.org/abs/2606.17080",
+    "authors": [
+      "Sahith Reddy Chada",
+      "Isht Dwivedi",
+      "Nirav Savaliya"
+    ]
+  },
+  "review": {
+    "question": "近一年空间数据的生产难点在哪里，具身机器人与智能驾驶的异同是什么？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-SENSOR",
+      "EA-4D",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "HRDX directly documents localization, time synchronization, aerial alignment and expert annotation needed to manufacture vector HD-map ground truth."
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "Map the scale, semantic richness and continuous-maintenance gap of HD maps."},
+      {"locator": "3.3 Localization and Sensor Synchronization; 3.4 Aerial Imagery; 3.5 Data Annotation and Ground-Truth Labels", "role": "method-or-design", "purpose": "Inspect pose, timing and label production."},
+      {"locator": "6.1 Dataset Scale; 6.2 Rich attributes and high-fidelity annotation; 6.3 Leveraging aerial imagery", "role": "results-or-analysis", "purpose": "Assess scaling and privileged overhead-view evidence."},
+      {"locator": "7 Conclusion", "role": "conclusion-or-limitations", "purpose": "Bound the demonstrated contribution."}
+    ],
+    "sections_skipped": [
+      {"locator": "References", "role": "appendix-or-supplement", "reason": "not-applicable: scoping claims are supported by the paper's dataset protocol and analyses."}
+    ]
+  },
+  "research_question": "What infrastructure and ground-truth process are required to scale vector HD-map learning beyond small, geometry-only datasets?",
+  "contributions": [
+    "Collects 1,400 km of minimally overlapping synchronized camera, LiDAR and centimeter-level pose data with aligned aerial imagery.",
+    "Builds attribute-rich vector ground truth on a globally registered dense point-cloud substrate and evaluates scale and aerial priors."
+  ],
+  "method": {
+    "summary": "Fuses RTK GNSS/INS with LiDAR-inertial odometry, slaves sensors to a master clock, motion-compensates LiDAR, aligns redistributable aerial imagery, accumulates global point clouds and has experts annotate geometry, topology and regulatory attributes.",
+    "assumptions": ["Aerial imagery is legally redistributable and accurately georeferenced", "Sensor clock discipline and cross-calibration remain valid", "Static-road semantics are the target"]
+  },
+  "study_context": {
+    "datasets": ["HRDX"],
+    "tasks": ["Online vector HD-map construction", "Attribute prediction", "Cross-view knowledge distillation"],
+    "embodiments": ["Six-camera, 128-beam LiDAR and RTK GNSS/IMU mapping vehicle"],
+    "sample_or_scale": "More than 40 hours and 1,400 km across urban, suburban and freeway environments; 10 map classes and 20+ attributes."
+  },
+  "evaluation": {
+    "design": "Benchmarks camera, LiDAR and aerial variants; varies training-set fraction; evaluates geometry and semantic attributes.",
+    "baselines": ["Camera-only MapTracker", "Camera+LiDAR fusion", "Camera+aerial fusion and aerial-teacher distillation"],
+    "metrics": ["mAP", "Composite Score", "Per-attribute precision/recall/F1"],
+    "ablations": ["25%, 50%, 75% dataset scale", "Aerial at training/inference versus training-only"]
+  },
+  "findings": [
+    {"finding": "Urban pose truth cannot rely on GNSS alone because multipath and occlusion require LIO/INS fusion; pixel-accurate fusion also requires explicit master clocks and LiDAR motion compensation.", "scope": "HRDX mapping platform.", "locator": "3.3 Localization and Sensor Synchronization"},
+    {"finding": "Rare regulatory attributes remain harder than common lane color/style even in a large attribute-rich dataset, so semantic long tails persist inside static-map production.", "scope": "HRDX attribute evaluation.", "locator": "6.2 Rich attributes and high-fidelity annotation"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "Pre-built HD maps require specialized fleets, extensive annotation and continuous maintenance; the released dataset targets a finite region and static road elements.", "locator": "1 Introduction"}
+    ],
+    "reader_inferred": [
+      {"boundary": "The pipeline establishes high-quality static-map data, but not a low-cost, continuously refreshed global map or dynamic-agent truth.", "basis": "The method depends on expert vector annotation, accumulated LiDAR and region-specific aerial imagery."}
+    ]
+  },
+  "transfer_boundary": "Evidence applies to offline construction of static vector maps in mapped US regions; deployment elsewhere depends on local aerial-data rights, localization quality and annotation ontology.",
+  "critical_appraisal": {
+    "design_strengths": ["Long contiguous drives expose drift and error accumulation", "Separates geometry and planning semantics in evaluation"],
+    "design_risks": ["Single metropolitan region", "The paper does not quantify full annotation labor or refresh cost"],
+    "baseline_fairness": "Model variants share the same main architecture, making modality comparisons reasonably controlled.",
+    "metric_validity": "Composite Score and attribute F1 capture more planner-relevant semantics than geometry-only mAP, but remain offline metrics.",
+    "reproducibility": "Dataset and benchmarks are publicly linked; aerial sources are public county databases.",
+    "external_validity": "Scale is large for public HD-map research but narrower than fleet geography and weather diversity."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.17080-C01",
+      "claim": "Fleet-grade spatial truth requires an explicit pose-and-time production stack: urban GNSS degradation is mitigated with LiDAR-inertial and INS fusion, cameras and LiDAR are disciplined to a master clock, and scans are motion-compensated to image timestamps.",
+      "stance": "support",
+      "relation": "Supports the claim that spatial data fails first at coordinate and temporal alignment, before downstream model training.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The dataset construction section describes the degradation mechanism and concrete fusion, clock and motion-compensation measures.",
+      "locator": "3.3 Localization and Sensor Synchronization",
+      "source_context": "In dense urban areas, GNSS degrades due to multipath and occlusions. We mitigate this by integrating LiDAR–Inertial Odometry (LIO) and fusing it with INS, yielding robust, drift-free localization.",
+      "evidence_type": "dataset production protocol",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The exact section states the urban localization failure mode, the LIO/INS remedy and the master-clock design; the claim is scoped to this production stack."}
+    },
+    {
+      "card_id": "2606.17080-C02",
+      "claim": "Vector HD-map ground truth is built on a globally registered dense 3D map and still requires expert geometry/topology annotation plus visual verification; high-quality coordinates alone do not supply regulatory semantics.",
+      "stance": "support",
+      "relation": "Supports the distinction between metric spatial truth and planner-relevant semantic truth.",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "The annotation section states how the metric substrate and expert semantic labeling are combined.",
+      "locator": "3.5 Data Annotation and Ground-Truth Labels",
+      "source_context": "To construct reliable ground truth for static map elements, we accumulate LiDAR frames at an interval of 5m across each scene into a globally registered, high-density 3D map. This merged point cloud serves as the metric substrate for annotation. Expert annotators use the fused pointcloud to annotate road geometry in vector form (polylines and polygons) and encode topology (e.g., intersection centerlines), followed by visual verification to ensure spatial precision.",
+      "evidence_type": "annotation protocol",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "The source context directly ties the 3D metric substrate to expert geometry/topology annotation and visual verification without generalizing beyond static map elements."}
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

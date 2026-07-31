@@ -1,0 +1,118 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "high",
+      "notes": "将具身数据时空一致性拆为时钟/采样、坐标/标定、跨视角/跨模态对应、动作—状态因果对齐、长程物理连续性五层；这些术语不会稳定同时出现在论文标题或摘要中。"
+    }
+  ],
+  "knowledge_ids": ["EA-DATA", "EA-SENSOR", "EA-4D", "EA-ALIGN", "EA-EVAL"],
+  "families": ["world-model", "tactile-force", "vla", "teleoperation-demo-quality"],
+  "queries": [
+    {
+      "label": "dynamic-clock-sensor-synchronization",
+      "tier": "quality",
+      "query": "(all:robot OR all:embodied) AND (all:\"sensor synchronization\" OR all:\"time synchronization\" OR all:\"timestamp alignment\")",
+      "why": "覆盖多传感器硬件时钟、时间戳、延迟和抖动讨论。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-multimodal-temporal-alignment",
+      "tier": "representation",
+      "query": "all:\"robot manipulation\" AND (all:\"temporal alignment\" OR all:\"cross-modal alignment\") AND (all:tactile OR all:force OR all:vision)",
+      "why": "覆盖视觉、触觉、力觉与机器人状态的跨模态时间对齐。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-spatial-calibration-coordinate-frame",
+      "tier": "quality",
+      "query": "all:robot AND (all:\"coordinate frame\" OR all:\"spatial calibration\" OR all:extrinsic) AND (all:dataset OR all:demonstration OR all:multimodal)",
+      "why": "覆盖相机—机器人—物体参考系、外参和空间标定。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-view-consistent-4d-data",
+      "tier": "representation",
+      "query": "(all:\"view-consistent\" OR all:\"multi-view consistency\") AND (all:4D OR all:\"world model\") AND all:robot",
+      "why": "覆盖跨视角几何一致和任意视角时空生成。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-point-tracks-correspondence",
+      "tier": "representation",
+      "query": "(all:\"3D point tracks\" OR all:\"spatiotemporal correspondence\") AND (all:manipulation OR all:embodied)",
+      "why": "覆盖跨帧点身份、遮挡可见性与度量几何监督。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-action-state-consistency",
+      "tier": "evaluation",
+      "query": "all:robot AND (all:\"action-state consistency\" OR all:\"action observation alignment\" OR all:\"action-conditioned state\")",
+      "why": "覆盖动作、观测和状态变化之间的对齐与检核。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-action-fidelity-long-horizon",
+      "tier": "limitation",
+      "query": "all:\"robot world model\" AND (all:\"action fidelity\" OR all:\"long-horizon consistency\" OR all:\"temporal consistency\")",
+      "why": "覆盖长程预测漂移、动作忠实和视频逼真但物理不一致的反例。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-contact-event-alignment",
+      "tier": "limitation",
+      "query": "all:\"contact-rich manipulation\" AND (all:\"contact event\" OR all:\"contact-aware\" OR all:\"event-driven\") AND (all:tactile OR all:force)",
+      "why": "覆盖稀疏接触事件、固定帧采样失真和接触门控。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-physical-time-action-chunk",
+      "tier": "policy-interface",
+      "query": "(all:VLA OR all:\"vision-language-action\") AND (all:\"action chunk\" OR all:\"control frequency\") AND (all:latency OR all:asynchronous OR all:alignment)",
+      "why": "覆盖动作块按物理时长而非固定帧数对齐、控制频率和延迟。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-spatiotemporal-data-quality",
+      "tier": "quality",
+      "query": "(all:robot OR all:embodied) AND all:\"spatiotemporal consistency\" AND (all:data OR all:dataset OR all:trajectory)",
+      "why": "直接捕捉明确使用时空一致性术语的数据论文。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-browser-spatiotemporal-data",
+      "query": "site:arxiv.org robot data spatiotemporal consistency synchronization calibration action-state",
+      "why": "API 术语过严时补获相邻论文。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-web-physical-time",
+      "query": "robot dataset physical time alignment sensor clock action chunk",
+      "why": "校准论文对物理时间、控制频率和同步误差的实际用词。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-web-spatial-contract",
+      "query": "robot learning dataset coordinate frame calibration provenance multimodal",
+      "why": "校准空间契约、标定谱系和参考系残差术语。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

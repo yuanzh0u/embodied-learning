@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.24934",
+    "title": "HumanEgo: Zero-Shot Robot Learning from Minutes of Human Egocentric Videos",
+    "published": "2026-05-24T08:26:41Z",
+    "url": "https://arxiv.org/abs/2605.24934",
+    "authors": [
+      "Zhi Wang",
+      "Botao He",
+      "Kelin Yu",
+      "Seungjae Lee",
+      "Ruohan Gao",
+      "Furong Huang",
+      "Yiannis Aloimonos"
+    ]
+  },
+  "review": {
+    "question": "近一年 Ego-centric 数据在具身模型训练中面临哪些问题、为何产生、现有方法如何缓解、哪些边界仍未解决？",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接用分钟级 human egocentric video 做 robot-data-free policy learning，并用表征和 tracker 消融揭示主要瓶颈。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认视觉/运动学本体差距与低数据学习问题。"
+      },
+      {
+        "locator": "3 HumanEgo > 3.3 Spatial Observation Preprocessing",
+        "role": "method-or-design",
+        "purpose": "核验 hand-object entity tracking 和 ICT 表征。"
+      },
+      {
+        "locator": "4 Experiments > 4.1 HumanEgo Bridges the Embodiment Gap Efficiently",
+        "role": "results-or-analysis",
+        "purpose": "核验四个真实任务和 human-video baselines。"
+      },
+      {
+        "locator": "4 Experiments > 4.4 What Drives Performance of HumanEgo?",
+        "role": "results-or-analysis",
+        "purpose": "核验 visual-only 与 ICT 的定量消融。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "记录 tracker、occlusion、精度和 RL refinement 边界。"
+      },
+      {
+        "locator": "Appendix E Additional Experiments Analysis > E.1 Hand Tracking Method Study",
+        "role": "appendix-or-supplement",
+        "purpose": "核验 hand tracker 对动作标签与闭环结果的影响。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "只用分钟级 human egocentric demonstrations，能否通过 transferable hand-object representation 学到可直接部署的机器人策略？",
+  "contributions": [
+    "提出 Interaction-Centric Tokens 显式编码 hand-object 6DoF 关系。",
+    "用 flow matching 与三类 dense auxiliary objectives 放大少量轨迹监督。",
+    "在四类真实任务中比较五个 human-video baselines 与 robot teleoperation。"
+  ],
+  "method": {
+    "summary": "由 Aria stereo/SLAM 得到 hand/object 6DoF，去除人手视觉外观并渲染虚拟 gripper，将实体相对位姿编码成 ICT；flow policy 同时学习机器人动作、2D trace、object motion 和 latent consistency。",
+    "assumptions": [
+      "Aria stereo hand tracking 与对象检测能恢复 metric 3D hand-object geometry。",
+      "thumb-index 可近似 parallel-jaw gripper action。",
+      "四个任务的 interaction geometry 对目标机器人可迁移。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "per-task Aria egocentric demonstrations"
+    ],
+    "tasks": [
+      "Serve Bread",
+      "Downstack Cups",
+      "Water Flowers",
+      "Adjust Table"
+    ],
+    "embodiments": [
+      "human hands",
+      "Trossen WidowX",
+      "Franka",
+      "UR10"
+    ],
+    "sample_or_scale": "约 30 分钟 human video/任务；每个主要条件 40 次真实机器人 trials。"
+  },
+  "evaluation": {
+    "design": "与五类 human-video methods 和 ACT 比较；消融 visual preprocessing、ICT、auxiliary losses、tracker 与 reference frame。",
+    "baselines": [
+      "EgoZero",
+      "Point Policy",
+      "ZeroMimic",
+      "Track2Act",
+      "SPOT",
+      "ACT"
+    ],
+    "metrics": [
+      "real-world success rate",
+      "collection time",
+      "hand-tracking accuracy/smoothness"
+    ],
+    "ablations": [
+      "raw RGB/inpainting/robot RGB/ICT",
+      "three auxiliary losses",
+      "four hand trackers"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "仅消除视觉外观差距的方案最高约 32.5%，在 raw human RGB 加 ICT 则从 7.5% 升到 85%，表明显式 3D interaction state 是关键。",
+      "scope": "Water Flowers representation ablation。",
+      "locator": "4 Experiments > 4.4 What Drives Performance of HumanEgo?"
+    },
+    {
+      "finding": "HumanEgo 在四个真实任务平均 92.5%，但依赖 Aria stereo tracking；monocular substitutes 明显降低成功率。",
+      "scope": "特定四任务、分钟级 per-task 数据和强感知前端。",
+      "locator": "5 Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "依赖 Aria stereo hand tracking、逐帧对象检测；快速运动/遮挡、sub-centimeter contact precision 和多模块级联失败尚未解决。",
+        "locator": "5 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "所谓 robot-data-free 仍依赖专用 wearable 的 metric hand pose 与 per-task data collection。",
+        "basis": "采集段使用 Aria MPS 的 stereo/IMU/SLAM 服务，appendix 显示 monocular tracker 导致明显性能损失。"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于能够可靠恢复 metric 3D hand-object interaction、任务可由虚拟 parallel-jaw action 表示且精度约厘米级的场景；对单目网络视频、强遮挡、in-hand manipulation 和亚厘米接触不成立。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "真实机器人、多个任务和多种 OOD hardware/viewpoint 测试。",
+      "表征消融把 visual appearance 与 3D interaction geometry 分开。"
+    ],
+    "design_risks": [
+      "per-task human data 与专用 Aria pipeline 限制通用大规模 corpus 结论。",
+      "与 robot teleoperation 的 collection-time 比较未完全等化预处理计算和设备成本。"
+    ],
+    "baseline_fairness": "五个 human-video baselines 使用同样 30 分钟数据；模型实现与强前端适配可能仍不完全等资源。",
+    "metric_validity": "40-trial 真实成功率强于开放环代理；缺少长期 drift、标注人工成本与安全过程指标。",
+    "reproducibility": "代码和 pipeline 公开意图清晰，但 Aria MPS/对象检测质量与硬件标定是关键依赖。",
+    "external_validity": "提供强烈可行性证据，但不意味着 arbitrary ego video 或任意机器人都可零样本迁移。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.24934-C01",
+      "claim": "缩小 human/robot 图像外观差距并不足以让 ego 数据可训练；Water Flowers 消融中 visual-only 最高约 32.5%，显式 hand-object 6DoF ICT 才带来大幅闭环提升。",
+      "stance": "conditional",
+      "relation": "说明 Ego-centric 预训练需要 action-relevant 3D interaction state，而非只靠视觉域适配。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "raw RGB、inpainting、robot RGB 和 ICT 的阶梯消融把视觉外观与空间关系作用分离。",
+      "locator": "4.4 What Drives Performance of HumanEgo?",
+      "source_context": "Monocular RGB encodes appearance , not the 3D spatial relationships that manipulation demands.",
+      "evidence_type": "representation-ablation",
+      "quantitative": {
+        "metric": "real-world success rate",
+        "value_or_direction": "32.5% visual-only ceiling; 85% with ICT on raw human RGB",
+        "comparator": "robot RGB without ICT versus raw human RGB plus ICT",
+        "task_or_sample": "Water Flowers, 40 real-world trials per condition",
+        "locator": "4 Experiments > 4.4 What Drives Performance of HumanEgo?"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "消融段和图 9 直接给出 visual-only 上限与 ICT 跳升；主张仅归因该系统内的显式 3D 表征。"
+      }
+    },
+    {
+      "card_id": "2605.24934-C02",
+      "claim": "HumanEgo 的高成功率依赖强 hand/object tracking 前端；单目绝对深度、动态遮挡、模块级联误差和亚厘米接触精度仍是未解决困难。",
+      "stance": "limit",
+      "relation": "给 robot-data-free 结果附加感知硬件与任务精度边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 limitation 段逐项列出 stereo hand tracking、occlusion-robust tracking、cascading failures 和 1 cm plateau。",
+      "locator": "5 Conclusion",
+      "source_context": "monocular substitutes drop real-world success sharply",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "限制段直接陈述 monocular 退化并列出 tracker/precision 边界；主张没有否定方法在其硬件条件下的正向结果。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "robot-data-free 指无机器人训练数据，不等于无专用手势/SLAM 采集基础设施。"
+}

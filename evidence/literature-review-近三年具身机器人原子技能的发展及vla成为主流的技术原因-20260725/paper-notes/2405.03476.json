@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2405.03476",
+    "title": "DexSkills: Skill Segmentation Using Haptic Data for Learning Autonomous Long-Horizon Robotic Manipulation Tasks",
+    "published": "2024-05-06T13:51:02Z",
+    "url": "https://arxiv.org/abs/2405.03476",
+    "authors": [
+      "Xiaofeng Mao",
+      "Gabriele Giudici",
+      "Claudio Coppola",
+      "Kaspar Althoefer",
+      "Ildar Farkhatdinov",
+      "Zhibin Li",
+      "Lorenzo Jamone"
+    ]
+  },
+  "review": {
+    "question": "近三年具身机器人原子技能如何发展，技术主流为何选择VLA，以及两条路线如何融合？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-XEMBODIMENT",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接回答VLA规模化、原子技能分解/组合或两者融合的评审问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "I INTRODUCTION",
+        "role": "problem",
+        "purpose": "理解灵巧长任务、遮挡与累积误差问题。"
+      },
+      {
+        "locator": "III METHODS",
+        "role": "method-or-design",
+        "purpose": "核验触觉/本体特征、primitive skill 学习与未见长演示分段。"
+      },
+      {
+        "locator": "VI Experimental Results",
+        "role": "results-or-analysis",
+        "purpose": "核验分类、模态消融与自主长任务执行。"
+      },
+      {
+        "locator": "VII Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "界定可复用 primitive skill 结论与特定灵巧手边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "长时程灵巧操作能否从触觉和本体演示中自动分割为可复用原子技能，并重组为自主任务？",
+  "contributions": [
+    "以本体感觉和触觉分割长时程演示",
+    "将分割出的 primitive skills 分别学习为可执行策略"
+  ],
+  "method": {
+    "summary": "先用有监督表示学习区分已知原子技能，再把未见长演示分割为技能序列，为每个原子技能学习自主控制器。",
+    "assumptions": [
+      "长任务可由有限已知 primitive skill 序列表示",
+      "触觉和本体动力学足以标识技能边界"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "人类遥操的触觉/本体演示"
+    ],
+    "tasks": [
+      "多指原子技能",
+      "未见长时程操作"
+    ],
+    "embodiments": [
+      "Allegro Hand 灵巧手系统"
+    ],
+    "sample_or_scale": "有限原子技能集与若干未见长时程任务。"
+  },
+  "evaluation": {
+    "design": "评估技能分类/分割准确率，做模态特征重要性消融，并执行自主长时程任务。",
+    "baselines": [
+      "替代时序分类/分段方法"
+    ],
+    "metrics": [
+      "classification accuracy",
+      "segmentation accuracy",
+      "autonomous task completion"
+    ],
+    "ablations": [
+      "tactile vs proprioceptive feature importance"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "触觉和本体感觉可将未见长演示分割为已知 primitive skills，并支持分技能策略自主执行。",
+      "scope": "论文设定的灵巧手和有限技能集",
+      "locator": "VII Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "该路线需要先定义 primitive skill 集并分别训练控制策略，技能库扩张会带来标注、路由与验收成本。",
+        "basis": "未知长任务的分割仅在既有原子技能集内评估。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论限于相同灵巧手、相同传感器与可由已知 primitive skills 覆盖的任务。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "用触觉支持视觉遮挡下的技能边界",
+      "技能分割与闭环执行都有评估"
+    ],
+    "design_risks": [
+      "技能词表预先限定",
+      "单一手型和传感配置限制迁移"
+    ],
+    "baseline_fairness": "分割方法在相同数据上比较，但自主执行的完整系统基线有限。",
+    "metric_validity": "分类准确率不等于组合成功；论文用自主执行部分缓解了此问题。",
+    "reproducibility": "方法和特征较清楚，但需要特定触觉灵巧手设备。",
+    "external_validity": "对接触丰富灵巧任务有针对性，但对夹爪、不同触觉硬件与开放技能库的外推弱。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2405.03476-C01",
+      "claim": "DexSkills 证明了原子技能路线在接触丰富长任务中的价值：触觉与本体信号可将长演示分解为可复用 primitive skills，再由独立策略组合执行；但证据限于预定技能集和特定灵巧手。",
+      "stance": "conditional",
+      "relation": "支持原子技能在分段、诊断与接触执行上有优势，同时显示其扩展性边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论直接将框架概括为从人类演示分解并学习可复用 primitive skills。",
+      "locator": "VII Conclusion",
+      "source_context": "decomposing them into reusable primitive skills, trained from human demonstrations.",
+      "evidence_type": "system-evaluation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文结论明确支持可复用原子技能和演示来源；主张显式限定于该实验系统。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "本轮按 scoping 深度完成结构映射、问题导向精读、限制审查与主张支持核验。"
+}
