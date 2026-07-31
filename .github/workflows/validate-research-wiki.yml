@@ -1,0 +1,23 @@
+name: Validate Research Wiki
+
+on:
+  pull_request:
+    paths:
+      - 'wiki/**'
+      - 'scripts/build_research_wiki.py'
+      - 'scripts/serve_research_wiki.py'
+      - '.github/workflows/deploy-research-wiki.yml'
+      - '.github/workflows/validate-research-wiki.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate content snapshot
+        run: python3 scripts/build_research_wiki.py --check --output wiki/data
+      - name: Check Python syntax
+        run: python3 -m py_compile scripts/build_research_wiki.py scripts/serve_research_wiki.py

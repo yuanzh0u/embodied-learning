@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f0e8">
+    <meta name="description" content="从科研备忘录到公众解释，导览和阅读具身智能话题研究成果。">
+    <title>具身智能研究 Wiki</title>
+    <link rel="stylesheet" href="assets/wiki.css">
+    <script defer src="assets/wiki.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#article-body">跳到正文</a>
+
+    <header class="topbar">
+      <button class="icon-button mobile-only" id="sidebar-toggle" type="button" aria-label="打开话题导航" aria-expanded="false">☰</button>
+      <a class="brand" href="#/" aria-label="具身智能研究 Wiki 首页">
+        <span class="brand-mark" aria-hidden="true">研</span>
+        <span class="brand-copy">
+          <strong>具身智能研究 Wiki</strong>
+          <small>从科研备忘录到公众解释</small>
+        </span>
+      </a>
+      <button class="search-trigger" id="search-trigger" type="button" aria-haspopup="dialog">
+        <span aria-hidden="true">⌕</span>
+        <span>搜索全部研究</span>
+        <kbd>/</kbd>
+      </button>
+      <button class="refresh-button" id="refresh-button" type="button">
+        <span class="refresh-icon" aria-hidden="true">↻</span>
+        <span id="refresh-label">检查更新</span>
+      </button>
+    </header>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="研究导航">
+        <div class="sidebar-intro">
+          <p class="eyebrow">研究导览</p>
+          <div class="library-stat"><strong id="topic-count">—</strong><span>个最新完整话题</span></div>
+          <p id="snapshot-time">正在读取成果索引…</p>
+        </div>
+        <nav class="field-nav" id="field-nav" aria-label="研究领域"></nav>
+        <div class="topic-section">
+          <div class="topic-section-title">
+            <span id="topic-list-title">最近更新</span>
+            <button id="show-all-topics" type="button">全部</button>
+          </div>
+          <div class="topic-list" id="topic-list"></div>
+        </div>
+        <a class="knowledge-map-link" href="knowledge-map/">
+          <span aria-hidden="true">◎</span>
+          <span><strong>知识图谱</strong><small>查看研究证据与知识路由</small></span>
+        </a>
+      </aside>
+
+      <button class="sidebar-scrim" id="sidebar-scrim" type="button" aria-label="关闭话题导航"></button>
+
+      <main class="main-content" id="main-content">
+        <section class="welcome" id="welcome-view" hidden>
+          <p class="eyebrow">Latest research</p>
+          <h1>把复杂研究，放进一条可阅读的路径。</h1>
+          <p>每个话题只呈现最新完整成果。先读知乎解释版建立理解，再按需进入科研备忘录和证据附录。</p>
+          <div class="welcome-grid" id="welcome-grid"></div>
+        </section>
+
+        <article class="article" id="article-view" hidden>
+          <header class="article-header">
+            <div class="article-kicker">
+              <span id="article-field">研究领域</span>
+              <span aria-hidden="true">·</span>
+              <time id="article-date"></time>
+              <span class="latest-badge">最新版本</span>
+            </div>
+            <h1 id="article-title"></h1>
+            <p class="article-excerpt" id="article-excerpt"></p>
+            <div class="article-actions">
+              <div class="version-tabs" id="version-tabs" role="tablist" aria-label="文章版本">
+                <button type="button" role="tab" data-version="keyan">科研备忘录</button>
+                <button type="button" role="tab" data-version="zhihu">知乎解释版</button>
+                <button type="button" role="tab" data-version="xiaohongshu">小红书版</button>
+              </div>
+              <button class="evidence-button" id="evidence-button" type="button">
+                <span aria-hidden="true">▤</span> 查看证据
+              </button>
+            </div>
+          </header>
+          <div class="reading-meta">
+            <span id="version-article-title"></span>
+            <span id="reading-length"></span>
+          </div>
+          <div class="markdown-body" id="article-body" tabindex="-1"></div>
+          <footer class="article-footer">
+            <p>本文来自研究工作流中的最新完整成稿；三种表达共享证据层，但面向不同阅读场景。</p>
+            <button id="next-topic" type="button">阅读下一篇 <span aria-hidden="true">→</span></button>
+          </footer>
+        </article>
+
+        <section class="error-view" id="error-view" hidden>
+          <span aria-hidden="true">!</span>
+          <h1>暂时无法读取 Wiki</h1>
+          <p id="error-message"></p>
+          <button type="button" id="retry-button">重新加载</button>
+        </section>
+      </main>
+
+      <aside class="toc-panel" id="toc-panel" aria-label="本页目录">
+        <p class="eyebrow">本页目录</p>
+        <nav id="toc-nav"></nav>
+        <div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div>
+      </aside>
+    </div>
+
+    <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title">
+      <div class="search-box">
+        <span aria-hidden="true">⌕</span>
+        <input id="search-input" type="search" placeholder="搜索标题、正文或研究领域…" autocomplete="off">
+        <button id="search-close" type="button" aria-label="关闭搜索">Esc</button>
+      </div>
+      <div class="search-summary">
+        <h2 id="search-title">搜索全部研究版本</h2>
+        <span id="search-count">输入关键词开始搜索</span>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </dialog>
+
+    <div class="drawer-scrim" id="drawer-scrim"></div>
+    <aside class="evidence-drawer" id="evidence-drawer" aria-label="研究证据" aria-hidden="true">
+      <header>
+        <div>
+          <p class="eyebrow">Evidence</p>
+          <h2 id="evidence-title">证据附录</h2>
+        </div>
+        <button class="icon-button" id="evidence-close" type="button" aria-label="关闭证据抽屉">×</button>
+      </header>
+      <div class="evidence-source" id="evidence-source"></div>
+      <div class="markdown-body evidence-body" id="evidence-body"></div>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <noscript>这个 Wiki 需要启用 JavaScript 才能读取研究成果。</noscript>
+  </body>
+</html>
