@@ -202,11 +202,13 @@
     nodes.articleField.textContent = topic.field;
     nodes.articleDate.textContent = formatDate(topic.date);
     nodes.articleDate.dateTime = topic.date;
-    nodes.articleTitle.textContent = topic.title;
+    nodes.articleTitle.textContent = version.article_title;
     nodes.articleExcerpt.textContent = topic.excerpt;
-    nodes.versionArticleTitle.textContent = version.article_title;
+    nodes.versionArticleTitle.textContent = `所属话题：${topic.title}`;
     nodes.readingLength.textContent = `约 ${Math.max(1, Math.round(version.characters / 520))} 分钟阅读`;
     nodes.articleBody.innerHTML = version.html;
+    const repeatedTitle = nodes.articleBody.firstElementChild;
+    if (repeatedTitle?.tagName === "H1") repeatedTitle.remove();
     nodes.evidenceButton.disabled = !topic.evidence.available;
     nodes.evidenceButton.title = topic.evidence.available ? "打开证据附录" : "这个话题没有随附证据文档";
     [...nodes.versionTabs.querySelectorAll("[data-version]")].forEach((button) => {
@@ -218,7 +220,7 @@
     renderFieldTree();
     bindArticleLinks();
     updateProgress();
-    document.title = `${topic.title}｜空间智能研究 Wiki`;
+    document.title = `${version.article_title}｜空间智能研究 Wiki`;
   }
 
   function renderToc(toc) {
