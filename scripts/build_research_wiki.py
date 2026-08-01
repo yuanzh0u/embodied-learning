@@ -67,6 +67,7 @@ _INLINE_CODE = re.compile(r"`([^`]+)`")
 _INLINE_BOLD = re.compile(r"\*\*(.+?)\*\*|__(.+?)__")
 _INLINE_STRIKE = re.compile(r"~~(.+?)~~")
 _INLINE_ITALIC = re.compile(r"(?<!\*)\*([^*]+)\*(?!\*)")
+_ARXIV_URL = re.compile(r"^https?://(?:[a-z0-9-]+\.)?arxiv\.org/", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -261,7 +262,10 @@ def _inline(text: str) -> str:
     def link_sub(match: re.Match[str]) -> str:
         label, target = match.group(1), html.unescape(match.group(2))
         if target.startswith(("https://", "http://", "mailto:")):
-            return f'<a href="{html.escape(target, quote=True)}" target="_blank" rel="noopener noreferrer">{label}</a>'
+            link = f'<a href="{html.escape(target, quote=True)}" target="_blank" rel="noopener noreferrer">{label}</a>'
+            if _ARXIV_URL.match(target):
+                return f'<span class="arxiv-reference"><span class="arxiv-icon" aria-hidden="true">arXiv</span>{link}</span>'
+            return link
         if target.startswith("#"):
             return f'<a href="{html.escape(target, quote=True)}">{label}</a>'
         if target.split("#", 1)[0].endswith(("evidence-appendix.md", "review-packet.md")):
