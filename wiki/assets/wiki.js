@@ -86,6 +86,11 @@
     return `快照更新于 ${new Intl.DateTimeFormat("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(date)}`;
   }
 
+  function formatTopicUpdated(value) {
+    if (!value || value === "0000-00-00") return "时间未标注";
+    return `更新于 ${value}`;
+  }
+
   async function fetchJson(path, bust = false) {
     const suffix = bust ? `${path.includes("?") ? "&" : "?"}t=${Date.now()}` : "";
     const response = await fetch(`${path}${suffix}`, { cache: bust ? "no-store" : "default" });
@@ -134,7 +139,8 @@
           <div class="tree-children" id="${childrenId}">
             ${topics.map((topic) => `
               <button class="tree-topic ${state.topic?.id === topic.id ? "is-active" : ""}" type="button" data-topic-id="${escapeHtml(topic.id)}" ${state.topic?.id === topic.id ? 'aria-current="page"' : ""}>
-                <span>${escapeHtml(topic.title)}</span>
+                <span class="tree-topic-title">${escapeHtml(topic.title)}</span>
+                <small class="tree-topic-meta">${escapeHtml(formatTopicUpdated(topic.date))}</small>
               </button>`).join("")}
           </div>
         </section>`;

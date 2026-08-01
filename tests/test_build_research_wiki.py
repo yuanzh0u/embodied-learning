@@ -129,9 +129,13 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn("function renderFieldTree()", script)
         self.assertIn('class="tree-folder ${expanded ? "is-expanded" : ""}"', script)
         self.assertIn('class="tree-count"', script)
+        self.assertIn('class="tree-topic-meta"', script)
+        self.assertIn('return `更新于 ${value}`', script)
         self.assertIn("function syncSidebarForViewport()", script)
         self.assertIn("transform: translateX(-105%);", styles)
         self.assertIn('.tree-folder-row[aria-expanded="true"] .folder-icon::after', styles)
+        self.assertIn("--paper: #f5f4f0", styles)
+        self.assertNotIn("--coral:", styles)
 
 
 if __name__ == "__main__":
