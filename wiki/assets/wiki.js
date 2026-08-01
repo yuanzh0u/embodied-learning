@@ -6,11 +6,21 @@
     zhihu: "知乎解释版",
     xiaohongshu: "小红书版",
   };
+  const FIELD_ORDER = [
+    "世界模型与评测",
+    "数据工程与质量",
+    "多模态感知",
+    "VLA 与模型",
+    "空间智能与导航",
+    "跨本体与控制",
+    "产业与应用",
+  ];
   const state = {
     manifest: null,
     topic: null,
     version: "zhihu",
-    selectedField: null,
+    drawerMode: "recent",
+    expandedFields: new Set(),
     searchIndex: null,
     topicCache: new Map(),
     searchTimer: null,
@@ -22,8 +32,8 @@
     sidebarToggle: el("sidebar-toggle"),
     sidebarScrim: el("sidebar-scrim"),
     fieldNav: el("field-nav"),
-    topicList: el("topic-list"),
-    topicListTitle: el("topic-list-title"),
+    allResearch: el("all-research"),
+    recentResearch: el("recent-research"),
     topicCount: el("topic-count"),
     snapshotTime: el("snapshot-time"),
     welcome: el("welcome-view"),
@@ -89,34 +99,46 @@
     state.manifest = manifest;
     nodes.topicCount.textContent = manifest.topics.length;
     nodes.snapshotTime.textContent = formatSnapshot(manifest.generated_at);
-    renderFieldNav();
-    renderTopicList();
+    renderFieldTree();
     renderWelcome();
     return manifest;
   }
 
-  function renderFieldNav() {
-    const fields = state.manifest.fields || [];
-    const all = [{ name: "全部领域", count: state.manifest.topics.length }, ...fields];
-    nodes.fieldNav.innerHTML = all.map((field) => `
-      <button type="button" data-field="${escapeHtml(field.name)}" class="${(!state.selectedField && field.name === "全部领域") || state.selectedField === field.name ? "is-active" : ""}">
-        <span>${escapeHtml(field.name)}</span><span>${field.count}</span>
-      </button>`).join("");
+  function orderedFields() {
+    const fields = state.manifest?.fields || [];
+    return [...fields].sort((left, right) => {
+      const leftIndex = FIELD_ORDER.indexOf(left.name);
+      const rightIndex = FIELD_ORDER.indexOf(right.name);
+      if (leftIndex === -1 && rightIndex === -1) return left.name.localeCompare(right.name, "zh-CN");
+      if (leftIndex === -1) return 1;
+      if (rightIndex === -1) return -1;
+      return leftIndex - rightIndex;
+    });
   }
 
-  function visibleTopics() {
-    const topics = state.manifest?.topics || [];
-    return state.selectedField ? topics.filter((topic) => topic.field === state.selectedField) : topics;
-  }
-
-  function renderTopicList() {
-    const topics = visibleTopics();
-    nodes.topicListTitle.textContent = state.selectedField || "最近更新";
-    nodes.topicList.innerHTML = topics.map((topic) => `
-      <button type="button" class="topic-card ${state.topic?.id === topic.id ? "is-active" : ""}" data-topic-id="${topic.id}">
-        <strong>${escapeHtml(topic.title)}</strong>
-        <span>${escapeHtml(formatDate(topic.date))}</span>
-      </button>`).join("");
+  function renderFieldTree() {
+    if (!state.manifest) return;
+    nodes.allResearch.classList.toggle("is-active", state.drawerMode === "all");
+    nodes.recentResearch.classList.toggle("is-active", state.drawerMode === "recent");
+    nodes.fieldNav.innerHTML = orderedFields().map((field, index) => {
+      const expanded = state.expandedFields.has(field.name);
+      const topics = state.manifest.topics.filter((topic) => topic.field === field.name);
+      const childrenId = `field-topics-${index}`;
+      return `
+        <section class="tree-folder ${expanded ? "is-expanded" : ""}">
+          <button class="tree-folder-row" type="button" data-field="${escapeHtml(field.name)}" aria-expanded="${expanded}" aria-controls="${childrenId}">
+            <span class="folder-icon" aria-hidden="true"></span>
+            <span>${escapeHtml(field.name)}</span>
+            <span class="tree-chevron" aria-hidden="true">›</span>
+          </button>
+          <div class="tree-children" id="${childrenId}">
+            ${topics.map((topic) => `
+              <button class="tree-topic ${state.topic?.id === topic.id ? "is-active" : ""}" type="button" data-topic-id="${escapeHtml(topic.id)}" ${state.topic?.id === topic.id ? 'aria-current="page"' : ""}>
+                <span>${escapeHtml(topic.title)}</span>
+              </button>`).join("")}
+          </div>
+        </section>`;
+    }).join("");
   }
 
   function renderWelcome() {
@@ -155,6 +177,8 @@
       }
       state.topic = topic;
       state.version = topic.versions[requestedVersion] ? requestedVersion : "zhihu";
+      state.drawerMode = null;
+      state.expandedFields.add(topic.field);
       renderArticle();
       closeSidebar();
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -185,7 +209,7 @@
       button.tabIndex = active ? 0 : -1;
     });
     renderToc(version.toc || []);
-    renderTopicList();
+    renderFieldTree();
     bindArticleLinks();
     updateProgress();
     document.title = `${topic.title}｜具身智能研究 Wiki`;
@@ -223,7 +247,8 @@
     nodes.welcome.hidden = false;
     nodes.tocNav.innerHTML = "";
     nodes.progress.style.width = "0";
-    renderTopicList();
+    state.drawerMode = "recent";
+    renderFieldTree();
     document.title = "具身智能研究 Wiki";
   }
 
@@ -248,7 +273,7 @@
     nodes.evidenceDrawer.classList.add("is-open");
     nodes.drawerScrim.classList.add("is-open");
     nodes.evidenceDrawer.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    syncBodyScroll();
     el("evidence-close").focus();
   }
 
@@ -256,19 +281,61 @@
     nodes.evidenceDrawer.classList.remove("is-open");
     nodes.drawerScrim.classList.remove("is-open");
     nodes.evidenceDrawer.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    syncBodyScroll();
   }
 
   function openSidebar() {
+    if (state.topic?.field) state.expandedFields.add(state.topic.field);
+    renderFieldTree();
     nodes.sidebar.classList.add("is-open");
     nodes.sidebarScrim.classList.add("is-open");
+    nodes.sidebar.inert = false;
+    nodes.sidebar.setAttribute("aria-hidden", "false");
     nodes.sidebarToggle.setAttribute("aria-expanded", "true");
+    nodes.sidebarToggle.setAttribute("aria-label", "关闭研究导航");
+    nodes.sidebarToggle.dataset.tooltip = "关闭研究导航";
+    syncBodyScroll();
+    requestAnimationFrame(() => {
+      const target = nodes.sidebar.querySelector(".tree-topic.is-active, .tree-shortcut.is-active, .tree-folder-row");
+      target?.focus();
+      target?.scrollIntoView({ block: "nearest" });
+    });
   }
 
   function closeSidebar() {
+    if (nodes.sidebar.contains(document.activeElement)) nodes.sidebarToggle.focus();
     nodes.sidebar.classList.remove("is-open");
     nodes.sidebarScrim.classList.remove("is-open");
+    nodes.sidebar.inert = true;
+    nodes.sidebar.setAttribute("aria-hidden", "true");
     nodes.sidebarToggle.setAttribute("aria-expanded", "false");
+    nodes.sidebarToggle.setAttribute("aria-label", "打开研究导航");
+    nodes.sidebarToggle.dataset.tooltip = "打开研究导航";
+    syncBodyScroll();
+  }
+
+  function syncBodyScroll() {
+    const overlayOpen = nodes.sidebar.classList.contains("is-open") || nodes.evidenceDrawer.classList.contains("is-open");
+    document.body.style.overflow = overlayOpen ? "hidden" : "";
+  }
+
+  function focusFieldRow(fieldName) {
+    requestAnimationFrame(() => {
+      const row = [...nodes.fieldNav.querySelectorAll("[data-field]")].find((button) => button.dataset.field === fieldName);
+      row?.focus();
+    });
+  }
+
+  function showRecentResearch() {
+    state.drawerMode = "recent";
+    closeSidebar();
+    if (!location.hash || location.hash === "#/") {
+      history.replaceState(null, "", "#/");
+      showWelcome();
+    } else {
+      location.hash = "#/";
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function ensureSearchIndex() {
@@ -358,7 +425,7 @@
     const previous = state.manifest?.generated_at;
     try {
       if (isLocalRefreshAvailable()) {
-        nodes.refreshLabel.textContent = "扫描成果中";
+        setRefreshLabel("扫描成果中");
         const response = await fetch("api/refresh", { method: "POST" });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "刷新失败");
@@ -368,7 +435,7 @@
         route();
         showToast(`刷新完成：已准备 ${payload.topics} 个最新完整话题。`);
       } else {
-        nodes.refreshLabel.textContent = "检查更新中";
+        setRefreshLabel("检查更新中");
         await loadManifest(true);
         if (previous === state.manifest.generated_at) showToast("已经是线上最新版本。下一次发布后可在这里检查更新。");
         else {
@@ -383,8 +450,14 @@
     } finally {
       nodes.refreshButton.disabled = false;
       nodes.refreshButton.classList.remove("is-spinning");
-      nodes.refreshLabel.textContent = isLocalRefreshAvailable() ? "刷新成果" : "检查更新";
+      setRefreshLabel(isLocalRefreshAvailable() ? "刷新成果" : "检查更新");
     }
+  }
+
+  function setRefreshLabel(label) {
+    nodes.refreshLabel.textContent = label;
+    nodes.refreshButton.setAttribute("aria-label", label);
+    nodes.refreshButton.dataset.tooltip = label;
   }
 
   function showToast(message) {
@@ -416,25 +489,33 @@
     nodes.sidebarToggle.addEventListener("click", () => nodes.sidebar.classList.contains("is-open") ? closeSidebar() : openSidebar());
     nodes.sidebarScrim.addEventListener("click", closeSidebar);
     nodes.fieldNav.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-field]");
-      if (!button) return;
-      state.selectedField = button.dataset.field === "全部领域" ? null : button.dataset.field;
-      renderFieldNav();
-      renderTopicList();
-    });
-    nodes.topicList.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-topic-id]");
-      if (button) setRoute(button.dataset.topicId, "zhihu");
+      const topicButton = event.target.closest("[data-topic-id]");
+      if (topicButton) {
+        state.drawerMode = null;
+        closeSidebar();
+        setRoute(topicButton.dataset.topicId, "zhihu");
+        return;
+      }
+      const fieldButton = event.target.closest("[data-field]");
+      if (!fieldButton) return;
+      const fieldName = fieldButton.dataset.field;
+      state.drawerMode = null;
+      if (state.expandedFields.has(fieldName)) state.expandedFields.delete(fieldName);
+      else state.expandedFields.add(fieldName);
+      renderFieldTree();
+      focusFieldRow(fieldName);
     });
     nodes.welcomeGrid.addEventListener("click", (event) => {
       const button = event.target.closest("[data-topic-id]");
       if (button) setRoute(button.dataset.topicId, "zhihu");
     });
-    el("show-all-topics").addEventListener("click", () => {
-      state.selectedField = null;
-      renderFieldNav();
-      renderTopicList();
+    nodes.allResearch.addEventListener("click", () => {
+      state.drawerMode = "all";
+      state.expandedFields = new Set(orderedFields().map((field) => field.name));
+      renderFieldTree();
+      nodes.allResearch.focus();
     });
+    nodes.recentResearch.addEventListener("click", showRecentResearch);
     nodes.versionTabs.addEventListener("click", (event) => {
       const button = event.target.closest("[data-version]");
       if (button) switchVersion(button.dataset.version);
@@ -479,7 +560,7 @@
   async function init(bust = false) {
     try {
       await loadManifest(bust);
-      nodes.refreshLabel.textContent = isLocalRefreshAvailable() ? "刷新成果" : "检查更新";
+      setRefreshLabel(isLocalRefreshAvailable() ? "刷新成果" : "检查更新");
       route();
     } catch (error) {
       showError(`成果索引读取失败：${error.message}`);
