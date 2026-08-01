@@ -87,6 +87,19 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn('href="https://example.com/paper"', rendered)
         self.assertEqual([item["label"] for item in toc], ["标题", "小节"])
 
+    def test_markdown_renderer_marks_arxiv_links_only(self) -> None:
+        rendered, _toc = wiki.markdown_to_html(
+            "[论文](https://arxiv.org/abs/2607.07287) 与 [项目](https://example.com/project)\n"
+        )
+
+        self.assertEqual(rendered.count('class="arxiv-icon"'), 1)
+        self.assertIn(
+            '<span class="arxiv-icon" aria-hidden="true">arXiv</span>'
+            '<a href="https://arxiv.org/abs/2607.07287"',
+            rendered,
+        )
+        self.assertIn('<a href="https://example.com/project"', rendered)
+
 
 if __name__ == "__main__":
     unittest.main()
