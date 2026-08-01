@@ -118,14 +118,20 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn('href="https://github.com/yuanzh0u/embodied-learning"', topbar)
         self.assertIn('href="knowledge-map/"', topbar)
         self.assertIn('id="refresh-button"', topbar)
+        self.assertIn('id="topic-count"', topbar)
+        self.assertIn('id="snapshot-time"', topbar)
+        self.assertIn('src="assets/github-mark.svg"', topbar)
         self.assertNotIn("github.com", sidebar)
         self.assertNotIn("knowledge-map/", sidebar)
-        self.assertIn('id="all-research"', sidebar)
+        self.assertNotIn('id="all-research"', sidebar)
         self.assertIn('id="recent-research"', sidebar)
-        self.assertIn('aria-hidden="true" inert', index)
+        self.assertIn('aria-hidden="false"', index)
         self.assertIn("function renderFieldTree()", script)
         self.assertIn('class="tree-folder ${expanded ? "is-expanded" : ""}"', script)
+        self.assertIn('class="tree-count"', script)
+        self.assertIn("function syncSidebarForViewport()", script)
         self.assertIn("transform: translateX(-105%);", styles)
+        self.assertIn('.tree-folder-row[aria-expanded="true"] .folder-icon::after', styles)
 
 
 if __name__ == "__main__":

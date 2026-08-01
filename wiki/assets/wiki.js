@@ -25,6 +25,7 @@
     topicCache: new Map(),
     searchTimer: null,
   };
+  const mobileNavigationQuery = window.matchMedia("(max-width: 780px)");
 
   const el = (id) => document.getElementById(id);
   const nodes = {
@@ -32,7 +33,6 @@
     sidebarToggle: el("sidebar-toggle"),
     sidebarScrim: el("sidebar-scrim"),
     fieldNav: el("field-nav"),
-    allResearch: el("all-research"),
     recentResearch: el("recent-research"),
     topicCount: el("topic-count"),
     snapshotTime: el("snapshot-time"),
@@ -118,7 +118,6 @@
 
   function renderFieldTree() {
     if (!state.manifest) return;
-    nodes.allResearch.classList.toggle("is-active", state.drawerMode === "all");
     nodes.recentResearch.classList.toggle("is-active", state.drawerMode === "recent");
     nodes.fieldNav.innerHTML = orderedFields().map((field, index) => {
       const expanded = state.expandedFields.has(field.name);
@@ -129,6 +128,7 @@
           <button class="tree-folder-row" type="button" data-field="${escapeHtml(field.name)}" aria-expanded="${expanded}" aria-controls="${childrenId}">
             <span class="folder-icon" aria-hidden="true"></span>
             <span>${escapeHtml(field.name)}</span>
+            <span class="tree-count" aria-label="${field.count} 篇">${field.count}</span>
             <span class="tree-chevron" aria-hidden="true">›</span>
           </button>
           <div class="tree-children" id="${childrenId}">
@@ -180,7 +180,7 @@
       state.drawerMode = null;
       state.expandedFields.add(topic.field);
       renderArticle();
-      closeSidebar();
+      closeMobileSidebar();
       window.scrollTo({ top: 0, behavior: "instant" });
     } catch (error) {
       showError(`无法读取“${manifestItem.title}”：${error.message}`);
@@ -287,8 +287,12 @@
   function openSidebar() {
     if (state.topic?.field) state.expandedFields.add(state.topic.field);
     renderFieldTree();
-    nodes.sidebar.classList.add("is-open");
-    nodes.sidebarScrim.classList.add("is-open");
+    if (isMobileNavigation()) {
+      nodes.sidebar.classList.add("is-open");
+      nodes.sidebarScrim.classList.add("is-open");
+    } else {
+      document.body.classList.remove("sidebar-collapsed");
+    }
     nodes.sidebar.inert = false;
     nodes.sidebar.setAttribute("aria-hidden", "false");
     nodes.sidebarToggle.setAttribute("aria-expanded", "true");
@@ -304,7 +308,8 @@
 
   function closeSidebar() {
     if (nodes.sidebar.contains(document.activeElement)) nodes.sidebarToggle.focus();
-    nodes.sidebar.classList.remove("is-open");
+    if (isMobileNavigation()) nodes.sidebar.classList.remove("is-open");
+    else document.body.classList.add("sidebar-collapsed");
     nodes.sidebarScrim.classList.remove("is-open");
     nodes.sidebar.inert = true;
     nodes.sidebar.setAttribute("aria-hidden", "true");
@@ -315,8 +320,44 @@
   }
 
   function syncBodyScroll() {
-    const overlayOpen = nodes.sidebar.classList.contains("is-open") || nodes.evidenceDrawer.classList.contains("is-open");
+    const overlayOpen = (isMobileNavigation() && nodes.sidebar.classList.contains("is-open")) || nodes.evidenceDrawer.classList.contains("is-open");
     document.body.style.overflow = overlayOpen ? "hidden" : "";
+  }
+
+  function isMobileNavigation() {
+    return mobileNavigationQuery.matches;
+  }
+
+  function sidebarIsOpen() {
+    return isMobileNavigation()
+      ? nodes.sidebar.classList.contains("is-open")
+      : !document.body.classList.contains("sidebar-collapsed");
+  }
+
+  function closeMobileSidebar() {
+    if (isMobileNavigation()) closeSidebar();
+  }
+
+  function syncSidebarForViewport() {
+    nodes.sidebar.classList.remove("is-open");
+    nodes.sidebarScrim.classList.remove("is-open");
+    if (isMobileNavigation()) {
+      if (nodes.sidebar.contains(document.activeElement)) nodes.sidebarToggle.focus();
+      document.body.classList.remove("sidebar-collapsed");
+      nodes.sidebar.inert = true;
+      nodes.sidebar.setAttribute("aria-hidden", "true");
+      nodes.sidebarToggle.setAttribute("aria-expanded", "false");
+      nodes.sidebarToggle.setAttribute("aria-label", "打开研究导航");
+      nodes.sidebarToggle.dataset.tooltip = "打开研究导航";
+    } else {
+      document.body.classList.remove("sidebar-collapsed");
+      nodes.sidebar.inert = false;
+      nodes.sidebar.setAttribute("aria-hidden", "false");
+      nodes.sidebarToggle.setAttribute("aria-expanded", "true");
+      nodes.sidebarToggle.setAttribute("aria-label", "关闭研究导航");
+      nodes.sidebarToggle.dataset.tooltip = "关闭研究导航";
+    }
+    syncBodyScroll();
   }
 
   function focusFieldRow(fieldName) {
@@ -328,7 +369,7 @@
 
   function showRecentResearch() {
     state.drawerMode = "recent";
-    closeSidebar();
+    closeMobileSidebar();
     if (!location.hash || location.hash === "#/") {
       history.replaceState(null, "", "#/");
       showWelcome();
@@ -486,13 +527,14 @@
   function bindEvents() {
     window.addEventListener("hashchange", route);
     window.addEventListener("scroll", updateProgress, { passive: true });
-    nodes.sidebarToggle.addEventListener("click", () => nodes.sidebar.classList.contains("is-open") ? closeSidebar() : openSidebar());
+    mobileNavigationQuery.addEventListener("change", syncSidebarForViewport);
+    nodes.sidebarToggle.addEventListener("click", () => sidebarIsOpen() ? closeSidebar() : openSidebar());
     nodes.sidebarScrim.addEventListener("click", closeSidebar);
     nodes.fieldNav.addEventListener("click", (event) => {
       const topicButton = event.target.closest("[data-topic-id]");
       if (topicButton) {
         state.drawerMode = null;
-        closeSidebar();
+        closeMobileSidebar();
         setRoute(topicButton.dataset.topicId, "zhihu");
         return;
       }
@@ -508,12 +550,6 @@
     nodes.welcomeGrid.addEventListener("click", (event) => {
       const button = event.target.closest("[data-topic-id]");
       if (button) setRoute(button.dataset.topicId, "zhihu");
-    });
-    nodes.allResearch.addEventListener("click", () => {
-      state.drawerMode = "all";
-      state.expandedFields = new Set(orderedFields().map((field) => field.name));
-      renderFieldTree();
-      nodes.allResearch.focus();
     });
     nodes.recentResearch.addEventListener("click", showRecentResearch);
     nodes.versionTabs.addEventListener("click", (event) => {
@@ -567,6 +603,7 @@
     }
   }
 
+  syncSidebarForViewport();
   bindEvents();
   init();
 })();
