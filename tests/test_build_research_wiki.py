@@ -74,6 +74,7 @@ class BuildResearchWikiTest(unittest.TestCase):
         topic = json.loads((self.output / "topics" / f"{topic_id}.json").read_text(encoding="utf-8"))
 
         self.assertEqual(validated["site"]["default_version"], "zhihu")
+        self.assertEqual(validated["site"]["title"], "空间智能研究 Wiki")
         self.assertEqual(set(topic["versions"]), {"keyan", "zhihu", "xiaohongshu"})
         self.assertTrue(topic["evidence"]["available"])
 
@@ -106,6 +107,8 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn('href="https://github.com/yuanzh0u/embodied-learning"', index)
         self.assertIn("GitHub 代码仓", index)
         self.assertIn('target="_blank" rel="noopener noreferrer"', index)
+        self.assertIn("<title>空间智能研究 Wiki</title>", index)
+        self.assertIn("<strong>空间智能研究 Wiki</strong>", index)
 
     def test_wiki_uses_topbar_actions_and_tree_drawer(self) -> None:
         wiki_root = Path(__file__).resolve().parents[1] / "wiki"
@@ -136,6 +139,10 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn('.tree-folder-row[aria-expanded="true"] .folder-icon::after', styles)
         self.assertIn("--paper: #f5f4f0", styles)
         self.assertNotIn("--coral:", styles)
+        self.assertIn('--topbar-height: 68px', styles)
+        self.assertIn('@media (max-width: 900px)', styles)
+        self.assertIn('font-size: clamp(38px, 3.2vw, 46px)', styles)
+        self.assertIn('空间智能研究 Wiki', script)
 
 
 if __name__ == "__main__":
