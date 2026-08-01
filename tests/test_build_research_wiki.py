@@ -100,6 +100,13 @@ class BuildResearchWikiTest(unittest.TestCase):
         )
         self.assertIn('<a href="https://example.com/project"', rendered)
 
+    def test_wiki_home_links_to_github_repository(self) -> None:
+        index = (Path(__file__).resolve().parents[1] / "wiki" / "index.html").read_text(encoding="utf-8")
+
+        self.assertIn('href="https://github.com/yuanzh0u/embodied-learning"', index)
+        self.assertIn("GitHub 代码仓", index)
+        self.assertIn('target="_blank" rel="noopener noreferrer"', index)
+
 
 if __name__ == "__main__":
     unittest.main()
