@@ -537,7 +537,7 @@ def build_snapshot(source: Path, output: Path) -> dict[str, object]:
     generated_at = datetime.now().astimezone().isoformat(timespec="seconds")
     manifest = {
         "site": {
-            "title": "具身智能研究 Wiki",
+            "title": "空间智能研究 Wiki",
             "subtitle": "从科研备忘录到公众解释",
             "default_version": "zhihu",
         },
@@ -583,7 +583,7 @@ def validate_snapshot(output: Path) -> dict[str, object]:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="构建具身智能研究 Wiki 的静态内容快照")
+    parser = argparse.ArgumentParser(description="构建空间智能研究 Wiki 的静态内容快照")
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE, help="成果扫描目录")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="静态数据输出目录")
     parser.add_argument("--check", action="store_true", help="只校验现有发布快照")

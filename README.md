@@ -1,12 +1,12 @@
 # 具身学习知识库
 
-> **在线阅读： [打开具身智能研究 Wiki →](https://yuanzh0u.github.io/embodied-learning/)**
+> **在线阅读： [打开空间智能研究 Wiki →](https://yuanzh0u.github.io/embodied-learning/)**
 
 这是一个围绕具身智能、数据采集、多模态感知、跨本体迁移、评测体系、商业化落地与误差治理的研究知识库。
 
 ## 快速入口
 
-- [具身智能研究 Wiki](https://yuanzh0u.github.io/embodied-learning/)：面向阅读者的研究成果导览，默认提供知乎解释版。
+- [空间智能研究 Wiki](https://yuanzh0u.github.io/embodied-learning/)：面向阅读者的研究成果导览，默认提供知乎解释版。
 - [项目上下文词表](CONTEXT.md)：项目共享语言与 query-planning 术语。
 - [智能体索引](knowledge/index.md)：面向智能体的主索引，优先从这里开始检索。
 - [知识库说明](knowledge/README.md)：说明目录结构、索引规则和新增素材方式。

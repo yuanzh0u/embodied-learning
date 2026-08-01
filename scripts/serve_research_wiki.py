@@ -134,7 +134,7 @@ def build_knowledge_map(output: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="在本地打开具身智能研究 Wiki")
+    parser = argparse.ArgumentParser(description="在本地打开空间智能研究 Wiki")
     parser.add_argument("--port", type=int, default=8018, help="本地端口，默认 8018")
     parser.add_argument("--open", action="store_true", help="启动后自动打开浏览器")
     parser.add_argument("--no-refresh", action="store_true", help="启动时不重新扫描成果")
@@ -156,7 +156,7 @@ def main() -> int:
         handler = partial(WikiHandler, knowledge_map=knowledge_map)
         server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
         url = f"http://127.0.0.1:{args.port}/"
-        print(f"具身智能研究 Wiki 已准备好：{url}")
+        print(f"空间智能研究 Wiki 已准备好：{url}")
         print("保持此窗口打开即可阅读；按 Control-C 关闭。")
         if args.open:
             threading.Timer(0.45, lambda: webbrowser.open(url)).start()

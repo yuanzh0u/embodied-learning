@@ -25,7 +25,7 @@
     topicCache: new Map(),
     searchTimer: null,
   };
-  const mobileNavigationQuery = window.matchMedia("(max-width: 780px)");
+  const mobileNavigationQuery = window.matchMedia("(max-width: 900px)");
 
   const el = (id) => document.getElementById(id);
   const nodes = {
@@ -218,7 +218,7 @@
     renderFieldTree();
     bindArticleLinks();
     updateProgress();
-    document.title = `${topic.title}｜具身智能研究 Wiki`;
+    document.title = `${topic.title}｜空间智能研究 Wiki`;
   }
 
   function renderToc(toc) {
@@ -255,7 +255,7 @@
     nodes.progress.style.width = "0";
     state.drawerMode = "recent";
     renderFieldTree();
-    document.title = "具身智能研究 Wiki";
+    document.title = "空间智能研究 Wiki";
   }
 
   function showError(message) {
