@@ -141,7 +141,11 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertNotIn("--coral:", styles)
         self.assertIn('--topbar-height: 68px', styles)
         self.assertIn('@media (max-width: 900px)', styles)
-        self.assertIn('font-size: clamp(38px, 3.2vw, 46px)', styles)
+        self.assertIn('font-size: clamp(32px, 2.6vw, 38px)', styles)
+        self.assertIn('.markdown-body h2 { margin: 40px 0 14px; padding-top: 4px; font-size: 22px; }', styles)
+        self.assertIn('nodes.articleTitle.textContent = version.article_title', script)
+        self.assertIn('if (repeatedTitle?.tagName === "H1") repeatedTitle.remove()', script)
+        self.assertIn('nodes.versionArticleTitle.textContent = `所属话题：${topic.title}`', script)
         self.assertIn('空间智能研究 Wiki', script)
 
 
