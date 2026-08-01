@@ -107,6 +107,26 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn("GitHub 代码仓", index)
         self.assertIn('target="_blank" rel="noopener noreferrer"', index)
 
+    def test_wiki_uses_topbar_actions_and_tree_drawer(self) -> None:
+        wiki_root = Path(__file__).resolve().parents[1] / "wiki"
+        index = (wiki_root / "index.html").read_text(encoding="utf-8")
+        script = (wiki_root / "assets" / "wiki.js").read_text(encoding="utf-8")
+        styles = (wiki_root / "assets" / "wiki.css").read_text(encoding="utf-8")
+        topbar = index.split('<header class="topbar">', 1)[1].split("</header>", 1)[0]
+        sidebar = index.split('<aside class="sidebar"', 1)[1].split("</aside>", 1)[0]
+
+        self.assertIn('href="https://github.com/yuanzh0u/embodied-learning"', topbar)
+        self.assertIn('href="knowledge-map/"', topbar)
+        self.assertIn('id="refresh-button"', topbar)
+        self.assertNotIn("github.com", sidebar)
+        self.assertNotIn("knowledge-map/", sidebar)
+        self.assertIn('id="all-research"', sidebar)
+        self.assertIn('id="recent-research"', sidebar)
+        self.assertIn('aria-hidden="true" inert', index)
+        self.assertIn("function renderFieldTree()", script)
+        self.assertIn('class="tree-folder ${expanded ? "is-expanded" : ""}"', script)
+        self.assertIn("transform: translateX(-105%);", styles)
+
 
 if __name__ == "__main__":
     unittest.main()
