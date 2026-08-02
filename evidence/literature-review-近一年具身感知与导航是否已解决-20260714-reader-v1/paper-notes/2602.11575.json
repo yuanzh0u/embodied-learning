@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.11575",
+    "title": "ReaDy-Go: Real-to-Sim Dynamic 3D Gaussian Splatting Simulation for Environment-Specific Visual Navigation with Moving Obstacles",
+    "published": "2026-02-12",
+    "url": "https://arxiv.org/abs/2602.11575",
+    "authors": [
+      "Seungyeon Yoo"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "提供动态人类障碍下环境特定视觉导航的sim-to-real和实机证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "核对动态环境与sim-to-real缺口。"
+      },
+      {
+        "locator": "III Method",
+        "role": "method-or-design",
+        "purpose": "核对动态3DGS、人规划器和数据生成。"
+      },
+      {
+        "locator": "IV Experiments > IV-A Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "核对任务、样本与真实平台。"
+      },
+      {
+        "locator": "IV Experiments > IV-E Real-World Visual Navigation Performance",
+        "role": "results-or-analysis",
+        "purpose": "核对目标环境实机表现。"
+      },
+      {
+        "locator": "V Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对泛化和未来工作。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "目标环境的照片级动态real-to-sim数据能否让视觉导航在真实移动障碍中可靠泛化？",
+  "contributions": [
+    "把静态3DGS场景、可动画人体和专家规划器结合，生成目标环境动态导航数据。"
+  ],
+  "method": {
+    "summary": "用目标环境视频重建3DGS，再插入动态人体并生成点目标导航示范训练视觉策略。",
+    "assumptions": [
+      "目标部署环境可提前采集并重建",
+      "动态障碍主要由可合成人体轨迹表示"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "three target environments plus one unseen environment"
+    ],
+    "tasks": [
+      "static/dynamic point-goal navigation"
+    ],
+    "embodiments": [
+      "differential wheeled robot with ZED2"
+    ],
+    "sample_or_scale": "每任务/环境模拟100个episode、实机10个episode；未见环境做零样本部署。"
+  },
+  "evaluation": {
+    "design": "目标环境模拟、实机和未见环境零样本对照。",
+    "baselines": [
+      "Vid2Sim",
+      "ViNT",
+      "GNM",
+      "NoMaD"
+    ],
+    "metrics": [
+      "success rate",
+      "average reaching time"
+    ],
+    "ablations": [
+      "photorealistic vs simulator human obstacles"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "照片级环境特定仿真改善真实动态导航，但对未见环境、密集或激进行为的覆盖仍不足。",
+      "scope": "四个室内/半室内环境、一至两个人体动态障碍。",
+      "locator": "V Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "需要更多训练环境，并需安全强化学习处理更复杂的多类型动态体、密集障碍和激进行为。",
+        "locator": "V Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "更接近环境特定部署方案，不等于任意未见环境和任意动态主体的通用导航。",
+        "basis": "未见环境表现下降，作者明确要求扩大环境并处理更难动态场景。"
+      }
+    ]
+  },
+  "transfer_boundary": "更接近环境特定部署方案，不等于任意未见环境和任意动态主体的通用导航。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "有匹配配置的模拟与实机对照，并隔离动态障碍视觉真实性。"
+    ],
+    "design_risks": [
+      "每个实机场景试验量小；真实动态主体仅六名未见人。"
+    ],
+    "baseline_fairness": "ReaDy-Go和Vid2Sim尽量共享策略与轨迹，能较好隔离视觉真实性。",
+    "metric_validity": "SR和时间反映任务完成，但缺少碰撞严重度、近失和长期恢复。",
+    "reproducibility": "流程、平台和环境设置明确，3DGS重建质量影响复现。",
+    "external_validity": "对目标环境适配较强，对跨建筑、复杂人群和多日变化有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.11575-C01",
+      "claim": "ReaDy-Go支持环境特定的动态sim-to-real路线，但作者仍要求扩大训练环境，并引入安全学习以应对更密集、多样和激进的动态主体。",
+      "stance": "conditional",
+      "relation": "说明导航在受控目标环境中有进展，但开放动态世界未解决。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论把泛化潜力与后续扩环境、处理复杂动态体的必要性并列。",
+      "locator": "V Conclusion",
+      "source_context": "Future work includes expanding training environments to strengthen generalization and integrating safe reinforcement learning methods to handle more challenging scenarios involving diverse dynamic agents beyond humans, dense dynamic obstacle settings, and aggressive human motions.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句是作者直接列出的未来工作；卡片据此限制通用动态导航外推，同时保留其目标环境实机收益。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

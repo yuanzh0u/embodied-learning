@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2509.17204",
+    "title": "Ratatouille: Imitation Learning Ingredients for Real-world Social Robot Navigation",
+    "published": "2025-09-21",
+    "url": "https://arxiv.org/abs/2509.17204",
+    "authors": [
+      "James R. Han"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "真实人群导航直接暴露感知、人类意图和安全恢复问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "核对真实社会导航与安全数据难点。"
+      },
+      {
+        "locator": "III Ingredients",
+        "role": "method-or-design",
+        "purpose": "核对行为克隆配方。"
+      },
+      {
+        "locator": "IV Hardware Experiments > IV-C Real-to-Sim Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "核对仿真与真实分布差。"
+      },
+      {
+        "locator": "IV Hardware Experiments > IV-F Real-to-Real Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核对实机成功与碰撞。"
+      },
+      {
+        "locator": "VI Limitations and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对人类意图、观测和延迟边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "离线模仿学习能否在真实人群中实现可靠安全的社会导航？",
+  "contributions": [
+    "在不增加数据的情况下组合正则、增强、动作空间和分块以改进社会导航行为克隆。"
+  ],
+  "method": {
+    "summary": "以LiDAR人轨迹和路径状态训练行为克隆策略，并在仿真、受控实机和公共餐厅评测。",
+    "assumptions": [
+      "示范者行为能编码社会规范",
+      "位置级人体表示足以支持多数交互"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "11 hours campus demonstrations"
+    ],
+    "tasks": [
+      "social path following and human avoidance"
+    ],
+    "embodiments": [
+      "Clearpath Jackal"
+    ],
+    "sample_or_scale": "40万步、校园两周采集；24个受控实机episode及公共餐厅定性测试。"
+  },
+  "evaluation": {
+    "design": "real-to-sim消融、受控real-to-real对照和公共场所定性部署。",
+    "baselines": [
+      "naive BC",
+      "SCAND",
+      "human expert"
+    ],
+    "metrics": [
+      "success rate",
+      "collisions per meter",
+      "navigation time"
+    ],
+    "ablations": [
+      "augmentation",
+      "weight perturbation",
+      "action chunking",
+      "optimizer",
+      "action space"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "设计配方大幅改善真实社会导航，但机器人仍缺少意图线索、完整感知和无延迟观测。",
+      "scope": "LiDAR位置级人表示、校园与餐厅场景。",
+      "locator": "VI Limitations and Future Work"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "机器人只观察人位置，不能像专家一样利用细微身体线索，并受感知与处理延迟影响。",
+        "locator": "VI Limitations and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "不能外推到更广社会文化、儿童/轮椅等多样人群或无碰撞长期公共部署。",
+        "basis": "数据集中于单一校园，公共餐厅只做定性测试且仍有偶发碰撞。"
+      }
+    ]
+  },
+  "transfer_boundary": "不能外推到更广社会文化、儿童/轮椅等多样人群或无碰撞长期公共部署。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "包含真实示范、系统消融和实机安全指标。"
+    ],
+    "design_risks": [
+      "单一校园和专家；数据73%是普通路径跟随。"
+    ],
+    "baseline_fairness": "对自家配方消融充分，跨方法状态表示不同。",
+    "metric_validity": "CPM和完成时间比SR更接近公共部署，但缺少社会舒适度和接管指标。",
+    "reproducibility": "硬件、数据量和训练成分说明详细。",
+    "external_validity": "对不同文化规范、传感器和拥挤程度的泛化尚未建立。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2509.17204-C01",
+      "claim": "真实社会导航的进步仍依赖受限的人体状态表征；论文明确指出机器人缺少专家可用的人类意图线索，并受到感知延迟影响。",
+      "stance": "limit",
+      "relation": "限制“社会导航已解决”，并把问题定位到感知—决策接口。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "限制段直接比较专家与机器人可见信息，说明剩余感知鸿沟。",
+      "locator": "VI Limitations and Future Work",
+      "source_context": "The expert can infer human intent from subtle body cues and benefits from perfect perception without delays, whereas the robot only observes human positions.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原句直接陈述专家与机器人观测差异；卡片将其限定为该系统的社会导航边界。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

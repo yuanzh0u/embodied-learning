@@ -2,8 +2,6 @@
 
 ## TL;DR
 
-这一版不只核对摘要，而是对 15 篇入选论文逐篇阅读方法、结果与局限。下文只保留能在完整正文中重新定位的判断。
-
 普通视频告诉模型世界看起来怎样变化，机器人世界模型还要知道“我做了什么，变化是否由动作造成，结果能不能用于下一步控制”。因此训练数据必须包含可执行动作、三维与接触状态、失败附近的纠正，以及真实与合成来源的可靠性边界。
 
 ## 误区从哪来：把世界模型当成视频生成器
@@ -49,10 +47,11 @@
 最有价值的记录不是“发生了一段视频”，而是“机器人在什么状态做了什么，世界怎样回应，哪些变量不可见，结果是否改善动作”。围绕这条因果链组织数据，人类视频、仿真和真实交互才能各司其职；否则更多视频只会让模型更会想象，不一定更会行动。
 
 ## 延伸阅读
-- [$τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027)
-- [RoboDream: Compositional World Models for Scalable Robot Data Synthesis](https://arxiv.org/abs/2606.02577)
-- [ComSim: Building Scalable Real-World Robot Data Generation via Compositional Simulation](https://arxiv.org/abs/2604.11386)
-- [SKIP: Sparse Keyframe Interpolation Paradigm for Efficient Embodied World Models](https://arxiv.org/abs/2606.00664)
-- [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882)
-- [Hi-WM: Human-in-the-World-Model for Scalable Robot Post-Training](https://arxiv.org/abs/2604.21741)
-- [SANTS: A State-Adaptive Scheduler for World Action Models](https://arxiv.org/abs/2605.27947)
+
+- [τ0-WM](https://arxiv.org/abs/2606.01027)：查看多种数据源如何按各自可靠的模态参与统一训练。
+- [RoboDream](https://arxiv.org/abs/2606.02577)：理解合成数据为何必须由机器人本体和场景先验锚定。
+- [ComSim](https://arxiv.org/abs/2604.11386)：用少量真实数据对齐经典仿真与神经仿真。
+- [SKIP](https://arxiv.org/abs/2606.00664)：说明稀疏采样应保护接近、接触、抓取和释放等任务事件。
+- [GEM-4D](https://arxiv.org/abs/2605.22882)：补充视频数据中的跨帧三维几何监督。
+- [Hi-WM](https://arxiv.org/abs/2604.21741)：强调失败高发状态附近的密集纠正轨迹。
+- [SANTS](https://arxiv.org/abs/2605.27947)：将世界模型训练目标与下游动作质量联系起来。

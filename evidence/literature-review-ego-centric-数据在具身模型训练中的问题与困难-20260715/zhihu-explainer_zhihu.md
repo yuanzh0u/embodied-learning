@@ -56,11 +56,11 @@
 
 ## 延伸阅读
 
-- [EgoScale：第一视角人类动作预训练的规模规律](https://arxiv.org/abs/2602.16710)
-- [EgoVLA：人类第一视角到 VLA 的预训练与机器人适配](https://arxiv.org/abs/2507.12440)
-- [ActiveMimic：把相机运动显式建模为主动视点动作](https://arxiv.org/abs/2606.06194)
-- [HumanEgo：显式手—物空间关系为何比视觉换皮更重要](https://arxiv.org/abs/2605.24934)
-- [VideoManip：从视频恢复可执行交互时的物理问题](https://arxiv.org/abs/2602.09013)
-- [ObjRetarget：接触几何对重定向的影响](https://arxiv.org/abs/2607.03828)
-- [ATHENA：多任务数据选择为何必须保护任务覆盖](https://arxiv.org/abs/2606.16208)
-- [SIEVE：按行为结构而非单一分数选择示教](https://arxiv.org/abs/2607.06442)
+- [EgoScale](https://arxiv.org/abs/2602.16710)：观察第一视角人类动作预训练在测量区间内的规模收益。
+- [EgoVLA](https://arxiv.org/abs/2507.12440)：理解人类第一视角预训练为何仍需机器人数据适配。
+- [ActiveMimic](https://arxiv.org/abs/2606.06194)：把相机运动显式建模为主动视点动作。
+- [HumanEgo](https://arxiv.org/abs/2605.24934)：比较视觉外观对齐与显式手—物空间关系的作用。
+- [VideoManip](https://arxiv.org/abs/2602.09013)：分析从单目视频恢复可执行交互时的物理约束。
+- [ObjRetarget](https://arxiv.org/abs/2607.03828)：说明接触几何如何影响人到机器人的动作重定向。
+- [ATHENA](https://arxiv.org/abs/2606.16208)：解释多任务数据选择为何必须保护任务覆盖。
+- [SIEVE](https://arxiv.org/abs/2607.06442)：按行为结构而非单一分数选择示教。

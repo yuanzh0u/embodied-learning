@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.14801",
+    "title": "Exploring Bottlenecks in VLM-LLM Navigation: How 3D Scene Understanding Capability Impacts Zero-Shot VLN",
+    "published": "2026-05-14",
+    "url": "https://arxiv.org/abs/2605.14801",
+    "authors": [
+      "Ziyi Xia"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接量化感知质量对导航成功的边际贡献与残余错误类型。"
+    },
+    "sections_read": [
+      {
+        "locator": "I INTRODUCTION",
+        "role": "problem",
+        "purpose": "核对像素级感知指标与实时导航需求的冲突。"
+      },
+      {
+        "locator": "II METHODS",
+        "role": "method-or-design",
+        "purpose": "核对漏检与框漂移的受控退化设计。"
+      },
+      {
+        "locator": "III-A Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "核对R2R、指令数与ESAM变体。"
+      },
+      {
+        "locator": "III-B Statistical Simulation Analysis",
+        "role": "results-or-analysis",
+        "purpose": "核对感知饱和现象。"
+      },
+      {
+        "locator": "III-C Practical Perception Model Analysis",
+        "role": "results-or-analysis",
+        "purpose": "核对误检和框形变的真实模型差距。"
+      },
+      {
+        "locator": "IV CONCLUSIONS",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对总结。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "继续提高3D感知精度是否仍能显著提高零样本VLN成功率？",
+  "contributions": [
+    "建立感知退化与导航成功率之间的统计上界分析，并用不同ESAM变体验证。"
+  ],
+  "method": {
+    "summary": "分别操纵语义保留率和目标框IoU，模拟慢规划器与快反应导航器的感知退化。",
+    "assumptions": [
+      "SFCo-Nav代表典型VLM-LLM导航架构",
+      "R2R上的采样结果可描述该架构的局部饱和趋势"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "R2R",
+      "ScanNet200-trained ESAM variants"
+    ],
+    "tasks": [
+      "zero-shot VLN"
+    ],
+    "embodiments": [
+      "Habitat simulated agent"
+    ],
+    "sample_or_scale": "约600条模拟指令；每个ESAM变体约300条指令。"
+  },
+  "evaluation": {
+    "design": "受控退化统计模拟加实际3D分割模型验证。",
+    "baselines": [
+      "ideal perception",
+      "five ESAM variants"
+    ],
+    "metrics": [
+      "SR",
+      "OSR",
+      "SPL",
+      "retention/matching score",
+      "box IoU"
+    ],
+    "ablations": [
+      "missed detections",
+      "bounding-box drift"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "达到任务所需阈值后，继续提高独立感知精度收益趋于饱和，但误检和框比例失真仍会造成导航失败。",
+      "scope": "R2R上的SFCo-Nav式零样本VLN。",
+      "locator": "IV CONCLUSIONS"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "感知饱和是特定架构、词表和R2R采样中的经验现象，不能解释动态真实导航或所有感知模态。",
+        "basis": "论文称其为采样得到的统计上界而非形式上界，实验集中在R2R和ESAM。"
+      }
+    ]
+  },
+  "transfer_boundary": "感知饱和是特定架构、词表和R2R采样中的经验现象，不能解释动态真实导航或所有感知模态。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "用受控退化隔离感知因素，并用真实模型变体验证。"
+    ],
+    "design_risks": [
+      "只模型化部分误差，架构和数据集依赖明显。"
+    ],
+    "baseline_fairness": "同一导航管线内比较不同感知退化，机制归因较清楚。",
+    "metric_validity": "SR/SPL连接下游任务，但不能覆盖实时延迟、安全和长期恢复。",
+    "reproducibility": "变量、样本规模和指标定义明确。",
+    "external_validity": "对开放世界动态场景与不同导航栈的泛化需要另行验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.14801-C01",
+      "claim": "对零样本VLN而言，感知并非简单地“越准越已解决”：独立精度会出现边际饱和，而误检和框形变仍是关键失败源。",
+      "stance": "conditional",
+      "relation": "解释为什么感知进步不等于端到端导航被解决。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论直接同时报告感知饱和和两类仍关键的误差。",
+      "locator": "IV CONCLUSIONS",
+      "source_context": "Our analysis also revealed that false positives and distorted bounding box aspect ratios are critical factors affecting navigation performance, and that a small set of core navigation-relevant object categories is sufficient for successful navigation.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原句直接总结了必要词表与关键误差类型；卡片保持为该架构和任务内的条件性结论。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

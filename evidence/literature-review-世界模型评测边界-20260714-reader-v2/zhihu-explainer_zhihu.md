@@ -2,8 +2,6 @@
 
 ## TL;DR
 
-这一版不只核对摘要，而是对 15 篇入选论文逐篇阅读方法、结果与局限。下文只保留能在完整正文中重新定位的判断。
-
 因为“像真的”只回答画面是否连贯，“能当考官”还要回答动作有没有被执行、物理约束有没有违反、长期预测是否校准、结果能否赶在控制截止前返回。世界模型可以帮助筛选动作，但在没有反事实、对抗和闭环验证前，不能被当成独立真值源。
 
 ## 误区从哪来：人眼很容易奖励一个好故事
@@ -49,8 +47,9 @@
 把世界模型用于机器人，价值不在生成更多可能性，而在执行前识别哪些动作不该做。它必须对控制输入敏感、在边界案例中保守，并且足够快。达到这些条件之前，它可以是规划助手，但不应成为唯一考官。
 
 ## 延伸阅读
-- [MiraBench: Evaluating Action-Conditioned Reliability in Robotic World Models](https://arxiv.org/abs/2605.29360)
-- [VLM-DEWM: Dynamic External World Model for Verifiable and Resilient Vision-Language Planning in Manufacturing](https://arxiv.org/abs/2602.15549)
-- [$τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027)
-- [SKIP: Sparse Keyframe Interpolation Paradigm for Efficient Embodied World Models](https://arxiv.org/abs/2606.00664)
-- [$\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation](https://arxiv.org/abs/2606.13672)
+
+- [MiraBench](https://arxiv.org/abs/2605.29360)：从物理遵循、动作跟随和乐观偏差评估动作条件可靠性。
+- [VLM-DEWM](https://arxiv.org/abs/2602.15549)：观察外部可查询状态如何帮助制造任务中的规划验证。
+- [τ0-WM](https://arxiv.org/abs/2606.01027)：展示世界模型在执行前筛选和修正候选动作的方式。
+- [SKIP](https://arxiv.org/abs/2606.00664)：讨论高效推演为何仍需保留接触等稀疏关键事件。
+- [WEAVER](https://arxiv.org/abs/2606.13672)：把长时一致、真实结果保真和计算效率放进同一验收框架。

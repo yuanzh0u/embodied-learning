@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.08765",
+    "title": "RGB-S: Image-Aligned Tactile Saliency for Robust Dexterous Manipulation",
+    "published": "2026-06-07",
+    "url": "https://arxiv.org/abs/2606.08765",
+    "authors": [
+      "Shengcheng Luo"
+    ]
+  },
+  "review": {
+    "question": "具身传感器感知误差",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身传感器感知误差."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身传感器感知误差', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "在视觉遮挡或视觉退化下，显式把触觉接触投影到图像域可以改善空间对齐；但这种收益依赖对运动学和标定误差导致的空间不确定性建模。"
+  ],
+  "method": {
+    "summary": "We propose RGB-S, a lightweight visuo-tactile policy learning framework that converts sparse, heterogeneous tactile measurements into dense, visually aligned saliency maps. We first present the problem formulation in Section 3.1 . We then introduce a visuo-tactile alignment representation in Section 3.2 , which maps contact information to image-space saliency cues through the robot kinematic chain and camera projection model. Finally, leveraging the proposed representation, we present a zero-initialized architecture in Section 3.3 for integrating tactile signals into robotic manipulation policies.",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate the proposed RGB-S framework to determine whether image-space tactile grounding improves visuo-tactile imitation learning. We focus on three key research questions: RQ1 : Compared with conventional fusion methods, does RGB-S improve visuo-tactile policy learning performance across diverse imitation learning architectures and downstream tasks? (Sec. 4.1 ) RQ2 : Does RGB-S generalize to real hardware despite tactile noise, calibration errors, and positional misalignment? (Sec. 4.2 ) RQ3 : How do the individual design components of RGB-S affect performance, specifically force rendering, cross-modal spatial alignment, and the fusion architecture? (Sec. 4.3 ) We conduct experiments in",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "在视觉遮挡或视觉退化下，显式把触觉接触投影到图像域可以改善空间对齐；但这种收益依赖对运动学和标定误差导致的空间不确定性建模。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "We identify several limitations of our framework. Since RGB-S relies on geometric projection, its performance depends on calibration quality and the accuracy of the robot configuration. In practice, achieving perfect image-space alignment remains challenging: uncompensated physical drift in the external setup, joint backlash, link deformation, and structural compliance during contact-rich interactions can all distort cross-modal alignment. Although our method shows robustness to moderate misalignment, future extensions could further alleviate these hardware constraints by integrating learnable",
+        "locator": "5 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (3 Method) and evaluation (4 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.08765-C01",
+      "claim": "在视觉遮挡或视觉退化下，显式把触觉接触投影到图像域可以改善空间对齐；但这种收益依赖对运动学和标定误差导致的空间不确定性建模。",
+      "stance": "conditional",
+      "relation": "Evidence relevant to the review question: 具身传感器感知误差",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者称视觉观测不可靠或被遮挡时，稀疏异构触觉与稠密视觉表示的对齐是核心挑战；方法使用正运动学和相机标定投影触觉传感器位置，并用力调制高斯 saliency maps 建模运动学和标定误差带来的空间不确定性。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "We then render force-modulated Gaussian saliency maps to model spatial uncertainty arising from kinematic and calibration errors.",
+      "evidence_type": "method-and-real-world-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (arising, calibration, errors, kinematic, maps, saliency, spatial, uncertainty). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "The abstract reports improved occluded manipulation success; exact numeric gains were not used because LaTeXML macro rendering hid some quantities."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

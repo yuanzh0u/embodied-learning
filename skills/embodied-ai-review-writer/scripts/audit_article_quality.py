@@ -7,6 +7,7 @@ import argparse
 import json
 import re
 import sys
+from collections import Counter
 from dataclasses import asdict, dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
@@ -16,6 +17,7 @@ EVENT_ID_RE = re.compile(r"\b(?:EA|ERR)-[A-Z0-9]+(?:-[A-Z0-9]+)*-\d{4}\b")
 ARXIV_LINK_RE = re.compile(r"https?://arxiv\.org/abs/\d{4}\.\d{4,5}(?:v\d+)?")
 CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
 LATIN_RE = re.compile(r"[A-Za-z]")
+ACRONYM_RE = re.compile(r"(?<![A-Za-z])[A-Z][A-Z0-9-]{1,}(?![A-Za-z])")
 
 CANNED_PHRASES = [
     "不能只看一个漂亮结论",
@@ -54,6 +56,50 @@ INTERNAL_PROSE_MARKERS = [
     "领域背景：",
 ]
 
+CHATBOT_ARTIFACTS = [
+    "希望这对你有帮助",
+    "希望这对您有帮助",
+    "如果你想让我",
+    "如果您想让我",
+    "如果需要我可以继续",
+    "您说得完全正确",
+    "你说得完全正确",
+    "下面让我们",
+    "接下来让我们",
+    "让我们深入探讨",
+]
+
+GENERIC_UPLIFT_PATTERNS = [
+    re.compile(r"未来(?:看起来)?(?:一片)?光明"),
+    re.compile(r"前景(?:十分|非常|依然|仍然)?可期"),
+    re.compile(r"激动人心的(?:时代|时刻)"),
+    re.compile(r"(?:迈出|迈出了).{0,8}(?:重要|关键)一步"),
+    re.compile(r"继续(?:踏上|追求).{0,8}(?:卓越|旅程)"),
+    re.compile(r"让我们(?:拭目以待|共同期待)"),
+]
+
+VAGUE_ATTRIBUTION_PATTERNS = [
+    re.compile(r"(?:行业专家|业内人士|专家们?|观察者|多位专家)(?:普遍)?(?:认为|指出|表示)"),
+    re.compile(r"有观点认为"),
+]
+
+PROMOTIONAL_PATTERNS = [
+    re.compile(r"令人叹为观止"),
+    re.compile(r"充满活力的"),
+    re.compile(r"无缝(?:衔接|体验)"),
+    re.compile(r"不断演变的.{0,12}格局"),
+    re.compile(r"持久的证明"),
+]
+
+INTERNAL_REASONING_LABEL_RE = re.compile(
+    r"(?:[（(]\s*inference\s*[）)])|(?:\binference\s*[:：;；])|(?:synthesized from evidence events)",
+    flags=re.IGNORECASE,
+)
+MALFORMED_PUNCTUATION_RE = re.compile(r"。。|，，|；；|：：|[.,，]\s*。|。\s*[.,]")
+MISSING_CITATION_SUBJECT_RE = re.compile(
+    r"(?:但|而|与|和)\s+的\s+(?:(?:[A-Za-z][A-Za-z0-9-]*)\s+)?(?:实验|研究|结论|方法|架构|论文)"
+)
+
 
 @dataclass
 class Finding:
@@ -81,7 +127,12 @@ def linguistic_text(text: str) -> str:
 
 
 def chinese_share(text: str) -> float:
-    text = linguistic_text(text)
+    # Paper titles are citation metadata rather than narrative prose. Counting
+    # long English titles against a Chinese article makes the language gate
+    # depend on citation style instead of the language used by the author.
+    text = re.sub(r"\[[^\]]+\]\([^\)]+\)", "", text)
+    text = re.sub(r"https?://\S+", "", text)
+    text = EVENT_ID_RE.sub("", text)
     chinese = len(CHINESE_RE.findall(text))
     latin = len(LATIN_RE.findall(text))
     return chinese / max(1, chinese + latin)
@@ -89,6 +140,15 @@ def chinese_share(text: str) -> float:
 
 def chinese_count(text: str) -> int:
     return len(CHINESE_RE.findall(linguistic_text(text)))
+
+
+def longest_chinese_sentence(text: str) -> int:
+    sentences = re.split(r"[。！？!?；;\n]+", linguistic_text(text))
+    return max((len(CHINESE_RE.findall(sentence)) for sentence in sentences), default=0)
+
+
+def domain_acronyms(text: str) -> list[str]:
+    return sorted(set(ACRONYM_RE.findall(linguistic_text(text))) - {"TL", "DR"})
 
 
 def normalized_substantive_lines(text: str, style: str) -> set[str]:
@@ -114,6 +174,21 @@ def normalized_body(text: str, style: str) -> str:
     return body
 
 
+def duplicate_prose_blocks(text: str) -> list[str]:
+    normalized: list[str] = []
+    for raw in re.split(r"\n\s*\n", text):
+        block = raw.strip()
+        if not block or block.startswith("#"):
+            continue
+        block = linguistic_text(block)
+        block = re.sub(r"[`*_>#💡⚠️📚|•-]", "", block)
+        block = re.sub(r"\s+", "", block)
+        if len(block) >= 40:
+            normalized.append(block)
+    counts = Counter(normalized)
+    return [block for block, count in counts.items() if count > 1]
+
+
 def source_line_share(text: str) -> float:
     lines = [line for line in text.splitlines() if line.strip()]
     start = len(lines)
@@ -122,6 +197,24 @@ def source_line_share(text: str) -> float:
             start = index
             break
     return (len(lines) - start) / max(1, len(lines))
+
+
+def zhihu_reading_list_findings(text: str) -> tuple[int, int]:
+    heading = re.search(r"^##\s+(?:延伸阅读|References)\s*$", text, flags=re.MULTILINE)
+    if not heading:
+        return 0, 0
+    tail = text[heading.end() :]
+    linked_bullets = [
+        line.strip()
+        for line in tail.splitlines()
+        if re.match(r"^[-*]\s+", line.strip()) and ARXIV_LINK_RE.search(line)
+    ]
+    annotated = [
+        line
+        for line in linked_bullets
+        if re.search(r"\]\([^)]*\)\s*[：:]\s*\S", line)
+    ]
+    return len(linked_bullets), len(annotated)
 
 
 def add(findings: list[Finding], severity: str, path: Path, rule: str, message: str) -> None:
@@ -153,11 +246,56 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
     for marker in INTERNAL_PROSE_MARKERS:
         if marker in text:
             add(findings, "error", path, "internal-prose", f"contains reader-facing internal/audit wording: {marker}")
+    generic_citations = len(re.findall(r"相关研究", body))
+    if generic_citations:
+        add(
+            findings,
+            "error",
+            path,
+            "generic-citation-anchor",
+            f"body contains {generic_citations} unresolved generic citation anchor(s): 相关研究",
+        )
+    reasoning_label = INTERNAL_REASONING_LABEL_RE.search(body)
+    if reasoning_label:
+        add(
+            findings,
+            "error",
+            path,
+            "internal-reasoning-label",
+            f"body exposes an internal reasoning label: {reasoning_label.group(0)}",
+        )
+    missing_subject = MISSING_CITATION_SUBJECT_RE.search(body)
+    if missing_subject:
+        add(
+            findings,
+            "error",
+            path,
+            "missing-citation-subject",
+            f"body contains a high-confidence missing citation subject: {missing_subject.group(0)}",
+        )
+    for phrase in CHATBOT_ARTIFACTS:
+        if phrase in body:
+            add(findings, "error", path, "chatbot-artifact", f"contains conversational assistant residue: {phrase}")
+    for pattern in GENERIC_UPLIFT_PATTERNS:
+        match = pattern.search(body)
+        if match:
+            add(findings, "warning", path, "generic-uplift", f"contains a generic positive claim: {match.group(0)}")
+    for pattern in VAGUE_ATTRIBUTION_PATTERNS:
+        match = pattern.search(body)
+        if match:
+            add(findings, "warning", path, "vague-attribution", f"contains an unnamed authority claim: {match.group(0)}")
+    for pattern in PROMOTIONAL_PATTERNS:
+        match = pattern.search(body)
+        if match:
+            add(findings, "warning", path, "promotional-prose", f"contains promotional wording: {match.group(0)}")
+    duplicates = duplicate_prose_blocks(body)
+    if duplicates:
+        add(findings, "error", path, "duplicate-prose", f"contains {len(duplicates)} exactly repeated substantive prose block(s)")
     if re.search(r"\bstance\s*:", body, flags=re.IGNORECASE):
         add(findings, "error", path, "internal-prose", "body exposes a stance label")
     if re.search(r"^-\s*—", text, flags=re.MULTILINE):
         add(findings, "error", path, "empty-reading-note", "contains an empty annotated-reading bullet")
-    if "()" in text or "、、、" in text or re.search(r",\s*,?\s*\.", text):
+    if "()" in text or "、、、" in text or re.search(r",\s*,?\s*\.", text) or MALFORMED_PUNCTUATION_RE.search(text):
         add(findings, "error", path, "malformed-prose", "contains empty citation slots or malformed generated punctuation")
     if "[TODO" in text or "<claim" in text or "<topic>" in text:
         add(findings, "error", path, "placeholder", "contains an unresolved placeholder")
@@ -177,10 +315,62 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
     elif style == "zhihu":
         if zh_count < 1000:
             add(findings, "error", path, "zhihu-length", f"Zhihu body has only {zh_count} Chinese characters; expected at least 1000")
+        elif zh_count < 1800:
+            add(
+                findings,
+                "warning",
+                path,
+                "zhihu-length",
+                f"Zhihu body has {zh_count} Chinese characters; review for over-compression against the 1800-character explanation target",
+            )
+        elif zh_count > 4500:
+            add(
+                findings,
+                "warning",
+                path,
+                "zhihu-length",
+                f"Zhihu body has {zh_count} Chinese characters; review whether the explanation can stay below 4500",
+            )
+        acronyms = domain_acronyms(body)
+        if len(acronyms) > 5:
+            add(
+                findings,
+                "warning",
+                path,
+                "acronym-load",
+                f"Zhihu body uses {len(acronyms)} domain acronyms; review first-use explanations and reader memory load: {', '.join(acronyms[:10])}",
+            )
+        longest_sentence = longest_chinese_sentence(body)
+        if longest_sentence > 70:
+            add(
+                findings,
+                "warning",
+                path,
+                "long-sentence",
+                f"Zhihu body contains a sentence with {longest_sentence} Chinese characters; review clauses and inference load above 70",
+            )
+        body_sources = set(ARXIV_LINK_RE.findall(body))
+        if len(body_sources) >= 10:
+            add(
+                findings,
+                "warning",
+                path,
+                "body-citation-load",
+                f"Zhihu body cites {len(body_sources)} unique papers; review whether supporting coverage belongs in annotated further reading",
+            )
+        reading_items, annotated_items = zhihu_reading_list_findings(text)
+        if reading_items < 3 or annotated_items != reading_items:
+            add(
+                findings,
+                "error",
+                path,
+                "unannotated-reading-list",
+                f"Zhihu further reading has {reading_items} linked bullet(s), {annotated_items} with reader-value annotations; expected at least 3 and every item annotated",
+            )
         required = {
             "tldr": r"^## TL;DR",
-            "misconception": r"^## .*误区|^### .*误区",
-            "mechanism": r"^## .*机制|^### .*机制",
+            "misconception": r"^#{2,3}\s+.*(?:误区|直觉.*(?:失灵|误判)|为什么.*(?:容易|会).*误判|问题从哪来)",
+            "mechanism": r"^#{2,3}\s+.*(?:机制|问题.*(?:出在哪|在哪里)|为什么.*(?:失败|失效)|因果链|真正发生)",
             "boundary": r"^## .*?(边界|什么时候.*不成立|限制)",
         }
     else:

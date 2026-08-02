@@ -2,8 +2,6 @@
 
 ## TL;DR
 
-这一版不只核对摘要，而是对 15 篇入选论文逐篇阅读方法、结果与局限。下文只保留能在完整正文中重新定位的判断。
-
 因为传统 UMI 最擅长记录“手和物体怎么移动”，却不一定记录“接触时发生了什么”。近半年研究把改进方向集中到三件事：补回力、深度与接触状态，扩大遮挡和弱纹理场景下的三维可靠性，并减少采集接口与部署末端之间的物理错配。
 
 ## 误区从哪来：把可采集性当成可学习性
@@ -32,6 +30,8 @@ UMI 的吸引力很直观：不必占用昂贵机器人，就能让人快速在�
 
 ## 一个反例：越通用，可能越难落到灵巧手
 
+UMI 可以把大范围手腕运动快速采下来，但灵巧手的成败还取决于手指接触顺序、局部力和持续接触。若数据只有腕部轨迹与夹爪开合量，同一条轨迹可以对应完全不同的指尖接触结果。此时，场景理解和粗运动仍可复用，精细接触却需要额外的同构末端数据或可靠重定向。
+
 这不是说通用路线错误，而是提醒我们：通用性与物理一致性存在交换。场景理解和粗运动可以跨本体复用，精细接触则可能需要同构末端数据补最后一段。
 
 ## 边界：不要把“加传感器”当作答案
@@ -49,8 +49,9 @@ UMI 的吸引力很直观：不必占用昂贵机器人，就能让人快速在�
 UMI 的质量不应只看视频清晰、轨迹完整和采集速度。更重要的是，任务所需状态是否被记录，设备是否改变了人的动作，数据是否能以可解释方式映射到目标机器人。采集得快只是入口；减少物理信息损失，才是数据真正能被机器人使用的条件。
 
 ## 延伸阅读
-- [In-the-Wild Compliant Manipulation with UMI-FT](https://arxiv.org/abs/2601.09988)
-- [OmniUMI: Towards Physically Grounded Robot Learning via Human-Aligned Multimodal Interaction](https://arxiv.org/abs/2604.10647)
-- [UMI-3D: Extending Universal Manipulation Interface from Vision-Limited to 3D Spatial Perception](https://arxiv.org/abs/2604.14089)
-- [Influence of Gripper Design on Human Demonstration Quality for Robot Learning](https://arxiv.org/abs/2603.17189)
-- [RynnWorld-Teleop: An Action-Conditioned World Model for Digital Teleoperation](https://arxiv.org/abs/2607.06558)
+
+- [UMI-FT](https://arxiv.org/abs/2601.09988)：用力/力矩、深度、位姿和抓力补足柔顺操作监督。
+- [OmniUMI](https://arxiv.org/abs/2604.10647)：将视觉运动采集升级为多模态物理交互数据。
+- [UMI-3D](https://arxiv.org/abs/2604.14089)：以激光雷达中心的三维感知改善遮挡和弱纹理场景。
+- [UMI 夹爪设计研究](https://arxiv.org/abs/2603.17189)：说明重量、受力方式和人体工学会塑造示教质量。
+- [RynnWorld-Teleop](https://arxiv.org/abs/2607.06558)：评估数字遥操作的数据扩展能力及流体、形变和跨本体边界。

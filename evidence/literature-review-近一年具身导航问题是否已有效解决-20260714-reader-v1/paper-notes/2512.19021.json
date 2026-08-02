@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2512.19021",
+    "title": "VLNVerse: A Benchmark for Vision-Language Navigation with Versatile, Embodied, Realistic Simulation and Evaluation",
+    "published": "2025-12-22",
+    "url": "https://arxiv.org/abs/2512.19021",
+    "authors": [
+      "Sihao Lin"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "在物理约束、碰撞、连续控制和长时任务下重新评测VLN。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "核对静态离散幽灵代理造成的评测失真。"
+      },
+      {
+        "locator": "3 The VLNVerse > 3.1 Simulation Layer",
+        "role": "method-or-design",
+        "purpose": "核对物理实体、连续控制与传感器设计。"
+      },
+      {
+        "locator": "3 The VLNVerse > 3.4 Evaluation Protocol and Metrics",
+        "role": "data-or-setting",
+        "purpose": "核对碰撞与长时任务指标。"
+      },
+      {
+        "locator": "5 Experiments > 5.3 Zero-shot Performance on VLNVerse",
+        "role": "results-or-analysis",
+        "purpose": "核对严格物理约束下的性能退化。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对基准贡献与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "把VLN从离散传送移到物理约束环境后，现有模型是否仍然可靠？",
+  "contributions": [
+    "建立物理感知、连续控制、多任务VLN基准并重评传统和基础模型。"
+  ],
+  "method": {
+    "summary": "在Isaac Sim上把实体、世界和任务分层，支持碰撞、运动学、连续控制与多传感器配置。",
+    "assumptions": [
+      "高保真Isaac仿真比离散图更接近部署约束",
+      "严格碰撞失败规则能暴露实体导航缺口"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "VLNVerse"
+    ],
+    "tasks": [
+      "fine/coarse VLN",
+      "visual reference",
+      "dialogue",
+      "long horizon"
+    ],
+    "embodiments": [
+      "physics-aware simulated agents"
+    ],
+    "sample_or_scale": "263个交互3D环境，多类大规模任务。"
+  },
+  "evaluation": {
+    "design": "比较离线训练模型、导航基础模型和MLLM代理，并对比传送与严格物理设置。",
+    "baselines": [
+      "Seq2Seq",
+      "CMA",
+      "RDP",
+      "NFM",
+      "UniNavid",
+      "MLLM agents"
+    ],
+    "metrics": [
+      "SR",
+      "SPL",
+      "nDTW",
+      "collision rate",
+      "stage success"
+    ],
+    "ablations": [
+      "Tel-Hop vs Strict",
+      "CoT"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "高层推理在传送设置中可改善结果，但严格物理设置下碰撞仍显著压低成功。",
+      "scope": "Isaac Sim物理感知VLN。",
+      "locator": "5 Experiments > 5.3 Zero-shot Performance on VLNVerse"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "仍是仿真基准，不能替代真实传感器噪声、人员互动和长期硬件故障验证。",
+        "basis": "基准提高了物理真实性但没有真实机器人长期对照。"
+      }
+    ]
+  },
+  "transfer_boundary": "仍是仿真基准，不能替代真实传感器噪声、人员互动和长期硬件故障验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把碰撞和实体动力学纳入统一多任务评测。"
+    ],
+    "design_risks": [
+      "模拟资产和控制抽象仍可能与真实世界有域差。"
+    ],
+    "baseline_fairness": "统一环境重实现多类模型，但离线专用模型和零样本代理的资源不同。",
+    "metric_validity": "碰撞率和阶段成功补足传统SR/SPL。",
+    "reproducibility": "框架和协议计划公开，Isaac资产与模型版本仍影响复现。",
+    "external_validity": "能反驳离散榜单外推，但不能证明真实部署水平。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2512.19021-C01",
+      "claim": "现有VLN的高层推理并未克服物理执行：即使CoT改善理想化传送设置，严格物理条件下性能仍低，碰撞是主要瓶颈。",
+      "stance": "limit",
+      "relation": "限制“VLN榜单已经等价于真实导航能力”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "零样本实验把同一代理放入传送和严格物理设置，直接暴露碰撞导致的退化。",
+      "locator": "5.3 Zero-shot Performance on VLNVerse",
+      "source_context": "Strikingly, when we introduce CoT prompting, performance in the Tel-Hop setting improves further, yet performance in the Strict setting remains low. This result strongly confirms that physical collision is the primary bottleneck.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文在同一实验段比较Tel-Hop与Strict并明确归因碰撞；卡片未把仿真碰撞率外推为真实事故率。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

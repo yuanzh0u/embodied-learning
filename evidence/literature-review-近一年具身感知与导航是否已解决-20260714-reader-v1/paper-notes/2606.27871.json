@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.27871",
+    "title": "LocalNav: Distilling Frontier VLMs and Embodied RL for On-Device Object Goal Navigation",
+    "published": "2026-06-26",
+    "url": "https://arxiv.org/abs/2606.27871",
+    "authors": [
+      "Nicolas Baumann"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "检验导航VLM在边缘设备上的可部署性及场景图语义时空限制。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "核对云模型与连续推理的部署瓶颈。"
+      },
+      {
+        "locator": "3 System Architecture",
+        "role": "method-or-design",
+        "purpose": "核对场景图、高层VLM与低层PointGoal分工。"
+      },
+      {
+        "locator": "4.1 Benchmark Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核对标准HM3D OVON结果。"
+      },
+      {
+        "locator": "4.2 Real World Experiments",
+        "role": "data-or-setting",
+        "purpose": "核对真实公寓单次序列任务。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对时空语义限制。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "小型本地VLM能否在移动机器人上低延迟完成开放词汇ObjectNav？",
+  "contributions": [
+    "将前沿VLM推理蒸馏到4B模型，并以强化学习和量化压缩输出与延迟。"
+  ],
+  "method": {
+    "summary": "在线构建RGB-D场景图，VLM做稀疏高层决策，低层PointGoal策略执行；以约500条推理轨迹蒸馏。",
+    "assumptions": [
+      "可靠RGB-D、里程计和场景图可用",
+      "低层PointGoal导航可独立处理避障"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "HM3D OVON",
+      "one real apartment"
+    ],
+    "tasks": [
+      "open-vocabulary ObjectNav"
+    ],
+    "embodiments": [
+      "handheld/robot edge device"
+    ],
+    "sample_or_scale": "HM3D OVON完整验证集；真实公寓中连续4个目标的一次部署。"
+  },
+  "evaluation": {
+    "design": "基准、推理效率消融和单次真实部署演示。",
+    "baselines": [
+      "cloud VLMs",
+      "Qwen3.5-4B variants",
+      "ObjectNav methods"
+    ],
+    "metrics": [
+      "SR",
+      "SPL",
+      "queries",
+      "tokens",
+      "latency"
+    ],
+    "ablations": [
+      "SFT teacher",
+      "RL token regularization",
+      "quantization",
+      "prompt compression"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "边缘部署延迟可显著下降，但场景图不能原生绑定短暂组合语义，真实验证规模也很小。",
+      "scope": "场景图驱动的室内ObjectNav。",
+      "locator": "5 Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "场景图存在时空限制，不能原生绑定短暂、组合语义，可能错过稀疏查询之间的动态线索。",
+        "locator": "5 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "不能从单次公寓四目标演示外推为长期动态家庭或公共空间可靠性。",
+        "basis": "真实评测仅一条连续部署，且作者明确指出场景图对瞬态组合语义受限。"
+      }
+    ]
+  },
+  "transfer_boundary": "不能从单次公寓四目标演示外推为长期动态家庭或公共空间可靠性。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时报告模型性能、查询数、token和端侧延迟。"
+    ],
+    "design_risks": [
+      "高层消融使用特权动作；真实演示样本极少。"
+    ],
+    "baseline_fairness": "标准基准比较清楚，但云/本地模型算力与动作设置不同。",
+    "metric_validity": "兼顾SR/SPL与部署效率，但缺少长期失败恢复和能耗稳定性。",
+    "reproducibility": "蒸馏数据规模、模型和端侧优化描述详细。",
+    "external_validity": "对动态人物、变化关系和长时间场景图维护的效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.27871-C01",
+      "claim": "端侧VLM可显著降低导航推理延迟，但基于场景图的ObjectNav仍无法原生表示瞬态组合语义，动态线索可能在稀疏查询间丢失。",
+      "stance": "limit",
+      "relation": "限制“导航只剩把模型搬到端侧”的判断。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论的限制段直接说明场景图的时空语义缺口。",
+      "locator": "5 Conclusion",
+      "source_context": "Limitations SG -based ObjectNav approaches are spatio-temporally limited. While the SG updates between VLM queries, the SG cannot inherently bind transient, compositional semantics (e.g., distinguishing a generic ”chair” from a ”chair with a person on it” ).",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该文本逐字位于结论限制段；卡片仅概括瞬态组合语义问题，没有扩展到论文未测试的其他故障。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

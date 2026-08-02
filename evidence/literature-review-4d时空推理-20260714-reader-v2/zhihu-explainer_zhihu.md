@@ -2,8 +2,6 @@
 
 ## TL;DR
 
-这一版不只核对摘要，而是对 15 篇入选论文逐篇阅读方法、结果与局限。下文只保留能在完整正文中重新定位的判断。
-
 不算。对机器人而言，4D 理解不是“3D 场景加一条时间轴”，更不是把未来画面做得以假乱真；它要求模型持续认出同一物体、预测动作会造成什么变化，并在控制截止时间之前给出可执行答案。新近研究显示，加入三维点轨迹、几何一致性或动作条件推演确实能提高部分操控任务的表现，但效果仍受数据、视角、接触传感和推理延迟约束。
 
 ## 这个误区为什么很自然
@@ -46,7 +44,7 @@ WEAVER 的局限讨论把问题列得很具体：部分可观测、缺少触觉�
 
 ## 什么时候这个判断不成立
 
-第二，海量人类视频不能直接替代机器人示范。人类第一视角素材能扩充“物体一般怎样运动”的知识，可执行关节动作仍要由机器人交互数据锚定。类似地，[Kinema4D](https://arxiv.org/abs/2603.16669) 选择大规模四维伪标注来学习相对几何和运动先验，强调的是覆盖与精度的权衡，而非把伪标注宣称为亚毫米真值。
+首先，海量人类视频不能直接替代机器人示范。人类第一视角素材能扩充“物体一般怎样运动”的知识，可执行关节动作仍要由机器人交互数据锚定。类似地，[Kinema4D](https://arxiv.org/abs/2603.16669) 选择大规模四维伪标注来学习相对几何和运动先验，强调的是覆盖与精度的权衡，而非把伪标注宣称为亚毫米真值。
 
 最后，训练时学习点轨迹是否能扩展到大规模预训练，或是否应在测试时显式调用几何，仍是未解问题。现有工作给出方向性证据，还没有封闭这个设计空间。
 
@@ -63,14 +61,12 @@ WEAVER 的局限讨论把问题列得很具体：部分可观测、缺少触觉�
 生成未来视频只是可能的载体。三维点轨迹可以作为训练老师，动作条件视频可以在执行前比较候选，场景图可以记住关系会持续多久，连续占用场可以回答任意时刻哪里可通行。它们是否有效，最终都要回到同一个验收问题：预测有没有让机器人更及时、更稳妥地做出下一步动作；如果没有，“4D”就仍只是表示上的标签。
 
 ## 延伸阅读
-- [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882)
-- [Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation](https://arxiv.org/abs/2603.01549)
-- [$τ_0$-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027)
-- [$\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation](https://arxiv.org/abs/2606.13672)
-- [Predictive Spatio-Temporal Scene Graphs for Semi-Static Scenes](https://arxiv.org/abs/2605.00121)
-- [GEM: Gaussian Evolution Model for Occupancy Forecasting and Motion Planning](https://arxiv.org/abs/2605.17682)
-- [DGSG-Mind: Dynamic 3D Gaussian Scene Graphs for Long-Term Scene Understanding and Grounding](https://arxiv.org/abs/2605.29879)
-- [Kinema4D: Kinematic 4D World Modeling for Spatiotemporal Embodied Simulation](https://arxiv.org/abs/2603.16669)
-- [MVISTA-4D: View-Consistent 4D World Model with Test-Time Action Inference for Robotic Manipulation](https://arxiv.org/abs/2602.09878)
-- [Embody4D: A Generalist Data Engine for Embodied 4D World Modeling](https://arxiv.org/abs/2605.01799)
-- [Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation](https://arxiv.org/abs/2606.08737)
+
+- [GEM-4D](https://arxiv.org/abs/2605.22882)：用几何特征蒸馏连接视频预测与可执行动作。
+- [Pri4R](https://arxiv.org/abs/2603.01549)：以训练期三维点轨迹监督增强 VLA 的时序结构。
+- [τ0-WM](https://arxiv.org/abs/2606.01027)：展示动作条件未来如何参与候选动作选择与修正。
+- [WEAVER](https://arxiv.org/abs/2606.13672)：同时讨论真实结果保真、长时一致和推理效率。
+- [PredictiveGraphs](https://arxiv.org/abs/2605.00121)：用三维场景关系的持续时间支持半静态导航规划。
+- [GEM](https://arxiv.org/abs/2605.17682)：以连续四维高斯表示查询任意未来时刻的占用。
+- [Kinema4D](https://arxiv.org/abs/2603.16669)：在大规模伪标注中学习相对几何与运动先验。
+- [Dream-Tac](https://arxiv.org/abs/2606.08737)：提醒接触任务还需联合预测触觉与动作。

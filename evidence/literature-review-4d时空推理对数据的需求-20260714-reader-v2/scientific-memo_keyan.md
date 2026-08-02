@@ -18,38 +18,38 @@
 
 | 数据层 | 最低可用形态 | 作用 | 证据 |
 |---|---|---|---|
-| 4D几何轨迹 | 3D point tracks、pointmaps、跨帧correspondence、可见性mask | 让模型学习同一物理点如何随时间运动，而不是只生成看起来合理的视频 | , [相关研究](https://arxiv.org/abs/2603.01549),  [相关研究](https://arxiv.org/abs/2605.22882) |
+| 4D几何轨迹 | 3D point tracks、pointmaps、跨帧correspondence、可见性mask | 让模型学习同一物理点如何随时间运动，而不是只生成看起来合理的视频 | , [Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation](https://arxiv.org/abs/2603.01549),  [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882) |
 | 可执行动作 grounding | 机器人动作chunk、本体状态、远程操作轨迹、少量真实机器人示教 | 把视觉/几何预测接到具体机器人控制空间 |,   |
 | 异构监督治理 | robot demo、UMI式示教、第一视角人类视频、失败推演，并用mask区分可监督字段 | 防止把弱动作信号或无动作视频误当成机器人动作真值 | , [τ_0-WM](https://arxiv.org/abs/2606.01027) |
-| 接触与多模态传感 | 双指触觉、腕部力/力矩、未来触觉潜在状态、触觉事件强度 | 补视觉不可观测的接触、滑移、抓取稳定性和局部形变 |,  [相关研究](https://arxiv.org/abs/2606.08737),  |
-| 失败、恢复、奖励 | 合成失败轨迹、扰动恢复示教、任务进度/奖励/critic标签 | 让世界模型能评价候选动作，而不只是预测平均未来 | [相关研究](https://arxiv.org/abs/2603.16669), [相关研究](https://arxiv.org/abs/2606.11184),  [相关研究](https://arxiv.org/abs/2606.13672) |
-| 采集质量与硬件 | 时间同步、动作-状态一致性、episode级切分、触觉标记跟踪、示教器人体工学 | 保证数据能被学习，并减少示教工具本身引入的偏差 | [相关研究](https://arxiv.org/abs/2603.08485), [相关研究](https://arxiv.org/abs/2606.04825),  [相关研究](https://arxiv.org/abs/2603.17189) |
+| 接触与多模态传感 | 双指触觉、腕部力/力矩、未来触觉潜在状态、触觉事件强度 | 补视觉不可观测的接触、滑移、抓取稳定性和局部形变 |,  [Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation](https://arxiv.org/abs/2606.08737),  |
+| 失败、恢复、奖励 | 合成失败轨迹、扰动恢复示教、任务进度/奖励/critic标签 | 让世界模型能评价候选动作，而不只是预测平均未来 | [Kinema4D: Kinematic 4D World Modeling for Spatiotemporal Embodied Simulation](https://arxiv.org/abs/2603.16669), [TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation](https://arxiv.org/abs/2606.11184),  [$\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation](https://arxiv.org/abs/2606.13672) |
+| 采集质量与硬件 | 时间同步、动作-状态一致性、episode级切分、触觉标记跟踪、示教器人体工学 | 保证数据能被学习，并减少示教工具本身引入的偏差 | [3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos](https://arxiv.org/abs/2603.08485), [HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning](https://arxiv.org/abs/2606.04825),  [Influence of Gripper Design on Human Demonstration Quality for Robot Learning](https://arxiv.org/abs/2603.17189) |
 
 ## 主要共识
 
-第一，动作标签不是世界动态标签。Pri4R明确指出，动作标签告诉策略“怎么动”，但不告诉它“动完世界会怎样”；3D点轨迹这类4D监督能把动作学习对齐到时空度量结构中（[相关研究](https://arxiv.org/abs/2603.01549)）。
+第一，动作标签不是世界动态标签。Pri4R明确指出，动作标签告诉策略“怎么动”，但不告诉它“动完世界会怎样”；3D点轨迹这类4D监督能把动作学习对齐到时空度量结构中（[Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation](https://arxiv.org/abs/2603.01549)）。
 
-第二，人类视频有价值，但必须被转成机器人可用的中间表示。3PoinTr用无动作人类视频学习非embodiment点的3D点轨迹，再用少量机器人动作示教学习闭环策略，说明“广泛视觉动态”和“可执行动作”应分工而不是混用（[相关研究](https://arxiv.org/abs/2603.08485)）。
+第二，人类视频有价值，但必须被转成机器人可用的中间表示。3PoinTr用无动作人类视频学习非embodiment点的3D点轨迹，再用少量机器人动作示教学习闭环策略，说明“广泛视觉动态”和“可执行动作”应分工而不是混用（[3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos](https://arxiv.org/abs/2603.08485)）。
 
-第三，4D世界模型必须约束跨帧对应。GEM-4D把视频世界模型的关键失败定义为：未来视频看起来真实，但同一3D表面点跨帧漂移，导致动作提取不可靠。因此几何教师、点轨迹和pointmap监督是数据层面的必要补丁（, [相关研究](https://arxiv.org/abs/2605.22882)）。
+第三，4D世界模型必须约束跨帧对应。GEM-4D把视频世界模型的关键失败定义为：未来视频看起来真实，但同一3D表面点跨帧漂移，导致动作提取不可靠。因此几何教师、点轨迹和pointmap监督是数据层面的必要补丁（, [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882)）。
 
 第四，真实部署需要异构数据混合。τ0-WM把真实机器人远程操作、UMI式交互、第一视角人类视频和失败推演放进同一训练框架，但用modality-specific supervision masks区分每类数据能监督什么（, [τ_0-WM](https://arxiv.org/abs/2606.01027)）。
 
-第五，接触任务会暴露纯视觉4D的盲区。TacForeSight、Dream-Tac和HapTile共同说明，触觉、力/力矩、触觉事件门控和haptic-informed示教对于插入、擦拭、切割、抓取柔性物体等任务不是锦上添花，而是状态可观测性的一部分（[相关研究](https://arxiv.org/abs/2606.11184), [相关研究](https://arxiv.org/abs/2606.08737), [相关研究](https://arxiv.org/abs/2606.04825)）。
+第五，接触任务会暴露纯视觉4D的盲区。TacForeSight、Dream-Tac和HapTile共同说明，触觉、力/力矩、触觉事件门控和haptic-informed示教对于插入、擦拭、切割、抓取柔性物体等任务不是锦上添花，而是状态可观测性的一部分（[TacForeSight: Force-Guided Tactile World Model for Contact-Rich Manipulation](https://arxiv.org/abs/2606.11184), [Dream-Tac: A Unified Tactile World Action Model for Contact-Rich Robot Manipulation](https://arxiv.org/abs/2606.08737), [HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning](https://arxiv.org/abs/2606.04825)）。
 
 ## 条件与限制
 
-4D数据不是越密越好，而是要对齐任务物理。Pri4R的点密度消融显示，点数太少会损失交互几何；但GEM-4D也说明直接预测显式几何输出会带来标注和架构成本，因此“训练期几何教师、推理期轻量化”是一个折中方向（[相关研究](https://arxiv.org/abs/2603.01549), [相关研究](https://arxiv.org/abs/2605.22882)）。
+4D数据不是越密越好，而是要对齐任务物理。Pri4R的点密度消融显示，点数太少会损失交互几何；但GEM-4D也说明直接预测显式几何输出会带来标注和架构成本，因此“训练期几何教师、推理期轻量化”是一个折中方向（[Pri4R: Learning World Dynamics for Vision-Language-Action Models with Privileged 4D Representation](https://arxiv.org/abs/2603.01549), [GEM-4D: Geometry-Enhanced Video World Models for Robot Manipulation](https://arxiv.org/abs/2605.22882)）。
 
-伪4D标注可以用，但要知道它在服务什么。Kinema4D接受ST-v2伪标注不是因为它等于高精度真值，而是因为相对几何和大规模覆盖足以训练生成式运动先验；这类数据适合世界模型，不应直接等同于控制精标数据（[相关研究](https://arxiv.org/abs/2603.16669)）。
+伪4D标注可以用，但要知道它在服务什么。Kinema4D接受ST-v2伪标注不是因为它等于高精度真值，而是因为相对几何和大规模覆盖足以训练生成式运动先验；这类数据适合世界模型，不应直接等同于控制精标数据（[Kinema4D: Kinematic 4D World Modeling for Spatiotemporal Embodied Simulation](https://arxiv.org/abs/2603.16669)）。
 
-数据质量来自采集系统。HapTile强调同步、时间戳、动作-状态一致性和episode级切分；UMI示教质量研究进一步说明，夹爪力分布、刚度和人体工学会影响示教是否可学（[相关研究](https://arxiv.org/abs/2606.04825), [相关研究](https://arxiv.org/abs/2603.17189)）。
+数据质量来自采集系统。HapTile强调同步、时间戳、动作-状态一致性和episode级切分；UMI示教质量研究进一步说明，夹爪力分布、刚度和人体工学会影响示教是否可学（[HapTile: A Haptic-Informed Vision-Tactile-Language-Action Dataset for Contact-Rich Imitation Learning](https://arxiv.org/abs/2606.04825), [Influence of Gripper Design on Human Demonstration Quality for Robot Learning](https://arxiv.org/abs/2603.17189)）。
 
 ## 未解决问题
 
-纯视觉世界模型仍然缺失隐藏物理状态。WEAVER作者明确指出，抓取稳定性、接触力、被遮挡几何、形变和颗粒动态可能无法从图像历史中恢复，需要触觉、力矩、深度、更广embodiment和更可靠奖励监督（[相关研究](https://arxiv.org/abs/2606.13672)）。
+纯视觉世界模型仍然缺失隐藏物理状态。WEAVER作者明确指出，抓取稳定性、接触力、被遮挡几何、形变和颗粒动态可能无法从图像历史中恢复，需要触觉、力矩、深度、更广embodiment和更可靠奖励监督（[$\texttt{WEAVER}$, Better, Faster, Longer: An Effective World Model for Robotic Manipulation](https://arxiv.org/abs/2606.13672)）。
 
-示教设备需要与数据目标共同设计。手持夹爪或UMI式设备如果不能表达任务所需接触，后续算法很难补回这部分缺失；这仍缺少完整“示教工具-传感-学习-部署”闭环评估（[相关研究](https://arxiv.org/abs/2603.17189)）。
+示教设备需要与数据目标共同设计。手持夹爪或UMI式设备如果不能表达任务所需接触，后续算法很难补回这部分缺失；这仍缺少完整“示教工具-传感-学习-部署”闭环评估（[Influence of Gripper Design on Human Demonstration Quality for Robot Learning](https://arxiv.org/abs/2603.17189)）。
 
 ## 对本项目的启发
 

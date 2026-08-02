@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.01872",
+    "title": "CausalNav: A Long-term Embodied Navigation System for Autonomous Mobile Robots in Dynamic Outdoor Scenarios",
+    "published": "2026-01-05",
+    "url": "https://arxiv.org/abs/2601.01872",
+    "authors": [
+      "Hongbo Duan"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "提供动态户外、长距离、语言导航的模拟和实机证据，并明确剩余边界。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "核对户外动态语义导航难点。"
+      },
+      {
+        "locator": "III Methodology > III-A System Overview",
+        "role": "method-or-design",
+        "purpose": "核对动态多层图与分层规划。"
+      },
+      {
+        "locator": "IV Experiments and Results > IV-A Experiments Setup",
+        "role": "data-or-setting",
+        "purpose": "核对模拟与真实平台。"
+      },
+      {
+        "locator": "IV Experiments and Results > IV-C Real-world Environmental Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对真实长距离任务。"
+      },
+      {
+        "locator": "V Conclusion and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者限制。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "动态更新的语义图和分层规划能否解决真实户外长距离语言导航？",
+  "contributions": [
+    "融合离线地图、实时开放词汇感知、动态过滤和多层图检索进行户外导航。"
+  ],
+  "method": {
+    "summary": "持续更新多层Embodied Graph，以LLM/RAG做语义检索，局部LiDAR地图负责动态避障和重规划。",
+    "assumptions": [
+      "有高精定位、LiDAR与离线地图",
+      "校园式户外环境可由多层图稳定表示"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Gazebo urban simulation",
+      "campus-like real environment"
+    ],
+    "tasks": [
+      "object/building language navigation"
+    ],
+    "embodiments": [
+      "wheeled mobile robot"
+    ],
+    "sample_or_scale": "模拟25个随机任务各10次；真实包含约130米与512米案例。"
+  },
+  "evaluation": {
+    "design": "模拟多基线多指标评测加两个代表性真实长距离场景。",
+    "baselines": [
+      "ViNT",
+      "NoMaD",
+      "GNM",
+      "CityWalker"
+    ],
+    "metrics": [
+      "SR",
+      "SPL",
+      "collision count",
+      "trajectory length",
+      "runtime"
+    ],
+    "ablations": [
+      "dynamic graph update",
+      "LLM choice"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "动态图更新提升模拟与实机表现，但扩展性、极端光照天气和长时一致性仍未解决。",
+      "scope": "具备LiDAR、RTK/GNSS与离线地图的校园式户外机器人。",
+      "locator": "V Conclusion and Future Work"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "仍受扩展性、极端光照/天气鲁棒性和长时一致性限制。",
+        "locator": "V Conclusion and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "不能外推到无高精定位、无离线地图、恶劣天气或跨日终身自主。",
+        "basis": "硬件依赖强，真实评测案例有限，作者明确列出三类限制。"
+      }
+    ]
+  },
+  "transfer_boundary": "不能外推到无高精定位、无离线地图、恶劣天气或跨日终身自主。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把模拟与真实长距离动态环境结合，并记录碰撞和运行时。"
+    ],
+    "design_risks": [
+      "真实部分是少量案例；基线部署条件可能不完全一致。"
+    ],
+    "baseline_fairness": "模拟比较较系统，真实基线对环境变化的适配程度可能不同。",
+    "metric_validity": "含碰撞、路径和实时性，比单一成功率更完整。",
+    "reproducibility": "系统频率、硬件和模块说明较清楚。",
+    "external_validity": "适用于装备充分的户外平台，对弱传感器和恶劣环境外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.01872-C01",
+      "claim": "CausalNav说明动态语义图可显著推进户外长距离导航，但作者仍把扩展性、极端光照天气和长时一致性列为未解决限制。",
+      "stance": "limit",
+      "relation": "支持导航系统进展，同时反驳通用问题已解决。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论的限制句直接界定了方法在真实动态场景之外的缺口。",
+      "locator": "V Conclusion and Future Work",
+      "source_context": "While effective in dynamic scenes, CausalNav still faces limitations in scalability, robustness under extreme lighting or weather, and long-horizon consistency.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句是作者的直接限制声明；卡片没有否定其校园实机成功，只限制通用和长期外推。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

@@ -2,8 +2,6 @@
 
 ## TL;DR
 
-这一版不只核对摘要，而是对 15 篇入选论文逐篇阅读方法、结果与局限。下文只保留能在完整正文中重新定位的判断。
-
 因为机器人数据不是互联网上可随意混合的图片文本。不同本体的动作含义、遮挡后的三维状态、接触力和失败恢复若没有被正确记录，新增数据会同时增加覆盖和错误监督。近半年研究真正推动的不是“更大数据集”，而是让每条数据对目标任务的作用可验证。
 
 ## 误区从哪来：把机器人学习想成语言模型扩容
@@ -47,8 +45,9 @@
 机器人数据越多越好的前提，是新增数据没有破坏观测、动作和结果之间的对应。真正成熟的数据管线会记录采集偏差、可观测状态、本体语义、覆盖贡献和闭环收益，并让部署失败反向改变采集规则。与其问“我们有多少小时”，不如先问“这些小时教会了机器人哪条可验证的行动规律”。
 
 ## 延伸阅读
-- [SIEVE: Structure-Aware Data Selection for Imitation Learning with VLA Models](https://arxiv.org/abs/2607.06442)
-- [Deform360: A Massive Multi-view Visuotactile Dataset for Deformable World Models](https://arxiv.org/abs/2607.05390)
-- [TACO: TActile World Model as a Self-COrrector forScalable VLA Post-Training](https://arxiv.org/abs/2607.02840)
-- [τ0-WM: A Unified Video-Action World Model for Robotic Manipulation](https://arxiv.org/abs/2606.01027)
-- [GigaWorld-1: A Roadmap to Build World Models for Robot Policy Evaluation](https://arxiv.org/abs/2607.02642)
+
+- [SIEVE](https://arxiv.org/abs/2607.06442)：说明筛选数据时为何要保留原语组合和转换结构。
+- [Deform360](https://arxiv.org/abs/2607.05390)：展示软物体数据对多视角、触觉和三维轨迹的联合需求。
+- [TACO](https://arxiv.org/abs/2607.02840)：把失败附近状态转成带纠正动作的多模态训练片段。
+- [τ0-WM](https://arxiv.org/abs/2606.01027)：区分机器人示教、人类视频和失败轨迹的监督边界。
+- [GigaWorld-1](https://arxiv.org/abs/2607.02642)：用长程动作忠实度而非短期画质校准数据价值。

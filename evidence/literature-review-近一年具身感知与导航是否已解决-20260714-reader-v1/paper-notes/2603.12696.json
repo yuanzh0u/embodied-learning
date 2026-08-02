@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.12696",
+    "title": "HaltNav: Reactive Visual Halting over Lightweight Topological Priors for Robust Vision-Language Navigation",
+    "published": "2026-03-13",
+    "url": "https://arxiv.org/abs/2603.12696",
+    "authors": [
+      "Zihui Yu"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接研究路径先验失效、视觉停机和失败后重规划。"
+    },
+    "sections_read": [
+      {
+        "locator": "I INTRODUCTION",
+        "role": "problem",
+        "purpose": "核对目标式指令、静态地图和动态阻塞的矛盾。"
+      },
+      {
+        "locator": "III METHODOLOGY",
+        "role": "method-or-design",
+        "purpose": "核对分层规划、局部执行和停机机制。"
+      },
+      {
+        "locator": "IV EXPERIMENTS > IV-A Experimental Setup",
+        "role": "data-or-setting",
+        "purpose": "核对HM3D任务与Fetch实机。"
+      },
+      {
+        "locator": "IV EXPERIMENTS > IV-C Real-World Evaluation Results",
+        "role": "results-or-analysis",
+        "purpose": "核对实机目标式和障碍注入结果。"
+      },
+      {
+        "locator": "V CONCLUSIONS",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结构先验和恢复的结论。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "当静态拓扑先验与现场障碍冲突时，VLN能否检测失败并恢复？",
+  "contributions": [
+    "用轻量拓扑图做全局规划，以视觉停机检测阻塞、修改图并重规划。"
+  ],
+  "method": {
+    "summary": "LLM把全局路线分解为局部指令，VLM监控通行性和碰撞，触发图边失效与全局绕行。",
+    "assumptions": [
+      "可获得osmAG式楼层拓扑图",
+      "局部VLN执行器能执行门到门子目标"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "HM3D-derived 528 tasks"
+    ],
+    "tasks": [
+      "goal-only and obstacle-injected VLN"
+    ],
+    "embodiments": [
+      "Fetch robot"
+    ],
+    "sample_or_scale": "5个模拟室内场景；真实大学楼走廊中标准和阻塞任务。"
+  },
+  "evaluation": {
+    "design": "三种指令粒度、标准/阻塞模拟与实机比较。",
+    "baselines": [
+      "StreamVLN",
+      "InternVLA-N1",
+      "OmniNav"
+    ],
+    "metrics": [
+      "SR",
+      "SPL",
+      "oracle success",
+      "navigation error"
+    ],
+    "ablations": [
+      "with/without structural prior and reactive halting"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "真实世界会放大目标式指令和意外阻塞的失败，显式结构先验与恢复机制是关键。",
+      "scope": "已有楼层拓扑先验的室内建筑。",
+      "locator": "IV EXPERIMENTS > IV-C Real-World Evaluation Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "依赖预先标注拓扑图、特定建筑和少量Fetch实机任务，不能外推到未知无图环境。",
+        "basis": "实验需要osmAG先验，真实环境范围单一且成功率仍非满分。"
+      }
+    ]
+  },
+  "transfer_boundary": "依赖预先标注拓扑图、特定建筑和少量Fetch实机任务，不能外推到未知无图环境。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把失败注入、检测、停机和重规划做成闭环并含实机比较。"
+    ],
+    "design_risks": [
+      "地图先验人工获取；阻塞类型相对单一。"
+    ],
+    "baseline_fairness": "统一实机平台比较主要基线，但多相机OmniNav因硬件成本未用于实机。",
+    "metric_validity": "含SR/SPL/导航误差，但安全指标仍主要由碰撞触发间接体现。",
+    "reproducibility": "任务和模块公开计划明确，真实osmAG标注成本需考虑。",
+    "external_validity": "对无图、跨楼层、动态人群和长期地图变化的外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.12696-C01",
+      "claim": "真实VLN鲁棒性依赖显式结构先验、异常检测和重规划；没有这些机制的基线在目标式指令或阻塞下会出现灾难性退化。",
+      "stance": "conditional",
+      "relation": "表明导航不是单次规划已解决，而是恢复闭环仍属核心能力。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "实机结果段直接比较基线在目标式和障碍注入条件下的崩溃。",
+      "locator": "IV-C Real-World Evaluation Results",
+      "source_context": "The real world dramatically amplifies both failure modes observed in simulation. Under goal-only instructions (L2-B), InternVLA-N1 collapses to 0% SR and StreamVLN to 13.33%, far below their simulation counterparts. Under obstacle injection, both baselines drop to 0% SR across all conditions—even StreamVLN, which retained 37.50% in simulation.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文是实机评测的直接结果；卡片只据此强调恢复和先验的条件性，不把单一建筑概括为所有导航。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

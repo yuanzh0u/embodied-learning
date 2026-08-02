@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2510.26909",
+    "title": "NaviTrace: Evaluating Embodied Navigation of Vision-Language Models",
+    "published": "2025-10-30",
+    "url": "https://arxiv.org/abs/2510.26909",
+    "authors": [
+      "Tim Windecker"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "在真实图像、多本体导航轨迹上评估VLM空间落点与路径规划。"
+    },
+    "sections_read": [
+      {
+        "locator": "I INTRODUCTION",
+        "role": "problem",
+        "purpose": "核对真实闭环、仿真和VQA三类评测缺口。"
+      },
+      {
+        "locator": "III NAVITRACE BENCHMARK > III-A Data Collection",
+        "role": "data-or-setting",
+        "purpose": "核对场景、指令与本体类型。"
+      },
+      {
+        "locator": "III NAVITRACE BENCHMARK > III-C Score",
+        "role": "method-or-design",
+        "purpose": "核对轨迹、目标和语义安全惩罚。"
+      },
+      {
+        "locator": "IV EXPERIMENTS > IV-D Summary of Key Findings",
+        "role": "results-or-analysis",
+        "purpose": "核对人类差距和目标定位失败。"
+      },
+      {
+        "locator": "VI LIMITATIONS",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对单图、地域和动态规划边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "当前VLM能否从真实第一视角图像产生接近人类且本体适配的导航轨迹？",
+  "contributions": [
+    "建立1000个真实场景、多本体专家轨迹及与人偏好对齐的语义轨迹分数。"
+  ],
+  "method": {
+    "summary": "让VLM根据单张真实图像、语言指令与本体类型输出2D轨迹，按路径、终点和语义风险评分。",
+    "assumptions": [
+      "单图2D轨迹能作为闭环导航能力的可扩展代理",
+      "语义分割惩罚可近似安全偏好"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "NaviTrace"
+    ],
+    "tasks": [
+      "single-image navigation trace prediction"
+    ],
+    "embodiments": [
+      "human",
+      "legged robot",
+      "wheeled robot",
+      "bicycle"
+    ],
+    "sample_or_scale": "1000个场景、3000多条专家轨迹、8个VLM。"
+  },
+  "evaluation": {
+    "design": "模型、人类、直行和特权目标基线的离线轨迹比较。",
+    "baselines": [
+      "human",
+      "Straight Forward",
+      "Oracle-Goal",
+      "goal-only",
+      "path-only"
+    ],
+    "metrics": [
+      "semantic-aware trace score",
+      "DTW",
+      "FDE",
+      "human ranking correlation"
+    ],
+    "ablations": [
+      "score components",
+      "goal vs path decomposition"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "VLM整体显著落后人类，目标定位是主导失败面，且总体弱势掩盖了本体差异。",
+      "scope": "单张真实图像上的离线2D轨迹预测。",
+      "locator": "IV EXPERIMENTS > IV-D Summary of Key Findings"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "数据地域偏瑞士、只含单图，不能评估动态环境中的时序推理和多步规划。",
+        "locator": "VI LIMITATIONS"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "可证明空间落点尚弱，但不能直接等同于真实机器人闭环成功或碰撞率。",
+        "basis": "作者明确说明单图基准缺少时序、多步规划和精确机器人尺寸。"
+      }
+    ]
+  },
+  "transfer_boundary": "可证明空间落点尚弱，但不能直接等同于真实机器人闭环成功或碰撞率。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "真实图像、多本体、专家轨迹与人偏好校准。"
+    ],
+    "design_risks": [
+      "离线2D代理可能与3D执行和闭环恢复脱节。"
+    ],
+    "baseline_fairness": "统一提示和分数比较多种VLM，闭源模型版本仍难完全控制。",
+    "metric_validity": "语义轨迹分数比单点准确率丰富，但依赖自动分割并局限图像平面。",
+    "reproducibility": "数据和排行榜计划公开。",
+    "external_validity": "对时序动态导航和低层控制的外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2510.26909-C01",
+      "claim": "当前VLM导航仍存在显著人类差距，且目标定位是主导失败模式；这说明基础视觉语言能力尚未等价为可靠空间行动。",
+      "stance": "limit",
+      "relation": "反驳“通用VLM已具备可靠导航”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "关键发现段同时报告人类差距和目标定位主导失败。",
+      "locator": "IV-D Summary of Key Findings",
+      "source_context": "(1) Large human performance gap. Across all four embodiments and task categories, VLM scores are substantially worse than both human and oracle-like baselines, highlighting significant room for improvement (see Fig. ˜ 4 and Table ˜ III ). (2) Goal localization is the dominant failure mode. When models predict only the goal location and we connect it with a straight line, scores are similar to full-trace predictions.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文在关键发现段直接给出跨本体的人类差距和目标定位归因；卡片未把离线轨迹分数冒充闭环成功率。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}
