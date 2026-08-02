@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2601.08325",
+    "title": "ActiveVLA: Injecting Active Perception into Vision-Language-Action Models for Precise 3D Robotic Manipulation",
+    "published": "2026-01-13",
+    "url": "https://arxiv.org/abs/2601.08325",
+    "authors": [
+      "Zhenyang Liu"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "检验主动选择视角与3D放大是否能补足固定相机感知。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "核对固定视角和遮挡造成的感知局限。"
+      },
+      {
+        "locator": "3 Our Proposed ActiveVLA",
+        "role": "method-or-design",
+        "purpose": "核对粗到细主动感知机制。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "data-or-setting",
+        "purpose": "核对三类模拟基准、算力与实机设置。"
+      },
+      {
+        "locator": "4.1 Experimental Results",
+        "role": "results-or-analysis",
+        "purpose": "核对总体收益与最难任务退化。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论及外推边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "主动选视角能否把固定相机下的具身感知变成通用可靠能力？",
+  "contributions": [
+    "把主动视角选择和3D局部放大注入VLA，并在模拟与实机任务中演示。"
+  ],
+  "method": {
+    "summary": "先定位任务关键3D区域，再选择低遮挡、多样视点并对关键区域进行3D放大。",
+    "assumptions": [
+      "可获得多视角RGB-D/点云和相机标定",
+      "额外视觉推理时间可被任务预算接受"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "RLBench",
+      "COLOSSEUM",
+      "GemBench"
+    ],
+    "tasks": [
+      "long-horizon and fine-grained manipulation"
+    ],
+    "embodiments": [
+      "Franka/Kinova-class manipulators"
+    ],
+    "sample_or_scale": "18、12和分层泛化任务；另有多项遮挡实机任务。"
+  },
+  "evaluation": {
+    "design": "模拟成功率对比、组件消融与实机定性演示。",
+    "baselines": [
+      "BridgeVLA",
+      "RVT-2",
+      "3D-LOTUS++"
+    ],
+    "metrics": [
+      "task success rate",
+      "inference time"
+    ],
+    "ablations": [
+      "Active View Selection",
+      "Active 3D Zoom-in"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "主动感知带来一致增益，但最难的GemBench L4任务仍出现严重性能塌缩。",
+      "scope": "多视角RGB-D操控基准及有限实机演示。",
+      "locator": "4.1 Experimental Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "只证明在多视角RGB-D操控设置中主动感知有条件有效，不能外推为开放世界通用感知已解决。",
+        "basis": "最难L4任务仍很弱，实机结果缺少与模拟同等规模的量化统计，且系统使用重算力。"
+      }
+    ]
+  },
+  "transfer_boundary": "只证明在多视角RGB-D操控设置中主动感知有条件有效，不能外推为开放世界通用感知已解决。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "跨三个模拟基准并包含组件消融。"
+    ],
+    "design_risks": [
+      "实机证据以演示为主；传感器和算力条件较强。"
+    ],
+    "baseline_fairness": "多数基线来自同类3D操控，但主动多视角带来额外观测与计算预算。",
+    "metric_validity": "成功率能反映闭环任务，但缺少长期漂移、换场景和传感器故障指标。",
+    "reproducibility": "任务与模型细节较完整，实机复现仍依赖多相机标定和高端算力。",
+    "external_validity": "对单目、低算力、透明反光物和长期运行的适用性未建立。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2601.08325-C01",
+      "claim": "主动感知能改善固定视角VLA，但并未解决通用感知；论文在最难的组合泛化任务上仍报告明显退化。",
+      "stance": "conditional",
+      "relation": "支持“主动感知是必要补丁”，限制“感知问题已经解决”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结果段在报告总体领先的同时明确指出最难L4任务性能下降。",
+      "locator": "4.1 Experimental Results",
+      "source_context": "Although performance decreases on the most difficult L4 tasks (1.2%), ActiveVLA still demonstrates promising long-horizon reasoning and strong 3D perception for precise manipulation.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原句直接位于GemBench结果分析，卡片只据此指出最难任务退化，没有声称主动感知对所有任务无效。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

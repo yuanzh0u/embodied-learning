@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.16690",
+    "title": "PATCH: Action-Chunk-Conditioned Latent Patch Innovation Monitoring for Robot Manipulation",
+    "published": "2026-06-15",
+    "url": "https://arxiv.org/abs/2606.16690",
+    "authors": [
+      "Yanan Zhou",
+      "Ranpeng Qiu",
+      "Yincong Chen",
+      "Jiajie Cui",
+      "Weiming Zhi"
+    ]
+  },
+  "review": {
+    "question": "具身传感器感知误差",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 具身传感器感知误差."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "1 Introduction",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "4.1 Experiment Setup and Evaluation Claims",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "5 Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '具身传感器感知误差', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "全局视觉异常、帧级变化或策略不确定性不足以判断感知误差是否会影响当前动作；部署监控需要把异常限定到 action chunk 将要使用的执行走廊。"
+  ],
+  "method": {
+    "summary": "Learning-based manipulation policies are moving from closed, single-skill settings toward more open-ended real-world autonomy. Methods such as Action Chunking with Transformers enable imitation policies to predict continuous action chunks for fine-grained manipulation [ 1 ] . Recent robot policies further expand the range of objects, scenes, and task specifications that robots can handle [ 2 , 3 ] . However, open-workspace deployment remains sensitive to scene dynamics that training data cannot exhaustively cover, such as new objects entering the workspace, unexpected occlusions, and surrounding objects being moved. Runtime monitoring therefore needs to determine whether visual evolution is",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate PATCH on a real robot platform with two AgileX Piper robot arms. The manipulation policies are learned from real demonstrations using Action Chunking Transformer, and PATCH runs alongside the active policy during deployment. At each step, PATCH receives the active action chunk and constructs the projected execution corridor used for intervention monitoring. Detailed sensor streams, policy horizon, timestamp synchronization, and logging protocol are reported in Section A.7 . We evaluate three claims. Claim 1. PATCH reduces false alarms relative to competing monitors while detecting action-relevant persistent disturbances. Claim 2. Each main component of PATCH contributes to reliab",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "全局视觉异常、帧级变化或策略不确定性不足以判断感知误差是否会影响当前动作；部署监控需要把异常限定到 action chunk 将要使用的执行走廊。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "We presented PATCH, an action-chunk-conditioned latent patch innovation monitor for deployment-time intervention. PATCH uses active action chunks to form a short-horizon execution corridor, predict normal latent patch evolution, filter self-motion, and accumulate persistent external innovation for PATCH-Router. Offline evaluation shows fewer false alarms on clean, irrelevant-change, and transient-obstruction cases while preserving recall on true execution blockers. Ablations verify the roles of corridor projection, latent dynamics, self-motion filtering, and evidence memory. Real-robot results",
+        "locator": "5 Conclusion and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (1 Introduction) and evaluation (4.1 Experiment Setup and Evaluation Claims)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.16690-C01",
+      "claim": "全局视觉异常、帧级变化或策略不确定性不足以判断感知误差是否会影响当前动作；部署监控需要把异常限定到 action chunk 将要使用的执行走廊。",
+      "stance": "limit",
+      "relation": "Evidence relevant to the review question: 具身传感器感知误差",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者指出开放工作空间中移动物体、瞬时遮挡和目标运动附近扰动会让部署脆弱；现有 runtime monitors 往往依赖全局 observation anomalies、policy uncertainty 或 frame-level visual changes，难以区分任务相关执行风险和无害视觉变化。PATCH 通过 active action chunk 的 projected execution corridor 累计持续残差作为介入信号。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Learning-based manipulation policies have made substantial progress in real-world robot manipulation, particularly for short-horizon action generation. However, deployment in open workspaces remains fragile under unexpected local scene dynamics, such as moving objects, transient occlusions, or disturbances near the intended motion. Existing runtime monitors often rely on global observation anomalies, policy uncertainty, or frame-level visual changes, and struggle to distinguish task-relevant execution risk from benign visual variation. We introduce PATCH, an action-chunk-conditioned latent patch innovation monitor for deployment-time intervention. Given the active action chunk, PATCH defines a projected execution corridor, predicts latent patch evolution inside it, and accumulates persistent residuals unexplained by the robot’s own motion. These residuals form a localized intervention signal that allows PATCH-Router to pause execution, select an available recovery source, and resume the original policy once localized innovation subsides. Experiments on real robot rollout dat",
+      "evidence_type": "method-and-framing",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in Abstract contains the paper-specific concepts used by the claim (action, active, anomalies, benign, changes, chunk, corridor, execution). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Useful as a failure-monitoring perspective; it is not a sensor-hardware paper. Full-text extraction provenance revalidated on 2026-07-14."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

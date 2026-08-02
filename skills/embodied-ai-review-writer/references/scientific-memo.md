@@ -27,6 +27,9 @@ Use this style for researchers, technical leads, and project decision-makers. Th
 - Translate established technical terms once; retain English only when it is the community-standard label.
 - Separate “论文显示” from “本文推断” and explain why the inference follows.
 - Compare methods around a question; do not allocate one paragraph to each paper.
+- Keep a neutral research voice unless the user explicitly supplies another voice. Do not add first-person reactions, personal experience, rhetorical drama, or informal asides to make the memo sound human.
+- Preserve calibrated qualification. A shorter sentence is not better if it erases the task, dataset, embodiment, time-range, or evaluation condition under which a claim holds.
+- Treat technical punctuation as semantic. Keep compounds such as “深度—尺度歧义” and other established notation when a dash expresses a real relation.
 
 ## Reject the draft when
 

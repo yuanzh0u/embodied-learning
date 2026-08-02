@@ -25,21 +25,21 @@ RT-1 把大规模真实机器人数据、语言指令和视觉观测接到 Trans
 
 ### 语言稀疏
 
-这带来一个重要推论：如果语言只在输入端作为 prompt 出现，而没有阶段级、动作级或因果级监督，它很容易成为装饰性条件。ZR-0 的 dense embodied chain-of-thought 方向可以理解为把稀疏语言“加密”：把场景描述、任务进度、未来计划、原子子任务、目标框和离散动作 token 作为 dense supervision，使高层认知过程更细粒度地对齐到动作专家（[相关研究](https://arxiv.org/abs/2606.30552)）。
+这带来一个重要推论：如果语言只在输入端作为 prompt 出现，而没有阶段级、动作级或因果级监督，它很容易成为装饰性条件。ZR-0 的 dense embodied chain-of-thought 方向可以理解为把稀疏语言“加密”：把场景描述、任务进度、未来计划、原子子任务、目标框和离散动作 token 作为 dense supervision，使高层认知过程更细粒度地对齐到动作专家（[Training Vision-Language-Action Models with Dense Embodied Chain-of-Thought Supervision](https://arxiv.org/abs/2606.30552)）。
 
 ### 动作连续
 
-动作不是自然语言词表。离散 action token 对 autoregressive VLA 很友好，但会带来压缩和解码问题：同一个 token 在不同关节状态、物体位姿、接触条件下不应解码成同一个连续控制量。SA-VLA 因此把机器人状态注入 action tokenizer，试图缩小离散 token 到连续控制之间的 compression 空白（[相关研究](https://arxiv.org/abs/2606.30113)）。
+动作不是自然语言词表。离散 action token 对 autoregressive VLA 很友好，但会带来压缩和解码问题：同一个 token 在不同关节状态、物体位姿、接触条件下不应解码成同一个连续控制量。SA-VLA 因此把机器人状态注入 action tokenizer，试图缩小离散 token 到连续控制之间的 compression 空白（[SA-VLA: State-aware tokenizer for improving Vision-Language-Action Models' performance](https://arxiv.org/abs/2606.30113)）。
 
 另一类论文绕开“先离散再还原”的瓶颈，用 flow matching / diffusion 直接学习连续动作流。Learning Action Priors for Cross-embodiment Robot Manipulation 的关键判断是：VLA 从 VLM 继承了视觉和语言先验，但 action module 往往从零学习物理运动；
 
 ### 视觉稠密
 
-SSI-Policy 则构造 RGB-only structured scene interface，把 monocular depth、language-grounded object layout 和 instruction-conditioned 2D motion trajectory 放到中间层，再交给 diffusion action planner；这等于在视觉和控制之间加了一个可解释、任务对齐的空间接口（[相关研究](https://arxiv.org/abs/2606.26800)）。
+SSI-Policy 则构造 RGB-only structured scene interface，把 monocular depth、language-grounded object layout 和 instruction-conditioned 2D motion trajectory 放到中间层，再交给 diffusion action planner；这等于在视觉和控制之间加了一个可解释、任务对齐的空间接口（[SSI-Policy: Learning Structured Scene Interfaces for Vision-Language Robotic Manipulation](https://arxiv.org/abs/2606.26800)）。
 
 ### 物理闭环
 
-真实机器人中的 action 不是抽象标签，而是控制器输入。SPACE 指出，不同机器人甚至同一型号不同硬件单元中，同一 action command 都可能产生不同 motion；因此它用 Cartesian state delta 做共享动作表示，再用 Action Adapter 转成具体机器人控制命令（[相关研究](https://arxiv.org/abs/2606.24049)）。
+真实机器人中的 action 不是抽象标签，而是控制器输入。SPACE 指出，不同机器人甚至同一型号不同硬件单元中，同一 action command 都可能产生不同 motion；因此它用 Cartesian state delta 做共享动作表示，再用 Action Adapter 转成具体机器人控制命令（[SPACE: Enabling Learning from Cross-Robot Data Toward Generalist Policies](https://arxiv.org/abs/2606.24049)）。
 
 ## 核心机制
 

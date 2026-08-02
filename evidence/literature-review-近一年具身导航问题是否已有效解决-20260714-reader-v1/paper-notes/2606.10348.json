@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.10348",
+    "title": "Rethinking Embodied Navigation via Relational Inductive Bias",
+    "published": "2026-06-09",
+    "url": "https://arxiv.org/abs/2606.10348",
+    "authors": [
+      "Weitao An"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "分析开放词汇感知误差如何持续污染目标导航地图和决策。"
+    },
+    "sections_read": [
+      {
+        "locator": "Introduction",
+        "role": "problem",
+        "purpose": "核对误检、混淆和静态先验的系统性风险。"
+      },
+      {
+        "locator": "Method",
+        "role": "method-or-design",
+        "purpose": "核对激活/抑制关系图。"
+      },
+      {
+        "locator": "Experiment > Experiment Setup",
+        "role": "data-or-setting",
+        "purpose": "核对三个ObjectNav基准。"
+      },
+      {
+        "locator": "Main Results",
+        "role": "results-or-analysis",
+        "purpose": "核对成功率和路径效率。"
+      },
+      {
+        "locator": "Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对方法贡献与范围。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "开放词汇感知的错误语义如何在探索中积累，并能否被动作验证抑制？",
+  "contributions": [
+    "把共现激活、相似物抑制和失败访问记忆统一为动态探索图。"
+  ],
+  "method": {
+    "summary": "将观察到的对象关系转为正向激活和负向抑制场，依据动作失败持续更新前沿价值。",
+    "assumptions": [
+      "对象检测与语义关系可在线更新",
+      "Habitat ObjectNav能代表噪声开放词汇搜索"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "HM3Dv1",
+      "HM3Dv2",
+      "MP3D"
+    ],
+    "tasks": [
+      "zero-shot ObjectNav"
+    ],
+    "embodiments": [
+      "Habitat simulated agent"
+    ],
+    "sample_or_scale": "三个标准模拟ObjectNav验证集。"
+  },
+  "evaluation": {
+    "design": "标准基准比较、组件消融、检测器敏感性与运行时分析。",
+    "baselines": [
+      "VLFM",
+      "InstructNav",
+      "SG-Nav",
+      "L3MVN"
+    ],
+    "metrics": [
+      "SR",
+      "SPL",
+      "SoftSPL",
+      "runtime"
+    ],
+    "ablations": [
+      "activation",
+      "similar-object inhibition",
+      "failed-access memory",
+      "label competition"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "开放词汇误差不是独立随机噪声，会反复污染地图和探索，因此需要显式反证和抑制。",
+      "scope": "模拟室内ObjectNav中的在线开放词汇感知。",
+      "locator": "Introduction"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "证明了结构化误差治理在模拟ObjectNav中的价值，但没有真实传感器漂移、动态场景或长期图维护验证。",
+        "basis": "全部评测在Habitat标准基准，未报告实机闭环。"
+      }
+    ]
+  },
+  "transfer_boundary": "证明了结构化误差治理在模拟ObjectNav中的价值，但没有真实传感器漂移、动态场景或长期图维护验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "消融能分别验证正向关系、混淆抑制和失败记忆。"
+    ],
+    "design_risks": [
+      "上游检测器和关系先验质量影响结果；真实噪声未覆盖。"
+    ],
+    "baseline_fairness": "覆盖多种零样本基线，并报告在线LLM调用与运行时。",
+    "metric_validity": "SR/SPL连接任务结果，但未覆盖碰撞严重度和误检代价。",
+    "reproducibility": "数据集与组件明确，方法轻量且不依赖在线LLM。",
+    "external_validity": "真实开放世界感知污染的规模和动态性尚未验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.10348-C01",
+      "claim": "开放词汇感知错误会形成系统性误导并持续污染地图与导航决策，因此标准检测能力并不等于具身感知已解决。",
+      "stance": "limit",
+      "relation": "解释感知误差为何会在闭环导航中被放大。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "引言直接描述视觉相似、静态先验和缺少动作验证导致的持续污染。",
+      "locator": "Abstract > first paragraph",
+      "source_context": "visual similarity can induce false positives, static priors are difficult to update once contradicted, and the lack of embodied verification may lead to repeated failed exploration, continuously contaminating map updates and navigation decisions.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句直接陈述系统性误导机制；卡片没有把作者的模拟改进外推成真实部署结论。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

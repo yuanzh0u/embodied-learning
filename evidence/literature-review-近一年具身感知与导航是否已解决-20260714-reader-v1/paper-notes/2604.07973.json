@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2604.07973",
+    "title": "How Far Are Large Multimodal Models from Human-Level Spatial Action? A Benchmark for Goal-Oriented Embodied Navigation in Urban Airspace",
+    "published": "2026-04-09",
+    "url": "https://arxiv.org/abs/2604.07973",
+    "authors": [
+      "Baining Zhao"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "用连续城市3D导航直接比较LMM与人类空间行动能力并分析失败分叉。"
+    },
+    "sections_read": [
+      {
+        "locator": "1. Introduction",
+        "role": "problem",
+        "purpose": "核对人类级空间行动问题及连续闭环设置。"
+      },
+      {
+        "locator": "3. Problem Formulation",
+        "role": "method-or-design",
+        "purpose": "核对连续目标导航的形式化任务与动作设置。"
+      },
+      {
+        "locator": "4. Dataset Construction > 4.2. Data Collection and Annotation",
+        "role": "data-or-setting",
+        "purpose": "核对数据构建与标注。"
+      },
+      {
+        "locator": "5. Experiment > 5.2. Overall Performance",
+        "role": "results-or-analysis",
+        "purpose": "核对17个模型与人类对比。"
+      },
+      {
+        "locator": "5. Experiment > 5.5. Failure Case Analysis: Gaps Between LMMs and Humans",
+        "role": "results-or-analysis",
+        "purpose": "核对四类失败机制。"
+      },
+      {
+        "locator": "7. Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对总体边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "当LMM连续观察并行动时，其空间行动是否已经达到人类级导航？",
+  "contributions": [
+    "构建城市空域目标导航基准并用关键决策分叉分析模型失败。"
+  ],
+  "method": {
+    "summary": "在城市3D环境中让模型依据连续第一视角和语言目标输出动作，比较轨迹并定位首次关键分叉。",
+    "assumptions": [
+      "城市空域仿真能代表一种高难度空间行动面",
+      "人工基准可作为目标能力上界"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Embodied-Navigation-Bench"
+    ],
+    "tasks": [
+      "goal-oriented urban aerial navigation"
+    ],
+    "embodiments": [
+      "simulated aerial agent"
+    ],
+    "sample_or_scale": "5037条轨迹、17个模型，并有人类对照。"
+  },
+  "evaluation": {
+    "design": "跨模型闭环模拟评测与逐步失败案例分析。",
+    "baselines": [
+      "random/action sampling",
+      "reasoning LMMs",
+      "agent methods",
+      "VLA methods",
+      "humans"
+    ],
+    "metrics": [
+      "success rate",
+      "SPL",
+      "progress curves"
+    ],
+    "ablations": [
+      "geometric perception",
+      "cross-view understanding",
+      "spatial imagination",
+      "memory"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "模型错误常在关键分叉后快速发散，根因跨越几何感知、跨视角一致性、动作后果和长期记忆。",
+      "scope": "城市空域仿真的目标导向连续导航。",
+      "locator": "7. Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "结论强烈否定当前模型的人类级空间行动，但仍不能覆盖地面机器人、低层控制和真实城市安全。",
+        "basis": "实验在构建的城市空域仿真中进行，尽管连续闭环但不是真实部署。"
+      }
+    ]
+  },
+  "transfer_boundary": "结论强烈否定当前模型的人类级空间行动，但仍不能覆盖地面机器人、低层控制和真实城市安全。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "含人类对照、17个模型和失败分叉分析。"
+    ],
+    "design_risks": [
+      "任务域集中于城市空域；不同模型接口与提示可能影响比较。"
+    ],
+    "baseline_fairness": "提供多类模型和共同任务，但闭源模型与专用代理的资源并不完全等价。",
+    "metric_validity": "闭环成功与轨迹进度比单步问答更接近导航能力。",
+    "reproducibility": "数据集与项目页面公开计划明确，闭源模型版本仍会变化。",
+    "external_validity": "对地面导航可提供机制性反证，但不能直接给出真实机器人事故率。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2604.07973-C01",
+      "claim": "当前LMM的连续空间行动仍远未解决：失败跨越几何感知、跨视角理解、动作后果想象和长期记忆，而非单一视觉分类误差。",
+      "stance": "limit",
+      "relation": "直接反驳“导航只剩工程收尾”或“感知一好导航即解决”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论把关键决策分叉后的发散归结为四类相互耦合的能力缺口。",
+      "locator": "7. Conclusion",
+      "source_context": "By examining navigation completion progress curves, we identify a critical decision bifurcation (CDB) phenomenon, in which navigation errors of LMMs do not grow gradually but instead deviate after a pivotal decision point. From the CDB viewpoint, we derive that LMMs exhibit emerging reasoning and action capabilities but still suffer from four key limitations: insufficient geometric perception, limited cross-view understanding, lack of spatial imagination about action consequences, and weak long-term memory for planning.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该段是结论对实验和失败分析的直接总结；卡片保留四类缺口且未超出城市空域模拟范围。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

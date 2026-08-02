@@ -5,7 +5,7 @@
 
 机器人模型里，语言像任务单，图像像监控流，动作像电机控制。把它们都塞进 Transformer，不等于它们自动对齐。
 
-💡 动作不是文字：action token 最后必须变成连续控制，同一个 token 在不同状态下不能含义固定。证据：SA-VLA [相关研究](https://arxiv.org/abs/2606.30113)。
+💡 动作不是文字：action token 最后必须变成连续控制，同一个 token 在不同状态下不能含义固定。证据：SA-VLA [SA-VLA: State-aware tokenizer for improving Vision-Language-Action Models' performance](https://arxiv.org/abs/2606.30113)。
 
 💡 **语言对齐要落到动作表示。** [ERVLA](https://arxiv.org/abs/2606.03784) 显示，末端运动/图像轨迹类 CoT 更有用，长文本前缀会累积误差。
 

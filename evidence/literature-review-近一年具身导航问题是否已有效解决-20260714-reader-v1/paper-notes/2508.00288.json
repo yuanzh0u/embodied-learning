@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2508.00288",
+    "title": "UAV-ON: A Benchmark for Open-World Object Goal Navigation with Aerial Agents",
+    "published": "2025-08-01",
+    "url": "https://arxiv.org/abs/2508.00288",
+    "authors": [
+      "Jianqiang Xiao"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "开放世界无人机ObjectNav把语义感知、3D控制、停止和碰撞风险同时纳入。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "核对航空开放世界ObjectNav缺口。"
+      },
+      {
+        "locator": "3 Task Definition",
+        "role": "method-or-design",
+        "purpose": "核对输入、动作与成功条件。"
+      },
+      {
+        "locator": "5 UAV-ON Benchmark > 5.2 Dataset Analysis",
+        "role": "data-or-setting",
+        "purpose": "核对场景和目标规模。"
+      },
+      {
+        "locator": "6 Experiments and Results > 6.1 Baselines",
+        "role": "relevant-core",
+        "purpose": "核对零样本代理结构。"
+      },
+      {
+        "locator": "6 Experiments and Results > 6.2 Results",
+        "role": "results-or-analysis",
+        "purpose": "核对成功、停止和碰撞。"
+      },
+      {
+        "locator": "7 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对总体挑战。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "在无GPS、开放词汇、连续3D动作和碰撞约束下，无人机ObjectNav是否已可靠？",
+  "contributions": [
+    "建立14个高保真户外场景、上万任务和物理动作的航空ObjectNav基准。"
+  ],
+  "method": {
+    "summary": "多视角RGB-D无人机根据实例描述在无全局地图/GPS条件下输出参数化移动和停止动作。",
+    "assumptions": [
+      "Unreal高保真场景可暴露航空导航主要难点",
+      "离散参数化动作足以比较方法"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "UAV-ON"
+    ],
+    "tasks": [
+      "open-world instance ObjectNav"
+    ],
+    "embodiments": [
+      "simulated UAV"
+    ],
+    "sample_or_scale": "14个户外环境、1270个目标、10000训练与1000测试episode。"
+  },
+  "evaluation": {
+    "design": "比较随机、CLIP启发式和两种MLLM零样本控制。",
+    "baselines": [
+      "Random",
+      "CLIP-H",
+      "AOA fixed-step",
+      "AOA variable-step"
+    ],
+    "metrics": [
+      "SR",
+      "OSR",
+      "DTS",
+      "SPL",
+      "collision termination"
+    ],
+    "ablations": [
+      "fixed vs variable step"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "零样本方法能探索但停止和控制不稳定，所有方法碰撞率都高到不适合真实部署。",
+      "scope": "Unreal仿真中的航空开放世界ObjectNav。",
+      "locator": "6 Experiments and Results > 6.2 Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "基准是模拟且训练可用特权位置/距离，不能直接估计真实无人机表现；但碰撞结果构成明确反证。",
+        "basis": "任务在Unreal环境运行，真实气动、传感器漂移与法规未测试。"
+      }
+    ]
+  },
+  "transfer_boundary": "基准是模拟且训练可用特权位置/距离，不能直接估计真实无人机表现；但碰撞结果构成明确反证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时覆盖语义、开放场景、6DoF移动、停止和碰撞。"
+    ],
+    "design_risks": [
+      "基线数量少，LLM控制管线依赖提示和后处理。"
+    ],
+    "baseline_fairness": "同一环境比较固定/可变步长，但训练型方法尚未充分覆盖。",
+    "metric_validity": "除SR/SPL外分析碰撞与终止行为，适合安全判断。",
+    "reproducibility": "任务、动作和数据规模描述清楚，基准计划公开。",
+    "external_validity": "真实空域安全与动力学外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2508.00288-C01",
+      "claim": "开放世界航空ObjectNav远未解决：基准中所有方法的碰撞率都超过真实部署可接受水平，语义探索尚未转化为安全控制。",
+      "stance": "limit",
+      "relation": "以安全过程指标反驳“能找到目标就等于导航已解决”。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结果段直接指出所有方法的高碰撞率和真实部署不可接受性。",
+      "locator": "6.2 Results",
+      "source_context": "Notably, all methods exhibit collision rates exceeding 30%, which would be unacceptable in real-world UAV deployments where safety is critical. Such high collision rates pose serious risks in physical environments, where hardware damage and human safety must be considered.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接报告全方法碰撞率并给出真实部署判断；卡片保留为该航空基准内的安全反证。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

@@ -18,7 +18,7 @@
 
 ### 误区二：来源越多，直接拼起来就越好
 
-异构数据如果没有对齐，会把模型搞糊涂。[ACE-Ego-0](https://arxiv.org/abs/2606.17200) 混合了人类 egocentric 视频、多机器人和仿真数据，但它同时做了四件事：用相机坐标系统一空间，用 morphology token 告诉模型“这是什么身体”，按物理时间而不是帧数组成动作块，并把有噪声的人类伪动作当作低置信监督。去掉这些对齐环节，成功率就会下降。
+异构数据如果没有对齐，会把模型搞糊涂。[ACE-Ego-0](https://arxiv.org/abs/2606.17200) 混合了人类第一视角视频、多机器人和仿真数据，但没有把它们直接并在一起。它用相机坐标系统一空间，用本体形态标记告诉模型“这是什么身体”，按物理时间组成动作块，并把有噪声的人类伪动作当作低置信监督。去掉这些对齐环节，成功率就会下降。
 
 这篇论文还给出一个很直观的例子：34 条机器人示范的动作覆盖很窄，加入 419 条任务匹配的人类视频后，平面工作空间扩大 4.8 倍，真机成功率从 10% 升到 40%。有用的是新覆盖，不是“来源标签又多了一个”。
 
@@ -54,10 +54,10 @@ UMI-3D 在腕部用了 185° 鱼眼，是为了同时看见附近交互和任务
 
 ## 延伸阅读
 
-- [ACE-Ego-0](https://arxiv.org/abs/2606.17200)
-- [EgoScale](https://arxiv.org/abs/2602.16710)
-- [HumanEgo](https://arxiv.org/abs/2605.24934)
-- [OXE-AugE](https://arxiv.org/abs/2512.13100)
-- [UMI-3D](https://arxiv.org/abs/2604.14089)
-- [Embodied Image Compression](https://arxiv.org/abs/2512.11612)
-- [SPARC](https://arxiv.org/abs/2606.16253)
+- [ACE-Ego-0](https://arxiv.org/abs/2606.17200)：查看任务匹配的人类第一视角视频如何补齐机器人示范覆盖。
+- [EgoScale](https://arxiv.org/abs/2602.16710)：理解第一视角人类动作预训练的规模收益与对齐条件。
+- [HumanEgo](https://arxiv.org/abs/2605.24934)：说明显式手—物三维关系为何比视觉换皮更关键。
+- [OXE-AugE](https://arxiv.org/abs/2512.13100)：分析跨本体数据中的机器人类型分布失衡。
+- [UMI-3D](https://arxiv.org/abs/2604.14089)：用三维感知扩展 UMI 在遮挡和弱纹理场景中的可靠性。
+- [Embodied Image Compression](https://arxiv.org/abs/2512.11612)：用闭环成功率而非人眼画质标定压缩边界。
+- [SPARC](https://arxiv.org/abs/2606.16253)：将多相机码率优先分配给当前动作相关的视图与区域。

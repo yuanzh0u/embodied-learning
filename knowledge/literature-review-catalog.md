@@ -2,26 +2,26 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-07-29
+updated: 2026-08-02
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 17 个 paper-reader-backed 基础 run 与 11 个跨 run 主题综合；`reader-v1` 保留为历史产物，但其事件编号命名空间存在跨 run 冲突，不作为知识卡的当前证据入口。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 18 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
 
 ## 批次概况
 
-- Review mode：17 项基础 run 均为 `scoping`。
+- Review mode：18 项基础 run 均为 `scoping`。
 - 检索池：基础 run 每项 172–1,409 篇候选论文。
-- 全文层：基础 run 每项 48–162 篇具有可读全文。
-- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 16 项基础 run 每项选取 15 篇核心论文，均完成 paper note 与 claim-support audit。
-- 基础 run 总量：261 个任务—论文精读实例，143 篇不重复论文，280 条全局唯一正式证据事件（286 条事件出现中有 6 条由 Ego run 复用）。
-- 跨 run 综合：11 项。前 8 项包括“反应式 VLA—世界模型融合栈”、“视频世界模型可靠应用任务”、“近半年 VLA 最大技术突破”、“近半年智能体技术产业应用”、“近一年多模态训练方法演进”、“近一年触觉发展”、“近半年力觉发展”与“近三年原子技能与 VLA 主流化”；“预训练数据源与采集参数”综合在 1,398 篇候选、40 篇可读全文中接纳 20 篇；“数据时空一致性”综合在 1,401 篇候选、52 篇可读全文中接纳 20 篇；本次“空间数据生产与机器人—智驾比较”综合在 225 篇候选、44 篇完整全文中接纳 17 篇已审计论文，聚焦时空真值、不可观状态、长尾生产与闭环验收。
+- 全文层：基础 run 每项 39–162 篇具有可读全文。
+- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 17 项基础 run 每项选取 15 篇核心论文，均完成 paper note 与 claim-support audit。
+- 基础 run 总量：276 个任务—论文精读实例，158 篇不重复论文，295 条全局唯一正式证据事件（301 条事件出现中有 6 条由 Ego run 复用）。
+- 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
 
-## 17 项成果
+## 18 项成果
 
 “规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
 
@@ -44,6 +44,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-VLOC | 近一年图像视觉定位方法的发展与挑战 | EA-VLOC, EA-SENSOR, EA-EVAL, EA-HARDWARE | 321 / 53 / 15 | [run](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/run.json) · [packet](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/review-packet.md) |
 | LR-CONTAM | 近一年论文中的具身数据污染问题 | EA-DATA, EA-EVAL, EA-MODEL | 964 / 49 / 15 | [run](../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/run.json) · [packet](../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/review-packet.md) |
 | LR-LOCOMANIP | 近一年 loco-manipulation 研究进展 | EA-LOCOMANIP, EA-MODEL, EA-EVAL, EA-XEMBODIMENT, EA-SENSOR | 556 / 76 / 21 | [run](../evidence/literature-review-近一年-loco-manipulation-研究进展-20260719/run.json) · [packet](../evidence/literature-review-近一年-loco-manipulation-研究进展-20260719/review-packet.md) |
+| LR-PNAV | 近一年具身感知与导航是否已解决 | EA-SENSOR, EA-EVAL, ERR-EMBODIED | 511 / 39 / 15 | [run](../evidence/literature-review-近一年具身感知与导航是否已解决-20260714-reader-v1/run.json) · [packet](../evidence/literature-review-近一年具身感知与导航是否已解决-20260714-reader-v1/review-packet.md) |
 
 ## 跨 run 综合专题
 
@@ -60,6 +61,9 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-PRETRAIN-DATA-SOURCES-YEAR | 近一年具身智能预训练模型对数据源与采集参数的要求 | EA-DATA, EA-HARDWARE, EA-SENSOR, EA-MODEL, EA-XEMBODIMENT | 1,398 / 40 / 20 | [run](../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/run.json) · [packet](../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/review-packet.md) |
 | LR-SPATIOTEMP-CONSISTENCY-YEAR | 近一年具身智能论文中的数据时空一致性 | EA-DATA, EA-SENSOR, EA-4D, EA-ALIGN | 1,401 / 52 / 20 | [run](../evidence/literature-review-近一年具身智能论文中的数据时空一致性-20260727/run.json) · [packet](../evidence/literature-review-近一年具身智能论文中的数据时空一致性-20260727/review-packet.md) |
 | LR-SPATIAL-DATA-ROBOT-AV-YEAR | 近一年空间数据生产难点及具身机器人与智能驾驶数据难点异同 | EA-DATA, EA-SENSOR, EA-4D | 225 / 44 / 17 | [run](../evidence/literature-review-近一年空间数据生产难点及具身机器人与智能驾驶数据难点异同-20260727/run.json) · [packet](../evidence/literature-review-近一年空间数据生产难点及具身机器人与智能驾驶数据难点异同-20260727/review-packet.md) |
+| LR-NAV-SOLVED-YEAR | 近一年具身导航问题是否已有效解决 | EA-EVAL, EA-SENSOR, EA-4D | 511 / 39 / 15 | [run](../evidence/literature-review-近一年具身导航问题是否已有效解决-20260714-reader-v1/run.json) · [packet](../evidence/literature-review-近一年具身导航问题是否已有效解决-20260714-reader-v1/review-packet.md) |
+| LR-PERCEPTION-SOLVED-YEAR | 近一年具身感知问题是否已有效解决 | EA-SENSOR, EA-4D, EA-EVAL | 903 / 130 / 19 | [run](../evidence/literature-review-近一年具身感知问题是否已有效解决-20260714-reader-v1/run.json) · [packet](../evidence/literature-review-近一年具身感知问题是否已有效解决-20260714-reader-v1/review-packet.md) |
+| LR-VISUAL-TACTILE-YEAR | 近一年触觉数据与视觉数据联合训练的方法和进展 | EA-SENSOR, EA-ALIGN, EA-MODEL, EA-DATA, EA-XEMBODIMENT | 1,789 / 247 / 27 | [run](../evidence/literature-review-近一年触觉数据与视觉数据联合训练的方法和进展-20260722/run.json) · [packet](../evidence/literature-review-近一年触觉数据与视觉数据联合训练的方法和进展-20260722/review-packet.md) |
 
 ## 按上下文预算加载
 
@@ -96,5 +100,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 - 具身预训练数据应实行“多样内容、受控契约、目标锚点”：设备与来源可异构，坐标/时间/动作/机位/标定/可靠性必须可解释；相机分辨率、帧率、码率与 FOV 没有跨任务通用门槛，应用有效可见性、物理时间同步和目标 VLA 闭环成功曲线验收。
 - 数据时空一致性不是单一同步分数，而是物理时间、空间参考、跨视角/跨模态对应、动作—状态因果匹配和长程对象/接触连续性的五层契约；时间戳与外参对齐只是入场条件，最终应以动作—后果同步和真实闭环收益验收。
 - 空间数据生产的共同瓶颈是把不完全、异步、有遮挡的观测变成可对动作后果负责的时空真值；具身机器人最终锚定本体相关的接触与执行真值，智能驾驶最终锚定 ODD 相关的地图拓扑、地理覆盖、稀有交互与闭环安全真值。
+- 具身感知与导航尚未作为开放世界通用能力得到解决；瓶颈已从静态识别和路线生成上移到主动取证、时序证据撤销、严格物理执行、动态主体预测、长时一致性与失败恢复，受控静态场景中的局部子问题则已接近工程成熟。
+- 触觉—视觉联合训练的有效性取决于时间同步、空间标定、接触阶段门控和分层融合；视觉负责全局语义与几何，触觉补足接触、滑移和力学状态，无约束融合可能反向污染视觉动力学与动作预测。
 
-这些结论来自 17 项基础综述与 11 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
+这些结论来自 18 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。

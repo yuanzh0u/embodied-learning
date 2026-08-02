@@ -34,6 +34,9 @@ Use this style for a broad but intelligent audience. Deliver one evidence-ground
 - Prefer a work scene, robot failure, or decision consequence over abstract taxonomy.
 - Use emoji as navigation, not decoration.
 - Keep Markdown headings such as `## Hook` and internal labels such as `stance` out of the final post.
+- Bold labels and the prescribed `💡`/`⚠️`/`📚` markers are platform grammar, not AI residue. Keep them when they improve scanning.
+- Hooks may dramatize a supported consequence, but may not invent a field visit, conversation, personal test, customer, or failure episode.
+- Compress qualifications into one visible boundary rather than deleting them. Strong wording must remain falsifiable by the cited evidence.
 
 ## Citation surface
 

@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.11072",
+    "title": "OA-NBV: Occlusion-Aware Next-Best-View Planning for Human-Centered Active Perception on Mobile Robots",
+    "published": "2026-03-10",
+    "url": "https://arxiv.org/abs/2603.11072",
+    "authors": [
+      "Boxun Hu"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接检验移动机器人通过动作改变视角来恢复被遮挡目标。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "核对遮挡和视点依赖的任务风险。"
+      },
+      {
+        "locator": "III Methods",
+        "role": "method-or-design",
+        "purpose": "核对目标3D估计与可达视点打分。"
+      },
+      {
+        "locator": "IV-A Experiment Setup",
+        "role": "data-or-setting",
+        "purpose": "核对仿真规模、实机平台和基线。"
+      },
+      {
+        "locator": "IV-D Real World Results",
+        "role": "results-or-analysis",
+        "purpose": "核对单步实机结果。"
+      },
+      {
+        "locator": "V-B Limitations and future work.",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对照明、延迟和单步边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "主动下一最佳视角能否在真实遮挡环境中使人体感知可靠且可扩展？",
+  "contributions": [
+    "提出考虑遮挡、目标尺度、完整性和可达性的下一最佳视角规划。"
+  ],
+  "method": {
+    "summary": "从RGB与点云形成目标3D假设，在可通行地形上采样视点并按遮挡、尺度和完整性评分。",
+    "assumptions": [
+      "目标是单个人体",
+      "机器人能稳定分割、重建并导航到候选视点"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "DISC/custom simulation scenes"
+    ],
+    "tasks": [
+      "single-step next-best-view for occluded human observation"
+    ],
+    "embodiments": [
+      "Unitree Go2"
+    ],
+    "sample_or_scale": "仿真2500个遮挡初始视角；实机6个场景、每方法每场景10次。"
+  },
+  "evaluation": {
+    "design": "仿真多步曲线与实机单步对照。",
+    "baselines": [
+      "Volumetric-NBV",
+      "Pred-NBV"
+    ],
+    "metrics": [
+      "detection success",
+      "normalized target area",
+      "keypoint visibility"
+    ],
+    "ablations": [
+      "view-score terms",
+      "alignment variants"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "该方法在特定人体遮挡任务上有效，但作者明确限定为单步观测质量而非完整多视图感知。",
+      "scope": "人体目标、单步视点选择、特定RGB-D/四足平台。",
+      "locator": "V-B Limitations and future work."
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "只面向即时观测质量的单步视点选择，不解决多视图重建；且低光与端到端延迟仍是问题。",
+        "locator": "V-B Limitations and future work."
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "不能外推为一般动态目标、烟雾低光、多人或完整3D重建问题已解决。",
+        "basis": "作者限制段明确限定单步目标并报告照明敏感和感知模块主导延迟。"
+      }
+    ]
+  },
+  "transfer_boundary": "不能外推为一般动态目标、烟雾低光、多人或完整3D重建问题已解决。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "同时做大规模仿真和受控实机对照。"
+    ],
+    "design_risks": [
+      "实机视点生成共享自家可达性模块；目标类别单一。"
+    ],
+    "baseline_fairness": "实机中三种方法使用相同可达视点生成，较好隔离评分函数差异。",
+    "metric_validity": "指标直接反映观测可用性，但未验证后续救援决策或长期跟踪收益。",
+    "reproducibility": "平台、传感器、场景数与指标描述清楚。",
+    "external_validity": "对其他目标类别、恶劣能见度和多步任务的外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.11072-C01",
+      "claim": "OA-NBV证明机器人可以主动绕开遮挡获得更好观察，但作者明确把能力限定为单步视点选择，而非完整多视图感知。",
+      "stance": "conditional",
+      "relation": "支持主动感知的闭环价值，同时限制其通用性。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "限制段直接划定即时单步观测与完整多视图任务之间的边界。",
+      "locator": "V-B Limitations and future work.",
+      "source_context": "Finally, OA-NBV targets single-step viewpoint selection for immediate observation quality, rather than multi-view reconstruction.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句是作者在限制段的直接范围声明，卡片保持单步与多视图重建的原始区分。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

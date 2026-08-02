@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2511.10376",
+    "title": "MSGNav: Unleashing the Power of Multi-modal 3D Scene Graph for Zero-Shot Embodied Navigation",
+    "published": "2025-11-13",
+    "url": "https://arxiv.org/abs/2511.10376",
+    "authors": [
+      "Xun Huang"
+    ]
+  },
+  "review": {
+    "question": "根据近一年的文献，具身领域中的感知问题和导航问题是否已经解决，为什么？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接研究零样本具身导航中的多模态场景表示、开放词汇感知与最后一公里停止问题。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "识别文本场景图丢失视觉证据、受感知错误影响及最后一公里问题。"
+      },
+      {
+        "locator": "3 Approach",
+        "role": "method-or-design",
+        "purpose": "核对M3DSG与闭环推理、视点决策的系统设计。"
+      },
+      {
+        "locator": "4.2 Main Experimental Results > 4.2.2 HM3D-ObjNav Benchmark",
+        "role": "results-or-analysis",
+        "purpose": "核对模拟基准结果与对照。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者对实时效率与最后一公里未完全解决的限定。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "保留视觉证据的多模态3D场景图能否让零样本目标导航达到可部署的可靠性？",
+  "contributions": [
+    "提出M3DSG、闭环推理与可见性视点决策，在GOAT-Bench和HM3D-ObjNav上验证。"
+  ],
+  "method": {
+    "summary": "在线构建保留图像关系的多模态3D场景图，以关键子图、开放词汇更新、闭环推理和视点选择驱动导航。",
+    "assumptions": [
+      "环境可由视觉基础模型和位姿估计稳定构图",
+      "模拟基准中的成功与SPL能代表目标导航质量"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "GOAT-Bench",
+      "HM3D-ObjNav"
+    ],
+    "tasks": [
+      "zero-shot goal-oriented navigation"
+    ],
+    "embodiments": [
+      "Habitat simulated agent"
+    ],
+    "sample_or_scale": "GOAT-Bench 360 episodes/36 scenes；HM3D-ObjNav 1000 episodes/36 scenes。"
+  },
+  "evaluation": {
+    "design": "在未见场景模拟基准中比较SR/SPL并做组件消融。",
+    "baselines": [
+      "3D-Mem",
+      "WMNav",
+      "SG-Nav"
+    ],
+    "metrics": [
+      "SR",
+      "SPL"
+    ],
+    "ablations": [
+      "M3DSG",
+      "VVD",
+      "AVU",
+      "CLR"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "多模态场景图和视点决策提升模拟成功率，但作者明确保留实时推理和最后一公里缺口。",
+      "scope": "Habitat室内模拟目标导航。",
+      "locator": "5 Conclusion"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "VFM/VLM延迟导致低推理效率，最后一公里虽缓解但尚未完全解决。",
+        "locator": "5 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "不能从两个室内模拟基准外推到实时真实机器人、动态人群或长期运行。",
+        "basis": "正文没有真实机器人部署，作者自己指出实时延迟和最后一公里仍未解决。"
+      }
+    ]
+  },
+  "transfer_boundary": "不能从两个室内模拟基准外推到实时真实机器人、动态人群或长期运行。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "使用两个标准基准并提供模块消融。"
+    ],
+    "design_risks": [
+      "主要证据来自模拟；场景图质量依赖上游视觉与位姿。"
+    ],
+    "baseline_fairness": "与同类零样本和场景图方法比较，但训练与在线模型成本未完全同质化。",
+    "metric_validity": "SR/SPL衡量到达和效率，但不足以覆盖碰撞、安全、恢复和持续运行。",
+    "reproducibility": "论文说明代码将公开，当前结论仍依赖作者实现。",
+    "external_validity": "对真实动态环境、极端光照和实时硬件的外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2511.10376-C01",
+      "claim": "MSGNav的结果不能说明零样本导航已解决：作者明确指出VFM/VLM延迟阻碍实时部署，且最后一公里仅被缓解而未被彻底解决。",
+      "stance": "limit",
+      "relation": "限制“感知增强后的零样本目标导航已经解决”这一命题。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论段直接给出两项残余问题，构成对榜单增益的部署边界。",
+      "locator": "5 Conclusion",
+      "source_context": "Despite these advantages of MSGNav , scene graph-based methods still face low inference efficiency due to the latency of VFMs and VLMs, suggesting future work on faster graph construction and inference for real‑time deployment. Additionally, while the “last-mile” problem has been mitigated by the VVD module, it is not fully resolved.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该原文位于结论的限制段，逐字同时限定实时性和最后一公里；卡片没有把模拟结果外推到真实部署。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}
