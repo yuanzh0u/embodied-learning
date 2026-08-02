@@ -24,6 +24,9 @@
     searchIndex: null,
     topicCache: new Map(),
     searchTimer: null,
+    dataBase: "data",
+    snapshotId: "legacy",
+    pointerResolved: false,
   };
   const mobileNavigationQuery = window.matchMedia("(max-width: 900px)");
 
@@ -98,8 +101,39 @@
     return response.json();
   }
 
+  function dataPath(relative) {
+    return `${state.dataBase}/${relative}`;
+  }
+
+  async function resolveDataBase(bust = false) {
+    if (state.pointerResolved && !bust) return state.dataBase;
+    const suffix = bust ? `?t=${Date.now()}` : "";
+    const response = await fetch(`data/current.json${suffix}`, { cache: "no-store" });
+    const previous = state.dataBase;
+    if (response.status === 404) {
+      state.dataBase = "data";
+      state.snapshotId = "legacy";
+    } else {
+      if (!response.ok) throw new Error(`读取快照指针失败（${response.status}）`);
+      const pointer = await response.json();
+      const expected = `snapshots/${pointer.snapshot_id}`;
+      if (!/^[A-Za-z0-9._-]+$/.test(pointer.snapshot_id || "") || pointer.base_path !== expected) {
+        throw new Error("快照指针格式无效");
+      }
+      state.dataBase = `data/${pointer.base_path}`;
+      state.snapshotId = pointer.snapshot_id;
+    }
+    state.pointerResolved = true;
+    if (previous !== state.dataBase) {
+      state.topicCache.clear();
+      state.searchIndex = null;
+    }
+    return state.dataBase;
+  }
+
   async function loadManifest(bust = false) {
-    const manifest = await fetchJson("data/manifest.json", bust);
+    await resolveDataBase(bust);
+    const manifest = await fetchJson(dataPath("manifest.json"), bust);
     if (!Array.isArray(manifest.topics) || !manifest.topics.length) throw new Error("成果索引为空");
     state.manifest = manifest;
     nodes.topicCount.textContent = manifest.topics.length;
@@ -178,7 +212,7 @@
       let topic = state.topicCache.get(identifier);
       if (!topic) {
         const snapshot = encodeURIComponent(state.manifest.generated_at || "latest");
-        topic = await fetchJson(`data/topics/${identifier}.json?v=${snapshot}`);
+        topic = await fetchJson(`${dataPath(`topics/${identifier}.json`)}?v=${snapshot}`);
         state.topicCache.set(identifier, topic);
       }
       state.topic = topic;
@@ -390,7 +424,7 @@
   async function ensureSearchIndex() {
     if (!state.searchIndex) {
       const snapshot = encodeURIComponent(state.manifest?.generated_at || "latest");
-      state.searchIndex = await fetchJson(`data/search-index.json?v=${snapshot}`);
+      state.searchIndex = await fetchJson(`${dataPath("search-index.json")}?v=${snapshot}`);
     }
     return state.searchIndex;
   }

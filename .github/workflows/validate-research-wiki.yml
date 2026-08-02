@@ -6,6 +6,10 @@ on:
       - 'wiki/**'
       - 'scripts/build_research_wiki.py'
       - 'scripts/serve_research_wiki.py'
+      - 'scripts/lib/**'
+      - 'tests/test_build_research_wiki.py'
+      - 'tests/test_markdown_semantics.py'
+      - 'tests/test_review_runs.py'
       - '.github/workflows/deploy-research-wiki.yml'
       - '.github/workflows/validate-research-wiki.yml'
 
@@ -20,4 +24,6 @@ jobs:
       - name: Validate content snapshot
         run: python3 scripts/build_research_wiki.py --check --output wiki/data
       - name: Check Python syntax
-        run: python3 -m py_compile scripts/build_research_wiki.py scripts/serve_research_wiki.py
+        run: python3 -m py_compile scripts/build_research_wiki.py scripts/serve_research_wiki.py scripts/lib/markdown_semantics.py scripts/lib/review_runs.py
+      - name: Run Wiki architecture tests
+        run: python3 -m unittest tests.test_build_research_wiki tests.test_markdown_semantics tests.test_review_runs tests.test_visualize_kb_index
