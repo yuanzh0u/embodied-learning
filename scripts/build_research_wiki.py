@@ -1,28 +1,46 @@
 #!/usr/bin/env python3
-"""Build the static content snapshot for the embodied-AI research Wiki.
+"""Build and atomically publish the embodied-AI research Wiki snapshot.
 
-The scanner deliberately reads finished writing artifacts only. A topic enters the
-snapshot when all three reader versions are present. When multiple directories
-represent the same normalized topic, only the newest dated version is published.
+Production builds load the current settled runs routed by the literature-review
+catalog. Directory scanning remains available for compatibility and isolated tests.
 """
 
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import html
 import json
+import os
 import re
+import shutil
 import sys
+import tempfile
 import unicodedata
+import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterator
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = REPO_ROOT / "work"
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from lib.markdown_semantics import (  # noqa: E402
+    first_heading,
+    markdown_to_plain,
+    render_markdown,
+    strip_frontmatter,
+)
+from lib.review_runs import load_catalog_runs  # noqa: E402
+
+
+DEFAULT_SOURCE = REPO_ROOT / "knowledge" / "literature-review-catalog.md"
 DEFAULT_OUTPUT = REPO_ROOT / "wiki" / "data"
 
 VERSION_FILES = {
@@ -55,18 +73,6 @@ TOPIC_ALIASES = {
 _DATE_COMPACT = re.compile(r"(?<!\d)(20\d{6})(?!\d)")
 _DATE_DASHED = re.compile(r"(?<!\d)(20\d{2})-(\d{2})-(\d{2})(?!\d)")
 _READER_SUFFIX = re.compile(r"-reader-v(\d+)$", re.IGNORECASE)
-_HEADER = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
-_HR = re.compile(r"^(?:-{3,}|\*{3,}|_{3,})$")
-_UL_ITEM = re.compile(r"^[-*+]\s+(.+)$")
-_OL_ITEM = re.compile(r"^\d+[.)]\s+(.+)$")
-_BLOCKQUOTE = re.compile(r"^>\s?(.*)$")
-_TABLE_SEP = re.compile(r"^\s*\|?\s*:?-{2,}.*\|")
-_INLINE_LINK = re.compile(r"(?<!!)\[([^\]]+)]\(([^)\s]+)(?:\s+[\"'][^\"']*[\"'])?\)")
-_INLINE_IMAGE = re.compile(r"!\[([^\]]*)]\(([^)\s]+)(?:\s+[\"'][^\"']*[\"'])?\)")
-_INLINE_CODE = re.compile(r"`([^`]+)`")
-_INLINE_BOLD = re.compile(r"\*\*(.+?)\*\*|__(.+?)__")
-_INLINE_STRIKE = re.compile(r"~~(.+?)~~")
-_INLINE_ITALIC = re.compile(r"(?<!\*)\*([^*]+)\*(?!\*)")
 _ARXIV_URL = re.compile(r"^https?://(?:[a-z0-9-]+\.)?arxiv\.org/", re.IGNORECASE)
 
 
@@ -132,13 +138,21 @@ def topic_id(topic_key: str) -> str:
 
 
 def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
-    if not source.is_dir():
-        raise FileNotFoundError(f"成果目录不存在：{source}")
+    source = source.resolve()
+    catalog_mode = source.is_file()
+    if catalog_mode:
+        root = source.parent.parent
+        all_dirs = [item.directory for item in load_catalog_runs(root, source)]
+    elif source.is_dir():
+        all_dirs = [path for path in source.iterdir() if path.is_dir()]
+    else:
+        raise FileNotFoundError(f"成果入口不存在：{source}")
 
     complete: list[Candidate] = []
-    all_dirs = [path for path in source.iterdir() if path.is_dir()]
     for directory in all_dirs:
         if not all((directory / filename).is_file() for _, filename in VERSION_FILES.values()):
+            if catalog_mode:
+                raise RuntimeError(f"目录指定的 run 缺少三种成稿：{directory}")
             continue
         reader_match = _READER_SUFFIX.search(directory.name)
         complete.append(
@@ -165,35 +179,9 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
         "published_topics": len(selected),
         "superseded_versions": len(complete) - len(selected),
         "skipped_incomplete": len(all_dirs) - len(complete),
+        "source_mode": "catalog" if catalog_mode else "directory",
     }
     return selected, stats
-
-
-def strip_frontmatter(markdown: str) -> str:
-    if not markdown.startswith("---\n"):
-        return markdown
-    end = markdown.find("\n---\n", 4)
-    return markdown[end + 5 :] if end >= 0 else markdown
-
-
-def first_heading(markdown: str) -> str | None:
-    for line in strip_frontmatter(markdown).splitlines():
-        match = _HEADER.match(line.strip())
-        if match:
-            return re.sub(r"[*_`]+", "", match.group(2)).strip()
-    return None
-
-
-def markdown_to_plain(markdown: str) -> str:
-    text = strip_frontmatter(markdown)
-    text = re.sub(r"```.*?```", " ", text, flags=re.DOTALL)
-    text = _INLINE_IMAGE.sub(r"\1", text)
-    text = _INLINE_LINK.sub(r"\1", text)
-    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
-    text = re.sub(r"^[>*+-]\s*", "", text, flags=re.MULTILINE)
-    text = re.sub(r"^\d+[.)]\s*", "", text, flags=re.MULTILINE)
-    text = re.sub(r"[*_`~|]", "", text)
-    return re.sub(r"\s+", " ", text).strip()
 
 
 def excerpt(markdown: str, limit: int = 150) -> str:
@@ -230,193 +218,56 @@ def classify_field(title: str, directory_name: str) -> str:
     return field if score else "综合研究"
 
 
-def _heading_slug(text: str, used: set[str]) -> str:
-    plain = markdown_to_plain(text).lower()
-    base = re.sub(r"[^\w\u4e00-\u9fff]+", "-", plain).strip("-") or "section"
-    slug = base
-    number = 2
-    while slug in used:
-        slug = f"{base}-{number}"
-        number += 1
-    used.add(slug)
-    return slug
+def _wiki_link(label: str, target: str) -> str:
+    safe_label = html.escape(label)
+    safe_target = html.escape(target, quote=True)
+    if target.startswith(("https://", "http://", "mailto:")):
+        link = (
+            f'<a href="{safe_target}" target="_blank" '
+            f'rel="noopener noreferrer">{safe_label}</a>'
+        )
+        if _ARXIV_URL.match(target):
+            return (
+                '<span class="arxiv-reference">'
+                '<span class="arxiv-icon" aria-hidden="true">arXiv</span>'
+                f"{link}</span>"
+            )
+        return link
+    if target.startswith("#"):
+        return f'<a href="{safe_target}">{safe_label}</a>'
+    if target.split("#", 1)[0].endswith(("evidence-appendix.md", "review-packet.md")):
+        return (
+            '<button class="inline-evidence-link" type="button" '
+            f'data-open-evidence>{safe_label}</button>'
+        )
+    return (
+        f'<span class="local-ref" title="本地来源：{safe_target}">{safe_label}</span>'
+    )
 
 
-def _inline(text: str) -> str:
-    escaped = html.escape(text, quote=True)
-    code_tokens: dict[str, str] = {}
-
-    def stash_code(match: re.Match[str]) -> str:
-        token = f"@@CODE{len(code_tokens)}@@"
-        code_tokens[token] = f"<code>{html.escape(match.group(1))}</code>"
-        return token
-
-    escaped = _INLINE_CODE.sub(stash_code, escaped)
-
-    def image_sub(match: re.Match[str]) -> str:
-        alt, target = match.group(1), html.unescape(match.group(2))
-        if target.startswith(("https://", "http://", "data:image/")):
-            return f'<img src="{html.escape(target, quote=True)}" alt="{alt}" loading="lazy">'
-        return f'<span class="local-ref" title="本地图片未随 Wiki 发布">〔图片：{alt or "本地素材"}〕</span>'
-
-    def link_sub(match: re.Match[str]) -> str:
-        label, target = match.group(1), html.unescape(match.group(2))
-        if target.startswith(("https://", "http://", "mailto:")):
-            link = f'<a href="{html.escape(target, quote=True)}" target="_blank" rel="noopener noreferrer">{label}</a>'
-            if _ARXIV_URL.match(target):
-                return f'<span class="arxiv-reference"><span class="arxiv-icon" aria-hidden="true">arXiv</span>{link}</span>'
-            return link
-        if target.startswith("#"):
-            return f'<a href="{html.escape(target, quote=True)}">{label}</a>'
-        if target.split("#", 1)[0].endswith(("evidence-appendix.md", "review-packet.md")):
-            return f'<button class="inline-evidence-link" type="button" data-open-evidence>{label}</button>'
-        return f'<span class="local-ref" title="本地来源：{html.escape(target, quote=True)}">{label}</span>'
-
-    escaped = _INLINE_IMAGE.sub(image_sub, escaped)
-    escaped = _INLINE_LINK.sub(link_sub, escaped)
-    escaped = _INLINE_BOLD.sub(lambda m: f"<strong>{m.group(1) or m.group(2)}</strong>", escaped)
-    escaped = _INLINE_STRIKE.sub(r"<del>\1</del>", escaped)
-    escaped = _INLINE_ITALIC.sub(r"<em>\1</em>", escaped)
-    for token, rendered in code_tokens.items():
-        escaped = escaped.replace(token, rendered)
-    return escaped
+def _wiki_image(alt: str, target: str) -> str:
+    safe_alt = html.escape(alt or "本地素材", quote=True)
+    if target.startswith(("https://", "http://")):
+        return (
+            f'<img src="{html.escape(target, quote=True)}" '
+            f'alt="{safe_alt}" loading="lazy">'
+        )
+    return (
+        '<span class="local-ref" title="本地图片未随 Wiki 发布">'
+        f"〔图片：{safe_alt}〕</span>"
+    )
 
 
 def markdown_to_html(markdown: str) -> tuple[str, list[dict[str, object]]]:
-    lines = strip_frontmatter(markdown).splitlines()
-    out: list[str] = []
-    toc: list[dict[str, object]] = []
-    used_slugs: set[str] = set()
-    paragraph: list[str] = []
-    in_ul = False
-    in_ol = False
-    index = 0
-
-    def close_lists() -> None:
-        nonlocal in_ul, in_ol
-        if in_ul:
-            out.append("</ul>")
-            in_ul = False
-        if in_ol:
-            out.append("</ol>")
-            in_ol = False
-
-    def flush_paragraph() -> None:
-        if paragraph:
-            value = " ".join(part.strip() for part in paragraph).strip()
-            if value:
-                out.append(f"<p>{_inline(value)}</p>")
-            paragraph.clear()
-
-    while index < len(lines):
-        raw = lines[index]
-        stripped = raw.strip()
-
-        if stripped.startswith("```"):
-            flush_paragraph()
-            close_lists()
-            language = stripped[3:].strip()
-            index += 1
-            code_lines: list[str] = []
-            while index < len(lines) and not lines[index].strip().startswith("```"):
-                code_lines.append(lines[index])
-                index += 1
-            index += 1
-            language_attr = f' class="language-{html.escape(language, quote=True)}"' if language else ""
-            out.append(f"<pre><code{language_attr}>{html.escape(chr(10).join(code_lines))}</code></pre>")
-            continue
-
-        header = _HEADER.match(stripped)
-        if header:
-            flush_paragraph()
-            close_lists()
-            level = len(header.group(1))
-            label = header.group(2)
-            slug = _heading_slug(label, used_slugs)
-            out.append(f'<h{level} id="{slug}">{_inline(label)}</h{level}>')
-            if level <= 3:
-                toc.append({"id": slug, "label": markdown_to_plain(label), "level": level})
-            index += 1
-            continue
-
-        if _HR.match(stripped):
-            flush_paragraph()
-            close_lists()
-            out.append("<hr>")
-            index += 1
-            continue
-
-        if "|" in stripped and index + 1 < len(lines) and _TABLE_SEP.match(lines[index + 1]):
-            flush_paragraph()
-            close_lists()
-            headers = [cell.strip() for cell in stripped.strip("|").split("|")]
-            index += 2
-            rows: list[list[str]] = []
-            while index < len(lines) and lines[index].strip() and "|" in lines[index]:
-                rows.append([cell.strip() for cell in lines[index].strip().strip("|").split("|")])
-                index += 1
-            out.append('<div class="table-scroll"><table><thead><tr>')
-            out.extend(f"<th>{_inline(cell)}</th>" for cell in headers)
-            out.append("</tr></thead><tbody>")
-            for row in rows:
-                cells = row + [""] * max(0, len(headers) - len(row))
-                out.append("<tr>" + "".join(f"<td>{_inline(cell)}</td>" for cell in cells[: len(headers)]) + "</tr>")
-            out.append("</tbody></table></div>")
-            continue
-
-        ul_match = _UL_ITEM.match(stripped)
-        if ul_match:
-            flush_paragraph()
-            if in_ol:
-                out.append("</ol>")
-                in_ol = False
-            if not in_ul:
-                out.append("<ul>")
-                in_ul = True
-            out.append(f"<li>{_inline(ul_match.group(1))}</li>")
-            index += 1
-            continue
-
-        ol_match = _OL_ITEM.match(stripped)
-        if ol_match:
-            flush_paragraph()
-            if in_ul:
-                out.append("</ul>")
-                in_ul = False
-            if not in_ol:
-                out.append("<ol>")
-                in_ol = True
-            out.append(f"<li>{_inline(ol_match.group(1))}</li>")
-            index += 1
-            continue
-
-        quote_match = _BLOCKQUOTE.match(stripped)
-        if quote_match:
-            flush_paragraph()
-            close_lists()
-            quote_lines = [quote_match.group(1)]
-            index += 1
-            while index < len(lines):
-                next_match = _BLOCKQUOTE.match(lines[index].strip())
-                if not next_match:
-                    break
-                quote_lines.append(next_match.group(1))
-                index += 1
-            out.append(f"<blockquote>{_inline(' '.join(quote_lines))}</blockquote>")
-            continue
-
-        if not stripped:
-            flush_paragraph()
-            close_lists()
-            index += 1
-            continue
-
-        paragraph.append(stripped)
-        index += 1
-
-    flush_paragraph()
-    close_lists()
-    return "\n".join(out), toc
+    result = render_markdown(
+        markdown,
+        link_renderer=_wiki_link,
+        image_renderer=_wiki_image,
+        heading_ids=True,
+        collect_toc=True,
+        table_wrapper_class="table-scroll",
+    )
+    return result.html, result.toc
 
 
 def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
@@ -562,7 +413,11 @@ def validate_snapshot(output: Path) -> dict[str, object]:
     if not isinstance(topics, list) or not topics:
         raise RuntimeError("发布索引中没有话题。")
     seen_keys: set[str] = set()
+    expected_topic_files: set[str] = set()
+    manifest_ids: list[str] = []
     for item in topics:
+        if not isinstance(item, dict):
+            raise RuntimeError("发布索引包含非对象话题。")
         identifier = item.get("id")
         key = item.get("topic_key")
         if not identifier or not key:
@@ -570,23 +425,209 @@ def validate_snapshot(output: Path) -> dict[str, object]:
         if key in seen_keys:
             raise RuntimeError(f"发现重复话题版本：{key}")
         seen_keys.add(key)
+        manifest_ids.append(str(identifier))
+        expected_topic_files.add(f"{identifier}.json")
         topic_path = output / "topics" / f"{identifier}.json"
         topic = json.loads(_read_text(topic_path))
+        if topic.get("id") != identifier or topic.get("topic_key") != key:
+            raise RuntimeError(f"{identifier} 的话题文件与发布索引不一致。")
         versions = topic.get("versions", {})
         missing = [key for key in VERSION_FILES if key not in versions]
         if missing:
             raise RuntimeError(f"{identifier} 缺少版本：{', '.join(missing)}")
+    actual_topic_files = {
+        path.name for path in (output / "topics").glob("topic-*.json") if path.is_file()
+    }
+    if actual_topic_files != expected_topic_files:
+        raise RuntimeError("发布索引与话题文件集合不一致。")
     search_path = output / "search-index.json"
     if not search_path.is_file():
         raise RuntimeError("缺少全文搜索索引。")
+    search = json.loads(_read_text(search_path))
+    search_topics = search.get("topics")
+    if not isinstance(search_topics, list):
+        raise RuntimeError("全文搜索索引缺少话题列表。")
+    search_ids = [str(item.get("id")) for item in search_topics if isinstance(item, dict)]
+    if search_ids != manifest_ids:
+        raise RuntimeError("全文搜索索引与发布索引的话题顺序或集合不一致。")
+    if search.get("generated_at") != manifest.get("generated_at"):
+        raise RuntimeError("全文搜索索引与发布索引来自不同快照。")
     return manifest
+
+
+@contextmanager
+def publication_lock(output: Path) -> Iterator[None]:
+    """Prevent concurrent publishers without leaving a stale process lock."""
+
+    output.mkdir(parents=True, exist_ok=True)
+    lock_key = hashlib.sha256(str(output.resolve()).encode("utf-8")).hexdigest()[:20]
+    lock_path = Path(tempfile.gettempdir()) / f"research-wiki-publish-{lock_key}.lock"
+    handle = lock_path.open("a+", encoding="utf-8")
+    locked = False
+    try:
+        try:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            locked = True
+        except BlockingIOError as exc:
+            raise RuntimeError("已有 Wiki 快照发布正在进行。") from exc
+        handle.seek(0)
+        handle.truncate()
+        handle.write(str(os.getpid()))
+        handle.flush()
+        yield
+    finally:
+        if locked:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        handle.close()
+
+
+def _snapshot_pointer(output: Path) -> dict[str, object] | None:
+    pointer_path = output / "current.json"
+    if not pointer_path.is_file():
+        return None
+    pointer = json.loads(_read_text(pointer_path))
+    if not isinstance(pointer, dict):
+        raise RuntimeError("Wiki 快照指针必须是 JSON 对象。")
+    snapshot_id = pointer.get("snapshot_id")
+    base_path = pointer.get("base_path")
+    expected = f"snapshots/{snapshot_id}"
+    if not isinstance(snapshot_id, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", snapshot_id):
+        raise RuntimeError("Wiki 快照指针包含非法 snapshot_id。")
+    if base_path != expected:
+        raise RuntimeError("Wiki 快照指针的 base_path 与 snapshot_id 不一致。")
+    return pointer
+
+
+def resolve_snapshot_directory(output: Path) -> Path:
+    """Resolve the active immutable snapshot, with legacy in-place fallback."""
+
+    output = output.resolve()
+    pointer = _snapshot_pointer(output)
+    if pointer is None:
+        return output
+    target = (output / str(pointer["base_path"])).resolve()
+    snapshots_root = (output / "snapshots").resolve()
+    try:
+        target.relative_to(snapshots_root)
+    except ValueError as exc:
+        raise RuntimeError("Wiki 快照指针越过 snapshots 目录。") from exc
+    if not target.is_dir():
+        raise RuntimeError(f"Wiki 当前快照不存在：{target}")
+    return target
+
+
+def validate_published_snapshot(output: Path) -> dict[str, object]:
+    return validate_snapshot(resolve_snapshot_directory(output))
+
+
+def _atomic_write_json(path: Path, value: object) -> None:
+    temporary = path.with_name(f".{path.name}.tmp-{uuid.uuid4().hex}")
+    payload = json.dumps(value, ensure_ascii=False, indent=2) + "\n"
+    try:
+        with temporary.open("w", encoding="utf-8") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def activate_snapshot(output: Path, snapshot_id: str) -> dict[str, object]:
+    """Validate and atomically switch the public pointer to one snapshot."""
+
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", snapshot_id):
+        raise RuntimeError("非法 snapshot_id。")
+    snapshot_dir = output / "snapshots" / snapshot_id
+    manifest = validate_snapshot(snapshot_dir)
+    pointer = {
+        "schema_version": 1,
+        "snapshot_id": snapshot_id,
+        "base_path": f"snapshots/{snapshot_id}",
+        "published_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "generated_at": manifest.get("generated_at"),
+        "topic_count": len(manifest["topics"]),
+    }
+    _atomic_write_json(output / "current.json", pointer)
+    return manifest
+
+
+def prune_snapshots(output: Path, *, retain: int = 2) -> None:
+    """Keep the active snapshot and at least one rollback snapshot."""
+
+    pointer = _snapshot_pointer(output)
+    active = str(pointer["snapshot_id"]) if pointer else None
+    snapshots_root = output / "snapshots"
+    if not snapshots_root.is_dir():
+        return
+    directories = sorted(
+        (path for path in snapshots_root.iterdir() if path.is_dir()),
+        key=lambda path: path.name,
+        reverse=True,
+    )
+    keep_count = max(2, retain)
+    keep = {path.name for path in directories[:keep_count]}
+    if active:
+        keep.add(active)
+    for directory in directories:
+        if directory.name not in keep:
+            shutil.rmtree(directory)
+
+
+def publish_snapshot(
+    source: Path,
+    output: Path,
+    *,
+    retain: int = 2,
+    before_activate: Callable[[Path], None] | None = None,
+) -> dict[str, object]:
+    """Build, validate, and atomically activate a new immutable Wiki snapshot."""
+
+    source = source.resolve()
+    output = output.resolve()
+    with publication_lock(output):
+        snapshots_root = output / "snapshots"
+        snapshots_root.mkdir(parents=True, exist_ok=True)
+        stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=output))
+        final: Path | None = None
+        activated = False
+        try:
+            manifest = build_snapshot(source, stage)
+            validate_snapshot(stage)
+            digest = hashlib.sha256(
+                (stage / "manifest.json").read_bytes()
+                + (stage / "search-index.json").read_bytes()
+            ).hexdigest()[:10]
+            timestamp = datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%f")
+            snapshot_id = f"{timestamp}-{digest}"
+            final = snapshots_root / snapshot_id
+            os.replace(stage, final)
+            if before_activate:
+                before_activate(final)
+            activate_snapshot(output, snapshot_id)
+            activated = True
+            prune_snapshots(output, retain=retain)
+            return manifest
+        finally:
+            if stage.exists():
+                shutil.rmtree(stage)
+            if final is not None and final.exists() and not activated:
+                shutil.rmtree(final)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="构建空间智能研究 Wiki 的静态内容快照")
-    parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE, help="成果扫描目录")
+    parser.add_argument(
+        "--source",
+        type=Path,
+        default=DEFAULT_SOURCE,
+        help="成果目录 Markdown；也兼容直接扫描目录",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="静态数据输出目录")
-    parser.add_argument("--check", action="store_true", help="只校验现有发布快照")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--check", action="store_true", help="只校验当前原子快照")
+    action.add_argument("--activate", metavar="SNAPSHOT_ID", help="回滚或切换到已验证快照")
+    parser.add_argument("--retain", type=int, default=2, help="至少保留的快照数，默认 2")
     return parser.parse_args()
 
 
@@ -594,19 +635,23 @@ def main() -> int:
     args = parse_args()
     try:
         if args.check:
-            manifest = validate_snapshot(args.output)
+            manifest = validate_published_snapshot(args.output)
             print(f"Wiki 快照有效：{len(manifest['topics'])} 个最新完整话题。")
+        elif args.activate:
+            with publication_lock(args.output):
+                manifest = activate_snapshot(args.output, args.activate)
+            print(f"Wiki 已切换到快照 {args.activate}：{len(manifest['topics'])} 个话题。")
         else:
-            manifest = build_snapshot(args.source, args.output)
+            manifest = publish_snapshot(args.source, args.output, retain=args.retain)
             stats = manifest["stats"]
             print(
-                "Wiki 已刷新："
-                f"扫描 {stats['scanned_directories']} 个目录，"
+                "Wiki 已原子发布："
+                f"加载 {stats['scanned_directories']} 个 run，"
                 f"发布 {stats['published_topics']} 个最新完整话题，"
                 f"跳过 {stats['skipped_incomplete']} 个不完整目录。"
             )
         return 0
-    except (FileNotFoundError, RuntimeError, json.JSONDecodeError, OSError) as exc:
+    except (FileNotFoundError, RuntimeError, ValueError, json.JSONDecodeError, OSError) as exc:
         print(f"构建失败：{exc}", file=sys.stderr)
         return 1
 

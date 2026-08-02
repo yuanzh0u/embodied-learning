@@ -20,6 +20,14 @@ from collections import deque
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from lib.markdown_semantics import (  # noqa: E402
+    render_markdown,
+    strip_frontmatter,
+)
 
 MD_LINK = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)")
 FRONTMATTER_BOUNDS = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
@@ -80,11 +88,6 @@ def parse_frontmatter(text: str) -> dict[str, object]:
     if sources:
         data["source"] = sources
     return data
-
-
-def strip_frontmatter(text: str) -> str:
-    match = FRONTMATTER_BOUNDS.match(text)
-    return text[match.end() :] if match else text
 
 
 def extract_links(text: str) -> list[str]:
@@ -182,24 +185,6 @@ def build_graph(root: Path, start: Path, max_nodes: int = 400):
     return nodes, edges, children_map, root_rel, truncated
 
 
-# ---------------------------------------------------------------------------
-# Minimal Markdown -> HTML renderer (headers, lists, tables, code, links,
-# bold/italic, blockquotes, hr). Good enough for this repo's topic cards and
-# indexes; not a general-purpose CommonMark implementation.
-# ---------------------------------------------------------------------------
-
-_INLINE_LINK = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")
-_INLINE_BOLD = re.compile(r"\*\*([^*]+)\*\*")
-_INLINE_CODE = re.compile(r"`([^`]+)`")
-_INLINE_ITALIC = re.compile(r"(?<!\*)\*([^*\n]+)\*(?!\*)")
-_HEADER = re.compile(r"^(#{1,6})\s+(.*)$")
-_UL_ITEM = re.compile(r"^[-*]\s+(.*)$")
-_OL_ITEM = re.compile(r"^\d+\.\s+(.*)$")
-_HR = re.compile(r"^-{3,}$")
-_BLOCKQUOTE = re.compile(r"^>\s?(.*)$")
-_TABLE_SEP = re.compile(r"^\s*\|?\s*:?-{2,}.*\|")
-
-
 def make_link_resolver(root: Path, source_dir: Path, ids: dict[str, str]):
     """Build a resolver that turns a raw markdown link target into render info.
 
@@ -233,142 +218,30 @@ def make_link_resolver(root: Path, source_dir: Path, ids: dict[str, str]):
     return resolve
 
 
-def _inline(text: str, resolve) -> str:
-    text = html.escape(text)
-
-    def link_sub(match: re.Match) -> str:
-        label, target = match.group(1), match.group(2)
-        info = resolve(target)
-        if info["internal_id"]:
-            return f'<a href="#" class="internal-link" data-goto="{html.escape(str(info["internal_id"]))}">{label}</a>'
-        if info["broken"]:
-            return f'<span class="broken-link" title="{html.escape("文件未找到: " + target)}">{label}</span>'
-        return f'<a href="{html.escape(str(info["href"]))}" target="_blank" rel="noopener">{label}</a>'
-
-    text = _INLINE_LINK.sub(link_sub, text)
-    text = _INLINE_BOLD.sub(r"<strong>\1</strong>", text)
-    text = _INLINE_CODE.sub(r"<code>\1</code>", text)
-    text = _INLINE_ITALIC.sub(r"<em>\1</em>", text)
-    return text
-
-
 def markdown_to_html(body: str, resolve=None) -> str:
     if resolve is None:
-        resolve = lambda target: {"href": target, "internal_id": None, "broken": False}  # noqa: E731
-    lines = body.splitlines()
-    out: list[str] = []
-    i, n = 0, len(lines)
-    in_ul = in_ol = False
-    paragraph: list[str] = []
+        resolve = lambda target: {  # noqa: E731
+            "href": target,
+            "internal_id": None,
+            "broken": not target.startswith(("http://", "https://", "mailto:", "#")),
+        }
 
-    def close_lists() -> None:
-        nonlocal in_ul, in_ol
-        if in_ul:
-            out.append("</ul>")
-            in_ul = False
-        if in_ol:
-            out.append("</ol>")
-            in_ol = False
+    def render_link(label: str, target: str) -> str:
+        info = resolve(target)
+        safe_label = html.escape(label)
+        if info["internal_id"]:
+            return (
+                '<a href="#" class="internal-link" '
+                f'data-goto="{html.escape(str(info["internal_id"]), quote=True)}">'
+                f"{safe_label}</a>"
+            )
+        if info["broken"]:
+            title = html.escape("文件未找到: " + target, quote=True)
+            return f'<span class="broken-link" title="{title}">{safe_label}</span>'
+        href = html.escape(str(info["href"]), quote=True)
+        return f'<a href="{href}" target="_blank" rel="noopener">{safe_label}</a>'
 
-    def flush_paragraph() -> None:
-        if paragraph:
-            text = " ".join(paragraph).strip()
-            if text:
-                out.append(f"<p>{_inline(text, resolve)}</p>")
-            paragraph.clear()
-
-    while i < n:
-        stripped = lines[i].strip()
-
-        if stripped.startswith("```"):
-            flush_paragraph()
-            close_lists()
-            i += 1
-            code_lines = []
-            while i < n and not lines[i].strip().startswith("```"):
-                code_lines.append(lines[i])
-                i += 1
-            i += 1
-            out.append(f"<pre><code>{html.escape(chr(10).join(code_lines))}</code></pre>")
-            continue
-
-        header = _HEADER.match(stripped)
-        if header:
-            flush_paragraph()
-            close_lists()
-            level = len(header.group(1))
-            out.append(f"<h{level}>{_inline(header.group(2), resolve)}</h{level}>")
-            i += 1
-            continue
-
-        if _HR.match(stripped):
-            flush_paragraph()
-            close_lists()
-            out.append("<hr>")
-            i += 1
-            continue
-
-        if "|" in stripped and i + 1 < n and _TABLE_SEP.match(lines[i + 1]):
-            flush_paragraph()
-            close_lists()
-            header_cells = [c.strip() for c in stripped.strip("|").split("|")]
-            i += 2
-            rows = []
-            while i < n and lines[i].strip() and "|" in lines[i]:
-                rows.append([c.strip() for c in lines[i].strip().strip("|").split("|")])
-                i += 1
-            out.append("<table><thead><tr>" + "".join(f"<th>{_inline(c, resolve)}</th>" for c in header_cells) + "</tr></thead><tbody>")
-            for row in rows:
-                out.append("<tr>" + "".join(f"<td>{_inline(c, resolve)}</td>" for c in row) + "</tr>")
-            out.append("</tbody></table>")
-            continue
-
-        ul_item = _UL_ITEM.match(stripped)
-        if ul_item:
-            flush_paragraph()
-            if in_ol:
-                out.append("</ol>")
-                in_ol = False
-            if not in_ul:
-                out.append("<ul>")
-                in_ul = True
-            out.append(f"<li>{_inline(ul_item.group(1), resolve)}</li>")
-            i += 1
-            continue
-
-        ol_item = _OL_ITEM.match(stripped)
-        if ol_item:
-            flush_paragraph()
-            if in_ul:
-                out.append("</ul>")
-                in_ul = False
-            if not in_ol:
-                out.append("<ol>")
-                in_ol = True
-            out.append(f"<li>{_inline(ol_item.group(1), resolve)}</li>")
-            i += 1
-            continue
-
-        if not stripped:
-            flush_paragraph()
-            close_lists()
-            i += 1
-            continue
-
-        quote = _BLOCKQUOTE.match(stripped)
-        if quote:
-            flush_paragraph()
-            close_lists()
-            out.append(f"<blockquote>{_inline(quote.group(1), resolve)}</blockquote>")
-            i += 1
-            continue
-
-        paragraph.append(stripped)
-        i += 1
-
-    flush_paragraph()
-    close_lists()
-    return "\n".join(out)
+    return render_markdown(body, link_renderer=render_link).html
 
 
 def render_markdown_preview(body: str, resolve) -> str:

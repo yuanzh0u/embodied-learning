@@ -18,6 +18,13 @@ from urllib.parse import urlparse
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from build_research_wiki import resolve_snapshot_directory  # noqa: E402
+
+
 WIKI_ROOT = REPO_ROOT / "wiki"
 BUILDER = REPO_ROOT / "scripts" / "build_research_wiki.py"
 GRAPH_BUILDER = REPO_ROOT / "scripts" / "visualize_kb_index.py"
@@ -60,8 +67,6 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 [
                     sys.executable,
                     str(BUILDER),
-                    "--source",
-                    str(REPO_ROOT / "work"),
                     "--output",
                     str(WIKI_ROOT / "data"),
                 ],
@@ -75,7 +80,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 message = (result.stderr or result.stdout or "刷新脚本执行失败").strip()
                 self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": message})
                 return
-            manifest = json.loads((WIKI_ROOT / "data" / "manifest.json").read_text(encoding="utf-8"))
+            snapshot_dir = resolve_snapshot_directory(WIKI_ROOT / "data")
+            manifest = json.loads((snapshot_dir / "manifest.json").read_text(encoding="utf-8"))
             self._send_json(
                 HTTPStatus.OK,
                 {
