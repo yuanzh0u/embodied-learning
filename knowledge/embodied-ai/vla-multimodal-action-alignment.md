@@ -3,7 +3,7 @@ id: EA-ALIGN
 title: VLA 多模态与动作对齐
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-20
+updated: 2026-08-07
 source:
   - id: RUN-VLA-ALIGN-20260714
     file: ../../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v2/evidence.jsonl
@@ -17,13 +17,17 @@ source:
   - id: RUN-MULTIMODAL-TRAINING-20260720
     file: ../../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/evidence.jsonl
     locator: EA-ALIGN-READ-0001..0015; EA-TWM-READ-0002..0004; EA-TWM-READ-0007; EA-TWM-READ-0010; EA-TWM-READ-0013; EA-LOCOMANIP-2026-0012; EA-LOCOMANIP-2026-0021
-tags: [embodied-ai, vla, alignment, language, vision, action, controller, action-token, action-grounded-reasoning, hierarchical-world-model, sparse-future, function-rate-alignment, recovery]
-aliases: [多模态对齐, 语言动作对齐, 视觉动作对齐, 动作 token, action adapter, 动作相关推理, latent planning, 分层世界模型, 稀疏未来, 功能—时标对齐融合, 分层恢复]
+  - id: RUN-ACT-ROBOTWIN-20260807
+    file: ../../evidence/literature-review-act及动作分块策略在robotwin-2.0中的接入-训练与闭环评测-20260807/evidence.jsonl
+    locator: EA-ACTRT-2026-0001..0015
+tags: [embodied-ai, vla, alignment, language, vision, action, controller, action-token, action-chunking, prediction-horizon, execution-horizon, replanning, action-grounded-reasoning, hierarchical-world-model, sparse-future, function-rate-alignment, recovery]
+aliases: [多模态对齐, 语言动作对齐, 视觉动作对齐, 动作 token, action adapter, 动作分块接口, 预测视界, 执行视界, 自适应重规划, 动作相关推理, latent planning, 分层世界模型, 稀疏未来, 功能—时标对齐融合, 分层恢复]
 load_when:
   - 问题涉及语言稀疏、视觉稠密、动作连续、VLA action token 或语言到动作的转译
   - 问题涉及 VLA 跨机器人混合数据、动作空间兼容或控制器接口
   - 问题涉及显式 CoT 与 latent reasoning、失败恢复分层或 VLA—世界模型接口
   - 问题涉及 H-WM、StructVLA、多时间尺度子目标、选择性多模态融合或接触反馈频率
+  - 问题涉及 ACT、动作块预测/执行长度、重规划边界或 RoboTwin 双臂控制接口
 confidence: working
 ---
 
@@ -37,7 +41,7 @@ confidence: working
 
 ## 30 秒摘要
 
-VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处理多种信号的粒度、功能、频率和物理语义错配：语言通常任务级且稀疏，视觉高维稠密，动作连续且受本体/控制器约束，触觉与力觉则在接触后进入更快的反馈环。可靠系统需要把低频逻辑与视觉子目标、高频 VLA 执行、机器人特定控制器和接触反馈分层连接，并用动作条件状态变化作为共享接口。动作表示应以物理状态变化和可执行性为中心，而不是以模型输出方便为中心。
+VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处理多种信号的粒度、功能、频率和物理语义错配：语言通常任务级且稀疏，视觉高维稠密，动作连续且受本体/控制器约束，触觉与力觉则在接触后进入更快的反馈环。可靠系统需要把低频逻辑与视觉子目标、高频 VLA 执行、机器人特定控制器和接触反馈分层连接，并用动作条件状态变化作为共享接口。动作分块又增加了一层时间对齐：预测视界、实际执行前缀和重新观测频率不能默认相等；跨块状态还要表达机器人动作已经造成的场景变化。动作表示应以物理状态变化和可执行性为中心，而不是以模型输出方便为中心。
 
 ## 关键判断
 
@@ -54,6 +58,9 @@ VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处�
 - StructVLA 用夹爪状态转换与运动转折点形成稀疏视觉里程碑，使长程未来更贴近可执行动作，而不必生成每一帧。
 - 多模态融合应按功能和时标选择性耦合：语言约束任务、视觉提供全局语义/几何、触觉与力觉进入接触预测和快速纠偏；无约束融合可能污染视觉 dynamics。
 - 视觉、触觉、力觉和动作可以通过 action-conditioned state change 对齐，但传感器特定载荷仍需平台 adapter、标定和少量目标硬件数据。
+- 动作块的预测长度定义学习目标，执行长度定义开环承诺，重规划频率定义反馈带宽；三者绑定为常数会把任务阶段差异隐藏在经验超参数中。
+- 多任务 ACT 可用语言条件、专家路由、离散动作模式或未来几何监督减少任务/动作分布缠结，但这些机制分别解决不同的对齐问题。
+- 跨块对齐不仅是获取新图像，还包括保存动作更新后的场景先验并用新观测校正；慢速世界上下文与快速动作执行可以异步协作。
 
 ## 三个接口
 
@@ -76,6 +83,7 @@ VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处�
 | 推理与恢复 | 规划延迟、动作相关轨迹一致性、失败分类准确率、恢复阶段准确率、residual 纠正成功率 |
 | 多时间尺度 | 逻辑阶段准确率、子目标可达率、里程碑覆盖、高频跟踪误差、端到端延迟 |
 | 选择性融合 | contact gate、模态污染消融、缺失模态退化、快慢反馈闭环增益 |
+| 动作块时间对齐 | prediction/execution horizon、重规划位置、执行前缀分布、跨块连续性、策略调用与控制频率 |
 
 ## 适用边界
 
@@ -86,6 +94,7 @@ VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处�
 - 文本 CoT、latent reasoning 和世界模型 rollout 的价值取决于任务时域与计算预算，不能只按离线推理分数选择。
 - 分层/稀疏未来结果来自有限任务；若遗漏接触瞬态或不能同步到真实动作，就不能替代高频闭环。
 - 多模态共享状态变化不等于传感器可跨平台直接复用；力/触觉硬件、控制频率和空间标定仍是本体特定条件。
+- 运动相位、动作熵、去噪方差与预测—现实偏差都只是重规划代理；它们与接触风险的对应关系会随策略骨干、任务和控制频率改变。
 
 ## 证据锚点
 
@@ -95,6 +104,7 @@ VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处�
 - RUN-VLA-WM-SHIFT-20260717：`EA-ALIGN-READ-0001`, `0003..0004`, `0006`, `0009`, `0013`, `0015` 在同一综合问题下连接动作语义、系统对齐、动作相关 reasoning、触觉想象和分层恢复；`EA-EGO-2026-0001`, `0003` 提供人类视频到机器人动作接口的负面边界。融合接口结论属于跨事件 `inference`。
 - RUN-VLA-BREAKTHROUGH-20260719：`EA-VLABREAK-2026-0001..0005`, `0007` 支持低频逻辑—潜在视觉子目标—高频执行、稀疏里程碑和动作—想象同步边界；其余复用对齐事件限定动作语义与系统接口。
 - RUN-MULTIMODAL-TRAINING-20260720：`EA-ALIGN-READ-0001..0015`, `EA-TWM-READ-0002..0004`, `0007`, `0010`, `0013`, `EA-LOCOMANIP-2026-0012`, `0021` 支持按功能/时标选择性耦合和 action-conditioned state change 共享接口；该 run 未新增论文级 event。
+- RUN-ACT-ROBOTWIN-20260807：`EA-ACTRT-2026-0001..0015` 支持多任务动作表示、预测/执行视界解耦、自适应重规划与动作更新场景先验；RoboTwin 数值受论文各自任务和预算限制。
 
 ## 待补问题
 
@@ -103,3 +113,4 @@ VLA 对齐的核心不是把语言、视觉和动作都变成 token，而是处�
 - 建立跨本体 action semantics 元数据和 adapter 验收模板。
 - 建立文本 CoT、latent planning 与 world-model rollout 在相同延迟预算下的统一对照。
 - 建立语言/视觉慢环、动作中环、触觉/力觉快环的统一时间接口与端到端延迟预算。
+- 建立动作块 prediction horizon、execution horizon、观测更新和跨块状态的统一接口 schema。

@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.01865",
+    "title": "Set-Supervised Diffusion Policy: Learning Action-Chunking Diffusion through Corrections",
+    "published": "2026-06-01",
+    "url": "https://arxiv.org/abs/2606.01865",
+    "authors": [
+      "Zhaoting Li",
+      "Gang Chen",
+      "Javier Alonso-Mora",
+      "Cosimo Della Santina",
+      "Jens Kober"
+    ]
+  },
+  "review": {
+    "question": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中的方法、实验和边界信息直接或相邻支撑 ACT/动作分块在训练、执行或 RoboTwin 闭环评测中的设计判断。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "核对论文提出的问题、方法定位与主要适用范围。"
+      },
+      {
+        "locator": "IV Method",
+        "role": "method-or-design",
+        "purpose": "核对动作表示、训练接口或执行策略的实际设计。"
+      },
+      {
+        "locator": "V Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准、实机或消融分析所支持的结论范围。"
+      },
+      {
+        "locator": "VI Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论、失败模式与可迁移边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and non-core appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "范围综述已核对问题、方法、实验与结论；未用于当前证据卡的附录细节不再投影。"
+      }
+    ]
+  },
+  "research_question": "围绕“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”，该论文解决哪个动作分块接口问题、采用何种训练或执行设计，以及结论受哪些评测边界约束？",
+  "contributions": [
+    "交互纠错可从单步监督扩展到动作块集合监督：Set-Supervised Diffusion Policy 将正负动作块逐时刻构造成期望动作集合，再训练扩散策略生成落入该集合的动作块。"
+  ],
+  "method": {
+    "summary": "该方法不把一次人工纠错当作唯一精确标签，而是由正负动作对定义可接受动作区域，并用多次纠错逐步收紧动作块监督。",
+    "assumptions": [
+      "仅把完整正文明确描述的方法与作者报告的评测作为论文级证据，不把摘要中的跨任务措辞外推为普遍因果结论。"
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [
+      "robot manipulation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "任务数、轨迹数和硬件规模只按论文实验章节解释；本证据卡不投影缺少精确定位的数量。"
+  },
+  "evaluation": {
+    "design": "已核对 V Experiments 中的模拟、实机或消融设计；这里只投影方法级结论，不独立复跑作者实验。",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "交互纠错可从单步监督扩展到动作块集合监督：Set-Supervised Diffusion Policy 将正负动作块逐时刻构造成期望动作集合，再训练扩散策略生成落入该集合的动作块。",
+      "scope": "限于论文报告的策略骨干、任务、机器人形态、数据规模、执行频率与评测协议。",
+      "locator": "IV-B Extending Desired Action Set to Action-Chunks"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "集合构造依赖纠错质量、局部优劣假设和策略对相似状态的泛化；其评测并非 RoboTwin 多任务接入实验。",
+        "basis": "由 IV Method、V Experiments 与 VI Conclusion 的设计和评测范围推得；未将单篇论文结果外推到未测试的策略或部署条件。"
+      }
+    ]
+  },
+  "transfer_boundary": "集合构造依赖纠错质量、局部优劣假设和策略对相似状态的泛化；其评测并非 RoboTwin 多任务接入实验。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "证据从完整非 OCR 正文核对了问题、IV Method、V Experiments 与 VI Conclusion，方法和评测边界可追溯。"
+    ],
+    "design_risks": [
+      "集合构造依赖纠错质量、局部优劣假设和策略对相似状态的泛化；其评测并非 RoboTwin 多任务接入实验。"
+    ],
+    "baseline_fairness": "基线差异只作为作者报告的比较处理；本综述没有复现实验，也不假定各方法拥有相同预训练、算力或调参预算。",
+    "metric_validity": "成功率、控制频率、重规划次数或不确定性覆盖仅在论文定义的任务和协议内解释，不能替代统一的跨论文闭环对照。",
+    "reproducibility": "论文给出了方法与实验定位；完整复现仍取决于作者释放的代码、数据、检查点和控制配置。",
+    "external_validity": "集合构造依赖纠错质量、局部优劣假设和策略对相似状态的泛化；其评测并非 RoboTwin 多任务接入实验。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.01865-C01",
+      "claim": "交互纠错可从单步监督扩展到动作块集合监督：Set-Supervised Diffusion Policy 将正负动作块逐时刻构造成期望动作集合，再训练扩散策略生成落入该集合的动作块。",
+      "stance": "conditional",
+      "relation": "对综述问题“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”的直接或相邻方法证据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "该方法不把一次人工纠错当作唯一精确标签，而是由正负动作对定义可接受动作区域，并用多次纠错逐步收紧动作块监督。",
+      "locator": "IV-B Extending Desired Action Set to Action-Chunks",
+      "source_context": "CLIC [ 19 ] shows that imitating a set of desired actions, constructed by a pair of positive and negative actions, achieves more robust behavior than imitating only the positive action. Building on this idea, we generalize the single-step desired action set to action-chunks. At step , under observation , we denote a positive and negative action-chunk as Given and the preceding positive actions , the action is better than for all . As we consider demonstration data or intervention feedback, to make learning efficient, we adopt the approximation that being a better action than depends only on . Under this approximation, each timestep within the action-chunk yields a contrastive single-step action pair . Each such pair defines a single-step desired action set in CLIC: (8) We then define the desired action set associated with the contrastive action-chunk pair as the sequence of single-step desired action sets (9) Visualization of this set is shown in Fig. 3 (a)(b) and Fig. 2 (B1). We say an action-chunk, , belongs to this set if Action-chunks outside of this set are considered undesired. The information provided by this set can be used to train a policy, and we detail this in the following section. Figure 3: (a)(b): Visualization of the desired action set. (c): Combination of the desired action sets shown in (a) and (b). New corrections at a state can progressively refine the effective supervision region and reduce the influence of suboptimal actions from earlier desired action sets, such as .",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已对照完整正文中的精确章节核验方法主体、输入信号与作用范围；中文表述删除了不能在该定位直接支持的数量和普遍化措辞，并保留论文评测边界。"
+      },
+      "notes": "完整非 OCR 正文由 arXiv HTML/PDF 文本链路恢复；未对作者机构作无来源映射。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "围绕当前范围综述重新深读并完成证据卡，不是由候选元数据直接提升。"
+}

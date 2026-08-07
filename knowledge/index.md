@@ -2,7 +2,7 @@
 id: KB-INDEX
 title: 智能体主索引
 type: index
-updated: 2026-07-20
+updated: 2026-08-07
 tags: [agent-index, routing, embodied-ai, error-governance]
 ---
 
@@ -34,10 +34,10 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | EA-VLOC | 图像视觉定位 | [embodied-ai/visual-localization.md](embodied-ai/visual-localization.md) | 图像定位, VPR, 相机重定位, SCR, 3DGS, PnP, 拒识覆盖 |
 | EA-FIELD | 现场采集 Hub 与物流分拣考察 | [embodied-ai/field-data-collection-hubs.md](embodied-ai/field-data-collection-hubs.md) | 物流分拣, Hub, 现场考察, 岗位盘点, 视频验收, 试采 |
 | EA-XEMBODIMENT | 跨本体与数据迁移 | [embodied-ai/cross-embodiment-transfer.md](embodied-ai/cross-embodiment-transfer.md) | retargeting, 灵巧手, 夹爪, 全身动作, embodiment adapter, 接触功能 |
-| EA-MODEL | 模型与预训练 | [embodied-ai/models-pretraining.md](embodied-ai/models-pretraining.md) | VLA, 结构化未来, VLA—世界模型融合栈, latent planning, 预训练, 模型供应链, Sim2Real |
-| EA-EVAL | 评测体系与世界模型 | [embodied-ai/evaluation-world-models.md](embodied-ai/evaluation-world-models.md) | 开放环, 闭环, benchmark, 世界模型权限阶梯, 策略排序, failure optimism, sim-real |
+| EA-MODEL | 模型与预训练 | [embodied-ai/models-pretraining.md](embodied-ai/models-pretraining.md) | VLA, ACT, action chunking, 结构化未来, VLA—世界模型融合栈, latent planning, 预训练, 模型供应链, Sim2Real |
+| EA-EVAL | 评测体系与世界模型 | [embodied-ai/evaluation-world-models.md](embodied-ai/evaluation-world-models.md) | 开放环, 闭环, benchmark, execution horizon, 自适应重规划, 世界模型权限阶梯, 策略排序, failure optimism, sim-real |
 | EA-4D | 4D 时空推理与世界动态 | [embodied-ai/4d-spatiotemporal-reasoning.md](embodied-ai/4d-spatiotemporal-reasoning.md) | 4D, point tracks, 结构化未来, 几何教师, 后果预演, action-conditioned rollout |
-| EA-ALIGN | VLA 多模态与动作对齐 | [embodied-ai/vla-multimodal-action-alignment.md](embodied-ai/vla-multimodal-action-alignment.md) | 语言稀疏, 视觉稠密, 动作连续, 功能—时标融合, action token, action adapter |
+| EA-ALIGN | VLA 多模态与动作对齐 | [embodied-ai/vla-multimodal-action-alignment.md](embodied-ai/vla-multimodal-action-alignment.md) | 语言稀疏, 视觉稠密, 动作连续, 动作块预测/执行视界, 功能—时标融合, action token, action adapter |
 | EA-LOCOMANIP | 全身移动操作 | [embodied-ai/loco-manipulation.md](embodied-ai/loco-manipulation.md) | loco-manipulation, whole-body, humanoid, quadruped, 地形, 动态抓持, 故障恢复 |
 | EA-BIZ | 产业落地与商业化 | [embodied-ai/commercialization.md](embodied-ai/commercialization.md) | ToB, ROI, 节拍, 良率, 最后一厘米, 工业场景 |
 | ERR-COMPARE | 测绘误差观与 AI 误差治理对照 | [error-governance/surveying-vs-ai-error-governance.md](error-governance/surveying-vs-ai-error-governance.md) | 量值误差, 语义风险, 真值, 验收, 平差 |
@@ -58,6 +58,7 @@ tags: [agent-index, routing, embodied-ai, error-governance]
 | 物流分拣、Hub、现场考察、岗位盘点、视频验收、远程验收、试采、Top 5 岗位 | EA-FIELD, EA-DATA, EA-BIZ |
 | 跨本体、人手到机器人、retargeting、灵巧手、夹爪、动作空间 | EA-XEMBODIMENT |
 | 机器人基础模型、VLA、RT-X、Octo、OpenVLA、预训练、微调 | EA-MODEL |
+| ACT、Action Chunking Transformer、RoboTwin 2.0、chunk size、execution horizon、自适应重规划 | EA-MODEL, EA-EVAL, EA-ALIGN |
 | 反应式 VLA、VLA 已死、世界模型当立、预演后行动、动作后果、VLA—世界模型融合、WAM、BadWAM、后果可校验、动作—想象同步 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN |
 | Loco-Manipulation、移动操作、全身操作、WholeBodyVLA、地形操作、动态抓持 | EA-LOCOMANIP, EA-MODEL, EA-SENSOR, EA-EVAL |
 | 世界视频模型可靠任务、策略排序、低权限应用、what-if、世界模型权限 | EA-EVAL, EA-MODEL, EA-4D |

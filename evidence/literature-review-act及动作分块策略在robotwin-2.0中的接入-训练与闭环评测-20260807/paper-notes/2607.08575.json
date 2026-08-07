@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.08575",
+    "title": "FabriVLA: A Lightweight Vision-Language-Action Model with Conformal Action Chunk Uncertainty",
+    "published": "2026-07-09",
+    "url": "https://arxiv.org/abs/2607.08575",
+    "authors": [
+      "Shiyuan Yang",
+      "Borong Zhang",
+      "Jizheng Zhang",
+      "Zhijia Tao",
+      "Junfei Guo",
+      "Donglai Ran",
+      "Xu Bian",
+      "Qingbiao Li"
+    ]
+  },
+  "review": {
+    "question": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中的方法、实验和边界信息直接或相邻支撑 ACT/动作分块在训练、执行或 RoboTwin 闭环评测中的设计判断。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "核对论文提出的问题、方法定位与主要适用范围。"
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "核对动作表示、训练接口或执行策略的实际设计。"
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准、实机或消融分析所支持的结论范围。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论、失败模式与可迁移边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and non-core appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "范围综述已核对问题、方法、实验与结论；未用于当前证据卡的附录细节不再投影。"
+      }
+    ]
+  },
+  "research_question": "围绕“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”，该论文解决哪个动作分块接口问题、采用何种训练或执行设计，以及结论受哪些评测边界约束？",
+  "contributions": [
+    "动作块的不确定性可以按“整个将执行前缀”联合校准，而非只估计单步误差；JCAC 为冻结策略增加轻量残差尺度头并输出具有用户指定覆盖水平的动作块集合。"
+  ],
+  "method": {
+    "summary": "FabriVLA 的 JCAC 使用单次策略查询生成联合共形集合，可在动作执行前对整段前缀进行风险排序，为闭环部署增加可审计的不确定性接口。",
+    "assumptions": [
+      "仅把完整正文明确描述的方法与作者报告的评测作为论文级证据，不把摘要中的跨任务措辞外推为普遍因果结论。"
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [
+      "robot manipulation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "任务数、轨迹数和硬件规模只按论文实验章节解释；本证据卡不投影缺少精确定位的数量。"
+  },
+  "evaluation": {
+    "design": "已核对 5 Experiments 中的模拟、实机或消融设计；这里只投影方法级结论，不独立复跑作者实验。",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "动作块的不确定性可以按“整个将执行前缀”联合校准，而非只估计单步误差；JCAC 为冻结策略增加轻量残差尺度头并输出具有用户指定覆盖水平的动作块集合。",
+      "scope": "限于论文报告的策略骨干、任务、机器人形态、数据规模、执行频率与评测协议。",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "共形覆盖依赖校准样本与部署分布的交换性条件；论文的风险排序来自 LIBERO-Safety，不能直接视为 RoboTwin 闭环安全保证。",
+        "basis": "由 3 Method、5 Experiments 与 6 Conclusion 的设计和评测范围推得；未将单篇论文结果外推到未测试的策略或部署条件。"
+      }
+    ]
+  },
+  "transfer_boundary": "共形覆盖依赖校准样本与部署分布的交换性条件；论文的风险排序来自 LIBERO-Safety，不能直接视为 RoboTwin 闭环安全保证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "证据从完整非 OCR 正文核对了问题、3 Method、5 Experiments 与 6 Conclusion，方法和评测边界可追溯。"
+    ],
+    "design_risks": [
+      "共形覆盖依赖校准样本与部署分布的交换性条件；论文的风险排序来自 LIBERO-Safety，不能直接视为 RoboTwin 闭环安全保证。"
+    ],
+    "baseline_fairness": "基线差异只作为作者报告的比较处理；本综述没有复现实验，也不假定各方法拥有相同预训练、算力或调参预算。",
+    "metric_validity": "成功率、控制频率、重规划次数或不确定性覆盖仅在论文定义的任务和协议内解释，不能替代统一的跨论文闭环对照。",
+    "reproducibility": "论文给出了方法与实验定位；完整复现仍取决于作者释放的代码、数据、检查点和控制配置。",
+    "external_validity": "共形覆盖依赖校准样本与部署分布的交换性条件；论文的风险排序来自 LIBERO-Safety，不能直接视为 RoboTwin 闭环安全保证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.08575-C01",
+      "claim": "动作块的不确定性可以按“整个将执行前缀”联合校准，而非只估计单步误差；JCAC 为冻结策略增加轻量残差尺度头并输出具有用户指定覆盖水平的动作块集合。",
+      "stance": "conditional",
+      "relation": "对综述问题“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”的直接或相邻方法证据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "FabriVLA 的 JCAC 使用单次策略查询生成联合共形集合，可在动作执行前对整段前缀进行风险排序，为闭环部署增加可审计的不确定性接口。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Vision-Language-Action (VLA) models have become a leading paradigm for general purpose robotic manipulation, but their computational cost and limited uncertainty awareness hinder practical deployment. We present FabriVLA, a lightweight VLA that fuses shallow and intermediate VLM layers to preserve fine-grained visual features, and gates self-attention among action tokens so that its flow matching head admits inter step structure only as far as training warrants. Trained end-to-end in a single stage, FabriVLA reaches a state-of-the-art 90.0% average success on Meta-World MT50 with only 0.88B parameters. We further introduce Joint Conformal Action Chunk Calibration (JCAC), a post-training method that augments a frozen policy with a lightweight residual scale head. From a single policy query, JCAC turns a learned elementwise error scale into a set that covers the whole executed action prefix at a user chosen confidence level, 3.3 tighter in mean radius than an unconditional conformal set. On LIBERO-Safety, these bounds rank rollouts by risk before execution, supporting risk ranked review. Together, FabriVLA and JCAC provide a lightweight and auditable framework for multi-task manipulation with calibrated action uncertainty.",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已对照完整正文中的精确章节核验方法主体、输入信号与作用范围；中文表述删除了不能在该定位直接支持的数量和普遍化措辞，并保留论文评测边界。"
+      },
+      "notes": "完整非 OCR 正文由 arXiv HTML/PDF 文本链路恢复；未对作者机构作无来源映射。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "围绕当前范围综述重新深读并完成证据卡，不是由候选元数据直接提升。"
+}

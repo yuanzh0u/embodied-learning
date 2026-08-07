@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.21600",
+    "title": "VQActFlow: Vector-Quantized Action Mode Steering for Multi-Task Robot Manipulation",
+    "published": "2026-06-19",
+    "url": "https://arxiv.org/abs/2606.21600",
+    "authors": [
+      "Zhigen Zhao",
+      "Mark Leggiero",
+      "Yipu Chen",
+      "Haoran Liu",
+      "Yifan Wu",
+      "Huishu Xue",
+      "Sirui Zhan",
+      "Ye Zhao"
+    ]
+  },
+  "review": {
+    "question": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中的方法、实验和边界信息直接或相邻支撑 ACT/动作分块在训练、执行或 RoboTwin 闭环评测中的设计判断。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "核对论文提出的问题、方法定位与主要适用范围。"
+      },
+      {
+        "locator": "IV Methods",
+        "role": "method-or-design",
+        "purpose": "核对动作表示、训练接口或执行策略的实际设计。"
+      },
+      {
+        "locator": "V Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准、实机或消融分析所支持的结论范围。"
+      },
+      {
+        "locator": "VI CONCLUSIONS",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论、失败模式与可迁移边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and non-core appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "范围综述已核对问题、方法、实验与结论；未用于当前证据卡的附录细节不再投影。"
+      }
+    ]
+  },
+  "research_question": "围绕“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”，该论文解决哪个动作分块接口问题、采用何种训练或执行设计，以及结论受哪些评测边界约束？",
+  "contributions": [
+    "多任务动作分块不必只在连续空间直接回归；VQActFlow 先把动作块编码为离散代码，再用变分流匹配生成代码序列，使语言任务模式与场景可行性可以在推理时分别施加引导。"
+  ],
+  "method": {
+    "summary": "离散代码簿显式分离多模态动作模式，语言条件的 classifier-free guidance 选择任务模式，代码簿 critic 补充场景可行性信号。",
+    "assumptions": [
+      "仅把完整正文明确描述的方法与作者报告的评测作为论文级证据，不把摘要中的跨任务措辞外推为普遍因果结论。"
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [
+      "robot manipulation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "任务数、轨迹数和硬件规模只按论文实验章节解释；本证据卡不投影缺少精确定位的数量。"
+  },
+  "evaluation": {
+    "design": "已核对 V Experiments 中的模拟、实机或消融设计；这里只投影方法级结论，不独立复跑作者实验。",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "多任务动作分块不必只在连续空间直接回归；VQActFlow 先把动作块编码为离散代码，再用变分流匹配生成代码序列，使语言任务模式与场景可行性可以在推理时分别施加引导。",
+      "scope": "限于论文报告的策略骨干、任务、机器人形态、数据规模、执行频率与评测协议。",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "代码簿会引入量化与覆盖边界；论文在 LIBERO、人形和 ALOHA 风格平台评测，但没有建立其在 RoboTwin 2.0 上优于 ACT 的结论。",
+        "basis": "由 IV Methods、V Experiments 与 VI CONCLUSIONS 的设计和评测范围推得；未将单篇论文结果外推到未测试的策略或部署条件。"
+      }
+    ]
+  },
+  "transfer_boundary": "代码簿会引入量化与覆盖边界；论文在 LIBERO、人形和 ALOHA 风格平台评测，但没有建立其在 RoboTwin 2.0 上优于 ACT 的结论。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "证据从完整非 OCR 正文核对了问题、IV Methods、V Experiments 与 VI CONCLUSIONS，方法和评测边界可追溯。"
+    ],
+    "design_risks": [
+      "代码簿会引入量化与覆盖边界；论文在 LIBERO、人形和 ALOHA 风格平台评测，但没有建立其在 RoboTwin 2.0 上优于 ACT 的结论。"
+    ],
+    "baseline_fairness": "基线差异只作为作者报告的比较处理；本综述没有复现实验，也不假定各方法拥有相同预训练、算力或调参预算。",
+    "metric_validity": "成功率、控制频率、重规划次数或不确定性覆盖仅在论文定义的任务和协议内解释，不能替代统一的跨论文闭环对照。",
+    "reproducibility": "论文给出了方法与实验定位；完整复现仍取决于作者释放的代码、数据、检查点和控制配置。",
+    "external_validity": "代码簿会引入量化与覆盖边界；论文在 LIBERO、人形和 ALOHA 风格平台评测，但没有建立其在 RoboTwin 2.0 上优于 ACT 的结论。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.21600-C01",
+      "claim": "多任务动作分块不必只在连续空间直接回归；VQActFlow 先把动作块编码为离散代码，再用变分流匹配生成代码序列，使语言任务模式与场景可行性可以在推理时分别施加引导。",
+      "stance": "conditional",
+      "relation": "对综述问题“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”的直接或相邻方法证据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "离散代码簿显式分离多模态动作模式，语言条件的 classifier-free guidance 选择任务模式，代码簿 critic 补充场景可行性信号。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Multi-task robot manipulation policies are challenging to learn from demonstration because traditionally a single network must select among qualitatively different action modes from a multimodal demonstration distribution, conditioned on language and visual context. A wrong mode selection means executing the wrong task or an action infeasible in the scene. Tokenizing continuous actions into a learned discrete codebook separates these modes at the representation level, offering structural advantages for multi-task learning. We propose VQActFlow, a multi-task manipulation policy that tokenizes action chunks and generates code sequences via Variational Flow Matching. VQActFlow maintains an explicit preference over action modes throughout generation. Inference-time guidance acts on this preference to steer mode commitment. We instantiate this with classifier-free guidance over language conditioning, which steers the policy toward the instructed action mode, and a learned codebook critic that supplies a complementary feasibility signal. We evaluate VQActFlow on three platforms: the LIBERO simulation benchmarks, a Unitree G1 humanoid performing whole-body pick-and-place, and an ALOHA-style bimanual platform performing contact-rich tasks. Across these benchmarks, VQActFlow outperforms both continuous and discrete baselines. 2 2 2 Website: mleggiero.github.io/vqactflow-website",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已对照完整正文中的精确章节核验方法主体、输入信号与作用范围；中文表述删除了不能在该定位直接支持的数量和普遍化措辞，并保留论文评测边界。"
+      },
+      "notes": "完整非 OCR 正文由 arXiv HTML/PDF 文本链路恢复；未对作者机构作无来源映射。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "围绕当前范围综述重新深读并完成证据卡，不是由候选元数据直接提升。"
+}

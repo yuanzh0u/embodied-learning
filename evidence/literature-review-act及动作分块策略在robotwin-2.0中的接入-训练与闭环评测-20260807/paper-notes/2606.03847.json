@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.03847",
+    "title": "Denoising Tells When to Replan: Denoising-Variance Adaptive Chunking for Flow-Based Robot Policies",
+    "published": "2026-06-02",
+    "url": "https://arxiv.org/abs/2606.03847",
+    "authors": [
+      "Xiangdong Feng",
+      "Yuxuan Cheng",
+      "Chen Shi",
+      "Boyao Han",
+      "Yuxuan Yan",
+      "Yitong Hong",
+      "Zhuotao Tian",
+      "Li Jiang"
+    ]
+  },
+  "review": {
+    "question": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中的方法、实验和边界信息直接或相邻支撑 ACT/动作分块在训练、执行或 RoboTwin 闭环评测中的设计判断。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "核对论文提出的问题、方法定位与主要适用范围。"
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "核对动作表示、训练接口或执行策略的实际设计。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准、实机或消融分析所支持的结论范围。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论、失败模式与可迁移边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and non-core appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "范围综述已核对问题、方法、实验与结论；未用于当前证据卡的附录细节不再投影。"
+      }
+    ]
+  },
+  "research_question": "围绕“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”，该论文解决哪个动作分块接口问题、采用何种训练或执行设计，以及结论受哪些评测边界约束？",
+  "contributions": [
+    "对流匹配动作策略，末端去噪步骤中干净动作估计的方差可作为重规划信号：DVAC 执行低方差稳定前缀，并在高方差未来动作被提交前重新观测与规划。"
+  ],
+  "method": {
+    "summary": "DVAC 不增加训练模块，而是利用推理过程已有的去噪轨迹估计未来动作稳定性，并用局部滚动尺度校准阈值，在 RoboTwin、LIBERO、CALVIN 与实机任务中比较成功率和重规划开销。",
+    "assumptions": [
+      "仅把完整正文明确描述的方法与作者报告的评测作为论文级证据，不把摘要中的跨任务措辞外推为普遍因果结论。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "RoboTwin 2.0"
+    ],
+    "tasks": [
+      "robot manipulation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "任务数、轨迹数和硬件规模只按论文实验章节解释；本证据卡不投影缺少精确定位的数量。"
+  },
+  "evaluation": {
+    "design": "已核对 4 Experiments 中的模拟、实机或消融设计；这里只投影方法级结论，不独立复跑作者实验。",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "对流匹配动作策略，末端去噪步骤中干净动作估计的方差可作为重规划信号：DVAC 执行低方差稳定前缀，并在高方差未来动作被提交前重新观测与规划。",
+      "scope": "限于论文报告的策略骨干、任务、机器人形态、数据规模、执行频率与评测协议。",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "方法适用范围受流匹配策略、方差阈值校准和基础策略生成质量约束。",
+        "locator": "6 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "该信号针对能暴露迭代去噪轨迹的流式策略；方差与真实风险并非等价，跨骨干和任务仍需校准。",
+        "basis": "由 3 Method、4 Experiments 与 5 Conclusion 的设计和评测范围推得；未将单篇论文结果外推到未测试的策略或部署条件。"
+      }
+    ]
+  },
+  "transfer_boundary": "该信号针对能暴露迭代去噪轨迹的流式策略；方差与真实风险并非等价，跨骨干和任务仍需校准。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "证据从完整非 OCR 正文核对了问题、3 Method、4 Experiments 与 5 Conclusion，方法和评测边界可追溯。"
+    ],
+    "design_risks": [
+      "该信号针对能暴露迭代去噪轨迹的流式策略；方差与真实风险并非等价，跨骨干和任务仍需校准。"
+    ],
+    "baseline_fairness": "基线差异只作为作者报告的比较处理；本综述没有复现实验，也不假定各方法拥有相同预训练、算力或调参预算。",
+    "metric_validity": "成功率、控制频率、重规划次数或不确定性覆盖仅在论文定义的任务和协议内解释，不能替代统一的跨论文闭环对照。",
+    "reproducibility": "论文给出了方法与实验定位；完整复现仍取决于作者释放的代码、数据、检查点和控制配置。",
+    "external_validity": "该信号针对能暴露迭代去噪轨迹的流式策略；方差与真实风险并非等价，跨骨干和任务仍需校准。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.03847-C01",
+      "claim": "对流匹配动作策略，末端去噪步骤中干净动作估计的方差可作为重规划信号：DVAC 执行低方差稳定前缀，并在高方差未来动作被提交前重新观测与规划。",
+      "stance": "support",
+      "relation": "对综述问题“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”的直接或相邻方法证据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "DVAC 不增加训练模块，而是利用推理过程已有的去噪轨迹估计未来动作稳定性，并用局部滚动尺度校准阈值，在 RoboTwin、LIBERO、CALVIN 与实机任务中比较成功率和重规划开销。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Action chunking has become a common inference strategy for flow-based robot policies, improving action coherence by modeling multi-step temporal dependencies in demonstrations. However, the execution horizon is still typically set as an empirical fixed value, overlooking that predictable free-space motions and precision-critical interaction phases often require different replanning frequencies. In this work, we first show that the denoising process of flow-based policies contains an intrinsic signal of task phases: clean-action estimates remain stable during predictable motion phases, but fluctuate more strongly around contact-rich or precision-sensitive operations. Motivated by this observation, we propose DVAC (Denoising-Variance Adaptive Chunking) , a test-time method that adaptively determines how many actions to execute from each predicted chunk. DVAC measures the variance of clean-action estimates over the final denoising steps, executes the stable low-variance prefix, and replans before high-variance future actions are committed. To transfer across tasks and rollouts, DVAC further calibrates the threshold with a rolling estimate of the local variance scale. Experiments on LIBERO, RoboTwin, CALVIN, and real-world manipulation show that DVAC improves task success while reducing replanning frequency. With a -based policy, DVAC improves LIBERO success from 94.75% to 98.00% and reduces replanning by 43.0%, while also yielding aggregate gains on RoboTwin and CALVIN and improving real-world execution efficiency.",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已对照完整正文中的精确章节核验方法主体、输入信号与作用范围；中文表述删除了不能在该定位直接支持的数量和普遍化措辞，并保留论文评测边界。"
+      },
+      "notes": "完整非 OCR 正文由 arXiv HTML/PDF 文本链路恢复；未对作者机构作无来源映射。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "围绕当前范围综述重新深读并完成证据卡，不是由候选元数据直接提升。"
+}

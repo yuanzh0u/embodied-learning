@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2608.03483",
+    "title": "Continue or Replan? Bernoulli-Continuation Policy Learning for Adaptive Horizon Execution",
+    "published": "2026-08-04",
+    "url": "https://arxiv.org/abs/2608.03483",
+    "authors": [
+      "Weichen Xu",
+      "Zhenhua Liu",
+      "Lin Luo",
+      "Yaobo Liang",
+      "Chengtang Yao",
+      "Qingyu Mei",
+      "Jian Cao",
+      "Xixin Cao",
+      "Xing Zhang",
+      "Jiaolong Yang",
+      "Baining Guo"
+    ]
+  },
+  "review": {
+    "question": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中的方法、实验和边界信息直接或相邻支撑 ACT/动作分块在训练、执行或 RoboTwin 闭环评测中的设计判断。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "核对论文提出的问题、方法定位与主要适用范围。"
+      },
+      {
+        "locator": "Method",
+        "role": "method-or-design",
+        "purpose": "核对动作表示、训练接口或执行策略的实际设计。"
+      },
+      {
+        "locator": "Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准、实机或消融分析所支持的结论范围。"
+      },
+      {
+        "locator": "Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论、失败模式与可迁移边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and non-core appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "范围综述已核对问题、方法、实验与结论；未用于当前证据卡的附录细节不再投影。"
+      }
+    ]
+  },
+  "research_question": "围绕“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”，该论文解决哪个动作分块接口问题、采用何种训练或执行设计，以及结论受哪些评测边界约束？",
+  "contributions": [
+    "固定执行视界会把重规划变成与任务阶段无关的周期调度；BCP 把视界选择分解为有序的继续/重规划决策，并用轨迹级强化学习同时优化成功与 VLA 调用效率。"
+  ],
+  "method": {
+    "summary": "BCP 在冻结 VLA 上附加轻量 continuation head，复用动作块与视觉语言表征；其有序前缀结构与效率奖励避免把所有候选视界当成互不相关类别或退化为频繁重规划。",
+    "assumptions": [
+      "仅把完整正文明确描述的方法与作者报告的评测作为论文级证据，不把摘要中的跨任务措辞外推为普遍因果结论。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "RoboTwin 2.0"
+    ],
+    "tasks": [
+      "robot manipulation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "任务数、轨迹数和硬件规模只按论文实验章节解释；本证据卡不投影缺少精确定位的数量。"
+  },
+  "evaluation": {
+    "design": "已核对 Experiments 中的模拟、实机或消融设计；这里只投影方法级结论，不独立复跑作者实验。",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "固定执行视界会把重规划变成与任务阶段无关的周期调度；BCP 把视界选择分解为有序的继续/重规划决策，并用轨迹级强化学习同时优化成功与 VLA 调用效率。",
+      "scope": "限于论文报告的策略骨干、任务、机器人形态、数据规模、执行频率与评测协议。",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "该方法需要在线强化学习资源，且性能仍受冻结基础策略、候选视界集合和训练任务分布限制。",
+        "basis": "由 Method、Experiments 与 Conclusion 的设计和评测范围推得；未将单篇论文结果外推到未测试的策略或部署条件。"
+      }
+    ]
+  },
+  "transfer_boundary": "该方法需要在线强化学习资源，且性能仍受冻结基础策略、候选视界集合和训练任务分布限制。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "证据从完整非 OCR 正文核对了问题、Method、Experiments 与 Conclusion，方法和评测边界可追溯。"
+    ],
+    "design_risks": [
+      "该方法需要在线强化学习资源，且性能仍受冻结基础策略、候选视界集合和训练任务分布限制。"
+    ],
+    "baseline_fairness": "基线差异只作为作者报告的比较处理；本综述没有复现实验，也不假定各方法拥有相同预训练、算力或调参预算。",
+    "metric_validity": "成功率、控制频率、重规划次数或不确定性覆盖仅在论文定义的任务和协议内解释，不能替代统一的跨论文闭环对照。",
+    "reproducibility": "论文给出了方法与实验定位；完整复现仍取决于作者释放的代码、数据、检查点和控制配置。",
+    "external_validity": "该方法需要在线强化学习资源，且性能仍受冻结基础策略、候选视界集合和训练任务分布限制。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2608.03483-C01",
+      "claim": "固定执行视界会把重规划变成与任务阶段无关的周期调度；BCP 把视界选择分解为有序的继续/重规划决策，并用轨迹级强化学习同时优化成功与 VLA 调用效率。",
+      "stance": "support",
+      "relation": "对综述问题“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”的直接或相邻方法证据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "BCP 在冻结 VLA 上附加轻量 continuation head，复用动作块与视觉语言表征；其有序前缀结构与效率奖励避免把所有候选视界当成互不相关类别或退化为频繁重规划。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Existing chunk-based Vision-Language-Action (VLA) models execute a fixed number of actions (i.e., execution horizon) before replanning, turning replanning into a task-agnostic periodic schedule that is independent of task progress. As a result, when no replanning boundary falls before a critical manipulation stage, it is executed from a stale chunk rather than a freshly replanned one. To address this limitation, we propose B ernoulli- C ontinuation P olicy ( BCP ), a lightweight, plug-and-play framework for adaptive horizon execution that keeps the base VLA frozen. Given a fixed-length action chunk, its continuation head decomposes execution-horizon selection into a sequence of continue-or-replan decisions, which imposes an ordinal, prefix-sharing inductive bias over candidate horizons rather than treating them as independent classes. Since the optimal horizon for each chunk is not observable, we train this head with reinforcement learning from trajectory-level outcomes and introduce a Replanning-Efficiency Reward that jointly rewards task success and efficient VLA usage, discouraging the policy from collapsing to unnecessarily short horizons. On RoboTwin 2.0 with LingBot-VLA as the base policy, BCP improves the average success rate by +11.08% on 13 low-success tasks and from 89.88% to 93.94% ( +4.06% ) across all 50 tasks. Although trained only under the Clean setting, BCP generalizes to the Randomized setting, raising the average success rate by +4.06% . It also transfers to a different base policy , achieving a better result on LIBERO (+1.7%) and, notably, on the harder LIBERO-PRO ( +6.8% ), where its advantage widens as tasks become more difficult. On a real robot, BCP lifts success from 74% to 92% and from 44% to 84% on two manipulation tasks. Meanwhile, its negligible overhead, combined with higher success, makes BCP’s overall runtime even lower than the fixed-horizon baselines. More details can be found at Project Page .",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已对照完整正文中的精确章节核验方法主体、输入信号与作用范围；中文表述删除了不能在该定位直接支持的数量和普遍化措辞，并保留论文评测边界。"
+      },
+      "notes": "完整非 OCR 正文由 arXiv HTML/PDF 文本链路恢复；未对作者机构作无来源映射。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "围绕当前范围综述重新深读并完成证据卡，不是由候选元数据直接提升。"
+}
