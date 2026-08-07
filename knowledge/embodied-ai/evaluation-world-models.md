@@ -3,7 +3,7 @@ id: EA-EVAL
 title: 评测体系与世界模型
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-20
+updated: 2026-08-07
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -36,14 +36,18 @@ source:
   - id: RUN-VLA-BREAKTHROUGH-20260719
     file: ../../evidence/literature-review-近半年vla在具身领域最大的技术突破-20260719/evidence.jsonl
     locator: EA-VLABREAK-2026-0006..0007; EA-WMEVAL-READ-0004; EA-WMEVAL-READ-0010; EA-WMEVAL-READ-0015
-tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, world-model-authority, action-conditioned-reliability, candidate-ranking, failure-optimism, sim-real, admissibility, action-fidelity, contamination, semantic-leakage, backdoor, risk-coverage, visual-localization]
-aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, 世界模型权限阶梯, Action-conditioned reliability, 后果预演, 候选动作排序, 策略淘汰, 失败乐观偏差, Benchmark, Sim2Real, 数据污染评测, 语义泄漏, 触发测试, 动作忠实, 世界模型可采信性, 风险覆盖, 定位评测]
+  - id: RUN-ACT-ROBOTWIN-20260807
+    file: ../../evidence/literature-review-act及动作分块策略在robotwin-2.0中的接入-训练与闭环评测-20260807/evidence.jsonl
+    locator: EA-ACTRT-2026-0001..0015
+tags: [embodied-ai, evaluation, benchmark, closed-loop, world-model, world-model-authority, action-conditioned-reliability, action-chunking, execution-horizon, replanning, robotwin, candidate-ranking, failure-optimism, sim-real, admissibility, action-fidelity, contamination, semantic-leakage, backdoor, risk-coverage, visual-localization]
+aliases: [评测体系, 闭环评测, 开放环评测, 世界模型, 世界模型权限阶梯, Action-conditioned reliability, 动作块执行视界, 自适应重规划, RoboTwin 2.0 评测, 后果预演, 候选动作排序, 策略淘汰, 失败乐观偏差, Benchmark, Sim2Real, 数据污染评测, 语义泄漏, 触发测试, 动作忠实, 世界模型可采信性, 风险覆盖, 定位评测]
 load_when:
   - 问题涉及具身智能评测、benchmark、开放环/闭环、世界模型或长程规划
   - 问题涉及 world-model admissibility、动作忠实、反事实、乐观偏差或策略评估器可信度
   - 问题涉及训练评测泄漏、数据投毒、VLA 后门、触发测试、检测恢复或世界模型二次激活
   - 问题涉及世界模型是否能参与规划、候选动作排序、后果拒识或“世界模型当立”的评测证据
   - 问题涉及世界模型可靠应用、权限晋级、同分布策略排序、BadWAM 或动作—想象同步
+  - 问题涉及 action chunk、execution horizon、自适应重规划、RoboTwin 2.0 或策略调用预算
 confidence: working
 ---
 
@@ -57,7 +61,7 @@ confidence: working
 
 ## 30 秒摘要
 
-开放环评测适合快速筛模型，但不能替代闭环成功、安全过程和恢复能力。世界模型可以生成未来、筛选动作和降低真实试错成本，但成为策略评估器前必须证明 admissibility：不仅视觉连贯，还要动作忠实、物理约束正确、长程稳定、能识别失败并与真实排序相关。当前最可靠的应用位于权限阶梯低端：训练期 4D/几何教师、离线策略排序与淘汰、有本体锚定的数据/后训练，以及明确物理变量下的 what-if 检查；在线预演、直接控制和安全裁决需要逐级更强的真实闭环证据。
+开放环评测适合快速筛模型，但不能替代闭环成功、安全过程和恢复能力。世界模型可以生成未来、筛选动作和降低真实试错成本，但成为策略评估器前必须证明 admissibility：不仅视觉连贯，还要动作忠实、物理约束正确、长程稳定、能识别失败并与真实排序相关。动作分块评测还必须把预测视界、执行视界、重规划频率和计算预算分开；单一固定块长或只报平均成功率会混淆策略质量与反馈频率。当前最可靠的应用位于权限阶梯低端：训练期 4D/几何教师、离线策略排序与淘汰、有本体锚定的数据/后训练，以及明确物理变量下的 what-if 检查；在线预演、直接控制和安全裁决需要逐级更强的真实闭环证据。
 
 ## 关键判断
 
@@ -85,6 +89,9 @@ confidence: working
 - 同分布策略排序可以条件性复现真机榜单顺序，但必须同时报告 rank correlation、错误淘汰、分布外退化与真实闭环复验，不能据此授予直接控制权。
 - RoboWorld 暴露了接触后物体破碎、变形和视觉不一致；这类错误限制高接触策略评测，即使接触前场景与运动看起来合理。
 - WAM 安全不能只判断 imagined future 是否合理，还要核对实际执行动作与想象条件是否同步；BadWAM 说明 action mismatch 可在“想象正确”时大幅压低任务成功。
+- 动作分块闭环评测必须区分 prediction horizon、execution horizon 与 replanning frequency，并报告任务级视界扫描；固定视界的效果可能任务依赖且非单调。
+- 自适应执行方法应在等策略调用、等墙钟时间和等执行步数三种预算下比较，同时报告视界分布、控制频率和阶段级重规划位置。
+- 冻结基础策略只改调度器，是识别“动作生成增益”与“执行时机增益”的必要对照；未冻结时不能把总增益归因于自适应重规划。
 
 ## 指标与检核
 
@@ -104,6 +111,7 @@ confidence: working
 | 决策价值 | 候选动作排序相关性、拒识准确率、failure optimism、规划闭环增益、rollout 延迟与单位成功成本 |
 | 权限晋级 | 排名相关性、风险—覆盖、错误淘汰率、分布外退化、在线增益、直接控制安全事件 |
 | 动作—想象同步 | action trace 一致性、控制/观测延迟、接触后状态一致、imagined/actual divergence |
+| 动作分块闭环 | prediction/execution horizon 网格、策略调用次数、墙钟时间、控制频率、视界分布、阶段成功/失败、等预算成功率 |
 
 ## 适用边界
 
@@ -117,6 +125,8 @@ confidence: working
 - 未证明动作条件可靠性、sim-real 排序和真实闭环增益的生成模型，只能作为数据/分析工具，不能单独承担规划或安全裁决。
 - RoboWorld 的策略排序结论依赖 DROID/RoboArena 等同分布设置；跨本体、跨环境和高接触 OOD 场景必须重新校准。
 - BadWAM 证明动作—想象不同步是安全攻击面，但其成功率下降来自特定设置，不能直接外推现实系统发生率。
+- 速度谷值、动作熵、去噪方差和未来—现实误差都是模型相关的风险代理；跨任务、跨骨干与跨控制频率部署前必须重新校准。
+- RoboTwin 2.0 论文常使用不同任务子集、预训练和随机化设置；只看论文汇总成功率不能支持公平方法排序。
 
 ## 证据锚点
 
@@ -131,6 +141,7 @@ confidence: working
 - RUN-LOCOMANIP-20260719：`EA-LOCOMANIP-2026-0001`, `0004`, `0007`, `0015` 对照了真实柔性物失败、ground-truth-plan 评测边界、摩擦调参假鲁棒与窄任务零样本迁移；`0010`, `0016..0018` 补充风险、长时序记忆、故障下 safety–completion 分账和动捕—机载深度差距。
 - RUN-WM-TASKS-20260719：`EA-WMTASK-2026-0001..0002`, `ERR-PVC-READ-0013..0014`, `EA-WMEVAL-READ-0004`, `0010`, `0013`, `0015` 支持低权限任务、同分布策略排序、接触后失真与可采信门槛；“权限阶梯”为跨事件 `inference`。
 - RUN-VLA-BREAKTHROUGH-20260719：`EA-VLABREAK-2026-0006..0007` 与复用的世界模型评测事件支持动作—想象同步门禁；BadWAM 的反例不能由视觉合理性指标替代。
+- RUN-ACT-ROBOTWIN-20260807：`EA-ACTRT-2026-0001..0015` 覆盖固定视界非单调性、相位/熵/去噪方差/强化学习/未来—现实验证驱动的自适应执行，以及 RoboTwin 2.0 等预算闭环对照需求。
 
 ## 待补问题
 
@@ -143,3 +154,4 @@ confidence: working
 - 建立相同动作候选、计算预算与真机数据下，有/无后果预演层的闭环评测协议。
 - 建立训练期教师、离线排序、在线预演、直接控制和安全裁决的五级权限晋级表。
 - 建立 imagined action、实际控制命令、机器人状态和接触后果的端到端同步审计协议。
+- 建立 RoboTwin 2.0 动作块评测矩阵：干净/随机场景、任务级视界扫描、等策略调用/墙钟/执行步数预算、扰动与少量实机复核。

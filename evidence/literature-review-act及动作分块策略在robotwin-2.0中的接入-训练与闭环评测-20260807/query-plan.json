@@ -1,0 +1,992 @@
+{
+  "generated_at": "2026-08-07T03:35:33.566696+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+  "start_date": "2026-02-07",
+  "end_date": "2026-08-07",
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-EVAL"
+  ],
+  "families": [],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 24,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 100,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 100,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-robotwin-act-direct",
+        "dynamic-multitask-bimanual-act",
+        "ea-model-vla",
+        "ea-model-named-foundation",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-robotwin-action-chunk",
+        "dynamic-action-chunking-mechanism",
+        "dynamic-robotwin-bimanual-benchmark",
+        "dynamic-robotwin-policy-adapter",
+        "dynamic-robotwin-domain-randomization",
+        "dynamic-action-chunk-runtime-monitor",
+        "calibrated-phase-aware-chunk-execution",
+        "calibrated-denoising-variance-adaptive-chunking",
+        "calibrated-implicit-ensembling",
+        "calibration-pace",
+        "calibration-dvac",
+        "calibration-chunk-mechanism",
+        "ea-model-finetuning",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-world-model",
+        "ea-eval-sim-real-correlation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-adaptive-replanning"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "dynamic-temporal-aggregation",
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): ACT–RoboTwin 是窄方法与特定基准的交叉问题，需要显式扩展到动作分块、执行调度、多任务双臂操作和域随机化评测。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-robotwin-act-direct",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:RoboTwin AND all:\"Action Chunking Transformer\"",
+      "why": "捕获直接同时使用 ACT 与 RoboTwin 的研究。"
+    },
+    {
+      "label": "dynamic-robotwin-action-chunk",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:RoboTwin AND all:\"action chunk\"",
+      "why": "覆盖在 RoboTwin 上研究动作块预测或执行的方法。"
+    },
+    {
+      "label": "dynamic-action-chunking-mechanism",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"action chunking\" AND all:\"robot manipulation\"",
+      "why": "建立动作分块的机制、表达能力和误差累积证据。"
+    },
+    {
+      "label": "dynamic-adaptive-replanning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"adaptive action chunking\" OR all:\"execution horizon\" OR all:replanning) AND all:\"robot policy\"",
+      "why": "覆盖固定执行窗的反例、自适应重规划和响应性—连续性权衡。"
+    },
+    {
+      "label": "dynamic-temporal-aggregation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"temporal aggregation\" OR all:\"temporal ensembling\") AND all:\"robot manipulation\"",
+      "why": "覆盖 ACT 部署中跨动作块融合和平滑执行的核心接口。"
+    },
+    {
+      "label": "dynamic-multitask-bimanual-act",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "(all:\"Action Chunking Transformer\" OR all:\"MoE-ACT\") AND all:\"multi-task\" AND all:bimanual",
+      "why": "覆盖 ACT 的多任务、语言条件和双臂变体。"
+    },
+    {
+      "label": "dynamic-robotwin-bimanual-benchmark",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"RoboTwin 2.0\" AND all:bimanual AND (all:benchmark OR all:evaluation)",
+      "why": "补齐 RoboTwin 2.0 任务、域随机化和评测边界。"
+    },
+    {
+      "label": "dynamic-robotwin-policy-adapter",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:RoboTwin AND (all:deployment OR all:adapter OR all:interface) AND all:policy",
+      "why": "寻找策略包装器、观测编码和动作交付的工程证据。"
+    },
+    {
+      "label": "dynamic-robotwin-domain-randomization",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:RoboTwin AND all:\"domain randomization\" AND all:policy",
+      "why": "捕获干净设置与困难随机化设置之间的鲁棒性落差。"
+    },
+    {
+      "label": "dynamic-action-chunk-runtime-monitor",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"action chunk\" AND (all:monitor OR all:failure OR all:intervention) AND all:robot",
+      "why": "覆盖动作块执行时的失败检测、插手和闭环安全。"
+    },
+    {
+      "label": "dynamic-robotwin-act-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs RoboTwin ACT action chunking robot",
+      "why": "API 检索不足时捕获直接交叉论文。"
+    },
+    {
+      "label": "dynamic-action-chunking-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "high",
+      "query": "site:arxiv.org/abs adaptive action chunk execution replanning robot",
+      "why": "捕获新的动作块执行别名和方法。"
+    }
+  ],
+  "calibration_notes": [
+    "arxiv calibration (high): DVAC uses denoising variance to adapt the executed prefix and replanning point.",
+    "arxiv calibration (high): PACE uses phase-aware chunk execution and evaluates on 50 RoboTwin 2.0 tasks.",
+    "arxiv calibration (high): AAC uses action entropy for inference-time adaptive chunk sizing.",
+    "arxiv calibration (high): Recent mechanism study frames implicit ensembling and non-Markovian expressivity as chunking benefits.",
+    "official-context calibration (medium): RoboTwin's current terminology is ACT data preprocessing, policy training, evaluation, and temporal aggregation."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-robotwin-act-direct",
+      "tier": "core",
+      "query": "all:RoboTwin AND all:\"Action Chunking Transformer\"",
+      "why": "捕获直接同时使用 ACT 与 RoboTwin 的研究。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-act-direct"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-action-chunk",
+      "tier": "mechanism",
+      "query": "all:RoboTwin AND all:\"action chunk\"",
+      "why": "覆盖在 RoboTwin 上研究动作块预测或执行的方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-action-chunk"
+      ]
+    },
+    {
+      "label": "dynamic-action-chunking-mechanism",
+      "tier": "mechanism",
+      "query": "all:\"action chunking\" AND all:\"robot manipulation\"",
+      "why": "建立动作分块的机制、表达能力和误差累积证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-chunking-mechanism"
+      ]
+    },
+    {
+      "label": "dynamic-adaptive-replanning",
+      "tier": "limitation",
+      "query": "(all:\"adaptive action chunking\" OR all:\"execution horizon\" OR all:replanning) AND all:\"robot policy\"",
+      "why": "覆盖固定执行窗的反例、自适应重规划和响应性—连续性权衡。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-adaptive-replanning"
+      ]
+    },
+    {
+      "label": "dynamic-temporal-aggregation",
+      "tier": "policy-interface",
+      "query": "(all:\"temporal aggregation\" OR all:\"temporal ensembling\") AND all:\"robot manipulation\"",
+      "why": "覆盖 ACT 部署中跨动作块融合和平滑执行的核心接口。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-temporal-aggregation"
+      ]
+    },
+    {
+      "label": "dynamic-multitask-bimanual-act",
+      "tier": "named-variant",
+      "query": "(all:\"Action Chunking Transformer\" OR all:\"MoE-ACT\") AND all:\"multi-task\" AND all:bimanual",
+      "why": "覆盖 ACT 的多任务、语言条件和双臂变体。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multitask-bimanual-act"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-bimanual-benchmark",
+      "tier": "evaluation",
+      "query": "all:\"RoboTwin 2.0\" AND all:bimanual AND (all:benchmark OR all:evaluation)",
+      "why": "补齐 RoboTwin 2.0 任务、域随机化和评测边界。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-bimanual-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-policy-adapter",
+      "tier": "deployment",
+      "query": "all:RoboTwin AND (all:deployment OR all:adapter OR all:interface) AND all:policy",
+      "why": "寻找策略包装器、观测编码和动作交付的工程证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-policy-adapter"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-domain-randomization",
+      "tier": "evaluation",
+      "query": "all:RoboTwin AND all:\"domain randomization\" AND all:policy",
+      "why": "捕获干净设置与困难随机化设置之间的鲁棒性落差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-domain-randomization"
+      ]
+    },
+    {
+      "label": "dynamic-action-chunk-runtime-monitor",
+      "tier": "deployment",
+      "query": "all:\"action chunk\" AND (all:monitor OR all:failure OR all:intervention) AND all:robot",
+      "why": "覆盖动作块执行时的失败检测、插手和闭环安全。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-chunk-runtime-monitor"
+      ]
+    },
+    {
+      "label": "calibrated-phase-aware-chunk-execution",
+      "tier": "calibrated-term",
+      "query": "all:\"phase-aware chunk execution\"",
+      "why": "Fresh label for adaptive execution horizons on RoboTwin 2.0.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-phase-aware-chunk-execution"
+      ]
+    },
+    {
+      "label": "calibrated-denoising-variance-adaptive-chunking",
+      "tier": "calibrated-term",
+      "query": "all:\"denoising-variance adaptive chunking\"",
+      "why": "Fresh label for policy-internal replanning cues.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-denoising-variance-adaptive-chunking"
+      ]
+    },
+    {
+      "label": "calibrated-implicit-ensembling",
+      "tier": "calibrated-term",
+      "query": "all:\"implicit ensembling\"",
+      "why": "Fresh mechanism hypothesis for why action chunking works.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-implicit-ensembling"
+      ]
+    },
+    {
+      "label": "calibration-pace",
+      "tier": "calibrated-query",
+      "query": "all:\"phase-aware chunk execution\" OR all:PACE",
+      "why": "Recover the PACE paper and related mentions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-pace"
+      ]
+    },
+    {
+      "label": "calibration-dvac",
+      "tier": "calibrated-query",
+      "query": "all:\"denoising-variance adaptive chunking\" OR all:DVAC",
+      "why": "Recover DVAC and related action-chunk execution research.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-dvac"
+      ]
+    },
+    {
+      "label": "calibration-chunk-mechanism",
+      "tier": "calibrated-query",
+      "query": "all:\"implicit ensembling\" AND all:\"action chunking\"",
+      "why": "Recover the recent mechanism-focused action chunking study.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-chunk-mechanism"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-robotwin-act-direct",
+      "tier": "core",
+      "query": "all:RoboTwin AND all:\"Action Chunking Transformer\"",
+      "why": "捕获直接同时使用 ACT 与 RoboTwin 的研究。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-act-direct"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-action-chunk",
+      "tier": "mechanism",
+      "query": "all:RoboTwin AND all:\"action chunk\"",
+      "why": "覆盖在 RoboTwin 上研究动作块预测或执行的方法。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-action-chunk"
+      ]
+    },
+    {
+      "label": "dynamic-action-chunking-mechanism",
+      "tier": "mechanism",
+      "query": "all:\"action chunking\" AND all:\"robot manipulation\"",
+      "why": "建立动作分块的机制、表达能力和误差累积证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-chunking-mechanism"
+      ]
+    },
+    {
+      "label": "dynamic-adaptive-replanning",
+      "tier": "limitation",
+      "query": "(all:\"adaptive action chunking\" OR all:\"execution horizon\" OR all:replanning) AND all:\"robot policy\"",
+      "why": "覆盖固定执行窗的反例、自适应重规划和响应性—连续性权衡。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-adaptive-replanning"
+      ]
+    },
+    {
+      "label": "dynamic-temporal-aggregation",
+      "tier": "policy-interface",
+      "query": "(all:\"temporal aggregation\" OR all:\"temporal ensembling\") AND all:\"robot manipulation\"",
+      "why": "覆盖 ACT 部署中跨动作块融合和平滑执行的核心接口。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-temporal-aggregation"
+      ]
+    },
+    {
+      "label": "dynamic-multitask-bimanual-act",
+      "tier": "named-variant",
+      "query": "(all:\"Action Chunking Transformer\" OR all:\"MoE-ACT\") AND all:\"multi-task\" AND all:bimanual",
+      "why": "覆盖 ACT 的多任务、语言条件和双臂变体。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multitask-bimanual-act"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-bimanual-benchmark",
+      "tier": "evaluation",
+      "query": "all:\"RoboTwin 2.0\" AND all:bimanual AND (all:benchmark OR all:evaluation)",
+      "why": "补齐 RoboTwin 2.0 任务、域随机化和评测边界。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-bimanual-benchmark"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-policy-adapter",
+      "tier": "deployment",
+      "query": "all:RoboTwin AND (all:deployment OR all:adapter OR all:interface) AND all:policy",
+      "why": "寻找策略包装器、观测编码和动作交付的工程证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-policy-adapter"
+      ]
+    },
+    {
+      "label": "dynamic-robotwin-domain-randomization",
+      "tier": "evaluation",
+      "query": "all:RoboTwin AND all:\"domain randomization\" AND all:policy",
+      "why": "捕获干净设置与困难随机化设置之间的鲁棒性落差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-robotwin-domain-randomization"
+      ]
+    },
+    {
+      "label": "dynamic-action-chunk-runtime-monitor",
+      "tier": "deployment",
+      "query": "all:\"action chunk\" AND (all:monitor OR all:failure OR all:intervention) AND all:robot",
+      "why": "覆盖动作块执行时的失败检测、插手和闭环安全。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-chunk-runtime-monitor"
+      ]
+    },
+    {
+      "label": "calibrated-phase-aware-chunk-execution",
+      "tier": "calibrated-term",
+      "query": "all:\"phase-aware chunk execution\"",
+      "why": "Fresh label for adaptive execution horizons on RoboTwin 2.0.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-phase-aware-chunk-execution"
+      ]
+    },
+    {
+      "label": "calibrated-denoising-variance-adaptive-chunking",
+      "tier": "calibrated-term",
+      "query": "all:\"denoising-variance adaptive chunking\"",
+      "why": "Fresh label for policy-internal replanning cues.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-denoising-variance-adaptive-chunking"
+      ]
+    },
+    {
+      "label": "calibrated-implicit-ensembling",
+      "tier": "calibrated-term",
+      "query": "all:\"implicit ensembling\"",
+      "why": "Fresh mechanism hypothesis for why action chunking works.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibrated-implicit-ensembling"
+      ]
+    },
+    {
+      "label": "calibration-pace",
+      "tier": "calibrated-query",
+      "query": "all:\"phase-aware chunk execution\" OR all:PACE",
+      "why": "Recover the PACE paper and related mentions.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-pace"
+      ]
+    },
+    {
+      "label": "calibration-dvac",
+      "tier": "calibrated-query",
+      "query": "all:\"denoising-variance adaptive chunking\" OR all:DVAC",
+      "why": "Recover DVAC and related action-chunk execution research.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-dvac"
+      ]
+    },
+    {
+      "label": "calibration-chunk-mechanism",
+      "tier": "calibrated-query",
+      "query": "all:\"implicit ensembling\" AND all:\"action chunking\"",
+      "why": "Recover the recent mechanism-focused action chunking study.",
+      "source_key": "calibration",
+      "source_type": "web-calibration",
+      "channel": "arxiv_api",
+      "calibration_source": "arxiv",
+      "calibration_confidence": "high",
+      "evidence_role": "query-calibration-only",
+      "merged_labels": [
+        "calibration-chunk-mechanism"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-robotwin-act-browser",
+      "query": "site:arxiv.org/abs RoboTwin ACT action chunking robot",
+      "why": "API 检索不足时捕获直接交叉论文。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-action-chunking-browser",
+      "query": "site:arxiv.org/abs adaptive action chunk execution replanning robot",
+      "why": "捕获新的动作块执行别名和方法。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "web-calibrated-phase-aware-chunk-execution",
+      "query": "\"phase-aware chunk execution\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: phase-aware chunk execution.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-denoising-variance-adaptive-chunking",
+      "query": "\"denoising-variance adaptive chunking\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: denoising-variance adaptive chunking.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "web-calibrated-implicit-ensembling",
+      "query": "\"implicit ensembling\" robot manipulation arxiv",
+      "why": "Check whether calibrated term appears in paper-facing web surfaces: implicit ensembling.",
+      "source_key": "calibration",
+      "source_type": "arxiv",
+      "channel": "web_calibration"
+    }
+  ]
+}

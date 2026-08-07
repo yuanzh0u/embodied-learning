@@ -3,7 +3,7 @@ id: EA-MODEL
 title: 模型与预训练
 type: topic-card
 domain: embodied-ai
-updated: 2026-07-26
+updated: 2026-08-07
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -42,13 +42,17 @@ source:
   - id: RUN-PRETRAIN-DATA-SOURCES-20260726
     file: ../../evidence/literature-review-近一年具身智能预训练模型对数据源与采集参数的要求-20260726/evidence.jsonl
     locator: EA-PRETRAIN-DATA-2026-0001..0006; EA-EGO-2026-0007..0009; EA-DQ-YEAR-READ-0009
-tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, hierarchical-world-model, sparse-future, latent-planning, action-fidelity, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
-aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, 分层世界模型, 稀疏未来, 世界模型权限阶梯, latent planning, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
+  - id: RUN-ACT-ROBOTWIN-20260807
+    file: ../../evidence/literature-review-act及动作分块策略在robotwin-2.0中的接入-训练与闭环评测-20260807/evidence.jsonl
+    locator: EA-ACTRT-2026-0001..0015
+tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, hierarchical-world-model, sparse-future, latent-planning, action-fidelity, action-chunking, adaptive-execution-horizon, act, robotwin, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
+aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, 分层世界模型, 稀疏未来, 世界模型权限阶梯, latent planning, Action Chunking Transformer, 自适应执行视界, RoboTwin 2.0, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
 load_when:
   - 问题涉及统一机器人模型、VLA、开源模型泛化、预训练有效性或 Sim2Real
   - 问题涉及基模型污染、VLA 后门、干净微调能否清除污染、检查点继承或世界模型生成风险
   - 问题涉及“VLA 已死”、反应式策略、世界模型当立、动作后果预演或策略—动态—控制分层
   - 问题涉及 H-WM、StructVLA、BadWAM、稀疏未来、动作—想象同步或世界模型权限分配
+  - 问题涉及 ACT、action chunking、RoboTwin 2.0、多任务双臂策略或动作块执行视界
 confidence: working
 ---
 
@@ -62,7 +66,7 @@ confidence: working
 
 ## 30 秒摘要
 
-机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。“反应式 VLA 已死”只对不显式检验动作后果的狭义策略成立；跨 run 证据更支持 VLA 语义/动作先验、动作条件世界模型、本体适配器与底层控制器组成的融合栈。近期突破不只是生成更长视频，而是把未来压缩成低频逻辑步骤、稀疏视觉子目标或结构化状态，并验证它与真实动作同步；BadWAM 说明“想象合理、动作错误”足以让系统失效。世界模型应先承担训练期教师、离线排序等低权限任务，再逐级争取在线规划权。Loco-manipulation 与多模态证据还表明，完整动作接口及按功能/时标分层的接触反馈会限制能力上限。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
+机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。“反应式 VLA 已死”只对不显式检验动作后果的狭义策略成立；跨 run 证据更支持 VLA 语义/动作先验、动作条件世界模型、本体适配器与底层控制器组成的融合栈。近期突破不只是生成更长视频，而是把未来压缩成低频逻辑步骤、稀疏视觉子目标或结构化状态，并验证它与真实动作同步；BadWAM 说明“想象合理、动作错误”足以让系统失效。ACT/RoboTwin 证据进一步表明，动作块预测长度、实际执行长度和重规划频率是三个不同接口；多任务动作表示、执行时机与跨块场景状态应分账优化。世界模型应先承担训练期教师、离线排序等低权限任务，再逐级争取在线规划权。Loco-manipulation 与多模态证据还表明，完整动作接口及按功能/时标分层的接触反馈会限制能力上限。预训练价值最终仍以目标任务闭环样本复杂度和真实成功率衡量。
 
 ## 关键判断
 
@@ -93,6 +97,10 @@ confidence: working
 - 世界模型权限应按错误可拦截性逐级开放：训练期几何/4D 教师和离线策略排序优先，在线预演次之，直接控制与安全裁决最后。
 - 多模态 backbone 不应无条件融合全部传感器；语言/视觉、触觉/力觉与控制状态应按功能和频率选择性耦合，并以动作条件状态变化作为共享接口。
 - 异构预训练的稳定收益来自“多源覆盖 + 显式对齐”：相机坐标系、本体形态、物理时间和标签可靠性应分别条件化，有噪声人类伪动作不应与传感器记录动作等权。
+- ACT 多任务化可以保留动作分块骨架，再用语言条件、稀疏专家路由、几何未来或离散动作模式分别处理任务干扰、空间理解和动作多峰性；这些模块应逐项消融。
+- action chunk 的 prediction horizon 不等于 execution horizon；固定执行长度会把重规划变成任务无关的周期调度，部署接口必须允许执行前缀与重新观测独立配置。
+- 自适应执行可读取运动相位、动作熵、去噪方差、学习式 continuation head 或未来—现实误差，但这些信号都是条件性风险代理，不能替代基础策略能力。
+- 跨块闭环既需要新观测，也可能需要动作更新后的循环场景先验；低频世界规划与高频短块执行可以异步分层。
 
 ## 指标与检核
 
@@ -110,6 +118,7 @@ confidence: working
 | 融合系统价值 | 同预算纯反应式/融合系统对照、候选动作排序、失败识别、恢复率、闭环增益、额外推理延迟 |
 | 结构化未来 | 子目标可达率、里程碑/转折点覆盖、长程任务进度、结构化未来到动作的迁移增益 |
 | 权限晋级 | 离线排序相关性、拒绝/风险覆盖、在线规划增益、action fidelity、真实闭环安全门禁 |
+| 动作分块执行 | prediction/execution horizon 扫描、执行视界分布、策略调用次数、控制频率、阶段级重规划、等预算闭环成功率 |
 
 ## 适用边界
 
@@ -121,6 +130,8 @@ confidence: working
 - 本卡不主张删除 VLA；若纯反应式 VLA 在相同计算与真机数据预算下，能在未见环境、跨本体、长时程和接触扰动任务上稳定追平融合系统，该范式转移判断即被证伪。
 - 当前分层世界模型与稀疏未来结果集中在少量 5–7 步或特定夹爪任务，不能据此证明开放世界长程规划已经解决。
 - 同分布策略排序只适合作为条件性筛选证据；接触后破碎、变形和视觉不一致仍限制高接触评测与直接控制。
+- ACT/RoboTwin 结论来自不同策略骨干、任务子集和控制预算；固定视界或自适应视界的论文数值不能直接组成统一排行榜。
+- 运动相位、熵、去噪方差与未来—现实误差都可能错报风险；错误动作块中没有可行动作时，仅优化执行时机无法恢复任务。
 
 ## 证据锚点
 
@@ -137,6 +148,7 @@ confidence: working
 - RUN-WM-TASKS-20260719：`EA-WMTASK-2026-0001..0002`, `EA-WMDATA-READ-0007`, `EA-WMEVAL-READ-0005`, `0011`, `0014` 支持低权限世界模型任务、同分布策略排序与接触后失真边界；“权限阶梯”是跨事件 `inference`。
 - RUN-VLA-BREAKTHROUGH-20260719：`EA-VLABREAK-2026-0001..0005` 支持低频逻辑、潜在视觉子目标和稀疏里程碑未来；`0006..0007` 支持 action fidelity 安全边界。其余复用事件将结构化未来与 VLA—世界模型融合栈连接起来。
 - RUN-MULTIMODAL-TRAINING-20260720：`EA-TWM-READ-0001..0014`, `EA-ALIGN-READ-0001..0015`, `EA-VLABREAK-2026-0001..0007` 支持按功能/时标分层的多模态模型接口；该结论为跨 run synthesis，并未新增论文级 event。
+- RUN-ACT-ROBOTWIN-20260807：`EA-ACTRT-2026-0001..0015` 覆盖 ACT 多任务/几何/离散动作表示、固定与自适应执行视界、循环场景状态、异步世界动作模型和 RoboTwin 2.0 闭环评测边界。
 
 ## 待补问题
 
@@ -149,3 +161,4 @@ confidence: working
 - 建立相同数据、计算和控制预算下纯反应式 VLA 与融合栈的可证伪对照实验。
 - 建立训练期教师、离线排序、在线预演、直接控制和安全裁决的世界模型权限晋级门禁。
 - 建立结构化/稀疏未来相对稠密视频 rollout 的规划价值、延迟与动作忠实对照。
+- 建立原始 ACT、语言/专家 ACT、固定视界与自适应视界在相同数据、策略调用和墙钟预算下的 RoboTwin 2.0 对照。

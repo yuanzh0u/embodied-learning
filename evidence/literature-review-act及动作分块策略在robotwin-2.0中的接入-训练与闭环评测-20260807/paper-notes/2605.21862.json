@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.21862",
+    "title": "EvoScene-VLA: Evolving Scene Beliefs Inside the Action Decoder for Chunked Robot Control",
+    "published": "2026-05-21",
+    "url": "https://arxiv.org/abs/2605.21862",
+    "authors": [
+      "Chushan Zhang",
+      "Ruihan Lu",
+      "Jinguang Tong",
+      "Xuesong Li",
+      "Yikai Wang",
+      "Hongdong Li"
+    ]
+  },
+  "review": {
+    "question": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中的方法、实验和边界信息直接或相邻支撑 ACT/动作分块在训练、执行或 RoboTwin 闭环评测中的设计判断。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "核对论文提出的问题、方法定位与主要适用范围。"
+      },
+      {
+        "locator": "3 Method",
+        "role": "method-or-design",
+        "purpose": "核对动作表示、训练接口或执行策略的实际设计。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准、实机或消融分析所支持的结论范围。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论、失败模式与可迁移边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and non-core appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "范围综述已核对问题、方法、实验与结论；未用于当前证据卡的附录细节不再投影。"
+      }
+    ]
+  },
+  "research_question": "围绕“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”，该论文解决哪个动作分块接口问题、采用何种训练或执行设计，以及结论受哪些评测边界约束？",
+  "contributions": [
+    "跨动作块闭环控制需要保留由机器人自身动作更新的场景状态；EvoScene-VLA 让动作解码器同时输出动作块和紧凑场景更新，并在下一次视觉调用中用新观测校正这一先验。"
+  ],
+  "method": {
+    "summary": "循环场景前缀把上一块动作导致的接触、遮挡和物体移动带入下一控制调用；训练时用几何锚点与未来场景目标监督，部署时移除教师模块。",
+    "assumptions": [
+      "仅把完整正文明确描述的方法与作者报告的评测作为论文级证据，不把摘要中的跨任务措辞外推为普遍因果结论。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "RoboTwin 2.0"
+    ],
+    "tasks": [
+      "robot manipulation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "任务数、轨迹数和硬件规模只按论文实验章节解释；本证据卡不投影缺少精确定位的数量。"
+  },
+  "evaluation": {
+    "design": "已核对 4 Experiments 中的模拟、实机或消融设计；这里只投影方法级结论，不独立复跑作者实验。",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "跨动作块闭环控制需要保留由机器人自身动作更新的场景状态；EvoScene-VLA 让动作解码器同时输出动作块和紧凑场景更新，并在下一次视觉调用中用新观测校正这一先验。",
+      "scope": "限于论文报告的策略骨干、任务、机器人形态、数据规模、执行频率与评测协议。",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "作者指出潜在循环状态只能间接验证，未来场景目标质量与动作块长度对先验质量的影响仍未解决。",
+        "locator": "5 Discussion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "循环状态是潜变量，其几何含义主要通过下游行为和消融间接判断；未来场景教师质量及块长度都会影响先验可靠性。",
+        "basis": "由 3 Method、4 Experiments 与 6 Conclusion 的设计和评测范围推得；未将单篇论文结果外推到未测试的策略或部署条件。"
+      }
+    ]
+  },
+  "transfer_boundary": "循环状态是潜变量，其几何含义主要通过下游行为和消融间接判断；未来场景教师质量及块长度都会影响先验可靠性。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "证据从完整非 OCR 正文核对了问题、3 Method、4 Experiments 与 6 Conclusion，方法和评测边界可追溯。"
+    ],
+    "design_risks": [
+      "循环状态是潜变量，其几何含义主要通过下游行为和消融间接判断；未来场景教师质量及块长度都会影响先验可靠性。"
+    ],
+    "baseline_fairness": "基线差异只作为作者报告的比较处理；本综述没有复现实验，也不假定各方法拥有相同预训练、算力或调参预算。",
+    "metric_validity": "成功率、控制频率、重规划次数或不确定性覆盖仅在论文定义的任务和协议内解释，不能替代统一的跨论文闭环对照。",
+    "reproducibility": "论文给出了方法与实验定位；完整复现仍取决于作者释放的代码、数据、检查点和控制配置。",
+    "external_validity": "循环状态是潜变量，其几何含义主要通过下游行为和消融间接判断；未来场景教师质量及块长度都会影响先验可靠性。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.21862-C01",
+      "claim": "跨动作块闭环控制需要保留由机器人自身动作更新的场景状态；EvoScene-VLA 让动作解码器同时输出动作块和紧凑场景更新，并在下一次视觉调用中用新观测校正这一先验。",
+      "stance": "conditional",
+      "relation": "对综述问题“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”的直接或相邻方法证据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "循环场景前缀把上一块动作导致的接触、遮挡和物体移动带入下一控制调用；训练时用几何锚点与未来场景目标监督，部署时移除教师模块。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Chunked vision-language-action (VLA) policies predict multi-step robot controls, conditioning each update on the current visual observation alone. Yet robot actions cause contact, occlusion, and object motion, and the geometry that later decisions depend on can change before the next visual update arrives. Spatial VLAs improve current-frame geometry. Temporal VLAs aggregate past frames. Neither maintains an action-updated scene prior across chunks. We argue for a persistent action-updated scene state across control calls, and introduce EvoScene-VLA. Its recurrent scene prefix carries a geometry-aware scene state across chunks. At each vision-language model (VLM) call, the VLM combines scene information from the current observation with the action-updated prior from the previous chunk; the action decoder outputs both the next action chunk and a compact scene update. This update becomes the next prior, which the VLM corrects against the new observation when the next call arrives. Each control call therefore starts from a scene prior that reflects both recent actions and fresh visual evidence. During training, Scene Predictor supplies future scene-token targets, and Geometric Anchor aligns scene slots with frozen depth and 3D teachers. We discard both modules at deployment. On 31 RoboTwin tasks, EvoScene-VLA raises average success from 87.2% to 89.1% in fixed evaluation and from 86.1% to 88.5% in randomized evaluation. On the Galaxea R1-Lite real robot, EvoScene-VLA outperforms all baselines.",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已对照完整正文中的精确章节核验方法主体、输入信号与作用范围；中文表述删除了不能在该定位直接支持的数量和普遍化措辞，并保留论文评测边界。"
+      },
+      "notes": "完整非 OCR 正文由 arXiv HTML/PDF 文本链路恢复；未对作者机构作无来源映射。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "围绕当前范围综述重新深读并完成证据卡，不是由候选元数据直接提升。"
+}

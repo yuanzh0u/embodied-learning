@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.18589",
+    "title": "DREAM-Chunk: Reactive Action Chunking with Latent World Model",
+    "published": "2026-06-17",
+    "url": "https://arxiv.org/abs/2606.18589",
+    "authors": [
+      "Wenxi Chen",
+      "Kaidi Zhang",
+      "Chi Lin",
+      "Zhiyuan Zhang",
+      "Yu She",
+      "Yuejiang Liu",
+      "Raymond A. Yeh",
+      "Shaoshuai Mou",
+      "Yan Gu"
+    ]
+  },
+  "review": {
+    "question": "ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-ALIGN"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "完整正文中的方法、实验和边界信息直接或相邻支撑 ACT/动作分块在训练、执行或 RoboTwin 闭环评测中的设计判断。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "核对论文提出的问题、方法定位与主要适用范围。"
+      },
+      {
+        "locator": "4 Method",
+        "role": "method-or-design",
+        "purpose": "核对动作表示、训练接口或执行策略的实际设计。"
+      },
+      {
+        "locator": "5 Experiment",
+        "role": "results-or-analysis",
+        "purpose": "核对基准、实机或消融分析所支持的结论范围。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论、失败模式与可迁移边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and non-core appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "范围综述已核对问题、方法、实验与结论；未用于当前证据卡的附录细节不再投影。"
+      }
+    ]
+  },
+  "research_question": "围绕“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”，该论文解决哪个动作分块接口问题、采用何种训练或执行设计，以及结论受哪些评测边界约束？",
+  "contributions": [
+    "长动作块的开环脆弱性可以在块内缓解：DREAM-Chunk 并行采样多个候选动作块，用轻量潜在世界模型预测各自未来，并依据预测潜状态与真实观测的匹配在线选择动作。"
+  ],
+  "method": {
+    "summary": "DREAM-Chunk 不微调基础策略，而用额外测试时计算维持多个可能轨迹，使机器人在随机动力学、执行误差和部分可观测条件下能够块内反应。",
+    "assumptions": [
+      "仅把完整正文明确描述的方法与作者报告的评测作为论文级证据，不把摘要中的跨任务措辞外推为普遍因果结论。"
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [
+      "robot manipulation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "任务数、轨迹数和硬件规模只按论文实验章节解释；本证据卡不投影缺少精确定位的数量。"
+  },
+  "evaluation": {
+    "design": "已核对 5 Experiment 中的模拟、实机或消融设计；这里只投影方法级结论，不独立复跑作者实验。",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "长动作块的开环脆弱性可以在块内缓解：DREAM-Chunk 并行采样多个候选动作块，用轻量潜在世界模型预测各自未来，并依据预测潜状态与真实观测的匹配在线选择动作。",
+      "scope": "限于论文报告的策略骨干、任务、机器人形态、数据规模、执行频率与评测协议。",
+      "locator": "Abstract (full-text section)"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "作者指出候选动作并行采样增加推理资源需求，且有效性依赖策略表达能力与示范中的纠错行为。",
+        "locator": "A1.4 Discussion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "方法需要额外测试时算力，收益依赖候选动作的多样性、潜在动力学可靠性以及示范中是否包含纠错行为。",
+        "basis": "由 4 Method、5 Experiment 与 6 Conclusion 的设计和评测范围推得；未将单篇论文结果外推到未测试的策略或部署条件。"
+      }
+    ]
+  },
+  "transfer_boundary": "方法需要额外测试时算力，收益依赖候选动作的多样性、潜在动力学可靠性以及示范中是否包含纠错行为。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "证据从完整非 OCR 正文核对了问题、4 Method、5 Experiment 与 6 Conclusion，方法和评测边界可追溯。"
+    ],
+    "design_risks": [
+      "方法需要额外测试时算力，收益依赖候选动作的多样性、潜在动力学可靠性以及示范中是否包含纠错行为。"
+    ],
+    "baseline_fairness": "基线差异只作为作者报告的比较处理；本综述没有复现实验，也不假定各方法拥有相同预训练、算力或调参预算。",
+    "metric_validity": "成功率、控制频率、重规划次数或不确定性覆盖仅在论文定义的任务和协议内解释，不能替代统一的跨论文闭环对照。",
+    "reproducibility": "论文给出了方法与实验定位；完整复现仍取决于作者释放的代码、数据、检查点和控制配置。",
+    "external_validity": "方法需要额外测试时算力，收益依赖候选动作的多样性、潜在动力学可靠性以及示范中是否包含纠错行为。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.18589-C01",
+      "claim": "长动作块的开环脆弱性可以在块内缓解：DREAM-Chunk 并行采样多个候选动作块，用轻量潜在世界模型预测各自未来，并依据预测潜状态与真实观测的匹配在线选择动作。",
+      "stance": "conditional",
+      "relation": "对综述问题“ACT及动作分块策略在RoboTwin 2.0中的接入、训练与闭环评测”的直接或相邻方法证据",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "DREAM-Chunk 不微调基础策略，而用额外测试时计算维持多个可能轨迹，使机器人在随机动力学、执行误差和部分可观测条件下能够块内反应。",
+      "locator": "Abstract (full-text section)",
+      "source_context": "Abstract Action chunking has become a common interface for vision-language-action (VLA) models, enabling low-frequency policy inference to drive high-frequency robot execution. However, once a chunk is committed, its open-loop execution can be brittle under stochastic dynamics, hardware execution errors, and partially observed state. We propose DREAM-Chunk , a test-time scaling method that augments chunking-based policies with a lightweight latent world model without requiring additional policy fine-tuning. At test time, DREAM-Chunk samples multiple candidate action chunks, rolls out their predicted latent futures, and selects actions from the chunk whose “dreamed” state best matches the observed rollout. In this way, DREAM-Chunk uses additional test-time computation to cover multiple plausible stochastic rollouts and improve reactivity during long-horizon chunk execution. On the Kinetix benchmark, DREAM-Chunk improves robustness under increasing action noise and benefits from larger candidate sample sizes, especially when demonstrations contain corrective behaviors. We conduct empirical validation on four manipulation tasks across two robot platforms and two VLA policies for various stochasticity sources. Across simulation and hardware experiments, DREAM-Chunk improves action-chunking policies in stochastic dynamics. Project page: https://wenxichen2746.github.io/DREAM-Chunk/ .",
+      "evidence_type": "method-and-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已对照完整正文中的精确章节核验方法主体、输入信号与作用范围；中文表述删除了不能在该定位直接支持的数量和普遍化措辞，并保留论文评测边界。"
+      },
+      "notes": "完整非 OCR 正文由 arXiv HTML/PDF 文本链路恢复；未对作者机构作无来源映射。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "围绕当前范围综述重新深读并完成证据卡，不是由候选元数据直接提升。"
+}

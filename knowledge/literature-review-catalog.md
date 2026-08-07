@@ -2,26 +2,26 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-08-02
+updated: 2026-08-07
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 18 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 19 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
 
 ## 批次概况
 
-- Review mode：18 项基础 run 均为 `scoping`。
+- Review mode：19 项基础 run 均为 `scoping`。
 - 检索池：基础 run 每项 172–1,409 篇候选论文。
 - 全文层：基础 run 每项 39–162 篇具有可读全文。
-- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 17 项基础 run 每项选取 15 篇核心论文，均完成 paper note 与 claim-support audit。
-- 基础 run 总量：276 个任务—论文精读实例，158 篇不重复论文，295 条全局唯一正式证据事件（301 条事件出现中有 6 条由 Ego run 复用）。
+- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 18 项基础 run 每项选取 15 篇核心论文，均完成 paper note 与 claim-support audit。
+- 基础 run 总量：291 个任务—论文精读实例，173 篇不重复论文，310 条全局唯一正式证据事件（316 条事件出现中有 6 条由 Ego run 复用）。
 - 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
 
-## 18 项成果
+## 19 项成果
 
 “规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
 
@@ -30,6 +30,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-4D | 4D 时空推理 | EA-4D, EA-MODEL, EA-EVAL | 915 / 128 / 15 | [run](../evidence/literature-review-4d时空推理-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-4d时空推理-20260714-reader-v2/review-packet.md) |
 | LR-4D-DATA | 4D 时空推理对数据的需求 | EA-4D, EA-DATA, EA-SENSOR | 915 / 128 / 15 | [run](../evidence/literature-review-4d时空推理对数据的需求-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-4d时空推理对数据的需求-20260714-reader-v2/review-packet.md) |
 | LR-VLA-ALIGN | VLA 中稀疏语言、稠密视觉与连续动作对齐 | EA-ALIGN, EA-MODEL, EA-XEMBODIMENT | 924 / 131 / 15 | [run](../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-sparse-language-dense-vision-and-continuous-action-alignment-in-vla-syst-20260714-reader-v2/review-packet.md) |
+| LR-ACT-ROBOTWIN | ACT 及动作分块策略在 RoboTwin 2.0 中的接入、训练与闭环评测 | EA-MODEL, EA-EVAL, EA-ALIGN | 228 / 39 / 15 | [run](../evidence/literature-review-act及动作分块策略在robotwin-2.0中的接入-训练与闭环评测-20260807/run.json) · [packet](../evidence/literature-review-act及动作分块策略在robotwin-2.0中的接入-训练与闭环评测-20260807/review-packet.md) |
 | LR-WM-EVAL | 世界模型评测边界 | EA-EVAL, EA-4D | 885 / 130 / 15 | [run](../evidence/literature-review-世界模型评测边界-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-世界模型评测边界-20260714-reader-v2/review-packet.md) |
 | LR-WM-DATA | 世界模型需要什么样的训练数据 | EA-DATA, EA-MODEL, EA-EVAL | 885 / 130 / 15 | [run](../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-世界模型需要什么样的训练数据-20260714-reader-v2/review-packet.md) |
 | LR-SENSOR-ERROR | 具身传感器感知误差 | EA-SENSOR, ERR-EMBODIED | 903 / 130 / 15 | [run](../evidence/literature-review-具身传感器感知误差-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-具身传感器感知误差-20260714-reader-v2/review-packet.md) |
@@ -102,5 +103,6 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 - 空间数据生产的共同瓶颈是把不完全、异步、有遮挡的观测变成可对动作后果负责的时空真值；具身机器人最终锚定本体相关的接触与执行真值，智能驾驶最终锚定 ODD 相关的地图拓扑、地理覆盖、稀有交互与闭环安全真值。
 - 具身感知与导航尚未作为开放世界通用能力得到解决；瓶颈已从静态识别和路线生成上移到主动取证、时序证据撤销、严格物理执行、动态主体预测、长时一致性与失败恢复，受控静态场景中的局部子问题则已接近工程成熟。
 - 触觉—视觉联合训练的有效性取决于时间同步、空间标定、接触阶段门控和分层融合；视觉负责全局语义与几何，触觉补足接触、滑移和力学状态，无约束融合可能反向污染视觉动力学与动作预测。
+- ACT/RoboTwin 2.0 证据表明，动作块预测长度、实际执行前缀和重规划频率必须分账；多任务动作表示、自适应执行时机与动作更新的跨块场景状态共同决定闭环表现，且比较必须控制策略调用、墙钟与执行步数预算。
 
-这些结论来自 18 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
+这些结论来自 19 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。

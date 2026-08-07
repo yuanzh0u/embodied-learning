@@ -3,7 +3,7 @@ id: EA-INDEX
 title: 具身智能领域索引
 type: domain-index
 domain: embodied-ai
-updated: 2026-07-20
+updated: 2026-08-07
 tags: [embodied-ai, index]
 ---
 
@@ -19,10 +19,10 @@ tags: [embodied-ai, index]
 | EA-VLOC | 图像视觉定位 | [visual-localization.md](visual-localization.md) | LR-VLOC |
 | EA-FIELD | 现场采集 Hub 与物流分拣考察 | [field-data-collection-hubs.md](field-data-collection-hubs.md) | S-LOGISTICS-HUB-SURVEY; S-EMBODIED-DATA-FRAMEWORK |
 | EA-XEMBODIMENT | 跨本体与数据迁移 | [cross-embodiment-transfer.md](cross-embodiment-transfer.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-UMI; LR-EGO-DATA; LR-LOCOMANIP; LR-MULTIMODAL-TRAINING-YEAR |
-| EA-MODEL | 模型与预训练 | [models-pretraining.md](models-pretraining.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-WM-DATA; LR-4D; LR-EGO-DATA; LR-CONTAM; LR-VLA-WM-SHIFT; LR-LOCOMANIP; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1; LR-MULTIMODAL-TRAINING-YEAR |
-| EA-EVAL | 评测体系与世界模型 | [evaluation-world-models.md](evaluation-world-models.md) | S-EA-QUESTIONS; LR-WM-EVAL; LR-WM-DATA; LR-SENSOR-ERROR; LR-VLOC; LR-CONTAM; LR-VLA-WM-SHIFT; LR-LOCOMANIP; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1 |
+| EA-MODEL | 模型与预训练 | [models-pretraining.md](models-pretraining.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-ACT-ROBOTWIN; LR-WM-DATA; LR-4D; LR-EGO-DATA; LR-CONTAM; LR-VLA-WM-SHIFT; LR-LOCOMANIP; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1; LR-MULTIMODAL-TRAINING-YEAR |
+| EA-EVAL | 评测体系与世界模型 | [evaluation-world-models.md](evaluation-world-models.md) | S-EA-QUESTIONS; LR-WM-EVAL; LR-ACT-ROBOTWIN; LR-WM-DATA; LR-SENSOR-ERROR; LR-VLOC; LR-CONTAM; LR-VLA-WM-SHIFT; LR-LOCOMANIP; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1 |
 | EA-4D | 4D 时空推理与世界动态 | [4d-spatiotemporal-reasoning.md](4d-spatiotemporal-reasoning.md) | LR-4D; LR-4D-DATA; LR-VLA-WM-SHIFT; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1 |
-| EA-ALIGN | VLA 多模态与动作对齐 | [vla-multimodal-action-alignment.md](vla-multimodal-action-alignment.md) | LR-VLA-ALIGN; LR-VLA-WM-SHIFT; LR-VLA-BREAKTHROUGH-HY1; LR-MULTIMODAL-TRAINING-YEAR |
+| EA-ALIGN | VLA 多模态与动作对齐 | [vla-multimodal-action-alignment.md](vla-multimodal-action-alignment.md) | LR-VLA-ALIGN; LR-ACT-ROBOTWIN; LR-VLA-WM-SHIFT; LR-VLA-BREAKTHROUGH-HY1; LR-MULTIMODAL-TRAINING-YEAR |
 | EA-LOCOMANIP | 全身移动操作 | [loco-manipulation.md](loco-manipulation.md) | LR-LOCOMANIP |
 | EA-BIZ | 产业落地与商业化 | [commercialization.md](commercialization.md) | S-EA-QUESTIONS:411-441 |
 
@@ -41,10 +41,11 @@ tags: [embodied-ai, index]
 | Loco-manipulation 如何训练与评测 | EA-LOCOMANIP + EA-MODEL + EA-SENSOR + EA-EVAL |
 | 触觉、力觉、视觉和语言如何协同训练 | EA-SENSOR + EA-ALIGN + EA-MODEL + EA-DATA + EA-XEMBODIMENT |
 | 语言、视觉和动作如何对齐 | EA-ALIGN + EA-MODEL + EA-XEMBODIMENT |
+| ACT 如何接入 RoboTwin 2.0 并评测动作分块 | EA-MODEL + EA-EVAL + EA-ALIGN |
 | 人手数据如何迁移到机器人 | EA-XEMBODIMENT + EA-SENSOR + EA-HARDWARE |
 | 工业落地如何验收 | EA-BIZ + EA-EVAL + ERR-PATTERN |
 | 最后一厘米问题 | EA-SENSOR + EA-BIZ + EA-EVAL |
 | 图像视觉定位方法如何选、为何失效 | EA-VLOC + EA-SENSOR + EA-EVAL |
 | 具身数据污染如何发现、隔离和治理 | EA-DATA + EA-EVAL + EA-MODEL |
 | 机器人失败是看错还是想错 | ERR-EMBODIED + EA-SENSOR + EA-ALIGN + EA-EVAL |
-| 查 16 项基础综述或 6 项跨 run 综合的范围、论文池与成稿 | [文献综述成果目录](../literature-review-catalog.md) |
+| 查 19 项基础综述或 14 项跨 run 综合的范围、论文池与成稿 | [文献综述成果目录](../literature-review-catalog.md) |
