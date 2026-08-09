@@ -2,26 +2,26 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-08-07
+updated: 2026-08-09
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 19 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 20 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
 
 ## 批次概况
 
-- Review mode：19 项基础 run 均为 `scoping`。
+- Review mode：20 项基础 run 均为 `scoping`。
 - 检索池：基础 run 每项 172–1,409 篇候选论文。
 - 全文层：基础 run 每项 39–162 篇具有可读全文。
-- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 18 项基础 run 每项选取 15 篇核心论文，均完成 paper note 与 claim-support audit。
-- 基础 run 总量：291 个任务—论文精读实例，173 篇不重复论文，310 条全局唯一正式证据事件（316 条事件出现中有 6 条由 Ego run 复用）。
+- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 19 项基础 run 每项选取 15 篇核心论文，均完成 paper note 与 claim-support audit。
+- 基础 run 总量：321 个任务—论文精读实例，203 篇不重复论文，346 条全局唯一正式证据事件。
 - 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
 
-## 19 项成果
+## 20 项成果
 
 “规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
 
@@ -46,6 +46,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-CONTAM | 近一年论文中的具身数据污染问题 | EA-DATA, EA-EVAL, EA-MODEL | 964 / 49 / 15 | [run](../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/run.json) · [packet](../evidence/literature-review-近一年论文中的具身数据污染问题-20260715/review-packet.md) |
 | LR-LOCOMANIP | 近一年 loco-manipulation 研究进展 | EA-LOCOMANIP, EA-MODEL, EA-EVAL, EA-XEMBODIMENT, EA-SENSOR | 556 / 76 / 21 | [run](../evidence/literature-review-近一年-loco-manipulation-研究进展-20260719/run.json) · [packet](../evidence/literature-review-近一年-loco-manipulation-研究进展-20260719/review-packet.md) |
 | LR-PNAV | 近一年具身感知与导航是否已解决 | EA-SENSOR, EA-EVAL, ERR-EMBODIED | 511 / 39 / 15 | [run](../evidence/literature-review-近一年具身感知与导航是否已解决-20260714-reader-v1/run.json) · [packet](../evidence/literature-review-近一年具身感知与导航是否已解决-20260714-reader-v1/review-packet.md) |
+| LR-WM-SUP | 世界模型训练是否有必要接监督信号还是走纯端到端 | EA-EVAL, EA-MODEL, EA-4D | 519 / 30 / 30 | [run](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/run.json) · [packet](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/review-packet.md) |
 
 ## 跨 run 综合专题
 
@@ -104,5 +105,6 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 - 具身感知与导航尚未作为开放世界通用能力得到解决；瓶颈已从静态识别和路线生成上移到主动取证、时序证据撤销、严格物理执行、动态主体预测、长时一致性与失败恢复，受控静态场景中的局部子问题则已接近工程成熟。
 - 触觉—视觉联合训练的有效性取决于时间同步、空间标定、接触阶段门控和分层融合；视觉负责全局语义与几何，触觉补足接触、滑移和力学状态，无约束融合可能反向污染视觉动力学与动作预测。
 - ACT/RoboTwin 2.0 证据表明，动作块预测长度、实际执行前缀和重规划频率必须分账；多任务动作表示、自适应执行时机与动作更新的跨块场景状态共同决定闭环表现，且比较必须控制策略调用、墙钟与执行步数预算。
+- 世界模型训练中"监督 vs 端到端"是伪二元对立：纯端到端存在表征坍缩、物理幻觉和视觉—动作分裂三类系统性失败，但外部监督不对齐时比无监督更危险；当前最有说服力的范式是"特权监督"——训练时注入结构化外部信号（几何先验、可微物理、语义标注）塑造表征，推理时丢弃监督分支零开销运行。
 
-这些结论来自 19 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
+这些结论来自 20 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
