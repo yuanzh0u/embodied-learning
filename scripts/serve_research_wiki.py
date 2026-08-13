@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 import subprocess
 import sys
@@ -160,8 +161,16 @@ def main() -> int:
         knowledge_map = Path(temp_dir) / "index.html"
         build_knowledge_map(knowledge_map)
         handler = partial(WikiHandler, knowledge_map=knowledge_map)
-        server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
         url = f"http://127.0.0.1:{args.port}/"
+        try:
+            server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
+        except OSError as exc:
+            if exc.errno != errno.EADDRINUSE:
+                raise
+            print(f"已有实例正在运行：{url}")
+            if args.open:
+                threading.Timer(0.45, lambda: webbrowser.open(url)).start()
+            return 0
         print(f"空间智能研究 Wiki 已准备好：{url}")
         print("保持此窗口打开即可阅读；按 Control-C 关闭。")
         if args.open:
