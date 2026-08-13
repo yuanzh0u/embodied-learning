@@ -11,6 +11,19 @@ on:
       - 'scripts/visualize_kb_index.py'
       - 'scripts/lib/**'
       - '.github/workflows/deploy-research-wiki.yml'
+  # Preview deployments: build + deploy a PR to a temporary Pages preview so
+  # reviewers can see the rendered Wiki before merging, instead of waiting for
+  # the production push to main. `actions/deploy-pages` detects the pull_request
+  # event and targets a preview environment; the URL is posted on the PR.
+  pull_request:
+    paths:
+      - 'wiki/**'
+      - 'knowledge/**'
+      - 'evidence/**'
+      - 'scripts/build_research_wiki.py'
+      - 'scripts/visualize_kb_index.py'
+      - 'scripts/lib/**'
+      - '.github/workflows/deploy-research-wiki.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,7 +32,9 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  # Per-ref group: previews (refs/pull/N/merge) must not cancel production
+  # (refs/heads/main) or each other.
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -54,3 +69,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          preview: ${{ github.event_name == 'pull_request' }}
