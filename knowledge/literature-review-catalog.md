@@ -2,26 +2,26 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-08-09
+updated: 2026-08-14
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 21 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 22 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
 
 ## 批次概况
 
-- Review mode：21 项基础 run 均为 `scoping`。
+- Review mode：22 项基础 run 均为 `scoping`。
 - 检索池：基础 run 每项 172–1,409 篇候选论文。
 - 全文层：基础 run 每项 20–162 篇具有可读全文。
-- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 20 项基础 run 每项选取 15–30 篇核心论文，均完成 paper note 与 claim-support audit。
+- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 21 项基础 run 每项选取 15–30 篇核心论文，均完成 paper note 与 claim-support audit。
 - 基础 run 总量：341 个任务—论文精读实例，223 篇不重复论文，371 条全局唯一正式证据事件。
 - 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
 
-## 21 项成果
+## 22 项成果
 
 “规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
 
@@ -40,6 +40,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-TWM | 触觉世界模型 | EA-SENSOR, EA-MODEL, EA-EVAL | 867 / 124 / 15 | [run](../evidence/literature-review-触觉世界模型-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-触觉世界模型-20260714-reader-v2/review-packet.md) |
 | LR-DQ-YEAR | 近一年论文中的具身智能数据质量 | EA-DATA, EA-XEMBODIMENT | 851 / 90 / 15 | [run](../evidence/literature-review-近一年已发表论文中的具身智能数据质量-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-近一年已发表论文中的具身智能数据质量-20260714-reader-v2/review-packet.md) |
 | LR-UMI | 近半年 UMI 数据质量 | EA-DATA, EA-HARDWARE, EA-SENSOR | 862 / 122 / 15 | [run](../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/review-packet.md) |
+| LR-LEWM | LeWorldModel 技术谱系：JEPA 潜空间世界模型到规划控制 | EA-MODEL, EA-EVAL, EA-4D | 193 / 38 / 24 | [run](../evidence/literature-review-leworldmodel-技术谱系-jepa-潜空间世界模型到规划控制-20260724/run.json) · [packet](../evidence/literature-review-leworldmodel-技术谱系-jepa-潜空间世界模型到规划控制-20260724/review-packet.md) · [学习指南](../evidence/literature-review-leworldmodel-技术谱系-jepa-潜空间世界模型到规划控制-20260724/lewm-learning-guide.md) |
 | LR-EGO-DATA | 近一年 Ego-centric 数据用于具身模型训练的问题与困难 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 1,409 / 162 / 15 | [run](../evidence/literature-review-ego-centric-数据在具身模型训练中的问题与困难-20260715/run.json) · [packet](../evidence/literature-review-ego-centric-数据在具身模型训练中的问题与困难-20260715/review-packet.md) |
 | LR-EGO-HAND | 近一年 Ego-centric 数据手部检测与追踪的问题和难点 | EA-DATA, EA-SENSOR, EA-HARDWARE, EA-4D | 172 / 48 / 15 | [run](../evidence/literature-review-近一年-ego-centric-数据手部检测与追踪的问题和难点-20260729/run.json) · [packet](../evidence/literature-review-近一年-ego-centric-数据手部检测与追踪的问题和难点-20260729/review-packet.md) |
 | LR-VLOC | 近一年图像视觉定位方法的发展与挑战 | EA-VLOC, EA-SENSOR, EA-EVAL, EA-HARDWARE | 321 / 53 / 15 | [run](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/run.json) · [packet](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/review-packet.md) |
@@ -58,6 +59,15 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-EGO-EXO-INFL | Ego-Exo 后继研究：第三人称→第一人称视觉表征迁移的演进 | EA-XEMBODIMENT, EA-MODEL, EA-DATA | 246 / 11 / 11 | [run](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/run.json) · [packet](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/review-packet.md) |
 
 ## 跨 run 综合专题
+
+## 人物研究路线 Survey
+
+该区收录用户明确要求以 `survey` 为最终可见产物的第一阶段人物调研，不计入上方基础三文体成稿统计。
+
+| ID | 综述主题 | 主要知识卡 | 规模 | 审计入口 |
+|---|---|---|---:|---|
+| LR-JIM-FAN | Jim Fan 研究路线：通用智能体、具身智能、基础模型与开放世界学习 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN, EA-DATA | 471 / 47 / 17 | [run](../evidence/literature-review-jim-fan-research-trajectory-20260721/run.json) · [packet](../evidence/literature-review-jim-fan-research-trajectory-20260721/review-packet.md) |
+
 
 | ID | 综合问题 | 主要知识卡 | 规模 | 审计入口 |
 |---|---|---|---:|---|
@@ -117,4 +127,4 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 - 世界模型训练中"监督 vs 端到端"是伪二元对立：纯端到端存在表征坍缩、物理幻觉和视觉—动作分裂三类系统性失败，但外部监督不对齐时比无监督更危险；当前最有说服力的范式是"特权监督"——训练时注入结构化外部信号（几何先验、可微物理、语义标注）塑造表征，推理时丢弃监督分支零开销运行。
 - 具身端到端模型除动作监督外至少需要七类非动作监督：触觉/力觉（解决力觉盲和接触感知）、几何/3D（解决空间推理和视图泛化）、物理（弥补演示数据的物理无知）、语义/中间表征（提供结构化任务理解）、奖励/RL（超越静态演示的闭环优化）、对比/表征学习（跨模态对齐）、安全/纠正（防止信用分配偏差）；这些信号具有维度互补性、特权范式（训练时注入推理时丢弃）和生命周期依赖三个共同特征，且监督施加位置和任务对齐性决定有效性。
 
-这些结论来自 21 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
+这些结论来自 22 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
