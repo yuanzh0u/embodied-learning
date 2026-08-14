@@ -1,0 +1,447 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2511.08544",
+    "title": "LeJEPA: Provable and Scalable Self-Supervised Learning Without the Heuristics",
+    "published": "2025-11-11",
+    "url": "https://arxiv.org/abs/2511.08544",
+    "authors": [
+      "Randall Balestriero",
+      "Yann LeCun"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 技术谱系中，JEPA/SIGReg 产生的潜空间几何如何支撑世界模型与规划控制，现有实验证据、限制和迁移边界是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "LeJEPA 提供 LeWorldModel 继承的 SIGReg 与 isotropic-Gaussian anti-collapse 机制；理解其理论条件与视觉表征实证边界，是判断 LeWM 潜空间几何主张的前置证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定 JEPA collapse、现有 anti-collapse heuristics 与 LeJEPA 两项公理式设计目标。"
+      },
+      {
+        "locator": "2.1 Notations and Definitions",
+        "role": "data-or-setting",
+        "purpose": "核对 i.i.d. 样本假设、view 组织和 JEPA prediction/anti-collapse 两个组成。"
+      },
+      {
+        "locator": "3 Latent Euclidean: Embeddings Should be Isotropic Gaussian",
+        "role": "method-or-design",
+        "purpose": "核对 isotropic Gaussian 最优性主张所对应的 probe 风险问题。"
+      },
+      {
+        "locator": "3.1 Linear Probing",
+        "role": "method-or-design",
+        "purpose": "检查固定 column span/energy 下线性 probe 的 bias/variance 几何比较。"
+      },
+      {
+        "locator": "3.2 Nonlinear Probing",
+        "role": "method-or-design",
+        "purpose": "检查 radius-kNN/kernel probe、固定总方差与 regularity conditions。"
+      },
+      {
+        "locator": "4.1 Hypothesis Testing as a Judge",
+        "role": "method-or-design",
+        "purpose": "核对随机方向一维检验与 Cramér–Wold/union-intersection 的一致性路径。"
+      },
+      {
+        "locator": "4.2.1 Moments are Unstable and Insufficient",
+        "role": "method-or-design",
+        "purpose": "核对有限矩 shortcut 与高阶矩梯度不稳定之间的设计取舍。"
+      },
+      {
+        "locator": "4.2.2 Cumulative Density Functions are Impractical",
+        "role": "method-or-design",
+        "purpose": "核对 CDF 检验在排序、分布式同步和可微性上的排除理由。"
+      },
+      {
+        "locator": "4.2.3 Characteristic Functions are Stable, Scalable and Identifiable",
+        "role": "method-or-design",
+        "purpose": "核对 Epps–Pulley empirical characteristic function、bounded gradient/curvature、DDP 与复杂度主张。"
+      },
+      {
+        "locator": "4.3 How SIGReg Beats the Curse of Dimensionality",
+        "role": "method-or-design",
+        "purpose": "检查有限 slices 的覆盖论证依赖 smoothness 与 SGD resampling 的条件。"
+      },
+      {
+        "locator": "5.1 LeJEPA: SIGReg + Prediction Loss",
+        "role": "method-or-design",
+        "purpose": "核对 LeJEPA 最终损失、实现、单 trade-off 参数以及 minibatch/quadrature 近似。"
+      },
+      {
+        "locator": "6 LeJEPA: Empirical Validation",
+        "role": "results-or-analysis",
+        "purpose": "检查经验验证实际覆盖的是哪些任务和指标。"
+      },
+      {
+        "locator": "6.1 LeJEPA’s Stability Across Hyper-Parameters and Architectures",
+        "role": "results-or-analysis",
+        "purpose": "核对超参数、模型族、batch/view 设置与 collapse 稳定性表格。"
+      },
+      {
+        "locator": "6.2 LeJEPA’s Training Loss is Informative of Downstream Performance",
+        "role": "results-or-analysis",
+        "purpose": "核对 label-free model selection 的相关性证据及其分类任务范围。"
+      },
+      {
+        "locator": "6.3 In-Domain LeJEPA Outperforms Frontier Model Transfer Learning",
+        "role": "results-or-analysis",
+        "purpose": "检查 in-domain pretraining 与 DINO/I-JEPA transfer 的数据、模型和评测边界。"
+      },
+      {
+        "locator": "6.4 LeJEPA Scales Across Data and Models",
+        "role": "results-or-analysis",
+        "purpose": "核对 ImageNet-1K 大模型 scaling 与 transfer 比较。"
+      },
+      {
+        "locator": "6.5 Emergent Semantic Structure in LeJEPA Representations",
+        "role": "results-or-analysis",
+        "purpose": "检查 PCA/attention 可视化与无监督视频分割属于何种证据强度。"
+      },
+      {
+        "locator": "7 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者最终主张与经验覆盖是否对称。"
+      },
+      {
+        "locator": "A.1 kNN Probing",
+        "role": "appendix-or-supplement",
+        "purpose": "核对 nonlinear-probe 定理的 density、query 与 target-gradient 假设。"
+      },
+      {
+        "locator": "A.2 Kernel Probing",
+        "role": "appendix-or-supplement",
+        "purpose": "核对 kernel 定理附加的轻尾与目标平滑条件。"
+      },
+      {
+        "locator": "Appendix B Proofs",
+        "role": "appendix-or-supplement",
+        "purpose": "抽查主要证明的比较对象、等号条件与一致性假设，防止把结论扩成无条件世界模型定理。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "relevant-core",
+        "reason": "引用条目不承担本篇 SIGReg/LeJEPA 的直接证据。"
+      },
+      {
+        "locator": "Appendix C Background",
+        "role": "appendix-or-supplement",
+        "reason": "标准线性回归背景不改变本次机制或迁移边界判断。"
+      },
+      {
+        "locator": "Appendix D Details on Low-Discrepancy Sequences",
+        "role": "appendix-or-supplement",
+        "reason": "未投影 QMC 方向采样事件；随机 resampling 的主机制已由第 4 节覆盖。"
+      },
+      {
+        "locator": "Appendix E Shapiro-Wilk Test and Appendix F Multivariate Statistics",
+        "role": "appendix-or-supplement",
+        "reason": "替代统计检验背景不影响最终选择 Epps–Pulley 的已核验主张。"
+      }
+    ]
+  },
+  "research_question": "LeJEPA 的 isotropic-Gaussian 目标与 SIGReg 如何抑制 JEPA collapse、其最优性和可扩展性依赖什么假设，以及这些证据能否直接支持后续 LeWorldModel 的动作条件动态与规划？",
+  "contributions": [
+    "在固定几何约束和特定线性/非线性 probe 风险模型下，把 isotropic Gaussian 提出为 embedding distribution 的最优目标。",
+    "提出 SIGReg：通过随机一维投影与 Epps–Pulley empirical characteristic function 检验约束嵌入分布，强调 bounded gradient/curvature、DDP 与线性复杂度。",
+    "把 view-prediction loss 与 SIGReg 组合成 LeJEPA，移除 stop-gradient、teacher–student、prototype 等常见 anti-collapse heuristics，并保留一个 prediction/regularization trade-off 权重。",
+    "在视觉自监督的分类、迁移、模型规模和 attention/segmentation 任务上验证稳定性，但不直接评测 action-conditioned dynamics、world-model rollout 或控制。"
+  ],
+  "method": {
+    "summary": "先在预设 probe 风险与固定总能量/协方差约束下论证各向同性（及 nonlinear probe 下 Gaussian）分布的最坏情形风险优势；再用每步重采样的随机方向把多维分布投影到一维，以 Epps–Pulley 特征函数统计量匹配标准 Gaussian。LeJEPA 对多 views 的 embedding 同时优化预测一致性和 SIGReg，由一个 mixing coefficient 平衡两项。",
+    "assumptions": [
+      "样本被视为 independent and identically distributed；非线性 probe 还要求 query 与训练分布一致。",
+      "线性比较固定 column span/总能量；非线性比较固定 mean 与 total-covariance scalar constraint，而不是在无约束的所有表征间比较。",
+      "kNN/kernel 结果依赖 embedding density 的平滑、有限 Fisher information/covariance、目标函数梯度的均值为零且各向同性；kernel 情况另需 light tails 与目标平滑类。",
+      "有限随机 slices 的全空间约束依赖 density smoothness、训练过程中方向反复重采样和渐近覆盖；它不是每个 minibatch 都精确检验整个高维分布。",
+      "实践实现用确定性 quadrature 和 minibatch 估计，存在作者承认的近似误差与显式 bias。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "ImageNet-10",
+      "ImageNet-100",
+      "ImageNet-1K",
+      "Galaxy10",
+      "Food101",
+      "Flowers102",
+      "CIFAR-10",
+      "CIFAR-100",
+      "DTD",
+      "FGVC Aircraft",
+      "Stanford Cars",
+      "Oxford-IIIT Pets"
+    ],
+    "tasks": [
+      "self-supervised multi-view image pretraining",
+      "frozen-backbone linear probing",
+      "few-shot classification",
+      "full finetuning",
+      "training-loss/downstream-accuracy correlation",
+      "PCA and attention-map qualitative analysis",
+      "unsupervised video foreground segmentation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "经验验证覆盖 10+ datasets、约 50 个小模型（8 个架构族、<20M 参数）以及 0.3B、0.6B、1.8B 级视觉 backbone；主要结论依赖 top-1 classification/linear probe 与视觉注意力分析。"
+  },
+  "evaluation": {
+    "design": "跨 dataset、backbone、batch size、view 数、SIGReg slices、积分区间/节点与 mixing coefficient 做稳定性/性能实验；以 frozen linear probe、few-shot、finetuning、loss–accuracy Spearman correlation 和 attention/PCA 可视化评估，与 I-JEPA、DINOv2/v3 等视觉 SSL/transfer 模型比较。",
+    "baselines": [
+      "I-JEPA",
+      "I-JEPA + STOP",
+      "DINOv2",
+      "DINOv3",
+      "VICReg-like moment matching limit",
+      "LeJEPA variants with predictor, SWA, register tokens, different slices/views/batches"
+    ],
+    "metrics": [
+      "top-1 classification accuracy",
+      "few-shot accuracy",
+      "frozen linear-probe accuracy",
+      "Spearman correlation between training loss and downstream accuracy",
+      "SIGReg compute time",
+      "qualitative PCA/attention-map segmentation coherence"
+    ],
+    "ablations": [
+      "number of views and global views",
+      "prediction/SIGReg mixing coefficient",
+      "batch size",
+      "embedding and projector dimensions",
+      "number of random slices",
+      "integration domain and quadrature points",
+      "register tokens",
+      "predictor and SWA",
+      "backbone family and scale"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "SIGReg 选择 Epps–Pulley empirical characteristic function，是因为其分布式求均值自然、梯度/曲率有界，并声称对样本数和维度呈线性时间/内存复杂度。",
+      "scope": "这是 regularizer 计算与数值稳定性的主张；不自动推出 embedding 对动作、物理或局部可逆性敏感。",
+      "locator": "4.2.3 Characteristic Functions are Stable, Scalable and Identifiable"
+    },
+    {
+      "finding": "LeJEPA 把多 view 预测项与逐 view SIGReg 相加，因此可以不依赖 prototype、stop-gradient 或 teacher–student 来防止 collapse。",
+      "scope": "经验证的是论文所列视觉数据/模型；不能据此断言所有时序/多模态 JEPA 训练均无需额外机制。",
+      "locator": "5.1 LeJEPA: SIGReg + Prediction Loss"
+    },
+    {
+      "finding": "非线性 probe 的 Gaussian 最优性并非无条件：它依赖平滑 density、同分布 query、各向同性 target-gradient prior 与固定 covariance 约束。",
+      "scope": "该边界直接限制“isotropic Gaussian 对任意下游任务普遍最优”的宽泛解读。",
+      "locator": "A.1 kNN Probing"
+    },
+    {
+      "finding": "在 ImageNet-10 上，约 50 个来自 8 个架构族且小于 20M 参数的模型都取得 91.5%–95% frozen linear-probe top-1 accuracy。",
+      "scope": "证明的是该视觉数据与线性分类指标上的跨架构稳定性，不等于大规模时序 world model 或控制的稳定性。",
+      "locator": "6.1 LeJEPA’s Stability Across Hyper-Parameters and Architectures"
+    },
+    {
+      "finding": "实践 SIGReg 的 minibatch 梯度带显式 bias；作者报告小 batch 下影响不大，但未探索 U-statistic debiasing 或 sample splitting。",
+      "scope": "这是作者明示的数值近似边界，尚未证明在不同分布、超小批次或时序相关样本下仍可忽略。",
+      "locator": "5.1 LeJEPA: SIGReg + Prediction Loss"
+    },
+    {
+      "finding": "LeJEPA 的经验章节覆盖视觉分类、迁移、loss correlation 与 attention/segmentation，没有 action-conditioned dynamics、rollout、规划或机器人闭环实验。",
+      "scope": "因此 LeWM 继承 SIGReg 是机制迁移；对 world-model admissibility 与规划收益的证据必须来自 LeWM 及后续控制论文。",
+      "locator": "6 LeJEPA: Empirical Validation"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "实践中用 minibatch 估计 Epps–Pulley/SIGReg 会引入显式 bias；作者未探索 U-statistic debiasing 或 sample splitting。",
+        "locator": "5.1 LeJEPA: SIGReg + Prediction Loss"
+      },
+      {
+        "limitation": "kNN 与 kernel probe 的最优性结论依赖 density regularity、query/training distribution match、target-gradient prior、fixed covariance constraint，以及 kernel 情况的 light-tail/smoothness 条件。",
+        "locator": "A.1 kNN Probing; A.2 Kernel Probing"
+      },
+      {
+        "limitation": "有限 slices 的全空间约束论证依赖 embedding density smoothness 与 SGD 过程中持续重采样方向。",
+        "locator": "4.3 How SIGReg Beats the Curse of Dimensionality"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "匹配全局 isotropic Gaussian 分布只能说明反塌缩/几何统计，不足以推出 latent 对动作干预、接触、因果结构或局部 inverse dynamics 条件良好。",
+        "basis": "LeJEPA 的目标没有 action-conditioned transition 项，经验验证也没有 dynamics/control；这些性质需要由后续 LeWM 训练目标和专门消融建立。"
+      },
+      {
+        "boundary": "“one hyperparameter”是核心 loss 权重层面的表述，实践仍包含 slices、积分区间/节点、views、batch 等设置。",
+        "basis": "Section 6.1 明确对这些配置做消融并给出推荐默认值；稳定性证据支持低敏感度，但不等于参数不存在。"
+      },
+      {
+        "boundary": "视觉 top-1、linear probe 和 attention 可视化不能替代世界模型的 action fidelity、长程 rollout 稳定性或闭环成功率。",
+        "basis": "Section 6 的完整结构只列视觉表征任务，未包含动作条件预测、规划或机器人控制。"
+      },
+      {
+        "boundary": "in-domain LeJEPA 与 frontier transfer 模型的比较受预训练数据、模型大小、epoch、frozen/finetuned protocol 差异影响。",
+        "basis": "Tables 2/5 同时改变 backbone、pretraining corpus 和训练轮数；可支持具体 setting 的结果，不能归结为单一算法因果优势。"
+      }
+    ]
+  },
+  "transfer_boundary": "向 LeWorldModel 迁移时，最稳妥的结论是：SIGReg 提供可扩展的 anti-collapse 与全局分布整形先验。不能直接从 LeJEPA 推出动作敏感、局部近等距、动力学可预测、规划可摊销或真实控制安全；这些必须在 action-conditioned world model、长程 rollout、non-isotropic/SIGReg-off 对照和闭环任务中另行验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "从线性、kNN、kernel probe 分别给出形式化目标与证明，并在附录暴露关键 regularity assumptions，便于限定结论。",
+      "对 moment、CDF、characteristic-function 三类统计量比较 identifiability、gradient stability、differentiability 与 distributed complexity。",
+      "使用 adversarial X-shaped synthetic distribution 检查仅看低阶矩可能漏检的 dimensional collapse。",
+      "跨数据集、模型族、参数规模和多个超参数做广泛稳定性实验，并给出可复现的简洁实现与详细表格。"
+    ],
+    "design_risks": [
+      "论文标题/摘要中的广义 foundation-model 最优性表述比实际定理条件更宽；非线性结果依赖强 target-gradient 与 density assumptions。",
+      "全局 distribution matching 与语义/动力学因果结构之间存在缺口，未设计 action-conditioned 或 world-model 实验隔离该缺口。",
+      "部分“无 heuristic/one hyperparameter”表述掩盖了 views、slices、积分节点、batch 等工程选择，虽然论文做了敏感度验证。",
+      "注意力/PCA 分割主要是定性证据，缺少标准 segmentation 指标和与基线的定量比较。",
+      "多项大规模比较同时改变数据、模型、epoch 与 transfer protocol，难以把差异唯一归因于 LeJEPA objective。"
+    ],
+    "baseline_fairness": "ImageNet frozen linear-probe 部分较可比；in-domain 与 frontier transfer 比较的 pretraining corpus、backbone 参数量和 epoch 不完全匹配，因此只能按表中具体配置解释，不能形成算法级统一胜负。",
+    "metric_validity": "top-1/linear probe、few-shot 与 loss correlation 能测视觉 representation utility 和训练稳定性；它们不测 action fidelity、物理可执行性、long-horizon prediction、control latency 或闭环安全。定性 attention segmentation 只能作机制提示。",
+    "reproducibility": "论文给出核心算法伪代码、公开代码、复杂度、数据/模型表和大量消融；大模型/多数据集结论仍需独立复现，且 minibatch bias、distributed all-reduce 与数值 quadrature 的实现细节可能影响结果。",
+    "external_validity": "外部有效性主要覆盖视觉 SSL 与 i.i.d. probe 模型；时序相关样本、多模态传感、机器人动作、接触、非平稳动力学和部署闭环均未直接验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2511.08544-C01",
+      "claim": "LeJEPA selects an Epps–Pulley empirical-characteristic-function regularizer because the implementation is DDP-friendly, has uniformly bounded gradients and curvature, and has linear memory and computational complexity.",
+      "stance": "support",
+      "relation": "提供 LeWM 所继承 SIGReg 的核心 anti-collapse 数值机制与可扩展性依据。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Section 4.2.3 明确比较统计检验家族后列出 Epps–Pulley 的 distributed、bounded 与 linear-complexity 性质。",
+      "locator": "4.2.3 Characteristic Functions are Stable, Scalable and Identifiable",
+      "source_context": "The limitations of moment-based and CDF-based tests coupled with Section ˜ 4.2.3 justifies our choice of the ( Epps–Pulley ): (i) DDP-friendly and scalable, (ii) uniformly bounded gradients and curvature regardless of input distribution, and (iii) hyper-parameter free implementation. Lastly, we highlight that our implementation has a linear memory and computational complexity of , with the minibatch size .",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "精确上下文逐项包含 DDP-friendly、uniformly bounded gradients and curvature 与 linear memory/computational complexity；主张没有把这些数值性质扩成世界模型控制性能。"
+      }
+    },
+    {
+      "card_id": "2511.08544-C02",
+      "claim": "The LeJEPA objective combines the multi-view prediction loss with SIGReg and removes prototypes, stop-gradients, and teacher–student networks, leaving one coefficient to trade prediction against isotropic-Gaussian regularization.",
+      "stance": "support",
+      "relation": "说明 LeWorldModel 两项式 JEPA+SIGReg 训练目标的直接方法来源。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Section 5.1 给出最终组合损失并明确列出不再需要的 collapse-prevention 组件和 mixing coefficient 的含义。",
+      "locator": "5.1 LeJEPA: SIGReg + Prediction Loss",
+      "source_context": "LeJEPA Loss. The final total loss simply combines the above prediction loss along with SIGReg on each views as per (9) We present ( 9 )’s implementation in LABEL:code:lejepa . Altogether, the entire implementation–besides the usual model definitions, optimizers, and data loaders–only takes a few dozens lines in PyTorch ( LABEL:lst:epps-pulley-pytorch and LABEL:code:lejepa ). The absence of prototypes, stop-gradients, and teacher-student networks makes ( 9 ) appealing as it only contains one hyperparameter, , balancing the trade-off between the prediction and isotropic Gaussian terms.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接说明 prediction loss + SIGReg、absence of prototypes/stop-gradients/teacher-student，以及唯一 trade-off coefficient；主张把 one hyperparameter 限定在核心 loss 权重层面。"
+      }
+    },
+    {
+      "card_id": "2511.08544-C03",
+      "claim": "The nonlinear-probe optimality result is conditional on a smooth embedding density with finite Fisher information and covariance, test queries drawn from the training distribution, an isotropic mean-zero target-gradient prior, and a fixed scalar covariance constraint.",
+      "stance": "conditional",
+      "relation": "限制把“isotropic Gaussian 对任意下游任务最优”当成无条件定理，并为 LeWM 迁移划定理论边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Appendix A.1 在给出 kNN 唯一最优解前逐项列出 density、query、target function 与 covariance constraints。",
+      "locator": "A.1 kNN Probing",
+      "source_context": "We denote the underlying embedding density as with derivatives of order up to bounded, and finite Fisher information and covariance. This regularity condition is fulfilled by current encoders. The unknown labels come from the target function , assumed . We handle classification tasks by setting . The training consists of the embeddings along with their training labels , where we will denote . The prediction for a query vector is formed as (kNN) with counting the number of samples within a -radius ball around . The radius controls how many neighbors predictions are averaged to form the query’s prediction. As per the linear probing’s Section ˜ 3.1 , we can characterize the bias of the estimator Equation ˜ kNN at a particular query point, as formalized below. To obtain the integrated bias, i.e., over the distribution of query points, we consider the following two properties. First, the distribution of query points follow the training distribution, i.e., , second, target function has gradient which is mean-zero and isotropic with with uniformly in . We also have any finite scalar-constraint on the covariance of the embeddings such as or for a finite constant . As a result, we now have a unique minimizer for the optimal embedding density for both the linear and k-NN probes.",
+      "evidence_type": "theoretical-condition",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "Appendix A.1 的连续上下文明确列出 smooth density/finite Fisher and covariance、query=train distribution、mean-zero isotropic gradient 与 scalar covariance constraint；主张没有扩及未满足这些假设的动态控制。"
+      }
+    },
+    {
+      "card_id": "2511.08544-C04",
+      "claim": "On ImageNet-10, LeJEPA pretrained approximately 50 architectures from eight families with fewer than 20 million parameters, and all reached 91.5%–95% top-1 accuracy under frozen-backbone linear probing.",
+      "stance": "support",
+      "relation": "提供 LeJEPA/SIGReg 在视觉自监督中的跨架构稳定性证据，同时保持数据集和指标边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Section 6.1 直接给出模型数量、架构族、参数上限和 frozen linear-probe top-1 区间。",
+      "locator": "6.1 LeJEPA’s Stability Across Hyper-Parameters and Architectures",
+      "source_context": "To validate this claim, we pretrain approximately 50 architectures from 8 different families on ImageNet-10, selecting all models in the timm library with fewer than 20M parameters. All models are able to learn high-quality representations reaching between 91.5% to 95% top 1 accuracy with frozen backbone linear probing.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "top 1 accuracy",
+        "value_or_direction": "between 91.5% to 95%",
+        "comparator": "across approximately 50 architectures from 8 different families",
+        "task_or_sample": "ImageNet-10 frozen-backbone linear probing; timm models with fewer than 20M parameters",
+        "locator": "6.1 LeJEPA’s Stability Across Hyper-Parameters and Architectures"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "同一连续上下文包含约 50 models、8 families、<20M、ImageNet-10 和 91.5%–95% top-1；主张不把视觉线性分类稳定性外推为 world-model/control 稳定性。"
+      }
+    },
+    {
+      "card_id": "2511.08544-C05",
+      "claim": "The practical minibatch SIGReg gradient is biased; the authors report the bias as small in their experiments but do not explore unbiased U-statistic or sample-splitting alternatives.",
+      "stance": "limit",
+      "relation": "保留 SIGReg 数值实现与理论 population objective 之间的近似边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Section 5.1 明确承认 minibatch-induced bias、经验上影响小，以及未探索两类无偏替代。",
+      "locator": "5.1 LeJEPA: SIGReg + Prediction Loss",
+      "source_context": "On the other hand, the use of minibatches introduces a bias vanishing at rate , as formalized below. Hence, the gradients we obtain from using ( Epps–Pulley ) are biased by an explicit term. We found this bias to be minimal and not a concern even for minibatches as small as 16. Unbiased alternatives include using U-statistic debiasing of or sample splitting, which we do not explore in this study.",
+      "evidence_type": "author-stated-limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "上下文逐字说明 biased by an explicit term、empirically minimal 与 unbiased alternatives not explored；主张未推断该 bias 在 LeWM 时序数据中必然无害。"
+      }
+    },
+    {
+      "card_id": "2511.08544-C06",
+      "claim": "LeJEPA's empirical validation does not directly test action-conditioned dynamics, world-model rollouts, planning, or closed-loop control; using SIGReg in LeWorldModel is therefore a downstream mechanism transfer rather than direct control evidence from LeJEPA.",
+      "stance": "limit",
+      "relation": "防止把 LeJEPA 的视觉 anti-collapse/representation 证据误写成 LeWM 的规划控制证据。",
+      "confidence": "inference",
+      "claim_basis": "reader-inference",
+      "summary": "经验章节的完整任务清单只包括跨架构/数据稳定性、loss correlation、视觉 in-domain transfer、scaling 和语义分割；六遍结构图未发现动作条件 dynamics 或控制评测。",
+      "locator": "6 LeJEPA: Empirical Validation",
+      "source_context": "We now use the LeJEPA implementation described in Section ˜ 5.1 to demonstrate its effectiveness through comprehensive experiments. We show that LeJEPA: (i) trains reliably across diverse architectures and datasets ( Section ˜ 6.1 ), (ii) provides an informative training loss for model selection ( Section ˜ 6.2 ), (iii) outperforms frontier vision models on small-scale in-domain pretraining ( Section ˜ 6.3 ), (iv) scales successfully to nearly 1 billion parameters on ImageNet-1k ( Section ˜ 6.4 ), and (v) learns rich semantic segmentation features without explicit supervision.",
+      "evidence_type": "scope-inference",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "Section 6 的自述清单与完整结构 map 只覆盖视觉表征/分类/分割；若全文存在 action-conditioned rollout 或闭环控制实验会削弱该推断，但逐节精读与 appendix map 均未发现此类实验。"
+      },
+      "notes": "Premises: Section 6 experiment taxonomy plus full-paper structure map. This inference would be weakened by a direct dynamics/control experiment in the complete text; none was found."
+    }
+  ],
+  "core_citations": [],
+  "notes": "按 scoping 六遍法精读完整 arXiv HTML v3。该 HTML 顶部文档标题/作者块结构异常，但正文 54 个 section 与 82k+ 字符完整；metadata 使用官方 arXiv abs 记录。数学节点在纯文本中有部分符号缺失，因此事件避免重建不可见公式，只保留正文可核验的条件与数值。"
+}

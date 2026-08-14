@@ -1,0 +1,430 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.06388",
+    "title": "Reconstruction or Semantics? What Makes a Latent Space Useful for Robotic World Models",
+    "published": "2026-05-07T15:05:26Z",
+    "url": "https://arxiv.org/abs/2605.06388",
+    "authors": [
+      "Nilaksh",
+      "Saurav Jha",
+      "Artem Zholus",
+      "Sarath Chandar"
+    ]
+  },
+  "review": {
+    "question": "无动作视频预训练、少量机器人 action-conditioned post-training，以及 semantic/reconstructive latent 分别如何影响潜空间世界模型的预测、控制与规划效用？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文在相同 Bridge V2 数据、动作条件 DiT 主干和训练协议下，把编码器定义的潜空间作为主要实验变量，直接比较重建对齐与语义表征对像素质量、动作可恢复性、CEM 规划、任务语义和策略内环评估的影响。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定像素重建质量与机器人动作、任务和策略效用之间可能脱钩的问题。"
+      },
+      {
+        "locator": "2.1 Latent Space World Models",
+        "role": "method-or-design",
+        "purpose": "核对冻结编码器、可选冻结适配器、动作条件转移模型和解码器的共同系统结构。"
+      },
+      {
+        "locator": "2.2 The Role of the Latent Space in Robotics",
+        "role": "method-or-design",
+        "purpose": "核对潜空间被视为动作可控、任务信息、视觉可解码和规划可用多目标接口的依据。"
+      },
+      {
+        "locator": "3.1 Dataset and Training",
+        "role": "data-or-setting",
+        "purpose": "确认数据、历史、动作条件、DiT、优化器和训练日程固定，仅改变编码器、适配器与解码路径。"
+      },
+      {
+        "locator": "3.2 Evaluation Metrics",
+        "role": "method-or-design",
+        "purpose": "核对规划与策略、像素与几何、潜表征质量三条评估轴及其样本协议。"
+      },
+      {
+        "locator": "4.1 Does the choice of latent space affect planning and policy performance?",
+        "role": "results-or-analysis",
+        "purpose": "复核 DiT-S 下策略内环成功、鲁棒性和 CEM 误差的编码器家族差异。"
+      },
+      {
+        "locator": "4.2 Does the latent space affect action recoverability and preservation of task semantics?",
+        "role": "results-or-analysis",
+        "purpose": "复核 IDM 动作恢复和轨迹成功分类在真实编码潜变量与生成潜变量上的差异。"
+      },
+      {
+        "locator": "4.3 How does the latent space affect visual fidelity?",
+        "role": "results-or-analysis",
+        "purpose": "检查像素、结构和时序视频指标是否与策略效用一致。"
+      },
+      {
+        "locator": "4.5 Do reconstruction-aligned and semantic encoders fail differently?",
+        "role": "results-or-analysis",
+        "purpose": "提取重建潜变量的任务语义幻觉与语义潜变量的几何接触误差这一质性失败分解。"
+      },
+      {
+        "locator": "4.6 Do compressed adapter latents aid semantic encoders further for world modeling?",
+        "role": "results-or-analysis",
+        "purpose": "核对适配器压缩对扩散建模、高层任务与精细轨迹优化的相反作用。"
+      },
+      {
+        "locator": "4.7 Do high-dimensional semantic latents and adapter add computational overhead?",
+        "role": "results-or-analysis",
+        "purpose": "复核固定 token 数时高通道语义潜变量对 DiT 主干计算量的实际影响。"
+      },
+      {
+        "locator": "7 Future Work and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取 Bridge V2、单一共享本体、固定 VLA 策略和 VLM 成功判定的作者边界。"
+      },
+      {
+        "locator": "8 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者将模型选择标准从视觉真实感转向动作与策略相关潜动力学的最终主张。"
+      },
+      {
+        "locator": "B.2 Action-Conditioned Diffusion Model",
+        "role": "appendix-or-supplement",
+        "purpose": "复核编码器与适配器冻结、只优化 DiT、各潜空间每帧 token 数相同的实现控制。"
+      },
+      {
+        "locator": "B.3 Adapter",
+        "role": "appendix-or-supplement",
+        "purpose": "复核 S-VAE 适配器的压缩瓶颈、特征保持和像素重建联合目标。"
+      },
+      {
+        "locator": "C.1 Planning and downstream policy performance",
+        "role": "appendix-or-supplement",
+        "purpose": "复核 100 个窗口的 CEM 动作反演、400 个候选、5 次迭代和生成噪声控制。"
+      },
+      {
+        "locator": "C.3 Latent representation quality",
+        "role": "appendix-or-supplement",
+        "purpose": "复核 IDM encoder ceiling 与 world-model rollout degradation 的指标含义。"
+      },
+      {
+        "locator": "D.3 Statistical Analyses",
+        "role": "appendix-or-supplement",
+        "purpose": "核对语义家族相对重建家族的配对 bootstrap 区间和共享任务统计。"
+      },
+      {
+        "locator": "D.4 Latent representation quality",
+        "role": "appendix-or-supplement",
+        "purpose": "复核不同 DiT 尺度上的动作恢复和成功分类数值是否保持相同趋势。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: 参考文献仅用于方法来源追踪，不作为本文自身结果的证据。"
+      },
+      {
+        "locator": "Appendix E Additional Rollouts",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: 质性失败模式已由正文和指定附录图总结，本轮不逐帧重做视觉评分。"
+      }
+    ]
+  },
+  "research_question": "当动作条件 latent diffusion 世界模型的数据、DiT 转移主干和训练协议固定时，重建对齐与语义表征潜空间分别保留哪些像素、动作、任务和策略相关信息，哪类指标最能预测规划与策略内环效用？",
+  "contributions": [
+    "在固定 Bridge V2、动作条件、DiT 和优化协议下，系统比较三类重建对齐编码器和三类语义编码器的原生或适配器潜空间。",
+    "提出同时覆盖规划与下游策略、像素与场景几何、潜表征质量的三轴评估，避免只按视觉真实感选择机器人世界模型。",
+    "用家族级配对 bootstrap、CEM 动作反演、IDM、轨迹成功分类与策略内环生成 rollout 共同检验语义潜空间的任务效用。",
+    "揭示潜空间选择并非单向排名：重建潜变量更偏局部外观，语义潜变量更偏任务结构，但后者仍可能损失几何和接触精度；适配器压缩也存在高层扩散与精细控制的权衡。"
+  ],
+  "method": {
+    "summary": "每个候选模型使用冻结视觉编码器定义潜空间；高维语义编码器可选冻结 S-VAE 适配器压缩，随后用同一动作条件 DiT 从头训练世界模型。实验固定 Bridge V2 数据、历史长度、动作条件、优化器与训练日程，改变编码器、可选适配器和对应解码路径。评估覆盖 CEM 从目标潜变量反演动作、OpenVLA 在生成世界模型中的闭环 rollout、VLM 成功判定与 OOD 扰动、像素和时序指标、IDM 动作恢复及语言条件轨迹成功分类。",
+    "assumptions": [
+      "固定 DiT、数据和训练日程足以把主要差异归因于编码器定义的潜接口，尽管解码器和适配器仍随编码器变化。",
+      "在生成世界模型中运行固定 OpenVLA 的成功率可以代理真实机器人上的策略评估价值。",
+      "CEM 动作反演误差、IDM Pearson 和成功分类探针分别测到动作敏感性与任务语义，而不是只测探针容量。",
+      "多个 VLM 聚合的成功判断配合非 VLM 指标，能够把单一评估器偏差降到可接受水平。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Bridge V2",
+      "SOAR"
+    ],
+    "tasks": [
+      "action-conditioned video diffusion world modeling",
+      "CEM latent action recovery",
+      "OpenVLA policy-in-the-loop rollout evaluation",
+      "OOD distractor and instruction robustness",
+      "inverse dynamics action recoverability",
+      "language-conditioned trajectory success classification",
+      "visual and geometric rollout evaluation"
+    ],
+    "embodiments": [
+      "WidowX 250 manipulation under the shared Bridge V2 embodiment"
+    ],
+    "sample_or_scale": "Bridge V2 含约 60K 条 WidowX 250 示范、13 个任务家族；策略内环在 20 个测试 episode 上每个 8 次试验，OOD 使用其中 10 个；CEM 每模型使用 100 个保留窗口；SOAR 约含 30.5K 条成功/失败轨迹。"
+  },
+  "evaluation": {
+    "design": "以编码器家族为主要实验变量，在 DiT-S/B/L 上训练动作条件 LDM；用像素、视频、几何、潜表征、CEM 和策略内环多指标评价，并在共享任务上对语义与重建家族做配对 bootstrap。",
+    "baselines": [
+      "VAE reconstruction-aligned latent",
+      "VA-VAE reconstruction-aligned latent",
+      "Cosmos reconstruction-aligned latent",
+      "V-JEPA 2.1 semantic latent",
+      "Web-DINO semantic latent",
+      "SigLIP 2 semantic latent",
+      "native semantic latent versus 96-dimensional adapter latent"
+    ],
+    "metrics": [
+      "VLA consensus success rate and Borda rank",
+      "OOD success under distractors and instruction shifts",
+      "CEM one-step and multi-step action error",
+      "IDM Pearson on encoder and generated latents",
+      "trajectory success classifier accuracy and AUC",
+      "SSIM, LPIPS, FID, FVD and temporal LPIPS",
+      "point tracking, depth and WorldArena perceptual/geometric scores"
+    ],
+    "ablations": [
+      "native versus compressed adapter semantic latents",
+      "DiT-S, DiT-B and DiT-L scaling",
+      "single-view versus three-view fine-tuning",
+      "encoder ceiling versus generated-world-model latent degradation"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在共享任务的家族级统计中，语义潜空间相对重建潜空间的 VLA 成功率高 9.8 个百分点，95% 配对 bootstrap 区间为 2.5 至 17.7 个百分点；OOD 成功率高 13.6 个百分点，CEM 一步动作误差低 0.0266。",
+      "scope": "Bridge V2、共享 WidowX 本体、论文所列编码器集合和 DiT-S 策略面对指标；不是任意语义编码器对任意重建编码器的普遍定律。",
+      "locator": "D.3 Statistical Analyses, Table 12"
+    },
+    {
+      "finding": "DiT-S 的编码器潜变量上，语义家族的 IDM Pearson 与轨迹成功分类准确率整体高于重建家族，且动作恢复优势大体保留到生成潜变量。",
+      "scope": "论文的 IDM、SOAR 成功分类探针和所测编码器；探针分数是动作与任务信息的诊断，不等同于真实闭环控制成功。",
+      "locator": "4.2 Does the latent space affect action recoverability and preservation of task semantics?"
+    },
+    {
+      "finding": "像素质量不能单独解释策略效用：重建对齐潜空间在局部外观上仍有竞争力，而语义潜空间在本文设置中通常改善全局结构、时序质量、动作恢复和策略面对指标。",
+      "scope": "Bridge V2 动作条件扩散模型及论文使用的解码路径和指标集合；不据此形成单一视觉基础模型排名。",
+      "locator": "4.3 How does the latent space affect visual fidelity?"
+    },
+    {
+      "finding": "两类潜空间的质性失败不同：重建潜变量更易产生外观连贯但任务语义错误的状态，语义潜变量较能保持任务意图却可能丢失几何和接触精度。",
+      "scope": "论文附录 rollout 的质性案例和 OOD 指令例子，属于机制诊断而非带置信区间的总体失败率。",
+      "locator": "4.5 Do reconstruction-aligned and semantic encoders fail differently?"
+    },
+    {
+      "finding": "压缩适配器通常让高维语义潜变量更易做扩散去噪并改善多项高层指标，但可能损伤 CEM 轨迹优化、OOD 鲁棒性和点跟踪所需的精细控制几何。",
+      "scope": "论文的 96 维适配器方案、Bridge V2 和所测指标；不能外推为所有压缩维度或适配器结构的固定结论。",
+      "locator": "4.6 Do compressed adapter latents aid semantic encoders further for world modeling?"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "结论仅由 Bridge V2 操作设置和共享机器人本体支持，其他本体、领域与数据规模仍需评估。",
+        "locator": "7 Future Work and Limitations"
+      },
+      {
+        "limitation": "策略内环实验只评估固定 VLA 策略在生成 rollout 中的表现，没有检验策略改进或 sim-to-real 迁移。",
+        "locator": "7 Future Work and Limitations"
+      },
+      {
+        "limitation": "部分成功判断依赖 VLM，可能引入评估器偏差；作者以多个 VLM 聚合和 CEM、IDM、成功分类、视觉与几何指标降低依赖。",
+        "locator": "7 Future Work and Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "固定 DiT 和训练数据提高了内部效度，但并未把“语义”作为唯一变量完全隔离。",
+        "basis": "不同编码器具有不同预训练数据、目标、通道维度，且对应解码器和可选适配器路径也不同；结果是潜接口家族的系统级效应。"
+      },
+      {
+        "boundary": "生成世界模型内的策略成功率不能直接替代真实机器人闭环成功率。",
+        "basis": "固定策略可能利用模型误差，VLM 评估器也可能偏好视觉上合理的轨迹；论文没有在真实机器人上重放各潜空间模型的策略结果。"
+      },
+      {
+        "boundary": "语义潜空间的家族优势不应改写成某一特定视觉基础模型对另一模型的通用优劣结论。",
+        "basis": "主要统计把多种语义编码器聚合后与多种重建编码器比较，且结论限定于 Bridge V2 动作条件 LDM、所测尺度和评估协议。"
+      }
+    ]
+  },
+  "transfer_boundary": "证据最直接适用于 Bridge V2 风格、共享 WidowX 本体、动作条件 latent diffusion 和固定 token 数 DiT 的模型选择。若迁移到不同机器人、相机、动作频率、接触动力学、数据规模或真实策略训练，应重新校准 CEM、IDM、成功探针与真实闭环结果；可采用“动作与任务信息优先于单一像素分数”的评估原则，但不能直接搬用家族排名或把它扩展为 DINOv3 优劣结论。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "固定数据、历史、动作条件、转移主干、优化器和训练日程，显著减少世界模型训练协议的混杂。",
+      "把规划、策略、像素、几何和潜表征指标分开，能显式识别视觉真实感与控制效用脱钩。",
+      "家族级配对 bootstrap 使用共享任务，比分别查看单模型均值更能支持语义与重建接口的总体差异。",
+      "同时报告语义潜变量的几何接触失败和适配器压缩代价，没有把语义表征描述成无条件最优。"
+    ],
+    "design_risks": [
+      "编码器预训练资源、模型结构、解码器和适配器路径仍然不同，潜空间语义性并非严格单变量。",
+      "策略效用主要在生成世界模型内部评估，缺少对应真实机器人闭环执行来检验模型偏差与策略利用。",
+      "Bridge V2 和共享 WidowX 本体限制外部效度，尤其对不同接触动力学、相机和动作空间。",
+      "VLM 成功判定与由语言模型生成的部分 OOD 指令可能引入评估器和任务构造偏差。"
+    ],
+    "baseline_fairness": "同一 DiT、数据、动作条件和训练日程使世界模型层比较较强，原生与适配器版本也揭示压缩影响；但不同编码器的预训练数据与目标、原生分辨率、通道维度和解码器质量不完全匹配，因此结论应视为编码器定义潜接口的系统级比较，而非只由“语义性”一个抽象属性造成。",
+    "metric_validity": "CEM 误差和 IDM 直接诊断动作敏感性，成功分类与策略内环补充任务语义，像素和几何指标揭示解码质量，指标互补性较强。不过 IDM 和分类器仍是探针，CEM 是离线目标反演，VLM 判断的生成 rollout 也不等同于真实机器人成功；最可靠的是多指标一致而非任一单项。",
+    "reproducibility": "论文给出数据规模、DiT 尺度、冻结组件、适配器目标、CEM 候选与迭代数、评估 episode 和统计方法，完整非 OCR HTML 可逐项核验；本轮未独立运行训练与评估代码，且完整复现仍依赖相同预训练编码器、解码器和计算资源。",
+    "external_validity": "13 个 Bridge V2 任务家族与 OOD 指令/干扰物提供一定任务宽度，但本体、数据域和策略均集中。跨 Franka、ALOHA、移动视角、双臂、仿真到真实和在线策略改进尚未验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.06388-C01",
+      "claim": "该研究固定数据、历史长度、动作条件、转移架构、优化器和训练日程，仅改变冻结编码器、可选适配器与解码路径，从而把编码器定义的潜接口作为主要实验变量。",
+      "stance": "support",
+      "relation": "为 semantic 与 reconstruction latent 的比较提供较强的受控设计基础，同时保留适配器和解码路径仍随编码器变化的解释边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "训练协议章节逐项列出固定量和变化量，并为每个编码器—适配器组合从头训练 LDM。",
+      "locator": "3.1 Dataset and Training",
+      "source_context": "We isolate the effect of the encoder-defined latent space by fixing the dataset, history length, action conditioning, transition architecture, optimizer, and training schedule, and varying only the encoder , optional adapter , and decoder path. For each encoder–adapter pair, we train an LDM from scratch and evaluate the resulting world model for visual fidelity, representation quality, and downstream policy performance",
+      "evidence_type": "evaluation-design",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接列出固定和变化的实验因素；本卡称其为主要实验变量而非绝对单变量，并明确保留适配器与解码器路径的伴随变化。"
+      }
+    },
+    {
+      "card_id": "2605.06388-C02",
+      "claim": "在论文的共享 Bridge V2 任务统计中，语义潜空间家族相对重建家族的 VLA 成功率高 9.8 个百分点、OOD 成功率高 13.6 个百分点，并把一步 CEM 动作误差降低 0.0266；三项 95% 配对 bootstrap 区间均不跨零。",
+      "stance": "conditional",
+      "relation": "支持在所测动作条件 LDM 中，语义表征比只看重建质量更能保留策略与规划相关结构；结论限定为家族级、共享任务协议。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "附录统计以共享任务做家族级配对 bootstrap，同时报告策略成功、OOD 成功和 CEM 动作恢复三个面向控制的指标。",
+      "locator": "D.3 Statistical Analyses",
+      "source_context": "For in-distribution VLA rollouts, semantic encoders exceed reconstruction encoders by 9.8 percentage points, with a 95% paired bootstrap interval of [2.5, 17.7] points and an exact one-sided sign-flip test of over the 20 shared task episodes. The OOD result is also positive: when pooling distractor and instruction shifts, semantic encoders exceed reconstruction encoders by 13.6 percentage points, with a 95% bootstrap interval of [8.8, 18.4] points and . For CEM action recovery, lower error is better; semantic encoders reduce one-step controllability error by 0.0266, with a 95% bootstrap interval of [0.0122, 0.0412] lower error and .",
+      "evidence_type": "statistical-analysis",
+      "quantitative": {
+        "metric": "VLA success, OOD success, and one-step CEM action error",
+        "value_or_direction": "+9.8 percentage points, +13.6 percentage points, and 0.0266 lower error",
+        "comparator": "semantic encoder family versus reconstruction encoder family",
+        "task_or_sample": "20 shared Bridge V2 task episodes; pooled distractor and instruction shifts for OOD",
+        "locator": "Appendix D.3 Statistical Analyses, Table 12"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐项给出三种家族差异和配对 bootstrap 区间；本卡不补写抽取中缺失的显著性数值，也不把家族统计改写为某个具体编码器的通用排名。"
+      }
+    },
+    {
+      "card_id": "2605.06388-C03",
+      "claim": "在 DiT-S 的真实编码潜变量上，语义编码器的 IDM Pearson 为 0.772–0.829、轨迹成功分类准确率为 0.903–0.906；重建编码器对应范围为 0.507–0.626 和 0.835–0.868，且动作信息优势大体延续到世界模型生成潜变量。",
+      "stance": "conditional",
+      "relation": "说明潜空间是否显式保留动作变化和任务语义会影响世界模型可用性，而像素重建质量不能替代这类诊断。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "表 2 同时报告真实编码潜变量与生成潜变量的 IDM 和成功分类结果，正文总结语义家族保留更多动作信息。",
+      "locator": "4.2 Does the latent space affect action recoverability and preservation of task semantics?",
+      "source_context": "Table 2 : IDM Pearson (horizons ) and Success classifier for DiT-S, reported on encoder (Enc.) and world model (WM) latents. Pearson Classifier Acc. Encoder Enc. WM Whole-video Enc. WM VAE 0.507 0.478 0.476 0.464 0.835 0.716 VA-VAE 0.549 0.744 0.545 0.719 0.868 0.744 Cosmos 0.626 0.673 0.581 0.651 0.851 0.723 V-JEPA 2.1 0.829 0.865 0.781 0.840 0.905 0.789 Web-DINO 0.820 0.845 0.729 0.794 0.906 0.788 SigLIP 2 0.772 0.793 0.697 0.757 0.903 0.823 Semantic latents make action-relevant changes more recoverable. Table 2 shows that semantic encoders retain substantially more action information than reconstruction-aligned ones.",
+      "evidence_type": "latent-probe",
+      "quantitative": {
+        "metric": "encoder-latent IDM Pearson and trajectory success classifier accuracy",
+        "value_or_direction": "semantic 0.772-0.829 and 0.903-0.906; reconstruction 0.507-0.626 and 0.835-0.868",
+        "comparator": "semantic encoder family versus reconstruction-aligned encoder family",
+        "task_or_sample": "DiT-S Bridge V2 inverse dynamics and SOAR trajectory success probes",
+        "locator": "4.2, Table 2"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "范围由表 2 各家族编码器潜变量列的最小值和最大值直接读取；本卡把生成潜变量表述为优势大体延续，符合正文语气，并未把探针分数等同于真实控制成功。"
+      }
+    },
+    {
+      "card_id": "2605.06388-C04",
+      "claim": "在该受控实验中，重建对齐潜空间仍能保持较锐利的局部外观，但语义潜空间通常在全局结构和时序生成指标上更强；因此低层像素质量不足以解释策略效用。",
+      "stance": "conditional",
+      "relation": "反对仅用视觉真实感选择机器人世界模型，同时保留重建潜变量在局部外观上的实际优势。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "视觉结果章节同时报告语义模型的结构与视频指标优势和 VAE 类模型的局部外观竞争力。",
+      "locator": "4.3 How does the latent space affect visual fidelity?",
+      "source_context": "VAE-style spaces remain competitive on image quality, and qualitatively tend to preserve sharper local appearance details, but they lag behind semantic spaces on global structure and temporal generation quality.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确给出局部外观与全局结构、时序质量的双向权衡；本卡没有把该结果扩大为所有数据集或特定视觉编码器的总体优劣。"
+      }
+    },
+    {
+      "card_id": "2605.06388-C05",
+      "claim": "论文的质性 rollout 显示两类潜空间会以不同方式失败：重建潜变量可能生成外观连贯但任务语义错误的状态，语义潜变量较能保持任务意图，却可能损失几何和接触精度。",
+      "stance": "conditional",
+      "relation": "把 semantic latent 的规划优势解释为任务信息偏好，而不是无代价的全面优势。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "失败分析用篮子、毛巾、抽屉和指令变化案例区分任务语义幻觉与几何接触不足。",
+      "locator": "4.5 Do reconstruction-aligned and semantic encoders fail differently?",
+      "source_context": "The main failure modes differ: reconstruction latents hallucinate task semantics, while semantic latents miss geometry and contact. Our qualitative rollouts in Appx. fig. 13 show that all encoder families share a common failure mode where static scene elements are faithfully preserved while manipulation-relevant details hallucinate.",
+      "evidence_type": "qualitative-analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接概括两类失败并说明它来自质性 rollout；本卡保留“可能”和质性证据范围，没有把案例频率当作统计结论。"
+      }
+    },
+    {
+      "card_id": "2605.06388-C06",
+      "claim": "把高维语义特征压缩到适配器潜空间通常更利于扩散去噪和高层任务完成，但会恶化潜空间 CEM 动作误差、OOD 鲁棒性或点跟踪等精细控制指标。",
+      "stance": "conditional",
+      "relation": "说明潜空间压缩存在扩散可训练性与控制几何之间的结构性权衡，适配器不是无条件改进。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "适配器消融把多数指标的改善与 CEM、OOD 和 PCK 的例外并列，并给出压缩损失精细动作信息的解释。",
+      "locator": "4.6 Do compressed adapter latents aid semantic encoders further for world modeling?",
+      "source_context": "This leads to generally stronger performance than the native variants on most metrics except latent CEM action error, OOD robustness, and PCK coverage. These findings hint towards the adapter compressing the latent space in a way that is useful for high-level task completion such as diffusion denoising but hurtful for fine-grained tasks like trajectory optimization, where precise action information is needed.",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确列出改善的总体趋势、三个例外指标和作者的机制解释；本卡保持“通常”和“会恶化部分指标”的条件范围。"
+      }
+    },
+    {
+      "card_id": "2605.06388-C07",
+      "claim": "该研究的结论局限于 Bridge V2 和共享机器人本体；策略内环只评估固定 VLA 在生成 rollout 中的表现，且部分成功判断依赖 VLM，尚未验证策略改进、sim-to-real 或更广本体。",
+      "stance": "limit",
+      "relation": "限制把家族级潜空间结果直接当作真实机器人策略训练或跨本体迁移结论。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "限制章节连续列出数据与本体范围、固定策略代理和 VLM 评估偏差。",
+      "locator": "7 Future Work and Limitations",
+      "source_context": "The conclusions are therefore scoped to the Bridge V2 manipulation setting and a shared robot embodiment. Evaluating broader embodiments, domains, and data regimes is an important next step. Our policy-in-the-loop experiments also focus on evaluating a fixed VLA policy inside generated rollouts, while policy improvement and sim-to-real transfer would test a complementary use of the same world models. Lastly, our evaluation partially relies on VLM-based success judgments, which may introduce evaluator bias.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐项声明 Bridge V2/共享本体、固定策略生成 rollout、未测 policy improvement 与 sim-to-real、以及 VLM 偏差；本卡没有加入额外失败断言。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "精读基于已恢复的完整高质量、非 OCR arXiv HTML。主结论按 semantic 与 reconstruction 家族、Bridge V2 动作条件 LDM 和共享本体协议记录；Web-DINO 仅作为论文所测语义编码器之一，不投影为 DINOv3 的通用优劣判断。"
+}

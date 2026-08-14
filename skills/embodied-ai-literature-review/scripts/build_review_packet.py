@@ -1377,6 +1377,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows PowerShell commonly exposes a legacy GBK stdout encoding. Keep
+    # the locale encoding (so text-mode subprocess callers can decode it), but
+    # replace the few unsupported glyphs instead of crashing stdout mode.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")
     parser = build_parser()
     args = parser.parse_args(argv)
     time_range = args.time_range or default_time_range()

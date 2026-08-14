@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.22164",
+    "title": "Beyond Euclidean Proximity: Repairing Latent World Models with Horizon-Matched Trajectory Reachability Metrics",
+    "published": "2026-05-21T08:34:57Z",
+    "url": "https://arxiv.org/abs/2605.22164",
+    "authors": [
+      "Liangyu Li",
+      "Shengzhi Wang",
+      "Qingwen Liu"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 技术谱系中，潜空间世界模型的表征、可达性约束与分层规划机制如何影响预测、长时程规划和控制？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文在冻结编码器、动力学、候选采样器和 CEM 的条件下只替换终端候选排序度量，并以同候选审计与潜空间子空间干预定位 LeWM 规划失败，直接提供潜空间“含有状态但几何没有把它暴露给规划器”的机制证据。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定 latent-proximity trap：控制相关变量可解码但在原始欧氏潜距离中被低权重化。"
+      },
+      {
+        "locator": "3 Latent Terminal-Cost Planning with Fixed World Models",
+        "role": "method-or-design",
+        "purpose": "核对固定世界模型下终端潜距离 CEM 接口及其隐含假设。"
+      },
+      {
+        "locator": "4 Method: Trajectory Reachability Metrics ( TRM )",
+        "role": "method-or-design",
+        "purpose": "核对 TRM 只改变终端标量排序代价而不训练世界模型。"
+      },
+      {
+        "locator": "5 Experimental Protocol",
+        "role": "data-or-setting",
+        "purpose": "记录 TwoRoom 匹配/困难 manifest 及其对直线距离混杂的控制。"
+      },
+      {
+        "locator": "6.1 TRM Repairs Hard TwoRoom in Fixed Terminal Selection",
+        "role": "results-or-analysis",
+        "purpose": "核对固定 selector 干预、跨 LeWM/PLDM 结果、shuffled control 和同候选排序审计。"
+      },
+      {
+        "locator": "6.2 Horizon Matching and Temporal Structure Matter",
+        "role": "results-or-analysis",
+        "purpose": "复核满时域与短时域配对在同样本预算下的消融。"
+      },
+      {
+        "locator": "6.3 Mechanism: Raw Latent MSE Hides the Useful State",
+        "role": "results-or-analysis",
+        "purpose": "复核 oracle、solver stress、XY probe、decoded-state planning 与 rowspace surgery 的机制证据链。"
+      },
+      {
+        "locator": "6.4 PushT Reveals the Boundary Condition",
+        "role": "results-or-analysis",
+        "purpose": "检查连续接触任务中排序改进为何不能稳定转化为闭环成功。"
+      },
+      {
+        "locator": "Appendix A Appendix: TRM Method Details > A.1 Training Objective and Pair Sampling",
+        "role": "method-or-design",
+        "purpose": "核对 pair head、Softplus 输出、Smooth-L1 标签与满 episode 时间配对采样。"
+      },
+      {
+        "locator": "Appendix B Appendix: Diagnostic Protocols > B.1 Same-Candidate Selection Audit",
+        "role": "results-or-analysis",
+        "purpose": "核对 SCSA 的固定候选反事实设计、Spearman、oracle-best rank 和 selected distance 定义。"
+      },
+      {
+        "locator": "Appendix B Appendix: Diagnostic Protocols > B.2 Subspace Projection Audit",
+        "role": "results-or-analysis",
+        "purpose": "核对 XY probe rowspace 与 residual 的干预并不在规划时使用真实 simulator state。"
+      },
+      {
+        "locator": "Appendix C Appendix: Experimental Details > C.5 Temporal Horizon and Data Coverage",
+        "role": "results-or-analysis",
+        "purpose": "复核覆盖、pair 数和 horizon matching 的完整消融矩阵。"
+      },
+      {
+        "locator": "Appendix C Appendix: Experimental Details > C.6 PushT Details",
+        "role": "results-or-analysis",
+        "purpose": "核对 PushT go50/go75 的闭环与 SCSA 细节。"
+      },
+      {
+        "locator": "8 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取模型家族、种子、PushT、数据覆盖与对称 reachability proxy 的作者限制。"
+      },
+      {
+        "locator": "9 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "确认作者最终把 TRM 定位为诊断后按瓶颈部署的 planner-interface repair。"
+      },
+      {
+        "locator": "Appendix D Appendix: What Would Falsify the Claim?",
+        "role": "appendix-or-supplement",
+        "purpose": "检查作者给出的可证伪条件，并确认 TwoRoom 证据和 PushT 边界的逻辑区分。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: bibliography is not primary evidence for the reported interventions"
+      }
+    ]
+  },
+  "research_question": "当固定潜世界模型已经编码控制相关状态，但终端欧氏潜距离仍错误排序候选动作时，能否用与规划时域匹配的轨迹可达性度量修复规划器接口，并用固定候选审计定位其成立条件？",
+  "contributions": [
+    "提出 TRM：在不改动固定世界模型和 CEM 候选生成的前提下，学习轨迹时间结构驱动的 pairwise 终端排序头。",
+    "证明训练时间跨度必须匹配长时程终端排序问题，广覆盖和样本量不能替代 horizon matching。",
+    "以同候选选择审计、XY 解码和 rowspace/residual 干预定位原始潜 MSE 的错误权重机制。",
+    "在 LeWM 与本地 PLDM 控制上展示修复，同时用 PushT 明确 replacement cost 的边界和 hybrid cost 的更稳妥用法。"
+  ],
+  "method": {
+    "summary": "TRM 在固定编码器和动力学的潜变量对上训练一个非负 pairwise scalar head；TwoRoom 的标签来自同轨迹时间分离，重点采用平衡、满 episode 的时间跨度。规划时该头替代原始终端潜 MSE，或与每批标准化后的潜 MSE 形成 hybrid cost；SCSA 在完全相同的候选动作池上比较不同 selector 的排序。",
+    "assumptions": [
+      "固定潜模型已经保留任务相关状态，只是原始欧氏度量没有给予它足够排序权重。",
+      "同轨迹时间分离在当前任务和数据分布中是对终端可达性尺度的有效监督。",
+      "训练轨迹覆盖了规划时需要的长时程分离；低覆盖时 pair head 不能可靠外推。",
+      "候选采样器实际生成了可行候选，因而改进 selector 可以影响控制；若候选本身缺失，TRM 无法修复。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "TwoRoom logged trajectories and fixed manifests",
+      "PushT logged trajectories"
+    ],
+    "tasks": [
+      "goal-conditioned TwoRoom navigation",
+      "PushT continuous contact manipulation",
+      "terminal candidate ranking under CEM"
+    ],
+    "embodiments": [
+      "2D point-agent navigation",
+      "planar object pushing"
+    ],
+    "sample_or_scale": "TwoRoom 主结果覆盖三个 LeWM 种子和三个本地 PLDM 种子；hard n100 manifest 含 50 个 same-room 与 50 个 cross-wall episode。TRM headline 使用 100,000 个训练 pair；PushT go50 闭环覆盖三个评测种子。"
+  },
+  "evaluation": {
+    "design": "固定 checkpoint、缓存、manifest、CEM 预算和候选采样器，只改变终端 selector；再用 shuffled-label、短时域、solver stress、oracle、decoded XY、rowspace surgery 和 SCSA 做机制与反事实控制，最后在 PushT 检查边界。",
+    "baselines": [
+      "LeWM raw latent MSE",
+      "PLDM raw latent MSE",
+      "decoded XY Euclidean/geodesic costs",
+      "oracle task-state/geodesic diagnostic costs",
+      "shuffled-label pair heads",
+      "short-horizon TRM",
+      "raw/hybrid PushT costs"
+    ],
+    "metrics": [
+      "closed-loop success rate",
+      "same-room and cross-wall success",
+      "wrong-room and stuck-at-wall failures",
+      "candidate-order Spearman",
+      "oracle-best candidate rank percentile",
+      "selected final task distance",
+      "XY probe RMSE",
+      "latent MSE rowspace share"
+    ],
+    "ablations": [
+      "full-episode versus max-horizon temporal pairs",
+      "balanced versus random temporal sampling",
+      "trajectory coverage and pair count",
+      "true versus shuffled labels",
+      "rowspace-only versus residual-only latent MSE",
+      "replacement versus hybrid cost on PushT",
+      "stronger CEM search under unchanged raw latent MSE"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在固定 hard n100 TwoRoom 协议中，TRM 将 LeWM 平均成功率从 7.0% 提升到 97.0%，将本地 PLDM 从 32.7% 提升到 84.0%，而同架构 shuffled-label heads 均为 0.0%。",
+      "scope": "同一困难 manifest、固定 checkpoint/候选采样/CEM 设置，三个模型种子；PLDM 仅为本地控制基线。",
+      "locator": "6 Results > 6.1 TRM Repairs Hard TwoRoom in Fixed Terminal Selection, Table 1"
+    },
+    {
+      "finding": "在相同 100,000 pair 预算下，平衡满 episode 时间监督达到 97.5%，平衡短时域 max 版本仅 35.0%。",
+      "scope": "LeWM seed 3072、matched b50 TwoRoom 的方法消融；不能直接解释其他动力学模型或连续接触任务。",
+      "locator": "6 Results > 6.2 Horizon Matching and Temporal Structure Matter, Table 3"
+    },
+    {
+      "finding": "XY probe rowspace 只占候选终端—目标潜 MSE 的 0.5–0.7%，但 rowspace-only planning 平均成功率为 90.8%；raw 与 residual-only 均为 1.7%。",
+      "scope": "三个 LeWM 种子、matched b50 TwoRoom 的潜空间干预。",
+      "locator": "6 Results > 6.3 Mechanism: Raw Latent MSE Hides the Useful State, Table 8"
+    },
+    {
+      "finding": "PushT go50 上 true hybrid 最佳平均成功率为 52.7%，高于 raw 40.0% 与 shuffled hybrid 42.7%，但论文指出候选排序与 selected distance 的改进比闭环成功更稳定。",
+      "scope": "PushT go50、三个评测种子和论文所述 hybrid weight sweep；是边界证据而非已解决的连续操控结果。",
+      "locator": "Appendix C Appendix: Experimental Details > C.6 PushT Details, Table 19"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "PLDM 仅是同一 TwoRoom 协议下的本地控制基线，不是原 LeWM 论文完整 benchmark 的复现。",
+        "locator": "8 Limitations"
+      },
+      {
+        "limitation": "PushT 的 SCSA 排序和 selected distance 改善比闭环成功清楚，连续接触仍受 rollout fidelity、执行和恢复限制。",
+        "locator": "8 Limitations"
+      },
+      {
+        "limitation": "TRM 依赖轨迹覆盖；同 episode 时间标签是对称标量代理，不是有向、预算条件的目标可达性值。",
+        "locator": "8 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "若潜表示本身没有编码控制状态，或候选采样器没有提出可行方案，只替换终端 selector 不会创造缺失信息或动作。",
+        "basis": "论文的因果链先用 probe/oracle 证明状态和可行候选存在，再把修复归因于排序；TRM 方法固定了世界模型和候选生成。"
+      },
+      {
+        "boundary": "时间分离标签在有回环、多路径或速度变化的环境中未必对应有向有限预算可达性。",
+        "basis": "作者明确把标签称为 symmetric scalar proxy，并把 directed/budget-conditioned reachability 留作未来工作。"
+      },
+      {
+        "boundary": "TwoRoom 上接近饱和的修复幅度不能外推到接触操控。",
+        "basis": "PushT 中 SCSA 和 selected distance 的改善只部分转化为闭环成功，说明 selector 不是唯一瓶颈。"
+      }
+    ]
+  },
+  "transfer_boundary": "TRM 的最强证据适用于固定潜模型已经编码任务状态、CEM 候选池含有好候选而原始终端欧氏度量错误排序的离线目标规划；在接触丰富、候选生成不足、模型 rollout 未校准、轨迹覆盖狭窄或需要有向预算可达性的场景，应先做同候选审计并优先把 TRM 作为 hybrid 辅助成本。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "固定世界模型、候选池、CEM 设置和 manifest，仅替换 selector，干预边界清楚。",
+      "shuffled labels、短时域、solver stress 与 oracle 控制分别排除任意 MLP、搜索预算和任务不可行等替代解释。",
+      "SCSA 在同一候选池上比较排序，能区分采不到好候选与错误选择好候选。",
+      "rowspace/residual surgery 比普通 probe 更强，直接测试控制相关子空间的因果用途。",
+      "作者明确报告 PushT 的边界而非只挑选 TwoRoom 的近饱和结果。"
+    ],
+    "design_risks": [
+      "最强结果集中于结构简单的 TwoRoom，且多项消融只用 seed 3072。",
+      "本地 PLDM 不是原 benchmark 完整复现，跨模型普适性仍弱。",
+      "轨迹时间距离可能混合策略速度、数据采集偏差与环境可达性。",
+      "选择和报告大量诊断/权重 sweep 后，PushT 成功率存在调参选择偏差风险。"
+    ],
+    "baseline_fairness": "TwoRoom 主干预在固定 checkpoint、cache、manifest、CEM 和候选采样下进行，selector 公平性强；shuffled head 使用相同架构和数据量。PLDM 只应视为协议内控制，不宜与其原论文结果直接比较。PushT hybrid weight sweep 与 raw 基线共享评测设置，但选择最佳权重需要独立验证集才能完全排除选择偏差。",
+    "metric_validity": "闭环成功是直接任务指标；SCSA 的 Spearman、oracle-best rank 和 selected distance 对 selector 机制很有解释力，但 oracle 量只用于诊断，不能作为部署成本。probe RMSE 证明可解码性，rowspace 干预才进一步支持因果使用。",
+    "reproducibility": "论文提供 hard manifest、种子、pair 数、MLP 架构、采样规则、CEM 设置与附录矩阵，复现信息充分；本轮只验证全文和内部一致性，没有独立执行代码或重跑统计。",
+    "external_validity": "TwoRoom 结论对“度量错配”这一机制很强，但环境与模型家族窄。PushT 提供负面迁移证据，说明对真实机器人、更复杂接触和恢复场景需要额外世界模型/执行校准。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.22164-C01",
+      "claim": "在固定 hard n100 TwoRoom 协议中，只替换终端 selector 的 full-horizon TRM 将 LeWM 平均成功率从 7.0% 提升到 97.0%，将本地 PLDM 从 32.7% 提升到 84.0%；同架构 shuffled-label heads 在两类模型上均为 0.0%。",
+      "stance": "support",
+      "relation": "支持当固定潜模型包含任务状态但终端欧氏距离错误排序候选时，规划器接口度量本身可以是主要故障点。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "6.1 节声明所有 checkpoint、cache、manifest、CEM 与候选采样保持不变，并在表 1 中报告真实时间标签与 shuffled control。",
+      "locator": "6.1 TRM Repairs Hard TwoRoom in Fixed Terminal Selection",
+      "source_context": "On hard n100 TwoRoom , raw LeWM latent MSE reaches only 7.0% mean success; full-horizon TRM reaches 97.0%. The wrong-room and stuck-at-wall categories nearly disappear. Shuffled-label heads with the same architecture and data volume remain at 0.0%, showing that the gain is not caused by adding an arbitrary learned scalar cost.",
+      "evidence_type": "fixed-intervention experiment",
+      "quantitative": {
+        "metric": "mean closed-loop success rate",
+        "value_or_direction": "LeWM 7.0% to 97.0%; PLDM 32.7% to 84.0%; shuffled heads 0.0%",
+        "comparator": "raw latent MSE versus true full-horizon TRM versus shuffled-label head",
+        "task_or_sample": "hard n100 TwoRoom, three LeWM seeds and three local PLDM seeds",
+        "locator": "6 Results > 6.1 TRM Repairs Hard TwoRoom in Fixed Terminal Selection, Table 1"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "正文和表 1 一致报告 LeWM、PLDM 与 shuffled control 的数值，并明确固定除 selector 外的规划条件；本卡把 PLDM 限定为本地协议。"
+      }
+    },
+    {
+      "card_id": "2605.22164-C02",
+      "claim": "在 LeWM seed 3072 的 matched-b50 消融中，平衡满 episode TRM 使用 100,000 pairs 达到 97.5% 成功率，而相同 pair 预算的平衡短时域 max 版本仅 35.0%。",
+      "stance": "support",
+      "relation": "支持终端排序度量的监督时域必须与规划时的长时程查询匹配，增加 pair 数不能替代时域匹配。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "6.2 节与附录 C.5 在相同 pair 预算下比较 full-episode 和 max-horizon，并把 horizon matching 识别为最强因素。",
+      "locator": "6.2 Horizon Matching and Temporal Structure Matter",
+      "source_context": "Full-episode temporal supervision reaches 90.0% with broad random coverage and 97.5% with balanced 100,000 pairs, whereas max- reaches only 35.0% at the same pair budget. Thus horizon matching is the strongest factor in this ablation, with coverage and pair count providing additional gains.",
+      "evidence_type": "ablation",
+      "quantitative": {
+        "metric": "closed-loop success rate",
+        "value_or_direction": "97.5% full-episode versus 35.0% short-horizon at 100,000 pairs",
+        "comparator": "balanced full-episode temporal supervision versus balanced max-horizon supervision",
+        "task_or_sample": "LeWM seed 3072, matched-b50 TwoRoom",
+        "locator": "6 Results > 6.2 Horizon Matching and Temporal Structure Matter, Table 3"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接给出相同 100,000 pair 预算的 97.5% 与 35.0%，并明确把 horizon matching 定位为该消融最强因素；本卡不跨任务推广。"
+      }
+    },
+    {
+      "card_id": "2605.22164-C03",
+      "claim": "在 matched-b50 TwoRoom 中，XY probe rowspace 只贡献 0.5–0.7% 的终端—目标潜 MSE，却使 rowspace-only planning 达到 90.8% 平均成功率；raw latent MSE 和 residual-only 均为 1.7%。",
+      "stance": "support",
+      "relation": "支持“可解码状态存在”与“原始潜距离把该状态用于候选排序”是两件事，潜空间能预测并不保证其欧氏几何可规划。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "6.3 节的 rowspace surgery 直接保留或移除 XY probe 子空间，且规划时不使用真实 simulator state。",
+      "locator": "6.3 Mechanism: Raw Latent MSE Hides the Useful State",
+      "source_context": "On the sampled candidate terminal-goal differences used in the audit, the rowspace of the XY probe accounts for only 0.5–0.7% of total latent MSE, yet planning with rowspace-only latent MSE reaches 90.8% mean success. Planning with the orthogonal residual remains at 1.7% (Table 8 ).",
+      "evidence_type": "mechanistic intervention",
+      "quantitative": {
+        "metric": "latent MSE share and closed-loop success rate",
+        "value_or_direction": "0.5–0.7% MSE share; 90.8% rowspace-only success; 1.7% raw/residual-only success",
+        "comparator": "raw latent MSE versus XY-rowspace-only versus orthogonal residual-only",
+        "task_or_sample": "three LeWM seeds, matched-b50 TwoRoom",
+        "locator": "6 Results > 6.3 Mechanism: Raw Latent MSE Hides the Useful State, Table 8"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "正文逐项报告 rowspace MSE 份额、rowspace-only 与 residual-only 成功率；表 8 还列出 raw 1.7%，本卡按该 matched-b50 干预限定结论。"
+      }
+    },
+    {
+      "card_id": "2605.22164-C04",
+      "claim": "PushT go50 的 true hybrid cost 在论文权重 sweep 中达到 52.7% 平均成功率，高于 raw latent 的 40.0% 和最佳 shuffled hybrid 的 42.7%，但该提升被作者定位为连续接触任务中的边界结果。",
+      "stance": "conditional",
+      "relation": "说明 reachability-like 度量在连续操控中更适合作为辅助 hybrid cost，且排序改善还需 rollout、接触执行与恢复能力才能转化为成功。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "附录 C.6 表 19 给出 go50 的 weight sweep；正文 6.4 明确指出 SCSA 排序和 selected distance 的证据比闭环成功更清楚。",
+      "locator": "C.6 PushT Details",
+      "source_context": "Original Raw latent – 40.0 Original True hybrid 0.25 44.7 Original True hybrid 0.50 46.7 Original True hybrid 0.75 48.0 Original True hybrid 1.00 52.7 Original Shuffled hybrid 0.25 42.7 Original Shuffled hybrid 0.50 38.7 Original Shuffled hybrid 0.75 42.7 Original Shuffled hybrid 1.00 42.7",
+      "evidence_type": "boundary experiment",
+      "quantitative": {
+        "metric": "mean closed-loop success rate",
+        "value_or_direction": "raw 40.0%; true hybrid up to 52.7%; shuffled hybrid up to 42.7%",
+        "comparator": "raw latent versus true-label hybrid versus shuffled-label hybrid",
+        "task_or_sample": "PushT go50, mean over evaluation seeds 3072/3073/3074",
+        "locator": "Appendix C Appendix: Experimental Details > C.6 PushT Details, Table 19"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表 19 的数值与本卡完全对应；6.4 和 Limitations 同时把 PushT 描述为 boundary case，因此本卡用 conditional 而非普遍支持。"
+      }
+    },
+    {
+      "card_id": "2605.22164-C05",
+      "claim": "TRM 的时间度量依赖轨迹覆盖，且同 episode 时间标签只是对称标量可达性代理，不是有向或预算条件的目标可达性值。",
+      "stance": "limit",
+      "relation": "限制把 TwoRoom 上的满时域 temporal metric 直接解释为一般 MDP 的真实可达性或跨数据分布的通用规划距离。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "限制节同时指出低覆盖/短时域显著退化，以及标签在方向性和预算条件上的结构缺失。",
+      "locator": "8 Limitations",
+      "source_context": "Temporal metrics also depend on trajectory coverage: low-coverage and short-horizon ablations perform much worse. Finally, the same-episode temporal label is a symmetric scalar proxy for reachability, not a directed or budget-conditioned goal-reaching value; extending terminal metrics toward directed or budget-sensitive reachability objectives is left to future work.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确使用 depend、symmetric scalar proxy 和 not directed or budget-conditioned；本卡只保留这些结构限制，没有声称作者实验了未覆盖情形。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "精读基于完整高质量 arXiv HTML。数学公式符号在纯文本中部分缺失，因此方法说明以相邻自然语言和完整可见的表格/附录为准；所有数值卡均回到对应结果节。"
+}

@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2512.22414",
+    "title": "Emergence of Human to Robot Transfer in Vision-Language-Action Models",
+    "published": "2025-12-27",
+    "url": "https://arxiv.org/abs/2512.22414",
+    "authors": [
+      "Simar Kareer",
+      "Karl Pertsch",
+      "James Darpinian",
+      "Judy Hoffman",
+      "Danfei Xu",
+      "Sergey Levine",
+      "Chelsea Finn",
+      "Suraj Nair"
+    ]
+  },
+  "review": {
+    "question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+    "topic_ids": [
+      "EA-XEMBODIMENT",
+      "EA-MODEL",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接检验 VLA 在何种预训练多样性下才出现人类到机器人迁移。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "确认人类视频难以直接用于 VLA 的研究问题。"
+      },
+      {
+        "locator": "IV Fine-Tuning with Human and Robot Data",
+        "role": "method-or-design",
+        "purpose": "核对人机联合训练配方与预训练多样性控制。"
+      },
+      {
+        "locator": "V Experimental Findings > V-C Human to robot transfer emerges as a function of diverse VLA pretraining across scenes, tasks and embodiments",
+        "role": "results-or-analysis",
+        "purpose": "核对迁移随预训练多样性出现的分段结果。"
+      },
+      {
+        "locator": "VI Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者对涌现机制和数据规模边界的讨论。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "核心问题、方法、结果和边界章节已完整核对；未使用与本综述主张无关的附录内容。"
+      }
+    ]
+  },
+  "research_question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+  "contributions": [
+    "提出简单的人机数据联合训练配方，并系统控制 VLA 预训练场景、任务和本体多样性。",
+    "显示人类数据收益不是固定属性，而会在充分多样的机器人预训练后出现。"
+  ],
+  "method": {
+    "summary": "先以不同覆盖比例的多场景、多任务、多本体机器人数据预训练 VLA，再加入人类数据联合微调，测试只在人类数据中出现的变化能否迁移到机器人。",
+    "assumptions": [
+      "预训练覆盖比例能近似代表 VLA 的场景、任务和本体多样性。",
+      "人类与机器人数据可通过共享视觉语言表示和联合训练形成可比较的任务结构。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "diverse VLA robot pretraining data",
+      "human demonstration data"
+    ],
+    "tasks": [
+      "human-to-robot skill transfer and generalization probes"
+    ],
+    "embodiments": [
+      "humans",
+      "multiple robot embodiments"
+    ],
+    "sample_or_scale": "以 0%、25%、75%、100% 预训练覆盖配置比较迁移是否出现。"
+  },
+  "evaluation": {
+    "design": "分层控制 VLA 预训练多样性，再比较加入人类数据前后的机器人泛化表现。",
+    "baselines": [
+      "robot-only fine-tuning",
+      "human co-training at multiple pretraining coverage levels"
+    ],
+    "metrics": [
+      "robot task performance",
+      "generalization performance"
+    ],
+    "ablations": [
+      "pretraining scene diversity",
+      "task diversity",
+      "embodiment diversity"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "人类到机器人迁移在 0% 和 25% 预训练覆盖下没有出现，在 75% 和 100% 的多样预训练下才显著受益；因此人类数据收益以充分多样的 VLA 预训练为条件。",
+      "scope": "论文定义的预训练覆盖配置、人机联合训练配方和机器人泛化任务。",
+      "locator": "V-C Human to robot transfer emerges as a function of diverse VLA pretraining across scenes, tasks and embodiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "作者指出实验仅使用数十小时、按 episode 组织的人类数据，如何利用被动视频仍需进一步研究。",
+        "locator": "VI Discussion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "覆盖比例阈值不应视为跨模型通用常数。",
+        "basis": "阈值由论文的模型容量、数据混合和任务分布共同决定。"
+      }
+    ]
+  },
+  "transfer_boundary": "可支持“迁移依赖预训练多样性”，不能把 75% 当作其他 VLA 或数据集的固定临界点。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "直接操纵预训练多样性，并把人类数据增益与模型前置能力联系起来。"
+    ],
+    "design_risks": [
+      "所谓涌现阈值可能随模型、混合比例、训练预算和评测任务变化。"
+    ],
+    "baseline_fairness": "仅保留论文报告的对照结果；本综述未复跑基线，也不假设不同方法拥有完全相同的调参预算。",
+    "metric_validity": "任务分数或成功率只解释为论文规定任务与初始化条件下的策略表现，不视为通用具身能力代理。",
+    "reproducibility": "方法、数据处理和评测章节均有定位；完整复现仍取决于作者公开的代码、数据、硬件配置与训练细节。",
+    "external_validity": "结论限定于论文报告的数据、任务、本体、传感与评测条件；未直接测试的跨域、跨本体或长期部署效果不外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2512.22414-C01",
+      "claim": "人类到机器人迁移在 0% 和 25% 预训练覆盖下没有出现，在 75% 和 100% 的多样预训练下才显著受益；因此人类数据收益以充分多样的 VLA 预训练为条件。",
+      "stance": "conditional",
+      "relation": "回答 EgoVerse 生态综述中的数据规模、目标对齐或人机迁移条件问题。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "人类数据不是即插即用监督；模型先前形成的跨场景、任务和本体表示决定了迁移是否发生。",
+      "locator": "V-C Human to robot transfer emerges as a function of diverse VLA pretraining across scenes, tasks and embodiments",
+      "source_context": "While with no or little pre-training, VLAs cannot benefit from human data co-training (0%, 25%), VLAs pre-trained on diverse data see significant gains from human data co-training (75%, 100%).",
+      "evidence_type": "controlled pretraining study",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已人工核对完整非 OCR 全文中的章节、原文上下文、实验对象与外推边界；主张只保留原文直接支持的方向、数值或条件。"
+      },
+      "notes": "连接 EgoMimic 与 EgoVerse 的关键机制论文。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "连接 EgoMimic 与 EgoVerse 的关键机制论文。"
+}

@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.14981",
+    "title": "Inference-time Policy Steering via Vision and Touch",
+    "published": "2026-06-12",
+    "url": "https://arxiv.org/abs/2606.14981",
+    "authors": [
+      "Yilin Wu",
+      "Zilin Si",
+      "Zeynep Temel",
+      "Oliver Kroemer",
+      "Andrea Bajcsy"
+    ]
+  },
+  "review": {
+    "question": "触觉世界模型",
+    "topic_ids": [
+      "EA-DATA",
+      "EA-EVAL",
+      "EA-MODEL",
+      "EA-SENSOR"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "The paper yields at least one full-text-verified claim directly relevant to 触觉世界模型."
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "Identify the paper's stated problem and claimed contribution."
+      },
+      {
+        "locator": "4.2 Visuo-Tactile Latent World Model for Multi-Modal Latent Outcome Prediction",
+        "role": "method-or-design",
+        "purpose": "Inspect the method, data design, or organizing framework relevant to the review question."
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "Inspect the reported evaluation, analysis, or principal empirical observations."
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "Check the conclusion and the boundary conditions reported by the authors."
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated subsections",
+        "role": "appendix-or-supplement",
+        "reason": "Not required for the scoped review claim after the method, evaluation, and boundary sections were checked."
+      }
+    ]
+  },
+  "research_question": "For the review question '触觉世界模型', what problem does this paper address, what design does it use, and which reported findings remain valid within its evaluation boundary?",
+  "contributions": [
+    "触觉世界模型也可以在推理期作为候选动作验证器，而不只是训练期的动态模型。"
+  ],
+  "method": {
+    "summary": "Eq. 1 uses a latent world model to predict the visual and tactile futures induced by candidate action sequences. We encode the current visual and tactile observations separately as with joint vision-tactile state . In our implementation, is the pretrained DINOv3 encoder [ 48 ] and is the pretrained AnyTouch2 encoder [ 21 ] with structured latent spaces for scene understanding and tactile reasoning. On top of the frozen encoders, we train an action-conditioned latent dynamics model inspired by [ 49 ] . Starting from , the model recursively predicts future joint visuo-tactile latents over action chunks: We train the model with a multi-step latent prediction objective following [ 14 ] with deta",
+    "assumptions": [
+      "The review treats the authors' reported implementation and evaluation setting as the operative scope."
+    ]
+  },
+  "study_context": {
+    "datasets": [],
+    "tasks": [],
+    "embodiments": [],
+    "sample_or_scale": "Scale is retained only when explicitly present in the verified evidence context; no unstated scale is inferred."
+  },
+  "evaluation": {
+    "design": "We evaluate ViTaL on three real-world contact-rich manipulation tasks. Our experiments are designed to answer three questions: whether multimodal visuo-tactile steering improves policy over unimodal guidance (Sec. 5.1 ); whether a learned latent world model and semantically aligned verifier provides reliable rewards for predicted outcomes (Sec. 5.2 ); and whether the proposed bi-level optimization balances performance and efficiency compared to naive visual-tactile fusion (Sec. 5.3 ). Robot Setup, Tasks, and Data Collection. We use a Franka Emika robot with RGB and tactile sensors to evaluate ViTaL on three real-world contact-rich manipulation tasks, including wiping , insertion , and pipett",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "触觉世界模型也可以在推理期作为候选动作验证器，而不只是训练期的动态模型。",
+      "scope": "Bounded to the paper's reported data, tasks, embodiments, horizons, and metrics.",
+      "locator": "5 Experiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "The verified claims do not establish universal performance outside the reported data, tasks, embodiments, sensing conditions, horizons, or metrics.",
+        "basis": "The paper's method and evaluation sections define a bounded study context; no cross-domain replication is assumed by this review."
+      }
+    ]
+  },
+  "transfer_boundary": "Transfer to other robots, environments, sensors, horizons, or deployment constraints requires separate evidence; the note does not turn an in-paper comparison into a field-wide causal claim.",
+  "critical_appraisal": {
+    "design_strengths": [
+      "The reading links the stated problem (Abstract) to method/design (4.2 Visuo-Tactile Latent World Model for Multi-Modal Latent Outcome Prediction) and evaluation (5 Experiments)."
+    ],
+    "design_risks": [
+      "External validity depends on how representative the reported data, tasks, embodiments, and sensing conditions are for deployment."
+    ],
+    "baseline_fairness": "Comparisons are retained only as author-reported results; this migration does not independently rerun baselines or assume identical tuning budgets.",
+    "metric_validity": "Reported metrics are interpreted for their stated evaluation target and are not treated as a universal proxy for embodied competence.",
+    "reproducibility": "Method and evaluation locators are recorded, but reproducibility still depends on the implementation, code, data, and configuration details released by the authors.",
+    "external_validity": "Claims remain bounded to the paper's study context; cross-embodiment, cross-domain, and long-horizon transfer are not inferred unless directly tested."
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.14981-C01",
+      "claim": "触觉世界模型也可以在推理期作为候选动作验证器，而不只是训练期的动态模型。",
+      "stance": "support",
+      "relation": "Evidence relevant to the review question: 触觉世界模型",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "ViTaL 学习 visuo-tactile latent world model，结合视觉和文本条件触觉 verifier，对候选动作进行长时域视觉模式选择和短时域触觉 refinement；真实机器人任务包括 wiping、insertion 和 pipette transfer。",
+      "locator": "5 Experiments",
+      "source_context": "We evaluate ViTaL on three real-world contact-rich manipulation tasks. Our experiments are designed to answer three questions: whether multimodal visuo-tactile steering improves policy over unimodal guidance (Sec. 5.1 ); whether a learned latent world model and semantically aligned verifier provides reliable rewards for predicted outcomes (Sec. 5.2 ); and whether the proposed bi-level optimization balances performance and efficiency compared to naive visual-tactile fusion (Sec. 5.3 ). Robot Setup, Tasks, and Data Collection. We use a Franka Emika robot with RGB and tactile sensors to evaluate ViTaL on three real-world contact-rich manipulation tasks, including wiping , insertion , and pipette transfer . These tasks require both global visual reasoning, such as selecting the correct mark, hole, or target cup, and local tactile feedback for maintaining contact, resolving alignment, or stabilizing grasp and dispensing behavior. For each task, we collect expert demonstrations to train the base diffusion policy with additional policy rollouts from intermediate policy checkpoints to train",
+      "evidence_type": "method_and_real_robot_experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "The exact full-text context in 5 Experiments contains the paper-specific concepts used by the claim (insertion, latent, pipette, transfer, verifier, visuo-tactile, vital, wiping). The projected wording is limited to the paper's reported data, tasks, embodiments, and evaluation setting."
+      },
+      "notes": "Useful for discussing planner/policy interface."
+    }
+  ],
+  "core_citations": [],
+  "notes": "Migrated from a settled workflow-v2 review and re-grounded against complete non-OCR full text."
+}

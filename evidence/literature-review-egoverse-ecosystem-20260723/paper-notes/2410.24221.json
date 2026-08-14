@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2410.24221",
+    "title": "EgoMimic: Scaling Imitation Learning via Egocentric Video",
+    "published": "2024-10-31",
+    "url": "https://arxiv.org/abs/2410.24221",
+    "authors": [
+      "Simar Kareer",
+      "Dhruv Patel",
+      "Ryan Punamiya",
+      "Pranay Mathur",
+      "Shuo Cheng",
+      "Chen Wang",
+      "Judy Hoffman",
+      "Danfei Xu"
+    ]
+  },
+  "review": {
+    "question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+    "topic_ids": [
+      "EA-XEMBODIMENT",
+      "EA-DATA",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Danfei Xu 团队从第一视角人类数据到机器人策略联合训练的直接前史，并明确测试了动作对齐。"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "确认规模化模仿学习的数据瓶颈与论文贡献。"
+      },
+      {
+        "locator": "III Methodology > III-B Data Processing and Domain Alignment",
+        "role": "method-or-design",
+        "purpose": "核对人类与机器人动作、视角和观测域的对齐设计。"
+      },
+      {
+        "locator": "IV Experiments > IV-B Results",
+        "role": "results-or-analysis",
+        "purpose": "核对动作归一化消融与联合训练结果。"
+      },
+      {
+        "locator": "V Conclusions",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论与未来工作边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "核心问题、方法、结果和边界章节已完整核对；未使用与本综述主张无关的附录内容。"
+      }
+    ]
+  },
+  "research_question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+  "contributions": [
+    "提出从 Project Aria 第一视角视频、三维手部跟踪到人机数据联合训练的完整 EgoMimic 流水线。",
+    "用对齐消融显示，人类数据并非自动可迁移，动作分布对齐是联合训练有效的重要条件。"
+  ],
+  "method": {
+    "summary": "将第一视角人类手部轨迹与机器人示范变换到可共同学习的表示，结合动作归一化、视觉域对齐和共享策略进行联合训练。",
+    "assumptions": [
+      "人体手部轨迹可被稳定恢复并转换成与机器人动作语义相容的表示。",
+      "论文中的低成本双臂平台缩小了人类与机器人的运动学差异。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoMimic egocentric human demonstrations",
+      "paired robot demonstrations"
+    ],
+    "tasks": [
+      "Object-in-Bowl",
+      "single-arm and bimanual long-horizon manipulation"
+    ],
+    "embodiments": [
+      "human hands captured by Project Aria",
+      "low-cost bimanual robot"
+    ],
+    "sample_or_scale": "规模结论限于论文报告的人类与机器人示范量及其测试任务。"
+  },
+  "evaluation": {
+    "design": "真实机器人任务比较完整 EgoMimic、去除动作归一化及其他消融配置。",
+    "baselines": [
+      "robot-only imitation learning",
+      "EgoMimic without action normalization"
+    ],
+    "metrics": [
+      "task score",
+      "task success"
+    ],
+    "ablations": [
+      "action normalization",
+      "domain alignment components"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "EgoMimic 的人机联合训练收益依赖显式动作对齐：在 Object-in-Bowl 任务中，去掉动作归一化使任务分数下降 38%。",
+      "scope": "EgoMimic 平台、Object-in-Bowl 任务及论文的联合训练设置。",
+      "locator": "IV-B Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "作者将向新机器人本体和更多行为泛化列为未来工作，说明现有结果尚未建立广泛跨本体结论。",
+        "locator": "V Conclusions"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "采用更不同的手型、控制频率或观测配置时，需要重新验证动作归一化是否足够。",
+        "basis": "论文通过相似人机动作空间和专门硬件缩小了本体差异。"
+      }
+    ]
+  },
+  "transfer_boundary": "可支持“对齐是联合训练条件”，不能据此断言任意第一视角视频都能提升任意机器人。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "包含真实机器人实验和针对动作对齐的直接消融。"
+    ],
+    "design_risks": [
+      "硬件设计主动缩小本体差异，可能高估向差异更大机器人的可迁移性。"
+    ],
+    "baseline_fairness": "仅保留论文报告的对照结果；本综述未复跑基线，也不假设不同方法拥有完全相同的调参预算。",
+    "metric_validity": "任务分数或成功率只解释为论文规定任务与初始化条件下的策略表现，不视为通用具身能力代理。",
+    "reproducibility": "方法、数据处理和评测章节均有定位；完整复现仍取决于作者公开的代码、数据、硬件配置与训练细节。",
+    "external_validity": "结论限定于论文报告的数据、任务、本体、传感与评测条件；未直接测试的跨域、跨本体或长期部署效果不外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2410.24221-C01",
+      "claim": "EgoMimic 的人机联合训练收益依赖显式动作对齐：在 Object-in-Bowl 任务中，去掉动作归一化使任务分数下降 38%。",
+      "stance": "conditional",
+      "relation": "回答 EgoVerse 生态综述中的数据规模、目标对齐或人机迁移条件问题。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "动作分布不对齐会显著削弱人类与机器人数据联合训练，规模不能替代表示和控制接口对齐。",
+      "locator": "IV-B Results",
+      "source_context": "First, removing action normalization results in a 38% drop in task score. This highlights the importance of action distribution alignment for co-training.",
+      "evidence_type": "ablation+real-robot experiment",
+      "quantitative": {
+        "metric": "task score",
+        "value_or_direction": "38% drop",
+        "comparator": "full EgoMimic versus removing action normalization",
+        "task_or_sample": "Object-in-Bowl",
+        "locator": "IV-B Results"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已人工核对完整非 OCR 全文中的章节、原文上下文、实验对象与外推边界；主张只保留原文直接支持的方向、数值或条件。"
+      },
+      "notes": "Danfei Xu 路线的关键前史；用作 EgoVerse 对齐假设的直接技术来源。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "Danfei Xu 路线的关键前史；用作 EgoVerse 对齐假设的直接技术来源。"
+}

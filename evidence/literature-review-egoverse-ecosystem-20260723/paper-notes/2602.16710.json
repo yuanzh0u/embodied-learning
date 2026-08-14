@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.16710",
+    "title": "EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data",
+    "published": "2026-02-18",
+    "url": "https://arxiv.org/abs/2602.16710",
+    "authors": [
+      "Ruijie Zheng",
+      "Dantong Niu",
+      "Yuqi Xie",
+      "Jing Wang",
+      "Mengda Xu",
+      "Yunfan Jiang",
+      "Fernando Castañeda",
+      "Fengyuan Hu",
+      "You Liang Tan",
+      "Letian Fu",
+      "Trevor Darrell",
+      "Furong Huang",
+      "Yuke Zhu",
+      "Danfei Xu",
+      "Linxi Fan"
+    ]
+  },
+  "review": {
+    "question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+    "topic_ids": [
+      "EA-XEMBODIMENT",
+      "EA-DATA",
+      "EA-MODEL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "提供比 EgoVerse 更大规模的第一视角数据扩量实验，并把离线人类动作预测与真实机器人表现联系起来。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认灵巧操作的人类数据规模问题。"
+      },
+      {
+        "locator": "2 Method",
+        "role": "method-or-design",
+        "purpose": "核对大规模预训练、对齐中训练和机器人后训练配方。"
+      },
+      {
+        "locator": "3 Experiment > 3.3 Policy Performance Scales with Pretraining Data Size",
+        "role": "results-or-analysis",
+        "purpose": "核对 1k–20k 小时扩量曲线和外推边界。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对作者结论和开放问题。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References and unrelated appendix subsections",
+        "role": "appendix-or-supplement",
+        "reason": "核心问题、方法、结果和边界章节已完整核对；未使用与本综述主张无关的附录内容。"
+      }
+    ]
+  },
+  "research_question": "在什么数据、对齐和评测条件下，EgoVerse 及其研究谱系中的第一视角人类数据能够提升机器人学习，并有哪些可迁移的产业与治理启示？",
+  "contributions": [
+    "在 20,854 小时动作标注第一视角人类视频上预训练 VLA，并测试多档数据规模。",
+    "提出大规模人类预训练、少量对齐人机中训练和机器人后训练的三阶段迁移配方。"
+  ],
+  "method": {
+    "summary": "先用腕部运动和手部关节监督进行大规模人类视频预训练，再用少量对齐的人机 play 数据中训练，最后针对灵巧机器人任务后训练。",
+    "assumptions": [
+      "人类动作标签的误差在大规模训练中不会完全淹没可迁移运动结构。",
+      "离线人类动作预测损失能在论文范围内反映下游机器人能力。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "20,854 hours of action-labeled egocentric human video",
+      "aligned human-robot play data"
+    ],
+    "tasks": [
+      "five dexterous manipulation tasks",
+      "one-shot transfer tasks",
+      "cross-embodiment G1 tasks"
+    ],
+    "embodiments": [
+      "human hands",
+      "22-DoF dexterous robotic hand",
+      "Unitree G1 tri-finger hand"
+    ],
+    "sample_or_scale": "预训练规模从 1k、2k、4k、10k 到 20k 小时；核心扩量结论不超出该范围。"
+  },
+  "evaluation": {
+    "design": "固定后训练任务，比较不同人类预训练小时数的离线验证损失与真实机器人任务完成度。",
+    "baselines": [
+      "training from scratch",
+      "aligned mid-training only",
+      "human pretraining only"
+    ],
+    "metrics": [
+      "average task completion",
+      "absolute success rate",
+      "human action prediction validation loss"
+    ],
+    "ablations": [
+      "human pretraining scale",
+      "aligned mid-training",
+      "human action representation"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "在 1k 到 20k 小时的测试范围内，平均任务完成度从 0.30 单调升至 0.71，未观察到饱和；该结果只支持已测范围内的扩量趋势。",
+      "scope": "EgoScale 的五个灵巧操作任务、固定模型与 1k–20k 小时预训练范围。",
+      "locator": "3.3 Policy Performance Scales with Pretraining Data Size"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "作者明确表示不把扩量趋势外推到已测范围之外。",
+        "locator": "3 Experiment > 3.3 Policy Performance Scales with Pretraining Data Size"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "离线损失作为训练有效性指标仍需在新任务、新硬件和新标签管线中重新校准。",
+        "basis": "论文相关性来自同一训练配方和有限任务集。"
+      }
+    ]
+  },
+  "transfer_boundary": "可支持 1k–20k 小时、指定模型和灵巧任务中的扩量关系，不能证明无限扩量或跨供应商数据同样有效。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "多档数据规模、离线指标与真实机器人评测共同构成可检验的扩量证据。"
+    ],
+    "design_risks": [
+      "数据规模与数据来源、标注管线和训练预算可能共同变化，因果解释仍有限。"
+    ],
+    "baseline_fairness": "仅保留论文报告的对照结果；本综述未复跑基线，也不假设不同方法拥有完全相同的调参预算。",
+    "metric_validity": "任务分数或成功率只解释为论文规定任务与初始化条件下的策略表现，不视为通用具身能力代理。",
+    "reproducibility": "方法、数据处理和评测章节均有定位；完整复现仍取决于作者公开的代码、数据、硬件配置与训练细节。",
+    "external_validity": "结论限定于论文报告的数据、任务、本体、传感与评测条件；未直接测试的跨域、跨本体或长期部署效果不外推。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.16710-C01",
+      "claim": "在 1k 到 20k 小时的测试范围内，平均任务完成度从 0.30 单调升至 0.71，未观察到饱和；该结果只支持已测范围内的扩量趋势。",
+      "stance": "conditional",
+      "relation": "回答 EgoVerse 生态综述中的数据规模、目标对齐或人机迁移条件问题。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "大规模第一视角人类数据在该配方下呈稳定扩量收益，但论文明确没有把曲线外推到 20k 小时之外。",
+      "locator": "3.3 Policy Performance Scales with Pretraining Data Size",
+      "source_context": "Average task completion rises monotonically from 0.30 at 1k hours to 0.71 at 20k hours, with no signs of saturation in the explored regime.",
+      "evidence_type": "scaling study+real-robot experiment",
+      "quantitative": {
+        "metric": "average task completion",
+        "value_or_direction": "0.30 to 0.71",
+        "comparator": "1k versus 20k hours of human pretraining data",
+        "task_or_sample": "five downstream dexterous manipulation tasks",
+        "locator": "3.3 Policy Performance Scales with Pretraining Data Size"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "已人工核对完整非 OCR 全文中的章节、原文上下文、实验对象与外推边界；主张只保留原文直接支持的方向、数值或条件。"
+      },
+      "notes": "为产业数据供应商如何证明“训练有效”提供了比总小时数更强的指标框架。"
+    }
+  ],
+  "core_citations": [],
+  "notes": "为产业数据供应商如何证明“训练有效”提供了比总小时数更强的指标框架。"
+}

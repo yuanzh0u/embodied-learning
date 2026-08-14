@@ -1,0 +1,435 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2606.30068",
+    "title": "Predictive Objectives Discard Exogenous Control-Relevant Features: A Controlled Mechanistic Study",
+    "published": "2026-06-29",
+    "url": "https://arxiv.org/abs/2606.30068",
+    "authors": [
+      "Ayan Pendharkar"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 技术谱系中，纯潜空间预测/正则化是否保留控制相关信息，动作敏感性缺失的机制、修复方式、实验边界与迁移条件是什么？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "该受控研究把 feature controllability 与 reward relevance 正交化，直接检验 reward-free JEPA、action-conditioned JEPA、controllability/inverse-dynamics variants 是否会丢弃不可预测但控制关键的信息，是“预测目标不等于控制充分”的核心反证。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract",
+        "role": "problem",
+        "purpose": "确认 objective-level failure mode、六类目标和小型受控研究范围。"
+      },
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "核对 predictability 与 control relevance 正交、四象限 feature taxonomy 及主贡献。"
+      },
+      {
+        "locator": "2 Background > 2.1 JEPA and latent self-prediction",
+        "role": "method-or-design",
+        "purpose": "检查未来不可预测 feature 为什么缺少 self-prediction gradient。"
+      },
+      {
+        "locator": "2 Background > 2.2 Bisimulation metrics",
+        "role": "method-or-design",
+        "purpose": "核对 reward/transition-aware state distance 与 pure predictability 的理论方向冲突。"
+      },
+      {
+        "locator": "2 Background > 2.3 A feature taxonomy and the exogenous control-relevant cell",
+        "role": "method-or-design",
+        "purpose": "核对 controllable/relevant 两轴定义与 cell 4 的难点。"
+      },
+      {
+        "locator": "3 Setup > 3.1 Environments",
+        "role": "data-or-setting",
+        "purpose": "核对 feature patch、predictable background、两种 surface forms、共享 encoder 与训练条件。"
+      },
+      {
+        "locator": "3 Setup > 3.2 The predictability knob",
+        "role": "method-or-design",
+        "purpose": "检查只变化 temporal predictability、保持 reward relevance 不变的因果隔离。"
+      },
+      {
+        "locator": "3 Setup > 3.3 Objectives",
+        "role": "method-or-design",
+        "purpose": "核对 reconstruction、JEPA、action-conditioned、controllability、inverse dynamics、reward-grounded 与 supervised reference 的信号差异。"
+      },
+      {
+        "locator": "3 Setup > 3.4 Metrics",
+        "role": "method-or-design",
+        "purpose": "检查 linear probe、InfoNCE MI、effective rank 的互补含义与 selective dropping 判据。"
+      },
+      {
+        "locator": "4 Results > 4.1 Reward-free predictive objectives do not retain the exogenous control-relevant feature",
+        "role": "results-or-analysis",
+        "purpose": "核对两环境、三种指标和 random-policy variants 的主 cell-4 结果。"
+      },
+      {
+        "locator": "4.2 Reward grounding is selectively relevant, not selectively controllable",
+        "role": "results-or-analysis",
+        "purpose": "检查 reward grounding 与 controllability objective 选择轴的区别。"
+      },
+      {
+        "locator": "4.3 The failure is not a capacity problem",
+        "role": "results-or-analysis",
+        "purpose": "核对 latent dimension sweep 是否排除容量不足解释。"
+      },
+      {
+        "locator": "4.4 Reward grounding is label-efficient",
+        "role": "results-or-analysis",
+        "purpose": "检查稀疏 reward labels 在本受控 setting 中的恢复效果。"
+      },
+      {
+        "locator": "5 Empirical Comparison with Bisimulation Predictions",
+        "role": "results-or-analysis",
+        "purpose": "核对 analytical bisimulation distance 与 trained latent class separation 的经验差距及单 seed 边界。"
+      },
+      {
+        "locator": "6.4 Why this is not a distractor problem",
+        "role": "conclusion-or-limitations",
+        "purpose": "区分 exogenous-irrelevant distractor 与 exogenous-relevant feature。"
+      },
+      {
+        "locator": "6.5 Why the result is not trivial",
+        "role": "conclusion-or-limitations",
+        "purpose": "检查 predictability/relevance 正交为何不是泛泛的不可预测噪声结论。"
+      },
+      {
+        "locator": "6.6 What this result does not imply",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对对 V-JEPA、world models 与 predictive objectives 的明示非结论。"
+      },
+      {
+        "locator": "6.7 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对 synthetic scale、非 benchmark、single-seed bisimulation、policy dependence 与 objective-set 非穷尽等限制。"
+      },
+      {
+        "locator": "Appendix C Full results",
+        "role": "appendix-or-supplement",
+        "purpose": "检查 informative-action inverse dynamics、capacity sweep 和 reward fraction 的完整矩阵语义。"
+      },
+      {
+        "locator": "Appendix D Implementation invariants and reproducibility",
+        "role": "appendix-or-supplement",
+        "purpose": "核对 byte-identical encoder、anti-collapse regularization、honest probing、seeds 与代码断言。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "relevant-core",
+        "reason": "只用于定位 JEPA/bisimulation 前序，不作为本篇受控结果证据。"
+      },
+      {
+        "locator": "Appendix A Environment implementation details",
+        "role": "appendix-or-supplement",
+        "reason": "主文 3.1–3.2 与 Appendix D 已覆盖环境逻辑和复现不变量；公式数值未用于事件投影。"
+      },
+      {
+        "locator": "Appendix B InfoNCE estimator details",
+        "role": "appendix-or-supplement",
+        "reason": "MI 仅作主结果 corroboration，未投影独立定量卡。"
+      }
+    ]
+  },
+  "research_question": "当一个视觉 feature 不受动作控制、其未来值不可预测，却决定 reward/optimal action 时，reward-free latent prediction、action conditioning 或 inverse dynamics 是否会保留它；如果不会，失败来自目标结构还是容量/塌缩，什么监督能修复？",
+  "contributions": [
+    "以 controllability × reward relevance 四象限和独立 predictability knob，受控隔离 exogenous-but-control-relevant feature。",
+    "在 byte-identical encoder 下比较 reconstruction、JEPA、action-conditioned JEPA、controllability JEPA、random-policy inverse dynamics、reward-grounded JEPA 与 supervised reference。",
+    "用 probe、InfoNCE MI 与 effective rank 区分选择性丢失和整体 collapse，并以 latent-dimension sweep、两种 surface forms、policy informativeness 与 bisimulation separation 排查替代解释。",
+    "显示少量 reward grounding 在该 synthetic setting 中可选择性恢复 relevance，而 pure prediction/controllability signal 不能保证。"
+  ],
+  "method": {
+    "summary": "构造一个局部视觉 bit，其 controllability、reward relevance 与 temporal predictability 可独立设定；可预测的多频 background 确保 JEPA 有真正的时序结构可学。固定同一 encoder，分别训练六种目标与监督上界，之后在 disjoint evaluation stream 上用 frozen online encoder 做 linear probe、InfoNCE MI 和 effective-rank 诊断，并改变 latent dimension、reward-label fraction、environment surface 与 inverse-dynamics policy informativeness。",
+    "assumptions": [
+      "reward relevance 被设计为 feature bit 直接决定 optimal action/reward，属于立即、二元、局部可见的受控定义。",
+      "exogenous feature 的 transition 由 predictability knob 控制；主实验处于最大不可预测设置，background 仍确定性可预测。",
+      "linear probe/InfoNCE 可检测 feature retention；effective rank 用于排除全局 collapse，但低 intrinsic-rank environment 需单独解释。",
+      "inverse dynamics 的保留能力依赖 behavior policy 的 action 是否与 feature 相关；random-policy 结果不能代表所有 informative policies。",
+      "reward-grounded objective 获得 reward labels，而 reward-free variants 不获得；结论比较的是 supervision axis，不是相同信息预算下的纯算法效率。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "QuadrantEnv generated transition streams",
+      "SwitchColorEnv generated transition streams",
+      "GridWorldHiddenRuleEnv replication streams"
+    ],
+    "tasks": [
+      "binary exogenous feature retention",
+      "linear-probe decoding",
+      "InfoNCE mutual-information estimation",
+      "effective-rank anti-collapse diagnosis",
+      "latent-dimension capacity sweep",
+      "reward-label fraction sweep",
+      "bisimulation class-separation comparison"
+    ],
+    "embodiments": [
+      "synthetic action-conditioned visual environments"
+    ],
+    "sample_or_scale": "小型 synthetic environments；主结果 3 seeds。各 objective 使用 byte-identical encoder，probe 读取 disjoint evaluation seed 上的 online encoder。Bisimulation separation 是 full-training 的 single-seed point estimate。"
+  },
+  "evaluation": {
+    "design": "在 feature taxonomy 的四个 cells 上对比目标信号；主 cell 4 在两个 surface forms 上运行，随后做 latent-capacity、reward-fraction、predictability 与 informative-vs-random policy checks。所有 objectives 共享 encoder architecture；JEPA variants 使用统一 anti-collapse regularization，probe 与训练 stream 分离。",
+    "baselines": [
+      "pixel reconstruction",
+      "JEPA latent self-prediction",
+      "action-conditioned JEPA",
+      "controllability-based JEPA",
+      "inverse dynamics under random and informative policies",
+      "reward-grounded JEPA",
+      "feature-label supervised reference"
+    ],
+    "metrics": [
+      "linear-probe accuracy",
+      "InfoNCE mutual-information lower bound",
+      "effective rank",
+      "whitened latent-centroid separation",
+      "analytical on-policy bisimulation distance"
+    ],
+    "ablations": [
+      "four controllability/relevance cells",
+      "predictability knob",
+      "latent dimension",
+      "reward-label fraction",
+      "environment surface form",
+      "random versus informative inverse-dynamics policy"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "对于未来接近不可预测但决定 payoff 的 feature，pure self-prediction 没有要求 latent 保留它的梯度；predictability 与 control relevance 可以正交。",
+      "scope": "存在性机制建立在显式构造的 binary feature 上，不说明自然数据中该类 feature 的频率。",
+      "locator": "1 Introduction"
+    },
+    {
+      "finding": "所有被测 reward-free predictive variants 在两个环境中都让 exogenous control-relevant feature 接近 chance；reward-grounded、reconstruction 和 supervised references 保留它。",
+      "scope": "只针对本文实现和 random-policy failure setting；不是所有可能 objective 的全称结论。",
+      "locator": "4.1 Reward-free predictive objectives do not retain the exogenous control-relevant feature"
+    },
+    {
+      "finding": "random-policy inverse dynamics 没有 action–feature mutual information 因而不能锚定 cell 4；informative policy 可以保留，但那已引入与 feature 相关的 action supervision。",
+      "scope": "inverse-dynamics 成败依赖行为策略信息性，不能只按 objective 名称判断。",
+      "locator": "3.3 Objectives"
+    },
+    {
+      "finding": "扩大 latent dimension 没有让 JEPA 越过保留阈值，而 reward-grounded variant 跨容量保持高保留，支持 objective-structural 而非 encoder capacity 解释。",
+      "scope": "容量扫描仍限于小型 synthetic encoder/training budget。",
+      "locator": "4.3 The failure is not a capacity problem"
+    },
+    {
+      "finding": "JEPA latent 对 cell-4 classes 的 whitened separation 明显小于 reconstruction/supervised references，probe 处于 chance；作者同时明确这是 single-seed controlled measurement 而非定理。",
+      "scope": "不能从该结果直接判断大型 pretrained JEPA 或真实控制 regret。",
+      "locator": "5 Empirical Comparison with Bisimulation Predictions"
+    },
+    {
+      "finding": "研究不测试 V-JEPA/LeWM 等大模型、机器人、Atari、RL benchmark 或真实数据，也不估计自然任务中该 failure 的发生频率。",
+      "scope": "可支持结构性风险存在和原因隔离，不能支持部署频率或系统排名。",
+      "locator": "6.7 Limitations"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "全部结果来自小型 synthetic environments；未运行大型 pretrained model、机器人、Atari、标准 RL benchmark 或真实演示。",
+        "locator": "6.7 Limitations"
+      },
+      {
+        "limitation": "该研究不是 benchmark，也不声称 failure mode 在自然数据中出现的频率。",
+        "locator": "6.7 Limitations"
+      },
+      {
+        "limitation": "bisimulation comparison 是 full-training single-seed empirical measurement，不是带环境/学习动力学假设的定理。",
+        "locator": "6.7 Limitations"
+      },
+      {
+        "limitation": "inverse-dynamics cell-4 failure 依赖 random actions；informative policy 下不必失败。",
+        "locator": "6.7 Limitations"
+      },
+      {
+        "limitation": "objective set 并非穷尽，只能把结论归于本文评测的 reward-free predictive objectives。",
+        "locator": "6.7 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "feature 是局部可见、二元且直接决定即时 reward；自然任务中的隐藏语境、长程规则和连续 reward 可能更难，也可能通过其他相关线索被间接保留。",
+        "basis": "环境实现把 corner/intensity patch 设为 feature bit，并令 optimal action 直接等于该 bit。"
+      },
+      {
+        "boundary": "reward-grounded remedy 的选择性并非免费无监督恢复；它使用 reward labels，改变了监督信息集。",
+        "basis": "Table 1/§3.3 明确 jepa_reward consumes reward labels，而其他 predictive variants reward-free。"
+      },
+      {
+        "boundary": "feature probe/MI 表示信息可解码，不等于实际 policy 成功、control regret、安全或恢复能力。",
+        "basis": "全文没有训练/评测下游 controller；bisimulation 与 regret 的联系来自理论引用，当前实证只测 latent separation。"
+      },
+      {
+        "boundary": "三种指标仍可能受 probe capacity、InfoNCE lower-bound estimator 和 effective-rank calibration 影响。",
+        "basis": "作者专门指出 gridworld intrinsic rank 低，bisimulation measurement 也只有 single seed。"
+      }
+    ]
+  },
+  "transfer_boundary": "最可信的迁移是结构性告警：若真实任务存在“当前必须观测、未来不可预测、动作不可控制但决定 reward/optimal action”的变量，reward-free prediction、action conditioning 或 inverse dynamics 可能无保留信号。要判断 LeWM/Delta-JEPA 是否受影响，必须在目标数据上构造 reward/exogenous-feature retention、下游 policy 与闭环测试；不能从本 synthetic study 直接判定具体模型失败。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "controllability、relevance 与 predictability 被独立操纵，能够隔离“因为不可预测而丢失”而非“因为无关而丢失”。",
+      "byte-identical encoder、统一 anti-collapse setup 和 disjoint online-encoder probe 降低架构/探针泄漏混杂。",
+      "probe、MI、effective rank 三指标区分 feature omission 与整体 collapse。",
+      "两种 surface forms、capacity sweep、reward fraction 和 policy informativeness 检查多个替代解释。",
+      "明确列出不蕴含项和 limitations，主张强度总体与受控研究相称。"
+    ],
+    "design_risks": [
+      "synthetic binary rule 过于简化，且没有大型 pretrained encoder/真实世界复验。",
+      "只使用三个 seeds；bisimulation separation 更是 single seed，统计不确定性有限。",
+      "reward-grounded 与 reward-free methods 接收不同监督信息，不能解释为纯 objective 优化优越性。",
+      "没有下游 policy/control performance，control relevance 通过 reward definition 与 probe retention 间接建立。",
+      "objective variants 是统一小环境实现，不等于原始 V-JEPA、LeWM、PLDM 等完整系统。",
+      "informative-policy inverse dynamics 可恢复 feature，说明数据收集策略是 load-bearing confounder/condition。"
+    ],
+    "baseline_fairness": "共享 encoder、training invariants 和 probe protocol 对目标级比较很公平；但 reconstruction/reward-grounded/supervised references 获得像素或标签信息，角色是信息上界/机制参照，不应当作同监督预算的算法排名。",
+    "metric_validity": "linear probe 与 MI 直接测 feature retention，effective rank 排除 collapse，whitened separation 对接 bisimulation geometry；但这些都不是闭环 controller success 或 regret。InfoNCE 是 lower bound，effective rank 在 intrinsic low-rank 环境需谨慎。",
+    "reproducibility": "附录列出 byte-identical state_dict assertions、EMA target、anti-collapse regularization、disjoint probe seed、配置 capacity、CUDA/PyTorch、verify.py 与 REPRODUCE.md；当前 HTML 数学节点缺失部分具体值，但结构与复现不变量完整。",
+    "external_validity": "外部有效性故意受限于小型 synthetic feature-retention setting；向自然视频、长程机器人任务、多模态 hidden state 和具体 LeWM/Delta-JEPA 迁移完全未验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2606.30068-C01",
+      "claim": "A reward-relevant feature can be temporally unpredictable, in which case a latent self-prediction objective receives no signal to retain information that a controller still needs.",
+      "stance": "limit",
+      "relation": "指出“预测得好”与“控制信息充分”之间的目标级缺口。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "引言把 feature 的不可预测性与 payoff relevance 分离，并明确预测目标会把它视为 noise。",
+      "locator": "1 Introduction",
+      "source_context": "A self-prediction objective receives no gradient that asks it to carry such a feature: from the objective’s point of view it is noise, even though it determines the agent’s payoff. Predictability and control-relevance, in other words, can be orthogonal, and an objective that optimizes the former can discard a feature that scores high on the latter.",
+      "evidence_type": "mechanistic-argument",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "连续原文直接说明 no gradient、objective sees noise、feature determines payoff 和 orthogonality；主张限于这种 feature class，没有推成所有预测目标必然失败。"
+      }
+    },
+    {
+      "card_id": "2606.30068-C02",
+      "claim": "Across both controlled environments, every evaluated reward-free predictive variant left the exogenous control-relevant feature near chance, while the reward-grounded variant recovered it at the one-bit ceiling alongside reconstruction and supervised references.",
+      "stance": "limit",
+      "relation": "为 reward-free JEPA/action-conditioned/controllability/inverse-dynamics variants 的共同 retention 缺口提供直接结果。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "主结果段按两环境和三 seeds 汇总 near-chance predictive variants 与 ceiling reward-grounded/reference outcomes。",
+      "locator": "4.1 Reward-free predictive objectives do not retain the exogenous control-relevant feature",
+      "source_context": "All evaluated reward-free predictive objectives leave the exogenous control-relevant feature near chance, in both environments and across three seeds (Figure 2 , Table 2 ). On QuadrantEnv , jepa reaches linear-probe accuracy with mutual information nats; jepa_ac ; jepa_ctrl ; and jepa_invdyn (random policy) , all at chance with essentially zero retained information. In contrast, jepa_reward reaches with nats, the one-bit ceiling, matching the recon and supervised references.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "精确上下文包含 all evaluated reward-free objectives、both environments、three seeds、at chance/zero information 与 reward-grounded one-bit ceiling；因公式数值缺失，主张不重建具体准确率。"
+      }
+    },
+    {
+      "card_id": "2606.30068-C03",
+      "claim": "Inverse-dynamics retention of the exogenous feature depends on the behavior policy: random actions provide no anchor, whereas an informative policy can retain it only because actions correlate with the feature.",
+      "stance": "conditional",
+      "relation": "限定把 inverse dynamics/LDAD 视为普遍控制相关信息修复器的范围。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Objectives section 明确区分 random-policy failure 与 informative-policy rescue，并把后者归为 action supervision。",
+      "locator": "3.3 Objectives",
+      "source_context": "For jepa_invdyn the policy matters. Under the random-policy stream used in the failure experiments, the actions carry no information about an exogenous feature, so the inverse-dynamics head has nothing to anchor cell 4 to and drops it. Under an informative policy whose actions correlate with the feature (the condition shown in the full matrix, Table 3 in Appendix C ), the same objective can retain it. But that is ground-truth action supervision, not unsupervised rescue.",
+      "evidence_type": "conditional-mechanism",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐项包含 policy matters、random actions no information/no anchor、informative correlated actions retain 与 not unsupervised rescue；主张不否认 informative-policy 条件。"
+      }
+    },
+    {
+      "card_id": "2606.30068-C04",
+      "claim": "Increasing latent capacity did not rescue cell-4 retention for JEPA, while the reward-grounded variant remained high across the sweep, supporting an objective-structural rather than capacity explanation.",
+      "stance": "limit",
+      "relation": "排除“LeWM/JEPA 只是 latent 太小”的替代解释。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "capacity sweep 显示 JEPA 始终不过 retain threshold，reward-grounded variant 跨容量保持近完美。",
+      "locator": "4.3 The failure is not a capacity problem",
+      "source_context": "Increasing latent capacity does not rescue the feature for JEPA. As the latent dimension grows from to , JEPA’s cell-4 linear-probe accuracy moves only from to on QuadrantEnv and never crosses the retain threshold (Figure 3 , Table 4 ). The slight upward drift at very large dimensions is small and plausibly reflects marginal saturation of the covariance regularizer rather than genuine retention. jepa_reward holds at from dimension through and dips to ( Quadrant ) or ( SwitchColor ) only at , a training-budget artifact at the largest scale rather than a capacity floor. The cell-4 failure to retain is a property of the objective, not of the encoder’s size.",
+      "evidence_type": "ablation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该段直接表述 capacity does not rescue、never crosses retain threshold、reward-grounded stays high 与 objective not size；数学值不可见，因此卡片只保留方向。"
+      }
+    },
+    {
+      "card_id": "2606.30068-C05",
+      "claim": "The trained JEPA latent realized substantially less class separation for the exogenous reward-relevant feature than reconstruction and supervised references, but the authors characterize this as a single-seed controlled measurement rather than a theorem or large-model result.",
+      "stance": "conditional",
+      "relation": "用 bisimulation-aware geometry 补充 probe 结果，同时保留证据强度和外推边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Section 5 把 analytical reward-sensitive state distinction与实际 latent separation 对比，并明示 single seed、finite budget、large pretrained generality open。",
+      "locator": "5 Empirical Comparison with Bisimulation Predictions",
+      "source_context": "Only the supervised reference and the pixel-grounded reconstruction baseline realize that separation in latent space (class distance ); the JEPA latent realizes only (Figure 5 ). In our setting, latent self-prediction provides no effective optimization signal toward the unpredictable-but-relevant feature and does not encode it, even though it is trivially encodable. These numbers are a single-seed point estimate under full training and are reported as such. Zhang et al. ( 2020 ) relate bisimulation-aligned representations to lower control regret: a representation that fails to separate states differing in a reward-relevant feature cannot support a controller that acts on it. This comparison locates exactly such a failure: the near-zero class separation is measured directly from the latent geometry, so the loss of control-relevant structure is intrinsic to the representation rather than an artifact of any particular probe or downstream policy. We emphasize that this comparison is an empirical measurement in a controlled synthetic environment, not a formal proof; the analytical bisimulation distance is a closed-form derivation, but the claim that JEPA does not encode the feature is measured from trained models on a finite budget, and its generality to large pretrained JEPA models is an open question.",
+      "evidence_type": "diagnostic-experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "连续上下文支持 less separation、single-seed、controlled empirical measurement/not proof 与 large-model open question；主张没有将理论引用中的 regret 关系当成本篇实测 controller 结果。"
+      }
+    },
+    {
+      "card_id": "2606.30068-C06",
+      "claim": "The study establishes an objective-level failure mode only in small synthetic environments; it does not test large pretrained models, robotics, standard RL benchmarks, real data, or how often the failure occurs naturally.",
+      "stance": "limit",
+      "relation": "界定该反证对 LeWorldModel/Delta-JEPA 的用途是风险假设与测试设计，而非具体模型判决。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Limitations section 明确列出 synthetic-only、无大模型/机器人/Atari/真实数据和非 benchmark/频率结论。",
+      "locator": "6.7 Limitations",
+      "source_context": "We are deliberately explicit about scope: this is a controlled mechanistic study, not a benchmark and not a theorem. • All results are in small synthetic environments ( and observations). We run no large-scale pretrained-model experiments (e.g. V-JEPA 2-AC), no robotics experiments, no Atari or other standard RL-benchmark experiments, and no real-world demonstrations; transfer to any of these is untested and is future work. • This is not a benchmark study. We do not rank methods on a task suite and make no claim about how frequently the failure mode arises in natural data, only that it exists and has an identifiable cause.",
+      "evidence_type": "author-stated-limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐字声明 controlled/not benchmark/not theorem、small synthetic、no large model/robotics/Atari/real demonstrations 与 no natural-frequency claim；卡片完全按明示范围表述。"
+      }
+    }
+  ],
+  "core_citations": [
+    {
+      "title": "Learning Invariant Representations for Reinforcement Learning without Reconstruction",
+      "arxiv_id": "2006.10742",
+      "reason": "提供 bisimulation-aware representation 与 control-relevant state distinction 的理论对照，是 Section 5 separation 解释的关键外部前提。"
+    }
+  ],
+  "notes": "按 scoping 六遍法精读完整 arXiv HTML v1。当前纯文本抽取丢失部分 LaTeX 数学值；事件不从摘要或缓存 HTML alttext 补数，只使用完整正文中可核验的方向、条件和明示范围。"
+}

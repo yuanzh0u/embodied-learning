@@ -1,0 +1,443 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.19312",
+    "title": "LeWorldModel: Stable End-to-End Joint-Embedding Predictive Architecture from Pixels",
+    "published": "2026-03-13",
+    "url": "https://arxiv.org/abs/2603.19312",
+    "authors": [
+      "Lucas Maes",
+      "Quentin Le Lidec",
+      "Damien Scieur",
+      "Yann LeCun",
+      "Randall Balestriero"
+    ]
+  },
+  "review": {
+    "question": "LeWorldModel 如何把从像素学习的 JEPA 表征、动作条件潜空间动力学和在线规划连接成可控闭环？其稳定、端到端、轻量和快规划分别由什么机制与实验证据支持，又有哪些限制和迁移边界？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文是本综述的主干论文：它把像素端到端 JEPA、SIGReg 防坍塌、动作条件潜动力学、CEM 轨迹优化与 MPC 执行放在同一系统中，并直接报告稳定性、规划效率、闭环成功与迁移限制。"
+    },
+    "sections_read": [
+      {
+        "locator": "Abstract and 1 Introduction",
+        "role": "problem",
+        "purpose": "界定现有 JEPA 的坍塌、冻结预训练表征和多损失调参问题，并核对 LeWM 的核心主张。"
+      },
+      {
+        "locator": "2 Related Work",
+        "role": "relevant-core",
+        "purpose": "区分生成式世界模型、表征 JEPA、动作条件 JEPA 与潜空间 MPC，并核对 LeWM 相对 DINO-WM、PLDM 的定位。"
+      },
+      {
+        "locator": "3 Method: LeWorldModel and 3.1 Learning the Latent World Model",
+        "role": "method-or-design",
+        "purpose": "核对 ViT 编码器、AdaLN 动作条件 predictor、teacher-forced 下一潜状态预测、SIGReg 两项训练目标与全参数联合优化。"
+      },
+      {
+        "locator": "3.2 Latent Planning",
+        "role": "method-or-design",
+        "purpose": "核对终端潜空间平方欧氏目标、CEM 搜索、rollout 误差与 receding-horizon MPC 接口。"
+      },
+      {
+        "locator": "4.1 Planning evaluation setup",
+        "role": "data-or-setting",
+        "purpose": "核对四个连续动作仿真环境、五类对照方法和跨环境固定超参数设置。"
+      },
+      {
+        "locator": "4.2 Towards Efficient Planning with WMs",
+        "role": "results-or-analysis",
+        "purpose": "核对 Push-T 相对 PLDM 的成功率方向、规划时延，以及 Two-Room 反例。"
+      },
+      {
+        "locator": "4.3 Towards Stable Training of World Models",
+        "role": "results-or-analysis",
+        "purpose": "核对 SIGReg 投影数、积分节点、embedding 维度与 encoder 架构消融，以及训练曲线所支持的稳定性范围。"
+      },
+      {
+        "locator": "5.1 Physical Structure of the Latent Space",
+        "role": "results-or-analysis",
+        "purpose": "核对线性/非线性 probe、事后 decoder、t-SNE 和 temporal straightening 对物理状态信息的代理证据及遗漏细节。"
+      },
+      {
+        "locator": "5.2 Violation-of-expectation Framework",
+        "role": "results-or-analysis",
+        "purpose": "核对 teleportation 与 color-change 扰动下 surprise 的定义、环境范围与显著性叙述。"
+      },
+      {
+        "locator": "6 Conclusion and Limitations & Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对短时域、离线覆盖、低数据多样性与动作标签依赖等作者明示边界。"
+      },
+      {
+        "locator": "Appendix A SIGReg and Appendix B Cross-Entropy Method",
+        "role": "appendix-or-supplement",
+        "purpose": "核对随机投影、Epps–Pulley、Cramér–Wold 的适用层级，以及 CEM 的无全局最优保证和高维动作困难。"
+      },
+      {
+        "locator": "Appendix C Baselines",
+        "role": "appendix-or-supplement",
+        "purpose": "核对 DINO-WM、PLDM、GCBC 与 GC-RL 的输入、目标和调参资源差异。"
+      },
+      {
+        "locator": "Appendix D Implementation details and Appendix E Environment & Dataset",
+        "role": "data-or-setting",
+        "purpose": "核对 frame skip、训练片段、模型规模、CEM 样本/迭代、执行频率及各环境离线数据规模。"
+      },
+      {
+        "locator": "Appendix F Evaluation Details",
+        "role": "appendix-or-supplement",
+        "purpose": "核对同轨迹可达目标采样、50-step 预算、probe 指标与 VoE 扰动生成方式。"
+      },
+      {
+        "locator": "Appendix G Ablations",
+        "role": "appendix-or-supplement",
+        "purpose": "核对三 seed 稳定性、SIGReg 权重、模型规模、decoder、架构、dropout 和 solver 消融。"
+      },
+      {
+        "locator": "Appendix H Temporal Latent Path Straightening and Appendix I Training Curves",
+        "role": "appendix-or-supplement",
+        "purpose": "核对 straightening 是观察到的相关现象而非目标项，以及训练曲线比较的任务边界。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "References",
+        "role": "relevant-core",
+        "reason": "只用于确认 LeJEPA、DINO-WM 与 PLDM 的前序身份；本篇直接事件不依赖参考文献表作为主证据。"
+      },
+      {
+        "locator": "Appendix C.3 GC-RL detailed value/Q-function derivations",
+        "role": "appendix-or-supplement",
+        "reason": "已核对其离线 goal-conditioned baseline 身份和输入；IQL/IVL 的完整推导不影响本文关于 LeWM 机制、规划或边界的主张。"
+      }
+    ]
+  },
+  "research_question": "只用离线像素—动作轨迹，LeWM 能否在不冻结预训练视觉编码器、不使用 EMA/stop-gradient 和奖励监督的情况下稳定学习可预测且动作敏感的潜状态，并让短时域 CEM/MPC 获得可测的效率与闭环收益；这些收益在哪些数据、几何、时域和评测条件内成立？",
+  "contributions": [
+    "提出约 15M 参数的端到端动作条件 JEPA：ViT 编码帧，Transformer predictor 通过 AdaLN 接收动作并自回归预测下一潜状态，编码器和 predictor 联合训练。",
+    "把下一潜状态预测与 SIGReg 各向同性高斯分布匹配组合成两项损失；SIGReg 以随机一维投影和 Epps–Pulley 正态性统计量近似高维分布约束。",
+    "在冻结训练后模型的条件下，以终端潜空间目标距离驱动 CEM，并以短时域 receding-horizon MPC 执行，连接表示学习、动力学预测与 goal-conditioned control。",
+    "在四个仿真连续控制环境报告控制、计算、跨 seed 稳定性、物理量 probe 和 violation-of-expectation 结果，同时给出短 horizon、数据覆盖、低内在维度和动作标签依赖等限制。"
+  ],
+  "method": {
+    "summary": "训练数据是无奖励、无任务标签的离线像素—动作轨迹。ViT-Tiny 编码器把图像压到低维 latent，约 10M 参数的 Transformer predictor 以历史 latent 为输入，并在每层通过零初始化 AdaLN 注入动作；teacher forcing 预测相邻下一 latent。训练目标是预测 MSE 加权 SIGReg：对 batch/time latent 取随机单位方向投影，用一维 Epps–Pulley 正态性统计量推动各投影接近标准高斯；全部参数端到端反传。控制时编码当前图像和目标图像，按动作序列自回归 rollout，以终端预测 latent 到目标 latent 的平方欧氏距离为代价，用 CEM 优化。默认 horizon 为 5 个模型步，frame skip 为 5，即 25 个环境步；附录实现实际执行完整 5-step 计划后再观测并重规划。",
+    "assumptions": [
+      "离线行为轨迹不必最优，但必须充分覆盖环境动力学；动作标签在训练中是必需的。",
+      "一步 teacher-forced 潜状态预测在规划时可自回归外推到 5 个模型步，且误差尚未破坏动作排序。",
+      "终端 latent 的平方欧氏距离与任务进度、可达性和最终成功足够一致；训练目标本身没有直接监督这一点。",
+      "有限 batch、有限随机投影下的 SIGReg 近似足以避免实用坍塌；Cramér–Wold 的渐近分布陈述不等于优化一定到达有用表示。",
+      "同轨迹未来帧作为目标代表部署目标分布；跨轨迹、分布外目标与不可达目标不在主评测中。",
+      "短 horizon 内执行完整 action block 后再重规划足以提供闭环纠偏；高频扰动或不可逆接触不在评测范围。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "TwoRoom offline trajectories: 10,000 episodes, average 92 steps, noisy heuristic policy",
+      "Push-T offline trajectories: 20,000 expert episodes, average 196 steps",
+      "OGBench-Cube single-cube trajectories: 10,000 episodes, 200 steps, benchmark heuristic",
+      "Reacher trajectories: 10,000 episodes, 200 steps, Soft Actor-Critic policy"
+    ],
+    "tasks": [
+      "TwoRoom 2D navigation through a doorway",
+      "Push-T 2D contact manipulation",
+      "OGBench-Cube 3D pick-and-place manipulation",
+      "Reacher 2D continuous reaching",
+      "latent physical-quantity probing",
+      "visual-change versus teleportation violation-of-expectation tests"
+    ],
+    "embodiments": [
+      "2D point agent",
+      "2D pushing agent and T block",
+      "simulated robotic arm with cube",
+      "simulated two-joint reaching arm"
+    ],
+    "sample_or_scale": "四个仿真连续动作环境，单环境 10,000–20,000 离线 episodes；世界模型各训练 10 epochs。主控制评测从离线轨迹采样起点并取同一轨迹 25 步后的状态作可达目标，最多执行 50 环境步。稳定性表只在 Push-T 上用三次训练 seed、相同 50 条评测轨迹。"
+  },
+  "evaluation": {
+    "design": "在相同四类 benchmark 上比较 LeWM、DINO-WM、PLDM、GCBC、GCIQL 和 GCIVL；除特别说明外去除 DINO-WM 的 proprioception，并保持每个方法的超参数跨环境固定。控制评测使用同轨迹可达目标、固定 budget/horizon；另做固定 FLOPs 规划比较、训练曲线、三 seed 方差、SIGReg/模型/solver 消融、probe、事后 decoder 与 VoE 扰动测试。",
+    "baselines": [
+      "DINO-WM with frozen DINOv2 encoder",
+      "PLDM end-to-end VICReg-style JEPA",
+      "goal-conditioned behavioral cloning (GCBC)",
+      "goal-conditioned IQL (GCIQL)",
+      "goal-conditioned IVL (GCIVL)"
+    ],
+    "metrics": [
+      "goal-conditioned success rate",
+      "planning wall time and fixed-FLOPs performance",
+      "training-seed mean success and variance",
+      "probe MSE and Pearson correlation",
+      "prediction surprise under visual and physical perturbations",
+      "qualitative decoded rollout fidelity",
+      "temporal latent-path straightness"
+    ],
+    "ablations": [
+      "SIGReg random projections and integration knots",
+      "SIGReg regularization weight",
+      "embedding dimension",
+      "ViT versus ResNet-18 encoder",
+      "predictor size and dropout",
+      "with versus without reconstruction loss",
+      "CEM versus gradient optimizers",
+      "three-seed training variance"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "LeWM 的 encoder 和 predictor 从像素—动作轨迹联合训练，动作通过每层 AdaLN 进入 predictor；它不是冻结视觉 backbone 上单独拟合 dynamics。",
+      "scope": "无奖励、无任务标签，但必须有动作标签的离线轨迹；任务特定目标只在规划时以 goal image 给出。",
+      "locator": "3 Method: LeWorldModel and 3.1 Learning the Latent World Model"
+    },
+    {
+      "finding": "SIGReg 通过随机一维投影的正态性匹配推动 latent 接近各向同性高斯，减少了显式防坍塌目标和需要调的有效损失权重。",
+      "scope": "Cramér–Wold 支持的是足够多投影时的分布等价；不证明有限训练一定获得控制充分、可达性保持的几何。",
+      "locator": "3.1 Training Objective and Appendix A SIGReg"
+    },
+    {
+      "finding": "规划以终端 latent 距离为目标运行 CEM；作者明确承认 horizon 增大会同时增加计算、模型偏差和自回归误差，因此用短 horizon MPC 缓解。",
+      "scope": "默认 5 个模型步、25 个环境步，并在附录实现中执行完整 5-step action sequence 后才重规划；不是逐环境步反馈控制。",
+      "locator": "3.2 Latent Planning and Appendix D Planning solver"
+    },
+    {
+      "finding": "在 Push-T，正文报告 LeWM 比 PLDM 高 18% success rate；固定规划配置下完整规划低于 1 秒，但 Two-Room 上 LeWM 反而落后。",
+      "scope": "四个仿真环境、特定硬件/solver/tokenization 和同轨迹可达目标；不能直接外推成真实机器人实时性或全任务优势。",
+      "locator": "4.2 Towards Efficient Planning with WMs"
+    },
+    {
+      "finding": "论文的跨 seed 稳定性证据来自 Push-T 的三次训练，LeWM 的 success-rate 方差低于 PLDM；训练曲线还显示两项损失比 PLDM 多项损失更平滑。",
+      "scope": "只覆盖一个环境、三 seed 和同一批 50 条可达轨迹；不是跨数据集的统计稳定性保证。",
+      "locator": "4.3 Towards Stable Training of World Models and Appendix G Table 5"
+    },
+    {
+      "finding": "物理量 probe、decoder 和 VoE 表明 latent 保留若干位置/场景信息并对 teleportation 更敏感，但细粒度旋转和 end-effector angle 仍可能丢失。",
+      "scope": "这些是仿真中的代理测量，不能单独证明因果物理理解、可达性几何或安全控制。",
+      "locator": "5.1 Physical Structure of the Latent Space and 5.2 Violation-of-expectation Framework"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "规划仍被限制在短 horizon，长时域推理需要层级世界模型。",
+        "locator": "6 Conclusion, Limitations & Future Work"
+      },
+      {
+        "limitation": "方法依赖充分覆盖环境动力学的离线数据；低多样性、低内在维度环境会削弱高维各向同性高斯匹配。",
+        "locator": "4.2 Towards Efficient Planning with WMs and 6 Conclusion"
+      },
+      {
+        "limitation": "训练依赖动作标签，作者把 inverse dynamics 作为未来可能的解除路径。",
+        "locator": "6 Conclusion, Limitations & Future Work"
+      },
+      {
+        "limitation": "CEM 在非凸问题中没有全局最优保证，并随动作空间维度增加而困难。",
+        "locator": "Appendix B Cross-Entropy Method"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "防坍塌与控制充分性是两道不同门：匹配各向同性高斯不保证 latent 欧氏距离表示有限动作预算下的可达性。",
+        "basis": "SIGReg 只约束 batch/time embedding 的边际分布；规划代价直接采用终端 latent 平方欧氏距离，论文没有对其可达性校准做独立因果实验。"
+      },
+      {
+        "boundary": "所谓闭环 MPC 的反馈频率受 action block 限制，不能等同于每个环境步观测并纠错。",
+        "basis": "附录设置 horizon=5、frame skip=5，且执行完整 5-step optimized sequence 后再规划，相当于两次反馈间隔 25 个环境步。"
+      },
+      {
+        "boundary": "同轨迹未来帧目标降低了不可达目标与分布外目标难度，主 success rate 不能代表任意图像目标规划。",
+        "basis": "Appendix F.1 明确从同一离线 trajectory 取未来 25 步作为目标，以确保目标可达且符合数据动力学。"
+      },
+      {
+        "boundary": "三 seed、单环境、单批 50 条轨迹只支持局部的训练稳定性判断，不足以证明跨数据集和超参数的普遍稳定。",
+        "basis": "Appendix G Table 5 的训练方差实验只在 Push-T 汇总三 seed；其他稳定性证据主要是曲线形态和若干单变量消融。"
+      },
+      {
+        "boundary": "仿真中的 probe、decoder 与 teleportation surprise 不是实际机器人接触、安全恢复或分布外鲁棒性的验证。",
+        "basis": "四个任务均为 benchmark 仿真，没有真实机器人、力/触觉、安全约束、动态扰动或跨本体部署评测。"
+      }
+    ]
+  },
+  "transfer_boundary": "最窄可迁移范围是：有足够覆盖的离线像素—动作轨迹、连续且较低维的动作接口、目标图像来自相近且可达的数据分布、25 环境步左右的短时域足够、可承担 CEM 在线搜索，并且 latent 欧氏距离与任务进度在该环境内大致一致的仿真 goal-conditioned control。向真实机器人、长程层级任务、强不可逆接触、高维动作、稀疏或低内在维度数据、不可达/跨轨迹目标、无动作视频或安全关键部署迁移，都需要新的机制和验证。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "端到端 LeWM 与冻结 DINO-WM、端到端 PLDM、行为克隆和离线 RL 同时比较，覆盖表示、世界模型和直接策略三类路线。",
+      "作者报告固定 FLOPs 的规划比较，并在正文/附录公开 frame skip、CEM 样本数、迭代数、horizon、数据规模和主要结构参数。",
+      "除了成功率和时延，还用 seed 方差、损失曲线、超参数/架构/solver 消融、probe 与 VoE 从多个角度检查主张。",
+      "正文主动报告 Two-Room 反例、短 horizon、离线覆盖和动作标签依赖，便于限定结论。"
+    ],
+    "design_risks": [
+      "训练是一步 teacher forcing，规划却做多步自回归 rollout；短 horizon/MPC 缓解误差但没有隔离长期误差来源。",
+      "默认执行整个 5-step action block 后再重规划，反馈频率较低，动态扰动和不可逆接触下的鲁棒性未知。",
+      "目标来自同一离线轨迹的未来状态，确保可达并贴近数据分布，可能高估面向任意目标的规划能力。",
+      "各向同性 prior 与 Two-Room 失败之间是作者解释而非因果消融；没有 SIGReg-off 或不同几何先验对照来验证该机制。",
+      "物理理解主要由 probe、事后 decoder、t-SNE 和人工 teleportation surprise 支持，代理指标与闭环决策效用未做逐样本对应。",
+      "规划时间依赖 token 数、solver 配置、硬件和实现；低于 1 秒仍不等同于高频实时机器人控制。"
+    ],
+    "baseline_fairness": "作者尽量保持各方法跨环境的超参数固定，通常移除 DINO-WM 的 proprioception，并补充固定 FLOPs 比较；这些设计提高了可比性。但 DINO-WM 受益于 124M 图像预训练，PLDM 具有六个可调损失权重且在 Push-T 做 256 配置搜索，LeWM 与直接策略基线的训练目标和计算预算也不同，因此应把结果解释为系统路线比较，而非单一模块的严格等资源因果实验。",
+    "metric_validity": "goal success rate 与 planning wall time直接衡量 benchmark 决策效用；三 seed 方差能触及训练稳定性。局限是目标被预先保证可达、时延是配置相关，probe MSE/Pearson、decoder、t-SNE、straightness 和 VoE surprise 都只是潜表示代理，不能替代真实安全、恢复、可达性或长期闭环评测。",
+    "reproducibility": "论文给出代码链接、模型结构、离线数据规模、frame skip、训练 epoch、CEM 参数、主对照和多项附录消融，复现条件较充分。仍需独立复现确认图表数值、硬件计时、环境版本、PLDM/DINO-WM 调参资源和 SIGReg 有效范围；LaTeXML 扁平文本省略 MathML 数值，本次对公式语义和实现参数另与缓存 HTML 的 alttext/原段落交叉核验。",
+    "external_validity": "证据限于四个仿真连续控制环境、图像目标、同轨迹可达状态、低维动作和短 horizon。没有真实机器人、跨本体、自然视频预训练、长程层级规划、不可达目标、强动态干扰、力/触觉、安全或资源受限边缘部署证据。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.19312-C01",
+      "claim": "LeWorldModel jointly trains a pixel encoder and an action-conditioned latent predictor; actions enter the predictor through AdaLN at every layer, and the predictor autoregressively forecasts the next latent from a history of frame representations.",
+      "stance": "support",
+      "relation": "界定 LeWM 技术主链中从像素表征到动作敏感潜动力学的具体接口，而不是把它误写成冻结 backbone 上的 dynamics head。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法段明确描述 encoder、predictor、AdaLN 动作注入、causal autoregression，并说明所有组件联合学习。",
+      "locator": "3 Method: LeWorldModel",
+      "source_context": "LeWM is built upon two components: an encoder and a predictor. The encoder maps a given frame observation into a compact, low-dimensional latent representation . The predictor models the environment dynamics in latent space by predicting the embedding of the next frame observation given the latent embedding and an action . Encoder: (LeWM) Predictor: The encoder is implemented as a Vision Transformer (ViT) [ 15 ] . Unless otherwise specified, we use the tiny configuration ( 5M parameters) with a patch size of 14, 12 layers, 3 attention heads, and hidden dimensions of 192. The observation embedding is constructed from the [CLS] token embedding of the last layer, followed by a projection step. The projection step maps the [CLS] token embedding into a new representation space using a 1-layer MLP with Batch Normalization [ 31 ] . This step is necessary because the final ViT layer applies a Layer Normalization [ 4 ] , which prevents our anti-collapse objective from being optimized effectively. The predictor is a transformer with 6 layers, 16 attention heads, and 10% dropout ( 10M parameters). Actions are incorporated into the predictor through Adaptive Layer Normalization (AdaLN) [ 42 ] applied at each layer. The AdaLN parameters are initialized to zero to stabilize training and ensure that action conditioning impacts the predictor training progressively. The predictor takes as input a history of frame representations and predicts the next frame representation auto-regressively with temporal causal masking to avoid looking at future embeddings. The predictor is also followed by a projector network with the same implementation as the one used for the encoder. All components of our world model are learned jointly using the loss described in the following paragraph.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "缓存全文的方法段逐项给出 encoder/predictor、每层 AdaLN、历史 latent、自回归 causal mask 与联合学习；主张没有扩展到无动作数据、任意 encoder 或跨本体条件。"
+      }
+    },
+    {
+      "card_id": "2603.19312-C02",
+      "claim": "SIGReg regularizes LeWM latents toward an isotropic Gaussian by projecting them onto random unit directions and matching each one-dimensional projection with an Epps–Pulley normality statistic; the joint-distribution argument is asymptotic in the number of projections.",
+      "stance": "support",
+      "relation": "说明 LeWM 防坍塌机制到底约束了什么，并阻止把分布匹配误写成已验证的可达性或任务几何保证。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "SIGReg 附录明确给出随机方向、一维 Epps–Pulley 匹配、Cramér–Wold 连接及其渐近限定。",
+      "locator": "Appendix A SIGReg",
+      "source_context": "SIGReg proposes to match the distribution of embeddings towards the isotropic Gaussian target distribution. Achieving that match in high-dimension is gracefully done by combining two statistical components (i) Cramer-Wold theorem, and (ii) the univariate Epps-Pulley test-statistic. In short, SIGReg first produces unit-norm directions and projects the embeddings onto them as (6) where the directions are sampled uniformly on the hypersphere. Then, SIGReg performs univariate distribution matching as (SIGReg) with the univariate Epps-Pulley test-statistic (EP) where the empirical characteristic function (ECF) is defined as , is a weighting function, e.g., . Lastly, because the target is an isotropic Gaussian in , the univariate projection through makes the univariate target distribution the standard Gaussian . By Cramér–Wold, matching all 1D marginals implies matching the joint distribution, i.e., in the asymptotic limit over we have the following weak convergence result (Cramer-Wold) Practically, the integral in equation EP employs a quadrature scheme, e.g., trapezoid with nodes uniformly distributed in .",
+      "evidence_type": "method-theory",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "附录原文完整包含 isotropic Gaussian target、random unit directions、Epps–Pulley、Cramér–Wold 和 asymptotic limit；主张只复述分布正则机制，不声称有限训练必然获得控制充分表示。"
+      }
+    },
+    {
+      "card_id": "2603.19312-C03",
+      "claim": "LeWM planning is explicitly short-horizon and conditional: longer autoregressive rollouts trade additional lookahead for more compute and model bias, so the controller executes only a planned action block before replanning from a new observation.",
+      "stance": "conditional",
+      "relation": "限定 LeWM 从 latent prediction 到闭环控制的成立条件，并解释其为何不能直接视为长程世界模型规划。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "规划段直接陈述 horizon 的计算/偏差权衡、误差累积和 MPC 重规划缓解机制。",
+      "locator": "3.2 Latent Planning",
+      "source_context": "The planning horizon trades off long-term lookahead against increased computational cost and model bias. In particular, auto-regressive rollouts accumulate prediction errors as the horizon grows, which can deteriorate the quality of the optimized action sequence. To mitigate this effect, we adopt a Model Predictive Control (MPC) strategy: only the first planned actions are executed before replanning from the updated observation. We provide more details on the planning strategy in appendix D .",
+      "evidence_type": "method-limit",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确把 horizon 与 compute/model bias、autoregressive error 联系起来，并把 MPC 重规划表述为缓解；主张保留了短 horizon 和 action-block 条件，未夸大为逐步无误差闭环。"
+      }
+    },
+    {
+      "card_id": "2603.19312-C04",
+      "claim": "In the paper's simulated benchmark setup, LeWM achieved an 18% higher Push-T success rate than PLDM, while the fixed planning configuration completed a full plan in under one second; this did not translate into dominance on every environment.",
+      "stance": "support",
+      "relation": "给出 LeWM 轻量/快规划转化为闭环效用的直接证据，同时保留跨环境不一致。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.2 同时报告 Push-T 相对 PLDM 的成功率差、低于一秒的完整规划，以及 Two-Room 反例。",
+      "locator": "4.2 Towards Efficient Planning with WMs, Figure 3 and Figure 6",
+      "source_context": "We report planning performance in Fig. 6 . LeWM outperforms PLDM on the more challenging planning tasks, achieving an 18% higher success rate on PushT, while remaining competitive with DINO-WM. Notably, on PushT, LeWM (pixels-only) surpasses DINO-WM even when DINO-WM has access to additional proprioceptive information, demonstrating LeWM’s ability to capture underlying task-relevant quantities. Interestingly, LeWM performs worse on the simplest environment, Two-Room. A possible explanation is that the low diversity and low intrinsic dimensionality of this dataset make it difficult for the encoder to match the isotropic Gaussian prior enforced by SIGReg in a high-dimensional latent space, which may lead to a less structured latent representation. This highlights a potential limitation of the SIGReg regularization in very low-complexity environments. Moreover, when comparing planning speedups (Fig. 3 ), LeWM achieves a faster planning time, with the full planning completing in under one second while preserving competitive performance across tasks. This planning time remains consistent across environments for a fixed planning setup, narrowing the gap toward real-time control.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Push-T success-rate difference and full planning time",
+        "value_or_direction": "18% higher than PLDM; under one second",
+        "comparator": "PLDM for success rate and the Figure 3 world-model planning comparison for time",
+        "task_or_sample": "Push-T and the fixed planning setup across the paper's four simulated continuous-control environments",
+        "locator": "4.2 Towards Efficient Planning with WMs, Figure 3 and Figure 6"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.2 原文直接报告 18% higher success rate 与 under one second，并紧邻记录 Two-Room 更差；主张把结果限定在论文仿真配置，没有恢复抽取中缺失的 48× 图内数值，也没有外推到真实机器人实时控制。"
+      }
+    },
+    {
+      "card_id": "2603.19312-C05",
+      "claim": "The paper's direct cross-seed stability check is narrow: on Push-T, across three training seeds evaluated on the same 50 trajectories, PLDM exhibited higher success-rate variance than LeWM.",
+      "stance": "support",
+      "relation": "把“稳定”落到可审计的跨 seed 证据，并同时限定任务、seed 数和评测样本。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Appendix G Table 5 报告三 seed、同一 50 条 Push-T 轨迹的 success rate 与方差，并明确 PLDM 方差更高。",
+      "locator": "Appendix G Ablations., Table 5",
+      "source_context": "Training variance. To assess the stability of training, we retrain the model using multiple random seeds. As shown in Tab. 5 , the resulting performance exhibits consistently high success rates with low variance across runs, indicating that the training procedure is stable and reproducible. Table 5 : Training Variance. We report the mean success rate across three training seeds and the corresponding variance, evaluated over the same set of 50 trajectories on Push-T. The goal configuration is reachable within 25 steps, and we allow a planning budget of 50 steps. PLDM exhibits higher variance compared to DINO-WM and LeWM.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "success-rate variance across training seeds",
+        "value_or_direction": "lower for LeWM than PLDM",
+        "comparator": "PLDM",
+        "task_or_sample": "Push-T, three training seeds, the same 50 evaluation trajectories, 25-step reachable goal and 50-step budget",
+        "locator": "Appendix G Ablations., Table 5"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "表注的抽取上下文直接包含 three training seeds、same 50 trajectories、Push-T 与 PLDM higher variance；主张没有加入 HTML 数学表格中被扁平抽取省略的均值/方差数值，并明确这是狭窄稳定性证据。"
+      }
+    },
+    {
+      "card_id": "2603.19312-C06",
+      "claim": "LeWM underperformed on the simple Two-Room environment; the authors hypothesize that low data diversity and low intrinsic dimensionality conflict with matching a high-dimensional isotropic Gaussian prior, making this a potential SIGReg failure condition rather than a universal causal conclusion.",
+      "stance": "limit",
+      "relation": "提供 SIGReg 并非数据分布无关的明确反例，并区分观察结果与作者的机制解释。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "正文直接报告 Two-Room 更差，并用 possible explanation/potential limitation 表明几何归因仍是假设。",
+      "locator": "4.2 Towards Efficient Planning with WMs",
+      "source_context": "Interestingly, LeWM performs worse on the simplest environment, Two-Room. A possible explanation is that the low diversity and low intrinsic dimensionality of this dataset make it difficult for the encoder to match the isotropic Gaussian prior enforced by SIGReg in a high-dimensional latent space, which may lead to a less structured latent representation. This highlights a potential limitation of the SIGReg regularization in very low-complexity environments.",
+      "evidence_type": "negative-result",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "上下文逐字包含 performs worse、possible explanation 和 potential limitation；主张把 Two-Room 负结果作为直接证据，但把高斯先验冲突保留为作者假设而非已识别因果。"
+      }
+    },
+    {
+      "card_id": "2603.19312-C07",
+      "claim": "The authors explicitly bound LeWM to short-horizon planning and sufficiently covering offline action-labeled datasets; low diversity weakens SIGReg, and removing the need for action labels remains future work.",
+      "stance": "limit",
+      "relation": "汇总 LeWM 从训练数据到规划部署的作者明示迁移边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论限制段同时列出 short horizons、offline coverage、low diversity 和 action-label dependence。",
+      "locator": "6 Conclusion",
+      "source_context": "Limitations & Future Work. Several limitations point to future directions. Planning remains restricted to short horizons, motivating hierarchical world modeling for long-horizon reasoning. Our method also relies on offline datasets with sufficient coverage; in particular, low data diversity weakens SIGReg in simple, low-dimensional environments where matching a high-dimensional Gaussian prior is harder. Pre-training on large, diverse video datasets could provide stronger priors and reduce domain-specific data needs. Finally, dependence on action labels could be alleviated by inverse dynamics modeling.",
+      "evidence_type": "author-limitations",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "结论原文明确列出全部四项边界；主张没有把 proposed pretraining 或 inverse dynamics 写成已验证方案，也没有扩大到论文未讨论的无标签控制。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "六遍 scoping 阅读已覆盖问题、方法、数据、结果、限制和相关附录。高质量 LaTeXML extraction 的扁平文本省略 MathML 公式/表格数值；本次人工核验同时查看同一缓存 HTML 的原段落与 alttext 来确认训练目标、欧氏 latent cost、CEM 参数和表格语义，但所有投影卡的 source_context 均严格取自 extraction.text，未用抽取外数值绕过 audit。"
+}

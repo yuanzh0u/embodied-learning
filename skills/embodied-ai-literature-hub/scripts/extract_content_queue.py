@@ -25,6 +25,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--paper-id-file", required=True)
     parser.add_argument("--terms", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument(
+        "--html-cache-dir",
+        help="Explicit HTML cache directory forwarded to extract_arxiv_content.py.",
+    )
+    parser.add_argument(
+        "--pdf-cache-dir",
+        help="Explicit PDF cache directory forwarded to extract_arxiv_content.py.",
+    )
     parser.add_argument("--workers", type=int, default=2, help="Bounded I/O workers; capped at 4.")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--paper-timeout", type=float, default=120.0, help="Hard wall-clock limit per paper subprocess.")
@@ -94,6 +102,10 @@ def extract_one(paper_id: str, args: argparse.Namespace, output_dir: Path) -> di
         "--include-selected-text",
         "--output", str(temporary),
     ]
+    if args.html_cache_dir:
+        command.extend(["--html-cache-dir", args.html_cache_dir])
+    if args.pdf_cache_dir:
+        command.extend(["--pdf-cache-dir", args.pdf_cache_dir])
     if args.include_full_text:
         command.append("--include-full-text")
     try:

@@ -1,0 +1,391 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2506.09985",
+    "title": "V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning",
+    "published": "2025-06-11",
+    "url": "https://arxiv.org/abs/2506.09985",
+    "authors": [
+      "Mahmoud Assran",
+      "Adrien Bardes",
+      "David Fan",
+      "Quentin Garrido",
+      "Russell Howes",
+      "Mojtaba Komeili",
+      "Matthew Muckley",
+      "Ammar Rizvi",
+      "Claire Roberts",
+      "Koustuv Sinha",
+      "Artem Zholus",
+      "Sergio Arnaud",
+      "Abha Gejji",
+      "Ada Martin",
+      "Francois Robert Hogan",
+      "Daniel Dugas",
+      "Piotr Bojanowski",
+      "Vasil Khalidov",
+      "Patrick Labatut",
+      "Francisco Massa",
+      "Marc Szafraniec",
+      "Kapil Krishnakumar",
+      "Yong Li",
+      "Xiaodong Ma",
+      "Sarath Chandar",
+      "Franziska Meier",
+      "Yann LeCun",
+      "Michael Rabbat",
+      "Nicolas Ballas"
+    ]
+  },
+  "review": {
+    "question": "无动作视频预训练、少量机器人 action-conditioned post-training，以及 semantic/reconstructive latent 分别如何影响潜空间世界模型的预测、控制与规划效用？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-EVAL",
+      "EA-4D"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该文是本轮技术谱系的直接前序：它明确把互联网无动作视频表征预训练与少量机器人动作条件后训练分开，并在真实机器人上展示潜表征、动作条件预测和 MPC 规划的接口，同时给出长时域、子目标与相机敏感性边界。"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定仅观察视频的可扩展预训练与需要动作因果的机器人规划之间的数据和接口缺口。"
+      },
+      {
+        "locator": "2.1 Methodology",
+        "role": "method-or-design",
+        "purpose": "核对 JEPA 的遮罩特征预测目标、在线编码器、预测器与 EMA 目标编码器。"
+      },
+      {
+        "locator": "2.3 Pretraining Dataset",
+        "role": "data-or-setting",
+        "purpose": "核对 VM22M 的视频和图像来源以及超过一百万小时的无动作观察数据规模。"
+      },
+      {
+        "locator": "3 V-JEPA 2-AC: Learning an Action-Conditioned World Model",
+        "role": "method-or-design",
+        "purpose": "确认无动作预训练预测不直接包含动作因果，以及冻结编码器后新增动作条件预测器的阶段边界。"
+      },
+      {
+        "locator": "3.1 Action-Conditioned World Model Training",
+        "role": "method-or-design",
+        "purpose": "核对 Droid 视频、末端状态、差分动作、教师强制和多步 rollout 损失的后训练协议。"
+      },
+      {
+        "locator": "3.2 Inferring Actions by Planning",
+        "role": "method-or-design",
+        "purpose": "核对以目标表征距离为能量、CEM 优化和滚动时域只执行首个动作的 MPC 接口。"
+      },
+      {
+        "locator": "4 Planning: Zero-shot Robot Control",
+        "role": "data-or-setting",
+        "purpose": "记录两座实验室、Franka 机械臂、未标定单目 RGB 相机和零样本部署条件。"
+      },
+      {
+        "locator": "4.1 Experimental Setup",
+        "role": "method-or-design",
+        "purpose": "核对 Octo 与 Cosmos 基线的训练数据、后训练方式和控制协议差异。"
+      },
+      {
+        "locator": "4.2 Results",
+        "role": "results-or-analysis",
+        "purpose": "核对单目标 reaching 的末端距离与能量地形结果。"
+      },
+      {
+        "locator": "4.3 Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "确认坐标轴隐式推断和人工选择相机位置带来的部署限制。"
+      },
+      {
+        "locator": "9 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取约 16 秒预测时域、长时程无子目标规划和图像目标接口的作者边界。"
+      },
+      {
+        "locator": "11.1 Post-Training Hyperparameters",
+        "role": "appendix-or-supplement",
+        "purpose": "复核 Droid 片段、单相机视角、4 fps 与不足 62 小时后训练数据的细节。"
+      },
+      {
+        "locator": "11.2 Robot Task Definitions",
+        "role": "appendix-or-supplement",
+        "purpose": "复核 grasp、reach-with-object 与 pick-and-place 的图像目标和人工子目标调度。"
+      },
+      {
+        "locator": "11.4 Assessing Sensitivity to Camera Position",
+        "role": "appendix-or-supplement",
+        "purpose": "复核相机方位变化、坐标轴推断误差及人工相机选择的诊断。"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "5-7 Understanding and prediction probes",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: 本轮只需区分表征预训练、动作条件后训练和机器人规划，不据此扩展到通用视频理解模型排名。"
+      },
+      {
+        "locator": "References",
+        "role": "appendix-or-supplement",
+        "reason": "not-applicable: 参考文献仅用于来源追踪，不作为该文自身实验结论的证据。"
+      }
+    ]
+  },
+  "research_question": "互联网规模的无动作视频 JEPA 预训练能否提供可复用的预测表征，并在冻结该表征后，用少量带末端状态与动作的机器人视频训练动作条件潜世界模型，从而通过 MPC 在新环境中执行真实机器人控制？",
+  "contributions": [
+    "把无动作视频表征预训练与动作条件机器人后训练明确拆成两个阶段，避免把观察学习直接等同于动作因果建模。",
+    "在冻结 V-JEPA 2 编码器上训练自回归动作条件预测器 V-JEPA 2-AC，以潜表征预测、目标图像能量和 CEM 形成闭环 MPC。",
+    "用不足 62 小时 Droid 机器人视频后训练，并在两座未出现在 Droid 中的实验室部署同一模型权重和推理代码。",
+    "公开相机坐标敏感、人工子目标与约 16 秒预测时域等限制，为潜世界模型从短程预测走向长程规划划定边界。"
+  ],
+  "method": {
+    "summary": "第一阶段在互联网视频和图像上以遮罩特征预测训练 V-JEPA 2，不使用动作；第二阶段冻结视频编码器，用 Droid 的视频、末端状态与相邻帧差分动作训练 300M 参数的帧因果预测器，使其自回归预测未来帧表征。部署时把候选动作序列送入 V-JEPA 2-AC，以预测末态与目标图像表征的 L1 距离作为能量，经 CEM 优化，并按滚动时域只执行首个动作后重新规划。",
+    "assumptions": [
+      "互联网视频预训练得到的可预测视觉表征能迁移到 Droid 和目标实验室的 Franka 场景。",
+      "Droid 的末端状态差分可以作为足够的 7 维动作条件，且不需要奖励、任务类型或成功标签。",
+      "目标图像与预测潜表征之间的 L1 距离能为所测短程操作任务提供可优化的目标信号。",
+      "固定外部相机下，模型可以从视觉中隐式推断机器人基座坐标轴与笛卡尔动作方向。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "VideoMix22M (VM22M)",
+      "Droid"
+    ],
+    "tasks": [
+      "single-goal reaching",
+      "grasp",
+      "reach with object",
+      "pick-and-place with image sub-goals",
+      "video understanding and anticipation probes"
+    ],
+    "embodiments": [
+      "7-DoF Franka Emika Panda arms with two-finger or RobotiQ grippers",
+      "fixed exocentric monocular RGB camera"
+    ],
+    "sample_or_scale": "无动作预训练使用超过 100 万小时互联网视频并扩展至 10 亿参数编码器；动作条件后训练使用 Droid 中不足 62 小时、4 fps 的短机器人视频；真实机器人部署位于两座新实验室。"
+  },
+  "evaluation": {
+    "design": "在新实验室的 Franka 机械臂上进行目标图像条件的闭环 MPC；单目标 reaching 评估末端到目标的欧氏距离，预抓取操作以任务成功为主，并与行为克隆 VLA Octo 和动作条件视频生成模型 Cosmos 比较。",
+    "baselines": [
+      "Octo base 1.5 fine-tuned on Droid with hindsight image goals",
+      "Cosmos latent diffusion 7B post-trained on Droid"
+    ],
+    "metrics": [
+      "end-effector Euclidean distance to goal",
+      "task success rate",
+      "per-action planning time",
+      "energy landscape around the ground-truth action"
+    ],
+    "ablations": [
+      "camera-position sensitivity diagnostic",
+      "blocking versus non-blocking control for Octo",
+      "visualized latent rollout decoding as a diagnostic rather than the planning representation itself"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "无动作 V-JEPA 2 预训练能预测视频缺失部分，但不直接建模智能体动作的因果效应；可用于规划的模型来自冻结编码器后的动作条件后训练。",
+      "scope": "这是论文方法分阶段的明示边界，不应改写成仅靠互联网无动作视频即可得到机器人控制器。",
+      "locator": "3 V-JEPA 2-AC: Learning an Action-Conditioned World Model"
+    },
+    {
+      "finding": "V-JEPA 2-AC 使用不足 62 小时 Droid 视频以及末端状态和动作信号训练；“unlabeled”只表示不使用奖励、任务类型和成功标签，并不表示没有动作或本体状态。",
+      "scope": "Droid 的 Franka 桌面操作分布、固定外部相机和 7 维末端控制接口。",
+      "locator": "3.1 Action-Conditioned World Model Training"
+    },
+    {
+      "finding": "在论文报告的三个单目标 reaching 实例中，V-JEPA 2-AC 把末端移动到距目标不足 4 cm，并使误差单调下降。",
+      "scope": "三个 reaching 实例和论文的目标图像、单目相机、滚动 MPC 协议；不等同于全部预抓取任务的总体成功率。",
+      "locator": "4.2 Results"
+    },
+    {
+      "finding": "论文把同一权重和推理代码零样本部署到两座未出现在 Droid 中的实验室，但部署仍使用同类 Franka 机械臂、人工选择的相机位置和图像目标。",
+      "scope": "环境层面的零样本迁移，而非跨机器人形态、跨动作空间或任意相机布置的零样本泛化。",
+      "locator": "4 Planning: Zero-shot Robot Control"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "未显式标定相机时，模型必须从单目图像隐式推断笛卡尔动作坐标轴；机器人基座不可见会使该问题欠定，作者实际人工试验多个相机位置后才选定配置。",
+        "locator": "4.3 Limitations"
+      },
+      {
+        "limitation": "论文只处理约 16 秒的预测时域；pick-and-place 需要两个中间图像子目标，更长时程且无子目标的任务仍需新的分层或多尺度建模。",
+        "locator": "9 Conclusion"
+      },
+      {
+        "limitation": "当前 V-JEPA 2-AC 以图像目标指定任务，尚未建立语言目标到该潜表征空间的可用控制接口。",
+        "locator": "9 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "不能把真实机器人控制收益单独归因于无动作互联网预训练。",
+        "basis": "控制链路还需要不足 62 小时但明确带末端状态和差分动作的 Droid 后训练；论文没有在同等后训练协议下用随机初始化或移除互联网预训练做完整因果消融。"
+      },
+      {
+        "boundary": "“zero-shot”主要指目标实验室未采集额外训练数据，并不覆盖任意相机、机器人形态或动作接口。",
+        "basis": "两座实验室均使用 Franka 机械臂和相似低级控制器，且相机位置经过人工筛选。"
+      },
+      {
+        "boundary": "三个 reaching 实例的不足 4 cm 结果是有价值的闭环诊断，但样本宽度不足以单独证明稳定、通用的精密操作能力。",
+        "basis": "该结果只覆盖论文展示的三个目标位置；更复杂任务还依赖图像子目标并受到长时域误差积累和搜索成本限制。"
+      }
+    ]
+  },
+  "transfer_boundary": "证据最直接适用于以固定外部单目相机观察 Franka 桌面操作、拥有少量动作与本体状态轨迹、并采用短时域目标图像 MPC 的系统。迁移到跨形态机器人、移动相机、语言目标、无人工子目标或显著更长时程规划时，需要重新验证动作坐标对齐、潜表征目标、误差积累和搜索预算；不能把无动作预训练本身视为已学得控制。 ",
+  "critical_appraisal": {
+    "design_strengths": [
+      "论文在方法文字中明确区分无动作预训练和动作条件后训练，避免数据监督来源含混。",
+      "真实机器人部署跨两座未出现在 Droid 中的实验室，并使用闭环重规划而非只报告离线预测质量。",
+      "规划直接在潜表征中优化，无需先生成像素视频，且同时提供行为克隆和视频生成世界模型两类基线。",
+      "作者主动报告相机敏感、子目标和长时域限制，并给出附录诊断。"
+    ],
+    "design_risks": [
+      "缺少同等 Droid 后训练下移除互联网预训练或更换表征的严格消融，因此控制收益不能被唯一归因于 V-JEPA 2 预训练。",
+      "不同基线的预训练数据、参数规模、微调目标和规划速度差异很大，跨模型排名混合了表征、模型族和计算预算。",
+      "相机位置经过人工试验选择，部署协议含有未被模型显式记录的人工校准环节。",
+      "复杂 pick-and-place 使用人工图像子目标，弱化了对端到端长时程世界模型规划的证明。"
+    ],
+    "baseline_fairness": "基线都在 Droid 上适配并在相同机器人环境中部署，控制比较具有现实意义；但 Octo、Cosmos 与 V-JEPA 2-AC 的预训练规模、动作接口、模型容量、目标函数和每动作规划时间均不匹配，因此结果更适合解释为系统级比较，而非潜表征的单变量因果排名。",
+    "metric_validity": "reaching 的末端距离和任务成功直接对应控制目标，闭环执行优于仅用像素指标评价世界模型；但三个 reaching 实例较窄，图像目标距离可能忽略接触可行性，使用人工子目标的 pick-and-place 也不能测量自主长时程分解能力。",
+    "reproducibility": "论文给出数据来源、帧率、动作构造、损失、CEM 和任务调度细节，且完整非 OCR HTML 可核验；不过相机位置依靠人工试验、部分部署细节与硬件控制器条件难以仅凭文字完全复现。",
+    "external_validity": "跨两座实验室支持一定环境迁移，但硬件仍集中于 Franka、固定外部相机和桌面预抓取操作。对移动相机、不同本体、语言任务、非贪心长程任务和安全关键控制的外部效度尚未建立。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2506.09985-C01",
+      "claim": "V-JEPA 2 的无动作视频预训练预测不直接包含机器人动作的因果效应；论文是在冻结视频编码器上另行训练帧因果、动作条件预测器，才把表征接到规划。",
+      "stance": "support",
+      "relation": "支持把观察预训练与 action-conditioned post-training 视为两个不可混同的技术层，而不是把真实机器人控制归因于无动作视频阶段本身。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法章节明确说明预训练后的缺失视频预测不考虑智能体动作因果，并把小规模交互数据后训练定义为使模型可用于规划的下一阶段。",
+      "locator": "3 V-JEPA 2-AC: Learning an Action-Conditioned World Model",
+      "source_context": "After pre-training, the V-JEPA 2 model can make predictions about missing part in videos. However, these predictions do not directly take into account the causal effect of actions that an agent might take. In the next stage of training, described in this section, we focus on making the model useful for planning by leveraging a small amount of interaction data. To that end, we learn a frame-causal action-conditioned predictor on top of the frozen V-JEPA 2 video encoder",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文逐句给出无动作预测的缺口、交互后训练目的和冻结编码器上的动作条件预测器；本卡只复述训练阶段边界，没有把后续控制结果反向归因给第一阶段。"
+      }
+    },
+    {
+      "card_id": "2506.09985-C02",
+      "claim": "V-JEPA 2 的表征目标是预测场景中可预测的方面，而不是复原生成目标强调的所有像素级不可预测细节。",
+      "stance": "support",
+      "relation": "为 semantic/predictive latent 与 reconstruction-aligned latent 的区别提供方法层定义，但不据此单独宣称前者必然带来更好控制。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "引言把 JEPA 的可预测表征目标与像素生成目标并列，并用运动轨迹和草叶细节说明选择性。",
+      "locator": "1 Introduction",
+      "source_context": "Furthermore, in contrast to approaches based on video generation, the JEPA approach focuses on learning representations for predictable aspects of a scene (e.g., the trajectory of an object in motion) while ignoring unpredictable details that generative objectives emphasize, since they make pixel-level predictions",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接对比 JEPA 与视频生成目标所保留的信息；本卡把它限定为训练目标和表征偏好，没有外推为跨模型性能排序。"
+      }
+    },
+    {
+      "card_id": "2506.09985-C03",
+      "claim": "V-JEPA 2-AC 与论文基线使用同一套目标实验室协议部署在两座 Droid 未覆盖的实验室，输入为未标定、低分辨率单目 RGB，相同 V-JEPA 2-AC 权重和推理代码跨实验室复用。",
+      "stance": "conditional",
+      "relation": "支持环境层面的零样本部署证据，同时保留同类 Franka 硬件和人工相机配置这一迁移边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "规划章节明确记录两座新实验室、Franka 平台、未标定单目相机及跨机器人复用权重和推理代码。",
+      "locator": "4 Planning: Zero-shot Robot Control",
+      "source_context": "All models are deployed zero-shot on Franka Emika Panda arms with RobotiQ grippers, located in two different labs, neither of which appears in the Droid dataset. Visual input is provided through an uncalibrated low-resolution monocular RGB camera. The robots use the same exact model weights and inference code, and similar low-level controllers based on operational space control.",
+      "evidence_type": "deployment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接给出部署地点、硬件、相机和代码复用条件；本卡只把 zero-shot 解释为目标实验室未进 Droid，不扩展为跨本体或任意相机泛化。"
+      }
+    },
+    {
+      "card_id": "2506.09985-C04",
+      "claim": "在论文展示的三个单目标 reaching 实例中，V-JEPA 2-AC 把末端移动到距目标不足 4 cm，并选择使误差单调下降的动作。",
+      "stance": "support",
+      "relation": "提供动作条件潜预测能够形成可优化闭环控制信号的直接结果，但证据范围只覆盖三个 reaching 实例。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "结果章节用末端目标距离报告三个单目标 reaching 执行，并同时观察到误差单调下降。",
+      "locator": "4.2 Results",
+      "source_context": "In all cases, the model is able to move the end-effector within less than 4 cm of its goal position, and select actions that lead to a monotonic decrease in the error.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "end-effector distance to goal",
+        "value_or_direction": "less than 4 cm with monotonic error decrease",
+        "comparator": "goal position across three reaching tasks",
+        "task_or_sample": "three single-goal reaching tasks in the real-robot deployment",
+        "locator": "4.2 Results, Figure 8"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文明确用 all cases 指代紧邻上文的三个 reaching 任务，并给出不足 4 cm 与误差单调下降；本卡没有把该数值扩展到 grasp 或 pick-and-place。"
+      }
+    },
+    {
+      "card_id": "2506.09985-C05",
+      "claim": "V-JEPA 2-AC 的已验证规划时域约为 16 秒；简单 grasp 和 reach-with-object 可用单一目标图像，但更长程 pick-and-place 若不提供子目标仍需新的建模方法。",
+      "stance": "limit",
+      "relation": "限制把短时域、人工子目标下的成功解释为已经解决端到端长时程规划。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "结论把约 16 秒预测、单目标简单操作和无子目标长时程任务明确分开。",
+      "locator": "9 Conclusion",
+      "source_context": "First, in this work we have focused on tasks requiring predictions up to roughly 16 seconds into the future. This enables planning for simpler manipulation tasks, like grasp and reach-with-object, from a single goal image. However, to extend this to longer-horizon tasks such as pick-and-place or even more complex tasks, without requiring sub-goals will require further innovations in modeling.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接给出预测时域和任务层级边界，并明确说无子目标长时程任务仍需创新；本卡保持作者的条件语气。"
+      }
+    },
+    {
+      "card_id": "2506.09985-C06",
+      "claim": "未做显式相机标定时，V-JEPA 2-AC 必须从单目图像隐式推断笛卡尔动作坐标轴；机器人基座不可见会导致欠定和预测错误，作者实际人工尝试多个相机位置后才固定配置。",
+      "stance": "limit",
+      "relation": "说明当前零样本环境迁移仍包含相机布置的人工作业，不能视为对任意视角天然不变。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "限制章节把相机坐标轴推断、基座不可见和人工选位连成明确的部署失败机制。",
+      "locator": "4.3 Limitations",
+      "source_context": "However, in many cases, the robot base is not visible in the camera frame, and thus the problem of inferring the action coordinate axis is not well defined, leading to errors in the world model. In practice, we manually tried different camera positions before settling on one that worked well across all of our experiments.",
+      "evidence_type": "limitation",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文直接陈述欠定原因、世界模型错误和人工相机试位；本卡仅据此限定视角泛化，不推断未报告的失败率。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "精读基于 Hub gateway 恢复的完整高质量、非 OCR arXiv HTML。证据卡刻意把无动作视频预训练、带动作和本体状态的 Droid 后训练、以及目标实验室闭环部署分开；不使用视频理解探针结果推导 DINOv3 或其他编码器优劣。"
+}
