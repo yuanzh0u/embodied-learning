@@ -49,6 +49,14 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-WM-SUP | 世界模型训练是否有必要接监督信号还是走纯端到端 | EA-EVAL, EA-MODEL, EA-4D | 519 / 30 / 30 | [run](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/run.json) · [packet](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/review-packet.md) |
 | LR-EMB-SUP | 具身端到端模型除动作监督外还需要哪些监督信号 | EA-MODEL, EA-EVAL, EA-ALIGN, EA-SENSOR, EA-4D | 558 / 20 / 20 | [run](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/run.json) · [packet](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/review-packet.md) |
 
+## 引文图派生综述
+
+引文图（citation-graph）派生的影响力综述：以单篇根论文为锚，沿 Semantic Scholar 引文图向下游扩展，经领域门控与人工复核选篇。这类 run 不走关键词检索的 coverage/saturation 门；其 run.json 以 `workflow_version: 1` 声明，并用 `selection_method` 记录选篇方式。
+
+| ID | 综述主题 | 主要知识卡 | 规模 | 审计入口 |
+|---|---|---|---:|---|
+| LR-EGO-EXO-INFL | Ego-Exo 后继研究：第三人称→第一人称视觉表征迁移的演进 | EA-XEMBODIMENT, EA-MODEL, EA-DATA | 246 / 11 / 11 | [run](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/run.json) · [packet](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/review-packet.md) |
+
 ## 跨 run 综合专题
 
 | ID | 综合问题 | 主要知识卡 | 规模 | 审计入口 |

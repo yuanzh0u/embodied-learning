@@ -18,11 +18,7 @@ import urllib.request
 from pathlib import Path
 
 
-DEFAULT_CACHE_DIR = os.path.join(
-    os.environ.get("TMPDIR") or "/private/tmp",
-    "embodied-ai-literature-hub",
-    "pdfs",
-)
+DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "pdfs")
 
 
 def parse_args() -> argparse.Namespace:

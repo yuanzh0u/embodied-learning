@@ -207,8 +207,17 @@ def dedupe_queries(entries: list[dict[str, Any]], max_queries: int) -> list[dict
 
 
 def coverage_group(tier: str) -> str:
-    """Collapse query tiers into review-level coverage dimensions."""
-    normalized = normalize_key(tier)
+    """Collapse query tiers into review-level coverage dimensions.
+
+    Classifies on the tier string's own keywords, not on the taxonomy-alias
+    normalization of it: many ordinary tier words (evaluation, closed-loop,
+    deployment, tracking, benchmark, ...) are ALSO taxonomy aliases for an
+    EA-*/family key (e.g. "evaluation" -> "EA-EVAL"), and normalize_key()
+    would silently swap in that uppercase canonical ID, breaking every
+    lowercase substring check below and misrouting the query into
+    "adjacent-and-transfer" instead of its intended dimension.
+    """
+    normalized = tier.lower()
     if any(token in normalized for token in ("limit", "failure", "gap", "risk", "burden", "latency")):
         return "limits-and-counterevidence"
     if any(token in normalized for token in ("eval", "benchmark", "validation", "sim-real", "closed-loop")):
