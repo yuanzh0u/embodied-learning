@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2305.16487",
+    "title": "EgoHumans: An Egocentric 3D Multi-Human Benchmark",
+    "published": "2023-05-25",
+    "url": "https://arxiv.org/abs/2305.16487",
+    "authors": [
+      "Rawal Khirodkar"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "Aria 眼镜 + 8–15 台 GoPro 异构多相机野外采集的独立实例，验证该范式的可复制性"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3 EgoHumans Dataset",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "6 Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "构建野外多人多视角 3D 人体基准 EgoHumans",
+    "异构相机（Aria + GoPro）全同步 + 逐帧标定位姿标注"
+  ],
+  "method": {
+    "summary": "多副 Aria 眼镜（ego）+ 8–15 台 GoPro（secondary/exo）全同步、便携可移动；每帧标注每台相机的标定与位姿并对齐进世界坐标系",
+    "assumptions": [
+      "相机全同步",
+      "便携采集体积可移动"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoHumans"
+    ],
+    "tasks": [
+      "3D 人体检测/跟踪/位姿/网格"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "125k+ ego 图像、3 室内 3 室外"
+  },
+  "evaluation": {
+    "design": "基准 + EgoFormer 跟踪基线",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "异构 Aria + GoPro 多相机全同步、逐帧标定位姿标注并世界对齐",
+      "scope": "异构多相机采集",
+      "locator": "3 EgoHumans Dataset"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "逐帧标定位姿来自半自动管线，未见对同步/标定失败的量化",
+        "basis": "论文未报告标定失败率"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于便携异构多相机野外人体采集",
+  "critical_appraisal": {
+    "design_strengths": [
+      "便携异构多相机野外验证"
+    ],
+    "design_risks": [
+      "标定真值依赖半自动管线"
+    ],
+    "baseline_fairness": "基准工作",
+    "metric_validity": "3D 位姿指标",
+    "reproducibility": "采集流程详述",
+    "external_validity": "室内外多场景"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2305.16487-C01",
+      "claim": "EgoHumans 用异构多相机系统（多副 Aria 眼镜作 ego + 8–15 台 GoPro 作 secondary/exo，全部同步，便携体积可移动）在野外采集多人 3D 人体；每帧标注每台相机的标定与位姿，并把 secondary 与 ego 相机对齐进世界坐标系。",
+      "stance": "support",
+      "relation": "回答问题一：Aria + GoPro 异构多相机野外采集的又一独立实例（与 Ego-Exo4D 同一范式）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3 EgoHumans Dataset 的 Data Collection 直接陈述异构相机系统、同步与逐帧标定位姿标注。",
+      "locator": "3 EgoHumans Dataset",
+      "source_context": "a flexible and simple multi-view system with heterogeneous sensors, including multiple Aria glasses and GoPros for the egocentric and secondary views",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

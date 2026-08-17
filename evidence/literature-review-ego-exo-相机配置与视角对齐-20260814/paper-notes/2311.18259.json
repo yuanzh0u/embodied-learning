@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2311.18259",
+    "title": "Ego-Exo4D: Understanding Skilled Human Activity from First- and Third-Person Perspectives",
+    "published": "2023-11-30",
+    "url": "https://arxiv.org/abs/2311.18259",
+    "authors": [
+      "Kristen Grauman",
+      "Andrew Westbury",
+      "Lorenzo Torresani"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "为第三人称相机初始化/标定提供权威基准数据集的物理配置与几何/时间对齐流程"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3.1 Ego-exo camera rig",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "5 Ego-Exo4D benchmark tasks",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "6 Conclusions",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      },
+      {
+        "locator": "3 Ego-Exo4D dataset",
+        "role": "data-or-setting",
+        "purpose": "核对数据集构成与采集规模。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "发布 1286 小时时间同步第一+第三人称视频数据集并开源采集 rig",
+    "用 Aria MPS 的 SLAM 地图 + PnP 把多台 GoPro 注册进同一世界坐标系"
+  ],
+  "method": {
+    "summary": "1 台 Aria 眼镜 + 4 台三脚架 GoPro；Aria 用 VIO+SLAM 建公共度量重力对齐地图，GoPro 用 P4P/PnP 在该地图上估计 6DoF 位姿，QR 码视频做时间同步",
+    "assumptions": [
+      "采集环境可被移动 Aria 的 walk-around 覆盖",
+      "GoPro 静态且场景有足够视觉特征"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Ego-Exo4D"
+    ],
+    "tasks": [
+      "ego-exo correspondence",
+      "ego-exo translation"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "1286 小时、740 名参与者、8 领域"
+  },
+  "evaluation": {
+    "design": "数据集基准任务 + baseline",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "exo 相机 rig 由 1 Aria + 4 GoPro 组成，成本低于 3000 美元",
+      "scope": "采集 rig 物理配置",
+      "locator": "3.1 Ego-exo camera rig"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "SLAM+PnP 注册依赖 walk-around 建图与场景纹理，纹理缺失的静态 GoPro 无法定位",
+        "basis": "论文报告 91.4% GoPro 定位成功率并给出纹理缺失这一主导失败原因"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于可同步采集、可 walk-around 建图且有纹理的室内外场景",
+  "critical_appraisal": {
+    "design_strengths": [
+      "多相机几何对齐 + 时间同步的完整工程方案可复现"
+    ],
+    "design_risks": [
+      "依赖 Meta 专有 Aria 设备"
+    ],
+    "baseline_fairness": "数据集工作，不涉及方法基线对比",
+    "metric_validity": "亚帧级同步误差以 ±16.66ms 明确量化",
+    "reproducibility": "开源 rig 清单与 projectaria_tools 工具",
+    "external_validity": "覆盖 8 领域 740 人，但受 GoPro 定位成功率约束"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2311.18259-C01",
+      "claim": "Ego-Exo4D 的第三人称（exo）相机配置由一套低成本、便携、自动时间同步的采集 rig 初始化：1 台 Aria 眼镜（ego）+ 4 台固定在三脚架上的 GoPro（exo），全套（不含 Aria/手机/笔记本）成本低于 3000 美元。",
+      "stance": "support",
+      "relation": "回答了问题一：exo 相机初始化的物理配置（固定三脚架 + 数量/成本）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.1 Ego-exo camera rig 直接列出 rig 的组成与成本，说明 exo 相机为固定于三脚架的 4 台 GoPro。",
+      "locator": "3.1 Ego-exo camera rig",
+      "source_context": "Our solution consists of 1 Aria",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    },
+    {
+      "card_id": "2311.18259-C02",
+      "claim": "exo（GoPro）相机的几何初始化分两步：Aria 用 VIO+SLAM 构建公共度量、重力对齐的坐标地图；每台静态 GoPro 先在实验室手工标定一台以获得默认内参，再用 P4P（PnP）算法配合 RANSAC 在该 SLAM 地图上估计其 6DoF 位姿并重新估计焦距，从而把所有 exo 相机注册进同一世界坐标系。",
+      "stance": "support",
+      "relation": "回答问题一（exo 相机几何标定/注册）与问题三（多台 exo 相机进入同一世界坐标系）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.1.2 Precomputed 3D spatial signals 详述 Aria MPS 的标定、Aria 6DoF 定位与 GoPro 6DoF 定位流程。",
+      "locator": "3.1.2 Precomputed 3D spatial signals",
+      "source_context": "manually calibrated one device in the lab to obtain default parameters, and then use the P4P",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    },
+    {
+      "card_id": "2311.18259-C03",
+      "claim": "exo 相机的时间同步用一段 29fps 的预渲染 QR 码视频编码墙钟时间，逐台相机播放并利用帧率差细同步，最终人工校验每台 GoPro 与 Aria RGB 相机的同步误差在 1 帧以内（±16.66ms，亚帧级）。",
+      "stance": "support",
+      "relation": "回答问题一（时间维度的相机初始化/同步）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "7.1 Time sync 详述 QR 码视频同步机制与 ±1 帧的校验精度，并说明 70% 采集自动达到帧级同步、其余 30% 靠人工对齐恢复。",
+      "locator": "7.1 Time sync",
+      "source_context": "we employ a pre-rendered sequence of QR Codes",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

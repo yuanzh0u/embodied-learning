@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2306.05526",
+    "title": "Learning Fine-grained View-Invariant Representations from Unpaired Ego-Exo Videos via Temporal Alignment",
+    "published": "2023-06-10",
+    "url": "https://arxiv.org/abs/2306.05526",
+    "authors": [
+      "Zihui Xue",
+      "Kristen Grauman"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "第一↔第三人称视角对齐的表征路线：无配对 DTW 时序对齐 + object-centric 编码器"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3 Approach",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "从无配对 ego-exo 视频学细粒度视角不变表征",
+    "以 DTW 时序对齐作自监督目标、反转帧作负样本"
+  ],
+  "method": {
+    "summary": "object-centric 编码器关注手与主动物体，DTW 时序对齐为自监督目标，反转帧作对比负样本正则",
+    "assumptions": [
+      "无需同步/配对 ego-exo 视频",
+      "动作类别已知"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Breakfast",
+      "EgoExo4D 等"
+    ],
+    "tasks": [
+      "动作相位分类",
+      "跨视角检索"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "四数据集 regular + cross-view 设定"
+  },
+  "evaluation": {
+    "design": "对比 SOTA 基线",
+    "baselines": [
+      "GTA 等"
+    ],
+    "metrics": [
+      "F1",
+      "检索指标"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "无配对时序对齐能学视角不变表征，超越 GTA 基线",
+      "scope": "跨视角动作相位分类",
+      "locator": "5 Experiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "表征对齐不产生显式相机几何，无法支撑需度量位姿的任务",
+        "basis": "方法只做特征级对齐"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于无配对/无同步视频的表征级对齐，不提供几何",
+  "critical_appraisal": {
+    "design_strengths": [
+      "前置宽松（unpaired）"
+    ],
+    "design_risks": [
+      "依赖 DTW 时序先验"
+    ],
+    "baseline_fairness": "与 SOTA 基线同设定对比",
+    "metric_validity": "动作相位 F1 等标准指标",
+    "reproducibility": "方法描述完整",
+    "external_validity": "四数据集验证"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2306.05526-C01",
+      "claim": "第一↔第三人称视角对齐的一条表征路线：AE2 在无配对（unpaired）设定下，用 object-centric 编码器关注手与主动物体、以 DTW 时序对齐作自监督目标、反转帧作负样本，学到细粒度视角不变表征，从而在不需要几何标定的情况下对齐 ego-exo 视角。",
+      "stance": "support",
+      "relation": "回答问题二：视角对齐的表征学习路线（无需显式几何标定）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "1 Introduction 与 Method 部分直接陈述三个关键设计；该工作被纳入既有 ego-exo 综述（EA-EGOEXO-2026-0011/0012）。",
+      "locator": "1 Introduction",
+      "source_context": "unpaired data. In the unpaired setting, we know which human activity occurs",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

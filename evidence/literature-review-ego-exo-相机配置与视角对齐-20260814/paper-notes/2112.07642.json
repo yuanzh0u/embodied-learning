@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2112.07642",
+    "title": "EgoBody: Human Body Shape and Motion of Interacting People from Head-Mounted Devices",
+    "published": "2021-12-15",
+    "url": "https://arxiv.org/abs/2112.07642",
+    "authors": [
+      "Siwei Zhang",
+      "Qianli Ma",
+      "Yan Zhang"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "给出多台第三人称相机（Azure Kinect）棋盘格 + ICP 空间标定的传统方案与世界原点定义"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3.2 Data Acquisition Setup",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "5 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      },
+      {
+        "locator": "3 Building the EgoBody Dataset",
+        "role": "data-or-setting",
+        "purpose": "核对数据集构成与采集规模。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "构建 EgoBody 多视角人体交互数据集",
+    "提出棋盘格 + ICP 的 Kinect–Kinect 与 Kinect–HoloLens2 空间标定流程"
+  ],
+  "method": {
+    "summary": "3–5 台 Azure Kinect RGB-D + 1 台 HoloLens2；棋盘格初始标定后 ICP 刚性配准细化，Cam1 定义世界原点，HoloLens2 靠头部跟踪器挂到该原点",
+    "assumptions": [
+      "多相机同场且可用棋盘格共同标定",
+      "HoloLens2 内置头部跟踪器提供其相对世界原点的变换"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoBody"
+    ],
+    "tasks": [
+      "3D 人体重建",
+      "SMPL-X 拟合"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "室内交互场景多视角 RGB-D"
+  },
+  "evaluation": {
+    "design": "基线评测 + 3D 人体重建基准",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "多相机用棋盘格标定 + ICP 配准，Cam1 定义世界坐标系原点",
+      "scope": "多相机空间标定流程",
+      "locator": "3.2 Data Acquisition Setup"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "棋盘格 + ICP 方案需要多相机同时观测同一标定物，难以推广到相机无共视的场景",
+        "basis": "标定依赖 checkerboard 与场景点云配准"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于室内、多相机可共视同一棋盘格/场景的人体重建采集",
+  "critical_appraisal": {
+    "design_strengths": [
+      "标定流程简单、依赖常见标定原语"
+    ],
+    "design_risks": [
+      "对 HoloLens2 深度工厂标定不精确较敏感，需关键点二次优化"
+    ],
+    "baseline_fairness": "数据集工作",
+    "metric_validity": "以重建精度间接验证标定",
+    "reproducibility": "给出标定步骤",
+    "external_validity": "仅室内场景"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2112.07642-C01",
+      "claim": "EgoBody 的多台第三人称相机（3–5 台固定的 Azure Kinect RGB-D）+ 1 台 HoloLens2（ego）通过两步完成空间对齐：先用棋盘格标定得到初始内/外参，再用 ICP 刚性配准（场景点云）细化 Kinect–Kinect 与 Kinect–HoloLens2；Cam1 定义世界坐标系原点，HoloLens2 靠内置头部跟踪器在其世界原点下被持续跟踪。",
+      "stance": "support",
+      "relation": "回答问题三（多台第三人称相机对齐）的经典棋盘格+ICP 方案，比 Ego-Exo4D 的 SLAM+PnP 方案更早、更传统。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.2 Data Acquisition Setup 与 0.A.1 Calibration 详述多相机空间标定流程与世界原点定义。",
+      "locator": "3.2 Data Acquisition Setup",
+      "source_context": "Kinect-Kinect and Kinect-HoloLens2 cameras are spatially calibrated using a checkerboard and refined by rigid alignment steps",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}
