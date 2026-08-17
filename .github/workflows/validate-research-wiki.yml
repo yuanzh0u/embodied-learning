@@ -21,8 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Validate content snapshot
-        run: python3 scripts/build_research_wiki.py --check --output wiki/data
+      - name: Build and validate content snapshot
+        # No committed snapshot exists (wiki/data is gitignored); a successful
+        # build runs validate_snapshot internally, so it is itself the check.
+        run: python3 scripts/build_research_wiki.py --output /tmp/wiki-check
       - name: Check Python syntax
         run: python3 -m py_compile scripts/build_research_wiki.py scripts/serve_research_wiki.py scripts/lib/markdown_semantics.py scripts/lib/review_runs.py
       - name: Run Wiki architecture tests
