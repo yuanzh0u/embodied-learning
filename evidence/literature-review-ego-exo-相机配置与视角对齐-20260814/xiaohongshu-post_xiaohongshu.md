@@ -6,6 +6,10 @@
 
 💡 **几何对齐有一套标准动作**：拿一副眼镜（第一人称）+ 4 台三脚架 GoPro（第三人称），先让眼镜走一圈用 SLAM 建地图，再让每台 GoPro 用位姿估计算法把自己"钉"进这张地图，时间用 QR 码视频同步到亚帧级。([Ego-Exo4D](https://arxiv.org/abs/2311.18259))
 
+![Overview of the recording procedure](https://arxiv.org/html/2311.18259v4/sec/appendices/figs/rig_recording_procedure.jpg)
+
+> 用法：就是这张图——走一圈建图、GoPro 就位、QR 同步，一眼看懂"外眼怎么装"。（Ego-Exo4D）
+
 💡 **更老的做法只要棋盘格**：3–5 台 Kinect + 一副 HoloLens，棋盘格标定 + ICP 配准，指定一台相机当世界原点。原理一样——把每台相机打进同一个坐标系。([EgoBody](https://arxiv.org/abs/2112.07642))
 
 💡 **没几何也能硬桥，但会掉精度**：没有同步采集时，就靠时间对齐、对象对应、生成式翻译这些"软信号"来拉近两种视角——门槛越低，桥越不稳。([AE2](https://arxiv.org/abs/2306.05526) / [Exo2Ego](https://arxiv.org/abs/2403.06351))

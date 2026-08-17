@@ -29,11 +29,30 @@
 2. **几何注册**：先让佩戴者手持 Aria 做一次 walk-around，用 VIO+SLAM 构建一个公共的、度量、重力对齐的场景地图；每台静态 GoPro 先在实验室手工标定一台获得默认内参，再用 **P4P（PnP）算法 + RANSAC** 在该 SLAM 地图上估计其 6DoF 位姿并重新估计焦距——这样每台 exo 相机都被"注册"进与 ego 相机同一个世界坐标系。
 3. **时间同步**：用一段 29fps 的预渲染 QR 码视频编码墙钟时间，逐台相机播放并利用帧率差细同步，最终人工校验每台 GoPro 与 Aria 的同步误差在 **1 帧以内（±16.66ms，亚帧级）**；70% 采集自动达到帧级同步，其余 30% 靠人工事件对齐恢复。
 
+![Overview of the recording procedure](https://arxiv.org/html/2311.18259v4/sec/appendices/figs/rig_recording_procedure.jpg)
+
+> 用法：作者用该图总览整个采集流程（佩戴者走一圈建图、GoPro 就位、QR 码同步），把第三人称相机 rig 的初始化、几何注册与时间同步画进一张图，直观点名评测主题"相机如何被装好并对齐"。（Ego-Exo4D，S7.F28）
+
+**Table 1**：作者用该表对比 Ego-Exo4D 与既有 ego/exo 数据集的多模态、规模与标注，佐证其作为相机配置与对齐基准的权威性。
+
+| Dataset | Year | Modalities | #Subj. | #Scenes | #Tasks | #Actions | #Masks | #BP | #HP | Nar. | EC |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| EGTEA-Gaze | 2018 | V,A,G | 32 | 1 | 7 | 106 | 15k | - | - | ✗ | ✗ |
+| Ego4D | 2022 | V,A,3D,S,G,I | 931 | 74 | N/A | 110 | - | - | - | ✓ | ✗ |
+| EgoExoLearn | 2024 | V,A,G,I | 136 | 7 | 8 | (95;254) | - | - | - | ✓ | ✗ |
+| EgoExo4D | 2024 | V,A,I,G,3D,6D,B,Ma | 740 | 123 | 689 | 2.2M | 9.6M | 4.4M | ✓ | ✓ |
+
 **[EgoBody](https://arxiv.org/abs/2112.07642)（Zhang et al., 2021）——棋盘格 + ICP 路线（更传统、更早）：**
 
 用 3–5 台固定的 Azure Kinect RGB-D 相机（exo）+ 1 台 HoloLens2（ego）。空间对齐先用**棋盘格标定**得到初始内/外参，再用 **ICP 刚性配准**（场景点云）细化 Kinect–Kinect 与 Kinect–HoloLens2；**Cam1 定义世界坐标系原点**，HoloLens2 靠内置头部跟踪器在该原点下被持续跟踪。Kinect 之间用音频线做硬件同步，Kinect–HoloLens2 之间用"手电筒第一帧可见"作同步信号。
 
-**结论**：exo 相机初始化的通用答案是——静态摆放多台相机 → 用「SLAM 地图 + PnP」或「棋盘格 + ICP」把每台相机注册进同一世界系 → 用 QR/音频/闪光做时间同步。前者适合户外/大场景（GoPro 便宜），后者适合室内人体重建（Kinect 有深度）。这一模式并非孤例，而是被多个独立数据集反复确认：[EgoHumans](https://arxiv.org/abs/2305.16487) 同样用「多副 Aria 眼镜 + 8–15 台 GoPro、全部同步、便携可移动」的异构多相机在野外采集；[Nymeria](https://arxiv.org/abs/2406.09905) 用 mocap 服 + Aria 眼镜 + miniAria 腕带 + 同步设备，以亚毫秒统一时间戳同步、再用 Aria MPS 的 VIO/SLAM + 回环 + bundle adjustment 全局对齐进单一度量 3D 世界。换句话说，「Aria 眼镜当 ego + 多台静态相机当 exo + 统一时间同步 + SLAM 全局对齐」已经是这个领域事实上的标准采集范式。
+**结论**：exo 相机初始化的通用答案是——静态摆放多台相机 → 用「SLAM 地图 + PnP」或「棋盘格 + ICP」把每台相机注册进同一世界系 → 用 QR/音频/闪光做时间同步。前者适合户外/大场景（GoPro 便宜），后者适合室内人体重建（Kinect 有深度）。这一模式并非孤例，而是被多个独立数据集反复确认：[EgoHumans](https://arxiv.org/abs/2305.16487) 同样用「多副 Aria 眼镜 + 8–15 台 GoPro、全部同步、便携可移动」的异构多相机在野外采集；[Nymeria](https://arxiv.org/abs/2406.09905) 用 mocap 服 + Aria 眼镜 + miniAria 腕带 + 同步设备，以亚毫秒统一时间戳同步、再用 Aria MPS 的 VIO/SLAM + 回环 + bundle adjustment 全局对齐进单一度量 3D 世界。
+
+![Aria MPS output for several recordings. Top: point cloud and estimated egocentric camera trajectory Bottom: three screenshots](https://arxiv.org/html/2311.18259v4/figs/aria/points2.jpg)
+
+> 用法：作者用该图展示 Aria MPS 的 SLAM 地图 + 轨迹输出，直观说明第一人称 ego 相机如何被注册进带尺度、重力对齐的公共坐标系，支撑第三人称相机在其上 P4P 定位的几何主张。（Ego-Exo4D，S3.F5）
+
+换句话说，「Aria 眼镜当 ego + 多台静态相机当 exo + 统一时间同步 + SLAM 全局对齐」已经是这个领域事实上的标准采集范式。
 
 ### 3.2 问题二：第一↔第三人称视角如何对齐？
 
@@ -60,8 +79,17 @@
 **几何对齐（把多台 exo 相机对齐到彼此 + 到 ego）**：多条证据都说明这是一个"注册进同一世界系"的问题，且已有三种标定原语——
 
 - [EgoBody](https://arxiv.org/abs/2112.07642)：多台 Kinect 之间用**棋盘格 + ICP** 刚性配准，Cam1 作世界原点，HoloLens2 通过头部跟踪器挂到该原点。
+
+![Capture setup. Multiple Azure Kinects capture the interactions from different views (A, B, C), and a synchronized HoloLens2 worn by one subject captures the egocentric view image (D).](https://arxiv.org/html/2112.07642v3/figures/setup.jpg)
+
+> 用法：作者用该图展示多台第三人称 Azure Kinect（A/B/C）与头戴 HoloLens2（D）的空间布设与同步，直观支撑多相机棋盘格+ICP 空间对齐的证据链。（EgoBody，S3.F2）
+
 - [Ego-Exo4D](https://arxiv.org/abs/2311.18259)：4 台 GoPro 各自通过 **P4P** 定位到 Aria 的 SLAM 地图上，从而所有 exo 相机 + ego 相机共享同一个度量、重力对齐的坐标系。
 - [H2O](https://arxiv.org/abs/2104.11181)：第三种原语——用 9 个 **IR 反射球**（每球在所有相机可见）从深度图定位 3D 坐标后用 **PnP** 求解相机位姿，相机间物理线缆同步（<0.74ms）。
+
+![(a) We calibrate cameras using IR sphere markers and PnP, (b) create object meshes using BADSLAM on RGB-D captures, and (c) estimate object poses.](https://arxiv.org/html/2104.11181v2/figures/pipeline3.png)
+
+> 用法：作者用该图示意基于 IR 反射球 + PnP 的相机外参标定管线，直观点支撑多相机几何对齐的证据链（与棋盘格、SLAM 地图并列的第三种标定原语）。（H2O，S1.F2）
 
 对齐之后，多视角才支撑起真正的几何任务——EgoBody 用它做多视角 SMPL-X 人体重建，Ego-Exo4D 用它定义 ego-exo correspondence/translation 基准。
 

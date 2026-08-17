@@ -22,7 +22,15 @@
 
 第一步，佩戴者先拿着眼镜在场地里走一圈，眼镜用视觉惯性里程计和同时定位与建图，建出一张公共的、带尺度、重力对齐的场景地图。第二步，每台 GoPro 先在实验室标定一台拿到默认内参，再到这张地图上用位姿估计算法配合随机采样一致性，算出自己的 6 自由度位姿，顺便重估焦距。这样，四台第三人称相机和第一人称眼镜，就注册进了**同一个世界坐标系**。时间上再靠一段 29fps 的二维码视频做细同步，误差压到 ±16.66 毫秒（亚帧级）。
 
+![Overview of the recording procedure](https://arxiv.org/html/2311.18259v4/sec/appendices/figs/rig_recording_procedure.jpg)
+
+> 用法：作者把"走一圈建图 → GoPro 就位 → QR 同步"的整个采集流程画成一张图，正是"第三人称相机怎么装、怎么对齐"的回答。（Ego-Exo4D）
+
 更早的 [EgoBody](https://arxiv.org/abs/2112.07642) 用的是另一套更传统的方案：3–5 台 Azure Kinect 深度相机加一副 HoloLens2，先用**棋盘格标定**，再用迭代最近点做刚性配准细化，指定一台相机作世界原点。路子不同，原理一样——**把每台相机打进同一个坐标系**。
+
+![Figure 2: Capture setup. Multiple Azure Kinects capture the interactions from different views (A, B, C), and a synchronized HoloLens2 worn by one subject captures the egocentric view image (D).](https://arxiv.org/html/2112.07642v3/figures/setup.jpg)
+
+> 用法：作者用该图展示多台第三人称 Azure Kinect 与头戴 HoloLens2 的空间布设，是典型的多相机空间对齐示例。（EgoBody）
 
 这一步做完，你才真正拥有了"第一视角和第三人称是同一场景、同一时刻"的数据，也才谈得上定义"对象对应""视角翻译"这些可评测的任务。
 

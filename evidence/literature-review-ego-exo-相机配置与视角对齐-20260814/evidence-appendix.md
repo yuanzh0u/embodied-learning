@@ -14,6 +14,19 @@
 - Quote: "Our solution consists of 1 Aria ..., 4 GoPros ..., 1 GoPro Remote, 4 Tripods ... The total cost excluding the Aria/phone/laptop is under $3,000."
 - Authors: kristen-grauman; andrew-westbury; lorenzo-torresani
 
+![Overview of the recording procedure](https://arxiv.org/html/2311.18259v4/sec/appendices/figs/rig_recording_procedure.jpg)
+
+> 用法：作者用该图总览整个采集流程（佩戴者走一圈建图、GoPro 就位、QR 码同步），把第三人称相机 rig 的初始化、几何注册与时间同步画进一张图，直观点名评测主题"相机如何被装好并对齐"。（Ego-Exo4D，S7.F28）
+
+**Table 1**（Ego-Exo4D，S1.T1）：作者用该表对比 Ego-Exo4D 与既有 ego/exo 数据集的多模态、规模与标注，佐证其作为相机配置与对齐基准的权威性。
+
+| Dataset | Year | Modalities | #Subj. | #Scenes | #Tasks | #Actions | #Masks | #BP | #HP | Nar. | EC |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| EGTEA-Gaze | 2018 | V,A,G | 32 | 1 | 7 | 106 | 15k | - | - | ✗ | ✗ |
+| Ego4D | 2022 | V,A,3D,S,G,I | 931 | 74 | N/A | 110 | - | - | - | ✓ | ✗ |
+| EgoExoLearn | 2024 | V,A,G,I | 136 | 7 | 8 | (95;254) | - | - | - | ✓ | ✗ |
+| EgoExo4D | 2024 | V,A,I,G,3D,6D,B,Ma | 740 | 123 | 689 | 2.2M | 9.6M | 4.4M | ✓ | ✓ |
+
 ### EA-CAMALIGN-2026-0002
 
 - Claim: exo（GoPro）相机的几何初始化分两步：Aria 用 VIO+SLAM 构建公共度量、重力对齐的坐标地图；每台静态 GoPro 先在实验室手工标定一台以获得默认内参，再用 P4P（PnP）算法配合 RANSAC 在该 SLAM 地图上估计其 6DoF 位姿并重新估计焦距，从而把所有 exo 相机注册进同一世界坐标系。
@@ -22,7 +35,12 @@
 - Locator: 3.1.2 Precomputed 3D spatial signals
 - Evidence: 3.1.2 详述 Aria MPS 的标定、Aria 6DoF 定位与 GoPro 6DoF 定位流程。
 - Quote: "manually calibrated one device in the lab to obtain default parameters, and then use the P4P ... algorithm (with RANSAC to reject matching outliers) to estimate the 6 DoF pose, as well as re-estimate the focal length."
+- Quote: "manually calibrated one device in the lab to obtain default parameters, and then use the P4P ... algorithm (with RANSAC to reject matching outliers) to estimate the 6 DoF pose, as well as re-estimate the focal length."
 - Authors: kristen-grauman; andrew-westbury; lorenzo-torresani
+
+![Aria MPS output for several recordings. Top: point cloud and estimated egocentric camera trajectory Bottom: three screenshots](https://arxiv.org/html/2311.18259v4/figs/aria/points2.jpg)
+
+> 用法：作者用该图展示 Aria MPS 的 SLAM 地图 + 轨迹输出，直观说明第一人称 ego 相机如何被注册进带尺度、重力对齐的公共坐标系，支撑第三人称相机在其上 P4P 定位的几何主张。（Ego-Exo4D，S3.F5）
 
 ### EA-CAMALIGN-2026-0003
 
@@ -43,6 +61,10 @@
 - Evidence: 3.2 与 0.A.1 Calibration 详述多相机空间标定流程与世界原点定义。
 - Quote: "Kinect-Kinect and Kinect-HoloLens2 cameras are spatially calibrated using a checkerboard and refined by rigid alignment steps (ICP). ... We use Cam1 to define our world coordinate frame origin."
 - Authors: siwei-zhang; qianli-ma; yan-zhang
+
+![Figure 2: Capture setup. Multiple Azure Kinects capture the interactions from different views (A, B, C), and a synchronized HoloLens2 worn by one subject captures the egocentric view image (D).](https://arxiv.org/html/2112.07642v3/figures/setup.jpg)
+
+> 用法：作者用该图展示多台第三人称 Azure Kinect 与头戴 HoloLens2 的空间布设，支撑多相机空间对齐主张。（EgoBody，S3.F2）
 
 ### EA-CAMALIGN-2026-0005
 
@@ -154,6 +176,10 @@
 - Quote: "We place nine IR reflective spheres ... solve for camera pose via PnP ... To ensure synchronization between multiple cameras, we use physical cables."
 - Authors: taein-kwon
 
+![(a) We calibrate cameras using IR sphere markers and PnP, (b) create object meshes using BADSLAM on RGB-D captures, and (c) estimate object poses.](https://arxiv.org/html/2104.11181v2/figures/pipeline3.png)
+
+> 用法：作者用该图示意基于 IR 反射球 + PnP 的相机外参标定管线，直观点支撑多相机几何对齐的证据链（与棋盘格、SLAM 地图并列的第三种标定原语）。（H2O，S1.F2）
+
 ### EA-CAMALIGN-2026-0016
 
 - Claim: Nymeria 的采集配置由 mocap 服、Aria 眼镜、miniAria 腕带与同步设备组成；同步设备为所有设备提供统一时间戳（可选从无线服务器接收），达亚毫秒级精度，XSens 与 Aria 的对齐误差在 1 个运动帧内即 4.2ms。
@@ -162,7 +188,12 @@
 - Locator: 3.1 Data collection setup (Synchronization)
 - Evidence: Synchronization 小节直接陈述同步设备与精度。
 - Quote: "A synchronization device is developed to supply the timestamps for all devices ... sub-millisecond accuracy. The alignment between XSens and Aria is within 1 motion frame i.e. 4.2 ms."
+- Quote: "A synchronization device is developed to supply the timestamps for all devices ... sub-millisecond accuracy. The alignment between XSens and Aria is within 1 motion frame i.e. 4.2 ms."
 - Authors: lingni-ma
+
+![Global aligned trajectories and point clouds by locations. red, green and blue indicate the head, left hand, right hand.](https://arxiv.org/html/2406.09905v2/fig_MPS2_loc33.jpg)
+
+> 用法：作者用该图展示多设备 SLAM/回环/BA 全局对齐后的轨迹与点云，直观说明多设备对齐进单一度量 3D 世界的时间+空间同步证据链。（Nymeria，S3.F4）
 
 ### EA-CAMALIGN-2026-0017
 
@@ -173,6 +204,10 @@
 - Evidence: 3.2 直接陈述多设备全局对齐流程。
 - Quote: "first SLAM is run for each individual recording independently. Subsequently, the resulting maps are loop-closed and jointly optimized via visual-inertial bundle adjustment."
 - Authors: lingni-ma
+
+![Global aligned trajectories and point clouds by locations. red, green and blue indicate the head, left hand, right hand.](https://arxiv.org/html/2406.09905v2/fig_MPS2_loc33.jpg)
+
+> 用法：作者用该图展示多设备 SLAM/回环/BA 全局对齐后的轨迹与点云，直观说明多设备对齐进单一度量 3D 世界的时间+空间同步证据链。（Nymeria，S3.F4）
 
 ### EA-CAMALIGN-2026-0018
 
