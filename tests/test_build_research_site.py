@@ -90,6 +90,7 @@ class BuildResearchSiteTest(unittest.TestCase):
             self.assertIn("去重论文引用", source)
             self.assertRegex(source, r'<a href="https?://[^\"]+"')
             self.assertIn('type="application/ld+json"', source)
+            self.assertIn("?version=zhihu&amp;ai=1", source)
 
     def test_page_metadata_and_json_ld_are_unique_and_parseable(self) -> None:
         pages = sorted((self.site_root / "research").glob("*/index.html"))
@@ -190,9 +191,15 @@ class BuildResearchSiteTest(unittest.TestCase):
 
     def test_spa_topic_navigation_has_real_static_hrefs(self) -> None:
         script = (ROOT / "wiki" / "assets" / "wiki.js").read_text(encoding="utf-8")
+        template = (ROOT / "wiki" / "index.html").read_text(encoding="utf-8")
         self.assertIn("function canonicalHref(topic)", script)
         self.assertIn('href="${escapeHtml(canonicalHref(topic))}"', script)
         self.assertIn("openTopicFromLink(event", script)
+        self.assertIn('id="ai-research-button"', template)
+        self.assertIn('id="ai-dialog"', template)
+        self.assertIn("function buildAiPrompt(task", script)
+        self.assertIn("topic.evidence_event_count", script)
+        self.assertIn('data-ai-provider="Gemini"', template)
 
 
 if __name__ == "__main__":

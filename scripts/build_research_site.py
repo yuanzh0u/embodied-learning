@@ -354,6 +354,7 @@ def render_topic_page(
         <h2 id="reading-versions-title">进入交互阅读</h2>
         <p>静态页以知乎解释版承接搜索意图；科研版、知乎版和小红书版在同一交互 Wiki 中切换，不建立相互竞争的索引页。</p>
         <div class="button-row">
+          <a class="ai-entry" href="{interactive_base}?version=zhihu&amp;ai=1">用 AI 继续研究</a>
           <a href="{interactive_base}?version=keyan">科研备忘录</a>
           <a href="{interactive_base}?version=zhihu">知乎解释版</a>
           <a href="{interactive_base}?version=xiaohongshu">小红书版</a>

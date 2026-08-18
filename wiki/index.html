@@ -92,9 +92,14 @@
                 <button type="button" role="tab" data-version="zhihu">知乎解释版</button>
                 <button type="button" role="tab" data-version="xiaohongshu">小红书版</button>
               </div>
-              <button class="evidence-button" id="evidence-button" type="button">
-                <span aria-hidden="true">▤</span> 查看证据
-              </button>
+              <div class="article-tool-buttons">
+                <button class="ai-research-button" id="ai-research-button" type="button">
+                  <span aria-hidden="true">✦</span> AI 研读
+                </button>
+                <button class="evidence-button" id="evidence-button" type="button">
+                  <span aria-hidden="true">▤</span> 查看证据
+                </button>
+              </div>
             </div>
           </header>
           <div class="reading-meta">
@@ -134,6 +139,38 @@
         <span id="search-count">输入关键词开始搜索</span>
       </div>
       <div class="search-results" id="search-results"></div>
+    </dialog>
+
+    <dialog class="ai-dialog" id="ai-dialog" aria-labelledby="ai-dialog-title">
+      <header class="ai-dialog-header">
+        <div>
+          <p class="eyebrow">Ask with evidence</p>
+          <h2 id="ai-dialog-title">用 AI 继续研究</h2>
+        </div>
+        <button class="icon-button" id="ai-dialog-close" type="button" aria-label="关闭 AI 研读">×</button>
+      </header>
+      <div class="ai-topic-context">
+        <strong id="ai-topic-title">当前研究专题</strong>
+        <span id="ai-topic-metrics"></span>
+        <a id="ai-canonical-link" href="research/">打开永久专题页</a>
+      </div>
+      <p class="ai-dialog-intro">选择一个研究任务，系统会把当前专题的永久地址、证据规模和审计边界一起交给 AI。</p>
+      <div class="ai-task-options" aria-label="选择研究任务">
+        <button type="button" data-ai-task="summary">总结核心结论</button>
+        <button type="button" data-ai-task="audit">检查证据边界</button>
+        <button type="button" data-ai-task="questions">形成研究问题</button>
+      </div>
+      <label class="ai-prompt-label" for="ai-prompt">可编辑研究指令</label>
+      <textarea id="ai-prompt" rows="12"></textarea>
+      <div class="ai-dialog-actions">
+        <button class="ai-copy-button" id="ai-copy-button" type="button">复制研究指令</button>
+        <div class="ai-provider-links" aria-label="选择 AI 服务">
+          <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" data-ai-provider="Gemini">打开 Gemini</a>
+          <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" data-ai-provider="ChatGPT">打开 ChatGPT</a>
+          <a href="https://www.perplexity.ai/" target="_blank" rel="noopener noreferrer" data-ai-provider="Perplexity">打开 Perplexity</a>
+        </div>
+      </div>
+      <p class="ai-dialog-note">打开外部服务时会同时复制研究指令，请在新页面粘贴。回答仍需回到原论文和证据附录核验。</p>
     </dialog>
 
     <div class="drawer-scrim" id="drawer-scrim"></div>
