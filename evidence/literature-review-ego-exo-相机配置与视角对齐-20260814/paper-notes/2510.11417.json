@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2510.11417",
+    "title": "Robust Ego-Exo Correspondence with Long-Term Memory",
+    "published": "2025-10-13",
+    "url": "https://arxiv.org/abs/2510.11417",
+    "authors": [
+      "Zijian He"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "最新（2025）对象级 ego-exo 对应方法：SAM 2 双记忆 + Memory-View MoE"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3.1 Task definition",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "双记忆库 + 压缩策略保留长程信息",
+    "Memory-View MoE 自适应融合记忆与视角特征"
+  ],
+  "method": {
+    "summary": "基于 SAM 2 的 ego-exo 对应框架：双记忆库 + Memory-View 混合专家模块处理极端视角变化、遮挡与小目标",
+    "assumptions": [
+      "同步 ego-exo 视频对 + 单视角目标掩码"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "EgoExo4D"
+    ],
+    "tasks": [
+      "Ego2Exo / Exo2Ego 对应"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "EgoExo4D 基准"
+  },
+  "evaluation": {
+    "design": "对比 SOTA",
+    "baselines": [
+      "SAM 2",
+      "XSegTx",
+      "XView-XMem"
+    ],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "LM-EEC 在 EgoExo4D 上超越 SAM 2 基线达 SOTA",
+      "scope": "对象对应",
+      "locator": "4 Experiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "仍依赖同步对，不解决无配对对齐",
+        "basis": "任务定义要求同步 ego-exo 视频"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于同步对象对应，不提供几何",
+  "critical_appraisal": {
+    "design_strengths": [
+      "长时记忆 + 自适应路由"
+    ],
+    "design_risks": [
+      "复杂度高"
+    ],
+    "baseline_fairness": "与 SAM 2 基线同设定",
+    "metric_validity": "分割指标",
+    "reproducibility": "代码公开",
+    "external_validity": "EgoExo4D"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2510.11417-C01",
+      "claim": "LM-EEC 把 ego-exo 对象对应形式化为：给定同步的 ego-exo 视频对与某一视角的目标掩码，在另一视角逐帧分割同一对象（Ego2Exo / Exo2Ego），并以基于 SAM 2 的双记忆库 + Memory-View 混合专家（MoE）模块解决极端视角变化、遮挡与小目标问题，在 EgoExo4D 上取得 SOTA。",
+      "stance": "support",
+      "relation": "回答问题二：最新（2025）的对象级对齐方法，把对应任务推向前沿。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.1 Task definition 与 3.3 Overview 直接陈述任务定义与双记忆/MoE 架构。",
+      "locator": "3.1 Task definition",
+      "source_context": "Given a pair of synchronized ego-exo videos and a sequence of query masks for an object",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

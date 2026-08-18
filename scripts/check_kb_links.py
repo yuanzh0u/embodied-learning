@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -113,6 +114,29 @@ def evidence_event_ids(path: Path) -> tuple[set[str], str | None]:
     return ids, None
 
 
+def owned_prefixes(event_ids: Iterable[str]) -> set[str]:
+    """Infer the longest shared prefixes of evidence event IDs.
+
+    ``EA-JIMFAN-READ-0015`` → ``EA-JIMFAN-READ``, ``EA-JIMFAN``. Returns the
+    longest distinct prefixes that are shared by at least two IDs (or all IDs
+    when there is only one) so a run reusing events can be matched by any of
+    them.
+    """
+    ids = [event_id.strip() for event_id in event_ids if event_id.strip()]
+    if not ids:
+        return set()
+    prefixes: set[str] = set()
+    first = ids[0]
+    # Walk every split point, keep the prefix that covers all IDs.
+    for index in range(1, len(first)):
+        candidate = first[:index]
+        if candidate.endswith("-") and all(event_id.startswith(candidate) for event_id in ids):
+            prefixes.add(candidate.rstrip("-"))
+    if not prefixes and len(ids) == 1 and "-" in first:
+        prefixes.add(first.rsplit("-", 2)[0].rstrip("-"))
+    return prefixes
+
+
 def check_sources_md(root: Path) -> list[str]:
     problems = []
     sources_md = root / "knowledge" / "sources.md"
@@ -185,6 +209,7 @@ def check_topic_cards(root: Path) -> list[str]:
 def check_evidence_manifests(root: Path) -> list[str]:
     problems = []
     prefix_owners: dict[str, Path] = {}
+    manifests: list[tuple[Path, dict[str, object]]] = []
     for manifest in sorted(root.glob("evidence/*/run.json")):
         run_dir = manifest.parent
         rel = manifest.relative_to(root)
@@ -212,24 +237,69 @@ def check_evidence_manifests(root: Path) -> list[str]:
                 )
             else:
                 prefix_owners[event_prefix] = manifest
-            evidence_name = files.get("evidence") if isinstance(files, dict) else None
-            evidence_path = run_dir / str(evidence_name or "evidence.jsonl")
-            if evidence_path.is_file():
-                event_ids, error = evidence_event_ids(evidence_path)
-                if error:
-                    problems.append(f"{rel}: invalid evidence JSONL ({error})")
-                else:
-                    invalid = sorted(item for item in event_ids if not item.startswith(event_prefix + "-"))
-                    if invalid:
-                        problems.append(
-                            f"{rel}: event IDs do not match event_id_prefix `{event_prefix}`: "
-                            + ", ".join(invalid[:5])
-                        )
-                    expected_count = data.get("event_count")
-                    if isinstance(expected_count, int) and len(event_ids) != expected_count:
-                        problems.append(
-                            f"{rel}: event_count={expected_count} but unique evidence event IDs={len(event_ids)}"
-                        )
+        manifests.append((manifest, data))
+
+    # Second pass: validate each run's evidence IDs against its declared prefix,
+    # allowing event IDs that are legitimately reused from a declared source run.
+    # A source run's "owned prefixes" are the longest shared prefixes of its own
+    # evidence event IDs (e.g. EA-JIMFAN-READ-*) plus any declared event_id_prefix,
+    # so reuse from runs that don't declare a prefix is still recognized.
+    source_run_prefixes: dict[Path, set[str]] = {}
+    for manifest, data in manifests:
+        source_runs = data.get("source_runs") or []
+        prefixes: set[str] = set()
+        for run_name in source_runs:
+            source = root / "evidence" / str(run_name) / "run.json"
+            if not source.is_file():
+                continue
+            try:
+                source_data = json.loads(source.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                continue
+            declared = str(source_data.get("event_id_prefix") or "").rstrip("-")
+            if declared:
+                prefixes.add(declared)
+            # Infer the owning prefix from the source run's own evidence IDs.
+            source_files = source_data.get("files", {})
+            source_evidence = source_files.get("evidence") if isinstance(source_files, dict) else None
+            source_evidence_path = source.parent / str(source_evidence or "evidence.jsonl")
+            if source_evidence_path.is_file():
+                source_ids, _ = evidence_event_ids(source_evidence_path)
+                for prefix in owned_prefixes(source_ids):
+                    prefixes.add(prefix)
+        source_run_prefixes[manifest] = prefixes
+
+    for manifest, data in manifests:
+        run_dir = manifest.parent
+        rel = manifest.relative_to(root)
+        event_prefix = str(data.get("event_id_prefix") or "").rstrip("-")
+        if not event_prefix:
+            continue
+        files = data.get("files", {})
+        evidence_name = files.get("evidence") if isinstance(files, dict) else None
+        evidence_path = run_dir / str(evidence_name or "evidence.jsonl")
+        if not evidence_path.is_file():
+            continue
+        event_ids, error = evidence_event_ids(evidence_path)
+        if error:
+            problems.append(f"{rel}: invalid evidence JSONL ({error})")
+            continue
+        allowed_prefixes = source_run_prefixes.get(manifest, set())
+        invalid = sorted(
+            item for item in event_ids
+            if not item.startswith(event_prefix + "-")
+            and not any(item.startswith(prefix + "-") for prefix in allowed_prefixes)
+        )
+        if invalid:
+            problems.append(
+                f"{rel}: event IDs do not match event_id_prefix `{event_prefix}`: "
+                + ", ".join(invalid[:5])
+            )
+        expected_count = data.get("event_count")
+        if isinstance(expected_count, int) and len(event_ids) != expected_count:
+            problems.append(
+                f"{rel}: event_count={expected_count} but unique evidence event IDs={len(event_ids)}"
+            )
     return problems
 
 

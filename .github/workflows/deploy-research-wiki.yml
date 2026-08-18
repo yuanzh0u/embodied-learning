@@ -46,8 +46,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Validate published research snapshot
-        run: python3 scripts/build_research_wiki.py --check --output wiki/data
+      - name: Build research wiki snapshot
+        # The snapshot is generated at deploy time from knowledge/ + evidence/;
+        # wiki/data is gitignored, so nothing is committed. The build runs
+        # validate_snapshot internally before activating the snapshot.
+        run: python3 scripts/build_research_wiki.py --output wiki/data
 
       - name: Assemble Wiki and knowledge map
         run: |

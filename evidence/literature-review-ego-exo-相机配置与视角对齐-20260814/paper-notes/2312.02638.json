@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2312.02638",
+    "title": "Synchronization is All You Need: Exocentric-to-Egocentric Transfer for Temporal Action Segmentation with Unlabeled Synchronized Video Pairs",
+    "published": "2023-12-05",
+    "url": "https://arxiv.org/abs/2312.02638",
+    "authors": [
+      "Camillo Quattrocchi",
+      "Antonino Furnari"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "同步蒸馏路线：无标注同步 ego-exo 对做知识蒸馏把时序动作分割从 exo 迁移到 ego"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3 Methodology",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "5 Results and Discussion",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "6 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "用无标注同步 exo-ego 对做知识蒸馏",
+    "在 Assembly101 与 EgoExo4D 上验证 exo→ego 迁移"
+  ],
+  "method": {
+    "summary": "仅用带标注 exo 视频 + 无标注同步 exo-ego 对做知识蒸馏，把时序动作分割模型迁移到 ego，无需 ego 标签",
+    "assumptions": [
+      "存在同步的 exo-ego 视频对"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Assembly101",
+      "EgoExo4D"
+    ],
+    "tasks": [
+      "时序动作分割"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "Assembly101 + EgoExo4D"
+  },
+  "evaluation": {
+    "design": "对比监督 ego-oracle 与仅 exo 基线",
+    "baselines": [
+      "ego-oracle",
+      "exo-only"
+    ],
+    "metrics": [
+      "edit"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "同步蒸馏 edit 28.59 接近监督 ego-oracle 26.42，远超 exo-only 12.60",
+      "scope": "Assembly101 时序动作分割",
+      "locator": "5.1 Performance of the Proposed Approach"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "同步是强前提，需采集同步对",
+        "basis": "方法以同步视频对为输入"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于可同步采集的对齐，采集成本高",
+  "critical_appraisal": {
+    "design_strengths": [
+      "无需 ego 标签"
+    ],
+    "design_risks": [
+      "依赖同步对"
+    ],
+    "baseline_fairness": "与 ego-oracle 同任务对比",
+    "metric_validity": "edit 分数",
+    "reproducibility": "方法完整",
+    "external_validity": "两数据集"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2312.02638-C01",
+      "claim": "第一↔第三人称对齐的同步蒸馏路线：仅用带标注 exo 视频 + 无标注的同步 exo-ego 视频对做知识蒸馏，即可把时序动作分割模型从 exo 迁移到 ego（edit 28.59，与监督 ego-oracle 26.42 相当），同步是强桥接信号但需采集同步对。",
+      "stance": "support",
+      "relation": "回答问题二：同步蒸馏路线，说明同步是强对齐信号。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Abstract 与 5.1 Performance 直接陈述该设定与 edit 分数对比；被纳入既有综述（EA-EGOEXO-2026-0017/0018）。",
+      "locator": "5.1 Performance of the Proposed Approach",
+      "source_context": "28.59 29.58 24.84 16.38 31.36 13 ✓ ✓ 28.13 28.75 24.16 15.79 32.67 14 Improvement w.r.t. baseline (line 10) Table 2 : Results for the v4 e4 view adaptation setting. Best results within groups are repo",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}
