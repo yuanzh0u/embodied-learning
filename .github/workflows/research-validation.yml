@@ -69,10 +69,11 @@ jobs:
           numstat = subprocess.check_output(
               ["git", "diff", "--numstat", revision_range], text=True
           )
+          allowed_binary_files = {"wiki/assets/social-preview.png"}
           binary_files = []
           for line in numstat.splitlines():
               added, deleted, path = line.split("\t", 2)
-              if added == "-" or deleted == "-":
+              if (added == "-" or deleted == "-") and path not in allowed_binary_files:
                   binary_files.append(path)
           if binary_files:
               raise SystemExit("binary files are not allowed:\n- " + "\n- ".join(binary_files))
