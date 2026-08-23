@@ -195,6 +195,7 @@ def query_entry(raw: dict[str, Any], source_key: str, source_type: str) -> dict[
         "persona_id",
         "persona_source",
         "coverage_dimension",
+        "regeneration_round",
         "evidence_role",
     ):
         if optional in raw:
@@ -559,6 +560,8 @@ def merge_persona(paths: list[str]) -> tuple[list[dict[str, Any]], list[dict[str
                 "coverage_dimension": dimension,
                 "evidence_role": "query-planning-only",
             }
+            if query_item.get("regeneration_round") is not None:
+                entry["regeneration_round"] = query_item["regeneration_round"]
             arxiv_entries.append(entry)
             suggestions.append(
                 {
