@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.06558",
+    "title": "RynnWorld-Teleop: An Action-Conditioned World Model for Digital Teleoperation",
+    "published": "2026-07-07",
+    "url": "https://arxiv.org/abs/2607.06558",
+    "authors": ["Haoyu Zhao", "Xingyue Zhao", "Hangyu Li", "Biao Gong", "Kehan Li", "Siteng Huang", "Xin Li", "Deli Zhao", "Zhongyu Li"]
+  },
+  "review": {
+    "question": "近两年（2024-08 至 2026-08）Diffusion Transformer（DiT）在视频生成与世界模型方向的：能力如何演进、向世界模型转型的机制、物理/时序/实体一致性等限制、评测方法与基准、部署/加速、以及 action-conditioned 世界模型与具身交叉。每篇关注其为该综述提供的证据。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "正中综述的 action-conditioned 世界模型 + DiT 架构 + 部署/加速 + 具身交叉：以 Video DiT（Wan2.2-TI2V-5B）构建 egocentric 世界模型，深度感知骨骼条件 + 渐进跨域训练 + 蒸馏为 4 步 causal 单趟（40 FPS），并把其作为数字遥操作数据引擎，用生成数据极简/增强训练策略实现 zero-shot Sim2Real。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "研究问题：机器人数据收集被物理遥操作瓶颈化（绑定硬件/时间/工作区）；现有 human-to-robot 译借 pass 与 human-centric，需 robot-centric+action-grounded+real-time"},
+      {"locator": "2.1 Action-Conditioned Egocentric World Models", "role": "problem", "purpose": "回顾 action-conditioned egocentric 世界模型（Hand2World/GeneratedReality/InterDyn/CosHand），现有者 human-centric"},
+      {"locator": "2.2 Human-to-Robot Video Translation", "role": "problem", "purpose": "回顾被动式 human-to-robot 视频译借局限（切纯观察式、无动作条件）"},
+      {"locator": "3.1 Preliminaries", "role": "method-or-design", "purpose": "基于 Wan-I2V：3D VAE + Transformer denoiser + conditional flow matching 训练目标"},
+      {"locator": "3.2 Depth-Aware Action Representation", "role": "method-or-design", "purpose": "21 关节手部骨骼 + 深度调制渲染 → 空间时间对齐的 latent 控制"},
+      {"locator": "3.3 Action-Conditioned Video Generation", "role": "method-or-design", "purpose": "分布对齐的 additive patch-embedding 条件注入 + zero-init gating 保 pretrained 先验"},
+      {"locator": "3.4 Progressive Cross-Domain Training", "role": "method-or-design", "purpose": "两阶段：EgoDex/VITRA 人类预训练 + 1800 条真机遥操作对，人-机器人知识迁移"},
+      {"locator": "3.5 Autoregressive Distillation", "role": "method-or-design", "purpose": "双向 teacher 蒸馏为 causal student（causal flow-matching warm-up + DMD + KV cache/sink token）"},
+      {"locator": "4.1 Data Generation Pipeline for Policy Learning", "role": "method-or-design", "purpose": "数字遥操作系统：retargeting（DLS IK、54 维动作）+ 骨骼条件合成 + 分块 re-anchoring 抗漂移"},
+      {"locator": "4.2 Data Engine Comparison with Traditional Simulation", "role": "method-or-design", "purpose": "相对传统仿真：零 3D 资产、无 visual domain gap、隐含物理"},
+      {"locator": "5.2 Digital Teleoperation System Evaluation", "role": "results-or-analysis", "purpose": "四个双（协作/顺序/长视界）任务策略成功率的 zero-shot Sim2Real 与数据增强；40 FPS 实时"},
+      {"locator": "5.3 Action-Conditioned World Model Evaluation", "role": "results-or-analysis", "purpose": "EgoDex-Test/Robotic-Test 上 PSNR/SSIM/LPIPS/FVD 优于 I2V 与 action-conditioned 基线；OOD 泛化"},
+      {"locator": "5.4 Ablation Study", "role": "results-or-analysis", "purpose": "additive vs concat 融合、human 预训练必要性、蒸馏课程（w/o DMD、w/o warmup）"},
+      {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "结论与限制：精细液体/高可变形物体困难；embodiment 桥需按平台微调"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "能否用 robot-centric、action-grounded、real-time 的 action-conditioned DiT 视频世界模型实现'数字遥操作'——即用操作者手部姿势流驱动世界模型合成机器人 egocentric 视频，并把同一姿势流重定向为机械臂/灵巧手动作，从而不经真实机器人即可产出可用于模仿学习的 (RGB, action) 数据并实现 Sim2Real？",
+  "contributions": [
+    "形式化'数字遥操作'范式并给出三要求（robot-centric、action-grounded、real-time）；任何实用实例必须同时满足",
+    "RynnWorld-Teleop：放入这些要求的 egocentric action-conditioned 世界模型（Video DiT / Wan2.2-TI2V-5B），含深度感知骨骼表示、渐进 human→robot 训练、流式自回归蒸馏，单趟 40+ FPS",
+    "完整数字遥操作系统：单参考图实例化任意操作场景，经 retargeting + 骨骼条件合成 + 分块 re-anchoring 生成无限 action-conditioned rollout",
+    "首次实证：纯由该系统生成的数据训练的策略能 zero-shot 迁移到真实机器人，且用该数据增强真实演示普遍提升成功率——数字遥操作可作为替代并放大物理遥操作的高保真数据引擎"
+  ],
+  "method": {
+    "summary": "RynnWorld-Teleop 基于 Wan-I2V/Wan2.2-TI2V-5B 的 Video DiT + conditional flow matching。动作表示为 21 关节手部骨骼视频，用深度调制颜色/半径渲染以编码 3D 线索，VAE 编码为与目标视频时空对齐的 latent 控制；通过分布对齐的 additive patch-embedding（含 zero-init gating）注入 Video DiT（LoRA rank 64 或全参 SFT）。两阶段训练：Stage1 大规模 egocentric 人类视频（EgoDex/VITRA）预训练吸收操作先验，Stage2 用 1800 条真机遥操作对微调桥接 embodiment。再把双向 teacher 蒸馏为 causal student（causal flow-matching warm-up 后接 DMD，固定尺寸 KV cache + sink token）。系统端：Vive trackers + Manus 手套读 6-DoF/21 关节，DLS IK + null-space shoulder 先验 retarget 为 54 维动作（双 7-DoF 臂 + 双 20-DoF 手），分块 81 帧 chunked re-anchoring 抗长视界漂移。",
+    "assumptions": [
+      "causewise骨骼视频足以把 human intent 映射为 robot execution（IK 把 human 姿势映射为 robot 动作）",
+      "depth-modulated 2D 骨骼渲染足以提供精细手-物交互所需的 3D 结构线索",
+      "causal student + KV cache + sink token 可跨 chunk 保持长视界一致；生成的 (RGB, action) 对可端到端对齐供模仿学习"
+    ]
+  },
+  "study_context": {
+    "datasets": ["EgoDex（人类，74.0M 帧/0.91M slice）", "VITRA（人类，30.7M 帧/1.23M slice）", "自建真机遥操作（Real-Robot，0.43M 帧/5.3K slice；1800 episode，4 任务：Dual Picking 500/Block Pushing 500/Bimanual Lifting 500/Lid Placement 300）"],
+    "tasks": ["Dual Picking", "Block Pushing", "Bimanual Lifting", "Lid Placement"],
+    "embodiments": ["TIANJI M6 移动机器人（双 7-DoF 臂 + 双 WUJI 20-DoF 灵巧手，总 54-DoF）", "RealSense D435i egocentric", "operator: HTC Vive trackers + Manus data gloves"],
+    "sample_or_scale": "5B DiT（Wan2.2-TI2V-5B）；训练 64 H100；生成 4-step；Robotic-Test 20 序列 / EgoDex-Test 50 序列，81 帧 16 FPS"
+  },
+  "evaluation": {
+    "design": "双域评测：(1) EgoDex-Test（人类中心，测通用操作先验与消融）+ Robotic-Test（自建真机遥操作 holdout，测 robot 域），度量 PSNR/SSIM/LPIPS/FVD（I3D）与单 H100 FPS；另做 unseen-object/unseen-background OOD 泛化。(2) 系统级：真机 4 任务 35 次/任务随机初态的成功率，对比纯 Real 数据、Real+生成数据、以及生成 data-only 训练策略（DP/VLA/(等)的增强）。",
+    "baselines": ["文本/图 I2V：CogVideoX-1.5-I2V-5B、Wan-2.2-TI2V-5B（含 vanilla SFT）、Wan-2.1/2.2-I2V-14B", "action-conditioned：InterDyn、CosHand、Mask2IV", "策略：Diffusion Policy (DP)、(行为克隆/(VLA 等)）"],
+    "metrics": ["PSNR", "SSIM", "LPIPS", "FVD (I3D)", "FPS / 延迟分解", "真机成功率（35 trials/task）", "t-SNE 特征分布对齐"],
+    "ablations": ["additive 分布对齐 vs 拼接融合", "有无 human 预训练（直接 robot 微调）", "蒸馏课程：w/o DMD、w/o causal warm-up", "LoRA vs 全参 SFT"]
+  },
+  "findings": [
+    {"finding": "RynnWorld-Teleop 在 EgoDex-Test 与 Robotic-Test 上 PSNR/SSIM/LPIPS/FVD 全面优于通用 I2V 与 action-conditioned 世界模型（FVD 585 vs SFT 1223 / Wan 1337 / InterDyn 655 等），说明深度感知骨骼 + 分布对齐条件为 robot 灵巧手交互提供更有效的 action grounding", "scope": "EgoDex-Test/Robotic-Test（81 帧），单 H100", "locator": "5.3 Action-Conditioned World Model Evaluation; Table 4"},
+    {"finding": "蒸馏 causal student 实现实时单趟生成：4-step 流匹配，40.0 FPS @ 单 H100（重 72% 于 Causal DiT 去噪），超出典型 action-conditioned 世界模型的 - Hz", "scope": "推理延迟分析（H100）", "locator": "5.2 Digital Teleoperation System Evaluation"},
+    {"finding": "纯由生成数据（300 episode，无真实数据）训练的策略即可 zero-shot 迁移到真机：Block Pushing 82.86%、Bimanual Lifting 77.14%；以 300 生成数据增强 300 真实数据在几乎所有任务一致提升，Lid Placement 提升最显著（某策略 +20% 成功率）", "scope": "真机 4 任务 ×35 trials，DP/(等) 策略", "locator": "5.2 Digital Teleoperation System Evaluation; Table 3"},
+    {"finding": "消融：拼接融合显著掉（FVD 585→1191）、无 human 预训练严重崩塌（FVD 2598、物体永久性丢失）、无 DMD 或无非因果 warm-up 的质量差距 >3 dB；两阶段课程与 additive 条件对 preserve pretrained 先验关键", "scope": "EgoDex-Test 消融", "locator": "5.4 Ablation Study; Table 4"},
+    {"finding": "能在训练外 OOD 视觉状态泛化：单参考图换 unseen object/sphere 或 unseen background/桌布，系统仍保持时序一致并忠实执行 action-conditioned 轨迹，说明学到与纹理/背景解耦的泛化交互先验", "scope": "图像编辑生成的 OOD 参考图", "locator": "5.3 Action-Conditioned World Model Evaluation"},
+    {"finding": "生成数据（t-SNE/I3D）与真实数据特征分布显著重叠，解释了观察到的 zero-shot Sim2Real 传播有效性", "scope": "1000 帧采样特征分析", "locator": "5.2 Digital Teleoperation System Evaluation"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "深度调制渲染虽捕捉 3D 动态，但模型在精细液体动力学或高度可变形物体的操作上仍偶尔困难，需更丰富的训练数据", "locator": "6 Conclusion"},
+      {"limitation": "桥接 embodiment 需按平台（per-platform）微调，限制其在机器人队规模上的可扩展性；cross-embodiment 基础世界模型（可用 kinematic descriptors 条件）是未来方向", "locator": "6 Conclusion"}
+    ],
+    "reader_inferred": [
+      {"boundary": "世界模型质量基于感知/分布度量（PSNR/SSIM/LPIPS/FVD）与真机成功率，非物理参数/轨迹真值校验；生成视频的物理合理性由人类先验近似而非守恒定律保证", "basis": "评测设计与 pre-train on human video 的方法"},
+      {"boundary": "基准模型与动作由单参考图实例化，严重依赖参考图/3D 重建质量；对不可见材料（精细液、高可变形）保真有限", "basis": "作者自述限制"},
+      {"boundary": "40 FPS、4-step 结果在 Wan2.2/视频 DiT 单一架构断面测得，为部署/加速命题提供 on-trend 证据但不支持跨架构推广", "basis": "单系架构（Wan DiT）"}
+    ]
+  },
+  "transfer_boundary": "RynnWorld-Teleop 的证据可迁移到综述的'action-conditioned 世界模型 + DiT 部署加速 + 具身 Sim2Real'命题：说明用 egocentric 视频 DiT（深度骨骼条件 + 渐进训练 + 自回归蒸馏）可生成与真机动作严格对齐的高保真机器人数据，蒸馏 causal 学生给出 40 FPS 单趟加速，且该生成数据能支撑 policy 的 zero-shot Sim2Real 与数据放大。但这些结论不迁移到严格物理正确性（精细液/高可变形受限）、不迁移到跨 embodiment 免微调（需 per-platform 微调）、对物理一致性也只提供感知级而非动学真值级证据。",
+  "critical_appraisal": {
+    "design_strengths": ["把动作条件世界模型落地为可用的数据引擎并给出 robot-centric/action-grounded/real-time 三要求，任务定义清晰", "深度感知骨骼 + 分布对齐 additive 条件保 pretrained 先验，机制设计自洽", "系统消融（融合/预训练/蒸馏课程）与双域（人类/robot）评测均衡", "真机 35 trials 成功率 + t-SNE 分布对齐 + OOD 泛化，证据链完整"],
+    "design_risks": ["质量指标（PSNR/SSIM/LPIPS/FVD）与成功率测视觉/任务达成而非物理/动力真值", "生成视频由 human 先验近似物理，未验证严格物态守恒", "评测为 4 任务 ×35 trials，规模有限；生成-only 结果（Block 82.86%）未见与真实全套任务的全面对照", "部分数值/分辨率在提取中 LaTeX 破坏"],
+    "baseline_fairness": "I2V 与 action-conditioned 基线（InterDyn/CosHand/Mask2IV）原生输入各异，在各自原生分辨率评测并换算，对比意图明确但存在公平性细节风险",
+    "metric_validity": "FVD(I3D) 为时序分布指标、PSNR/SSIM/LPIPS 为帧级保真指标，适合评测动作条件视频重建；它们不直接等同'物理正确性'，故需结合真机成功率为搭桥证据",
+    "reproducibility": "公开代码/checkpoint、方法章节含明确训练/蒸馏协议（LoRA rank、阶段超参、retarget 公式），可复现",
+    "external_validity": "外部有效性受限于 4 个双/协作任务、单参考图实例化、Wan 系 DiT 与所测 embodiment；对精细液/高可变形与跨平台免微调未覆盖"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.06558_C01",
+      "claim": "RynnWorld-Teleop 用深度调制渲染的 21 关节手部骨骼动作表示（颜色与关节/骨骼直径按相机空间深度动态缩放）来编码精确手-物交互所需的 3D 结构线索，并投影为与目标视频 latent 时空对齐的控制 latent。",
+      "stance": "support",
+      "relation": "支持'tDC视频世界模型的动作条件表示'机制命题：以 2D 深度让骨骼 latent 携带 3D 线索，是 action-conditioned 世界中处理精细操作的一种有效动作编码",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 3.2 描述深度调制渲染以解决 2D 投影的深度歧义，产出的控制 latent 与目标视频 latent 时空对齐用于 grounding。",
+      "locator": "3.2 Depth-Aware Action Representation",
+      "source_context": "the depth-encoded color mapping and diameter of each joint and bone are dynamically scaled according to their camera-space depth",
+      "evidence_type": "architecture",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 3.2，直接支撑深度调制骨骼表示、以及该表示供更精细手-物交互/时空对齐控制 latent 的主张"
+      }
+    },
+    {
+      "card_id": "2607.06558_C02",
+      "claim": "RynnWorld-Teleop 通过分布对齐的 additive patch-embedding 把骨骼控制 latent 注入视频 DiT，并以零初始化的 gating scalar 保持与预训练视频流的统计兼容，从而在纳入动作条件时不破坏 base DiT 的生成先验。",
+      "stance": "support",
+      "relation": "支持'DiT 世界模型如何在模型中注入动作条件'的架构命题：additive 分布对齐条件机制相比拼接更保 pretrained 先验",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 3.3 描述并行控制 patch-embedding 层、学习到的 scalar gate、均值/方差运行对齐，并 zero-init gating 以逐步纳入 pose 信号而不 destabilize 预训练权重",
+      "locator": "3.3 Action-Conditioned Video Generation",
+      "source_context": "we adopt an additive patch-embedding scheme with distribution alignment",
+      "evidence_type": "architecture",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 3.3，支撑 additive 分布对齐 patch-embedding 的条件机制及其保先验设计（zero-init gating）在同一节的描述"
+      }
+    },
+    {
+      "card_id": "2607.06558_C03",
+      "claim": "蒸馏因果学生模型实现实时单趟生成：4-step 条件流匹配，在单 H100 上 40.0 FPS（其中 Causal DiT 去噪约占 72% 延迟），明显超出现有 action-conditioned 世界模型数 Hz 的帧率，从而弥合传感-执行间隙。",
+      "stance": "support",
+      "relation": "支持'ĐiT 视频世界模型部署/加速与实时流式'命题：双向 teacher 蒸馏为 4-step causal 学生 + KV cache 可把 action-conditioned world model 推到实时",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.2 的延迟分析报告因果学生 4-step 达 40.0 fps（H100），分解为 skeletal encoding 5%/DiT denoising 72%/visual decode 23%，并称超出典型 - Hz。",
+      "locator": "5.2 Digital Teleoperation System Evaluation",
+      "source_context": "Our distilled causal student model, optimized with a 4-step flow matching schedule, achieves a high throughput of 40.0 fps",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "吞吐 FPS（单 H100，4-step）",
+        "value_or_direction": "40.0 fps；延迟分解 DiT 去噪占总 72%；超出典型 action-conditioned 世界模型的低数 Hz 帧率",
+        "comparator": "Wan2.2-TI2V-5B(I2V) 等数 Hz 的 action-conditioned 世界模型",
+        "task_or_sample": "egocentric 遥操作流式生成（EGO 分辨率，单 H100 GPU）",
+        "locator": "5.2 Digital Teleoperation System Evaluation"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文与 40.0 fps 在 5.2 延迟分析段逐字可查，延迟分解与典型 - Hz 的对比也在同一段，支撑实时 40 FPS 的量化主张"
+      }
+    },
+    {
+      "card_id": "2607.06558_C04",
+      "claim": "RynnWorld-Teleop 在 EgoDex-Test 与 Robotic-Test 上显著优于通用 I2V（Wan/CogVideoX）与 action-conditioned 世界模型（InterDyn/CosHand/Mask2IV）：如 FVD 585 vs vanilla SFT 1223、PSNR 26.08 vs 20.93，说明自定义深度骨骼条件 + 分布对齐优于简单 SFT 或现有 action-conditioned 基准。",
+      "stance": "support",
+      "relation": "支持'DiT 向世界模型转型的机制与物理/时序一致性'命题：通用 I2V 缺细粒度手势响应机制致操作时序一致性弱，专项 action-conditioned 训练显著更好",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.3 报告其对通用 I2V 与 action-conditioned 模型的全面领先；vanilla SFT 基线 FVD 1223 vs 585、PSNR 20.93 vs 26.08 凸显专项条件化的重要性。",
+      "locator": "5.3 Action-Conditioned World Model Evaluation",
+      "source_context": "our method significantly outperforms both general-purpose I2V models and action conditioned video generation models",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "FVD (I3D) 与 PSNR（EgoDex-Test）",
+        "value_or_direction": "FVD 585 (ours) vs 1223 (vanilla SFT) / 1337 (Wan-2.2-I2V-14B)；PSNR 26.08 vs 20.93 (SFT)",
+        "comparator": "通用 I2V + action-conditioned 世界模型 + vanilla SFT",
+        "task_or_sample": "EgoDex-Test（50 序列 81 帧）与 Robotic-Test（20 序列 81 帧）",
+        "locator": "5.3 Action-Conditioned World Model Evaluation; Table 4"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 5.3；FVD 585 vs 1223、PSNR 20.93 vs 26.08 在该节正文逐字出现（并对应 Table 4 数据行），支撑其全面优于基线"
+      }
+    },
+    {
+      "card_id": "2607.06558_C05",
+      "claim": "以 RynnWorld-Teleop 生成数据做数据引擎：纯由 300 生成 episode（无真实数据）训练的策略可 zero-shot 迁移到真机（Block Pushing 82.86%、Bimanual Lifting 77.14%），且用 300 生成数据增强 300 真实 episode 在几乎所有任务一致提升成功率（如 Lid Placement 某策略 +20%）。",
+      "stance": "support",
+      "relation": "直接支持'action-conditioned 世界模型与具身交叉/数据引擎与 Sim2Real'命题：生成式 DiT 世界模型可不经真实机器人产出可训练策略的机器人数据并放大真实数据",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.2 报真机 4 任务成功率：生成-only 达竞争性成功率，增强真实数据在近全部任务一致提升，Lid Placement 提升最大。",
+      "locator": "5.2 Digital Teleoperation System Evaluation",
+      "source_context": "augmenting 300 real-world episodes with 300 RynnWorld-Teleop-generated episodes leads to consistent performance gains across nearly all tasks",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "真机成功率（35 trials/task）",
+        "value_or_direction": "生成-only：Block Pushing 82.86%、Bimanual Lifting 77.14%；增强：Lid Placement 从 42.86%→62.86% 及 34.29%→54.29%（+20%）",
+        "comparator": "纯真实数据 vs 真实+生成数据 vs 纯生成数据",
+        "task_or_sample": "真机 4 任务（TIANJI M6 + WUJI 手），随机初态",
+        "locator": "5.2 Digital Teleoperation System Evaluation; Table 3"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 5.2；生成-only 的 82.86%/77.14% 与 Lid Placement +20%（42.86→62.86、34.29→54.29）在 Table 3 与正文可核验，支撑数据引擎可 zero-shot Sim2Real 与放大真实数据"
+      }
+    },
+    {
+      "card_id": "2607.06558_C06",
+      "claim": "作者明确限制：该模型在精细液体动力学或高可变形物体操作上仍偶尔困难，且桥接 embodiment 需按平台（per-platform）微调，限制其跨机器人队可扩展性——这构成数字遥操作数据引擎在物态复杂度与多本体泛化上的边界。",
+      "stance": "gap",
+      "relation": "界定'action-conditioned 世界模型物理/时序一致性 + 具身泛化'输送证据中未被覆盖的缺口：高可变形/流体物理与零迁移多本体部署",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 6 Conclusion 的 Limitation 段落显式声明这两条限制，指向更丰富数据与 cross-embodiment 基础世界模型（kinematic descriptors 条件）。",
+      "locator": "6 Conclusion",
+      "source_context": "the model occasionally struggles with complex physical phenomena such as fine-grained liquid dynamics or the manipulation of highly deformable objects",
+      "evidence_type": "position",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 6 Conclusion 限制段；per-platform 微调限制也在同段紧邻文字中陈述，命题即为作者原文立场"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "该文是综述'action-conditioned 世界模型与具身交叉'最核心的一篇：Video DiT（Wan2.2-TI2V-5B）+ 蒸馏 40 FPS + 数字遥操作数据引擎 + zero-shot Sim2Real，VA 的交集最多。物理一致性局限：评测为感知级（PSNR/SSIM/LPIPS/FVD）+ 任务成功率，非动力学真值；生成视频物理由 human 先验近似。部分分辨率/数值 LaTeX 破坏，定量卡采用正文可还原数字。"
+}

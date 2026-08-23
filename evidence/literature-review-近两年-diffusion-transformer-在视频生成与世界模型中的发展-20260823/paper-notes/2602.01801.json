@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2602.01801",
+    "title": "Fast Autoregressive Video Diffusion and World Models with Temporal Cache Compression and Sparse Attention",
+    "published": "2026-02-02",
+    "url": "https://arxiv.org/abs/2602.01801",
+    "authors": ["Dvir Samuel", "Issar Tzachor", "Matan Levy", "Michael Green", "Gal Chechik", "Rami Ben-Ari"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向：能否通过缓存压缩与稀疏注意力在自回归/流式世界模型中保质加速长时生成，并维持近常数显存（长上下文瓶颈）。关注 '部署/加速' 与 '长时一致性/世界模型'。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "面向自回归视频扩散/世界模型（Rolling-Forcing、LongVie2）提出训练无关 FAST-AR（TempCache+AnnCA+AnnSA），在长时回卷中维持近常数 KV 显存并给出 10.8x 加速；是 '部署/加速+长时世界模型' 的核心实证。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确立问题：自回归视频扩散随 KV cache 增长导致延迟/显存上升、限制长上下文一致性；引入三冗余来源与分析。含图1定量摘要。"},
+      {"locator": "4 Motivation", "role": "method-or-design", "purpose": "观测稀疏性：注意力 recall 分析、Q/K 语义化与跨帧重复、以及帧选择性的 cross-attention；为其方法提供机制依据。"},
+      {"locator": "5.2 KV Cache Compression using Temporal Correspondence", "role": "method-or-design", "purpose": "TempCache：用时间对应通过 ANN 检索合并重复 key，Lemma 5.1 保证重复 key 无损压缩。"},
+      {"locator": "6.1 Setup", "role": "data-or-setting", "purpose": "评测设定：Rolling-Forcing 与 LongVie2 世界模型、LongVBench/LongVGenBench、Dense FA3 基线、3000 帧回卷。"},
+      {"locator": "7.1 Quantitative Results", "role": "results-or-analysis", "purpose": "定量：KV 压缩、SA/CA 稀疏、端到端 10.8x 加速、吞吐与峰值显存随回卷长度保持常数。"},
+      {"locator": "8 Summary", "role": "conclusion-or-limitations", "purpose": "总结与方法定位（统一训练无关框架）。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "自回归视频扩散/世界模型存在何种可开发的注意力冗余，能否用训练无关的统一框架（KV 压缩+稀疏注意力）在长时回卷中维持质量的同时显著加速并保持近常数显存？",
+  "contributions": [
+    "识别自回归视频扩散中的三类持久注意力冗余：跨帧近似重复 key、缓慢演化的语义化 Q/K 使多数点积冗余、长 prompt 上自带帧选择性 cross-attention。",
+    "提出统一、训练无关的注意力框架 FAST-AR：TempCache（基于时间对应与 ANN 的 KV 压缩）、AnnCA（ANN 剪枝 prompt tokens）、AnnSA（ANN 稀疏 self-attention）。",
+    "Lemma 5.1：重复 key 的注意力可由分组代表无损计算，为不含核的 KV 合并提供理论基础。",
+    "在 Rolling-Forcing 与 LongVie2 世界模型上实证：长回卷（3000 帧）近常数 FPS 与显存，端到端最高 10.8x 加速且保持 FA3 级质量。"
+  ],
+  "method": {
+    "summary": "FAST-AR 为训练无关推理加速框架。(1) TempCache：跨帧 key 近似重复，用 ANN（FAISS LSH/8-bit 量化）为每个 query 找前一帧 top-1 key 建立时间对应，把对应到同一语义 token 的 key 分组、仅保留最新代表 key；Lemma 5.1 保证 key 完全重复时压缩无损（实际按相似度阈值近似合并）。(2) AnnCA：cross-attention 中对每个 query 用 ANN 只保留 prompt 中语义最近的部分 token。(3) AnnSA：self-attention 中限制每个 query 到 ANN 匹配的 key 子集。实现用 FAISS+FlashInfer；前 30% 去噪步禁用稀疏，仅对经验上稀疏的 ~70% 块应用；量化为 8-bit。",
+    "assumptions": [
+      "自回归视频扩散的注意力在语义上是稀疏且跨帧高度重复的（以 PCA 与 attention-recall 观测支撑）。",
+      "ANN 近似最近邻引出的时间对应能忠实反映真实 attention 对应关系（差分于 DiffTrack 观察）。",
+      "训练无关、不重训即可把稀疏/压缩嵌入现成模型；向量/核无关修改（只改输入 KV/掩码）。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["LongVBench（基于 VBench prompts 的长视界基准）", "LongVGenBench（长视频生成基准）"],
+    "tasks": ["长时（多分钟、最长 3000 帧流式回卷）自回归视频生成/世界模型 roll-out（RollingForcing 与 LongVie2）", "模型作为交互/神经游戏引擎与世界模型评估"],
+    "embodiments": ["无真实机器人本体；评测本体为视频世界模型（LongVie2）与自回归视频扩散（RollingForcing），未涉真实 action-conditioned 具身控制。"],
+    "sample_or_scale": "3000 帧无上下文窗限制的长回卷（单 H100）；比较 Dense FlashAttention-3 与 TeaCache/FlowCache 缓存及 SVG/SVG2/RadialAttn 稀疏方法；基准为 LongVBench 与 LongVGenBench"
+  },
+  "evaluation": {
+    "design": "在自回归视频扩散（Rolling-Forcing）与世界模型（LongVie2）上评测：与 Dense FlashAttention-3 对质量保真（PSNR/SSIM/LPIPS），报告 attention density/recall 与 per-component/end-to-end 加速；在 3000 帧回卷测吞吐（FPS）与峰值显存随长度 scaling。",
+    "baselines": ["Dense FlashAttention-3 (FA3)", "TeaCache", "FlowCache", "SVG / SVG2 / RadialAttn（适配到自回归设定）", "组合 FlowCache+RadialAttn"],
+    "metrics": ["PSNR / SSIM / LPIPS (vs FA3)", "LongVBench / LongVGenBench", "Attention density", "Attention recall", "Component & E2E Speedup", "FPS 与 Peak GPU memory 随回卷长度"],
+    "ablations": ["LSH vs 8-bit Quant ANN（TempCache/AnnSA/AnnCA 及全组合）", "每组件与端到端加速分解（Supp. 另列短视频与 KV 压缩对照）", "AVA：稀疏仅对部分块/步（前 30% 关闭）"]
+  },
+  "findings": [
+    {"finding": "端到端：All Ours-Quant/LSH 在 RollingForcing LongVBench 上达最高 10.8/10.7x 加速并保持 FA3 级质量（VBench 84.0），而最好基线组合 FlowCache+RadialAttn 仅 4.4x 且质量崩坏。", "scope": "RollingForcing, 3000 帧回卷, LongVBench", "locator": "7.1 Quantitative Results"},
+    {"finding": "TempCache 把 KV 压缩到 ~16% 最小密度、注意力 recall 90-91%、质量匹配 dense（VBench 84.1）；TeaCache/FlowCache 仅 1.1-1.3x 加速且保留大部分 dense 计算。", "scope": "RollingForcing, KV 压缩组件", "locator": "7.1 Quantitative Results"},
+    {"finding": "随回卷长度增长，dense FA3 吞吐连续下滑、峰值显存上升，而 FAST-AR 保持近常数 FPS 与平坦显存（有界 cache）。世界模型 LongVie2 上观察到相同趋势。", "scope": "3000 帧回卷，单 H100", "locator": "7.1 Quantitative Results"}
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {"boundary": "加速/显存结论域为自回归/流式生成与 ANN 近似 + 8-bit 量化前提；不覆盖离线整段 DiT、真实机器人/动作交互世界模型等。", "basis": "方法为训练无关稀疏+KV 合并，评测仅 RollingForcing/LongVie2；动作/物理一致性正确性不在指标内。"},
+      {"boundary": "质量保真以 Dense FA3 为锚（PSNR/SSIM/LPIPS），不测任务成功率/长期语义一致性正确性；'世界模型' 证据主要在效率维。", "basis": "入门指标与 6.1 Setup 均为保真度/速度/显存；无物理一致性或交互正确性评测。"},
+      {"boundary": "端到端加速依赖 FAISS/FlashInfer 与特定块/步稀疏配置，收益随硬件/模型刻度变化，非无条件 10.8x。", "basis": "实现细节（8-bit、~70% 稀疏块、前 30% 步禁用）为可调超参；定量仅在长回卷 H100 测量。"}
+    ]
+  },
+  "transfer_boundary": "本文证据限定在自回归/流式视频扩散与世界模型（RollingForcing、LongVie2）的长回卷推理加速；其加速与 '近常数显存' 结论域为自回归生成、ANN≈注意力对应、8-bit 量化前提。对无 KV-cache 增长（离线整段）DiT、对真实机器人/动作交互世界模型、以及对非 ANN 可近似注意力的场景，不做直接外推；质量保真锚定为 FA3 密集注意力而非任务成功率或世界模型能力本身。",
+  "critical_appraisal": {
+    "design_strengths": ["训练无关、即插即用，直接作用于自回归/世界模型的注意力瓶颈", "有理论（Lemma 5.1）支撑重复 key 无损压缩，机制清晰", "明确比较吞吐/显存随回卷长度 scaling，切中长上下文一致性痛点"],
+    "design_risks": ["高度依赖『注意力=语义上对应』与 ANN 近似假设，Q/K 语义化程度因模型/数据而异", "量化与核对依赖 FAISS/FlashInfer，加速收益可能随硬件/核差异波动", "以 FA3 密集质量为锚，未端到端评测世界模型的下游能力（如行动预测/长期一致性正确性）"],
+    "baseline_fairness": "对 TeaCache/FlowCache（缓存）与 SVG/SVG2/RadialAttn（稀疏）做全超参网格搜索并适配到自回归设定，控制较严；质量以 FA3 为对齐基。",
+    "metric_validity": "FPS/Peak memory 直接反映长回卷部署瓶颈；PSNR/SSIM/LPIPS 反映对 FA3 的保真但不等于任务成功率或认知一致性。",
+    "reproducibility": "实现细节（FAISS/FlashInfer、8-bit、块/步稀疏策略、H100）明确，开源基线与基准可复现。",
+    "external_validity": "作为综述 '部署/加速+长时世界模型' 的强实证；为行动预测/物理一致性正确性的外部价值有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2602.01801_C01",
+      "claim": "统一训练无关框架（TempCache+AnnCA+AnnSA，FAST-AR）在 RollingForcing 长回卷上达最高 10.8x（LSH 10.7x）端到端加速并保持 FA3 级质量，而最优基线组合 FlowCache+RadialAttn 仅 4.4x 且质量崩坏。",
+      "stance": "support",
+      "relation": "支持综述命题：缓存压缩+稀疏注意力可在自回归/世界模型长时生成中保质实现数量级加速，明显优于单纯缓存或单纯稀疏基线。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "7.1 报告 All Ours-LSH/Quant 端到端达 10.7-10.8x 且保持 FA3 级质量，而 FlowCache+RadialAttn 仅 4.4x 并 'collapses in quality'；与表1一致。",
+      "locator": "7.1 Quantitative Results",
+      "source_context": "Combining cache compression with SA/CA sparsity yields the strongest overall gains: All Ours-LSH/Quant achieves up to 10.7\u2013 10.8 end-to-end speedup while preserving FA3-level quality, while the best baseline combination (FlowCache+RadialAttn) reaches only 4.4 and collapses in quality.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "End-to-end speedup over Dense FlashAttention-3 (RollingForcing LongVBench)",
+        "value_or_direction": "All Ours-Quant 10.8x, All Ours-LSH 10.7x",
+        "comparator": "best baseline combo FlowCache+RadialAttn 4.4x (quality collapses)",
+        "task_or_sample": "RollingForcing autoregressive long-horizon generation, 3000-frame rollout",
+        "locator": "7.1 Quantitative Results (Table 1)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "7.1 Quantitative Results 全文含该 verbatim 句，且 Table 1 列出 'All Ours-LSH 10.7 / All Ours-Quant 10.8' 与 'FlowCache+RadialAttn 4.4'，逐字与数值一致；断言限定 RollingForcing/LongVBench。"
+      }
+    },
+    {
+      "card_id": "2602.01801_C02",
+      "claim": "TempCache（时间对应 KV 合并）把注意力 KV 缓存压缩到 ~16% 最小密度而保持 90-91% 注意力召回并匹配 dense 质量（VBench 84.1），而既有训练无关缓存 TeaCache/FlowCache 仅提供 1.1-1.3x 加速。",
+      "stance": "support",
+      "relation": "支持综述命题：针对自回归设定的 KV 缓存压缩可大幅降低 attention 密度而质量无损，是 '部署/加速（缓存）' 的关键实证。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "7.1 报告 TempCache-LSH/Quant 把密度降到 16%-17%，recall 90-91%，质量匹配 dense（VBench 84.1），而 TeaCache/FlowCache 仅 1.1-1.3x。",
+      "locator": "7.1 Quantitative Results",
+      "source_context": "both TempCache-LSH/Quant compress the KV cache aggressively (down to 16% Min Density) while preserving high attention recall ( 90\u201391%) and matching dense quality (VBench 84.1).",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "KV-cache compression (Min Density) & attention recall & VBench quality",
+        "value_or_direction": "Min Density ~16-17%, recall 90-91%, VBench 84.1 (tempcache) vs TeaCache/FlowCache 1.1-1.3x speedup",
+        "comparator": "TeaCache (1.1), FlowCache (2.3 density not to 16%); Dense FA3",
+        "task_or_sample": "RollingForcing autoregressive video diffusion, LongVBench",
+        "locator": "7.1 Quantitative Results (Table 1)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "7.1 Quantitative Results 全文含该 verbatim 句，Table 1 给出 TempCache-LSH 16.8%/90.2%、TempCache-Quant 16.2%/91.4% 与 TeaCache/FlowCache 的低压缩，逐字一致，限定 KV-压缩组件。"
+      }
+    },
+    {
+      "card_id": "2602.01801_C03",
+      "claim": "随回卷长度增长，dense 基线 FA3 吞吐持续下滑、峰值显存随 KV cache 扩张上升，而 FAST-AR 在 3000 帧回卷中维持近常数 FPS 且显存平坦（有界 cache）；该趋势在世界模型（LongVie2）上同样被观察到。",
+      "stance": "support",
+      "relation": "支持综述命题：KV 缓存/长上下文是自回归世界模型部署的核心瓶颈，可被缓存压缩+稀疏注意力化解，为 '长时一致性与世界模型' 提供效率维证据（正确性维未覆盖）。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "7.1 及其图6 记录 FA3 与稀疏基线的吞吐随回卷下滑/显存上升，而本方法 FPS 与显存保持近常数（SA 稀疏使 attention 成本不随上下文增长）。",
+      "locator": "7.1 Quantitative Results",
+      "source_context": "Peak GPU memory for the dense attention baseline and current approaches increases with the expanding KV cache, whereas our method stays constant.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "7.1 全文含该 verbatim 句，且同节 (a) 说明 FA3 的 FPS 'drops continuously over the 3K-frame rollout' 而 'our method maintains constant FPS'，与图6 一致；含世界模型 trend 的同节奏陈述。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "方法性加速实证；论文未明列 limitation 段（author_status=not-found），故限制以 reader_inferred 记录。质量锚定 FA3 密集注意力与非任务级指标，不评测物理/因果一致性正确性，亦无分钟级世界模型能力验证（虽基线含 LongVie2）。"
+}

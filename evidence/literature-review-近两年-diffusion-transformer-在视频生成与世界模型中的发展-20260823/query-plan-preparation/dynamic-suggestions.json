@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "medium",
+      "notes": "Agent inferred that a video/world-model Diffusion Transformer review needs both the generic DiT-video lineage (Sora/Stable Video Diffusion/Genie/Veo/HunyuanVideo/CogVideoX/Open-Sora) and the limitation/evaluation/action-conditioned world-model surfaces that static embodied taxonomy does not cover."
+    }
+  ],
+  "knowledge_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+  "families": ["world-model"],
+  "queries": [
+    { "label": "dit-video-core", "tier": "core", "query": "all:\"diffusion transformer\" AND (all:\"video generation\" OR all:\"video synthesis\")", "why": "Direct vocabulary for Diffusion Transformer applied to video generation.", "source": "llm", "confidence": "high" },
+    { "label": "dit-world-model-core", "tier": "core", "query": "all:\"diffusion transformer\" AND all:\"world model\"", "why": "Diffusion Transformer used as a world model / video-world-model.", "source": "llm", "confidence": "high" },
+    { "label": "video-latent-diffusion-core", "tier": "core", "query": "all:\"latent diffusion\" AND (all:\"video generation\" OR all:\"video world model\")", "why": "Latent video diffusion architecture that underlies DiT-video models.", "source": "llm", "confidence": "high" },
+    { "label": "sora-lineage", "tier": "named-method", "query": "all:\"Sora\" AND (all:\"diffusion\" OR all:\"world model\" OR all:\"video\")", "why": "Sora demonstrated DiT on video and is a pivotal anchor even without public tech report completeness.", "source": "llm", "confidence": "medium" },
+    { "label": "stv-lineage", "tier": "named-method", "query": "all:\"Stable Video Diffusion\"", "why": "Stable Video Diffusion is a canonical video diffusion method and its successors (SVD-XT, Mochi, LongMoE) form a lineage.", "source": "llm", "confidence": "high" },
+    { "label": "genie-lineage", "tier": "named-method", "query": "all:\"Genie\" AND (all:\"world model\" OR all:\"interactive\")", "why": "Genie / Genie 2 are action-conditioned video world models built on video generation.", "source": "llm", "confidence": "medium" },
+    { "label": "hunyuan-cogvideo-opensora", "tier": "named-method", "query": "all:\"HunyuanVideo\" OR all:\"CogVideoX\" OR all:\"Open-Sora\"", "why": "Modern open DiT video models that report architecture, scaling, and evaluation details.", "source": "llm", "confidence": "high" },
+    { "label": "veo-moviegen-kling-wan", "tier": "named-method", "query": "all:\"Veo\" OR all:\"MovieGen\" OR all:\"Kling\" OR all:\"Wan\"", "why": "Nearer-term flagship video world-model/generation systems frequently benchmarked against.", "source": "llm", "confidence": "medium" },
+    { "label": "dit-scaling-mechanism", "tier": "mechanism", "query": "all:\"scaling\" AND (all:\"diffusion transformer\" OR all:\"diffusion\" AND all:\"video\")", "why": "Scaling-law evidence for diffusion transformers in video/world-model context.", "source": "llm", "confidence": "medium" },
+    { "label": "rectified-flow-mechanism", "tier": "mechanism", "query": "all:\"flow matching\" OR all:\"rectified flow\"", "why": "Flow matching / rectified flow is the training objective behind most current DiT-video and Sora-style models and shapes quality.", "source": "llm", "confidence": "high" },
+    { "label": "video-vae-mechanism", "tier": "mechanism", "query": "all:\"video autoencoder\" OR all:\"spatiotemporal VAE\" OR all:\"3D VAE\"", "why": "Latent video compression/representation (3D VAE) is a core component on which DiT-video quality depends.", "source": "llm", "confidence": "medium" },
+    { "label": "spatiotemporal-attention-mechanism", "tier": "mechanism", "query": "all:\"spatiotemporal attention\" AND (all:\"video\" OR all:\"diffusion\")", "why": "Temporal/space-time attention design inside video DiT.", "source": "llm", "confidence": "medium" },
+    { "label": "autoregressive-diffusion-hybrid-mechanism", "tier": "mechanism", "query": "all:\"autoregressive\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"token\")", "why": "Hybrid autoregressive+diffusion pipelines (e.g. W.A.L.T, next-token video models) competing with pure DiT.", "source": "llm", "confidence": "medium" },
+    { "label": "physics-consistency-limitation", "tier": "limitation", "query": "all:\"physics\" AND all:\"video generation\" AND (all:\"inconsistent\" OR all:\"violation\" OR all:\"dynamics\")", "why": "Core limitation: generated video lacks physical consistency/real dynamics.", "source": "llm", "confidence": "medium" },
+    { "label": "temporal-consistency-limitation", "tier": "limitation", "query": "all:\"temporal consistency\" AND (all:\"video generation\" OR all:\"world model\" OR all:\"diffusion\")", "why": "Limitation: temporal coherence and long-term consistency of generated video.", "source": "llm", "confidence": "medium" },
+    { "label": "object-entity-persistence-limitation", "tier": "limitation", "query": "all:\"entity\" AND all:\"persistence\" AND all:\"video\"", "why": "Limitation: object identity persistence and multimodal interaction in generated scenes.", "source": "llm", "confidence": "medium" },
+    { "label": "action-conditioned-worldmodel-eval", "tier": "evaluation", "query": "all:\"action-conditioned\" AND (all:\"world model\" OR all:\"video prediction\" OR all:\"planning\")", "why": "Evaluation surface: whether DiT-video world models are truly action-controllable and usable for planning.", "source": "llm", "confidence": "medium" },
+    { "label": "video-world-model-review-eval", "tier": "evaluation", "query": "all:\"video world model\" AND (all:\"benchmark\" OR all:\"evaluation\" OR all:\"survey\")", "why": "Evaluation: benchmarks and surveys for video world models.", "source": "llm", "confidence": "medium" },
+    { "label": "video-reward-model-eval", "tier": "evaluation", "query": "all:\"video reward model\" OR all:\"video quality assessment\"", "why": "Evaluation: reward/quality models for generated video, a practical gate.", "source": "llm", "confidence": "medium" },
+    { "label": "long-horizon-consistency-eval", "tier": "evaluation", "query": "all:\"long-horizon\" AND (all:\"video\" OR all:\"world model\" OR all:\"consistency\")", "why": "Evaluation: long-horizon rollouts and consistency in video world models.", "source": "llm", "confidence": "medium" },
+    { "label": "inference-cost-deployment", "tier": "deployment", "query": "all:\"diffusion\" AND all:\"video\" AND (all:\"accelerat\" OR all:\"distill\" OR all:\"efficien\")", "why": "Deployment: inference cost, sampling acceleration, and distillation of video diffusion.", "source": "llm", "confidence": "medium" },
+    { "label": "real-time-distillation-deployment", "tier": "deployment", "query": "all:\"distillation\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"latent\" OR all:\"model\")", "why": "Deployment: one/few-step distillation for practical video generation throughput.", "source": "llm", "confidence": "medium" },
+    { "label": "robot-video-worldmodel-adjacent", "tier": "adjacent", "query": "all:\"video generation\" AND all:\"robot\"", "why": "Adjacent/embodied: video generation and world models for robotics (links to EA-4D/EA-EVAL).", "source": "llm", "confidence": "medium" },
+    { "label": "latent-planning-worldmodel-adjacent", "tier": "adjacent", "query": "all:\"latent\" AND all:\"planning\" AND all:\"world model\"", "why": "Adjacent: planning in the latent space of a video/diffusion world model.", "source": "llm", "confidence": "medium" },
+    { "label": "video-generation-survey-adjacent", "tier": "adjacent", "query": "all:\"video generation\" AND all:\"survey\"", "why": "Adjacent: surveys mapping the video generation field and its diffusion-transformer core.", "source": "llm", "confidence": "medium" }
+  ],
+  "browser_fallback_queries": [
+    { "label": "dit-video-browser", "query": "\"diffusion transformer\" \"video generation\" Sora", "why": "Web fallback when arXiv under-recovers flagship DiT-video systems.", "source": "llm", "confidence": "medium" },
+    { "label": "genie2-worldmodel-browser", "query": "\"Genie 2\" OR \"world model\" interactive video", "why": "Check action-conditioned video world-model systems outside arXiv.", "source": "llm", "confidence": "medium" }
+  ],
+  "web_calibration_queries": [
+    { "label": "dit-video-calibration", "query": "Diffusion Transformer video generation world model 2025 advances", "why": "Calibrate current DiT-video terminology and flagship systems.", "source": "llm", "confidence": "medium" }
+  ]
+}

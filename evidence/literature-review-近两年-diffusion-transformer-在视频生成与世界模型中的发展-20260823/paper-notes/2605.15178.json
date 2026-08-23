@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.15178",
+    "title": "SANA-WM: Efficient Minute-Scale World Modeling with Hybrid Linear Diffusion Transformer",
+    "published": "2026-05-14",
+    "url": "https://arxiv.org/abs/2605.15178",
+    "authors": ["Haoyi Zhu", "Haozhe Liu", "Yuyang Zhao", "Tian Ye", "Junsong Chen", "Jincheng Yu", "Tong He", "Song Han", "Enze Xie"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向：能否以混合线性注意力/高压缩 latent 在有限数据与算力下原生训练分钟级相机可控世界模型，并在单 GPU 部署；其效率与长期一致性/相机控制质量的权衡。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "pdf",
+    "method": "pdf-text",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "提出 2.6B 参数、213K 视频、64 H100 训练的原生分钟级相机可控世界模型 SANA-WM；混合 GDN/softmax 线性注意力 + 高压缩 LTX2 VAE 实现单 GPU 部署，是 '分钟级世界建模 + 部署/加速（混合线性架构）' 的核心系统证据，含回声测评与 6-DoF 相机控制评测。"
+    },
+    "sections_read": [
+      {"locator": "1. Introduction (page 1-2)", "role": "problem", "purpose": "确立问题：分享开源分钟级相机可控世界模型需大模型/大数据/长训练/多 GPU；问能否以可访问成本原生训练 1 分钟世界模型。给出四贡献与效率主张。"},
+      {"locator": "3. Method / 3.2 Memory-Efficient Long-Context Modeling (page 4-5)", "role": "method-or-design", "purpose": "混合注意力：累计线性注意力的局限→帧级 GDN（decay gate+delta rule）+周期 softmax 注意力；含代数稳定化 (1/sqrt(DS)) 与双向/分块因果变体、dual-branch 相机控制。"},
+      {"locator": "5.3. Main Results (page 8, Table 2)", "role": "results-or-analysis", "purpose": "与 LingBot-World/HY-WorldPlay/Infinite-World/Matrix-Game 3.0 对比：相机控制精度、VBench、内存/吞吐；minute-scale 60s 720p。"},
+      {"locator": "5.4. Ablation Studies (page 9, Fig 6-7, Table 3-4)", "role": "results-or-analysis", "purpose": "部署效率路径（60步→4步蒸馏+attention-sink+NVFP4）、渐进训练消融、GDN key scaling 稳定化、相机条件消融（UCPE+Plucker）。"},
+      {"locator": "6. Conclusion & Limitations (page 10)", "role": "conclusion-or-limitations", "purpose": "总结与作者自承局限（scale-limited、缺显式 3D 场景记忆、动态/罕见视角/更长回卷漂移）及未来方向。页9又指 all-softmax 60s OOM。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "能否以混合线性注意力 DiT + 高压缩视频 latent + 渐进训练，在 213K 视频/64 H100（15 天）的有限预算下原生训练出 720p、相机（6-DoF）可控、分钟级（60s）世界模型，并做到单 GPU 部署？",
+  "contributions": [
+    "提出 SANA-WM，2.6B 参数开源世界模型，原生训练 1 分钟 720p 生成，配精确 6-DoF 相机控制，质量对标 LingBot-World/HY-WorldPlay 而效率显著更高。",
+    "混合线性注意力：帧级 Gated DeltaNet + 周期 softmax attention，配合高压缩 LTX2 tokenizer，使分钟级上下文在单 GPU 成本内可建模；含统计稳定化 key scaling。",
+    "双分支相机控制（latent UCPE 全局轨迹 + raw-frame Plucker mixing 细粒度），在低 D压缩下保持 6-DoF 轨迹贴合。",
+    "两阶段生成（阶段1+长视频 refiner）提升分钟级视觉质量与长期稳定；并自建 1 分钟世界模型评测基准与鲁棒相机位姿标注管道（213K clips）。"
+  ],
+  "method": {
+    "summary": "SANA-WM 基于 SANA-Video 改造：用 LTX2-VAE 高压缩 latent（比 ST-DC-AE 小 2.0x、比 Wan2.1-VAE 小 8.0x），四阶段渐进训练（VAE 适配 50k 步→混合架构≈5 GDN+softmax 适配于短视频→分钟级扩展+动作条件→分块因果微调+4 步自强制蒸馏+attention-sink/局部时间窗部署）。注意力为帧级 GDN 递推（decay 门+delta 规则，状态 DxD、逐 latent 帧一步，带 1/sqrt(DS) key scaling 保证非扩张），每第 4 块替换为标准 softmax 以精确长程召回。相机控制用潜率 UCPE（ray-local 几何通道）粗轨迹 + 原始帧 Plucker mixing 细运动。两阶段 refiner 用截断-sigma flow-matching LoRA 在 60s latent 上改进质量。",
+    "assumptions": [
+      "帧级递推状态（GDN）足以承载分钟级长期结构，而周期 softmax 弥补精确长程召回，二者互补。",
+      "高压缩 latent（LTX2）不损失分钟级且相机可控世界建模所需信息（上下文与压缩间合理权衡）。",
+      "质量、相机控制、内存/吞吐可由其 1 分钟基准客观评估；几何位姿标注（VIPE/MoGe 等）可靠支撑训练监督管理。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["~213K 公开视频 clips（metric-scale pose 监督，含 AvatarRaData 18,987 真实 60s + DL3DV/其他经 FCGS 渲染+DiFix3D 精修）", "自建 1 分钟世界模型基准：80 初始场景（Nano Banana Pro）x4 类 x 重访轨迹", "消融：VBench-I2V、OmniWorld 验证集"],
+    "tasks": ["给定首帧+文本+6-DoF 相机轨迹生成 1 分钟 720p 视频并保场景一致（camera-controlled world modeling）", "动作跟随精度（R/T/CMC）、视觉质量、重访/长期一致性与效率评测"],
+    "embodiments": ["非机器人动作；控制界面为 6-DoF 相机轨迹（embodied 交叉有限，作者于未来工作提到探索 robot action/point-tracking 控制）。"],
+    "sample_or_scale": "2.6B 主模型（+17B refiner）；~213K clips；64 H100 x 15 天训练；单 H100/RTX 5090 推理；60s 720p"
+  },
+  "evaluation": {
+    "design": "在自建 1 分钟基准的 Simple-/Hard-Trajectory 两 split 上，与 Infinite-World (1.3B), LingBot-World (14B+14B), HY-WorldPlay (8B), Matrix-Game 3.0 (5B) 对比；测 Pose Acc（RotErr R°、T、CMC）、VBench 8 维+Overall、峰值显存(Mem)/videos-per-hour(Tput)；并做部署效率路径、渐进训练、GDN key scaling 稳定性、相机条件消融。",
+    "baselines": ["Infinite-World（480p,1 GPU）", "LingBot-World（480p/8 GPU）", "HY-WorldPlay（480p/8 GPU）", "Matrix-Game 3.0（720p/8 GPU）", "消融内：Sana-Video cumulative-linear / GDN+softmax 变体"],
+    "metrics": ["Pose accuracy: RotErr (°), TransErr, CamMC (↓)", "VBench (8 dims + Overall, ↑)", "Revisit PSNR（重访保持）；晚期窗口 ΔIQ 漂移", "Peak Mem (GB) / Tput (videos/hr, 8 H100)", "训练稳定性（NaN steps）、FVD/Pi3X（OmniWorld 消融）"],
+    "ablations": ["部署效率：60步 H100 → 4步+attention-sink → NVIDIA NVFP4；all-softmax 60s OOM 对照", "渐进训练：LTX2 tokenizer 与混合注意力对 VBench-I2V/内存/延迟", "GDN key scaling：1/sqrt(DS) vs L2 1/sqrt(D) vs no-scale（NaN 步）", "相机条件：No control/Plucker/PRoPE/UCPE/UCPE+Plucker（OmniWorld）"]
+  },
+  "findings": [
+    {"finding": "相机控制精度：SANA-WM 在两轨迹 split 上 action-following 最强，refined 输出 RotErr 4.50°/8.34°、CamMC 1.41/1.44，优于大 480p 与 720p 基线。", "scope": "SANA-WM 1 分钟基准 Simple/Hard 两 split", "locator": "5.3. Main Results (Table 2, page 8)"},
+    {"finding": "效率：SANA-WM 仅 51.1GB、24.1 视频/时（8×H100），refiner 全流程 74.7GB/22.0 视频-时仍比最快的 480p 基线快 3.7x；distilled+NVFP4 在单 RTX 5090 上 34s 生成 60s 720p clip，宣称 '36x 吞吐'。", "scope": "一分钟 720p，8 H100 / 单 RTX 5090", "locator": "5.3. Main Results + Abstract (page 2)"},
+    {"finding": "长期一致性：refined 后重访 PSNR 14.46/14.80 dB，ΔIQ 晚期窗口漂移由 stage-1 AR 的 3.79/3.09 降至 1.17/0.31；而 HY-WorldPlay 晚期窗口劣化达 23.59/25.88。", "scope": "Hard/Simple 1 分钟轨迹，重访评测", "locator": "5.3. Main Results (page 8)"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "SANA-WM 仍 scale-limited，缺乏显式 3D 场景记忆，在动态场景、罕见视角或更长回卷中会漂移；未来需扩模型/数据、探索 robot action/point-tracking 控制、强化持久场景记忆、发展实时/流式 refiner。", "locator": "6. Conclusion & Limitations (page 10)"}
+    ],
+    "reader_inferred": [
+      {"boundary": "评测以自建 1 分钟基准为主、基线多为 480p/8-GPU 对比，存在分辨率/算力公平性问题；'36x 吞吐' 为主观断言的相对数，与不同重负载基线换算口径需谨慎。", "basis": "Table 2 各基线分辨率/GPU 数不一；吞吐单位 videos/hour/8 H100。"},
+      {"boundary": "动作域为相机轨迹（非机器人体域）；revisit/持久一致性通过重访 PSNR/ΔIQ 代理度量，未验证因果物理或本体持久性（对真实具身/多体交互不直接成立）。", "basis": "评测指标为 VBench/位姿误差/PSNR 类，非物理一致性或下游规划成功率；作者自承未含点跟踪/机器人控制。"},
+      {"boundary": "原生分钟级报道依赖 LTX2 高压缩与 213K 数据，域受限（场景类别/光照/相机运动分布）；强计算成分（GDN 状态/蒸馏/NVFP4）对硬件敏感，单 GPU 可部署结论仅限 H100/RTX 5090 类。", "basis": "数据为公开视频过滤子集；效率数字绑定特定 GPU/量化栈。"}
+    ]
+  },
+  "transfer_boundary": "SANA-WM 证据域为：213K 公开视频、2.6B 混合线性 DiT、分钟级（60s）720p、相机（6-DoF）可控世界模型，在单 H100/RTX 5090 上部署；其所能支撑的综述命题是 '以混合线性架构+高压缩 latent+渐进训练可在有限预算下实现分钟级相机可控世界模型'。相机控制是 action-conditioned 的交叉点，但非机器人/动作空间本体；其效率结论随 GPU/量化/蒸馏栈而变化；质量/一致性结论限于自建 1 分钟基准与重访/漂移代理度量，不直接推广到更长回卷、真实物理一致性或多体交互场景。",
+  "critical_appraisal": {
+    "design_strengths": ["以 '效率为一等对象' 系统化：数据量、训练算力、推理 GPU 全部报告，可复现性好", "明确的分钟级/相机可控评测思想（pose accuracy+revisit+drift）与互补的部署效率路径消融", "对线性递推稳定化（key scaling）与相机条件（UCPE/Plucker）做了独立消融"],
+    "design_risks": ["自建 1 分钟基准缺乏独立第三方验证；基线分辨率/GPU/吞吐口径不一使效率对比有偏", "'36x 吞吐' 等在论文中以宣传性相对值出现，需以表内口径为准", "weight-quantization/蒸馏收益对特定栈绑定，外部复现成本较高"],
+    "baseline_fairness": "涉及大工业基线（LingBot-World/HY-WorldPlay）但分辨率与 GPU 数不均（480p vs 720p、8-GPU vs 1-GPU），吞吐/质量对比需谨慎解读；作者亦承认 720p 长片段在大基线不可负担。",
+    "metric_validity": "Pose acc（RotErr/CMC）+VBench+重访 PSNR/ΔIQ 较贴合 '相机可控世界模型' 目标；但均非物理一致性/下游成功率，'consistency' 主要为视觉/相机维度。",
+    "reproducibility": "训练（数据/进度/蒸馏/refiner LoRA）、评测、部署（sink/NVFP4）细节较详，但 17B refiner 与 64 H100 算力门槛高，复现成本大。",
+    "external_validity": "对综述 ' 分钟级世界建模+混合线性架构部署 ' 是高价值强证据；对通用视频 DiT 或更大场景泛化、物理一致性正确性的外部价值有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.15178_C01",
+      "claim": "SANA-WM 在作者自建 1 分钟基准的两轨迹 split 上取得更强 action-following：refined 输出 RotErr 4.50°/8.34°、CamMC 1.41/1.44，优于 Infinite-World/LingBot-World/HY-WorldPlay/Matrix-Game 3.0 等基线。",
+      "stance": "support",
+      "relation": "支持综述命题：混合线性 DiT 可在分钟级相机可控世界模型中实现强 6-DoF 轨迹跟随，是 action-conditioned 世界模型能力与质量的实证（限定自建基准/相机轨迹域）。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.3 记录 refined 输出在 Simple/Hard 两 split 获最低 RotErr/CamMC，明确 'gives the strongest action following on both trajectory splits'，且优于大小型号基线；VBench 与 LingBot-World 相当（80.62/81.89）。",
+      "locator": "5.3. Main Results (Table 2, page 8)",
+      "source_context": "SANA-WM gives the strongest action following on both trajectory splits.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Camera-following Pose Accuracy: RotErr (deg, R) and CamMC (T-based) on 1-minute benchmark",
+        "value_or_direction": "Refined: RotErr 4.50/8.34, CamMC 1.41/1.44; base 2.6B: 7.59/10.02",
+        "comparator": "Infinite-World, LingBot-World (14B+14B), HY-WorldPlay (8B), Matrix-Game 3.0 (5B)",
+        "task_or_sample": "Simple-/Hard-Trajectory splits, 60s 720p camera-controlled generation",
+        "locator": "5.3. Main Results (Table 2, page 8)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "page 8 含 verbatim 'SANA-WM gives the strongest action following on both trajectory splits'，且 Table 2 给出 refined RotErr 4.50/8.34、CamMC 1.41/1.44 与各基线数值（如 LingBot-World 10.47/18.99），逐字与数值一致；limited 至相机轨迹/自建基准域。"
+      }
+    },
+    {
+      "card_id": "2605.15178_C02",
+      "claim": "SANA-WM 以 51.1GB/24.1 视频-时（8×H100）完成单 GPU/分钟级 720p 推理，refiner 全流程 74.7GB/22.0 视频-时仍比最快的 480p 基线快；distilled+NVFP4 变体在单 RTX 5090 上 34s 生成 60s 720p clip（宣称 36x 吞吐）。",
+      "stance": "support",
+      "relation": "支持综述命题：混合线性注意力+高压缩 latent+蒸馏可在单消费级 GPU 上实现分钟级世界模型生成，是 '部署/加速（混合线性架构+量化+蒸馏）' 的极端效率证据（含口径warning）。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.3 报 SANA-WM 51.1GB/24.1 视频-时、refiner 74.7GB/22.0 视频-时且 'still 3.7x faster than the fastest visible 480p baseline'；Abstract/蒸馏页报单 RTX 5090+NVFP4 34s/60s-720p 与 '36x higher throughput'。",
+      "locator": "5.3. Main Results (Table 2) & Abstract",
+      "source_context": "SANA-WM fits in 51.1 GB and reaches 24.1 videos/hour; with the refiner, the full pipeline remains within the 80 GB H100 budget (74.7 GB) and reaches 22.0 videos/hour, still 3.7\u00d7 faster than the fastest visible 480p baseline.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Peak GPU memory (GB) & throughput (videos/hr) on 8 H100; distilled single-GPU latency for 60s 720p",
+        "value_or_direction": "Base 51.1GB/24.1 vph; +refiner 74.7GB/22.0 vph (3.7x vs 480p baseline); RTX 5090+NVFP4 34s per 60s clip; '36x throughput'",
+        "comparator": "Infinite-World (53.5GB/5.9, 480p), LingBot-World (454.1GB/0.6), HY-WorldPlay (215.5GB/1.1), Matrix-Game (106.2GB/3.1)",
+        "task_or_sample": "one-minute 720p camera-controlled generation, 8 H100 / single RTX 5090",
+        "locator": "5.3. Main Results (Table 2, page 8) & Abstract (page 2)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "page 8 含该 verbatim 句及 Table 2 的 Mem/Tput/GPU 数口径（51.1GB/24.1、LingBot 454.1/0.6 等）；Abstract 含 'single RTX 5090 ... 34s'/'36x' 主张。数值逐字对齐；'36x' 与 3.7x 为相对对比，口径按不同基线，rationale 并入跨表口径 caveat。"
+      }
+    },
+    {
+      "card_id": "2605.15178_C03",
+      "claim": "SANA-WM 作者自承其仍 scale-limited、缺乏显式 3D 场景记忆，并在动态场景、罕见视角或更长回卷中漂移；且部署上全 softmax 注意力在 60s 时 OOM，需混合 GDN/softmax 才可行。",
+      "stance": "limit",
+      "relation": "限制综述关于 '分钟级世界模型健全性' 的命题：即便达到分钟级，持久场景记忆/长时稳定与全注意力可扩展性仍是未解缺口，混合线性架构是必要而非充分。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "6. Conclusion 明确 limitation：scale-limited、无显式 3D 记忆、动态/罕见视角/更长回卷漂移；5.4/Fig 7 指 all-softmax 于 60s OOM，近常数状态依赖递推/线性变体。",
+      "locator": "6. Conclusion & Limitations (page 10) & 5.4 Ablation (page 9)",
+      "source_context": "SANA-WM remains scale-limited, lacks explicit 3D scene memory, and can drift in dynamic scenes, rare viewpoints, or longer rollouts.",
+      "evidence_type": "position",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "page 10 含该 verbatim limitation 句；page 9/Fig 7(b) 给出 all-softmax 'runs out of memory at 60s' 而递推/线性变体保持紧凑状态，两处共同支撑 '分钟级需混合架构 +持久记忆仍缺' 的 gap 边界。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "系统级效率+型工件论文，证据遍及 experiment/position；'36x 吞吐' 等为相对/宣传口径，效率结论绑定特定 GPU/量化/蒸馏栈。quality-grade 由创建准备阶段标记为 high（pdf-text,非OCR）。#G/R 未推断机构归属。"
+}

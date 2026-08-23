@@ -8,7 +8,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 23 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 2 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 23 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 3 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
 
 ## 批次概况
 
@@ -68,6 +68,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 |---|---|---|---:|---|---|
 | LR-EXO-VIDEO | 第三视角视频数据对 ego 数据采集和预训练的帮助 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 16 / — / 48 events | candidate_floor, full_text_floor, mechanisms 维度 0 候选, saturation（仅 1 轮） | [run](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/run.json) · [packet](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/review-packet.md) |
 | LR-EXO-YEAR | 近一年 exocentric 人类数据的发展 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 29 / — / 126 events | candidate_floor, full_text_floor, accepted_paper_floor, saturation（仅 1 轮） | [run](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/run.json) · [packet](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/review-packet.md) |
+| LR-DIT-WM-YEAR | 近两年 Diffusion Transformer 在视频生成与世界模型中的发展 | EA-4D, EA-EVAL, EA-MODEL | 1,566 / 70 / 16 events | saturation（活跃领域，末两轮新增率未收敛） | [run](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/run.json) · [packet](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/review-packet.md) |
 
 ## 跨 run 综合专题
 

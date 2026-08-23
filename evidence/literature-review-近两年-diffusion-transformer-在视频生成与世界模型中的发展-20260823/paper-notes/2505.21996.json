@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2505.21996",
+    "title": "VRAG: Learning World Models for Interactive Video Generation",
+    "published": "2025-05-28",
+    "url": "https://arxiv.org/abs/2505.21996",
+    "authors": ["Taiye Chen", "Xun Hu", "Zihan Ding", "Chi Jin"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向的能力演进、向世界模型转型的机制、评测与方法边界。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "为交互式长视频生成加 action conditioning + 自回归框架并引入 retrieval-augmented + global state 的记忆机制；围绕 compounding error 与 memory 是世界模型关键实证证据，并揭示视频模型 in-context 能力局限。"
+    },
+    "sections_read": [
+      {"locator": "Abstract", "role": "problem", "purpose": "确立长视频世界模型的两大挑战（compounding errors、memory 不足）。"},
+      {"locator": "3.2 Interactive Long Video Generation", "role": "method-or-design", "purpose": "读 AdaLN action conditioning 与 random-frame-noise 自回归建模。"},
+      {"locator": "3.3 Retrieval Augmented Video World Model with Global State", "role": "method-or-design", "purpose": "读历史帧 buffer 检索与 global state（坐标/朝向）条件化。"},
+      {"locator": "4.3 World Coherence Results", "role": "results-or-analysis", "purpose": "world coherence 定量结果（Tab. 1）及 YaRN/History Buffer 局限。"},
+      {"locator": "4.4 Compounding Error Results", "role": "results-or-analysis", "purpose": "长序列 1200 帧 compounding error（Tab. 2）。"},
+      {"locator": "4.6 Extension: Real World Setting", "role": "results-or-analysis", "purpose": "RealEstate10K 上 DFoT 初始化泛化实验（Tab. 4）。"},
+      {"locator": "5 Conclusions and Discussions", "role": "conclusion-or-limitations", "purpose": "结论与 Limitations（算力/内存限制）。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "在长视界交互式视频生成中，记忆机制与检索增强如何缓解 compounding error 并保持世界模型时空一致性？LLM 语境扩展技术能否转移到视频生成？",
+  "contributions": [
+    "揭示自回归视频生成中 compounding error 本质不可消除，而 memory 不足导致世界模型不一致，两者为长期一致性的根本挑战。",
+    "提出 VRAG：video retrieval-augmented generation + explicit global state conditioning（角色坐标/朝向），历史帧 buffer 配合显式 in-context 训练。",
+    "动作条件用 AdaLN + random frame noise 自回归框架扩展 image-to-video 模型为 interactive 模型。",
+    "建立含世界一致性/compounding error/VBench/真实场景的基准，验证 VRAG 显著降低长期 compounding error、提升时空一致性。"
+  ],
+  "method": {
+    "summary": "VRAG 基于 latent video diffusion（DF 主线）扩展交互与长视界能力：(1) action conditioning 用 AdaLN——学学习 action embedding，在各归一化层计算 action 相关的 scale/shift 调制特征；(2) 用 random frame noise 的互帧噪声训练做自回归建模；(3) 记忆与全局状态——历史帧 buffer 提供上下文，另加 global state（角色 3D 坐标与朝向角）作为附加条件经 embedding 进 AdaLN，以增强长程时空一致与物体位置意识；(4) retrieval-augmented generation：显式检索历史帧并配合 in-context 训练，显著降 compounding error。与 vanilla 长上下文扩展、YaRN、History Buffer、Neural Memory、Frame Pack 对比。",
+    "assumptions": [
+      "显式历史帧检索 + 全局状态能补足视频模型较弱的 in-context（长上下文）能力。",
+      "global state（坐标/朝向）在交互环境中可得或可预测，可作为额外监督/条件信号。",
+      "自回归 video diffusion 的 compounding error 无法仅靠扩窗或 LLM 式 context 扩展消除。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["Minecraft 类模拟长视频世界模型基准（world coherence 300 帧 / compounding 1200 帧）", "RealEstate10K（真实世界视频，DFoT 初始化 finetune 2 epochs）"],
+    "tasks": ["interactive long video generation（给定初始帧+动作序列预测后续帧）", "world coherence 保持与长序列 compounding error 抑制", "VBench 长期视频质量五指标"],
+    "embodiments": ["角色具象在场模拟环境（Minecraft 式角色）+ 全局状态（坐标/朝向）；备注 real-world 为视频预测数据（无实体动作）"],
+    "sample_or_scale": "world coherence 300 帧；compounding 1200 帧；RealEstate10K 2 epochs（10% 原始训练量）；DFoT 初始化"
+  },
+  "evaluation": {
+    "design": "在交互式长视频预测上，对给定初始帧（历史 buffer）与动作，预测后续多帧；与长上下扩展与记忆型基线比较，用 SSIM/PSNR/LPIPS 与 VBench 五指标；另做真实场景 DFoT 泛化，与 memory/training 消融。",
+    "baselines": ["DF (window 10 / window 20)", "YaRN（长上下文扩展）", "History Buffer", "Frame Pack", "Neural Memory", "DFoT（Diffusion Forcing Transformer，真实场景）"],
+    "metrics": ["SSIM", "PSNR", "LPIPS", "VBench: Background Consistency / Temporal Flickering / Motion Smoothness / Aesthetic Quality / Imaging Quality", "FVD（真实场景）"],
+    "ablations": ["VRAG 记忆与训练消融（memory/training of VRAG，Sec. 4.7）", "window size 10→20", "YaRN vs vanilla"]
+  },
+  "findings": [
+    {"finding": "VRAG 在 world coherence 与 compounding error 上全面领先基线（SSIM 0.506 vs 次优 DF-window20 0.466；compounding SSIM 0.349 对 History Buffer 0.188）。", "scope": "Minecraft 类模拟交互长视频（300/1200 帧）", "locator": "4.3 World Coherence Results"},
+    {"finding": "扩窗 10→20 稍好，但 YaRN 与 History Buffer 相对 vanilla 无实质提升/甚至更差，指示当前视频模型 in-context learning 能力有限，LLM 语境扩展不可直接转移。", "scope": "long-context 与记忆基线对比", "locator": "4.3 World Coherence Results"},
+    {"finding": "在 RealEstate10K 上，从 DFoT 初始化并仅 finetune 2 epochs（10% 训练量），VRAG 大幅提升记忆能力（SSIM 0.9116 vs DFoT 0.4436）。", "scope": "真实世界视频长视频预测（RealEstate10K）", "locator": "4.6 Extension: Real World Setting"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "依赖 Minecraft-like 模拟与世界状态假设；limited 计算限制 memory buffer 与训练序列长度，可能影响长视界一致性与模型性能；检索增强的更高计算成本限制 edge/资源受限部署。", "locator": "5 Conclusions and Discussions"},
+      {"limitation": "上下文扩展与 retrieval 需显式 in-context 训练，否则 History Buffer/Naive RAG 效果差。", "locator": "5 Conclusions and Discussions"}
+    ],
+    "reader_inferred": [
+      {"boundary": "主基准为 Minecraft 类模拟世界；global state（坐标/朝向）显式给出，真实世界（RealEstate10K）沿用 DFoT 初始化但不提供动作状态，故主体证据不能外推到任意真实世界模型本体。", "basis": "方法依赖显式 global state 条件（Sec. 3.3）且探索真实场景仅一个数据集。"},
+      {"boundary": "世界模型价值以视频保真/一致性指标 proxy，未在具体 RL/planning 闭环评估交互收益。", "basis": "论文聚焦生成一致性，缺少决策下游评估。"}
+    ]
+  },
+  "transfer_boundary": "VRAG 的世界模型证据限定在显式 global state（坐标/朝向）可得的交互式长视频设定与 Minecraft-like 模拟/RealEstate10K 真实数据，且主体用 300–1200 帧的离线生成评估；其 '记忆/检索增强 + 显式状态条件' 路径不能直接外推到缺失状态监督、需在线闭环策略学习的具身世界模型，也未验证 LLM 式长上下文扩展在其他视频主干上的可迁移性。",
+  "critical_appraisal": {
+    "design_strengths": ["跨多种 long-context/memory 基线系统对比，包含定量表（Tab.1/2/3/4）", "给出世界一致性、compounding error、VBench 与真实场景多角度评估", "明确暴露视频模型 in-context 局限的关键负面结果（YaRN/History Buffer）"],
+    "design_risks": ["主体评价依赖 Minecraft-like 环境与显式状态；RealEstate10K 结果虽强但仅一个数据集", "Neural Memory 训练不稳定被排除，降低了记忆基线对照的鲁棒性"],
+    "baseline_fairness": "基线较全（long-context、retrieval、memory），但部分基线（Neural Memory）被排除，需谨慎解释比较。",
+    "metric_validity": "SSIM/PSNR/LPIPS 与 VBench 覆盖结构/美学/时序，但 fndtfg不足以直接度量物理因果正确性。",
+    "reproducibility": "训练/实现细节与附录给出；但该交互设定依赖模拟环境与状态轨迹，复现需环境。",
+    "external_validity": "真实世界外推仅一个数据集（RealEstate10K 视频预测），对无状态监督/闭环交互的外部效度有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2505.21996_C01",
+      "claim": "在 300 帧长视频 world coherence 评估上，VRAG 以 SSIM 0.506 优于所有对比基线（DF-window20 0.466、YaRN 0.462、History Buffer 0.459、Frame Pack 0.421）。",
+      "stance": "support",
+      "relation": "支持综述命题：显式记忆/检索+状态条件可提升视频世界模型的长期时空一致性。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.3 World Coherence Results 文本明言 VRAG 全面最佳，Tab. 1 给出 SSIM 0.506（其下所有基线均低于 0.466）。",
+      "locator": "4.3 World Coherence Results",
+      "source_context": "Our VRAG method achieves the best performance across all metrics, demonstrating its superior ability to maintain world coherence in generated videos.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "SSIM (world coherence, 300-frame videos)",
+        "value_or_direction": "0.506 best vs baselines",
+        "comparator": "DF(window20) 0.466; YaRN 0.462; History Buffer 0.459; Frame Pack 0.421 (Tab.1)",
+        "task_or_sample": "long interactive video world coherence benchmark (Minecraft-like simulation, 300 frames)",
+        "locator": "4.3 World Coherence Results (Table 1)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.3 全文含 verbatim 'Our VRAG method achieves the best performance across all metrics' 与 Table 1 行 'VRAG 0.506 17.097 0.506'，且表内各基线 SSIM 均低于 0.506；断言限定 world coherence 300 帧评估。"
+      }
+    },
+    {
+      "card_id": "2505.21996_C02",
+      "claim": "在 1200 帧 compounding error 评估中，VRAG 以平均 SSIM 0.349 优于所有基线（History Buffer 0.188、DF-window20 0.321、YaRN 0.316）。",
+      "stance": "support",
+      "relation": "支持综述命题：检索增强+显式 in-context 训练显著抑制长视界 self-generated 误差累积。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.4 Compounding Error Results 明言 VRAG SSIM 0.349 优于基线，History Buffer 仅 0.188（naive retrieval 未获 in-context 训练则失效）。",
+      "locator": "4.4 Compounding Error Results",
+      "source_context": "our VRAG method achieves superior performance with an SSIM score of 0.349, demonstrating better structural similarity preservation compared to baseline methods.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Average SSIM (compounding error, long 1200-frame prediction)",
+        "value_or_direction": "0.349 VRAG (best)",
+        "comparator": "DF(window20) 0.321; YaRN 0.316; History Buffer 0.188; Neural Memory 0.283 (Tab.2)",
+        "task_or_sample": "long-horizon 1200-frame interactive video prediction (Minecraft-like simulation)",
+        "locator": "4.4 Compounding Error Results (Table 2)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.4 全文含 verbatim 'our VRAG method achieves superior performance with an SSIM score of 0.349'，且 Table 2 列出基线 SSIM 均 ≤0.321，History Buffer 0.188；断言限定 1200 帧 compounding 评估。"
+      }
+    },
+    {
+      "card_id": "2505.21996_C03",
+      "claim": "在真实世界数据集 RealEstate10K 上从 Diffusion Forcing Transformer (DFoT) 初始化仅 finetune 2 epochs（约 10% 原始训练量），VRAG 的记忆能力显著超 DFoT（SSIM 0.9116 vs 0.4436，FVD 221 vs 337.5）。",
+      "stance": "support",
+      "relation": "支持综述命题：记忆/检索机制可迁移到真实视频，用小量微调获得长视频预测增益。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.6 Extension: Real World Setting 明言 2 epochs 后显著超越 DFoT，Tab. 4 给 SSIM/PSNR/LPIPS/FVD。",
+      "locator": "4.6 Extension: Real World Setting",
+      "source_context": "After fine-tuning for just 2 epochs (10% of the original training steps), our method significantly outperforms the DFoT baseline in terms of memorization capability.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "SSIM / FVD (RealEstate10K long-video generation)",
+        "value_or_direction": "SSIM 0.9116 vs 0.4436; FVD 221 vs 337.5",
+        "comparator": "DFoT baseline (initialization; same finetune)",
+        "task_or_sample": "RealEstate10K real-world video prediction (long videos)",
+        "locator": "4.6 Extension: Real World Setting (Table 4)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.6 全文含 verbatim 'After fine-tuning for just 2 epochs (10% of the original training steps), our method significantly outperforms the DFoT baseline'，Table 4 给出 'SSIM 0.4436 0.9116 ... FVD 337.5 221'；断言限定 RealEstate10K 单数据集。"
+      }
+    },
+    {
+      "card_id": "2505.21996_C04",
+      "claim": "来自 LLM 的长上下文扩展技术（YaRN）与 naive History Buffer 不能有效转移到视频生成，因当前视频模型 in-context learning 能力有限。",
+      "stance": "limit",
+      "relation": "限制综述命题：不能假设 '共享 transformer 主干→语义相似改进' 可直接外推到视频世界模型；LLM 技术转移存在边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 4.3 与 Conclusion 指出 YaRN/History Buffer 未带来世界一致性提升，归因于视频模型 in-context 局限，解释为重要负面结果。",
+      "locator": "5 Conclusions and Discussions",
+      "source_context": "context enhancement techniques from LLMs fail to transfer effectively to the video generation domain, even with shared transformer backbones, due to the inherent limitations of in-context learning capabilities for video models.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5 Conclusion 全文含该 verbatim 句，且 4.3 有 YaRN/History Buffer 未提升的实证支持；按作者对负面结果的总结记录，未夸大到所有视频模型。"
+      }
+    },
+    {
+      "card_id": "2505.21996_C05",
+      "claim": "VRAG 受 GPU 内存与计算成本限制，memory buffer 大小与训练序列长度受限，可能削弱长视界一致性与性能，并限制 edge/资源受限部署。",
+      "stance": "limit",
+      "relation": "限制综述命题：记忆/检索类视频世界模型的内存与部署开销是规模化与落地边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "5 Conclusion 的 Limitations 自述 GPU 内存限制 buffer 与序列长度，检索增强计算成本高，限制资源受限部署。",
+      "locator": "5 Conclusions and Discussions",
+      "source_context": "GPU memory constraints severely restricted memory buffer size and training sequence length, potentially impacting long-horizon consistency and model performance.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5 Conclusion 全文 Limitations 段含该 verbatim 句（'GPU memory constraints severely restricted memory buffer size and training sequence length...'），属作者自述资源限制。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "定量卡片均有真实落入文本的表格数值（Tab.1/2/4），核验可靠。RealEstate10K 从 DFoT 初始化属于基于已有 DFoT 模型的转移实验。abstract 'compounding error is inherently irreducible in autoregressive video generation' 为方法动机 position，未单独建卡。"
+}

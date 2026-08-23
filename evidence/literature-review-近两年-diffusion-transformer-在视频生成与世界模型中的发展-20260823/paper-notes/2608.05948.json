@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2608.05948",
+    "title": "GAUGE: A Measurement-Grounded Benchmark for Physical Fidelity in Simulation Engines and Video World Models",
+    "published": "2026-08-06",
+    "url": "https://arxiv.org/abs/2608.05948",
+    "authors": ["Shuai Wang", "Yaxin Feng", "Xuekun Jiang", "Shihan Tian", "Ningyu Yan", "Xing Shen", "Chaoyang Lyu", "Hui Wang", "Yunsong Zhou", "Hanqing Wang", "Jiangmiao Pang", "Yang Xiang", "Xing Gao", "Chunhua Shen", "Weinan Zhang"]
+  },
+  "review": {
+    "question": "近两年（2024-08 至 2026-08）Diffusion Transformer（DiT）在视频生成与世界模型方向的：能力如何演进、向世界模型转型的机制、物理/时序/实体一致性等限制、评测方法与基准、部署/加速、以及 action-conditioned 世界模型与具身交叉。每篇关注其为该综述提供的证据。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接提供评测方法与基准证据：GAUGE 用真实测量轨迹评测 6 个 image-to-video 视频世界模型（Cosmos3 系列、Wan-2.2/2.7、Seedance 2.0、Genie 3）在 5 个刚体任务上的物理一致性（law-form DE/R2/QFI 与参数稳定性），并揭示视频世界模型在物理/时序一致性上的具体局限。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "研究问题：物理保真度（visual fidelity 不等同于 physical dynamics accuracy），高视觉保真可能掩盖错误运动/接触/形变"},
+      {"locator": "2 Related Work", "role": "problem", "purpose": "现有物理引擎/世界模型评测各自为政、依赖感知相似性或人工判断，缺乏跨机制统一评测"},
+      {"locator": "3 GAUGE", "role": "method-or-design", "purpose": "GAUGE 基准：22 个受控任务族（刚体/线缆/布料/3D 软体），真实运动捕捉轨迹 + 校准物理参数 + 不确定性标注"},
+      {"locator": "3.2.2 Evaluation Metrics", "role": "method-or-design", "purpose": "物理引擎评测：generalized trajectory (RMSE/DTW)，及 LSD/MTE/PD/EL 物理指标"},
+      {"locator": "3.3.1 Generation and Track", "role": "method-or-design", "purpose": "世界模型评测：6 个 I2V 模型，SAM3 分割追踪恢复轨迹，转换至实验坐标系"},
+      {"locator": "3.3.2 Evaluation Metrics", "role": "method-or-design", "purpose": "世界模型评测指标：Dynamic Error(DE)、R2、Quadratic Form Improvement(QFI)，区分 law-form 与参数精度"},
+      {"locator": "4 Experiment Setup", "role": "method-or-design", "purpose": "数据采集设备、引擎/世界模型部署与推理配置"},
+      {"locator": "5.1 Physics Engines", "role": "results-or-analysis", "purpose": "physics engines 在 14 任务上 sim-to-real 差异，无统一占优引擎"},
+      {"locator": "5.2 World Models", "role": "results-or-analysis", "purpose": "视频世界模型在 5 个刚体任务上的物理一致性结果"},
+      {"locator": "6 Limitations and Outlook", "role": "conclusion-or-limitations", "purpose": "明确限制：世界模型 track 限于刚体、二维图像轨迹；材料/参数范围有限"},
+      {"locator": "7 Conclusion", "role": "conclusion-or-limitations", "purpose": "结论：物理保真度不能仅由视觉质量/单一轨迹距离/参数估计刻画"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "GAUGE 能否以真实测量为基，联合、诊断地评测数值物理引擎与生成式视频世界模型的物理保真度，并区分'符合物理定律形式'与'物理参数/时序正确'这两种独立能力？",
+  "contributions": [
+    "统一真实世界任务套件：22 个受控任务族（8 刚体、1 绳索、6 布料、8/7 软体），约 1560 次 motion-capture 试验，含不确定性估计与任务特定物理观测量",
+    "跨机制物理参数标注：首个在同一标准化集合中提供刚体接触、布料本构响、体积软体力学任务相关实验参数的真实世界基准数据集（自身宣称，作者观点）",
+    "两套互补评测协议：物理引擎用 task-specific sim-to-real 差异；世界模型区分 law-form 一致性（DE/R2/QFI）与参数/时间稳定性"
+  ],
+  "method": {
+    "summary": "GAUGE 是一个 measurement-grounded 基准：22 个受控物理任务族由真实 motion-capture 采集（16 台 NOKOV Mars9H 红外相机，180Hz，亚毫米精度），并为每类资产校准物理参数。对物理引擎（Isaac Sim/PhysX、Genesis、Newton/MuJoCo 等）用 generalized trajectory（RMSE + DTW）与物理指标（LSD/MTE/PD/EL）评测 14 个任务；对 6 个 image-to-video 视频世界模型（5 刚体任务），用 SAM3 分割追踪恢复 2D 轨迹，用 Dynamic Error、R2、QFI 评测 law-form 一致性并分离参数精度与时间稳定性。",
+    "assumptions": [
+      "任务用已知尺寸物体提供 image-to-world 比例尺，假定对象相对相机近似恒深以由 2D 质心恢复运动",
+      "物理引擎评测采用 out-of-the-box 设置，非任务级调优",
+      "motion-capture 标记质量可忽略、对动力学无影响"
+    ]
+  },
+  "study_context": {
+    "datasets": ["GAUGE 自建真实 world motion-capture 数据集（约 1560 试验，22 任务族）"],
+    "tasks": ["slope contact", "nonsmooth contact", "slope slider", "turntable", "bouncing ball", "newton's cradle", "pendulum", "wall breaking", "rope winding", "textile stretching/bending/flinging", "funnel", "rotating ball", "tablecloth pulling", "foam stretching/compressing/shearing/twisting/bending", "stick-stack", "cantilever beam"],
+    "embodiments": ["刚体", "绳索", "布料", "3D 软体（泡沫/橡胶）"],
+    "sample_or_scale": "22 task families; 14 tasks for physics engines; 5 rigid-body tasks (6 models) for world models"
+  },
+  "evaluation": {
+    "design": "两套互补协议：物理引擎以 sim-to-real 广义轨迹误差（RMSE/DTW，相对真实 baseline 归一化）加物理指标评测；视频世界模型以恢复轨迹的 law-form 一致性（DE/R2/QFI）和参数/时间稳定性评测，并做 negative-prompt 消融。",
+    "baselines": ["真实 world motion-capture 每条任务 20 trials 的均值与标准差（within-trial RMSE、per-trial RMSE std）"],
+    "metrics": ["RMSE", "DTW", "LSD", "MTE", "PD", "EL", "Dynamic Error (DE)", "R2", "Quadratic Form Improvement (QFI)"],
+    "ablations": ["World-model negative-prompt 消融（对 Cosmos3-Nano、Cosmos3-Super-I2V、Wan-2.2、Wan-2.7；Seedance 2.0 与 Genie 3 接口无 negative prompt 故排除）"]
+  },
+  "findings": [
+    {"finding": "视频世界模型可以生成符合预期方程形式的轨迹，却恢复出错误的加速度、动量传递、振荡时相——law-form 一致性与参数精度是相互独立的能力", "scope": "5 个刚体任务上 6 个 image-to-video 模型", "locator": "5.2 World Models; 7 Conclusion"},
+    {"finding": "视频世界模型的物理输出对 prompt 表述敏感：negative-prompt 消融显著改变 QFI/DE 等指标", "scope": "4 个开放/可塑模型（Cosmos3 两版本、Wan-2.2/2.7）的 negative-prompt 消融", "locator": "3.3.1 Generation and Track; 5.2 World Models; Table 4"},
+    {"finding": "当前物理引擎无统一占优者；最大 sim-to-real 差异出现在 impulsive contact、快速织物运动、体积形变", "scope": "Isaac Sim/Genesis/Newton 在 14 任务上的评测", "locator": "5 Results Overview; 5.1 Physics Engines; Table 3"},
+    {"finding": "即使表现最好的可变形体引擎，其误差也约为真实世界 baseline 的一个数量级以上", "scope": "3D 可变形体任务", "locator": "5 Results Overview"},
+    {"finding": "视频世界模型（I2V 系列）在刚体动学上的物理保真仍弱：slope slider/plastic 与 metal 上最佳估计加速度仅约为真实值的一部分，bouncing ball 的最近加速度估计仍远低于重力加速度", "scope": "5 刚体任务、6 个 I2V 模型", "locator": "5.2 World Models; Table 4"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "世界模型 track 仅限刚体任务且依赖二维图像轨迹，无法评测布料/体积软体的分布式形变、深度变化、自遮挡、self-contact", "locator": "6 Limitations and Outlook"},
+      {"limitation": "材料与校准参数范围有限，同名义类别材料因表面处理/结构/温度/磨损而不同；任务集应扩展至流体及耦合过程", "locator": "6 Limitations and Outlook"},
+      {"limitation": "当可靠的 3D 坐标可用时，指标应作用于点云/网格/表面元素并显式建模对应与重建不确定性", "locator": "6 Limitations and Outlook"}
+    ],
+    "reader_inferred": [
+      {"boundary": "GAUGE 的世界模型证据只约束 image-to-video 生成器的物理一致性评测，不覆盖架构/训练机制、text-to-video、interactive/action-conditioned 世界模型", "basis": "评测协议与所选模型集决定"},
+      {"boundary": "DE/R2/QFI 由恢复的 2D 质心轨迹估计，受 SAM3 追踪与 image-to-world 比例影响，属测量固有传播误差", "basis": "C 章物理一致性分析依赖分割轨迹"}, 
+      {"boundary": "physics-engine 结论（MuJoCo/PBD/FEM 等数值解算器）与本综述的 DiT 视频生成主线相关性较低，仅作评测参照", "basis": "综述主线为 DiT"}
+    ]
+  },
+  "transfer_boundary": "GAUGE 的世界模型洞察仅能迁移到'面向物理一致性的 I2V 视频世界模型评测'这一层面：其证据（视频世界模型可吻合方程形式却参数/时序不对、输出对 prompt 敏感）不迁移到 deformable/textile 3D 动力学、不迁移到 action-conditioned/interactive 世界模型、也不提供任何关于 DiT 架构优劣或部署加速的证据。评测有效性受限于刚体、2D 轨迹与 negative-prompt 可控的推理接口。",
+  "critical_appraisal": {
+    "design_strengths": ["以毫米级真实运动捕捉 + 校准物理参数为锚，评测 grounded 于真实测量而非感知相似性", "统一 generalized-trajectory 框架同时覆盖刚性/布料/软体", "明确分离 law-form（DE/R2/QFI）与参数/时间稳定性，避免仅用视觉或单一轨迹距离", "负向 prompt 消融控制提示表述对评测的影响"],
+    "design_risks": ["世界模型轨迹由 SAM3 分割+质心估计，2D 到 metric 依赖恒深假设与比例尺，误差易传导至 DE/QFI", "表格数值部分（加速/MTE/R2）被 OCR/LaTeX 破坏，精确数字不可靠地转述", "physics-engine 评测采用 out-of-the-box 默认参数，可能低估引擎在调优后能力"],
+    "baseline_fairness": "以 20 trials 真实数据均值±std 为 baseline，领域内合理；physics-engine 与 world-model 评测共享 baseline，公平",
+    "metric_validity": "指标设计针对任务物理机制设计（LSD/MTE/PD/EL/DE/R2/QFI 等），区分结构一致性与定量准确度，有效性高",
+    "reproducibility": "未给全精确数值（LaTeX 破坏），但从方法与附录（SAM3 参数、坐标变换、引擎配置）看流程可复现",
+    "external_validity": "外部有效性有限：仅 6 个 I2V 模型、5 刚体任务、特定材料；不支持泛化到其他任务类别/本体/文本条件"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2608.05948_C01",
+      "claim": "GAUGE 在 5 个刚体任务上评测的 6 个 image-to-video 视频世界模型，其生成轨迹可以符合预期物理定律的结构形式，却恢复出错误的物理参数（加速度、动量传递效率、振荡周期/时相），说明视频世界模型的'视觉/结构合理性'与其'定量物理/时序准确度'是分离的、可独立失败的能力。",
+      "stance": "limit",
+      "relation": "限制'视频世界模型已能忠实建模物理/时序一致性'的命题：即便 DiT-I2V 能生成在方程形式上看似合理的运动，其底层物理参数仍常错误",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.2 显式区分'满足物理定律结构形式'与'恢复参数'为不同能力：bouncing-ball 上取得最低 QFI 的模型其推断加速度仍远低于重力加速度；slope-slider 上不同材料最佳 QFI 由不同模型取得。",
+      "locator": "5.2 World Models",
+      "source_context": "satisfying the structural form of a physical law and recovering its parameters are distinct capabilities",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "QFI (Quadratic Form Improvement) 与推断加速度",
+        "value_or_direction": "Cosmos3-Super-I2V 加 negative prompt 取得最低 QFI 12.50，但其推断加速度仍远低于 g；slope-slider 上 closest acceleration 距真实值远",
+        "comparator": "重力加速度 baseline",
+        "task_or_sample": "bouncing ball（5 个刚体任务之一，6 个 I2V 模型）",
+        "locator": "5.2 World Models"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "逐字核验 abstract 的'expected equation form while recovering incorrect accelerations...'及 5.2 段中对 bouncing-ball 与 slope-slider 加速偏离的真实叙述，两者一致支撑该分离命题"
+      }
+    },
+    {
+      "card_id": "2608.05948_C02",
+      "claim": "视频世界模型的物理一致性输出对文本提示敏感：5.2 显示在 bouncing-ball 任务上加 negative prompt 后不同模型的 QFI 发生变化（如 Cosmos3-Super-I2V 降至最低 12.50），因此对这些模型的物理评测结果受提示表述条件控制、不可视为提示无关的固有属性。",
+      "stance": "conditional",
+      "relation": "对'视频世界模型物理一致性可稳定评测/可跨条件泛化'的命题附加条件：生成物理质量依赖 prompt，评测与能力结论受提示表述影响",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.2 的 bouncing-ball 分析显式访问 negative-prompt 条件下的最低 QFI 12.50（其无负prompt对应值更高），说明提示条件改变物理一致性结果；对应 negative-prompt 消融设置在 3.3.1 阐述。",
+      "locator": "5.2 World Models",
+      "source_context": "Cosmos3-Super-I2V with the negative prompt obtains the lowest QFI of 12.50, but its inferred acceleration is only",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "QFI (Quadratic Form Improvement, 低更好)",
+        "value_or_direction": "Cosmos3-Super-I2V 在 negative prompt 条件下取得最低 QFI 12.50（低于其无负prompt 的 270.69）",
+        "comparator": "有 vs 无 negative prompt 条件下的 QFI 变化（bouncing ball 任务）",
+        "task_or_sample": "bouncing ball（Cosmos3-Super-I2V）",
+        "locator": "5.2 World Models"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "逐一核对 5.2 的负向 prompt 消融描述、slope-slider 跨材料 ranking 变化及 Table 4 的 w/o 与 w 列数值，命题与原文一致"
+      }
+    },
+    {
+      "card_id": "2608.05948_C03",
+      "claim": "GAUGE 对 Isaac Sim、Genesis、Newton 在 14 个任务上的评测表明没有统一的物理引擎在多机制上一律精准：刚体接触/滑动、动态布料、体积形变等领域各有互补优势，最大 sim-to-real 差异出现在 impulsive contact（即时接触）、高加速度布料运动和 3D 体积形变。",
+      "stance": "limit",
+      "relation": "为'生成式世界模型可替代数值物理引擎'的命题定下参照/限制：即使成熟的数值解算器在跨机制物理上也不老实，凸显物理一致的难度并为世界模型提供更严格基准",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5 Results 概括性结论：无引擎在刚体/布料/软体三机制中占优，残差 sim-to-real 误差主要来自动态接触、高加速度布料运动与三维形变；各引擎具体分工在 Table 3 交叉呈现。",
+      "locator": "5 Results",
+      "source_context": "Overall, no engine dominates across rigid, textile, and volumetric regimes. The results instead reveal complementary solver strengths and identify dynamic contact, high-acceleration cloth motion, and three-dimensional deformation as the main sources of residual sim-to-real error.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该段为 5 Results 章逐字概括性结论，直接支持'无统一占优引擎 + 主要残差来源'主张；具体引擎分工在 Table 3 可交叉核验"
+      }
+    },
+    {
+      "card_id": "2608.05948_C04",
+      "claim": "GAUGE 的世界模型评测 track 被严格限制在可由二维图像轨迹评估的刚体任务；作者明确指出该表示不足以评估布料与体积软体的分布式形变、深度变化、自遮挡与 self-contact，需要可靠 3D 坐标后才能扩展到这些机制。",
+      "stance": "gap",
+      "relation": "界定综述中测评基准的覆盖边界：当前物理一致性基准（含 GAUGE）仅能就刚体/2D 动刻提供证据，通用可变形体与 3D 世界模型物理评测仍是开放缺口",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 3.3.1 显式说明因当前 world models 在 3D 一致性与可变形动力学上仍薄弱，故只聚焦 rigid-body 场景评估 6 个模型；此限定构成评测覆盖的读者侧边界。",
+      "locator": "3.3.1 Generation and Track",
+      "source_context": "Because current world models still struggle with 3D consistency and deformable-object dynamics, we focus on rigid-body scenarios to evaluate six models",
+      "evidence_type": "position",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文为 3.3.1 逐字连续文本，直接支撑'因 deformable/3D 困难故聚焦 rigid-body'的作者立场，评测覆盖边界由此界定；6 Limitations 进一步说明 2D 表示不足以评估可变形体"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "该文主体是评测基准而非 DiT 模型本身；其对综述的价值集中在'视频世界模型物理/时序一致性评测方法与基准'(EA-EVAL)与物理一致性限制证据。World-model 评测对象中 Cosmos3 系列、Wan-2.2/2.7、Seedance 2.0、Genie 3 均为近年视频生成/世界模型代表。若干表中数值（加速度、MTE、R2）在提取中 LaTeX 损坏，定量卡只采用可准确还原的数值（QFI、归一化 RMSE/DTW、PD/EL）。"
+}

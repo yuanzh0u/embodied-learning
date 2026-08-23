@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2411.17470",
+    "title": "Towards Precise Scaling Laws for Video Diffusion Transformers",
+    "published": "2024-11-25",
+    "url": "https://arxiv.org/abs/2411.17470",
+    "authors": [
+      "Yuanyang Yin", "Yaqi Zhao", "Mingwu Zheng", "Ke Lin", "Jiarong Ou", "Rui Chen",
+      "Victor Shea-Jay Huang", "Jiahao Wang", "Xin Tao", "Pengfei Wan", "Di Zhang",
+      "Baoqun Yin", "Wentao Zhang", "Kun Gai"
+    ]
+  },
+  "review": {
+    "question": "近两年（2024-08 至 2026-08）Diffusion Transformer 在视频生成与世界模型方向的缩放律与能力演进：如何在给定数据与算力预算下预测最优模型尺寸与超参（batch size/lr），以及验证损失与模型/数据/计算之间的幂律关系及其最优分配结论。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "pdf",
+    "method": "pdf-text",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接实证视频 DiT 的缩放律存在性、最优超参（batch size/lr）幂律、最优模型尺寸-算力分配与验证损失泛化式，属于综述'缩放律'命题的高相关证据，并给出明确的迁移边界。"
+    },
+    "sections_read": [
+      {"locator": "page 1", "role": "problem", "purpose": "研究问题：给定视频 DiT 架构与训练预算如何预测最优模型尺寸、性能与最优超参（batch size、lr）。背景对比 LLM 缩放律与 Movie Gen 等大规模模型。贡献三：确认缩放律存在、最优超参缩放律、广义损失-模型-预算关系。"},
+      {"locator": "page 3-4", "role": "method-or-design", "purpose": "Setup（记号 N/T/C，Ctoken=3/4·N·(7+nctx/d)）；评估用验证集损失而非外部 benchmark。Section 3 推导 Bopt 与 ηopt 幂律理论框架（Mini-Batch SGD 收敛分析、式 4-13）。"},
+      {"locator": "page 5-7", "role": "method-or-design", "purpose": "Section 3.4 与 4：最优超参拟合（式 10、13）、最优模型尺寸缩放律（式 14）、性能缩放律 L(T,N)（式 15）及其拟合表 1-3。"},
+      {"locator": "page 6-9", "role": "results-or-analysis", "purpose": "结果：Bopt/ηopt 拟合、Nopt 幂律、L(T,N) 效能、及最优 vs 固定次优超参对比（MSE、模型尺寸省 39.9%、斜率偏差 30.26% vs 3.57%）。"},
+      {"locator": "page 9", "role": "conclusion-or-limitations", "purpose": "结论与限制：确认缩放律存在、最优超参缩放律、最优模型尺寸与损失预测；限制为常量学习率、仅验证损失指标、低分辨率小模型、未覆盖分辨率/帧率。"},
+      {"locator": "page 13-16", "role": "method-or-design", "purpose": "Appendix：实验设置（Cross-DiT、Panda-70M、17 帧 256x256、2000 样本验证集）、参数/FLOPs 表、固定次优超参结果、图像生成单帧比较。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "给定特定视频 transformer 架构与训练预算，如何预测最优模型尺寸及其对应性能与最优超参数（batch size、learning rate）？",
+  "contributions": [
+    "确认视频扩散 transformer 存在缩放律（validation loss / 模型尺寸 / 训练 token 间幂律）。",
+    "建立视频 DiT 最优超参的缩放律：Bopt=αB·T^βB·N^γB 与 ηopt=αη·T^βη·N^γη，可预测任意模型尺寸与算力预算下的最优 batch size 与 lr。",
+    "基于最优超参建立更广义的验证损失 L(T,N) 关系式，支持给定算力下模型尺寸-性能 trade-off 的精确预测（含非最优模型尺寸）。"
+  ],
+  "method": {
+    "summary": "围绕视频 DiT（Cross-DiT 骨干，17 帧 256x256，Panda-70M）在常量学习率稳定训练阶段建立三类幂律：(1) 最优超参缩放律（基于 Mini-Batch SGD 收敛与梯度噪声/有效迭代步权衡的理论推导，式 4-13），Bopt=αB·T^βB·N^γB、ηopt=αη·T^βη·N^γη；(2) 最优模型尺寸缩放律 Nopt=常数·C^0.41 级（式 14）；(3) 广义损失 L(T,N)=(Tc/T)^αT+(Nc/N)^αN+L∞（式 15）。用 0.017B-0.26B 小模型拟合，外推到 0.64B/0.72B/1.07B 验证。以验证集 loss（每 200 步测量）为主指标。",
+    "assumptions": [
+      "常量学习率可代表稳定训练阶段（引用 [1] 多步 lr scheduler 与 cosine 结果可比）。",
+      "样本梯度为真实梯度无偏估计且方差有界（式 2-3）。",
+      "L(θ) 满足 L-smooth；模型增大使 Lipschitz 常数 L 增大。",
+      "validation loss 是视频生成质量的合理代理（引用 [13,43]）。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["Panda-70M（验证集随机抽取 2000 样本）"],
+    "tasks": ["text-to-video 生成（视频 DiT 训练/缩放律测量）"],
+    "embodiments": [],
+    "sample_or_scale": "模型尺寸 0.017B/0.057B/0.13B/0.26B（拟合），外推到 0.64B/0.72B/1.07B；训练 token 2B-12B（拟合），外推到 10B/140B；compute 预算 [3e17,6e17,1e18,3e18,6e18] 拟合，外推 1e-2.4e10 TFlops、5.85e20 FLOPs；17 帧 256x256。"
+  },
+  "evaluation": {
+    "design": "拟合小规模（0.017B-0.26B）模型缩放曲线，用最优超参拟合幂律，再外推到更大（0.72B/1.07B）模型与更大 compute 验证预测精度；对比最优 vs 固定次优超参（B=128, η=2.5313e-4）下的拟合/预测误差。",
+    "baselines": ["固定次优超参发送定（B=128, η=2.5313e-4）的缩放律拟合作为对照"],
+    "metrics": ["validation loss（每 200 步测量，主指标）", "拟合 MSE", "N-C 幂律斜率偏离度（IsoFLOP 经验最优 vs 预测最优）"],
+    "ablations": [
+      "不同模型尺寸（0.02B-0.26B）下 lr/batch 网格搜索以定位最优超参",
+      "最优 vs 固定次优超参对 L(T,N) 拟合精度与 Nopt 预测偏差的影响",
+      "1 帧（图像生成）对照，验证方法泛化性"
+    ]
+  },
+  "findings": [
+    {"finding": "视频 DiT 存在验证损失随模型尺寸与训练 token 变化的幂律缩放律。", "scope": "Cross-DiT，17 帧 256x256，Panda-70M，validation loss", "locator": "page 1 / page 4.1-4.2"},
+    {"finding": "最优 batch size 缩放律 Bopt=2.1797e4·T^0.8080·N^0.1906（αB 表示 tokens/batch；样本数表示 αB≈17.03）；更大模型倾向更大 batch 与更低 lr，训练 token 增多可适度增 batch、lr 略降。", "scope": "模型尺寸 0.017B-0.26B 拟合", "locator": "Table 1 (page 6) / Table 4 (page 13)"},
+    {"finding": "最优学习率缩放律 ηopt=0.0002·T^-0.0453·N^-0.1619。", "scope": "同上", "locator": "Table 2 (page 6)"},
+    {"finding": "经验最优模型尺寸 Nopt=1.5787·C^0.4146；预测最优模型尺寸 N̂opt=0.8705·C^0.4294（optimal hp）与 Topt=(4/3)·(7+nctx/d)·C^0.5706。", "scope": "C 单位 FLOPs", "locator": "Eq 14 (page 6) / Eq 18 (page 9) / Eq 23 (page 13)"},
+    {"finding": "损失通式 L(T,N)=(0.0373/T)^0.2917+(0.0082/N)^0.3188+L∞(0.4856)；外推预测对 1.07B/10B tokens 偏差 0.03%、0.72B/140B tokens 偏差 0.15%，拟合 MSE 由次优 4.31e-7 降至最优 2.35e-7（-45.5%）。", "scope": "validation loss，最优超参", "locator": "Table 3 (page 7) / page 4.3.2"},
+    {"finding": "最优超参下 Nopt(C) 预测偏差仅 3.57%，固定次优超参下达 30.26%；后者高估最优模型尺寸，浪费算力。", "scope": "C 外推", "locator": "page 8-9 / Figure 7"},
+    {"finding": "给定 1e10 TFlops 预算，最优超参可比次优降低 39.9% 参数量（摘要 40.1% 推理成本）仍近相同损失。", "scope": "compute 外推", "locator": "page 4.3.1 (page 8)"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "仅用常量学习率拟合缩放律；未研究 lr 衰减（可能得到不同结果，但需更多算力）。", "locator": "page 9 (Section 6)"},
+      {"limitation": "评估仅聚焦 validation loss，因缺少标准的视频生成质量指标；开发鲁棒视频质量评估是未来方向。", "locator": "page 9 (Section 6)"},
+      {"limitation": "低分辨率、较小模型的研究可能不直接适用于更高分辨率/更大模型，需要重新拟合；且未探索分辨率与帧率如何影响缩放律。", "locator": "page 9 (Section 6)"}
+    ],
+    "reader_inferred": [
+      {"boundary": "所有结论在单一骨干（Cross-DiT）、单一数据集（Panda-70M）与单一帧/分辨率配置（17 帧 256x256）上测得，向流匹配/flow 训练、更大 nctx 或更高帧率的迁移未经实验验证。", "basis": "实验设置限制在 Sec A.1-A.2 与 Section 6"},
+      {"boundary": "只用 validation loss（代理指标），未评测 FVD 等下游视频质量/一致性，因此对'世界模型'维度（物理/时序/实体一致性）无直接证据。", "basis": "Evaluation 段 page 3、limitations page 9"}
+    ]
+  },
+  "transfer_boundary": "该篇缩放律在低分辨率（17 帧 256x256）、0.017B-1.07B 的小视频 DiT（Cross-DiT 骨干）上用 validation loss（代理指标，未用 FVD 等标准视频质量指标）实证于 Panda-70M；作者明确其结论可能不迁移到更高分辨率/更大模型、常量学习率外（lr 衰减/eplis）及不同分辨率与帧率。故其对综述'缩放律支持'的直接适用域被限制在低分辨率小模型与 loss 代理指标；向大规模生产级视频模型或世界模型评测的推断仅为 conditional/inference。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "以理论推导（Mini-Batch SGD 收敛、梯度噪声与有效步权衡）支撑超参幂律，非纯启发式。",
+      "外推到 1.07B/10B 与大 compute（5.85e20 FLOPs）验证预测精度，报告 0.03%/0.15% 偏差并做对照实验。",
+      "量化显示最优 vs 次优超参对 Nopt 预测偏差（3.57% vs 30.26%）与拟合 MSE（-45.5%）的显著差距，控制变量清晰。"
+    ],
+    "design_risks": [
+      "主指标仅为 validation loss，为代理指标，无下游视频质量/基准评测，外部效度受限。",
+      "仅常量学习率、单一分辨率/帧率/骨干，向实际生产（高分辨率、大模型、流匹配、lr 衰减）的泛化未验证。",
+      "compute 预算外推量级较大（1e17 级拟合到 1e20-1e22 级），幂律外推风险存在；最优超参在更大范围未见独立复现。"
+    ],
+    "baseline_fairness": "对照固定次优超参（B=128, η=2.5313e-4）合理，凸显最优超参必要性；但未与额外多样化超参设定系统对照。",
+    "metric_validity": "validation loss 为代理指标，作者引述 [13,43] 支持其可作为性能代理；但对视频生成'质量/一致性'等话语的度量不覆盖。",
+    "reproducibility": "报告了完整幂律系数表、数据集（Panda-70M）、骨架（Cross-DiT）、帧/分辨率与计算（FLOPs/参数）拆分，拟合与外推程序可复现。",
+    "external_validity": "受限于单一骨干、单分辨率/帧率与 loss 代理指标；面向大规模/高分辨率生产模型的迁移结论谨慎。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2411.17470_C01",
+      "claim": "视频 DiT 被系统实证确认存在缩放律：验证损失随模型尺寸与训练 token 呈可预测幂律，抽取优化条件下能与 LLM 式缩放律拟合对齐。",
+      "stance": "support",
+      "relation": "直接支持综述'缩放律：性能可预测、存在幂律'命题中视频生成子域的存在性部分。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者在摘要与引言声明 'We confirm the existence of scaling laws in video diffusion transformers'，并给出 L(T,N) 幂律通式与跨模型尺寸一致拟合（图 1、5），为本命题提供直接证据。",
+      "locator": "page 1 (Abstract + 1. Introduction) / page 7 (Eq 15, Table 3)",
+      "source_context": "We confirm the existence of scaling laws",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "摘要贡献列表逐字载明 'confirm the existence of scaling laws'（page 1），且 Section 4.2 给出 L(T,N) 通式与拟合表（Table 3, page 7），两处上下文互证。"}
+    },
+    {
+      "card_id": "2411.17470_C02",
+      "claim": "视频 DiT 最优超参（batch size 与 learning rate）可被幂律预测：Bopt=2.1797e4·T^0.8080·N^0.1906、ηopt=0.0002·T^-0.0453·N^-0.1619；较 LLM，视频模型对 batch/lr 更敏感。",
+      "stance": "support",
+      "relation": "支持综述'缩写化/缩放律'命题中'最优超参可预测、模型/数据对超参有结构依赖'方面；并突出视频 DiT 与 LLM 缩放律的行为差异。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者由 Mini-Batch SGD 收敛分析推导 ηopt 依赖于 T 与 Bopt，Bopt 平衡梯度噪声与更新步数，拟合出 Bopt、ηopt 幂律（式 10、13），并在 1.07B/4B-10B token 网格搜索验证预测位置对应最低 validation loss（图 4）。",
+      "locator": "page 6 (Table 1, Table 2) / page 13 (Table 4)",
+      "source_context": "more sensitive to learning rate and batch size",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Bopt 幂律系数 (αB, βB, γB) / ηopt 幂律系数 (αη, βη, γη)",
+        "value_or_direction": "Bopt=2.1797e4·T^0.8080·N^0.1906；ηopt=0.0002·T^-0.0453·N^-0.1619",
+        "comparator": "与固定次优超参 (B=128, η=2.5313e-4) 对照；Find 1.07B 处预测 vs 网格搜索最低 loss",
+        "task_or_sample": "0.017B-0.26B 视频 DiT，2B-12B training tokens",
+        "locator": "Table 1/2 (page 6), Table 4 (page 13)"
+      },
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "系数逐字取自 Table 1/Table 2/Table 4（page 6、page 13），式 10/13 给定幂律形式；敏感性表述在 Abstract 与 page 2 原文可查。"}
+    },
+    {
+      "card_id": "2411.17470_C03",
+      "claim": "视频 DiT 最优模型尺寸服从 Nopt∝C^a 幂律，且拟合精确度强烈依赖超参最优性：最优超参下 Nopt(C) 斜率偏差 3.57%，固定次优超参下升至 30.26%（工资估最优模型尺寸）。",
+      "stance": "conditional",
+      "relation": "支持'缩放律：compute-optimal 分配'命题，同时加条件——幂律系数只在最优超参下可靠；偏离最优超参会系统性高估最优模型尺寸（浪费算力）。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "经验 Nopt=1.5787·C^0.4146（式 14）；预测 N̂opt=0.8705·C^0.4294（optimal hp，式 18）。对比图 7：optimal hp 下指数差绝对值 0.0148→3.57% 偏差，固定次优 hp 下 0.1581→30.26% 偏差。结论是有条件的：必须先取最优超参。",
+      "locator": "page 6 (Eq 14) / page 8-9 (4.3.1, Eq 18, Fig 7)",
+      "source_context": "The use of suboptimal hyperparameters leads to an overestimation of the optimal model size",
+      "evidence_type": "analysis",
+      "quantitative": {
+        "metric": "Nopt 幂律指数 (a in C^a) 及 optimal vs suboptimal 斜率偏差",
+        "value_or_direction": "经验 a≈0.4146；最优 hp 预测 a=0.4294，偏差 3.57%；次优 hp 偏差 30.26%（绝对指数差 0.1581）",
+        "comparator": "最优超参 vs 固定次优超参",
+        "task_or_sample": "compute C∈[3e17,6e18] 拟合，外推 1e10 TFlops 与 5.85e20 FLOPs",
+        "locator": "Eq 14 (page 6), Eq 18 / Fig 7 (page 8-9)"
+      },
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "指数与偏差百分比均逐字取自适应/式 14、式 18 与 Figure 7 说明（page 8-9）；39.9% 参数节省在 4.3.1 原文明确，偏差 30.26% 在 page 9 明确。由此该主张是'最优超参条件下'的 conditional 结论。"}
+    },
+    {
+      "card_id": "2411.17470_C04",
+      "claim": "性能缩放通式 L(T,N)=(Tc/T)^αT+(Nc/N)^αN+L∞ 可在最优超参下预测任意模型尺寸与 compute 的 validation loss，外推验证偏差约 0.03%（1.07B/10B tokens）与 0.15%（0.72B/140B tokens）。",
+      "stance": "support",
+      "relation": "支持'性能随模型/数据可预测'与'广义损失-模型-预算 trade-off'命题，含非最优模型尺寸的预测能力（实际推理成本约束下）。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "式 15/21 拟合系数 Tc=0.0373, αT=0.2917, Nc=0.0082, αN=0.3188, L∞=0.4856（Table 3）。外推图 5b 报告 1.07B/10B 偏差 0.03%、0.72B/140B 偏差 0.15%；4.3.2 报告 MSE 由 4.31e-7 降至 2.35e-7（-45.5%，相对次优 hp）。",
+      "locator": "page 7 (Eq 15, Table 3) / page 7 (Fig 5) / page 8 (4.3.2)",
+      "source_context": "the deviations between our predicted and experimental results were",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "L(T,N) 拟合系数 + 外推预测偏差 + 拟合 MSE",
+        "value_or_direction": "Tc=0.0373,αT=0.2917,Nc=0.0082,αN=0.3188,L∞=0.4856；外推偏差 0.03%/0.15%；MSE 4.31e-7→2.35e-7(-45.5%)",
+        "comparator": "预测 vs 实测；最优 vs 固定次优超参",
+        "task_or_sample": "1.07B/10B tokens 与 0.72B/140B tokens（5.85e20 FLOPs）",
+        "locator": "Table 3 (page 7), Fig 5 (page 7), page 8 (4.3.2)"
+      },
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "全部系数与百分比逐字取自 Table 3、Figure 5 说明与 4.3.2 原文（page 7-8）；式 15 形式在正文明确，外推样本（1.07B/10B、0.72B/140B、5.85e20 FLOPs）在 page 7 与他文中多次复述。注意其为 validation loss 代理指标下的偏差，非下游质量指标。"}
+    },
+    {
+      "card_id": "2411.17470_C05",
+      "claim": "本文所有缩放律结论以验证损失（validation loss，代理指标）作为唯一评测，未使用 FVD 等标准视频生成质量指标；作者自称因缺少统一标准视频质量指标而放弃外部基准。",
+      "stance": "limit",
+      "relation": "限制综述'评测方法/基准'命题——该类视频缩放律证据的指标有效性局限在 loss 代理，未与 FVD/质量/一致性直接挂钩。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者明确 'We did not include external benchmarks due to challenges in consistently aligning multiple video benchmarks'，且 limitations 承认 'evaluation focused on validation loss due to the lack of a standard metric for video generation quality'。故本证据卡限定其评测视角。",
+      "locator": "page 3 (Setup-Evaluation) / page 9 (Section 6)",
+      "source_context": "validation loss serves as an effective proxy for performance",
+      "evidence_type": "other",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "两处表述均在全文原文（page 3 Evaluation 段、page 9 限制段）逐字存在；据此可确认本文不使用 FVD/外部视频基准，度量系 loss 代理。"}
+    },
+    {
+      "card_id": "2411.17470_C06",
+      "claim": "该缩放律在低分辨率（17 帧 256x256）、小模型（0.017B-1.07B、单骨干 Cross-DiT、单数据集 Panda-70M）、常量学习率设定上测得；作者声明其可能不适用更高分辨率/更大模型，且未探索分辨率与帧率影响。",
+      "stance": "limit",
+      "relation": "界定综述'能力演进/缩放律泛化'的迁移边界：该实证支持仅及于低分辨率小模型与 loss 代理；向高分辨率、流匹配、世界模型评测的转移为 conditional/inference。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "实验设置（Sec A.1-A.2）与作者 limitation 双证：'our study on low-resolution, smaller models may not directly apply to higher-resolution, larger models, requiring new fitting. Additionally, we did not explore how video resolution and frame rate impact the scaling law.'",
+      "locator": "page 9 (Section 6) / page 13 (Sec A.1-A.2)",
+      "source_context": "our study on low-resolution, smaller models may not directly apply to higher-resolution, larger models, requiring new fitting",
+      "evidence_type": "other",
+      "quantitative": false,
+      "verification": {"status": "passed", "checked_against": "full-text", "rationale": "限制原文逐字见于 page 9；实验配置（17 帧 256x256、Cross-DiT、Panda-70M、常量学习率）在 Appendix A 与正文 Setup 可查，据此界定迁移边界为低分辨率小模型 + loss 代理。"}
+    }
+  ],
+  "core_citations": ["Hoffmann et al., Training compute-optimal large language models (Chinchilla), 2022", "Kaplan et al., Scaling Laws for Neural Language Models, 2020", "Bi et al., DeepSeek LLM: Scaling Open-Source Language Models with Longtermism, 2024", "Esser et al., Scaling Rectified Flow Transformers (SiT) for High-Resolution Image Synthesis, 2024"],
+  "notes": "跨页结构；无命名 sections（sections 为空，以 ## page N 定位）。quantitative 关键系数：Bopt=2.1797e4·T^0.8080·N^0.1906；ηopt=0.0002·T^-0.0453·N^-0.1619；Nopt(emp)=1.5787·C^0.4146，N̂opt(pred,opt hp)=0.8705·C^0.4294；L(T,N)=(0.0373/T)^0.2917+(0.0082/N)^0.3188+0.4856；MSE 4.31e-7→2.35e-7(-45.5%)；1e10 TFlops 下省 39.9% 参数、40.1% 推理成本；外推偏差 0.03%/0.15%。评测为 validation loss，不用 FVD/外部基准。"
+}

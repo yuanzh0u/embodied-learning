@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2411.02385",
+    "title": "How Far is Video Generation from World Model: A Physical Law Perspective",
+    "published": "2024-11-04",
+    "url": "https://arxiv.org/abs/2411.02385",
+    "authors": ["Bingyi Kang", "Yang Yue", "Rui Lu", "Zhijie Lin", "Yang Zhao", "Kaixin Wang", "Gao Huang", "Jiashi Feng"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向的能力演进、物理/时序一致性限制、评测方法与基准。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "系统研究 DiT-based 视频生成模型能否通过缩放学习物理定律，给出 ID/OOD/组合泛化的边界证据（scaling 不足、memorization、视觉歧义），是视频→世界模型物理一致性/评测方法的强实证。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确立问题：视频生成能否仅凭观察视频发现物理定律，以及三种泛化类别的评测框架。"},
+      {"locator": "2.1 Problem Definition", "role": "method-or-design", "purpose": "物理一致性定义与 latent 变量演化框架。"},
+      {"locator": "2.2 Video Generation Model", "role": "method-or-design", "purpose": "读其 DiT+VAE 视频生成模型（全时空 self-attention、3D RoPE、首帧条件 mask）。"},
+      {"locator": "3.2 Perfect ID and Failed OOD Generalization", "role": "results-or-analysis", "purpose": "ID/OOD 泛化结果：ID 近完美而 OOD 不随缩放改善。"},
+      {"locator": "4.2 Scaling Law Observed for Combinatorial Generalization", "role": "results-or-analysis", "purpose": "组合泛化扩展律（abnormal 67%→10%）。"},
+      {"locator": "5.2 Memorization or Generalization", "role": "results-or-analysis", "purpose": "memorization/case-based 行为与优先层次证据。"},
+      {"locator": "5.5 Is Video Sufficient for Complete Physics Modeling?", "role": "results-or-analysis", "purpose": "视觉歧义导致视频不足以完成物理建模的边界证据。"},
+      {"locator": "7 Conclusion and Discussion", "role": "conclusion-or-limitations", "purpose": "结论：naive scaling 不足以为物理定律发现；讨论对真实世界/组合多样性含义。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "基于 DiT 的视频生成模型在缩放数据/模型时，能否在 ID、OOD 与组合三种泛化情形下从视频中 '发现' 基础物理定律？",
+  "contributions": [
+    "提出以物理定律发现为目标的系统性评测：定义并区分 in-distribution / out-of-distribution / combinatorial generalization。",
+    "构建 2D 经典力学模拟器（几何形状物体、单一/两定律）+ 从像素推断内部状态的工具，支撑 30K–6M 规模的可扩展数据集与定量物理度量。",
+    "实证发现：DiT 视频生成在 ID 上近完美、随缩放提升；OOD 误差不随数据/模型缩放改善，naive scaling 不足以发现物理定律。",
+    "揭示组合泛化随数据/模板多样性提升（abnormal 67%→10%），并分析 'case-based/memorization' 行为与颜色>大小>速度>形状的优先层次。"
+  ],
+  "method": {
+    "summary": "基于 Sora 式 VAE+DiT 的视频生成模型：Vent之首 (2+1)D-VAE 预训练并固定冻结做视频压缩，DiT 对 latent 全时空 token 做 self-attention，位置用 3D RoPE，以首帧为条件（mask 'video' 指示条件帧）。用 2D 经典力学模拟器生成物理事件视频（匀速/弹性碰撞/抛物、多物体自由落体碰撞），开发从像素解析状态的工具，定义 ID/OOD/组合三种泛化评估。物理一致性由 latent 变量演化误差等定量度量。",
+    "assumptions": [
+      "以 2D 简单几何物体与经典力学近似世界，规避复杂纹理混杂因素，使物理可定量（存在简化边界）。",
+      "通过泛化（même训练未见分布）推断模型是否内化物理律，系可观测行为指标。",
+      "视觉表示足以承载论断所指范围的物理信息（论文后半对其充分性提出质疑）。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["自建 2D 经典力学模拟数据（均匀直线、两球完全弹性碰撞、抛物线），规模 30K–3M；组合环境 8 物体自由落体+碰撞，600K–6M", "对照 SOTA 视频生成模型（附录）"],
+    "tasks": ["给定首 1–3 帧生成后续帧的物理预测", "从生成视频像素推断物体状态（位置/尺寸）做物理误差度量", "ID / OOD / combinatorial generalization 三态评估"],
+    "embodiments": ["无真实实体/机器人；仅 2D 模拟物理物体（ball/box 等），对象论为物理本体而非具身"],
+    "sample_or_scale": "DiT 大小 22M–310M（DiT-S/B/L/XL）；数据 30K–6M；运动任务 1–3 个初始帧条件；组合任务手动标注 abnormal"
+  },
+  "evaluation": {
+    "design": "在 ID/OOD/组合三种泛化下评估视频生成模型；用从像素解析出的物理量（如速度）误差或人工标注 'abnormal'（物理不合理）度量定律被发现程度；做 scaling（数据量、模型大小）与数据增广/属性组合的系统实验。",
+    "baselines": ["不同规模 DiT（DiT-S/B about /XL）", "多种 SOTA 视频生成/预训练模型（附录 D）做对照"],
+    "metrics": ["ID/OOD 速度误差（物理解析）", "组合泛化：FVD、SSIM、PSNR、LPIPS + 手动 abnormal 率", "优先/记忆行为定性分析（图、pairwise）"],
+    "ablations": ["数据量 30K→3M 与模型 22M→310M", "模板数 6/30/60 与 DiT-XL vs DiT-B", "水平翻转增广（Deceptive 例）", "颜色/大小/速度/形状优先层次 pairwise 分析"]
+  },
+  "findings": [
+    {"finding": "ID 泛化随缩放（数据/模型）近完美、误差降低；OOD 误差比 ID 高一个量级且不随数据/模型缩放显著改善，naive scaling 不足以及www.html发现物理定律。", "scope": "3 个基础物理任务，DiT-S→XL，30K→3M", "locator": "3.2 Perfect ID and Failed OOD Generalization"},
+    {"finding": "组合泛化随训练更广的模板/组合覆盖改善（out-of-template abnormal 67%→10%），且模型规模亦有帮助（DiT-B 60 模板为 24%）。", "scope": "8 物体组合物理环境，600K–6M，DiT-XL/B", "locator": "4.2 Scaling Law Observed for Combinatorial Generalization"},
+    {"finding": "泛化机制更接近 'case-based/memorization' 而非学习普适规则；对 'deceptive' 增广敏感，且呈现颜色>大小>速度>形状的属性优先层次。", "scope": "uniform-motion 定向/双向训练与属性混合实验", "locator": "5.2 Memorization or Generalization"},
+    {"finding": "视觉歧义（如像素级尺寸差、相对位置）会使仅靠视觉的视频模型在细粒度物理上出错，提示单靠视频表示可能不足以完成完整物理建模。", "scope": "可解剖的 2D 物理示例（gap/碰撞判定）", "locator": "5.5 Is Video Sufficient for Complete Physics Modeling?"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "主要基于 2D 经典力学与简单几何物体模拟，规避复杂纹理；对复杂真实世界物理外推有限。", "locator": "1 Introduction"},
+      {"limitation": "组合泛化评估因分辨率/训练迭代/模型大小较高，未做全量数据×模型扫描。", "locator": "4.2 Scaling Law Observed for Combinatorial Generalization"}
+    ],
+    "reader_inferred": [
+      {"boundary": "评测聚焦经典力学 2D 模拟，未覆盖流体、3D 刚体接触、自主体等具身/复杂物理；'scaling 不足以发现物理定律' 的结论域受限于此本体。", "basis": "方法与数据均为经典力学 2D 模拟；附录仅做 SOTA 视频模型对照。"},
+      {"boundary": "以像素解析/人工 abnormal 判断作为 '物理定律发现' 代理，未直接验证模型参数是否内化定律，也未在真实物理或机器人系统上确认因果可迁移。", "basis": "作者以 generalization 作代理指标（Sec. 2.3），并在 5.5 自承视觉充分性存疑。"}
+    ]
+  },
+  "transfer_boundary": "论文的 '视频生成→世界模型物理定律' 证据限定在 2D 经典力学、简单几何物体的合成模拟数据集与 DiT（22M–310M）视频生成模型；其 ID 近完备而 OOD 不随缩放改善、组合泛化需组合多样性、视觉歧义限制充分性等结论不能直接外推到真实世界具身、3D/流体物理或需要动作/交互因果干预的世界模型本体。",
+  "critical_appraisal": {
+    "design_strengths": ["用受控 2D 物理模拟与像素解析工具构建可扩展、可定量的物理定律评测（对综述很具价值）", "明确划分 ID/OOD/组合三种泛并做 systematic scaling", "包含 memorization 与属性优先层次等机制分析"],
+    "design_risks": ["2D 合成模拟简化了物理（一次一至两定律），外部效度受限", "组合泛化评估未做全量 data×model 扫描，abnormal 为人工标注依赖标注主观性"],
+    "baseline_fairness": "主要在自建模拟上对比不同 DiT 规模；SOTA 视频模型对照见附录，正文主评以内部分析为主。",
+    "metric_validity": "物理量解析误差与人工 abnormal 率贴近 '物理定律是否被发现' 之测度，比纯分布指标更直接；但仍为代理并受像素解析精度影响。",
+    "reproducibility": "数据生成、DiT/VAE 细节、度量在正文与附录较详，具备较高复现条件。",
+    "external_validity": "对真实世界/具身物理与复杂环境的直接适用有限；可作为综述中 '物理一致性限制与评测方法' 的高价值证据。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2411.02385_C01",
+      "claim": "对 DiT 视频生成，ID 泛化随数据/模型缩放近完美且误差下降，而 OOD 泛化误差至少高一个数量级且不随缩放改善，说明 naive 缩放不足以让视频模型发现物理定律。",
+      "stance": "limit",
+      "relation": "限制综述命题：'DiT/视频扩散可通过缩放自动获得世界模型物理能力'——对 OOD/物理普适性给出明确负向边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者在 Introduction/3.2 报告：三任务 ID 近完美、OOD 误差高一个量级且随数据/模型缩放变化高度随机，DiT-XL 亦无改善。",
+      "locator": "1 Introduction",
+      "source_context": "Consistently, we observe that the model achieves a near-perfect ID generalization across all tasks. However, the OOD generalization error does not improve with increased data and model size, revealing the limitations of scaling video generation models in handling OOD data.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "1 Introduction 全文含该 verbatim 两句；3.2 进一步给 OOD 误差一个数量级且 DiT-XL 不改善的细节，两处一致蕴含 'scaling 不改善 OOD' 的结论，断言限定 2D 经典力学任务与 DiT 规模。"
+      }
+    },
+    {
+      "card_id": "2411.02385_C02",
+      "claim": "组合泛化随 training 覆盖更多模板/物体组合而改善：DiT-XL 的 out-of-template 人工 abnormal 率从 6 模板的 67% 降至 60 模板的 10%；DiT-B（60 模板）为 24%，说明组合多样性与模型容量均关键。",
+      "stance": "support",
+      "relation": "支持综述命题：缩放视频 DiT 在组合/多样性维度有效（相对 OOD 场景），为 '向世界模型转型' 的数据设计提供正/负双重证据。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.2 报 6→60 模板 abnormal 从 67%→10%，DiT-B 60 模板升至 24%，明言 'both model capacity and coverage of the combination space are crucial'。",
+      "locator": "4.2 Scaling Law Observed for Combinatorial Generalization",
+      "source_context": "the abnormal rate for human evaluation significantly reduces from 67% to 10%.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Abnormal rate (human evaluation, out-of-template combinatorial generalization)",
+        "value_or_direction": "67% -> 10% (DiT-XL, templates 6->60); DiT-B 60 templates = 24%",
+        "comparator": "DiT-XL (6 vs 30 vs 60 templates); DiT-B (60 templates)",
+        "task_or_sample": "combinatorial 8-object free-fall & collision physical scenarios (600K-6M samples)",
+        "locator": "4.2 Scaling Law Observed for Combinatorial Generalization (Table 2)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.2 全文含 verbatim 'the abnormal rate for human evaluation significantly reduces from 67% to 10%' 与 'the abnormal rate increases to 24%'，并与 Table 2 'out-of-template abnormal 3%...67%...10%...24%' 及组合多样性关键论点一致。"
+      }
+    },
+    {
+      "card_id": "2411.02385_C03",
+      "claim": "视频模型的 OOD 泛化更接近 '案例式/记忆式'（color>size>velocity>shape 优先层次）而非常见普适物理规则，易受 training set 中的 deceptive 样本偏置。",
+      "stance": "limit",
+      "relation": "限制综述命题：视频 DiT 的世界模型内化机制更多是检索/记忆相似样本而非通用物理推理，限制了真实世界泛化。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.2 用 uniform-motion 定向/双向训练实验显示模型被 deceptive 增广误导（低速球反向），判断其为 memorization/case-based；Introduction 给出颜色>大小>速度>形状优先层次。",
+      "locator": "5.2 Memorization or Generalization",
+      "source_context": "Rather than abstracting universal rules, the model appears to rely on memorization and case-based imitation for OOD generalization.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.2 全文含该 verbatim 句，且全节实验（Set-1/Set-2 的翻转增广导致反向运动）为该结论提供直接证据；未扩及训练分布内的通用规则行为。"
+      }
+    },
+    {
+      "card_id": "2411.02385_C04",
+      "claim": "视觉表示存在歧义（如像素级尺寸差、相对位置判定），使仅靠视频（视觉）的视频生成模型在细粒度物理建模上出错，暗示仅靠视觉可能不足以做完整物理建模。",
+      "stance": "gap",
+      "relation": "指出综述命题的边界：'以视频为唯一模态的世界模型' 在细粒度物理/因果上可能有信息不足的根本 gap。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.5 报告视觉歧义导致 gap 判定与相对位置判定出错，作者据此自承视觉单独可能不足以完成精确物理建模。",
+      "locator": "5.5 Is Video Sufficient for Complete Physics Modeling?",
+      "source_context": "These findings suggest that relying solely on visual representations, may be inadequate for accurate physics modeling.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.5 全文含该 verbatim 句，且前文给出 gap/相对位置视觉歧义的失败实例；作为 '视频模态充分性' 的 gap 证据，限定在论文所测 2D 物理场景。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "论文为 empirically-driven 评测研究，naive-scaling 不足为物理定律反Po的summary，可作为综述中物理一致性/评测方法的支持与限制证据。定量数值主要以占位符（figure/表格）形式存在于文本，故除组合泛化外多按定性记录。"
+}

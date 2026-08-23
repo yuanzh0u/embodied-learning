@@ -1,0 +1,937 @@
+{
+  "generated_at": "2026-08-23T09:36:15.588764+00:00",
+  "paper_id": "2502.15077",
+  "html_url": "https://arxiv.org/html/2502.15077",
+  "available": true,
+  "cache_file": "/var/folders/sb/fr7nzcvd5dv7w1f9tyhrg6780000gn/T/embodied-ai-literature-hub/html/2502.15077.html",
+  "structure": "latexml",
+  "text_chars": 23616,
+  "sections": [
+    {
+      "index": 0,
+      "id": "abstract1",
+      "kind": "ltx_abstract",
+      "title": "Abstract",
+      "path": "Abstract",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 1345
+    },
+    {
+      "index": 1,
+      "id": "S1",
+      "kind": "ltx_section",
+      "title": "I Introduction",
+      "path": "I Introduction",
+      "level": 1,
+      "para_count": 4,
+      "char_count": 2441
+    },
+    {
+      "index": 2,
+      "id": "S2",
+      "kind": "ltx_section",
+      "title": "II Related Works",
+      "path": "II Related Works",
+      "level": 1,
+      "para_count": 4,
+      "char_count": 3648
+    },
+    {
+      "index": 3,
+      "id": "S3",
+      "kind": "ltx_section",
+      "title": "III Our Method",
+      "path": "III Our Method",
+      "level": 1,
+      "para_count": 1,
+      "char_count": 1541
+    },
+    {
+      "index": 4,
+      "id": "S3.SS1",
+      "kind": "ltx_subsection",
+      "title": "III-A Aggregated Static Quantization",
+      "path": "III Our Method > III-A Aggregated Static Quantization",
+      "level": 2,
+      "para_count": 5,
+      "char_count": 2604
+    },
+    {
+      "index": 5,
+      "id": "S3.SS2",
+      "kind": "ltx_subsection",
+      "title": "III-B Time-step-wise Static Quantization",
+      "path": "III Our Method > III-B Time-step-wise Static Quantization",
+      "level": 2,
+      "para_count": 4,
+      "char_count": 4837
+    },
+    {
+      "index": 6,
+      "id": "S4",
+      "kind": "ltx_section",
+      "title": "IV Experiment",
+      "path": "IV Experiment",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    },
+    {
+      "index": 7,
+      "id": "S4.SS1",
+      "kind": "ltx_subsection",
+      "title": "IV-A Implementation Details and Experimental Settings",
+      "path": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 1622
+    },
+    {
+      "index": 8,
+      "id": "S4.SS2",
+      "kind": "ltx_subsection",
+      "title": "IV-B Main Results and Ablation Studies",
+      "path": "IV Experiment > IV-B Main Results and Ablation Studies",
+      "level": 2,
+      "para_count": 4,
+      "char_count": 1801
+    },
+    {
+      "index": 9,
+      "id": "S4.SS3",
+      "kind": "ltx_subsection",
+      "title": "IV-C Method Robustness Across Different Bit-Widths",
+      "path": "IV Experiment > IV-C Method Robustness Across Different Bit-Widths",
+      "level": 2,
+      "para_count": 2,
+      "char_count": 790
+    },
+    {
+      "index": 10,
+      "id": "S4.SS4",
+      "kind": "ltx_subsection",
+      "title": "IV-D Effect of Time-Step-Wise Quantization",
+      "path": "IV Experiment > IV-D Effect of Time-Step-Wise Quantization",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 793
+    },
+    {
+      "index": 11,
+      "id": "S4.SS5",
+      "kind": "ltx_subsection",
+      "title": "IV-E Cross-Dataset Evaluation",
+      "path": "IV Experiment > IV-E Cross-Dataset Evaluation",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 337
+    },
+    {
+      "index": 12,
+      "id": "S4.SS6",
+      "kind": "ltx_subsection",
+      "title": "IV-F Temporal Efficiency",
+      "path": "IV Experiment > IV-F Temporal Efficiency",
+      "level": 2,
+      "para_count": 1,
+      "char_count": 476
+    },
+    {
+      "index": 13,
+      "id": "S5",
+      "kind": "ltx_section",
+      "title": "V Conclusion",
+      "path": "V Conclusion",
+      "level": 1,
+      "para_count": 3,
+      "char_count": 1381
+    },
+    {
+      "index": 14,
+      "id": "bib",
+      "kind": "ltx_bibliography",
+      "title": "References",
+      "path": "References",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    }
+  ],
+  "ranked_sections": [
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 5.224,
+      "hits": 4,
+      "matched_terms": [
+        "diffusion transformer",
+        "video generation"
+      ],
+      "text": "Abstract Diffusion Transformers for video generation have gained significant research interest since the impressive performance of SORA. Efficient deployment of such generative-AI models on GPUs has been demonstrated with dynamic quantization. However, resource-constrained devices cannot support dynamic quantization, and need static quantization of the models for their efficient deployment on AI processors. In this paper, we propose a novel method for the post-training quantization of OpenSora [ 1 ] , a Video Diffusion Transformer, without relying on dynamic quantization techniques. Our approach employs static quantization, achieving video quality comparable to FP16 and dynamically quantized ViDiT-Q methods, as measured by CLIP and VQA metrics. In particular, we utilize per-step calibration data to adequately provide a post-training statically quantized model for each time step, incorporating channel-wise quantization for weights and tensor-wise quantization for activations. By further applying the smooth-quantization technique, we can obtain high-quality video outputs with the statically quantized models. Extensive experimental results demonstrate that static quantization can be a viable alternative to dynamic quantization for video diffusion transformers, offering a more efficient approach without sacrificing performance."
+    },
+    {
+      "section_index": 2,
+      "path": "II Related Works",
+      "score": 4.638,
+      "hits": 4,
+      "matched_terms": [
+        "diffusion transformer",
+        "scaling",
+        "video generation"
+      ],
+      "text": "PTQ of Transformer Models: Numerous PTQ methods have been developed to meet the demands of transformer-based language models in industry [ 6 ] . For example, Activation-aware Weight Quantization (AWQ) quantizes weights based on the saliency of the corresponding activations and scales the weights per channel to minimize quantization errors [ 7 ] . Other methods also take into account the activation outliers in quantizing weights [ 8 , 9 ] . Advancements in LLM weight quantization have even reached sub-2-bit quantization, utilizing ternary numbers for weights [ 10 , 11 ] . Additionally, various methods have been proposed for PTQ of both weights and activations, with the primary challenge being the diverse distribution across activation channels. For instance, Smooth Quantization (SQ) smooths the weights and activation by scaling the channels, and Reorder-based Post-training Quantization (RPTQ) cluster the channels of weights and activations based on the similarity and quantizes per cluster [ 12 , 13 ] . A series of PTQ methods for Vision Transformer (ViT) was also suggested such as using mixed precision, attention weight order preserving quantization, and using multiple uniform quantization or log transformations to manage non-Gaussian activation distribution, [ 14 , 15 , 16 ] . PTQ of Diffusion Models: However, the recurrent nature of diffusion models, which rely on the output of previous steps to sample the input for subsequent denoising steps, have limited the direct application of PTQ methods from other domains to diffusion model quantization. A key obstacle is the significant variation in activation distribution across time steps [ 17 ] . Early work in PTQ for diffusion models mitigated this issue by generating calibration sets from the denoising process, with a focus on sampling across time steps to preserve output quality [ 17 , 18 , 19 ] . Other approaches involved using a neural network module to determine the time intervals for quantization and predict quantization parameters per interval or having different precision for different time steps and progressive calibration [ 20 , 21 , 22 ] . Another study suggested a method using SQ, mixed precision across layers and focusing on the final time step in calibration for quantizing latent diffusion models [ 23 ] . PTQ of Diffusion Transformer Models: Recent advancements in video generation have increasingly adopted transformer models in denoising, such as Sora by OpenAI [ 24 ] . However, effective methods for quantizing Diffusion Transformer (DiT) models remain limited due to their unique characteristics compared to LLMs and CNN-based diffusion models. For example, unlike LLMs, DiT models experience significant variation across tokens, making the direct application of LLM quantization methods challenging [ 3 , 4 ] . Additionally, the activation distribution in DiT models varies significantly across time steps and between forward paths with or without conditional information from prompts [ 4 ] . The ViDiT-Q framework introduced techniques for quantizing DiT models, utilizing both path-wise dynamic quantization based on prompts and token-wise dynamic quantization for activations [ 4 ] . Despite its advantages, the framework requires real-time calculation of quantization parameters during inference, which complicates hardware optimizations, particularly for NPUs. Our methods avoid this problem by using static quantization while achieving the performance of the original model. Fig. 1: Example videos from various quantization methods Fig. 2: Example frames from generated videos for each quantization method and the corresponding prompt."
+    },
+    {
+      "section_index": 4,
+      "path": "III Our Method > III-A Aggregated Static Quantization",
+      "score": 3.161,
+      "hits": 4,
+      "matched_terms": [
+        "scaling"
+      ],
+      "text": "The first component of our method involves Channel-Wise (CW) quantization of the weight matrix to mitigate quantization errors arising from channel-wise variance [ 4 ] . The minimum and maximum values for each channel in weights were extracted and stored. Then the minimum and maximum were used to calculate the bin sizes ( ) and zero points ( ) channel-wise using the following equation 1 . (1) Thus the bin sizes and zero points for CW quantization of a weight matrix have dimensions where is the output channel size (see the middle row of Figure 3 ). The second component is Tensor-Wise (TW) quantization of the activation matrix. While dynamic token-wise quantization is widely used for transformer models, it is not feasible to estimate statistics to cover the variance of each token activation during inference in a static manner due to the heterogeneity across inference samples. Instead, the simplest method, which involves estimating the minimum and maximum values of activations tensor-wise, was utilized. Therefore, the bin sizes ( ) and zero points ( ) for TW quantization of a activation matrix are scalar values (see the middle row of Figure 3 ). Next, as the third component, we explored the variants of smooth quantization method to migrate the quantization difficulty from activations to weights [ 12 ] . In particular, we proposed the Aggregated Smooth Quantization (ASQ) to be applied in the aggregated static quantization method. In ASQ, the maximum absolute values of weights for each channel were extracted ( ) to calculate the smooth quantization scaling term ( ) for each channel . Then, the maximum absolute values of activations for each channel were averaged across the batch ( ). The maximum absolute values of activations for the entire calibration set were then calculated using a running average with a momentum of 0.95, aggregating information across time steps. The final scaling term for smooth quantization was determined using equation 2 , where is a hyperparameter that needs to be tuned. Therefore, in ASQ, a single scaling term was obtained for each channel, which was used for the entire denoising steps. (2) As a result, the scaling term ( ) has the size of where the is the input channel size (see the middle row of Figure 3 ). When the ASQ was applied, CW weight quantization and TW activation quantization was applied to the smoothed and , instead of the raw and . Therefore, applying ASQ and doing TW activation quantization can be viewed as a method that handles channel-wise variance of the activation without doing CW quantization on the activation matrix."
+    },
+    {
+      "section_index": 9,
+      "path": "IV Experiment > IV-C Method Robustness Across Different Bit-Widths",
+      "score": 2.242,
+      "hits": 1,
+      "matched_terms": [
+        "temporal consistency"
+      ],
+      "text": "We assessed the robustness of *+TSQ+TSW and *+ASQ across various bit-widths using the open-sora prompt set and compared them to the dynamic quantization used in ViDiT-Q for W8A8 quantization [ 4 ] . Table III shows that both static quantization methods outperformed dynamic quantization across a broader bit-width range. The averaged score across bit-width in Table III revealed that the *+TSQ+TSW model generated videos with better semantic alignment with the prompt and temporal consistency, while the *+ASQ model produced videos with more aesthetic appeal and less noise and distortion. Furthermore, qualitative analysis showed that *+TSQ+TSW generated recognizable videos in wider ranges of bit-width than the *+ASQ which confirming our analysis in the previous section (see Figure 4 )."
+    },
+    {
+      "section_index": 10,
+      "path": "IV Experiment > IV-D Effect of Time-Step-Wise Quantization",
+      "score": 2.24,
+      "hits": 1,
+      "matched_terms": [
+        "scaling"
+      ],
+      "text": "We further explored the impact of time-step-wise quantization by grouping time steps into several time ranges (TR), estimating quantization parameters separately for each group. For instance, the 2TR method grouped the time steps into two ranges and estimated quantization parameters for each range, while the 4TR method did so for four separate time ranges. Therefore, for example, the SQ scaling term will have or dimensions for 2TR or 4TR methods. As shown in Tables IV and V , implementing time-step-wise quantization improved semantic adherence to the prompt, as measured by CLIP, but compromised video quality metrics (VQA-a and VQA-t) and the model size. This trade-off is evident in the qualitative analysis of the generated videos (see the last two columns of Figure 1 and Figure 4 )."
+    },
+    {
+      "section_index": 1,
+      "path": "I Introduction",
+      "score": 1.617,
+      "hits": 1,
+      "matched_terms": [
+        "diffusion transformer"
+      ],
+      "text": "The use of generative AI for video creation, especially through diffusion techniques, has gained traction for various applications, ranging from content creation to complex simulation environments. As diffusion models become more common, enhancing their efficiency and reducing size for use in limited-resource settings becomes essential. One commonly employed approach for neural network compression is post-training quantization (PTQ). This method allows for reducing model size and improving inference speed without requiring model retraining, making it particularly attractive for large and computation-intensive models. PTQ has been effective in optimizing large language models (LLMs) by reducing bit-width while keeping the performance of floating-point models [ 2 , 3 ] . Despite such progress, quantization for video diffusion transformers (DiT) [ 1 ] remains challenging due to their complexity. A recent work, Video Difussion Transformer Quantization (ViDiT-Q), suggests using dynamic quantization for these models [ 4 ] . However, this approach requires calculating the quantization parameters online during inference, which complicates hardware-level optimization, such as those for NPUs and Mobile System on Chip (SoC) [ 5 ] . To address this challenge, we propose static quantization for DiT models, calculating quantization parameters only during a calibration phase for use in inference. Our method includes aggregated static quantization that aggregates activation from all denoising steps to estimate a single set of quantization parameters that is used across denoising steps, and Time-Step-Wise (TSW) static quantization that estimates quantization parameters for each time step. Both approaches involve Channel-Wise (CW) quantization for weights, Tensor-Wise (TW) for activations, Aggregated or Time-step-wise Smooth Quantization (ASQ or TSQ). Our static approaches match the performance of the original FP16 STDiT model (Spatial-Temporal DiT or OpenSora [ 1 ] ) and the dynamic quantization method from ViDiT-Q [ 4 ] in W8A8 quantization, with robust results at various precision levels. For example, as shown in Figure 1 , our aggregated static quantization solution using CW, TW and ASQ (*+ASQ) showed comparable visual quality with dynamic quantization and the FP16 model. Our other proposal, TSW static quantization method using CW, TW and TSQ (*+TSQ+TSW) showed best alignment between prompt and generated videos."
+    },
+    {
+      "section_index": 5,
+      "path": "III Our Method > III-B Time-step-wise Static Quantization",
+      "score": 1.242,
+      "hits": 1,
+      "matched_terms": [
+        "scaling"
+      ],
+      "text": "One of our main contributions is a method that estimates quantization parameters for individual denoising time steps during the calibration stage only, enabling Time-Step-Wise (TSW) static quantization. Unlike previously suggested dynamic quantization method that estimates quantization parameters for each denoising time step during the inference [ 4 ] , our TSW static quantization estimates the parameters during the calibration stage only, and use the estimated parameters without any updates for the inference, facilitating efficient hardware-level optimization. Thus TSW static quantization can handle the time-step-wise variance in activation distributions (See the upper right plot in Figure 3 ) without additional calculation during the inference. The essence of implementing the static TSW quantization is to use the calibration set to estimate the parameter statistics for each denoising step. When the TSW static quantization is applied, the bin sizes ( ) and zero points ( ) for the TW quantization have dimensions. The smooth quantization scaling term ( ) has the dimension where is the number of denoising time steps, which we called Time-step-wise Smooth Quantization, or TSQ. The CW quantization stays same as it quantizes weight not activations. See the last row of Figure 3 ). During inference, these fixed, pre-estimated statistics are used without further calculations or updates. TSW static quantization can also be applied in a coarser manner, where quantization parameters are estimated not for each time step but across time ranges that group multiple denoising steps. For instance, estimating parameters over the entire denoising process corresponds to a single time-range static quantization. Dividing the process into two time ranges (e.g., early and late stages) and estimating parameters for each range leads to a two-time-range static quantization. The effects of different levels of granularity in the estimation of static quantization parameters are discussed further in Section IV-C . TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.2058 0.9970 26.3483 34.5356 Dynamic [ 4 ] 8/8 0.2049 0.9968 25.6435 34.6162 CW+TW (*) 8/8 0.2033 0.9955 18.1882 22.8154 +TSW 8/8 0.2025 0.9958 17.9768 24.7684 +ASQ 8/8 0.2048 0.9975 24.6499 31.9683 +TSQ+TSW 8/8 0.2084 0.9986 10.2957 17.4171 TABLE III: Robustness test of the proposed methods Bit (W/A) Method CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] - 0.1950 0.9982 54.2730 49.9179 4/4 *+TSQ+TSW 0.1569 0.9967 0.0257 0.0008 *+ASQ 0.1538 0.9974 0.0171 0.0009 Dynamic [ 4 ] 0.1786 0.9729 2.7089 0.4849 4/6 *+TSQ+TSW 0.1909 0.9981 4.8082 5.4387 *+ASQ 0.1838 0.9983 0.0557 0.0686 Dynamic [ 4 ] 0.1817 0.9976 0.1681 0.2958 6/6 *+TSQ+TSW 0.1864 0.9981 9.2497 9.2459 *+ASQ 0.1829 0.9986 0.0961 0.0781 Dynamic [ 4 ] 0.1881 0.9981 18.9117 15.1275 4/8 *+TSQ+TSW 0.1922 0.9994 24.5604 24.0194 *+ASQ 0.1849 0.9984 26.9354 15.8466 Dynamic [ 4 ] 0.1849 0.9986 0.0404 0.3072 6/8 *+TSQ+TSW 0.1962 0.9987 36.0467 40.6366 *+ASQ 0.1910 0.9991 25.6601 17.4476 Dynamic [ 4 ] 0.1903 0.9990 28.2134 21.8238 8/8 *+TSQ+TSW 0.1967 0.9987 47.5200 39.0468 *+ASQ 0.1926 0.9988 53.9969 49.9545 Dynamic [ 4 ] 0.1960 0.9982 53.3998 49.4671 4/16 *+TSQ+TSW 0.1911 0.9996 28.3527 12.5568 *+ASQ 0.1895 0.9988 31.6746 35.4823 Dynamic [ 4 ] 0.1871 0.9972 0.0237 0.0240 6/16 *+TSQ+TSW 0.1960 0.9996 26.2750 17.4801 *+ASQ 0.1959 0.9989 44.6240 38.0148 Dynamic [ 4 ] 0.1854 0.9983 8.3704 10.7042 8/16 *+TSQ+TSW 0.1953 0.9988 46.8446 38.9204 *+ASQ 0.1963 0.9982 53.2460 51.9194 Dynamic [ 4 ] 0.1871 0.9981 24.0312 26.8858 Average *+TSQ+TSW 0.1891 0.9986 24.8537 20.8162 *+ASQ 0.1856 0.9985 26.1451 23.2014 Dynamic [ 4 ] 0.1866 0.9953 15.0964 13.9022 Fig. 4: Robustness comparison between the CW+TW+ASQ (Aggr) and the CW+TW+TSQ+TSW (TSW). Additional examples in the supplemental material. TABLE IV: Granular TSW quantization on the open-sora prompt set Method CLIPSIM CLIP-temp VQA-a VQA-t *+ASQ (=1TR) 0.1926 0.9988 52.9969 49.9545 +TSQ+2TR 0.1960 0.9981 42.2731 43.7837 +TSQ+4TR 0.1957 0.9978 43.3432 46.1740 +TSQ+10TR 0.1946 0.9978 40.5217 42.3603 +TSQ+TSW (=20TR) 0.1967 0.9987 47.5200 39.0468 TABLE V: Granular TSW quantization on UCF-101 Method CLIPSIM CLIP-temp VQA-a VQA-t *+ASQ (=1TR) 0.2048 0.9975 24.6499 31.9683 +TSQ+2TR 0.2039 0.9966 18.0531 23.2528 +TSQ+4TR 0.2054 0.9967 18.3887 26.8416 +TSQ+10TR 0.2063 0.9967 14.2008 22.1882 +TSQ+TSW (=20TR) 0.2084 0.9986 10.2957 17.4171"
+    }
+  ],
+  "term_matches": [
+    {
+      "term": "diffusion transformer",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 9,
+      "snippet": "Abstract Diffusion Transformers for video generation have gained significant research interest since the impressive performance of SORA. Efficient deployment of such generative-AI models on GPUs has been demonstrated with dynamic quantization. However, resource-constrained devices cannot s"
+    },
+    {
+      "term": "diffusion transformer",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 515,
+      "snippet": "source-constrained devices cannot support dynamic quantization, and need static quantization of the models for their efficient deployment on AI processors. In this paper, we propose a novel method for the post-training quantization of OpenSora [ 1 ] , a Video Diffusion Transformer, without relying on dynamic quantization techniques. Our approach employs static quantization, achieving video quality comparable to FP16 and dynamically quantized ViDiT-Q methods, as measured by CLIP and VQA metrics. In particular, we utilize per-step calibr"
+    },
+    {
+      "term": "diffusion transformer",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 1254,
+      "snippet": "urther applying the smooth-quantization technique, we can obtain high-quality video outputs with the statically quantized models. Extensive experimental results demonstrate that static quantization can be a viable alternative to dynamic quantization for video diffusion transformers, offering a more efficient approach without sacrificing performance."
+    },
+    {
+      "term": "video generation",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 36,
+      "snippet": "Abstract Diffusion Transformers for video generation have gained significant research interest since the impressive performance of SORA. Efficient deployment of such generative-AI models on GPUs has been demonstrated with dynamic quantization. However, resource-constrained devices cannot support dynamic quantiz"
+    },
+    {
+      "term": "diffusion transformer",
+      "locator": "I Introduction ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 826,
+      "snippet": "rly attractive for large and computation-intensive models. PTQ has been effective in optimizing large language models (LLMs) by reducing bit-width while keeping the performance of floating-point models [ 2 , 3 ] . Despite such progress, quantization for video diffusion transformers (DiT) [ 1 ] remains challenging due to their complexity. A recent work, Video Difussion Transformer Quantization (ViDiT-Q), suggests using dynamic quantization for these models [ 4 ] . However, this approach requires calculating the quantization parameters o"
+    },
+    {
+      "term": "diffusion transformer",
+      "locator": "II Related Works ¶ S2.p4",
+      "section_index": 2,
+      "char_start": 2313,
+      "snippet": "recision for different time steps and progressive calibration [ 20 , 21 , 22 ] . Another study suggested a method using SQ, mixed precision across layers and focusing on the final time step in calibration for quantizing latent diffusion models [ 23 ] . PTQ of Diffusion Transformer Models: Recent advancements in video generation have increasingly adopted transformer models in denoising, such as Sora by OpenAI [ 24 ] . However, effective methods for quantizing Diffusion Transformer (DiT) models remain limited due to their unique characte"
+    },
+    {
+      "term": "diffusion transformer",
+      "locator": "II Related Works ¶ S2.p4",
+      "section_index": 2,
+      "char_start": 2516,
+      "snippet": "n for quantizing latent diffusion models [ 23 ] . PTQ of Diffusion Transformer Models: Recent advancements in video generation have increasingly adopted transformer models in denoising, such as Sora by OpenAI [ 24 ] . However, effective methods for quantizing Diffusion Transformer (DiT) models remain limited due to their unique characteristics compared to LLMs and CNN-based diffusion models. For example, unlike LLMs, DiT models experience significant variation across tokens, making the direct application of LLM quantization methods cha"
+    },
+    {
+      "term": "video generation",
+      "locator": "II Related Works ¶ S2.p4",
+      "section_index": 2,
+      "char_start": 2366,
+      "snippet": "ibration [ 20 , 21 , 22 ] . Another study suggested a method using SQ, mixed precision across layers and focusing on the final time step in calibration for quantizing latent diffusion models [ 23 ] . PTQ of Diffusion Transformer Models: Recent advancements in video generation have increasingly adopted transformer models in denoising, such as Sora by OpenAI [ 24 ] . However, effective methods for quantizing Diffusion Transformer (DiT) models remain limited due to their unique characteristics compared to LLMs and CNN-based diffusion"
+    },
+    {
+      "term": "scaling",
+      "locator": "II Related Works ¶ S2.p1",
+      "section_index": 2,
+      "char_start": 831,
+      "snippet": "11 ] . Additionally, various methods have been proposed for PTQ of both weights and activations, with the primary challenge being the diverse distribution across activation channels. For instance, Smooth Quantization (SQ) smooths the weights and activation by scaling the channels, and Reorder-based Post-training Quantization (RPTQ) cluster the channels of weights and activations based on the similarity and quantizes per cluster [ 12 , 13 ] . A series of PTQ methods for Vision Transformer (ViT) was also suggested such as u"
+    },
+    {
+      "term": "scaling",
+      "locator": "III Our Method > III-A Aggregated Static Quantization ¶ S3.SS1.p3",
+      "section_index": 4,
+      "char_start": 1570,
+      "snippet": "ts [ 12 ] . In particular, we proposed the Aggregated Smooth Quantization (ASQ) to be applied in the aggregated static quantization method. In ASQ, the maximum absolute values of weights for each channel were extracted ( ) to calculate the smooth quantization scaling term ( ) for each channel . Then, the maximum absolute values of activations for each channel were averaged across the batch ( ). The maximum absolute values of activations for the entire calibration set were then calculated using a running average with a mom"
+    },
+    {
+      "term": "scaling",
+      "locator": "III Our Method > III-A Aggregated Static Quantization ¶ S3.SS1.p3",
+      "section_index": 4,
+      "char_start": 1905,
+      "snippet": "tivations for each channel were averaged across the batch ( ). The maximum absolute values of activations for the entire calibration set were then calculated using a running average with a momentum of 0.95, aggregating information across time steps. The final scaling term for smooth quantization was determined using equation 2 , where is a hyperparameter that needs to be tuned. Therefore, in ASQ, a single scaling term was obtained for each channel, which was used for the entire denoising steps. (2) As a result, the scalin"
+    },
+    {
+      "term": "scaling",
+      "locator": "III Our Method > III-A Aggregated Static Quantization ¶ S3.SS1.p3",
+      "section_index": 4,
+      "char_start": 2054,
+      "snippet": "lculated using a running average with a momentum of 0.95, aggregating information across time steps. The final scaling term for smooth quantization was determined using equation 2 , where is a hyperparameter that needs to be tuned. Therefore, in ASQ, a single scaling term was obtained for each channel, which was used for the entire denoising steps. (2) As a result, the scaling term ( ) has the size of where the is the input channel size (see the middle row of Figure 3 ). When the ASQ was applied, CW weight quantization an"
+    },
+    {
+      "term": "scaling",
+      "locator": "III Our Method > III-A Aggregated Static Quantization ¶ S3.SS1.p5",
+      "section_index": 4,
+      "char_start": 2166,
+      "snippet": "caling term for smooth quantization was determined using equation 2 , where is a hyperparameter that needs to be tuned. Therefore, in ASQ, a single scaling term was obtained for each channel, which was used for the entire denoising steps. (2) As a result, the scaling term ( ) has the size of where the is the input channel size (see the middle row of Figure 3 ). When the ASQ was applied, CW weight quantization and TW activation quantization was applied to the smoothed and , instead of the raw and . Therefore, applying ASQ"
+    },
+    {
+      "term": "scaling",
+      "locator": "III Our Method > III-B Time-step-wise Static Quantization ¶ S3.SS2.p3",
+      "section_index": 5,
+      "char_start": 1053,
+      "snippet": "ic TSW quantization is to use the calibration set to estimate the parameter statistics for each denoising step. When the TSW static quantization is applied, the bin sizes ( ) and zero points ( ) for the TW quantization have dimensions. The smooth quantization scaling term ( ) has the dimension where is the number of denoising time steps, which we called Time-step-wise Smooth Quantization, or TSQ. The CW quantization stays same as it quantizes weight not activations. See the last row of Figure 3 ). During inference, these"
+    },
+    {
+      "term": "temporal consistency",
+      "locator": "IV Experiment > IV-C Method Robustness Across Different Bit-Widths ¶ S4.SS3.p1",
+      "section_index": 9,
+      "char_start": 472,
+      "snippet": "ws that both static quantization methods outperformed dynamic quantization across a broader bit-width range. The averaged score across bit-width in Table III revealed that the *+TSQ+TSW model generated videos with better semantic alignment with the prompt and temporal consistency, while the *+ASQ model produced videos with more aesthetic appeal and less noise and distortion. Furthermore, qualitative analysis showed that *+TSQ+TSW generated recognizable videos in wider ranges of bit-width than the *+ASQ which confirming our analysis in"
+    },
+    {
+      "term": "scaling",
+      "locator": "IV Experiment > IV-D Effect of Time-Step-Wise Quantization ¶ S4.SS4.p1",
+      "section_index": 10,
+      "char_start": 390,
+      "snippet": "ntization parameters separately for each group. For instance, the 2TR method grouped the time steps into two ranges and estimated quantization parameters for each range, while the 4TR method did so for four separate time ranges. Therefore, for example, the SQ scaling term will have or dimensions for 2TR or 4TR methods. As shown in Tables IV and V , implementing time-step-wise quantization improved semantic adherence to the prompt, as measured by CLIP, but compromised video quality metrics (VQA-a and VQA-t) and the model s"
+    }
+  ],
+  "citation_contexts": [
+    {
+      "section": "Abstract",
+      "para": "",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "In this paper, we propose a novel method for the post-training quantization of OpenSora [ 1 ] , a Video Diffusion Transformer, without relying on dynamic quantization techniques."
+    },
+    {
+      "section": "I Introduction",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib2",
+        "bib.bib3"
+      ],
+      "arxiv_ids": [],
+      "sentence": "PTQ has been effective in optimizing large language models (LLMs) by reducing bit-width while keeping the performance of floating-point models [ 2 , 3 ] ."
+    },
+    {
+      "section": "I Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Despite such progress, quantization for video diffusion transformers (DiT) [ 1 ] remains challenging due to their complexity."
+    },
+    {
+      "section": "I Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "A recent work, Video Difussion Transformer Quantization (ViDiT-Q), suggests using dynamic quantization for these models [ 4 ] ."
+    },
+    {
+      "section": "I Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib5"
+      ],
+      "arxiv_ids": [],
+      "sentence": "However, this approach requires calculating the quantization parameters online during inference, which complicates hardware-level optimization, such as those for NPUs and Mobile System on Chip (SoC) [ 5 ] ."
+    },
+    {
+      "section": "I Introduction",
+      "para": "S1.p3",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Our static approaches match the performance of the original FP16 STDiT model (Spatial-Temporal DiT or OpenSora [ 1 ] ) and the dynamic quantization method from ViDiT-Q [ 4 ] in W8A8 quantization, with robust results at various precision levels."
+    },
+    {
+      "section": "I Introduction",
+      "para": "S1.p3",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "Our static approaches match the performance of the original FP16 STDiT model (Spatial-Temporal DiT or OpenSora [ 1 ] ) and the dynamic quantization method from ViDiT-Q [ 4 ] in W8A8 quantization, with robust results at various precision levels."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib6"
+      ],
+      "arxiv_ids": [],
+      "sentence": "PTQ of Transformer Models: Numerous PTQ methods have been developed to meet the demands of transformer-based language models in industry [ 6 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib7"
+      ],
+      "arxiv_ids": [],
+      "sentence": "For example, Activation-aware Weight Quantization (AWQ) quantizes weights based on the saliency of the corresponding activations and scales the weights per channel to minimize quantization errors [ 7 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib8",
+        "bib.bib9"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Other methods also take into account the activation outliers in quantizing weights [ 8 , 9 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib10",
+        "bib.bib11"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Advancements in LLM weight quantization have even reached sub-2-bit quantization, utilizing ternary numbers for weights [ 10 , 11 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib12",
+        "bib.bib13"
+      ],
+      "arxiv_ids": [],
+      "sentence": "For instance, Smooth Quantization (SQ) smooths the weights and activation by scaling the channels, and Reorder-based Post-training Quantization (RPTQ) cluster the channels of weights and activations based on the similarity and quantizes per cluster [ 12 , 13 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p2",
+      "bib_keys": [
+        "bib.bib14",
+        "bib.bib15",
+        "bib.bib16"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A series of PTQ methods for Vision Transformer (ViT) was also suggested such as using mixed precision, attention weight order preserving quantization, and using multiple uniform quantization or log transformations to manage non-Gaussian activation distribution, [ 14 , 15 , 16 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p3",
+      "bib_keys": [
+        "bib.bib17"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A key obstacle is the significant variation in activation distribution across time steps [ 17 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p3",
+      "bib_keys": [
+        "bib.bib17",
+        "bib.bib18",
+        "bib.bib19"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Early work in PTQ for diffusion models mitigated this issue by generating calibration sets from the denoising process, with a focus on sampling across time steps to preserve output quality [ 17 , 18 , 19 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p3",
+      "bib_keys": [
+        "bib.bib20",
+        "bib.bib21",
+        "bib.bib22"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Other approaches involved using a neural network module to determine the time intervals for quantization and predict quantization parameters per interval or having different precision for different time steps and progressive calibration [ 20 , 21 , 22 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p3",
+      "bib_keys": [
+        "bib.bib23"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Another study suggested a method using SQ, mixed precision across layers and focusing on the final time step in calibration for quantizing latent diffusion models [ 23 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p4",
+      "bib_keys": [
+        "bib.bib24"
+      ],
+      "arxiv_ids": [],
+      "sentence": "PTQ of Diffusion Transformer Models: Recent advancements in video generation have increasingly adopted transformer models in denoising, such as Sora by OpenAI [ 24 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p4",
+      "bib_keys": [
+        "bib.bib3",
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "For example, unlike LLMs, DiT models experience significant variation across tokens, making the direct application of LLM quantization methods challenging [ 3 , 4 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "Additionally, the activation distribution in DiT models varies significantly across time steps and between forward paths with or without conditional information from prompts [ 4 ] ."
+    },
+    {
+      "section": "II Related Works",
+      "para": "S2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "The ViDiT-Q framework introduced techniques for quantizing DiT models, utilizing both path-wise dynamic quantization based on prompts and token-wise dynamic quantization for activations [ 4 ] ."
+    },
+    {
+      "section": "III Our Method > III-A Aggregated Static Quantization",
+      "para": "S3.SS1.p1",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "The first component of our method involves Channel-Wise (CW) quantization of the weight matrix to mitigate quantization errors arising from channel-wise variance [ 4 ] ."
+    },
+    {
+      "section": "III Our Method > III-A Aggregated Static Quantization",
+      "para": "S3.SS1.p3",
+      "bib_keys": [
+        "bib.bib12"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Next, as the third component, we explored the variants of smooth quantization method to migrate the quantization difficulty from activations to weights [ 12 ] ."
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p1",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "Unlike previously suggested dynamic quantization method that estimates quantization parameters for each denoising time step during the inference [ 4 ] , our TSW static quantization estimates the parameters during the calibration stage only, and use the estimated parameters without any updates for the inference, facilitating efficient hardware-level optimization."
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "III Our Method > III-B Time-step-wise Static Quantization",
+      "para": "S3.SS2.p4",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W"
+    },
+    {
+      "section": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "We evaluated the performance of our methods on the STDiT v1.0 using various bit-widths and evaluation settings [ 1 ] ."
+    },
+    {
+      "section": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "This calibration set was generated using example prompts to create a calibration dataset for ViDiT-Q, consisting of 10 prompts [ 4 ] ."
+    },
+    {
+      "section": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib25",
+        "bib.bib26"
+      ],
+      "arxiv_ids": [],
+      "sentence": "For evaluation, we utilized CLIPSIM and CLIP-temp, both scaled from 0 to 1, to measure text-video alignment and temporal semantic consistency of the generated videos [ 25 , 26 ] ."
+    },
+    {
+      "section": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib27"
+      ],
+      "arxiv_ids": [],
+      "sentence": "To assess video quality, we used VQA-aesthetic and VQA-technical scores, scaled from 0 to 100, to evaluate high-level aesthetics and low-level technical soundness [ 27 ] ."
+    },
+    {
+      "section": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib28"
+      ],
+      "arxiv_ids": [],
+      "sentence": "For the evaluations, implementations in the EvalCrafter were used [ 28 ] ."
+    },
+    {
+      "section": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib29"
+      ],
+      "arxiv_ids": [],
+      "sentence": "The experiments were conducted on UCF-101 [ 29 ] and OpenSora [ 1 ] datasets, on a single A100 GPU using 20 denoising steps and an IDDPM scheduler with a CFG scale of 7.0."
+    },
+    {
+      "section": "IV Experiment > IV-A Implementation Details and Experimental Settings",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib1"
+      ],
+      "arxiv_ids": [],
+      "sentence": "The experiments were conducted on UCF-101 [ 29 ] and OpenSora [ 1 ] datasets, on a single A100 GPU using 20 denoising steps and an IDDPM scheduler with a CFG scale of 7.0."
+    },
+    {
+      "section": "IV Experiment > IV-C Method Robustness Across Different Bit-Widths",
+      "para": "S4.SS3.p1",
+      "bib_keys": [
+        "bib.bib4"
+      ],
+      "arxiv_ids": [
+        "2406.02540"
+      ],
+      "sentence": "We assessed the robustness of *+TSQ+TSW and *+ASQ across various bit-widths using the open-sora prompt set and compared them to the dynamic quantization used in ViDiT-Q for W8A8 quantization [ 4 ] ."
+    },
+    {
+      "section": "V Conclusion",
+      "para": "S5.p1",
+      "bib_keys": [
+        "bib.bib5"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Modern Mobile SoC hardware lacks support for any form of dynamic quantization due to its inability to calculate activation or weight statistics at runtime [ 5 ] ."
+    }
+  ],
+  "reference_hints": [
+    {
+      "arxiv_id": "2406.02540",
+      "snippet": "[4] Tianchen Zhao, Tongcheng Fang, Enshu Liu, Wan Rui, Widyadewi Soedarmadji, Shiyao Li, Zinan Lin, Guohao Dai, Shengen Yan, Huazhong Yang, et al., “Vidit-q: Efficient and accurate quantization of diffusion transformers for image and video generation,” arXiv preprint arXiv:2406.02540 , 2024."
+    }
+  ],
+  "text": "## Abstract\nAbstract Diffusion Transformers for video generation have gained significant research interest since the impressive performance of SORA. Efficient deployment of such generative-AI models on GPUs has been demonstrated with dynamic quantization. However, resource-constrained devices cannot support dynamic quantization, and need static quantization of the models for their efficient deployment on AI processors. In this paper, we propose a novel method for the post-training quantization of OpenSora [ 1 ] , a Video Diffusion Transformer, without relying on dynamic quantization techniques. Our approach employs static quantization, achieving video quality comparable to FP16 and dynamically quantized ViDiT-Q methods, as measured by CLIP and VQA metrics. In particular, we utilize per-step calibration data to adequately provide a post-training statically quantized model for each time step, incorporating channel-wise quantization for weights and tensor-wise quantization for activations. By further applying the smooth-quantization technique, we can obtain high-quality video outputs with the statically quantized models. Extensive experimental results demonstrate that static quantization can be a viable alternative to dynamic quantization for video diffusion transformers, offering a more efficient approach without sacrificing performance.\n\n## I Introduction\nThe use of generative AI for video creation, especially through diffusion techniques, has gained traction for various applications, ranging from content creation to complex simulation environments. As diffusion models become more common, enhancing their efficiency and reducing size for use in limited-resource settings becomes essential. One commonly employed approach for neural network compression is post-training quantization (PTQ). This method allows for reducing model size and improving inference speed without requiring model retraining, making it particularly attractive for large and computation-intensive models. PTQ has been effective in optimizing large language models (LLMs) by reducing bit-width while keeping the performance of floating-point models [ 2 , 3 ] . Despite such progress, quantization for video diffusion transformers (DiT) [ 1 ] remains challenging due to their complexity. A recent work, Video Difussion Transformer Quantization (ViDiT-Q), suggests using dynamic quantization for these models [ 4 ] . However, this approach requires calculating the quantization parameters online during inference, which complicates hardware-level optimization, such as those for NPUs and Mobile System on Chip (SoC) [ 5 ] . To address this challenge, we propose static quantization for DiT models, calculating quantization parameters only during a calibration phase for use in inference. Our method includes aggregated static quantization that aggregates activation from all denoising steps to estimate a single set of quantization parameters that is used across denoising steps, and Time-Step-Wise (TSW) static quantization that estimates quantization parameters for each time step. Both approaches involve Channel-Wise (CW) quantization for weights, Tensor-Wise (TW) for activations, Aggregated or Time-step-wise Smooth Quantization (ASQ or TSQ). Our static approaches match the performance of the original FP16 STDiT model (Spatial-Temporal DiT or OpenSora [ 1 ] ) and the dynamic quantization method from ViDiT-Q [ 4 ] in W8A8 quantization, with robust results at various precision levels. For example, as shown in Figure 1 , our aggregated static quantization solution using CW, TW and ASQ (*+ASQ) showed comparable visual quality with dynamic quantization and the FP16 model. Our other proposal, TSW static quantization method using CW, TW and TSQ (*+TSQ+TSW) showed best alignment between prompt and generated videos.\n\n## II Related Works\nPTQ of Transformer Models: Numerous PTQ methods have been developed to meet the demands of transformer-based language models in industry [ 6 ] . For example, Activation-aware Weight Quantization (AWQ) quantizes weights based on the saliency of the corresponding activations and scales the weights per channel to minimize quantization errors [ 7 ] . Other methods also take into account the activation outliers in quantizing weights [ 8 , 9 ] . Advancements in LLM weight quantization have even reached sub-2-bit quantization, utilizing ternary numbers for weights [ 10 , 11 ] . Additionally, various methods have been proposed for PTQ of both weights and activations, with the primary challenge being the diverse distribution across activation channels. For instance, Smooth Quantization (SQ) smooths the weights and activation by scaling the channels, and Reorder-based Post-training Quantization (RPTQ) cluster the channels of weights and activations based on the similarity and quantizes per cluster [ 12 , 13 ] . A series of PTQ methods for Vision Transformer (ViT) was also suggested such as using mixed precision, attention weight order preserving quantization, and using multiple uniform quantization or log transformations to manage non-Gaussian activation distribution, [ 14 , 15 , 16 ] . PTQ of Diffusion Models: However, the recurrent nature of diffusion models, which rely on the output of previous steps to sample the input for subsequent denoising steps, have limited the direct application of PTQ methods from other domains to diffusion model quantization. A key obstacle is the significant variation in activation distribution across time steps [ 17 ] . Early work in PTQ for diffusion models mitigated this issue by generating calibration sets from the denoising process, with a focus on sampling across time steps to preserve output quality [ 17 , 18 , 19 ] . Other approaches involved using a neural network module to determine the time intervals for quantization and predict quantization parameters per interval or having different precision for different time steps and progressive calibration [ 20 , 21 , 22 ] . Another study suggested a method using SQ, mixed precision across layers and focusing on the final time step in calibration for quantizing latent diffusion models [ 23 ] . PTQ of Diffusion Transformer Models: Recent advancements in video generation have increasingly adopted transformer models in denoising, such as Sora by OpenAI [ 24 ] . However, effective methods for quantizing Diffusion Transformer (DiT) models remain limited due to their unique characteristics compared to LLMs and CNN-based diffusion models. For example, unlike LLMs, DiT models experience significant variation across tokens, making the direct application of LLM quantization methods challenging [ 3 , 4 ] . Additionally, the activation distribution in DiT models varies significantly across time steps and between forward paths with or without conditional information from prompts [ 4 ] . The ViDiT-Q framework introduced techniques for quantizing DiT models, utilizing both path-wise dynamic quantization based on prompts and token-wise dynamic quantization for activations [ 4 ] . Despite its advantages, the framework requires real-time calculation of quantization parameters during inference, which complicates hardware optimizations, particularly for NPUs. Our methods avoid this problem by using static quantization while achieving the performance of the original model. Fig. 1: Example videos from various quantization methods Fig. 2: Example frames from generated videos for each quantization method and the corresponding prompt.\n\n## III Our Method\nFig. 3: Overview of the proposed method Upper left figure shows the architecture of STDiT. The upper right figure shows the change of activation distribution across time steps from STDiT. Lower figures summarized the components of our method: Channel-Wise (CW) quantization for weights, Tensor-Wise (TW) quantization for activations, Aggregated or Time-step-wise Smooth Quantization (ASQ, TSQ), and Time-Step-Wise (TSW) static quantization for each diffusion step. The linear layers in the attention and feed forward layers in the transformer blocks (orange-colored) of STDiT were quantized. is the number of transformer blocks (28 in STDiT v1.0). is the activation and is the weight matrix where is the number of tokens, and is the input and output channel sizes and is the number of denoising time steps. The proposed methods, aggregated static quantization and time-step-wise static quantization consist of three different components to quantize the transformer denoiser of DiT models: Channel-Wise (CW) weight quantization, Tensor-Wise (TW) activation quantization and Aggregated of Time-step-wise Smooth Quantization (ASQ or TSQ). Each component’s will be explained as Aggregated Static Quantization version first and the Time-step-wise Static Quantization version will be discussed in the next subsection. Using these methods, linear layers of the spatial self-attention, temporal self-attention, prompt cross-attention, and pointwise feed forward layers in the transformer blocks were quantized (See the upper left plot of Figure 3 ).\n\n## III-A Aggregated Static Quantization\nThe first component of our method involves Channel-Wise (CW) quantization of the weight matrix to mitigate quantization errors arising from channel-wise variance [ 4 ] . The minimum and maximum values for each channel in weights were extracted and stored. Then the minimum and maximum were used to calculate the bin sizes ( ) and zero points ( ) channel-wise using the following equation 1 . (1) Thus the bin sizes and zero points for CW quantization of a weight matrix have dimensions where is the output channel size (see the middle row of Figure 3 ). The second component is Tensor-Wise (TW) quantization of the activation matrix. While dynamic token-wise quantization is widely used for transformer models, it is not feasible to estimate statistics to cover the variance of each token activation during inference in a static manner due to the heterogeneity across inference samples. Instead, the simplest method, which involves estimating the minimum and maximum values of activations tensor-wise, was utilized. Therefore, the bin sizes ( ) and zero points ( ) for TW quantization of a activation matrix are scalar values (see the middle row of Figure 3 ). Next, as the third component, we explored the variants of smooth quantization method to migrate the quantization difficulty from activations to weights [ 12 ] . In particular, we proposed the Aggregated Smooth Quantization (ASQ) to be applied in the aggregated static quantization method. In ASQ, the maximum absolute values of weights for each channel were extracted ( ) to calculate the smooth quantization scaling term ( ) for each channel . Then, the maximum absolute values of activations for each channel were averaged across the batch ( ). The maximum absolute values of activations for the entire calibration set were then calculated using a running average with a momentum of 0.95, aggregating information across time steps. The final scaling term for smooth quantization was determined using equation 2 , where is a hyperparameter that needs to be tuned. Therefore, in ASQ, a single scaling term was obtained for each channel, which was used for the entire denoising steps. (2) As a result, the scaling term ( ) has the size of where the is the input channel size (see the middle row of Figure 3 ). When the ASQ was applied, CW weight quantization and TW activation quantization was applied to the smoothed and , instead of the raw and . Therefore, applying ASQ and doing TW activation quantization can be viewed as a method that handles channel-wise variance of the activation without doing CW quantization on the activation matrix.\n\n## III-B Time-step-wise Static Quantization\nOne of our main contributions is a method that estimates quantization parameters for individual denoising time steps during the calibration stage only, enabling Time-Step-Wise (TSW) static quantization. Unlike previously suggested dynamic quantization method that estimates quantization parameters for each denoising time step during the inference [ 4 ] , our TSW static quantization estimates the parameters during the calibration stage only, and use the estimated parameters without any updates for the inference, facilitating efficient hardware-level optimization. Thus TSW static quantization can handle the time-step-wise variance in activation distributions (See the upper right plot in Figure 3 ) without additional calculation during the inference. The essence of implementing the static TSW quantization is to use the calibration set to estimate the parameter statistics for each denoising step. When the TSW static quantization is applied, the bin sizes ( ) and zero points ( ) for the TW quantization have dimensions. The smooth quantization scaling term ( ) has the dimension where is the number of denoising time steps, which we called Time-step-wise Smooth Quantization, or TSQ. The CW quantization stays same as it quantizes weight not activations. See the last row of Figure 3 ). During inference, these fixed, pre-estimated statistics are used without further calculations or updates. TSW static quantization can also be applied in a coarser manner, where quantization parameters are estimated not for each time step but across time ranges that group multiple denoising steps. For instance, estimating parameters over the entire denoising process corresponds to a single time-range static quantization. Dividing the process into two time ranges (e.g., early and late stages) and estimating parameters for each range leads to a two-time-range static quantization. The effects of different levels of granularity in the estimation of static quantization parameters are discussed further in Section IV-C . TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.2058 0.9970 26.3483 34.5356 Dynamic [ 4 ] 8/8 0.2049 0.9968 25.6435 34.6162 CW+TW (*) 8/8 0.2033 0.9955 18.1882 22.8154 +TSW 8/8 0.2025 0.9958 17.9768 24.7684 +ASQ 8/8 0.2048 0.9975 24.6499 31.9683 +TSQ+TSW 8/8 0.2084 0.9986 10.2957 17.4171 TABLE III: Robustness test of the proposed methods Bit (W/A) Method CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] - 0.1950 0.9982 54.2730 49.9179 4/4 *+TSQ+TSW 0.1569 0.9967 0.0257 0.0008 *+ASQ 0.1538 0.9974 0.0171 0.0009 Dynamic [ 4 ] 0.1786 0.9729 2.7089 0.4849 4/6 *+TSQ+TSW 0.1909 0.9981 4.8082 5.4387 *+ASQ 0.1838 0.9983 0.0557 0.0686 Dynamic [ 4 ] 0.1817 0.9976 0.1681 0.2958 6/6 *+TSQ+TSW 0.1864 0.9981 9.2497 9.2459 *+ASQ 0.1829 0.9986 0.0961 0.0781 Dynamic [ 4 ] 0.1881 0.9981 18.9117 15.1275 4/8 *+TSQ+TSW 0.1922 0.9994 24.5604 24.0194 *+ASQ 0.1849 0.9984 26.9354 15.8466 Dynamic [ 4 ] 0.1849 0.9986 0.0404 0.3072 6/8 *+TSQ+TSW 0.1962 0.9987 36.0467 40.6366 *+ASQ 0.1910 0.9991 25.6601 17.4476 Dynamic [ 4 ] 0.1903 0.9990 28.2134 21.8238 8/8 *+TSQ+TSW 0.1967 0.9987 47.5200 39.0468 *+ASQ 0.1926 0.9988 53.9969 49.9545 Dynamic [ 4 ] 0.1960 0.9982 53.3998 49.4671 4/16 *+TSQ+TSW 0.1911 0.9996 28.3527 12.5568 *+ASQ 0.1895 0.9988 31.6746 35.4823 Dynamic [ 4 ] 0.1871 0.9972 0.0237 0.0240 6/16 *+TSQ+TSW 0.1960 0.9996 26.2750 17.4801 *+ASQ 0.1959 0.9989 44.6240 38.0148 Dynamic [ 4 ] 0.1854 0.9983 8.3704 10.7042 8/16 *+TSQ+TSW 0.1953 0.9988 46.8446 38.9204 *+ASQ 0.1963 0.9982 53.2460 51.9194 Dynamic [ 4 ] 0.1871 0.9981 24.0312 26.8858 Average *+TSQ+TSW 0.1891 0.9986 24.8537 20.8162 *+ASQ 0.1856 0.9985 26.1451 23.2014 Dynamic [ 4 ] 0.1866 0.9953 15.0964 13.9022 Fig. 4: Robustness comparison between the CW+TW+ASQ (Aggr) and the CW+TW+TSQ+TSW (TSW). Additional examples in the supplemental material. TABLE IV: Granular TSW quantization on the open-sora prompt set Method CLIPSIM CLIP-temp VQA-a VQA-t *+ASQ (=1TR) 0.1926 0.9988 52.9969 49.9545 +TSQ+2TR 0.1960 0.9981 42.2731 43.7837 +TSQ+4TR 0.1957 0.9978 43.3432 46.1740 +TSQ+10TR 0.1946 0.9978 40.5217 42.3603 +TSQ+TSW (=20TR) 0.1967 0.9987 47.5200 39.0468 TABLE V: Granular TSW quantization on UCF-101 Method CLIPSIM CLIP-temp VQA-a VQA-t *+ASQ (=1TR) 0.2048 0.9975 24.6499 31.9683 +TSQ+2TR 0.2039 0.9966 18.0531 23.2528 +TSQ+4TR 0.2054 0.9967 18.3887 26.8416 +TSQ+10TR 0.2063 0.9967 14.2008 22.1882 +TSQ+TSW (=20TR) 0.2084 0.9986 10.2957 17.4171\n\n## IV-A Implementation Details and Experimental Settings\nWe evaluated the performance of our methods on the STDiT v1.0 using various bit-widths and evaluation settings [ 1 ] . For quantization, we adopted the min-max quantization scheme, where the quantization parameters for actions were estimated using a calibration set. This calibration set was generated using example prompts to create a calibration dataset for ViDiT-Q, consisting of 10 prompts [ 4 ] . For evaluation, we utilized CLIPSIM and CLIP-temp, both scaled from 0 to 1, to measure text-video alignment and temporal semantic consistency of the generated videos [ 25 , 26 ] . The CLIPSIM is the average CLIP cosine similarity between the prompt CLIP embedding and each frame’s CLIP embedding. The CLIP-temp is calculated by averaging across CLIP cosine similarities between CLIP embeddings of consecutive two frames. To assess video quality, we used VQA-aesthetic and VQA-technical scores, scaled from 0 to 100, to evaluate high-level aesthetics and low-level technical soundness [ 27 ] . The VQA scores are automatically evaluated by neural networks trained on large video datasets, which were annotated by humans for aesthetic appeal and technical quality. For the evaluations, implementations in the EvalCrafter were used [ 28 ] . The experiments were conducted on UCF-101 [ 29 ] and OpenSora [ 1 ] datasets, on a single A100 GPU using 20 denoising steps and an IDDPM scheduler with a CFG scale of 7.0. The parameter for SmoothQuant was grid-searched from 0.1 to 1.0 in 0.1 increments, chosen based on the CLIPSIM score. For dynamic quantization, (from ViDiT-Q) was used; for CW+TW+ASQ, ; and for CW+TW+TSQ+TSW, .\n\n## IV-B Main Results and Ablation Studies\nFirst, we compared our STDiT quantization approaches (*+ASQ and *+TSQ+TSW) with previous methods (Tables I and II ). Our methods showed superior performance across various metrics. Specifically, *+TSQ+TSW excelled in producing semantically aligned videos. For example, frames from the generated videos in Figure 2 show that our *+TSQ+TSW method most accurately captured the vibrant characteristics of the city of Burano (see also Figure 1 ). The aggregated method, *+ASQ achieved video quality comparable to ViDiT-Q’s dynamic quantization according to VQA metrics. Intuitively, it might be thought that aggregated static quantization would perform worse than TSW static quantization. However, we observed on-par or even superior performance from the *+ASQ models for a subset of metrics. This is attributed to the fact that when ASQ (also TSQ) is applied, within-a-channel activity variations are smoothed out, allowing the maximum absolute activation to be normalized by , which ensures that the maximum absolute value of the smoothed activation is less than 1, bringing the range of activations within regardless of the denoising steps, and making TSW less necessary. In relation to this analysis, the ablation study further confirmed the importance of applying ASQ and TSQ for the best static quantization performance (Tables I and II ). However, while not using TSQ but using ASQ does not lead to significant failures—due to the activation distribution remaining within the range of the calibrated parameters—it can result in less precise quantization. This imprecision arises because the activation range for some time steps may only cover subset of . Consequently, we can imagine *+ASQ is more sensitive to changes in bit-widths than *+TSQ+TSW, which will be discussed in the next section IV-C .\n\n## IV-C Method Robustness Across Different Bit-Widths\nWe assessed the robustness of *+TSQ+TSW and *+ASQ across various bit-widths using the open-sora prompt set and compared them to the dynamic quantization used in ViDiT-Q for W8A8 quantization [ 4 ] . Table III shows that both static quantization methods outperformed dynamic quantization across a broader bit-width range. The averaged score across bit-width in Table III revealed that the *+TSQ+TSW model generated videos with better semantic alignment with the prompt and temporal consistency, while the *+ASQ model produced videos with more aesthetic appeal and less noise and distortion. Furthermore, qualitative analysis showed that *+TSQ+TSW generated recognizable videos in wider ranges of bit-width than the *+ASQ which confirming our analysis in the previous section (see Figure 4 ).\n\n## IV-D Effect of Time-Step-Wise Quantization\nWe further explored the impact of time-step-wise quantization by grouping time steps into several time ranges (TR), estimating quantization parameters separately for each group. For instance, the 2TR method grouped the time steps into two ranges and estimated quantization parameters for each range, while the 4TR method did so for four separate time ranges. Therefore, for example, the SQ scaling term will have or dimensions for 2TR or 4TR methods. As shown in Tables IV and V , implementing time-step-wise quantization improved semantic adherence to the prompt, as measured by CLIP, but compromised video quality metrics (VQA-a and VQA-t) and the model size. This trade-off is evident in the qualitative analysis of the generated videos (see the last two columns of Figure 1 and Figure 4 ).\n\n## IV-E Cross-Dataset Evaluation\nAlthough calibration was performed using the OpenSora prompt set from the ViDiT-Q paper, we validated our model’s generalization ability by evaluating it on UCF-101. The results in Tables II and V demonstrate that our static quantization approach maintains competitive performance, validating its cross-dataset generalization capability.\n\n## IV-F Temporal Efficiency\nWe evaluated the execution time of different quantization methods by measuring the time taken to generate 48 videos using the OpenSora prompt set on an NVIDIA A100 GPU. As shown in Table VI , both CW+TW+ASQ and CW+TW+TSQ+TSW showed significantly reduced inference time compared to the dynamic quantization approach. TABLE VI: Execution time for generating 48 videos using OpenSora prompts on an A100 GPU Method Execution time (s) Dynamic 2259 CW+TW+ASQ 1942 CW+TW+TSQ+TSW 1919\n\n## V Conclusion\nModern Mobile SoC hardware lacks support for any form of dynamic quantization due to its inability to calculate activation or weight statistics at runtime [ 5 ] . Our proposed static quantization schemes provide a viable solution for deployment on these devices, as they eliminate the need for online statistic computation, enabling simpler hardware design with lower power and area requirements. This paper introduces two static quantization methods—aggregated and time-step-wise—that match the performance of previously proposed dynamic quantization for DiT models. By incorporating channel-wise weight quantization, tensor-wise activation quantization and smooth quantization, either aggregated or time-step-wise, our approach successfully maintains the performance of the original STDiT (Open-Sora) model. The proposed methods could broaden the use of diffusion-based generative models in mobile AI devices, though limitations at narrow bit-widths suggest room for future enhancement. Additionally, assigning different quantized models for each time step means intelligent processing to swap models across time steps is needed to hide the latency in loading new model parameters. Balancing between fine-grained time step quantization and grouping time steps into ranges, while considering hardware constraints, will be crucial for optimizing the method’s practical application.",
+  "quality": {
+    "grade": "high",
+    "text_chars": 23616,
+    "structure": "latexml"
+  },
+  "extraction_method": "html-latexml",
+  "source_format": "html",
+  "evidence_eligible": true,
+  "needs_visual_validation": false,
+  "selected_passages": [
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 5.224,
+      "hits": 4,
+      "matched_terms": [
+        "diffusion transformer",
+        "video generation"
+      ],
+      "text": "Abstract Diffusion Transformers for video generation have gained significant research interest since the impressive performance of SORA. Efficient deployment of such generative-AI models on GPUs has been demonstrated with dynamic quantization. However, resource-constrained devices cannot support dynamic quantization, and need static quantization of the models for their efficient deployment on AI processors. In this paper, we propose a novel method for the post-training quantization of OpenSora [ 1 ] , a Video Diffusion Transformer, without relying on dynamic quantization techniques. Our approach employs static quantization, achieving video quality comparable to FP16 and dynamically quantized ViDiT-Q methods, as measured by CLIP and VQA metrics. In particular, we utilize per-step calibration data to adequately provide a post-training statically quantized model for each time step, incorporating channel-wise quantization for weights and tensor-wise quantization for activations. By further applying the smooth-quantization technique, we can obtain high-quality video outputs with the statically quantized models. Extensive experimental results demonstrate that static quantization can be a viable alternative to dynamic quantization for video diffusion transformers, offering a more efficient approach without sacrificing performance."
+    },
+    {
+      "section_index": 2,
+      "path": "II Related Works",
+      "score": 4.638,
+      "hits": 4,
+      "matched_terms": [
+        "diffusion transformer",
+        "scaling",
+        "video generation"
+      ],
+      "text": "PTQ of Transformer Models: Numerous PTQ methods have been developed to meet the demands of transformer-based language models in industry [ 6 ] . For example, Activation-aware Weight Quantization (AWQ) quantizes weights based on the saliency of the corresponding activations and scales the weights per channel to minimize quantization errors [ 7 ] . Other methods also take into account the activation outliers in quantizing weights [ 8 , 9 ] . Advancements in LLM weight quantization have even reached sub-2-bit quantization, utilizing ternary numbers for weights [ 10 , 11 ] . Additionally, various methods have been proposed for PTQ of both weights and activations, with the primary challenge being the diverse distribution across activation channels. For instance, Smooth Quantization (SQ) smooths the weights and activation by scaling the channels, and Reorder-based Post-training Quantization (RPTQ) cluster the channels of weights and activations based on the similarity and quantizes per cluster [ 12 , 13 ] . A series of PTQ methods for Vision Transformer (ViT) was also suggested such as using mixed precision, attention weight order preserving quantization, and using multiple uniform quantization or log transformations to manage non-Gaussian activation distribution, [ 14 , 15 , 16 ] . PTQ of Diffusion Models: However, the recurrent nature of diffusion models, which rely on the output of previous steps to sample the input for subsequent denoising steps, have limited the direct application of PTQ methods from other domains to diffusion model quantization. A key obstacle is the significant variation in activation distribution across time steps [ 17 ] . Early work in PTQ for diffusion models mitigated this issue by generating calibration sets from the denoising process, with a focus on sampling across time steps to preserve output quality [ 17 , 18 , 19 ] . Other approaches involved using a neural network module to determine the time intervals for quantization and predict quantization parameters per interval or having different precision for different time steps and progressive calibration [ 20 , 21 , 22 ] . Another study suggested a method using SQ, mixed precision across layers and focusing on the final time step in calibration for quantizing latent diffusion models [ 23 ] . PTQ of Diffusion Transformer Models: Recent advancements in video generation have increasingly adopted transformer models in denoising, such as Sora by OpenAI [ 24 ] . However, effective methods for quantizing Diffusion Transformer (DiT) models remain limited due to their unique characteristics compared to LLMs and CNN-based diffusion models. For example, unlike LLMs, DiT models experience significant variation across tokens, making the direct application of LLM quantization methods challenging [ 3 , 4 ] . Additionally, the activation distribution in DiT models varies significantly across time steps and between forward paths with or without conditional information from prompts [ 4 ] . The ViDiT-Q framework introduced techniques for quantizing DiT models, utilizing both path-wise dynamic quantization based on prompts and token-wise dynamic quantization for activations [ 4 ] . Despite its advantages, the framework requires real-time calculation of quantization parameters during inference, which complicates hardware optimizations, particularly for NPUs. Our methods avoid this problem by using static quantization while achieving the performance of the original model. Fig. 1: Example videos from various quantization methods Fig. 2: Example frames from generated videos for each quantization method and the corresponding prompt."
+    },
+    {
+      "section_index": 4,
+      "path": "III Our Method > III-A Aggregated Static Quantization",
+      "score": 3.161,
+      "hits": 4,
+      "matched_terms": [
+        "scaling"
+      ],
+      "text": "The first component of our method involves Channel-Wise (CW) quantization of the weight matrix to mitigate quantization errors arising from channel-wise variance [ 4 ] . The minimum and maximum values for each channel in weights were extracted and stored. Then the minimum and maximum were used to calculate the bin sizes ( ) and zero points ( ) channel-wise using the following equation 1 . (1) Thus the bin sizes and zero points for CW quantization of a weight matrix have dimensions where is the output channel size (see the middle row of Figure 3 ). The second component is Tensor-Wise (TW) quantization of the activation matrix. While dynamic token-wise quantization is widely used for transformer models, it is not feasible to estimate statistics to cover the variance of each token activation during inference in a static manner due to the heterogeneity across inference samples. Instead, the simplest method, which involves estimating the minimum and maximum values of activations tensor-wise, was utilized. Therefore, the bin sizes ( ) and zero points ( ) for TW quantization of a activation matrix are scalar values (see the middle row of Figure 3 ). Next, as the third component, we explored the variants of smooth quantization method to migrate the quantization difficulty from activations to weights [ 12 ] . In particular, we proposed the Aggregated Smooth Quantization (ASQ) to be applied in the aggregated static quantization method. In ASQ, the maximum absolute values of weights for each channel were extracted ( ) to calculate the smooth quantization scaling term ( ) for each channel . Then, the maximum absolute values of activations for each channel were averaged across the batch ( ). The maximum absolute values of activations for the entire calibration set were then calculated using a running average with a momentum of 0.95, aggregating information across time steps. The final scaling term for smooth quantization was determined using equation 2 , where is a hyperparameter that needs to be tuned. Therefore, in ASQ, a single scaling term was obtained for each channel, which was used for the entire denoising steps. (2) As a result, the scaling term ( ) has the size of where the is the input channel size (see the middle row of Figure 3 ). When the ASQ was applied, CW weight quantization and TW activation quantization was applied to the smoothed and , instead of the raw and . Therefore, applying ASQ and doing TW activation quantization can be viewed as a method that handles channel-wise variance of the activation without doing CW quantization on the activation matrix."
+    },
+    {
+      "section_index": 9,
+      "path": "IV Experiment > IV-C Method Robustness Across Different Bit-Widths",
+      "score": 2.242,
+      "hits": 1,
+      "matched_terms": [
+        "temporal consistency"
+      ],
+      "text": "We assessed the robustness of *+TSQ+TSW and *+ASQ across various bit-widths using the open-sora prompt set and compared them to the dynamic quantization used in ViDiT-Q for W8A8 quantization [ 4 ] . Table III shows that both static quantization methods outperformed dynamic quantization across a broader bit-width range. The averaged score across bit-width in Table III revealed that the *+TSQ+TSW model generated videos with better semantic alignment with the prompt and temporal consistency, while the *+ASQ model produced videos with more aesthetic appeal and less noise and distortion. Furthermore, qualitative analysis showed that *+TSQ+TSW generated recognizable videos in wider ranges of bit-width than the *+ASQ which confirming our analysis in the previous section (see Figure 4 )."
+    },
+    {
+      "section_index": 10,
+      "path": "IV Experiment > IV-D Effect of Time-Step-Wise Quantization",
+      "score": 2.24,
+      "hits": 1,
+      "matched_terms": [
+        "scaling"
+      ],
+      "text": "We further explored the impact of time-step-wise quantization by grouping time steps into several time ranges (TR), estimating quantization parameters separately for each group. For instance, the 2TR method grouped the time steps into two ranges and estimated quantization parameters for each range, while the 4TR method did so for four separate time ranges. Therefore, for example, the SQ scaling term will have or dimensions for 2TR or 4TR methods. As shown in Tables IV and V , implementing time-step-wise quantization improved semantic adherence to the prompt, as measured by CLIP, but compromised video quality metrics (VQA-a and VQA-t) and the model size. This trade-off is evident in the qualitative analysis of the generated videos (see the last two columns of Figure 1 and Figure 4 )."
+    },
+    {
+      "section_index": 1,
+      "path": "I Introduction",
+      "score": 1.617,
+      "hits": 1,
+      "matched_terms": [
+        "diffusion transformer"
+      ],
+      "text": "The use of generative AI for video creation, especially through diffusion techniques, has gained traction for various applications, ranging from content creation to complex simulation environments. As diffusion models become more common, enhancing their efficiency and reducing size for use in limited-resource settings becomes essential. One commonly employed approach for neural network compression is post-training quantization (PTQ). This method allows for reducing model size and improving inference speed without requiring model retraining, making it particularly attractive for large and computation-intensive models. PTQ has been effective in optimizing large language models (LLMs) by reducing bit-width while keeping the performance of floating-point models [ 2 , 3 ] . Despite such progress, quantization for video diffusion transformers (DiT) [ 1 ] remains challenging due to their complexity. A recent work, Video Difussion Transformer Quantization (ViDiT-Q), suggests using dynamic quantization for these models [ 4 ] . However, this approach requires calculating the quantization parameters online during inference, which complicates hardware-level optimization, such as those for NPUs and Mobile System on Chip (SoC) [ 5 ] . To address this challenge, we propose static quantization for DiT models, calculating quantization parameters only during a calibration phase for use in inference. Our method includes aggregated static quantization that aggregates activation from all denoising steps to estimate a single set of quantization parameters that is used across denoising steps, and Time-Step-Wise (TSW) static quantization that estimates quantization parameters for each time step. Both approaches involve Channel-Wise (CW) quantization for weights, Tensor-Wise (TW) for activations, Aggregated or Time-step-wise Smooth Quantization (ASQ or TSQ). Our static approaches match the performance of the original FP16 STDiT model (Spatial-Temporal DiT or OpenSora [ 1 ] ) and the dynamic quantization method from ViDiT-Q [ 4 ] in W8A8 quantization, with robust results at various precision levels. For example, as shown in Figure 1 , our aggregated static quantization solution using CW, TW and ASQ (*+ASQ) showed comparable visual quality with dynamic quantization and the FP16 model. Our other proposal, TSW static quantization method using CW, TW and TSQ (*+TSQ+TSW) showed best alignment between prompt and generated videos."
+    },
+    {
+      "section_index": 5,
+      "path": "III Our Method > III-B Time-step-wise Static Quantization",
+      "score": 1.242,
+      "hits": 1,
+      "matched_terms": [
+        "scaling"
+      ],
+      "text": "One of our main contributions is a method that estimates quantization parameters for individual denoising time steps during the calibration stage only, enabling Time-Step-Wise (TSW) static quantization. Unlike previously suggested dynamic quantization method that estimates quantization parameters for each denoising time step during the inference [ 4 ] , our TSW static quantization estimates the parameters during the calibration stage only, and use the estimated parameters without any updates for the inference, facilitating efficient hardware-level optimization. Thus TSW static quantization can handle the time-step-wise variance in activation distributions (See the upper right plot in Figure 3 ) without additional calculation during the inference. The essence of implementing the static TSW quantization is to use the calibration set to estimate the parameter statistics for each denoising step. When the TSW static quantization is applied, the bin sizes ( ) and zero points ( ) for the TW quantization have dimensions. The smooth quantization scaling term ( ) has the dimension where is the number of denoising time steps, which we called Time-step-wise Smooth Quantization, or TSQ. The CW quantization stays same as it quantizes weight not activations. See the last row of Figure 3 ). During inference, these fixed, pre-estimated statistics are used without further calculations or updates. TSW static quantization can also be applied in a coarser manner, where quantization parameters are estimated not for each time step but across time ranges that group multiple denoising steps. For instance, estimating parameters over the entire denoising process corresponds to a single time-range static quantization. Dividing the process into two time ranges (e.g., early and late stages) and estimating parameters for each range leads to a two-time-range static quantization. The effects of different levels of granularity in the estimation of static quantization parameters are discussed further in Section IV-C . TABLE I: Quantization methods on the open-sora prompt set Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.1950 0.9982 54.2730 49.9179 Dynamic [ 4 ] 8/8 0.1960 0.9982 53.3998 49.4671 CW+TW (*) 8/8 0.1931 0.9966 44.2729 38.6906 +TSW 8/8 0.1931 0.9972 42.4221 40.8720 +ASQ 8/8 0.1926 0.9988 52.9969 49.9545 +TSQ+TSW 8/8 0.1967 0.9987 47.5200 39.0468 TABLE II: Quantization methods on UCF-101 Method Bit (W/A) CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] 16/16 0.2058 0.9970 26.3483 34.5356 Dynamic [ 4 ] 8/8 0.2049 0.9968 25.6435 34.6162 CW+TW (*) 8/8 0.2033 0.9955 18.1882 22.8154 +TSW 8/8 0.2025 0.9958 17.9768 24.7684 +ASQ 8/8 0.2048 0.9975 24.6499 31.9683 +TSQ+TSW 8/8 0.2084 0.9986 10.2957 17.4171 TABLE III: Robustness test of the proposed methods Bit (W/A) Method CLIPSIM CLIP-temp VQA-a VQA-t FP16 [ 1 ] - 0.1950 0.9982 54.2730 49.9179 4/4 *+TSQ+TSW 0.1569 0.9967 0.0257 0.0008 *+ASQ 0.1538 0.9974 0.0171 0.0009 Dynamic [ 4 ] 0.1786 0.9729 2.7089 0.4849 4/6 *+TSQ+TSW 0.1909 0.9981 4.8082 5.4387 *+ASQ 0.1838 0.9983 0.0557 0.0686 Dynamic [ 4 ] 0.1817 0.9976 0.1681 0.2958 6/6 *+TSQ+TSW 0.1864 0.9981 9.2497 9.2459 *+ASQ 0.1829 0.9986 0.0961 0.0781 Dynamic [ 4 ] 0.1881 0.9981 18.9117 15.1275 4/8 *+TSQ+TSW 0.1922 0.9994 24.5604 24.0194 *+ASQ 0.1849 0.9984 26.9354 15.8466 Dynamic [ 4 ] 0.1849 0.9986 0.0404 0.3072 6/8 *+TSQ+TSW 0.1962 0.9987 36.0467 40.6366 *+ASQ 0.1910 0.9991 25.6601 17.4476 Dynamic [ 4 ] 0.1903 0.9990 28.2134 21.8238 8/8 *+TSQ+TSW 0.1967 0.9987 47.5200 39.0468 *+ASQ 0.1926 0.9988 53.9969 49.9545 Dynamic [ 4 ] 0.1960 0.9982 53.3998 49.4671 4/16 *+TSQ+TSW 0.1911 0.9996 28.3527 12.5568 *+ASQ 0.1895 0.9988 31.6746 35.4823 Dynamic [ 4 ] 0.1871 0.9972 0.0237 0.0240 6/16 *+TSQ+TSW 0.1960 0.9996 26.2750 17.4801 *+ASQ 0.1959 0.9989 44.6240 38.0148 Dynamic [ 4 ] 0.1854 0.9983 8.3704 10.7042 8/16 *+TSQ+TSW 0.1953 0.9988 46.8446 38.9204 *+ASQ 0.1963 0.9982 53.2460 51.9194 Dynamic [ 4 ] 0.1871 0.9981 24.0312 26.8858 Average *+TSQ+TSW 0.1891 0.9986 24.8537 20.8162 *+ASQ 0.1856 0.9985 26.1451 23.2014 Dynamic [ 4 ] 0.1866 0.9953 15.0964 13.9022 Fig. 4: Robustness comparison between the CW+TW+ASQ (Aggr) and the CW+TW+TSQ+TSW (TSW). Additional examples in the supplemental material. TABLE IV: Granular TSW quantization on the open-sora prompt set Method CLIPSIM CLIP-temp VQA-a VQA-t *+ASQ (=1TR) 0.1926 0.9988 52.9969 49.9545 +TSQ+2TR 0.1960 0.9981 42.2731 43.7837 +TSQ+4TR 0.1957 0.9978 43.3432 46.1740 +TSQ+10TR 0.1946 0.9978 40.5217 42.3603 +TSQ+TSW (=20TR) 0.1967 0.9987 47.5200 39.0468 TABLE V: Granular TSW quantization on UCF-101 Method CLIPSIM CLIP-temp VQA-a VQA-t *+ASQ (=1TR) 0.2048 0.9975 24.6499 31.9683 +TSQ+2TR 0.2039 0.9966 18.0531 23.2528 +TSQ+4TR 0.2054 0.9967 18.3887 26.8416 +TSQ+10TR 0.2063 0.9967 14.2008 22.1882 +TSQ+TSW (=20TR) 0.2084 0.9986 10.2957 17.4171"
+    }
+  ],
+  "attempts": [
+    {
+      "method": "html-latexml",
+      "available": true,
+      "quality": "high"
+    }
+  ],
+  "fallback_reason": ""
+}
