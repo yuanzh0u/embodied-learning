@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2308.11489",
+    "title": "Learning from Semantic Alignment between Unpaired Multiviews for Egocentric Video Recognition",
+    "published": "2023-08-22",
+    "url": "https://arxiv.org/abs/2308.11489",
+    "authors": [
+      "Qitong Wang"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "无配对多视角（含多台第三人称）语义伪配对 + 对比对齐的少数表征尝试"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3.3 Semantics-based Multiview Learning",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "5 Conclusions",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "LLM 编码叙述挖掘跨视角伪配对",
+    "语义感知跨视角对比 + 视频-文本模态对齐"
+  ],
+  "method": {
+    "summary": "SUM-L 用 LLM 编码文本叙述挖跨视角伪配对，做语义感知跨视角对比对齐 + 视频-文本模态对齐，在无配对多视角下学视角不变表征",
+    "assumptions": [
+      "第一/第三人称视频各有文本叙述"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "多基准数据集"
+    ],
+    "tasks": [
+      "egocentric 视频识别"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "多基准"
+  },
+  "evaluation": {
+    "design": "对比现有视角对齐方法",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "SUM-L 在无配对多视角设定下超越现有视角对齐方法",
+      "scope": "无配对多视角表征学习",
+      "locator": "4 Experiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "依赖文本叙述，无叙述的原始视频无法挖伪配对",
+        "basis": "伪配对挖掘依赖 narration"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于有文本叙述的无配对多视角表征对齐",
+  "critical_appraisal": {
+    "design_strengths": [
+      "无配对多视角"
+    ],
+    "design_risks": [
+      "依赖 LLM 叙述编码"
+    ],
+    "baseline_fairness": "多基线",
+    "metric_validity": "标准识别指标",
+    "reproducibility": "代码公开",
+    "external_validity": "多基准"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2308.11489-C01",
+      "claim": "SUM-L 处理无配对多视角（含多台第三人称相机）对齐：先用 LLM 编码视频文本叙述挖掘跨视角伪配对，再做语义感知的跨视角对比对齐 + 视频-文本模态对齐，从而在没有同步/配对多视角数据的情况下对齐第一与第三人称视角。",
+      "stance": "support",
+      "relation": "回答问题二/三：无配对多视角对齐的表征路线（语义伪配对）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Abstract、3.1 Semantics-based Pseudo-pair Mining 与 3.3 Semantics-based Multiview Learning 直接陈述伪配对挖掘与语义感知对齐。",
+      "locator": "3.3 Semantics-based Multiview Learning",
+      "source_context": "propose a representation learning method, namely Semantics-based Unpaired Multiview Learning. We employ contrastive alignment as a tool to align the unpaired multiview videos. Different from existing ",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

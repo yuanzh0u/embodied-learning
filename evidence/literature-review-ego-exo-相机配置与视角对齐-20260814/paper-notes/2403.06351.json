@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2403.06351",
+    "title": "Put Myself in Your Shoes: Lifting the Egocentric Perspective from Exocentric Videos",
+    "published": "2024-03-11",
+    "url": "https://arxiv.org/abs/2403.06351",
+    "authors": [
+      "Mi Luo"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "生成式第一↔第三人称对齐：两阶段结构变换 + 扩散像素幻觉，不依赖相机参数"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3.1 Problem Formulation",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "4 Experimental Evaluation",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "5 Limitations and Future Work",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "把 exo→ego 翻译解耦为高层结构变换 + 扩散像素幻觉",
+    "引入手部布局先验增强保真"
+  ],
+  "method": {
+    "summary": "Exo2Ego 两阶段：高层结构变换鼓励跨视角对应 + 扩散像素幻觉，最小化对相机参数/几何结构的假设",
+    "assumptions": [
+      "静态背景 + 动态主体",
+      "无显式几何/相机参数"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "H2O",
+      "Aria Pilot",
+      "Assembly101"
+    ],
+    "tasks": [
+      "exo-to-ego 跨视角翻译"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "同步 ego-exo 桌面活动视频对"
+  },
+  "evaluation": {
+    "design": "合成质量 + 泛化对比",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "Exo2Ego 生成逼真 ego 视角并优于基线",
+      "scope": "桌面活动跨视角翻译",
+      "locator": "4 Experimental Evaluation"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "生成式翻译是概率幻觉，不保证度量几何正确",
+        "basis": "方法显式回避几何/相机参数"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于无几何假设的视角合成，不产生可度量位姿",
+  "critical_appraisal": {
+    "design_strengths": [
+      "无需几何标定"
+    ],
+    "design_risks": [
+      "幻觉可能破坏几何一致性"
+    ],
+    "baseline_fairness": "多基线对比",
+    "metric_validity": "合成质量指标",
+    "reproducibility": "方法完整",
+    "external_validity": "三数据集"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2403.06351-C01",
+      "claim": "Exo2Ego 提出生成式第一↔第三人称视角对齐：把 exo→ego 跨视角翻译解耦为高层结构变换（显式鼓励跨视角对应）与基于扩散的像素级幻觉（引入手部布局先验），在最小化对相机参数/几何结构假设的前提下生成第一人称视角。",
+      "stance": "support",
+      "relation": "回答问题二：生成式视角翻译路线，明确不依赖显式几何/相机参数。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Abstract 与 3.1 Problem Formulation 直接陈述两阶段解耦与无几何假设的概率化设定。",
+      "locator": "3.1 Problem Formulation",
+      "source_context": "propose tackling the exo-to-ego translation problem in a purely probabilistic framework. Intuitively, this is essential to address the inherent ambiguity in predicting the ego view from the exo view, ",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

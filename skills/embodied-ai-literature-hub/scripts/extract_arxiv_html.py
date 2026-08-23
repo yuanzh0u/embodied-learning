@@ -92,6 +92,18 @@ class LatexmlParser(HTMLParser):
         self.open_cite: dict[str, object] | None = None
         self.bibitems: dict[str, str] = {}
         self.open_bibitem: str | None = None
+        self.figures: list[dict[str, object]] = []
+        self.tables: list[dict[str, object]] = []
+        # Figure/table capture state (captions and cell text must not leak
+        # into section text, so they are routed into their own accumulators).
+        self._capture: list[str] = []  # stack: "figure" | "table"
+        self._active_figure: dict[str, object] | None = None
+        self._active_table: dict[str, object] | None = None
+        self._in_caption: bool = False
+        self._caption_parts: list[str] = []
+        self._table_rows: list[list[str]] = []
+        self._current_row: list[str] = []
+        self._current_cell: list[str] = []
 
     @staticmethod
     def _attr(attrs, name: str) -> str:  # type: ignore[no-untyped-def]
@@ -142,6 +154,37 @@ class LatexmlParser(HTMLParser):
         if kind:
             self._open_section(kind, elem_id, tag)
             return
+        if (
+            tag == "figure"
+            and ("ltx_figure" in classes or "ltx_table" in classes)
+            and "ltx_figure_group" not in classes
+        ):
+            is_table = "ltx_table" in classes
+            base = {"id": elem_id, "caption": "", "section_index": self.stack[-1][0] if self.stack else None}
+            self._capture.append("table" if is_table else "figure")
+            if is_table:
+                self._active_table = {**base, "rows": []}
+            else:
+                self._active_figure = {**base, "image_url": ""}
+            return
+        if tag == "img" and self._active_figure is not None and not self._active_figure["image_url"]:
+            src = self._attr(attrs, "src")
+            if src:
+                self._active_figure["image_url"] = f"https://arxiv.org/html/{src}"
+            return
+        if tag == "figcaption":
+            self._in_caption = True
+            self._caption_parts = []
+            return
+        if tag == "table" and "ltx_tabular" in self._attr(attrs, "class").split():
+            self._table_rows = []
+            return
+        if tag == "tr" and self._active_table is not None:
+            self._current_row = []
+            return
+        if tag in {"td", "th"} and self._active_table is not None:
+            self._current_cell = []
+            return
         current = self._current()
         if current is not None:
             if tag in {"h1", "h2", "h3", "h4", "h5", "h6"} and "ltx_title" in classes and not current["title"]:
@@ -170,6 +213,45 @@ class LatexmlParser(HTMLParser):
             if self.skip_depth:
                 self.skip_depth -= 1
             return
+        if tag == "figcaption":
+            self._in_caption = False
+            caption = " ".join(self._caption_parts).strip()
+            if self._active_figure is not None:
+                self._active_figure["caption"] = caption
+            elif self._active_table is not None:
+                self._active_table["caption"] = caption
+            self._caption_parts = []
+            return
+        if tag in {"td", "th"} and self._active_table is not None:
+            self._current_row.append(" ".join(self._current_cell).strip())
+            self._current_cell = []
+            return
+        if tag == "tr" and self._active_table is not None:
+            if self._current_row:
+                self._table_rows.append(self._current_row)
+            self._current_row = []
+            return
+        if tag == "table" and self._active_table is not None:
+            self._active_table["rows"] = self._table_rows
+            self._table_rows = []
+            return
+        if tag == "figure" and self._capture and self._capture[-1] in ("figure", "table"):
+            if self._active_figure is not None:
+                sec = self._active_figure.get("section_index")
+                self._active_figure["section"] = (
+                    section_path(self.sections, int(sec)) if sec is not None else ""
+                )
+                self.figures.append(self._active_figure)
+                self._active_figure = None
+            elif self._active_table is not None:
+                sec = self._active_table.get("section_index")
+                self._active_table["section"] = (
+                    section_path(self.sections, int(sec)) if sec is not None else ""
+                )
+                self.tables.append(self._active_table)
+                self._active_table = None
+            self._capture.pop()
+            return
         if tag in {"h1", "h2", "h3", "h4", "h5", "h6"} and self.in_title_for is not None:
             section = self.sections[self.in_title_for]
             section["title"] = " ".join(str(section["title"]).split())
@@ -194,6 +276,12 @@ class LatexmlParser(HTMLParser):
             return
         text = " ".join(data.split())
         if not text:
+            return
+        if self._in_caption:
+            self._caption_parts.append(text)
+            return
+        if self._active_table is not None and self._current_cell is not None:
+            self._current_cell.append(text)
             return
         if self.in_title_for is not None:
             section = self.sections[self.in_title_for]
@@ -484,7 +572,7 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
         "cache_file": str(target) if available else "",
     }
     if not available:
-        output.update({"structure": "unavailable", "text_chars": 0, "term_matches": [], "reference_hints": []})
+        output.update({"structure": "unavailable", "text_chars": 0, "term_matches": [], "reference_hints": [], "figures": [], "tables": []})
         return output
 
     structured = extract_structured(html)
@@ -500,6 +588,8 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
                 "text_chars": len(text),
                 "term_matches": flat_term_matches(text, terms) if text else [],
                 "reference_hints": flat_reference_hints(text) if text else [],
+                "figures": [],
+                "tables": [],
             }
         )
         if args.include_text:
@@ -534,6 +624,8 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
             "term_matches": find_term_matches(sections, terms) if terms else [],
             "citation_contexts": citation_contexts(structured),
             "reference_hints": reference_hints_from_bib(structured.bibitems),
+            "figures": structured.figures,
+            "tables": structured.tables,
         }
     )
     if args.include_text:

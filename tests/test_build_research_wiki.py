@@ -208,8 +208,8 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn('href="https://github.com/yuanzh0u/embodied-learning"', index)
         self.assertIn("GitHub 代码仓", index)
         self.assertIn('target="_blank" rel="noopener noreferrer"', index)
-        self.assertIn("<title>空间智能研究 Wiki</title>", index)
-        self.assertIn("<strong>空间智能研究 Wiki</strong>", index)
+        self.assertIn("<title>Embodied AI Evidence Hub｜具身智能证据知识库</title>", index)
+        self.assertIn("<strong>Embodied AI Evidence Hub</strong>", index)
 
     def test_wiki_uses_topbar_actions_and_tree_drawer(self) -> None:
         wiki_root = Path(__file__).resolve().parents[1] / "wiki"
@@ -247,7 +247,7 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn('nodes.articleTitle.textContent = version.article_title', script)
         self.assertIn('if (repeatedTitle?.tagName === "H1") repeatedTitle.remove()', script)
         self.assertIn('nodes.versionArticleTitle.textContent = `所属话题：${topic.title}`', script)
-        self.assertIn('空间智能研究 Wiki', script)
+        self.assertIn('Embodied AI Evidence Hub', script)
         self.assertIn('data/current.json', script)
         self.assertIn('state.dataBase', script)
 

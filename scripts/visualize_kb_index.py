@@ -407,6 +407,7 @@ def render_html(root: Path, nodes: dict, edges: set, children_map: dict, root_re
 <html lang="zh">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex,follow">
 <title>知识库路由浏览器 — knowledge/index.md</title>
 <style>
   * {{ box-sizing: border-box; }}

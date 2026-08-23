@@ -4,10 +4,15 @@ on:
   pull_request:
     paths:
       - 'wiki/**'
+      - 'knowledge/**'
+      - 'evidence/**'
       - 'scripts/build_research_wiki.py'
+      - 'scripts/build_research_site.py'
       - 'scripts/serve_research_wiki.py'
+      - 'scripts/visualize_kb_index.py'
       - 'scripts/lib/**'
       - 'tests/test_build_research_wiki.py'
+      - 'tests/test_build_research_site.py'
       - 'tests/test_markdown_semantics.py'
       - 'tests/test_review_runs.py'
       - '.github/workflows/deploy-research-wiki.yml'
@@ -21,9 +26,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Validate content snapshot
-        run: python3 scripts/build_research_wiki.py --check --output wiki/data
+        with:
+          fetch-depth: 0
+      - name: Build and validate content snapshot
+        # No committed snapshot exists (wiki/data is gitignored); a successful
+        # build runs validate_snapshot internally, so it is itself the check.
+        run: python3 scripts/build_research_wiki.py --output /tmp/wiki-check
+      - name: Build noindex preview and knowledge map
+        run: |
+          python3 scripts/build_research_site.py \
+            --snapshot-root /tmp/wiki-check \
+            --wiki-root wiki \
+            --output /tmp/site-check \
+            --base-url https://yuanzh0u.github.io/embodied-learning \
+            --preview
+          mkdir -p /tmp/site-check/knowledge-map
+          python3 scripts/visualize_kb_index.py --no-open --output /tmp/site-check/knowledge-map/index.html
+          python3 scripts/build_research_site.py \
+            --output /tmp/site-check \
+            --base-url https://yuanzh0u.github.io/embodied-learning \
+            --preview \
+            --check-only
       - name: Check Python syntax
-        run: python3 -m py_compile scripts/build_research_wiki.py scripts/serve_research_wiki.py scripts/lib/markdown_semantics.py scripts/lib/review_runs.py
-      - name: Run Wiki architecture tests
-        run: python3 -m unittest tests.test_build_research_wiki tests.test_markdown_semantics tests.test_review_runs tests.test_visualize_kb_index
+        run: python3 -m py_compile scripts/build_research_wiki.py scripts/build_research_site.py scripts/serve_research_wiki.py scripts/lib/markdown_semantics.py scripts/lib/review_runs.py
+      - name: Run complete regression suite
+        run: python3 -m unittest discover -s tests -v
+      - name: Validate routed reviews and knowledge links
+        run: |
+          python3 scripts/validate_current_reviews.py --root .
+          python3 scripts/check_kb_links.py --root .

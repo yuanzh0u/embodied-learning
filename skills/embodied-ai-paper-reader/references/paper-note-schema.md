@@ -61,9 +61,45 @@
   },
   "evidence_cards": [],
   "core_citations": [],
+  "figures": [],
+  "tables": [],
   "notes": ""
 }
 ```
+
+## Optional: figures and tables
+
+`figures: []` and `tables: []` are **optional** top-level fields. They record only each
+figure/table's **caption** and the author's **usage** of it — the pipeline never parses
+figure/table *content*. Figures reference the paper's external arXiv HTML image URL; tables
+carry their captured cell rows (LaTeXML tables have no image link). A paper note may omit
+these fields entirely; `evidence.jsonl` is the projection where figures/tables are attached
+per evidence event.
+
+```json
+"figures": [
+  {
+    "figure_id": "S3.F3",
+    "caption": "The Aria device used for egocentric recordings.",
+    "image_url": "https://arxiv.org/html/2311.18259v4/figs/aria/aria.png",
+    "section": "3 Ego-Exo4D dataset",
+    "usage": "作者用该图展示采集 rig 中 Aria 眼镜本体。"
+  }
+],
+"tables": [
+  {
+    "table_id": "S1.T1",
+    "caption": "Comparison between Ego-Exo4D and relevant datasets.",
+    "section": "3 Ego-Exo4D dataset",
+    "rows": [["Dataset", "Year"], ["Ego-Exo4D", "2023"]],
+    "usage": "作者用该表对比数据集。"
+  }
+]
+```
+
+The `render_figure_table_block.py` helper in the literature-hub skill turns these records
+into markdown snippets for the review deliverables (figures render as `![caption](image_url)`
+which the research wiki displays as a real `<img>`; tables render as a markdown grid).
 
 ## Allowed values
 

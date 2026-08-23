@@ -8,6 +8,7 @@ on:
       - 'knowledge/**'
       - 'evidence/**'
       - 'scripts/build_research_wiki.py'
+      - 'scripts/build_research_site.py'
       - 'scripts/visualize_kb_index.py'
       - 'scripts/lib/**'
       - '.github/workflows/deploy-research-wiki.yml'
@@ -21,6 +22,7 @@ on:
       - 'knowledge/**'
       - 'evidence/**'
       - 'scripts/build_research_wiki.py'
+      - 'scripts/build_research_site.py'
       - 'scripts/visualize_kb_index.py'
       - 'scripts/lib/**'
       - '.github/workflows/deploy-research-wiki.yml'
@@ -46,17 +48,41 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Validate published research snapshot
-        run: python3 scripts/build_research_wiki.py --check --output wiki/data
+      - name: Build research wiki snapshot
+        # The snapshot is generated at deploy time from knowledge/ + evidence/;
+        # wiki/data is gitignored, so nothing is committed. The build runs
+        # validate_snapshot internally before activating the snapshot.
+        run: python3 scripts/build_research_wiki.py --output wiki/data
 
-      - name: Assemble Wiki and knowledge map
+      - name: Assemble crawlable research site
+        env:
+          IS_PREVIEW: ${{ github.event_name == 'pull_request' }}
+        run: |
+          preview_args=()
+          if [ "$IS_PREVIEW" = "true" ]; then preview_args+=(--preview); fi
+          python3 scripts/build_research_site.py \
+            --snapshot-root wiki/data \
+            --wiki-root wiki \
+            --output _site \
+            --base-url https://yuanzh0u.github.io/embodied-learning \
+            "${preview_args[@]}"
+
+      - name: Build knowledge map and verify release artifact
+        env:
+          IS_PREVIEW: ${{ github.event_name == 'pull_request' }}
         run: |
           mkdir -p _site/knowledge-map
-          cp -R wiki/. _site/
           python3 scripts/visualize_kb_index.py \
             --no-open \
             --output _site/knowledge-map/index.html
           touch _site/.nojekyll
+          preview_args=()
+          if [ "$IS_PREVIEW" = "true" ]; then preview_args+=(--preview); fi
+          python3 scripts/build_research_site.py \
+            --output _site \
+            --base-url https://yuanzh0u.github.io/embodied-learning \
+            --check-only \
+            "${preview_args[@]}"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

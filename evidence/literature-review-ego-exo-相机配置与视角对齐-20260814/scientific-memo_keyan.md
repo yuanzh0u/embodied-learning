@@ -1,0 +1,146 @@
+# 第三人称相机怎么装、第一/第三人称怎么对齐：Ego-Exo 视角配置与对齐的实证综述
+
+> **研究备忘录** | 主题：Ego-Exo 相机配置与视角对齐 | 证据基础：14 篇论文（含 4 篇与既有 ego-exo 综述复用），18 条证据事件 | 综述模式：scoping
+>
+> 本备忘录回答三个具体问题：**① 第三人称（exo）相机配置如何初始化/标定？② 第一↔第三人称视角如何对齐？③ 多台第三人称（multiview）相机如何对齐？** 证据池由两轮检索构成：先定向检索（`search_arxiv.py`），再以既有 ego-exo 综述的 11 篇论文为种子池用 `$embodied-ai-problem-relevance-ranking` 做引文扩展 + BM25 相关性检索到 50 篇短名单，据此补充 4 篇相机几何论文（YOWO、H2O、Nymeria、EgoHumans）。所有主张可追溯到具体论文，事件级溯源见 `evidence-appendix.md` 与 `trace-map.json`。
+
+## 1. 研究边界与问题界定
+
+这三个问题是对上一份综述《Ego-Exo 后继研究：第三人称→第一人称视觉表征迁移的演进》遗留缺口的补充——那份综述讲清了"表征如何从第三人称迁移到第一人称"，但没有系统回答"相机本身是怎么装的、怎么对齐的"。本备忘录把"对齐"拆成两个正交维度来谈：
+
+- **几何对齐（geometric）**：把多台相机注册进同一个世界坐标系，得到相机之间的外参关系——这是数据集采集层面的问题。
+- **表征对齐（representation）**：在不显式标定的情况下，让模型学到跨视角不变的特征或对应关系——这是方法层面的问题。
+
+两个维度共同决定了一个 ego-exo 系统的可用性，但它们的代价、前提和适用场景完全不同。
+
+## 2. 中心判断
+
+**第三人称相机配置的初始化，本质是"物理摆放 + 几何注册 + 时间同步"三件事；而第一↔第三人称视角的对齐，则分裂成"要么你有标定好的几何、要么你靠学习硬桥"两条路线。** 关键洞察是：几何对齐是表征对齐的上限——有几何注册的数据集（Ego-Exo4D、EgoBody）才能定义出"对象对应""视角翻译"这类可评测任务；而一旦脱离同步多相机采集、只剩无配对视频，方法层就只能退回到 DTW、对比、掩码、生成等"软对齐"信号。谁为后一种廉价场景找到更稳的桥接信号，谁就掌握这条线的下一程。
+
+## 3. 三个问题的实证答案
+
+### 3.1 问题一：第三人称（exo）相机配置如何初始化/标定？
+
+两个大规模数据集给出了两条互补的"标准操作"，都分三步：
+
+**[Ego-Exo4D](https://arxiv.org/abs/2311.18259)（Grauman et al., CVPR 2024）——SLAM 地图 + PnP 路线：**
+
+1. **物理摆放**：采集 rig 由 1 台 Aria 眼镜（ego）+ 4 台固定在三脚架上的 GoPro（exo）组成，便携、自动同步，全套（不含 Aria/手机/笔记本）成本低于 3000 美元；三脚架按"最大化人体覆盖"的经验原则摆放，位置在同类场景内保持一致。
+2. **几何注册**：先让佩戴者手持 Aria 做一次 walk-around，用 VIO+SLAM 构建一个公共的、度量、重力对齐的场景地图；每台静态 GoPro 先在实验室手工标定一台获得默认内参，再用 **P4P（PnP）算法 + RANSAC** 在该 SLAM 地图上估计其 6DoF 位姿并重新估计焦距——这样每台 exo 相机都被"注册"进与 ego 相机同一个世界坐标系。
+3. **时间同步**：用一段 29fps 的预渲染 QR 码视频编码墙钟时间，逐台相机播放并利用帧率差细同步，最终人工校验每台 GoPro 与 Aria 的同步误差在 **1 帧以内（±16.66ms，亚帧级）**；70% 采集自动达到帧级同步，其余 30% 靠人工事件对齐恢复。
+
+![Overview of the recording procedure](https://arxiv.org/html/2311.18259v4/sec/appendices/figs/rig_recording_procedure.jpg)
+
+> 用法：作者用该图总览整个采集流程（佩戴者走一圈建图、GoPro 就位、QR 码同步），把第三人称相机 rig 的初始化、几何注册与时间同步画进一张图，直观点名评测主题"相机如何被装好并对齐"。（Ego-Exo4D，S7.F28）
+
+**Table 1**：作者用该表对比 Ego-Exo4D 与既有 ego/exo 数据集的多模态、规模与标注，佐证其作为相机配置与对齐基准的权威性。
+
+| Dataset | Year | Modalities | #Subj. | #Scenes | #Tasks | #Actions | #Masks | #BP | #HP | Nar. | EC |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| EGTEA-Gaze | 2018 | V,A,G | 32 | 1 | 7 | 106 | 15k | - | - | ✗ | ✗ |
+| Ego4D | 2022 | V,A,3D,S,G,I | 931 | 74 | N/A | 110 | - | - | - | ✓ | ✗ |
+| EgoExoLearn | 2024 | V,A,G,I | 136 | 7 | 8 | (95;254) | - | - | - | ✓ | ✗ |
+| EgoExo4D | 2024 | V,A,I,G,3D,6D,B,Ma | 740 | 123 | 689 | 2.2M | 9.6M | 4.4M | ✓ | ✓ |
+
+**[EgoBody](https://arxiv.org/abs/2112.07642)（Zhang et al., 2021）——棋盘格 + ICP 路线（更传统、更早）：**
+
+用 3–5 台固定的 Azure Kinect RGB-D 相机（exo）+ 1 台 HoloLens2（ego）。空间对齐先用**棋盘格标定**得到初始内/外参，再用 **ICP 刚性配准**（场景点云）细化 Kinect–Kinect 与 Kinect–HoloLens2；**Cam1 定义世界坐标系原点**，HoloLens2 靠内置头部跟踪器在该原点下被持续跟踪。Kinect 之间用音频线做硬件同步，Kinect–HoloLens2 之间用"手电筒第一帧可见"作同步信号。
+
+**结论**：exo 相机初始化的通用答案是——静态摆放多台相机 → 用「SLAM 地图 + PnP」或「棋盘格 + ICP」把每台相机注册进同一世界系 → 用 QR/音频/闪光做时间同步。前者适合户外/大场景（GoPro 便宜），后者适合室内人体重建（Kinect 有深度）。这一模式并非孤例，而是被多个独立数据集反复确认：[EgoHumans](https://arxiv.org/abs/2305.16487) 同样用「多副 Aria 眼镜 + 8–15 台 GoPro、全部同步、便携可移动」的异构多相机在野外采集；[Nymeria](https://arxiv.org/abs/2406.09905) 用 mocap 服 + Aria 眼镜 + miniAria 腕带 + 同步设备，以亚毫秒统一时间戳同步、再用 Aria MPS 的 VIO/SLAM + 回环 + bundle adjustment 全局对齐进单一度量 3D 世界。
+
+![Aria MPS output for several recordings. Top: point cloud and estimated egocentric camera trajectory Bottom: three screenshots](https://arxiv.org/html/2311.18259v4/figs/aria/points2.jpg)
+
+> 用法：作者用该图展示 Aria MPS 的 SLAM 地图 + 轨迹输出，直观说明第一人称 ego 相机如何被注册进带尺度、重力对齐的公共坐标系，支撑第三人称相机在其上 P4P 定位的几何主张。（Ego-Exo4D，S3.F5）
+
+换句话说，「Aria 眼镜当 ego + 多台静态相机当 exo + 统一时间同步 + SLAM 全局对齐」已经是这个领域事实上的标准采集范式。
+
+### 3.2 问题二：第一↔第三人称视角如何对齐？
+
+这是文献最密集的方向，答案分裂成两条路线：
+
+**路线 A —— 几何对齐（需要同步采集 + 标定）**：即 3.1 的注册结果。Ego-Exo4D 用 SLAM+PnP 把 ego 与 exo 相机注册进同一度量坐标系后，就**天然**得到了 ego↔exo 的几何对应（每帧都有相机位姿），这才使得"[对象对应 / 视角翻译](https://arxiv.org/abs/2311.18259)"能被形式化为可评测基准。
+
+**路线 B —— 表征对齐（无需显式几何，用"软信号"硬桥）**：当只有无配对/异步视频时，方法层靠不同的代理信号对齐：
+
+- **时序对齐**：[AE2](https://arxiv.org/abs/2306.05526)（Xue & Grauman, NeurIPS 2023）在 unpaired 设定下用 **DTW 时序对齐**作自监督目标、object-centric 编码器关注手与主动物体。
+- **同步蒸馏**：[Synchronization is All You Need](https://arxiv.org/abs/2312.02638) 用带标注 exo + 无标注同步 exo-ego 对做知识蒸馏（edit 28.59 接近监督 ego-oracle 26.42）。
+- **对象对应**：[ObjectRelator](https://arxiv.org/abs/2411.19083)（MCFuse 文本+掩码融合、XObjAlign 自监督对齐，Ego-Exo4D SOTA）；[LM-EEC](https://arxiv.org/abs/2510.11417)（2025）把 SAM 2 加双记忆库 + Memory-View MoE 解决极端视角变化与长视频对应。
+- **生成式视角翻译**：[Exo2Ego](https://arxiv.org/abs/2403.06351) 把 exo→ego 解耦为"高层结构变换 + 扩散像素幻觉"，显式不依赖相机参数。
+- **掩码自监督**：[BYOV](https://arxiv.org/abs/2503.19706) 用 self-view + cross-view 掩码建模学视角不变表征。
+- **语义伪配对**：[SUM-L](https://arxiv.org/abs/2308.11489) 用 LLM 编码文本叙述挖跨视角伪配对 + 语义感知对比对齐。
+- **下游对齐**：[SAVA-X](https://arxiv.org/abs/2603.12764) 把对齐作为跨视角模仿错误检测的前置模块（场景自适应视角嵌入 + 双向交叉注意力）。
+
+**结论**：对齐的"首选"永远是路线 A 的几何注册（当你能采集同步数据）；一旦做不到，路线 B 提供了一张按"代理信号强弱"排序的方法谱系（同步 > 时序 > 语义 > 掩码），信号越弱、前置越松，对齐精度也越低。
+
+### 3.3 问题三：多台第三人称（multiview）相机如何对齐？
+
+这个问题在几何层答案很直接，在表征层则刚刚开始：
+
+**几何对齐（把多台 exo 相机对齐到彼此 + 到 ego）**：多条证据都说明这是一个"注册进同一世界系"的问题，且已有三种标定原语——
+
+- [EgoBody](https://arxiv.org/abs/2112.07642)：多台 Kinect 之间用**棋盘格 + ICP** 刚性配准，Cam1 作世界原点，HoloLens2 通过头部跟踪器挂到该原点。
+
+![Capture setup. Multiple Azure Kinects capture the interactions from different views (A, B, C), and a synchronized HoloLens2 worn by one subject captures the egocentric view image (D).](https://arxiv.org/html/2112.07642v3/figures/setup.jpg)
+
+> 用法：作者用该图展示多台第三人称 Azure Kinect（A/B/C）与头戴 HoloLens2（D）的空间布设与同步，直观支撑多相机棋盘格+ICP 空间对齐的证据链。（EgoBody，S3.F2）
+
+- [Ego-Exo4D](https://arxiv.org/abs/2311.18259)：4 台 GoPro 各自通过 **P4P** 定位到 Aria 的 SLAM 地图上，从而所有 exo 相机 + ego 相机共享同一个度量、重力对齐的坐标系。
+- [H2O](https://arxiv.org/abs/2104.11181)：第三种原语——用 9 个 **IR 反射球**（每球在所有相机可见）从深度图定位 3D 坐标后用 **PnP** 求解相机位姿，相机间物理线缆同步（<0.74ms）。
+
+![(a) We calibrate cameras using IR sphere markers and PnP, (b) create object meshes using BADSLAM on RGB-D captures, and (c) estimate object poses.](https://arxiv.org/html/2104.11181v2/figures/pipeline3.png)
+
+> 用法：作者用该图示意基于 IR 反射球 + PnP 的相机外参标定管线，直观点支撑多相机几何对齐的证据链（与棋盘格、SLAM 地图并列的第三种标定原语）。（H2O，S1.F2）
+
+对齐之后，多视角才支撑起真正的几何任务——EgoBody 用它做多视角 SMPL-X 人体重建，Ego-Exo4D 用它定义 ego-exo correspondence/translation 基准。
+
+**把这一原则最彻底地推广的是 [YOWO](https://arxiv.org/abs/2511.16521)**：它把多台天花板相机的注册本身形式化为一个方法问题——让佩戴头戴 RGB-D 相机的移动 agent 遍历场景一次建图（ICP/SLAM），天花板相机观察该 agent 的运动关键点用增量 SfM 估相对位姿，再用时空重平衡配准 + 因子图联合优化把每台相机的 6DoF 位姿注册进场景布局；对没有共视重叠的孤立相机，则退回到「先建图、后用 RANSAC+PnP 定位」的兜底。YOWO 的价值在于说明：Ego-Exo4D 里那套「SLAM 地图 + PnP」不是数据集作者的工程偏好，而是一个可独立成篇、可对任意室内多相机场景复用的**通用注册框架**。
+
+**表征对齐（无配对多视角）**：[SUM-L](https://arxiv.org/abs/2308.11489) 明确处理"无配对 multiview"场景：没有同步多视角时，用语义伪配对 + 对比对齐把多视角（含多台第三人称）拉到一个不变表征空间。这是把"多相机对齐"从几何层搬到表征层的少数尝试之一。
+
+**结论**：多台第三人称相机对齐的标准答案是**几何注册**（把每台相机打进同一世界系），已有三种标定原语——棋盘格 + ICP（EgoBody）、SLAM 地图 + PnP/P4P（Ego-Exo4D）、IR 反射球 + PnP（H2O）；[YOWO](https://arxiv.org/abs/2511.16521) 则把这套「建图 + PnP 注册」推广成可对任意室内多相机场景复用的通用框架。表征层的无配对 multiview 对齐（SUM-L）是较新的、仍在早期的小分支。
+
+## 4. 条件、边界与分歧
+
+1. **几何对齐是表征对齐的前提与上限，但不是免费的。** Ego-Exo4D 的 SLAM+PnP 需要 walk-around 建图 + 实验室标定 + QR 时间同步，成本不低（GoPro 定位有 91.4% 成功率，纹理缺失场景会失败）；EgoBody 的棋盘格+ICP 需要多相机同场 + 硬件同步。这意味着高质量 ego-exo 数据本质上是"昂贵"的，这也解释了为什么表征对齐方法大量涌现。
+2. **"对齐"一词的两义性是最容易踩的坑。** 几何对齐（相机注册）与表征对齐（特征/对应）是两件事，但论文常混用 "alignment"。阅读时需要先问：它在对齐相机，还是在对齐表征？
+3. **证据面偏斜。** 本池 18 条事件全为 `support`，缺少 limit/conditional/gap 证据。这更多是选题（"怎么对齐"天然是方法论文的正向陈述）所致，而非领域没有失败——异步、无配对场景下的跨视角对齐上限仍显著偏低，是这一方向公认的软肋（这也是既有 ego-exo 综述的唯一显式 `gap` 信号）。
+4. **表征对齐的精度随任务粒度分层。** 全局特征对齐（AE2）够支撑动作识别，但对象对应（ObjectRelator/LM-EEC）需要对象级显式对齐，说明"对齐"不是一个统一操作。
+
+## 5. 可操作框架
+
+| 你的场景 | 相机初始化 | 视角对齐 | 参考工作 |
+|---|---|---|---|
+| 可同步采集多相机（室内人体） | 棋盘格 + ICP，Cam1 定原点 | 几何注册 | EgoBody |
+| 可同步采集多相机（户外大场景） | SLAM 地图 + PnP，QR 同步 | 几何注册 | Ego-Exo4D |
+| 只有无配对 ego+exo 视频 | — | 时序/语义/掩码软对齐 | AE2 / SUM-L / BYOV |
+| 需对象级对应 | — | 对象对应分割 | ObjectRelator / LM-EEC |
+| 需生成对方视角 | — | 生成式视角翻译 | Exo2Ego |
+| 需判断模仿正误 | — | 场景自适应对齐 | SAVA-X |
+
+## 6. 研究空白与下一步
+
+- **弱监督几何对齐是真空地带。** 现在要么是全几何标定（贵），要么是纯表征对齐（无几何）。介于两者之间——"只用少量配对/粗略位姿做弱几何约束的表征对齐"——几乎没有工作，而这正是真实机器人/AR 落地的常态场景。YOWO 把几何标定的成本降到"走一圈"，是朝这个方向的一步，但它仍要求场景可遍历且相机能观察 agent，未覆盖任意散乱 ego/exo 视频。
+- **无配对 multiview 对齐仍是孤例。** 多台第三人称相机的表征对齐目前只有 SUM-L 一家，且依赖文本叙述（很多原始视频没有 narration）。
+- **对齐的"可迁移判据"缺失。** AE2 的时序代理、SUM-L 的语义代理、BYOV 的掩码代理如何统一成一个跨任务的"视角不变"度量，尚无答案。
+- 本备忘录是定向检索 + 引文派生（含问题相关性检索技能），不是关键词全量覆盖；"几何 vs 表征"的二分本身也可能遗漏了中间形态。
+
+## 7. 结论
+
+三个问题的答案可以各压缩成一句：**第三人称相机怎么装**——静态多机摆放后，用「SLAM 地图 + PnP」或「棋盘格 + ICP」注册进同一世界系并做时间同步；**第一/第三人称怎么对齐**——有几何就注册、没几何就靠时序/语义/掩码/生成等软信号硬桥；**多台第三人称怎么对齐**——本质是同样的几何注册问题，表征层的无配对 multiview 对齐刚起步。贯穿三者的一条主线是：**几何对齐决定上限，表征对齐决定可达性**，而当前研究正沿着"把几何成本降下来"的方向走。
+
+## References
+
+- [Ego-Exo4D](https://arxiv.org/abs/2311.18259) — Grauman, Westbury, Torresani et al. CVPR 2024.（exo 相机 rig + SLAM/PnP 注册 + QR 同步）
+- [EgoBody](https://arxiv.org/abs/2112.07642) — Zhang, Ma, Zhang et al. 2021.（多 Kinect 棋盘格 + ICP 标定）
+- [AE2](https://arxiv.org/abs/2306.05526) — Xue & Grauman. NeurIPS 2023.（DTW 时序对齐）
+- [ObjectRelator](https://arxiv.org/abs/2411.19083) — Fu, Wang, Ren et al. ICCV 2025.（对象对应 SOTA）
+- [LM-EEC](https://arxiv.org/abs/2510.11417) — He et al. 2025.（SAM2 双记忆对象对应）
+- [Exo2Ego](https://arxiv.org/abs/2403.06351) — Luo et al. ECCV 2024.（生成式视角翻译）
+- [BYOV](https://arxiv.org/abs/2503.19706) — Park et al. 2025.（掩码 ego-exo 建模）
+- [SAVA-X](https://arxiv.org/abs/2603.12764) — Li et al. 2026.（场景自适应对齐 + 错误检测）
+- [SUM-L](https://arxiv.org/abs/2308.11489) — Wang et al. 2023.（无配对多视角语义对齐）
+- [Synchronization is All You Need](https://arxiv.org/abs/2312.02638) — Quattrocchi, Furnari et al. ECCV 2024.（同步蒸馏）
+- [YOWO](https://arxiv.org/abs/2511.16521) — 2025.（天花板多相机注册的通用框架）
+- [H2O](https://arxiv.org/abs/2104.11181) — Kwon et al. CVPR 2021.（IR 反射球 + PnP 多相机标定）
+- [Nymeria](https://arxiv.org/abs/2406.09905) — Ma et al. 2024.（亚毫秒同步 + SLAM/BA 全局对齐）
+- [EgoHumans](https://arxiv.org/abs/2305.16487) — Khirodkar et al. 2023.（异构多相机野外采集）

@@ -8,21 +8,17 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 23 个 paper-reader-backed 基础 run 与 14 个跨 run 主题综合；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 3 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 24 个 paper-reader-backed 基础 run、14 个跨 run 主题综合与 2 项引文图派生综述；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 3 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
 
 ## 批次概况
 
-- Review mode：23 项基础 run 均为 `scoping`；其中 LR-ALLO-YEAR 候选池（18）与全文层（15）低于 scoping floor，run.json notes 已声明原因（arXiv API 当时不可用），结论为初步性质。
-- 检索池：基础 run 每项 18–1,409 篇候选论文（下界为 LR-ALLO-YEAR，见上）。
-- 全文层：基础 run 每项 15–162 篇具有可读全文（下界为 LR-ALLO-YEAR，见上）。
-- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 22 项基础 run 每项选取 15–30 篇核心论文，均完成 paper note 与 claim-support audit。
-- 基础 run 总量：376 个任务—论文精读实例，258 篇不重复论文，535 条全局唯一正式证据事件（2026-08-23 起含 LR-ALLO-YEAR 的 15 实例 / 15 论文 / 43 事件；不含覆盖门未过小节的 2 个 run）。
+- Review mode：24 项基础 run 均为 `scoping`；其中 LR-ALLO-YEAR 候选池（18）与全文层（15）低于 scoping floor，run.json notes 已声明原因（arXiv API 当时不可用），结论为初步性质。
 - 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
 - bundle 规范演变：2026-07-20 前沉淀的 bundle 不含独立 `paper-notes/` 与 `claim-support-audits/` 子目录——早期 run（`-reader-v1/v2` 结构）的精读产物在平行工作区目录中，另有部分 run 以 evidence.jsonl 内嵌事件（paper + locator）承载精读定位；这是当时规范，不构成追溯缺口。legacy/ 子目录为 writer 迁移前旧版成稿，git 可追溯。
 
-## 23 项成果
+## 24 项成果
 
 “规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
 
@@ -41,6 +37,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-TWM | 触觉世界模型 | EA-SENSOR, EA-MODEL, EA-EVAL | 867 / 124 / 15 | [run](../evidence/literature-review-触觉世界模型-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-触觉世界模型-20260714-reader-v2/review-packet.md) |
 | LR-DQ-YEAR | 近一年论文中的具身智能数据质量 | EA-DATA, EA-XEMBODIMENT | 851 / 90 / 15 | [run](../evidence/literature-review-近一年已发表论文中的具身智能数据质量-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-近一年已发表论文中的具身智能数据质量-20260714-reader-v2/review-packet.md) |
 | LR-UMI | 近半年 UMI 数据质量 | EA-DATA, EA-HARDWARE, EA-SENSOR | 862 / 122 / 15 | [run](../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/run.json) · [packet](../evidence/literature-review-近半年-umi-数据质量-20260714-reader-v2/review-packet.md) |
+| LR-LEWM | LeWorldModel 技术谱系：JEPA 潜空间世界模型到规划控制 | EA-MODEL, EA-EVAL, EA-4D | 193 / 38 / 24 | [run](../evidence/literature-review-leworldmodel-技术谱系-jepa-潜空间世界模型到规划控制-20260724/run.json) · [packet](../evidence/literature-review-leworldmodel-技术谱系-jepa-潜空间世界模型到规划控制-20260724/review-packet.md) · [学习指南](../evidence/literature-review-leworldmodel-技术谱系-jepa-潜空间世界模型到规划控制-20260724/lewm-learning-guide.md) |
 | LR-EGO-DATA | 近一年 Ego-centric 数据用于具身模型训练的问题与困难 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 1,409 / 162 / 15 | [run](../evidence/literature-review-ego-centric-数据在具身模型训练中的问题与困难-20260715/run.json) · [packet](../evidence/literature-review-ego-centric-数据在具身模型训练中的问题与困难-20260715/review-packet.md) |
 | LR-EGO-HAND | 近一年 Ego-centric 数据手部检测与追踪的问题和难点 | EA-DATA, EA-SENSOR, EA-HARDWARE, EA-4D | 172 / 48 / 15 | [run](../evidence/literature-review-近一年-ego-centric-数据手部检测与追踪的问题和难点-20260729/run.json) · [packet](../evidence/literature-review-近一年-ego-centric-数据手部检测与追踪的问题和难点-20260729/review-packet.md) |
 | LR-VLOC | 近一年图像视觉定位方法的发展与挑战 | EA-VLOC, EA-SENSOR, EA-EVAL, EA-HARDWARE | 321 / 53 / 15 | [run](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/run.json) · [packet](../evidence/literature-review-近一年图像视觉定位方法的发展与挑战-20260715/review-packet.md) |
@@ -52,13 +49,14 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-BRAIN-YEAR | 近一年类脑模型的发展 | EA-MODEL | 1,280 / 45 / 20 | [run](../evidence/literature-review-近一年类脑模型的发展-20260822/run.json) · [packet](../evidence/literature-review-近一年类脑模型的发展-20260822/review-packet.md) |
 | LR-ALLO-YEAR | 近一年 allocentric representation 在具身领域的应用 | EA-DATA, EA-MODEL, EA-XEMBODIMENT, EA-SENSOR | 18 / 15 / 15 | [run](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/run.json) · [packet](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/review-packet.md) |
 
-## 引文图派生综述
+## 引文图派生与问题相关性综述
 
-引文图（citation-graph）派生的影响力综述：以单篇根论文为锚，沿 Semantic Scholar 引文图向下游扩展，经领域门控与人工复核选篇。这类 run 不走关键词检索的 coverage/saturation 门；其 run.json 以 `workflow_version: 1` 声明，并用 `selection_method` 记录选篇方式。
+引文图（citation-graph）派生的影响力/问题相关性综述：以一篇根论文或一组种子论文为锚，沿 Semantic Scholar 引文图向下游扩展，经领域门控、BM25 相关性检索与人工复核选篇。这类 run 不走关键词检索的 coverage/saturation 门；其 run.json 以 `workflow_version: 1` 声明，并用 `selection_method` 记录选篇方式。
 
 | ID | 综述主题 | 主要知识卡 | 规模 | 审计入口 |
 |---|---|---|---:|---|
 | LR-EGO-EXO-INFL | Ego-Exo 后继研究：第三人称→第一人称视觉表征迁移的演进 | EA-XEMBODIMENT, EA-MODEL, EA-DATA | 246 / 11 / 11 | [run](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/run.json) · [packet](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/review-packet.md) |
+| LR-EGO-EXO-CAMALIGN | Ego-Exo 相机配置与视角对齐：第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐 | EA-SENSOR, EA-DATA, EA-XEMBODIMENT | 80 / 14 / 14 | [run](../evidence/literature-review-ego-exo-相机配置与视角对齐-20260814/run.json) · [memo](../evidence/literature-review-ego-exo-相机配置与视角对齐-20260814/scientific-memo_keyan.md) · [appendix](../evidence/literature-review-ego-exo-相机配置与视角对齐-20260814/evidence-appendix.md) |
 
 ## 覆盖门未过的补沉淀 run（2026-08-23 登记）
 
@@ -71,6 +69,15 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-DIT-WM-YEAR | 近两年 Diffusion Transformer 在视频生成与世界模型中的发展 | EA-4D, EA-EVAL, EA-MODEL | 1,566 / 70 / 16 events | saturation（活跃领域，末两轮新增率未收敛） | [run](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/run.json) · [packet](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/review-packet.md) |
 
 ## 跨 run 综合专题
+
+## 人物研究路线 Survey
+
+该区收录用户明确要求以 `survey` 为最终可见产物的第一阶段人物调研，不计入上方基础三文体成稿统计。
+
+| ID | 综述主题 | 主要知识卡 | 规模 | 审计入口 |
+|---|---|---|---:|---|
+| LR-JIM-FAN | Jim Fan 研究路线：通用智能体、具身智能、基础模型与开放世界学习 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN, EA-DATA | 471 / 47 / 17 | [packet](../evidence/literature-review-jim-fan-research-trajectory-20260721/review-packet.md) |
+
 
 | ID | 综合问题 | 主要知识卡 | 规模 | 审计入口 |
 |---|---|---|---:|---|

@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2511.16521",
+    "title": "YOWO: You Only Walk Once to Jointly Map an Indoor Scene and Register Ceiling Cameras",
+    "published": "2025-11",
+    "url": "https://arxiv.org/abs/2511.16521",
+    "authors": [
+      "YOWO authors"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "把多台第三人称相机注册推广为通用框架：走一圈建图 + 因子图联合注册（含孤立相机 PnP 兜底）"
+    },
+    "sections_read": [
+      {
+        "locator": "I Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "III Approach",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "IV Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "V Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "移动 agent 遍历一次联合建图与天花板相机注册",
+    "时空重平衡配准 + 因子图优化 + 孤立相机 PnP 兜底"
+  ],
+  "method": {
+    "summary": "YOWO 用头戴 RGB-D 的移动 agent 遍历场景：ICP/SLAM 建图 + 天花板相机观察 agent 关键点用增量 SfM 估相对位姿，时空重平衡配准 + 因子图联合优化注册 6DoF，孤立相机用 RANSAC+PnP 兜底",
+    "assumptions": [
+      "相机内参已知",
+      "场景可被移动 agent 遍历且天花板相机能观察 agent"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "室内多相机场景"
+    ],
+    "tasks": [
+      "天花板相机 6DoF 注册"
+    ],
+    "embodiments": [
+      "移动 agent（人/机器人）"
+    ],
+    "sample_or_scale": "室内场景建图 + 多相机注册"
+  },
+  "evaluation": {
+    "design": "对比 SOTA 注册方法",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "YOWO 联合建图与天花板相机注册，孤立相机用 RANSAC+PnP 兜底",
+      "scope": "多相机几何注册",
+      "locator": "III Approach"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "要求场景可遍历且相机能观察 agent，未覆盖任意散乱视频",
+        "basis": "注册以 agent 关键点共视为前提"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于可遍历室内场景的多相机注册",
+  "critical_appraisal": {
+    "design_strengths": [
+      "把 Ego-Exo4D 的 SLAM+PnP 思路推广为独立方法"
+    ],
+    "design_risks": [
+      "依赖 agent 遍历与共视"
+    ],
+    "baseline_fairness": "与 SOTA 注册对比",
+    "metric_validity": "位姿误差指标",
+    "reproducibility": "方法完整",
+    "external_validity": "室内多相机场景"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2511.16521-C01",
+      "claim": "YOWO 把多台第三人称（天花板安装）相机的对齐形式化为场景建图加相机位姿注册：让佩戴头戴 RGB-D 相机的移动 agent 遍历场景一次，用 ICP/SLAM 建出场景点云与 ego 轨迹；天花板相机通过观察该 agent 的运动关键点用增量 SfM 估计相对位姿，再用时空重平衡配准与因子图联合优化，把所有天花板相机 6DoF 位姿注册进同一世界坐标系。",
+      "stance": "support",
+      "relation": "回答问题三：多台第三人称相机对齐的通用化方案（把 Ego-Exo4D 的 SLAM 地图加 PnP 思路推广到天花板相机）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "III Approach 与 III-C Collaborative Processing 直接陈述三条处理管线与联合注册机制。",
+      "locator": "III Approach",
+      "source_context": "RGB-D videos, possibly with Inertial Measurement Unit (IMU) data, are the inputs, while the outputs are the scene layout and CMC 6-DoF poses registered to it. Problem formulation. Our study includes a",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    },
+    {
+      "card_id": "2511.16521-C02",
+      "claim": "对于没有共视重叠的孤立第三人称相机，YOWO 先完成场景建图与非孤立相机注册，再用 RANSAC 加 PnP 从已优化的 3D 移动关键点初始化其 6DoF 位姿，随后融合场景静态关键点与移动关键点的 2D-3D 匹配细化位姿——即先建图、后 PnP 定位，把无法共视的相机也注册进场景。",
+      "stance": "support",
+      "relation": "回答问题三：无共视多相机的注册兜底方案。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "III-D Register 6-DoF Poses for Isolated CMCs 直接陈述孤立相机的 PnP 初始化与细化流程。",
+      "locator": "III-D Register 6-DoF Poses for Isolated CMCs",
+      "source_context": "Employing RANSAC and PnP",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2503.19706",
+    "title": "Bootstrap Your Own Views: Masked Ego-Exo Modeling for Fine-grained View-invariant Representation Learning",
+    "published": "2025-03-24",
+    "url": "https://arxiv.org/abs/2503.19706",
+    "authors": [
+      "Jungin Park"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "无配对掩码自监督跨视角对齐（self-view + cross-view masking）的最新代表"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3.1 Overview of BYOV",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "self-view masking 捕获时序依赖",
+    "cross-view masking 学跨视角对齐"
+  ],
+  "method": {
+    "summary": "BYOV 用掩码 ego-exo 建模：self-view masking 重构自视角帧、cross-view masking 预测对方视角隐变量",
+    "assumptions": [
+      "无配对异步 ego-exo 视频同属同一动作类"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "多个 ego-exo 数据集"
+    ],
+    "tasks": [
+      "下游 ego-exo 视频任务"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "四下游任务"
+  },
+  "evaluation": {
+    "design": "对比 SOTA",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "BYOV 在四下游 ego-exo 任务上显著超越现有方法",
+      "scope": "无配对视角不变表征",
+      "locator": "4 Experiments"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "掩码表征对齐不产生相机几何",
+        "basis": "纯表征学习"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于无配对表征级对齐",
+  "critical_appraisal": {
+    "design_strengths": [
+      "无配对"
+    ],
+    "design_risks": [
+      "依赖掩码建模假设"
+    ],
+    "baseline_fairness": "多基线",
+    "metric_validity": "标准下游指标",
+    "reproducibility": "代码公开",
+    "external_validity": "四任务"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2503.19706-C01",
+      "claim": "BYOV 用掩码 ego-exo 建模在无配对设定下学视角不变表征：self-view masking 重构自视角帧以捕获时序依赖、cross-view masking 预测对方视角的隐变量以学跨视角对齐，从而在不需同步/配对的前提下对齐 ego-exo 视角。",
+      "stance": "support",
+      "relation": "回答问题二：自监督掩码路线的最新代表（2025）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Abstract 与 3.1 Overview of BYOV 直接陈述两种掩码建模目标。",
+      "locator": "3.1 Overview of BYOV",
+      "source_context": "masked self-view modeling reconstructs frame-level token embeddings from the own view",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

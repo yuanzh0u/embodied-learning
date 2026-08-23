@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2411.19083",
+    "title": "ObjectRelator: Enabling Cross-View Object Relation Understanding Across Ego-Centric and Exo-Centric Perspectives",
+    "published": "2024-11-28",
+    "url": "https://arxiv.org/abs/2411.19083",
+    "authors": [
+      "Yu Fu",
+      "Runze Wang",
+      "Bin Ren"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "对象级第一↔第三人称视角对齐（MCFuse + XObjAlign）的 SOTA 方法"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3 Methodology",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "MCFuse 融合文本与视觉掩码",
+    "XObjAlign 自监督跨视角对象对齐"
+  ],
+  "method": {
+    "summary": "MCFuse 融合文本描述与视觉掩码，XObjAlign 做自监督跨视角对象对齐，在 Ego-Exo4D 对象对应基准上达 SOTA",
+    "assumptions": [
+      "输入为同步 ego-exo 视频对"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Ego-Exo4D",
+      "HANDAL-X"
+    ],
+    "tasks": [
+      "对象对应"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "Ego-Exo4D 对象对应基准"
+  },
+  "evaluation": {
+    "design": "对比 SOTA",
+    "baselines": [
+      "PSALM"
+    ],
+    "metrics": [
+      "IoU"
+    ],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "较 PSALM 提升 IoU Ego2Exo 39.7→44.3、Exo2Ego 44.1→49.2",
+      "scope": "Ego-Exo4D 对象对应",
+      "locator": "4.1 Main Results on Ego-Exo4D"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "对象对应依赖同步配对，且不恢复相机位姿",
+        "basis": "任务设定为同步 ego-exo 分割"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于同步 ego-exo 对象级对应，不提供几何标定",
+  "critical_appraisal": {
+    "design_strengths": [
+      "多模态条件 + 自监督对齐"
+    ],
+    "design_risks": [
+      "依赖同步对与掩码监督"
+    ],
+    "baseline_fairness": "同基准对比 PSALM",
+    "metric_validity": "IoU 标准指标",
+    "reproducibility": "方法完整",
+    "external_validity": "Ego-Exo4D + HANDAL-X"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2411.19083-C01",
+      "claim": "第一↔第三人称视角对齐落到对象级对应任务：ObjectRelator 用 MCFuse 融合文本描述与视觉掩码、XObjAlign 做自监督跨视角对象对齐，在 Ego-Exo4D 对象对应基准上取得 SOTA（IoU Ego2Exo 39.7→44.3，Exo2Ego 44.1→49.2）。",
+      "stance": "support",
+      "relation": "回答问题二：对象级对齐的最强基准方法。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Abstract 与 4.1 Main Results 直接陈述方法与 Ego-Exo4D 上相对 PSALM 的 IoU 提升；被纳入既有综述（EA-EGOEXO-2026-0013/0014）。",
+      "locator": "4.1 Main Results on Ego-Exo4D",
+      "source_context": "improves the PSALM from 39.7 to 44.3 on Ego2Exo and from 44.1 to 49.2 on Exo2Ego.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}

@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2406.09905",
+    "title": "Nymeria: A Massive Collection of Multimodal Egocentric Daily Motion in the Wild",
+    "published": "2024-06-14",
+    "url": "https://arxiv.org/abs/2406.09905",
+    "authors": [
+      "Lingni Ma"
+    ]
+  },
+  "review": {
+    "question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+    "topic_ids": [
+      "EA-SENSOR",
+      "EA-DATA",
+      "EA-XEMBODIMENT"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "dataset",
+    "relevance": {
+      "decision": "include",
+      "reason": "多设备时间同步（亚毫秒统一时间戳）与 SLAM/BA 全局几何对齐的又一实例"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "界定问题与动机，说明本文要解决的对齐/标定缺口。"
+      },
+      {
+        "locator": "3 Building Nymeria Dataset",
+        "role": "method-or-design",
+        "purpose": "核对相机配置/标定/对齐的核心机制。"
+      },
+      {
+        "locator": "4 Benchmark Tasks and Baselines",
+        "role": "results-or-analysis",
+        "purpose": "核对基准任务或实验设定与结果。"
+      },
+      {
+        "locator": "5 Conclusions and Discussions",
+        "role": "conclusion-or-limitations",
+        "purpose": "提取作者结论与边界。"
+      },
+      {
+        "locator": "3 Building Nymeria Dataset",
+        "role": "data-or-setting",
+        "purpose": "核对数据集构成与采集规模。"
+      }
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐？",
+  "contributions": [
+    "构建大规模多模态运动数据集 Nymeria",
+    "同步设备统一时间戳 + Aria MPS SLAM/BA 全局对齐"
+  ],
+  "method": {
+    "summary": "mocap 服 + Aria 眼镜 + miniAria 腕带 + 同步设备；同步设备提供统一时间戳（亚毫秒），Aria MPS 用 VIO/SLAM + 回环 + 视觉惯性 BA 全局对齐进单一度量 3D 世界",
+    "assumptions": [
+      "设备处于同一时间服务器覆盖范围"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Nymeria"
+    ],
+    "tasks": [
+      "运动跟踪/生成基线"
+    ],
+    "embodiments": [],
+    "sample_or_scale": "大规模在野多模态运动"
+  },
+  "evaluation": {
+    "design": "数据集 + 运动任务基线",
+    "baselines": [],
+    "metrics": [],
+    "ablations": []
+  },
+  "findings": [
+    {
+      "finding": "同步设备提供亚毫秒统一时间戳，XSens–Aria 对齐误差 4.2ms",
+      "scope": "多设备时间同步",
+      "locator": "Synchronization"
+    },
+    {
+      "finding": "Aria MPS 用 SLAM + 回环 + BA 全局对齐多设备进单一度量 3D 世界",
+      "scope": "多设备几何对齐",
+      "locator": "6DoF localization and mapping with global alignment"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "全局对齐依赖同一时间服务器与 Aria 硬件",
+        "basis": "同步与对齐以 Aria MPS 为中心"
+      }
+    ]
+  },
+  "transfer_boundary": "适用于 Aria 设备群的在野多设备采集",
+  "critical_appraisal": {
+    "design_strengths": [
+      "大规模在野多设备同步对齐"
+    ],
+    "design_risks": [
+      "依赖专有 Aria MPS"
+    ],
+    "baseline_fairness": "数据集工作",
+    "metric_validity": "亚毫秒/4.2ms 量化",
+    "reproducibility": "硬件与流程详述",
+    "external_validity": "多地点多设备"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2406.09905-C01",
+      "claim": "Nymeria 的采集配置由 mocap 服、Aria 眼镜、miniAria 腕带与同步设备组成；同步设备为所有设备提供统一时间戳（可选从无线服务器接收），达亚毫秒级精度，XSens 与 Aria 的对齐误差在 1 个运动帧内即 4.2ms。",
+      "stance": "support",
+      "relation": "回答问题一：多设备（含第三人称 observer）时间同步的另一种实现（统一时间戳 + 无线服务器）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.1 Data collection setup 的 Synchronization 小节直接陈述同步设备与精度。",
+      "locator": "Synchronization",
+      "source_context": "A synchronization device is developed to supply the timestamps for all devices",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    },
+    {
+      "card_id": "2406.09905-C02",
+      "claim": "Nymeria 用 Project Aria MPS 的 VIO、SLAM 与建图算法，把同一地点多设备录制的数据先各自跑 SLAM，再回环闭合并做视觉惯性 bundle adjustment 联合优化，全局对齐进单一度量 3D 世界，输出 1kHz 高精度轨迹。",
+      "stance": "support",
+      "relation": "回答问题一/三：多设备全局几何对齐的 SLAM 加 BA 流程，与 Ego-Exo4D 同一技术路线。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "3.2 6DoF localization and mapping with global alignment 直接陈述多设备全局对齐流程。",
+      "locator": "6DoF localization and mapping with global alignment",
+      "source_context": "first SLAM is run for each individual recording independently. Subsequently, the resulting maps are loop-closed and jointly optimized via visual-inertial bundle adjustment.",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "卡片主张限定在论文报告的设定/流程范围内，引文为原文上下文，未外推到论文未覆盖的任务或数据集。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": ""
+}
