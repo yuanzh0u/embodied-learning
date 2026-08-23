@@ -28,6 +28,7 @@ This repository is a research knowledge base. Optimize for context efficiency an
 ## Source Of Truth
 
 - `evidence/` is the source of truth for paper-level evidence and finished literature reviews (versioned, append-only per run).
+- Settled runs sink into `evidence/` via `scripts/sink_run.py` (idempotent; stamps a `sink_checklist` into run.json; refuses gate-failed bundles unless `--allow-gate-fail`). Run `scripts/check_sink_integrity.py` after any sink or cleanup — it reconciles `work/`, `evidence/`, and the catalog, and exits non-zero on drift.
 - Retired raw documents remain traceable through their registered git archives in [knowledge/sources.md](knowledge/sources.md) (`git show 081e898:<file>`).
 - Topic cards are compressed working memory for agents.
 - The master index is the topic routing layer; [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) declares the current literature-review versions and evidence loading routes.

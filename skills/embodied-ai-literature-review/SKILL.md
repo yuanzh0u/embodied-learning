@@ -119,7 +119,8 @@ Use `--output -` only when the user explicitly wants inline Markdown or stdout f
 7. Settle the run:
    - Validate the evidence JSONL: `python3 skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl <file> --validate-only`.
    - Flip `run.json` `status` from `in-progress` to `settled`.
-   - Copy accepted assets into `evidence/literature-review-<topic>-<date>/`: every used evidence JSONL, final articles, appendix, source draft, query plan, candidate registry, and coverage report. Full texts/extraction payloads stay in cache/`work/`.
+   - Sink the bundle with one idempotent command: `python3 scripts/sink_run.py <run-dir>` — it re-runs the bundle audit, copies accepted assets into `evidence/literature-review-<topic>-<date>/` (every used evidence JSONL, final articles, appendix, source draft, query plan, candidate registry, coverage report; full texts/extraction payloads stay in cache/`work/`), stamps a `sink_checklist` into run.json, and prints a ready-to-paste catalog row. Gate-failed runs require `--allow-gate-fail` and their catalog row must go to the dedicated gate-failed section, never the main table.
+   - After sinking, run `python3 scripts/check_sink_integrity.py` (work/ ↔ evidence/ ↔ catalog reconciliation) and add the printed catalog row if it reports the run as unregistered.
    - Cross-run evidence is supported but must be recorded: `run.json` lists `source_runs` (the prior runs whose evidence was combined) and `event_count` equals the deduplicated count actually available to the articles. Never cite an event that is not in the settled evidence set.
    - Audit before settling — all gates must pass:
      - `python3 scripts/check_run_bundle.py <run-dir>` (bundle completeness: three styles or a declared `style`+`scope_note`, self-contained evidence, standard run.json schema).
