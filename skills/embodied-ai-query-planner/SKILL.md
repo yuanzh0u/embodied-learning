@@ -46,7 +46,8 @@ python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
 5. If the topic benefits from multiple expert perspectives (e.g. pitfall-oriented topics), extract local reference context with `scripts/gen_persona_context.py`, generate a reviewed persona file, and pass it via `--persona-file`. See [persona-expansion.md](references/persona-expansion.md).
 6. If the user requested fresh calibration, search arXiv pages, project pages, author pages, Reddit, and X/Twitter for current terms. Save only terms/query hints, not claims. See [web-calibration.md](references/web-calibration.md).
 7. Re-run the script with `--dynamic-file`, `--persona-file`, and/or `--calibration-file` to merge dynamic suggestions, persona queries, and calibrated terms.
-8. Pass the JSON plan to `$embodied-ai-literature-hub` or `search_arxiv.py --query-file`.
+8. After a retrieval or reading round, if the coverage report shows dimension gaps or the evidence pool skews positive, run `scripts/suggest_persona_regeneration.py` to draft a next-round persona file. Review the draft, refine focus and queries, then merge via `--persona-file` (round cap 2 by default).
+9. Pass the JSON plan to `$embodied-ai-literature-hub` or `search_arxiv.py --query-file`.
 
 ## Output Contract
 
