@@ -1,0 +1,392 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.20289",
+  "title": "Plug-and-Play Spiking Operators: Breaking the Nonlinearity Bottleneck in Spiking Transformers",
+  "published": "2026-05-19T06:59:46Z",
+  "url": "https://arxiv.org/abs/2605.20289",
+  "authors": [
+   "Xinzhe Yuan",
+   "Xiang Peng",
+   "Bin Gu",
+   "Huan Xiong"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "补上 ANN-to-SNN 转换路线中'非线性算子无法脉冲化'的关键缺口:以免训练、即插即用方式实现 Softmax/SiLU/RMSNorm 的纯脉冲近似,并在 7B-70B LLM 上验证精度几乎无损,是脉冲大模型'严格 spike-only 部署'路线的直接证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:现有 ANN-to-SNN 只转换线性算子,Softmax/激活/归一化等非线性算子在严格 spike-only 约束下成为部署障碍。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位与 SpikeZIP-TF、SpikeLLM、Sorbet 的差异(Sorbet 需训练,与转换管线不兼容)。"
+   },
+   {
+    "locator": "4 Method",
+    "role": "method-or-design",
+    "purpose": "理解非线性算子的分数结构分解与模块化策略。"
+   },
+   {
+    "locator": "4.1.1 Division Neuron Group",
+    "role": "method-or-design",
+    "purpose": "理解有序阈值 LIF 群体实现整数除法的两时间窗机制。"
+   },
+   {
+    "locator": "4.1.2 PolarNorm Unit (PN Unit).",
+    "role": "method-or-design",
+    "purpose": "理解 CORDIC-Hypot 二叉树仅用移位加法估计范数。"
+   },
+   {
+    "locator": "4.1.3 Piecewise Linear Exponential Unit (PWL-Exp Unit)",
+    "role": "method-or-design",
+    "purpose": "理解分段线性查表指数近似与 8 位定点系数。"
+   },
+   {
+    "locator": "4.2 Nonlinear Spiking Function (NLSpiking)",
+    "role": "method-or-design",
+    "purpose": "理解三原语如何组合成 Softmax/SiLU/RMSNorm。"
+   },
+   {
+    "locator": "5 Performance Analysis",
+    "role": "results-or-analysis",
+    "purpose": "核查定理 5.1 误差界与算子级误差图(NLS-Softmax/NLS-RMS 优势)。"
+   },
+   {
+    "locator": "6.1 Function-Level Evaluation.",
+    "role": "results-or-analysis",
+    "purpose": "核查算子级基线对比与表 1 的模型级精度变化。"
+   },
+   {
+    "locator": "6.2 Ablation and Function Sensitivity Analysis",
+    "role": "results-or-analysis",
+    "purpose": "理解截断区间超参数敏感性。"
+   },
+   {
+    "locator": "6.3 Model-Level Evaluation.",
+    "role": "results-or-analysis",
+    "purpose": "核查 SpikeLLM/SpikeZIP 转换后替换算子与标准 LLM 上的受控协议。"
+   },
+   {
+    "locator": "6.4 Latency Analysis",
+    "role": "results-or-analysis",
+    "purpose": "核查神经形态执行模型下的延迟与跨域数据搬运分析。"
+   },
+   {
+    "locator": "B.3 Model-Level Evaluation.",
+    "role": "results-or-analysis",
+    "purpose": "核查 W6A6/W8A8、T=1/2/4 与 LLaMA3-70B 的扩展验证。"
+   },
+   {
+    "locator": "B.4 Additional Operation Counts Comparisons",
+    "role": "results-or-analysis",
+    "purpose": "核查 MAC→AC/移位 的算子级操作数替换。"
+   },
+   {
+    "locator": "7 Conclusion and Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集作者自述限制(缺少真实脉冲硬件端到端部署)。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "3 Preliminary",
+    "reason": "SNN/LIF 预备知识,标准背景。"
+   },
+   {
+    "locator": "6 Experiments",
+    "reason": "仅为实验总览,细节在各小节。"
+   },
+   {
+    "locator": "Appendix A Proof of Theorem1",
+    "reason": "误差界证明细节,主文定理陈述已够综述引用。"
+   },
+   {
+    "locator": "B.1 Function-Level Evaluation / B.2 Module-Level Evaluation.",
+    "reason": "附录扩展图与 1000 条 MMLU 模块级误差,主文结论一致,非综述关键定量主张来源。"
+   }
+  ]
+ },
+ "research_question": "能否设计免训练、即插即用的脉冲算子来近似 Transformer 的非线性运算(Softmax、SiLU、归一化),使 ANN-to-SNN 转换出的脉冲大模型在严格 spike-only 硬件约束下端到端可执行且精度几乎无损?",
+ "contributions": [
+  "把 LLM 非线性算子分解为除法、指数、范数三个循环出现的原语,提出 NLSpiking 即插即用框架,免训练替换 Softmax/SiLU/RMSNorm/LayerNorm",
+  "三个模块化构件:有序阈值 LIF 群体实现的两时间窗整数除法(Division Neuron)、CORDIC-Hypot 移位加法范数估计(PolarNorm Unit)、查表式分段线性指数(PWL-Exp Unit),全部避免浮点乘法",
+  "定理 5.1 给出三类非线性的逐输出误差界,总误差可加性分解为少量隔离项(查表指数、脉冲除法、递归范数),并给出精度-内存权衡的推荐设置",
+  "在 SpikeLLM/SpikeZIP 转换模型与 LLaMA-2/3、Mistral、Qwen3(至 70B,W6A6/W8A8,T=1/2/4)上验证算子替换的平均精度变化在 ±0.003 量级"
+ ],
+ "method": {
+  "summary": "观察到 LLM 非线性函数共享'分子/正分母'的分数结构,作者将其拆成分子路径与分母路径分别用脉冲友好原语实现,再用除法神经元群重组。除法用一组阈值按 2 的幂排序的 LIF 群体:第一时间窗积分分母得到归一化尺度并固化为群体阈值,第二时间窗由分子驱动发放,输出近似商。指数用限定区间的 K 段分段线性查表(系数 8 位定点),范数用 CORDIC-Hypot 二叉树递归归约(仅移位-加减),全程以位运算缩放替代浮点。整个过程不需微调,直接挂在既有 ANN-to-SNN 转换管线之后。",
+  "assumptions": [
+   "非线性函数的分数结构分解在激活分布上成立(输入经归一化后落在 PWL-Exp 限定区间)",
+   "整数除法/查表近似的误差与 8-bit 量化噪声同量级即可被下游任务容忍",
+   "延迟与能耗结论基于神经形态执行模型分析,非真实芯片测量"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "WinoGrande/HellaSwag/ARC-Challenge/ARC-Easy/PIQA(五项零样本任务)",
+   "MR/SST-2/Subj/SST-5(BERT/SpikeZIP)",
+   "MMLU 随机 1000 条(模块级,附录 B.2)"
+  ],
+  "tasks": [
+   "算子级近似误差评测(8-bit 量化)",
+   "ANN LLM 上只替换非线性算子的受控推理(LLaMA-3-8B/LLaMA-2-7B/Mistral-7B/Qwen3-8B)",
+   "ANN-to-SNN 转换模型上的算子替换(SpikeLLM T=2 W2A16 的 LLaMA-2-7B/13B,SpikeZIP 转换的 BERT)",
+   "扩展验证:LLaMA2-7B/LLaMA3-8B W6A6/W8A8 与 LLaMA3-70B W8A8,T=1/2/4"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "7B-70B 语言模型;算子级评测以 8-bit 量化为基准"
+ },
+ "evaluation": {
+  "design": "三层评测:算子级(与 Sorbet/XNOR/DoReFa/PWL/Padé/hardmax/blockwise RMS 等孤立算子基线比误差)、模型级(同架构同参数只替换非线性算子,报告逐任务精度变化)、延迟分析(神经形态执行模型下对比 SpikeZIP/SpikeLLM 式管线的非线性调用与跨域搬运);附超参敏感性消融",
+  "baselines": [
+   "Sorbet(需训练的脉冲非线性近似)",
+   "XNOR-Net",
+   "DoReFa-Net(4b)",
+   "PWL-sigmoid 16/64 段",
+   "Padé [2/2] 近似",
+   "hardmax / hard-swish / ReLU",
+   "blockwise RMS(块 32/64)",
+   "SpikeLLM / SpikeZIP 转换管线(作为宿主)"
+  ],
+  "metrics": [
+   "算子级平均/最大绝对误差(8-bit)",
+   "模型级平均准确率变化(Δ)",
+   "MAC/AC/移位操作数(G)",
+   "时间步延迟与跨域数据搬运(定性/计数)"
+  ],
+  "ablations": [
+   "截断区间长度 L 对 SiLU/Softmax 误差的敏感性",
+   "段数 K 与查表内存的权衡",
+   "时间无关(NLS)与时间相关(NLS-TDF)两种形式(附录 B.2)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "标准 ANN LLM 上只替换非线性算子:LLaMA-3-8B 平均 -0.003、LLaMA-2-7B -0.002、Mistral-7B +0.000、Qwen3-8B +0.014(某些推理任务反而上升)",
+   "scope": "表 1,五项零样本任务",
+   "locator": "6.1 Function-Level Evaluation."
+  },
+  {
+   "finding": "在 SpikeLLM 转换的 LLaMA-2-7B/13B 与 SpikeZIP 转换的 BERT 上事后替换算子,平均变化分别为 -0.000/-0.001/+0.003,不改任何转换组件即可加载",
+   "scope": "表 1/表 2",
+   "locator": "6.3 Model-Level Evaluation."
+  },
+  {
+   "finding": "算子级(8-bit)评测中 NLS-Softmax 在所有维度取得最低平均误差且最大误差受 8-bit 网格约束;NLS-RMS 平均误差低于 blockwise 与 Sorbet 且跨维度稳定",
+   "scope": "图 3/图 4/图 5",
+   "locator": "5 Performance Analysis"
+  },
+  {
+   "finding": "定理 5.1:三类非线性的总近似误差可加性分解为查表指数、脉冲除法、递归范数三个隔离项;推荐设置下误差相对低精度推理的量化噪声可忽略,查表仅存 8/16 位条目",
+   "scope": "性能分析节",
+   "locator": "5 Performance Analysis"
+  },
+  {
+   "finding": "扩展验证:LLaMA3-70B W8A8 下 T=1 时 NLS 平均 78.64 对直接 SNN 转换 78.85,T=2 时 78.82 对 78.97,差距随时间步缩小;LLaMA2-7B/LLaMA3-8B 的 W6A6/W8A8 各时间步结论一致",
+   "scope": "附录表 4",
+   "locator": "B.3 Model-Level Evaluation."
+  },
+  {
+   "finding": "延迟分析:NLSpike 以移位加法与 LUT 在神经形态核内执行非线性,消除跨域数据搬运,时间步结构与 SpikeLLM 式管线相同不增加时间步延迟;操作数层面系统性把 MAC 替换为 AC 与移位",
+   "scope": "表 3 与表 5",
+   "locator": "6.4 Latency Analysis"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "由于算子、内存与精度-延迟约束,尚缺在真实脉冲硬件上的端到端 LLM 部署;未来工作将聚焦于此",
+    "locator": "7 Conclusion and Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "主文模型级实验只替换非线性算子、线性层仍为常规 ANN 实现,'严格 spike-only 端到端'仅是可行性论证而非完整系统的实测;算子级误差与延迟分析都未上真实芯片",
+    "basis": "6.3 节受控协议说明与 6.4 节执行模型分析口径"
+   },
+   {
+    "boundary": "对 SpikeLLM 宿主的验证在 T=2、W2A16 特定设置,精度基线本身较低(LLaMA-2-7B 平均 0.477);在强基座/高位宽下的绝对增益空间未单独量化",
+    "basis": "表 1 SpikeLLM 行设置"
+   },
+   {
+    "boundary": "PWL-Exp 限定区间与截断超参依赖'归一化后激活分布'假设,对分布外(极端尾部)输入的鲁棒性只有敏感性曲线支撑",
+    "basis": "4.1.3 节区间限制与 6.2 节敏感性分析"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于'ANN-to-SNN 转换/推理期替换非线性算子'范式及其评测口径(8-bit 量化算子误差、7B-70B 零样本任务);不能外推为已实现真实神经形态芯片上的端到端脉冲 LLM 部署,也不覆盖从头训练的 SNN、视觉/多模态任务与生成式长文本推理,能耗与延迟均为执行模型推算值。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "受控协议设计干净:同架构同参数只换算子,精度变化可直接归因于算子近似",
+   "算子级、模型级、延迟三层评测互为支撑,并有定理级误差界而非纯经验结论",
+   "横跨两类宿主管线(SpikeLLM/SpikeZIP)与四类标准 LLM,验证广度好",
+   "与既有近似基线(Sorbet/XNOR/DoReFa/PWL/Padé/blockwise)系统性对比"
+  ],
+  "design_risks": [
+   "主文 ANN LLM 实验中线性算子未脉冲化,'完整脉冲 Transformer'的证据是拼装的",
+   "延迟与能耗为执行模型分析,无芯片实测;表 3 的跨域搬运对比是计数/定性论证",
+   "算子级误差图为均值/最大误差,未报告多样本方差与最坏任务退化",
+   "摘要中'小于某精度损失'的具体数值在提取文本中缺失,只能以表 1 的 Δ 数值为准"
+  ],
+  "baseline_fairness": "算子级基线覆盖极端量化到高精度数值近似;但 Sorbet 需训练,与免训练目标不同,对比口径由作者设定",
+  "metric_validity": "算子误差(8-bit 网格下)与模型级 Δ 准确率指标合理;延迟指标是结构分析而非测量值,应按定性证据使用",
+  "reproducibility": "方法与超参(段数、区间、阈值构造)描述具体,基座模型公开;正文未提供代码链接,误差界证明完整可循",
+  "external_validity": "验证集中于语言理解类零样本任务与 BERT 分类;未覆盖生成任务、多模态与真实硬件部署(作者自认)"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.20289-C01",
+   "claim": "作者提出免训练、即插即用的 NLSpiking 框架:把 Transformer 非线性(Softmax/SiLU/RMSNorm)分解为除法、指数、范数三个原语,用标准 LIF 群体计算加位缩放实现,与既有 ANN-to-SNN 转换管线兼容且无需任何微调。",
+   "stance": "support",
+   "relation": "直接回应综述问题中脉冲大模型路线的结构性缺口:此前转换式方法只转换线性算子,该工作把'非线性算子不可脉冲化'这一部署障碍转为可解问题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言给出问题陈述与肯定回答;第 4 节给出三个模块化构件的设计。",
+   "locator": "1 Introduction",
+   "source_context": "In this work, we answer this question affirmatively by developing training-free spike-based replacements that are compatible with standard LIF dynamics.",
+   "evidence_type": "method-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对;'三个原语/免训练/即插即用'的表述与引言后文及 4.1-4.2 节模块化设计一致;定位为作者对其方法性质的主张,实际效果由后续实验卡支撑。"
+   }
+  },
+  {
+   "card_id": "2605.20289-C02",
+   "claim": "模型级受控实验(只替换非线性算子、其余不变)显示平均精度变化可忽略:LLaMA-3-8B 为 -0.003、Mistral-7B 为 +0.000,SpikeLLM 转换的 LLaMA-2-7B(T=2,W2A16)为 -0.000,五项零样本任务逐项变化均在 ±0.008 内。",
+   "stance": "support",
+   "relation": "支持'非线性算子脉冲化在 7B 级 LLM 上近乎免费'的关键主张,是转换式脉冲大模型路线精度边界的定量证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 1 给出四个 ANN LLM 与两个 SpikeLLM 转换模型的逐任务与平均精度变化。",
+   "locator": "6.1 Function-Level Evaluation.",
+   "source_context": "ANN LLaMA-3-8B ( 8 ) Original 0.736 0.792 0.542 0.776 0.807 0.730 NLSpike ( ) -0.008 -0.000 +0.001 +0.000 -0.004 -0.003",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Avg. Acc change after operator replacement",
+    "value_or_direction": "-0.003 on LLaMA-3-8B; +0.000 on Mistral-7B; -0.000 on SpikeLLM LLaMA-2-7B",
+    "comparator": "Original operators on the same model",
+    "task_or_sample": "WinoGrande, HellaSwag, ArcC, ArcE, PIQA",
+    "locator": "6.1 Function-Level Evaluation."
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 为表 1 LLaMA-3-8B 行原样文本,含逐任务变化与平均 -0.003;Mistral-7B(+0.000)与 SpikeLLM LLaMA-2-7B(-0.000)行亦在同表原样出现;±0.008 为 LLaMA-3-8B WinoGrande 单项最大变化,与表内数字一致。"
+   }
+  },
+  {
+   "card_id": "2605.20289-C03",
+   "claim": "算子级(8-bit 量化)评测中,NLS-Softmax 在所有测试维度上取得最低平均误差且最大误差受整数实现约束;NLS-RMS 平均误差低于 blockwise(块 32/64)与 Sorbet 基线并跨维度稳定,而 blockwise 仅在维度对齐块划分时才准确。",
+   "stance": "support",
+   "relation": "支持'脉冲原语组合能在量化噪声量级上逼近非线性算子'的机制主张,为算子替换近零精度损失提供底层解释。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "图 3/图 4 汇总算子级误差,正文与图注给出与基线的定性排序。",
+   "locator": "5 Performance Analysis",
+   "source_context": "NLS-Softmax achieves the lowest mean error across dimensions while keeping bounded maximum error under integer-only implementation, and NLS-RMS yields lower mean errors than blockwise and Sorbet baselines with stable performance across dimensions.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "该句为 5 节图 3 图注原样文本,逐字核对;blockwise 仅在维度对齐时准确的对照表述见 6 节实验总览段,均为提取文本原文;误差图为均值/最大误差汇总,主张措辞保持在原文排序层面未加数字。"
+   }
+  },
+  {
+   "card_id": "2605.20289-C04",
+   "claim": "定理 5.1 证明三类非线性(Softmax/SiLU/RMSNorm)的总近似误差可加性分解为少量隔离项:查表式指数、脉冲除法与递归范数估计各贡献一个可控误差项,构成明确的精度-内存权衡,推荐设置下误差相对低精度推理的量化噪声可忽略,查表仅需 8/16 位条目。",
+   "stance": "support",
+   "relation": "为综述提供'误差有界且可分解'的机制级证据,区别于纯经验近似:该路线的可控性论证来自定理而非仅实验拟合。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "5 节给出定理 5.1 陈述、加性分解观察与推荐设置(含 LUT 内存讨论)。",
+   "locator": "5 Performance Analysis",
+   "source_context": "A key observation from Theorem 5.1 is that, for all three nonlinearities, the total approximation error decomposes additively into a small number of well-isolated terms.",
+   "evidence_type": "theory",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "该观察句为 5 节原样文本;8/16 位 LUT 条目与'推荐设置下误差相对量化噪声可忽略'的表述在同节 Memory Efficiency 与 Remark 5.2 段落原文;证明见附录 A,综述引用时按定理陈述而非重述具体界常数。"
+   }
+  },
+  {
+   "card_id": "2605.20289-C05",
+   "claim": "扩展到 LLaMA3-70B(W8A8)时,NLS 转换在 T=1 平均 78.64 对直接 SNN 转换 78.85、T=2 为 78.82 对 78.97,差距随时间步增加而缩小;在 LLaMA2-7B/LLaMA3-8B 的 W6A6/W8A8 与 T=1/2/4 设置下同样保持可比精度,支持方法可扩展到 70B 规模。",
+   "stance": "conditional",
+   "relation": "支持'算子替换可扩展至数十亿级脉冲 LLM'主张,同时条件限定于 W6A6/W8A8 量化与 T≤4 时间步的语言理解任务口径。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 B.3 表 4 给出三个规模、两种量化、多个时间步的 SNN 与 NLS 对照。",
+   "locator": "B.3 Model-Level Evaluation.",
+   "source_context": "Llama 3 70B PrefixQ - W8A8 79.32 85.65 62.37 82.79 84.11 78.85 DuQ - W8A8 80.82 84.83 63.48 85.73 84.39 79.85 SNN 1 W8A8 79.32 85.65 62.37 82.79 84.11 78.85 NLS 1 W8A8 78.85 85.71 62.54 82.20 83.90 78.64 SNN 2 W8A8 79.48 85.70 62.88 82.87 83.90 78.97 NLS 2 W8A8 79.08 85.60 62.88 82.62 83.90 78.82",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Avg. Acc",
+    "value_or_direction": "78.64 vs 78.85 at T=1; 78.82 vs 78.97 at T=2",
+    "comparator": "SNN direct conversion under W8A8",
+    "task_or_sample": "Llama 3 70B on WinoGrande, HellaSwag, ArcC, ArcE, PIQA",
+    "locator": "B.3 Model-Level Evaluation."
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 为附录 B.3 表 4 Llama 3 70B 行原样文本,78.64/78.85/78.82/78.97 均在其中;'差距随时间步缩小'与'W6A6/W8A8、T=1/2/4 可比精度'的表述为同节正文原句,故以条件式记录量化与时间步范围。"
+   }
+  },
+  {
+   "card_id": "2605.20289-C06",
+   "claim": "路线边界:作者自认目前缺乏在真实脉冲硬件上的端到端 LLM 部署,受算子、内存与精度-延迟约束;延迟消除跨域数据搬运的结论来自执行模型分析而非芯片实测。",
+   "stance": "limit",
+   "relation": "限定'严格 spike-only 脉冲大模型已可部署'的强解读:该路线的硬件级证据仍停留在分析与折算层面。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论与限制一节明确硬件部署缺口;6.4 节延迟分析基于执行模型。",
+   "locator": "7 Conclusion and Limitations",
+   "source_context": "A current limitation is the lack of end-to-end LLM deployment on real spiking hardware due to operator, memory, and accuracy–latency constraints.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "限制原句逐字核对;6.4 节明确延迟分析基于'practical neuromorphic execution models'而非实测,补充的边界表述与该节口径一致,综述引用延迟优势时应标注为结构分析结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  "You et al. (SpikeZIP-TF, Transformer ANN-to-SNN 转换)",
+  "Xing et al. (SpikeLLM, 首个转换式脉冲大模型)",
+  "Sorbet(移位离散化脉冲非线性,需蒸馏微调)",
+  "Diehl et al. / Sengupta et al.(经典 ANN-to-SNN 转换)",
+  "XNOR-Net / DoReFa-Net(极端量化算子基线)",
+  "CORDIC-Hypot 算法(PolarNorm 依据)"
+ ],
+ "notes": "作者含 Bin Gu、Huan Xiong(新加坡国立大学背景),2026 年 5 月发布;定位为转换式脉冲 LLM 的'算子层补全'工作,与 SDLLM(权重侧稀疏加法)和 ASN/NASN(神经元侧机制)互补:本文解决非线性算子侧的 spike-only 可执行性。提取文本中摘要的精度损失数值与若干数学符号被 latexml 丢弃,本文引用数字均以表 1/表 4 原文为准。"
+}

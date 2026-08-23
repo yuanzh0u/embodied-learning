@@ -1,0 +1,403 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.16148",
+  "title": "NeuronSpark: A Spiking Neural Network Language Model with Selective State Space Dynamics",
+  "published": "2026-03-17T06:01:05Z",
+  "url": "https://arxiv.org/abs/2603.16148",
+  "authors": [
+   "Zhengzheng Tang"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "目前公开报道中规模最大的从随机初始化端到端训练的纯 SNN 语言模型(874M),将 SNN 膜电位动力学与选择性状态空间(Mamba)对偶,是'从头训练脉冲大模型'路线的规模与可训练性证据,对综述判断该路线验证强度关键。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认研究问题:纯 SNN 能否从随机初始化、无 Transformer 蒸馏地在有意义规模学会语言建模。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "梳理既有 SNN 语言工作的三缺口:蒸馏依赖、部分脉冲管线、规模上限 216M。"
+   },
+   {
+    "locator": "3 Architecture",
+    "role": "method-or-design",
+    "purpose": "理解四步设计逻辑:稳定神经元状态更新、层间信号、选择性序列块、系统级稳定器。"
+   },
+   {
+    "locator": "3.3 Membrane Potential Leakage Activation",
+    "role": "method-or-design",
+    "purpose": "确认层间信号为浮点泄漏电流而非二值脉冲这一关键设计边界。"
+   },
+   {
+    "locator": "3.4 Selective State Space SNN Block",
+    "role": "method-or-design",
+    "purpose": "理解 SNNBlock 的 7 路并行投影与 SNN-SSM(Mamba)对偶。"
+   },
+   {
+    "locator": "3.6 PonderNet Adaptive Timesteps",
+    "role": "method-or-design",
+    "purpose": "理解每子层自适应时间步与几何分布加权。"
+   },
+   {
+    "locator": "5.2 Results",
+    "role": "results-or-analysis",
+    "purpose": "核查 874M 训练指标:损失 3.6/2.1、85K 步、1.4B token、吞吐与定性对话。"
+   },
+   {
+    "locator": "Architecture Ablation via Training Stability (5.3)",
+    "role": "results-or-analysis",
+    "purpose": "核查 7 个消融变体全部停滞在损失 7.0 以上的稳定性证据。"
+   },
+   {
+    "locator": "5.4 Comparison with Existing SNN Language Models",
+    "role": "results-or-analysis",
+    "purpose": "核查与 SpkGPT/SpkBERT 的能力与规模对比表。"
+   },
+   {
+    "locator": "5.5 Biological Interpretability Analysis",
+    "role": "results-or-analysis",
+    "purpose": "核查计算分配'结构驱动而非难度驱动'的量化分析。"
+   },
+   {
+    "locator": "6 Discussion",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集中心主张与 SNN-SSM 对偶讨论。"
+   },
+   {
+    "locator": "Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集作者自述五项局限与能效未定量评估的声明。"
+   },
+   {
+    "locator": "7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认可行性结论、生物学解释与代码权重开源声明。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "4 Stabilization and Efficient Implementation (4.1-4.4)",
+    "reason": "残差中心化/侧抑制归一化/Triton 内核/自然梯度补偿的工程细节,主文与消融已覆盖其对可训练性的作用,综述不需要逐条公式。"
+   },
+   {
+    "locator": "Appendix A-E",
+    "reason": "初始化、模型配置、参数分解、工程优化与超参数细节,不影响综述层结论。"
+   }
+  ]
+ },
+ "research_question": "纯 SNN 架构能否不依赖 Transformer 蒸馏、从随机初始化出发,在 0.9B 参数规模上用标准 next-token 训练学会非平凡的语言建模?",
+ "contributions": [
+  "提出 Selective State Space SNN Block(7 路并行投影、学习调制网络、结构化初始化),建立 PLIF 膜电位动力学与 Mamba 选择性 SSM 的形式对偶",
+  "以浮点泄漏电流激活作为 PLIFNode 边界的默认层间信号,规避纯二值层间通信的表达/梯度瓶颈,同时保留 0/1 脉冲为内部事件过程",
+  "每个子层引入 PonderNet 自适应时间步,实现按 token 的动态计算深度",
+  "一套 SNN 原生稳定化组合(残差中心化、侧抑制归一化、两阶段自然梯度补偿)+ Triton 融合 PLIF 内核,使 0.9B 规模优化可行",
+  "训练并开源 NeuronSpark-0.9B(874M),给出纯 SNN 从零学语言的可行性证据,规模约为此前 SNN 语言模型上限(216M)的 4 倍"
+ ],
+ "method": {
+  "summary": "NeuronSpark-0.9B 是从随机初始化训练的解码器式纯 SNN 语言模型:核心序列块把 PLIF 神经元的衰减率/输入增益/阈值参数化为输入依赖的门控(与 Mamba 选择机制结构对偶),神经元内部保留发放-复位脉冲非线性;层间则以浮点泄漏电流信号通信。配套 PonderNet 逐子层自适应时间步、Triton 融合 PLIF 前向/反向内核,以及残差中心化、侧抑制归一化、自然梯度补偿三类稳定器,使替代梯度训练在 874M 参数下保持稳定。",
+  "assumptions": [
+   "LIF 膜电位动力学可表述为选择性状态空间模型,选择机制可迁移到脉冲神经元",
+   "浮点层间信号(而非二值脉冲)是保证梯度流与表达力的必要折中",
+   "训练稳定性消融(1K-12K 步)足以判定架构变体的可行性"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Seq-Monkey(29M 样本、10B token 语料,实际训练约 1.4B token)",
+   "BelleGroup train_3.5M_CN(3.5M 中文对话,SFT 0.4B token)"
+  ],
+  "tasks": [
+   "中文 next-token 预训练(85K 步)",
+   "指令/对话 SFT(6.5K 步)",
+   "可解释性分析(40 句中文、541 token)"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "874M 参数、512-token 上下文、6144 BPE 词表、8×RTX 4090"
+ },
+ "evaluation": {
+  "design": "无外部基准评测。以训练损失曲线(预训练 3.6→SFT 2.1)、定性中文对话示例、7 个架构变体的训练稳定性消融、与既有 SNN 语言模型的能力/规模对照表、以及脉冲动力学的可解释性统计作为证据。",
+  "baselines": [
+   "SpkBERT(110M,蒸馏依赖)",
+   "SpkBERT-110M(110M,蒸馏依赖)",
+   "SpkGPT(216M,含非脉冲组件)"
+  ],
+  "metrics": [
+   "预训练/SFT 训练损失",
+   "训练吞吐(tokens/sec)",
+   "消融变体损失",
+   "E[K](期望 ponder 步数)与 surprisal 相关性",
+   "快/慢时间常数神经元占比"
+  ],
+  "ablations": [
+   "7 个架构变体(MPD-AGL、E[K] 下限、有界增益、HC 解耦、Sinkhorn 健康度、皮层侧向传播、无梯度同步)的训练稳定性"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "874M 纯 SNN 从随机初始化训练:85K 步预训练(约 1.4B token)损失从 9.0 降至 3.5(表 2 记 3.6),6.5K 步 SFT 后 2.1;吞吐 960 tokens/sec(8×RTX 4090),SFT 后可进行基础中文问答",
+   "scope": "NeuronSpark-0.9B,中文语料",
+   "locator": "5.2 Results"
+  },
+  {
+   "finding": "7 个替代架构变体(各训练 1K-12K 步)全部停滞在损失 7.0 以上(7.21-7.66),仅最终架构达到 3.5,说明稳定化组件组合是该规模可训练的前提",
+   "scope": "训练稳定性消融",
+   "locator": "Architecture Ablation via Training Stability (5.3)"
+  },
+  {
+   "finding": "与既有 SNN 语言模型对照:NeuronSpark-0.9B(874M)是唯一同时满足从零训练/核心脉冲计算/通用生成/对话四项的模型;SpkGPT(216M)无对话,SpkBERT 系(110M)依赖蒸馏",
+   "scope": "SNN 语言模型横向对照表",
+   "locator": "5.4 Comparison with Existing SNN Language Models"
+  },
+  {
+   "finding": "计算分配由结构/句法角色而非预测难度驱动:排除 BOS 后 surprisal 与 E[K] 相关性近零,mean E[K] 在 7.4-7.9 间平坦;功能词/标点少约 0.7 步;67.3% 神经元快时间常数、32.7% 慢",
+   "scope": "40 句中文、541 token 的训练后分析",
+   "locator": "5.5 Biological Interpretability Analysis"
+  },
+  {
+   "finding": "作者自述:无 C-Eval/CMMLU 等定量基准与 Transformer 基线、仅中文、512-token 上下文、有重复伪影且无推理能力;能效主张(Loihi 等平台)未经定量评估",
+   "scope": "作者自述局限",
+   "locator": "Limitations"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "0.9B 参数、512-token 上下文,规模与上下文均远低于当代 LLM",
+    "locator": "Limitations"
+   },
+   {
+    "limitation": "无定量基准(C-Eval、CMMLU)与 Transformer 基线,能力证据限于训练损失与定性对话",
+    "locator": "Limitations"
+   },
+   {
+    "limitation": "仅中文;存在重复伪影且无推理能力",
+    "locator": "Limitations"
+   },
+   {
+    "limitation": "可解释性分析为相关性而非因果;神经形态平台能效的严格定量评估仍是未来工作",
+    "locator": "Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "层间通信为浮点泄漏电流信号而非二值脉冲,脉冲只存在于神经元内部;'纯 SNN/全脉冲通信'的表述不能按字面外推到神经形态硬件的通信层",
+    "basis": "3.3 节明确 downstream layers consume floating-point leakage-current signals rather than binary spikes"
+   },
+   {
+    "boundary": "训练损失 3.6 无任何同数据同 tokenizer 的 Transformer 对照,不能作为 SNN 与 ANN 性能差距的证据;可行性结论的强度止于'损失下降+定性对话'",
+    "basis": "5 Experiments 全节无外部 benchmark 与 ANN 基线"
+   },
+   {
+    "boundary": "embedding 与输出头仍是常规浮点模块,与 SpkGPT 的'部分脉冲管线'批评只有程度差异,端到端全脉冲尚未完全达成",
+    "basis": "3.1 节 Encode/Decode 流程与 Related Work 中对部分脉冲管线的定义"
+   }
+  ]
+ },
+ "transfer_boundary": "结论仅在'中文、512 上下文、874M、约 1.4B token 小预算、无外部基准'的可行性证明范围内成立;不能外推为纯 SNN 已具备与同规模 Transformer 竞争的语言能力,不能外推到英文/多语言与长上下文,更不能把'适合 Loihi 部署'读作已验证的能效优势。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "正面回应此前 SNN 语言工作的三缺口(蒸馏依赖、部分脉冲、规模),定位清晰",
+   "以训练稳定性消融(7 变体全部失败)支撑'稳定化组件必要性'的因果性论述",
+   "可解释性分析做了 BOS 混杂控制,发现相关由哨兵 token 驱动后修正结论,方法自觉较好",
+   "声称代码、权重与训练基础设施公开,可复现性主张明确"
+  ],
+  "design_risks": [
+   "零外部基准、零 Transformer 对照,能力主张完全依赖训练损失与两句定性对话",
+   "训练损失与其它模型/tokenizer 不可比,'3.6 损失'缺乏锚点",
+   "单作者论文,评审与社区验证未知",
+   "'纯 SNN'层间实为浮点泄漏电流,与神经形态芯片事件通信的适配性存疑"
+  ],
+  "baseline_fairness": "未提供任何 Transformer 或同预算 ANN 基线,无法评估公平性;对比表只与更小的 SNN 模型做能力勾选,属弱对照。",
+  "metric_validity": "训练损失与吞吐指标内部一致,但缺少标准 benchmark,能力结论的度量效度弱;可解释性统计样本仅 40 句/541 token,偏小。",
+  "reproducibility": "声称代码权重公开,附录给出配置与超参数,架构描述完整;但部分公式在 HTML 提取中符号缺失,复现仍需源码。",
+  "external_validity": "仅中文、512 上下文、0.9B 规模;结论对多语言、长上下文、更大规模与实际神经形态部署的外推均未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.16148-C01",
+   "claim": "NeuronSpark-0.9B(874M 参数)从随机初始化、无 Transformer 蒸馏完成训练:85,000 步预训练(约 1.4B token)损失降至 3.6(曲线从 9.0 降到 3.5),6,500 步 SFT 后损失 2.1,8×RTX 4090 上吞吐 960 tokens/sec,并展示基础中文多轮对话。",
+   "stance": "support",
+   "relation": "支持\"纯 SNN 可在亚十亿参数规模从零学会非平凡语言行为\"的路线可行性主张,是该路线本年度规模最大的直接证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 2 给出完整训练指标,正文补充损失曲线范围、吞吐与两个定性对话示例。",
+   "locator": "5.2 Results",
+   "source_context": "Table 2: Training results for NeuronSpark -0.9B. Metric Pretrain SFT Training loss 3.6 2.1 Parameters 874M Training steps 85,000 6,500 Tokens seen 1.4B 0.4B Hardware 8 NVIDIA RTX 4090",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Training loss; Training steps; Tokens seen; Training throughput",
+    "value_or_direction": "3.6 pretraining loss (SFT 2.1); 874M parameters; 85,000 steps; 1.4B tokens; 960 tokens/sec; loss decreases from 9.0 to 3.5",
+    "comparator": "pure SNN architecture from random initialization",
+    "task_or_sample": "NeuronSpark-0.9B pretraining on Seq-Monkey (1.4B of 10B tokens) + SFT on BelleGroup train_3.5M_CN",
+    "locator": "5.2 Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 2 原文逐字核对:3.6/2.1、874M、85,000/6,500、1.4B/0.4B、8 NVIDIA RTX 4090 全部一致;9.0→3.5 与 960 tokens/sec 出自同节正文。主张限于该训练设置的损失与定性对话,不含任何外部基准。"
+   }
+  },
+  {
+   "card_id": "2603.16148-C02",
+   "claim": "与既有 SNN 语言模型对照,NeuronSpark-0.9B(874M)是唯一同时满足从零训练、核心脉冲计算、通用生成、对话四项的模型;SpkGPT(216M)缺对话能力,SpkBERT/SpkBERT-110M(110M)依赖蒸馏且无通用生成;参数规模约为此前上限的 4 倍。",
+   "stance": "support",
+   "relation": "支持\"从头训练路线在规模与能力覆盖上超越既有 SNN 语言模型\"的进展主张,为综述提供该路线的年度坐标。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 4 以 From/Core/Gen/Dia 四列勾选对比四个模型;Related Work 给出此前规模上限 216M 的依据。",
+   "locator": "5.4 Comparison with Existing SNN Language Models",
+   "source_context": "Table 4: Comparison with existing SNN language models. Model Par. From Core Gen. Dia. SpkBERT-110M 110M ✗ ✓ ✗ ✗ SpkBERT 110M ✗ ✓ ✗ ✗ SpkGPT 216M ✓ ✓ ✓ ✗ NeuronSpark -0.9B 874M ✓ ✓ ✓ ✓",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Par. (parameters)",
+    "value_or_direction": "874M; SpkGPT 216M; SpkBERT 110M; SpkBERT-110M 110M",
+    "comparator": "SpkGPT, SpkBERT, SpkBERT-110M",
+    "task_or_sample": "From/Core/Gen/Dia capability checklist of SNN language models",
+    "locator": "5.4 Comparison with Existing SNN Language Models"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 4 原文逐字核对,勾选矩阵与参数规模完全一致;'此前上限 216M'由 Related Work 节'existing studies are typically limited to 216M parameters'支撑。对照为能力勾选表而非定量评测,解读时不得当作性能数字。"
+   }
+  },
+  {
+   "card_id": "2603.16148-C03",
+   "claim": "训练稳定性消融:7 个替代架构变体(各训练 1K-12K 步)损失全部停滞在 7.0 以上(如去除跨层均衡的 MPD-AGL 变体 7.21、E[K] 下限变体 7.47),仅最终完整架构在 85K 步达到 3.5,说明稳定化组件是该规模下可训练的必要条件。",
+   "stance": "support",
+   "relation": "支持\"脉冲大模型从头训练的瓶颈在优化稳定性而非表达能力\"的技术判断,为综述解释该路线为何进展缓慢提供证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 3 列出 7 个变体的步数与损失;正文明确所有变体损失>7.0、仅最终架构到 3.5。",
+   "locator": "Architecture Ablation via Training Stability",
+   "source_context": "Table 3: Ablation variants. All stagnated above loss 7.0; only the final architecture reached 3.5. Variant Steps Loss What Changed Final V1 85K 3.5 Full architecture MPD-AGL + no Phase 2 4.8K 7.21 Adaptive surrogate gradient, removed cross-layer equalization",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "training loss of architectural variants",
+    "value_or_direction": "all ablation variants stagnated above loss 7.0; final architecture reached 3.5; MPD-AGL variant 7.21; E[K] floor variant 7.47",
+    "comparator": "ablation variants vs. Final V1 full architecture",
+    "task_or_sample": "7 architectural variants, each trained 1K-12K steps",
+    "locator": "Architecture Ablation via Training Stability"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 3 原文逐字核对,7.0/3.5/85K/7.21 等数字一致;变体训练步数(1K-12K)远短于最终架构 85K,比较是不对称的,故主张措辞限定为'停滞在 7.0 以上'而非严格的等预算消融。"
+   }
+  },
+  {
+   "card_id": "2603.16148-C04",
+   "claim": "训练后可解释性分析(40 句中文、541 token)显示计算分配由结构/句法角色而非预测难度驱动:排除 BOS 哨兵 token 后 surprisal 与 E[K] 相关性降至近零,mean E[K] 在所有 surprisal 区间平坦(7.4-7.9);功能词/标点比内容词少约 0.7 步;学习到的神经元 67.3% 为快时间常数、32.7% 为慢。",
+   "stance": "support",
+   "relation": "支持\"脉冲模型的适应性计算分配呈现类脑的结构化模式\"主张,是类脑可解释性维度少见的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "图 4/图 5 及正文给出 E[K] 分层分布、BOS 混混杂控制后的相关性与快慢神经元占比。",
+   "locator": "5.5 Biological Interpretability Analysis",
+   "source_context": "Excluding BOS tokens, the correlation drops to (near zero), and binned analysis confirms that mean E[K] is essentially flat ( 7.4–7.9) across all surprisal ranges. This reveals that PonderNet’s computation budget is governed by structural/syntactic role rather than predictive difficulty",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean E[K] across surprisal ranges; neuron time-constant distribution; POS-level E[K] gap",
+    "value_or_direction": "mean E[K] flat 7.4–7.9; 67.3% fast, 32.7% slow; function words/punctuation lower by about 0.7; BOS E[K] 3.2 with surprisal 8.9",
+    "comparator": "excluding BOS tokens; punctuation and function words receive fewer steps than content words",
+    "task_or_sample": "40 Chinese sentences, 541 tokens (NeuronSpark-0.9B-Chat)",
+    "locator": "5.5 Biological Interpretability Analysis"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "7.4–7.9、67.3%/32.7%、约 0.7、BOS 的 3.2/8.9 均在同节图 4/图 5 说明文字中逐字核对;作者在 Limitations 自述该分析为相关性而非因果,故主张措辞限于'分配与结构角色相关'而非因果机制。"
+   }
+  },
+  {
+   "card_id": "2603.16148-C05",
+   "claim": "路线边界(作者自述):模型仅 0.9B 参数、512-token 上下文;无 C-Eval/CMMLU 等定量基准与任何 Transformer 基线;仅中文;存在重复伪影且无推理能力;可解释性为相关性分析;神经形态平台(如 Intel Loihi)上的能效'严格定量评估仍是未来工作'。",
+   "stance": "limit",
+   "relation": "限定\"纯 SNN 语言模型已接近实用\"的强解读:该路线当前证据强度止于可行性演示,无能力与能效的定量验证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Limitations 节以编号列表自述五项局限,并单独声明能效未定量评估。",
+   "locator": "Limitations",
+   "source_context": "(1) 0.9B parameters, 512-token context. (2) No quantitative benchmarks (C-Eval, CMMLU) or Transformer baselines. (3) Chinese only. (4) Repetition artifacts and no reasoning capability. (5) Interpretability analyses are correlational, not causal. Energy efficiency. The spike-based hidden computation may be amenable to deployment on neuromorphic platforms (e.g., Intel Loihi ( 9 ) ), which could yield substantial energy savings. A rigorous quantitative evaluation remains future work.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Limitations 节整段逐字复制核对,五项编号与能效段均一致;主张按原文措辞限定为作者自述边界,其中能效为'可能但未定量'的未验证主张,不构成已证实的节能证据。"
+   }
+  },
+  {
+   "card_id": "2603.16148-C06",
+   "claim": "\"纯 SNN\"的通信边界:NeuronSpark 默认以浮点泄漏电流信号(而非二值脉冲)作为层间信号以规避二值尖峰对梯度流与表达的限制,泄漏重加权只应用于每层 2 个输入神经元、SNNFFN 中每层 2 个门/升维神经元与 1 个输出神经元;二值脉冲仅是内部事件过程,故其神经形态通信层外推需打折。",
+   "stance": "limit",
+   "relation": "限定\"该模型即为全脉冲通信系统\"的解读:综述引用其规模证据时必须注明层间为浮点信号这一折中。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.3 节明确下游层消费浮点泄漏电流信号而非二值脉冲,并给出重加权适用的神经元清单。",
+   "locator": "3.3 Membrane Potential Leakage Activation",
+   "source_context": "In other words, unless explicitly stated otherwise, downstream layers consume floating-point leakage-current signals (bioelectric-state proxies) rather than binary spikes: (9) This quantity is the amount of membrane potential that will dissipate due to exponential decay before the next input arrives.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PLIFNode outputs with leakage reweighting",
+    "value_or_direction": "input neurons (2 per layer); gate/up neurons in SNNFFN (2 per layer); 1 output neuron",
+    "comparator": "floating-point leakage-current signals rather than binary spikes",
+    "task_or_sample": "inter-layer signal design of NeuronSpark-0.9B",
+    "locator": "3.3 Membrane Potential Leakage Activation"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.3 节原句逐字核对:浮点泄漏电流信号与二值脉冲的对比为原文直接陈述;'2 per layer/2 per layer/1 output neuron'出自同节重加权适用范围句。'0/1 脉冲为内部事件过程'出自 Introduction 的同义表述,不改变本卡边界结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Mamba: Linear-Time Sequence Modeling with Selective State Spaces",
+   "note": "文中以\"selective state space model\"引用,SNN-SSM 对偶的目标对象"
+  },
+  {
+   "title": "PonderNet: Learning to Ponder",
+   "note": "自适应时间步机制来源"
+  },
+  {
+   "title": "Incorporating Learnable Membrane Time Constant to Deep Learning (PLIF)",
+   "note": "PLIF 神经元模型来源"
+  },
+  {
+   "title": "SpkGPT",
+   "note": "此前最大规模 SNN 语言模型(216M),主要对照对象"
+  },
+  {
+   "title": "SpkBERT / SpkBERT-110M",
+   "note": "蒸馏依赖路线代表,对照对象"
+  }
+ ],
+ "notes": "单作者工作(Zhengzheng Tang),8×RTX 4090 小预算训练;结论页脚声称代码、权重与训练基础设施公开。预训练语料 Seq-Monkey(中文)、SFT 用 BelleGroup 中文对话,故全部证据为中文域。与 SDLLM/SpikingBrain 等'转换式'脉冲 LLM 不同,NeuronSpark 属'从头训练纯 SNN'路线,规模从 216M 推到 874M,但证据形态是训练损失+定性对话,与转换式路线的基准评测不可直接比较。"
+}

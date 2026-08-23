@@ -1,0 +1,352 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.16475",
+  "title": "Spike-driven Large Language Model",
+  "published": "2026-04-11T17:58:35Z",
+  "url": "https://arxiv.org/abs/2604.16475",
+  "authors": [
+   "Han Xu",
+   "Xuerui Qiu",
+   "Baiyu Chen",
+   "Xinhao Luo",
+   "Xingrun Xing",
+   "Jiahong Zhang",
+   "Bo Lei",
+   "Tiejun Huang",
+   "Bo Xu",
+   "Guoqi Li"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "首个完全消除矩阵乘法的脉冲驱动 LLM 方法,给出与低位量化方案的系统对比,是脉冲大模型'纯加法推理'路线的代表作。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:十亿级 LLM 上仅靠稀疏加法实现脉冲驱动推理仍是开放挑战。"
+   },
+   {
+    "locator": "4 Methods",
+    "role": "method-or-design",
+    "purpose": "理解 π-SQP 两步脉冲编码与膜电位裁剪机制。"
+   },
+   {
+    "locator": "4.2 Analysis and Challenges of Spike Firing",
+    "role": "method-or-design",
+    "purpose": "理解发放率分析与稀疏化来源。"
+   },
+   {
+    "locator": "5 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "核查 LLaMA2-7B/13B、Qwen2.5-14B 上与全精度及低位量化基线的对比。"
+   },
+   {
+    "locator": "5.2 Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "核查 π-SQP 与时间步的消融。"
+   },
+   {
+    "locator": "6 Discussion",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集神经形态芯片实现讨论与边界。"
+   },
+   {
+    "locator": "7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认'首个脉冲驱动 LLM'与最多 13× 能耗降低结论。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work / 3 Preliminary",
+    "reason": "背景与量化预备知识,已从引言获得必要脉络。"
+   },
+   {
+    "locator": "Appendix A/B/C",
+    "reason": "FLOPs/功率计算与训练设置细节,主文表格已覆盖综述所需定量主张。"
+   }
+  ]
+ },
+ "research_question": "十亿参数级 LLM 能否仅用稀疏加法(无矩阵乘法)完成脉冲驱动推理,精度与能耗相对全精度与低位量化处于什么水平?",
+ "contributions": [
+  "提出 SDLLM:首个完全消除矩阵乘法、以稀疏加法执行的脉冲驱动大语言模型,覆盖 LLaMA2-7B/13B、LLaMA3-8B、Qwen2.5-14B",
+  "π-SQP(语义量化原则)两步脉冲编码:量化过程对齐模型习得的语义空间,降低关键语义维度的量化误差集中",
+  "对称量化下的双向编码与膜电位裁剪:使零/低发放计数主导,时间步减半、发放率显著下降",
+  "首次系统对比 SNN 与低位量化边缘方案(而非只对比全精度)"
+ ],
+ "method": {
+  "summary": "推理期即插即用的两步脉冲编码:先把浮点激活按 π-SQP 映射为整数脉冲计数,再沿虚拟时间步展开为 0/1 脉冲串,使矩阵乘法等价地替换为对权重列的稀疏加法;配合对称量化双向编码与分段膜电位裁剪压低发放率。无需训练 SNN,作用于现成 LLM 权重。",
+  "assumptions": [
+   "量化对齐语义空间可缓解二值脉冲的表示退化",
+   "稀疏加法的等价性(定理 2)在 LLM 规模成立",
+   "能耗模型按突触操作数折算,代表神经形态芯片潜力而非实测"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "PIQA/ARC-e/ARC-c/BoolQ/HellaSwag/WinoGrande",
+   "SQuAD/TriviaQA/GSM8K",
+   "Wikitext2/C4"
+  ],
+  "tasks": [
+   "零样本问答",
+   "阅读理解/世界知识/数学推理",
+   "困惑度"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "7B-14B 四个基座"
+ },
+ "evaluation": {
+  "design": "与全精度、SmoothQuant/OS+/OmniQuant/AffineQuant/QLLM/Atom/DuQuant/RTN/GPTQ 等低位量化基线系统对比,报告精度/FLOPs/能耗",
+  "baselines": [
+   "LLaMA2-7B/13B FP",
+   "Qwen2.5-14B FP",
+   "SmoothQuant",
+   "OS+",
+   "OmniQuant",
+   "AffineQuant",
+   "QLLM",
+   "Atom",
+   "DuQuant",
+   "RTN",
+   "GPTQ"
+  ],
+  "metrics": [
+   "零样本 QA 平均准确率",
+   "FLOPs(T)",
+   "Power(J)",
+   "PPL",
+   "时间步/发放率"
+  ],
+  "ablations": [
+   "π-SQP 对不同量化算子的 PPL 影响(表 11)",
+   "时间步 8→8.3→16 的精度-能耗权衡(表 10)",
+   "双向编码与膜电位裁剪消融"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "SDLLM 声称是首个完全消除矩阵乘法的脉冲驱动 LLM,在多个基座上以稀疏加法执行推理",
+   "scope": "LLaMA2-7B/13B、LLaMA3-8B、Qwen2.5-14B",
+   "locator": "7 Conclusion"
+  },
+  {
+   "finding": "相对此前脉冲 LLM:能耗降低 7×、精度提升 4.2%;相对低位边缘方案最多 13× 能耗降低",
+   "scope": "摘要与结论",
+   "locator": "Abstract; 7 Conclusion"
+  },
+  {
+   "finding": "LLaMA2-7B 上 SDLLM 平均 61.09(4-1.58bit,功率 0.67J),高于最佳低位基线 DuQuant 60.57(3.97J),全精度为 63.72(31.77J)",
+   "scope": "表 5 零样本 QA",
+   "locator": "5 Experiments, Table 5"
+  },
+  {
+   "finding": "Qwen2.5-14B 上 4-1.58bit 脉冲方案平均 72.51,显著高于同位宽 RTN 39.35 与 GPTQ 36.73",
+   "scope": "表 6",
+   "locator": "5 Experiments, Table 6"
+  },
+  {
+   "finding": "作者指出异步发放模式下维度过大时会增加芯片功耗与通信带宽需求,需调节并发度",
+   "scope": "神经形态实现讨论",
+   "locator": "6 Discussion"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "异步发射模式下维度过大会增加功耗与通信带宽需求,需要调节并发度优化",
+    "locator": "6 Discussion"
+   },
+   {
+    "limitation": "脉冲驱动表示仍低于全精度精度(LLaMA2-7B 61.09 vs 63.72)",
+    "locator": "5 Experiments, Table 5"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "能耗数字基于突触操作计数折算(附录 A.2),并非神经形态芯片实测;将其读作'实测能耗'会高估证据强度",
+    "basis": "附录 A.2 Power 为计算模型"
+   },
+   {
+    "boundary": "方法属推理期转换(即插即用),并非从头训练的 SNN;'脉冲驱动 LLM'的能力上限受基座模型约束",
+    "basis": "Related Work 与 Methods 明确 no need to train the SNN"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于'在现成 LLM 权重上做推理期脉冲编码'这一转换范式;不能外推为从头训练的脉冲大模型具有同等能力,也不能把折算能耗当作芯片实测。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "与低位量化基线(而非仅全精度)系统对比,定位边缘场景",
+   "跨 4 个基座验证泛化性",
+   "定理保证稀疏加法与矩阵乘法等价",
+   "提供 FLOPs/能耗/精度三维联合报告"
+  ],
+  "design_risks": [
+   "能耗为折算值而非实测",
+   "脉冲编码本质是量化+展开,生物合理性有限",
+   "无大规模生成任务(仅零样本 QA 与少量生成任务)"
+  ],
+  "baseline_fairness": "与同位宽量化基线对比公平;与全精度对比用于说明退化幅度",
+  "metric_validity": "准确率/FLOPs/功率指标一致可比;时间步与发放率报告支撑稀疏性主张",
+  "reproducibility": "方法描述完整,基于公开基座;未见代码链接声明",
+  "external_validity": "验证集中在语言任务;未覆盖多模态与具身场景"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.16475-C01",
+   "claim": "SDLLM 是首个完全消除矩阵乘法、仅以稀疏加法执行的脉冲驱动大语言模型,在 LLaMA2-7B/13B、LLaMA3-8B、Qwen2.5-14B 多个基座上实现,并将 SNN 与低位量化边缘方案首次系统对比。",
+   "stance": "support",
+   "relation": "支持\"脉冲驱动推理在十亿级 LLM 上首次做到纯加法执行\"的年度里程碑主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "结论首句明确 first 声明与多基座覆盖。",
+   "locator": "7 Conclusion",
+   "source_context": "In this work, we present the first spike-driven LLM that eliminates matrix multiplication entirely by leveraging sparse addition, built upon multiple LLM architectures, addressing the issues of insufficient spiking representation and sparsity at the LLM level.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "结论原句直接支撑;实验部分确认四个基座(5 Experiments)。"
+   }
+  },
+  {
+   "card_id": "2604.16475-C02",
+   "claim": "在 LLaMA-2-7B/13B 上,SDLLM 相比 SpikeLLM 任务性能分别提升 5.69% 与 4.23%,同时 FLOPs 降低 1.4×、能耗降低 7×;摘要汇总称对既有脉冲 LLM 能耗降低 7×、精度提升 4.2%。",
+   "stance": "support",
+   "relation": "支持\"脉冲编码路线在能耗-精度权衡上超越既有脉冲 LLM\"的进展主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节给出对 SpikeLLM 的具体对比数字;摘要给出对既有脉冲 LLM 的 7×/4.2% 汇总。",
+   "locator": "5.1 Main Results",
+   "source_context": "Experimental results show that, on the LLaMA-2-7B and LLaMA-2-13B models, SDLLM achieves higher task performance by 5.69% and 4.23%, respectively, compared to SpikeLLM. Additionally, SDLLM reduces FLOPs by 1.4 , and energy consumption by 7 , outperforming SpikeLLM in both accuracy and efficiency.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task performance / FLOPs / energy consumption",
+    "value_or_direction": "+5.69% and +4.23% higher task performance; FLOPs reduced by 1.4; energy consumption reduced by 7",
+    "comparator": "SpikeLLM on LLaMA-2-7B and LLaMA-2-13B",
+    "task_or_sample": "zero-shot task benchmarks in Table 3",
+    "locator": "5.1 Main Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对,数字 5.69%/4.23%/1.4/7 均一致;摘要汇总句亦核对,提取文本仅丢失乘号符号,不影响数字语义。范围限于该文评测的零样本任务与 SpikeLLM 基线。"
+   }
+  },
+  {
+   "card_id": "2604.16475-C03",
+   "claim": "LLaMA2-7B 上 SDLLM(4bit 权重-1.58bit 脉冲)零样本 QA 平均 61.09、功率 0.67J,超过最佳低位基线 DuQuant 的 60.57(3.97J),相对全精度 63.72(31.77J)仍低约 2.6 个百分点。",
+   "stance": "support",
+   "relation": "支持\"脉冲驱动推理精度开始追平低位量化、能耗大幅领先\"的主张;同时暴露与全精度的残余差距。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 5 完整给出 SDLLM、全精度与七种低位基线的精度/FLOPs/功率。",
+   "locator": "5 Experiments",
+   "source_context": "Our core focus is to explore whether LLMs at the tens-of-billions scale can be constructed as spike-driven SNNs that replace dense matrix multiplications with sparse additions through spike encoding.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "零样本 QA 平均准确率 / 功率",
+    "value_or_direction": "SDLLM 61.09 / 0.67J;DuQuant 60.57 / 3.97J;FP 63.72 / 31.77J",
+    "comparator": "DuQuant(最佳低位基线)、LLaMA2-7B 全精度",
+    "task_or_sample": "PIQA/ARC-e/ARC-c/BoolQ/HellaSwag/WinoGrande",
+    "locator": "5 Experiments"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "三组数字(61.09/0.67、60.57/3.97、63.72/31.77)均在 5 Experiments 节表 5 表面文本中核对一致。"
+   }
+  },
+  {
+   "card_id": "2604.16475-C04",
+   "claim": "在更新的 Qwen2.5-14B 上,4bit 权重-1.58bit 脉冲编码平均 72.51,大幅高于同位宽 RTN 的 39.35 与 GPTQ 的 36.73,表明脉冲语义量化对更强基座的退化远小于常规量化。",
+   "stance": "support",
+   "relation": "支持\"语义对齐的脉冲编码在强基座上更稳健\"的主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 6 给出 Qwen2.5-14B 下脉冲方案与 RTN/GPTQ/SmoothQuant 对比。",
+   "locator": "5 Experiments",
+   "source_context": "We apply the SDLLM method (our -SQP two-step spike encoding with symmetric quantization–based bidirectional encoding and segmented membrane potentials as sparse components, which replaces dense matrix multiplications with spike-driven sparse additions) to LLaMA2-7B, LLaMA2-13B, and LLaMA3-8B, as well as the newer LLM Qwen2.5-14B, and systematically evaluate performance on commonsense question answering (PIQA, ARC-easy, ARC-challenge, HellaSwag, and WinoGrande) and more complex language generation tasks",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "零样本 QA 平均准确率",
+    "value_or_direction": "SDLLM 4-1.58bit: 72.51;RTN 4-4bit: 39.35;GPTQ 4-4bit: 36.73;FP: 77.26",
+    "comparator": "RTN、GPTQ、SmoothQuant(4bit)、全精度",
+    "task_or_sample": "Qwen2.5-14B,六项零样本 QA",
+    "locator": "5 Experiments"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "72.51/39.35/36.73/77.26 均在 5 Experiments 节表 6 表面文本中核对一致。"
+   }
+  },
+  {
+   "card_id": "2604.16475-C05",
+   "claim": "边界:SDLLM 属推理期即插即用转换而非训练出的 SNN;作者自述异步发放模式下维度过大会抬高芯片功耗与通信带宽需求;能耗数字为按突触操作折算而非芯片实测。",
+   "stance": "limit",
+   "relation": "限定\"纯加法脉冲 LLM 已可实用部署\"的强解读;部署证据仍在折算层面。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "讨论节给出异步模式带宽/功耗权衡;相关工作中明确无需训练 SNN;附录 A.2 为功率折算模型。",
+   "locator": "6 Discussion",
+   "source_context": "However, when the dimension becomes too large, it may increase power consumption and communication bandwidth requirements on the chip, a problem that can be optimized by adjusting the concurrency of",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为讨论节原句;\"无需训练 SNN\"出自 Related Work(\"without the need to train the SNN\"),能耗折算性质出自附录 A.2 标题与内容。"
+   }
+  },
+  {
+   "card_id": "2604.16475-C06",
+   "claim": "与低位量化边缘方案相比,SDLLM 在保持竞争精度的同时最多实现 13× 能耗降低,首次给出 SNN 可与低位边缘方案在精度与能效上抗衡的证据。",
+   "stance": "support",
+   "relation": "支持\"脉冲驱动路线具备与低位量化边缘方案竞争的现实潜力\"主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "结论原句给出 up to 13×。",
+   "locator": "7 Conclusion",
+   "source_context": "Our results show that, compared to low-bit edge solutions, SDLLM achieves competitive accuracy while reducing energy consumption by up to 13 . This work provides the first compelling evidence that SNNs are not only feasible for LLMs but also have the potential to rival low-bit edge solutions in both accuracy and energy efficiency",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "energy consumption reduction",
+    "value_or_direction": "up to 13",
+    "comparator": "low-bit edge solutions",
+    "task_or_sample": "edge computing scenario benchmarks",
+    "locator": "7 Conclusion"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "结论原句逐字核对,up to 13 与竞争精度表述完全一致;该数字为对低位量化边缘方案的对比上限,范围限于文中边缘计算场景基准,不代表所有任务上恒定达到 13×。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "π-SQP 与 SpikingBrain 的自适应阈值脉冲同属'转换式脉冲大模型'范式;SDLLM 强调与低位量化生态的直接竞争,是评估脉冲路线实用性的关键对照点。"
+}

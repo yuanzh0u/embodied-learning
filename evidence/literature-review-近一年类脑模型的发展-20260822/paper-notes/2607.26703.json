@@ -1,0 +1,353 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.26703",
+  "title": "Sequence-SOD: Bio-inspired Sequence-aware Spiking Object Detection for Event Cameras",
+  "published": "2026-07-29T09:49:56Z",
+  "url": "https://arxiv.org/abs/2607.26703",
+  "authors": [
+   "Katharina Bendig",
+   "René Schuster",
+   "Didier Stricker"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "事件相机×SNN 检测方向少见的'固定架构、隔离训练策略变量'研究:证明序列感知训练(保持膜电位)在同架构上带来可量化增益,并诚实报告与 ANN/RNN SOTA 的剩余差距与理论能耗口径。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 2",
+    "role": "problem",
+    "purpose": "确认问题:现脉冲检测器在孤立事件区间后重置状态,浪费事件流的时序信息;并核对三项贡献声明。"
+   },
+   {
+    "locator": "page 5",
+    "role": "method-or-design",
+    "purpose": "理解序列构造(125ms×T=5)、有标签/无标签区间的损失设计与膜电位保持机制。"
+   },
+   {
+    "locator": "page 6",
+    "role": "data-or-setting",
+    "purpose": "确认 Gen1 数据集规格、训练配置(AdamW、batch 14、110 epochs)与 40Hz 理论预测频率来源。"
+   },
+   {
+    "locator": "page 7",
+    "role": "results-or-analysis",
+    "purpose": "核查表 1 训练/测试序列长度交叉结果。"
+   },
+   {
+    "locator": "page 8",
+    "role": "results-or-analysis",
+    "purpose": "理解数据增强消融与基准对比叙述(序列训练与增强效应分离)。"
+   },
+   {
+    "locator": "page 9",
+    "role": "results-or-analysis",
+    "purpose": "核查表 3 Gen1 SOTA 定位与能耗公式(45nm、EMult 3.7pJ/EAc 0.9pJ)。"
+   },
+   {
+    "locator": "page 10",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集讨论/局限:GPU 训练代价、精度差距未闭合、单一数据集与架构、能效需神经形态硬件。"
+   },
+   {
+    "locator": "page 11",
+    "role": "results-or-analysis",
+    "purpose": "核查表 4 ANN vs SNN 理论能耗与逐层发放率。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 3-4 Related Work 细节",
+    "reason": "相关工作脉络已从第 2/4 页摘要级阅读获得,逐篇细节不影响本综述主张。"
+   },
+   {
+    "locator": "page 12-13 References 与页 7 图 3 可视化",
+    "reason": "参考文献与定性可视化,不承担定量证据。"
+   }
+  ]
+ },
+ "research_question": "在固定 SSD 脉冲检测架构下,把训练与评估从孤立单标签事件区间扩展为保持膜电位的多标签事件序列,能否提升事件相机目标检测性能,代价与边界是什么?",
+ "contributions": [
+  "提出 Sequence-SOD:序列感知的 SNN 目标检测训练/评估策略,把膜电位显式当作连续感知的时序记忆,仅在独立序列间重置状态",
+  "在完全相同的 SSD + Spiking DenseNet 架构上隔离验证序列训练变量:Gen1 上 mAP 23.38→25.30(无增强)→26.88(增强)",
+  "给出训练/测试序列长度交叉评估(strain×stest),证明序列训练网络对长短测试序列都稳健,而单区间训练在长序列上退化",
+  "按 45nm CMOS 折算给出 ANN vs SNN 理论能耗对比(整体 116×)及逐层发放率分析"
+ ],
+ "method": {
+  "summary": "沿用 Cordone 等的 SSD + Spiking DenseNet(深度 121、增长率 24)以保持可比性;事件按 125ms 区间累积为 (2,H,W) 直方图并离散为 T=5 时间步顺序输入。核心变化是序列内保持漏电膜电位(仅序列间重置):有标签区间把 T 步输出累积平均后计算检测损失,无标签区间只前向传播状态;训练用代理梯度穿过展开的 SNN 状态序列,批大小受序列化训练内存限制为 14。推理端可用滑动窗实现理论 40Hz 预测(25ms 内部时间步)。",
+  "assumptions": [
+   "膜电位作为时序记忆能携带跨区间有效信息(漏电积分而非硬重置)",
+   "多标签长序列的训练信号优于单区间快照",
+   "45nm CMOS 的 FLOPs 折算(EMult 3.7pJ/EAc 0.9pJ)+ 实测发放率可代表能效潜力"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Gen1 Automotive Detection Dataset(39 小时车载事件相机记录,304×240,255k 边界框,车/行人,标注频率 1-4Hz;排除边长≤10px 或对角≤30px 的小框)"
+  ],
+  "tasks": [
+   "事件相机目标检测(汽车与行人,mAP@0.5:0.05:0.95)"
+  ],
+  "embodiments": [
+   "车载事件相机感知场景(数据集层面,非机器人实体部署)"
+  ],
+  "sample_or_scale": "训练序列长 5×125ms、每区间 T=5 步;110 epochs、batch 14;模型 8.2M 参数"
+ },
+ "evaluation": {
+  "design": "同架构对照(单区间 vs 序列训练)为主轴,辅以增强消融(翻转/缩放)、Gen1 SOTA 表(ANN/混合/SNN)与理论能耗对比(ANN vs SNN 等价拓扑);训练与测试序列长度交叉评估检验状态记忆的泛化。",
+  "baselines": [
+   "ODSNN/Cordone 等(同架构单区间基线,表 3 报 18.9)",
+   "RVT-B/RVT-S(循环视觉 Transformer)",
+   "Hybrid SNN-ANN、HsVT-B、STMOD、SpikingViT(混合架构)",
+   "SFOD、SpikeYOLO、EMS-YOLO、Spiking CenterNet、SpikeFPN(SNN 检测器)",
+   "等价 ANN 拓扑(能耗对比)"
+  ],
+  "metrics": [
+   "mAP(IoU 0.5-0.95,步长 0.05)",
+   "AP50/AP75、APcar/APped",
+   "FLOPs、平均发放率 Rl、理论能耗(mJ)"
+  ],
+  "ablations": [
+   "训练序列长度 strain∈{1,5} × 测试序列长度 stest∈{1,5,full}(表 1)",
+   "水平翻转/放大/缩小及组合增强(表 2)",
+   "ANN vs SNN 逐模块能耗(表 4)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "同架构下序列感知训练提升 Gen1 检测性能:mAP 从单区间训练的 23.38 提升到 25.30(无增强),事件数据增强进一步到 26.88;相对原 ODSNN 基线(18.9)提升更明显",
+   "scope": "表 1/表 3,Gen1 test split",
+   "locator": "page 7"
+  },
+  {
+   "finding": "序列训练网络在所有测试长度上稳健(strain=5:test 1/5/full 为 25.26/25.31/25.30),而单区间训练在 full 序列上退化到 23.04(行人 AP 11.36→10.92),证明膜电位记忆的价值来自训练期状态保持",
+   "scope": "表 1 交叉评估",
+   "locator": "page 7"
+  },
+  {
+   "finding": "Gen1 榜单定位:Sequence-SOD 26.88 仍显著低于 ANN/RNN SOTA(RVT-B 47.2)、混合架构(HsVT-B 47.8、STMOD 44.3)与较新 SNN 检测器(SFOD 32.1、SpikeYOLO 40.4);其贡献是隔离训练策略变量而非架构 SOTA",
+   "scope": "表 3",
+   "locator": "page 9"
+  },
+  {
+   "finding": "理论能耗:等价 ANN 整体 12.17 mJ vs SNN 整体 0.10 mJ(116×;骨干 199×、检测头 31×),基于实测发放率(骨干 0.0235、头 0.0960)与 45nm CMOS 32-bit 折算",
+   "scope": "表 4 与第 9 页公式",
+   "locator": "page 11"
+  },
+  {
+   "finding": "25ms 内部时间步对应理论 40Hz 预测频率;但作者自述该频率依赖输入数据,更小时间步可能负向影响性能",
+   "scope": "方法与实现节",
+   "locator": "page 6"
+  },
+  {
+   "finding": "作者自述局限:SNN 精度仍低于 ANN/RNN 且本方法未闭合差距;仅在 Gen1 与单一 SSD 架构验证;T=5、Δt=125ms 固定;能效优势需神经形态硬件实现",
+   "scope": "讨论与局限节",
+   "locator": "page 10"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "SNN 精度仍低于传统 ANN 与 RNN,本方法未完全闭合该差距,只解决'孤立事件样本后重置网络状态'这一项局限",
+    "locator": "page 10"
+   },
+   {
+    "limitation": "研究限于 Gen1 Automotive Detection Dataset 与一种 SSD-based SNN 架构,在其他数据集与架构上的验证将加强结论一般性",
+    "locator": "page 10"
+   },
+   {
+    "limitation": "所有实验固定 T=5 与 Δt=125ms,对 T、Δt 与中间序列长度的系统消融仍是未来工作",
+    "locator": "page 10"
+   },
+   {
+    "limitation": "SNN 能耗依赖具体数据集与相应发放率(ANN 恒定执行同数量操作),且该级能效只有在神经形态硬件上部署才能实现",
+    "locator": "page 10"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "能耗为 FLOPs+发放率的 45nm CMOS 理论折算(EMult 3.7pJ/EAc 0.9pJ),非硬件实测;116× 应读作估算上限而非部署实测",
+    "basis": "第 9 页能耗公式明确 'we determine the energy consumption in terms of the total number of Floating point operations (FLOPs) on standard CMOS technology'"
+   },
+   {
+    "boundary": "表 3 跨方法比较受 Δt 与增强设置差异影响(ODSNN 100ms、SFOD 100ms、SpikeYOLO 2500ms、Sequence-SOD 125ms),SNN 间的名次不能直接解读",
+    "basis": "表 3 各行 Δt 列与 Seq/Aug 标记不一"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于'同一 SSD 脉冲检测架构上序列训练 vs 单区间训练'的对照与 Gen1 车载事件数据;不能外推为序列训练在其他 SNN 检测架构上同样有效(作者明言 future work),不能把 116× 理论能耗当作神经形态硬件实测,也不能据此宣称脉冲检测器已追平 ANN 检测器精度。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "固定架构隔离训练策略变量,归因干净",
+   "把序列训练效应(23.38→25.30)与数据增强效应(→26.88)分开报告",
+   "strain×stest 交叉评估直接检验膜电位记忆的跨长度泛化",
+   "能耗分析给出逐层发放率与 FLOPs 明细,可复核"
+  ],
+  "design_risks": [
+   "单一数据集、单一架构,泛化性未知",
+   "能耗为理论折算且依赖数据集发放率,非实测",
+   "跨方法表格 Δt/增强设置不一,只能作背景参考",
+   "GPU 上训练长序列 SNN 的内存代价(batch 14)限制了更长序列的探索"
+  ],
+  "baseline_fairness": "与同架构 ODSNN 的对照最公平(沿用其训练实现);跨方法对比仅作背景且作者明确不与架构型方法竞争,处理诚实。",
+  "metric_validity": "mAP/AP50/AP75/类 AP 为标准检测指标;能耗为社区惯例的 FLOPs 折算口径,非实测功耗与延迟。",
+  "reproducibility": "训练超参(AdamW、lr、batch、epochs、损失)与数据集(Prophesee 公开)完整;未见代码发布声明。",
+  "external_validity": "单一车载事件数据集与仿真时间步;真实神经形态硬件部署与异步事件处理未验证,40Hz 为理论值。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.26703-C01",
+   "claim": "Sequence-SOD 的主要贡献是把'序列感知训练与评估'引入 SNN 目标检测:显式把膜电位当作模型的时序记忆,在序列内保持 SNN 内部状态、仅在独立序列间重置,并用包含多个时间点标签的完整事件序列训练,而非孤立单标签区间。",
+   "stance": "support",
+   "relation": "支持综述问题中'SNN 从快照式处理转向连续流状态记忆'的类脑计算进展主张:训练范式而非仅架构成为脉冲视觉的进步来源。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 2 页贡献段原句定义序列感知策略与膜电位记忆定位;第 5 页给出损失在标签区间的分配机制。",
+   "locator": "page 2",
+   "source_context": "The main contribution of this paper is a sequence-aware training and evaluation strategy for SNN-based object detec- tion that explicitly treats membrane potentials as the model’s temporal memory for continuous perception.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "第 2 页贡献段原句逐字核对(连字符断行按提取原样保留);'仅在序列间重置'与第 5 页 'maintains its inner state throughout the processing of one sequence and resets it only between independent sequences' 一致,主张措辞无超出原文范围。"
+   }
+  },
+  {
+   "card_id": "2607.26703-C02",
+   "claim": "在完全相同的 SSD+Spiking DenseNet 架构上,序列感知训练(序列长 5)在所有测试长度上稳定优于单区间训练:test 1 为 25.26 vs 23.38、test full 为 25.30 vs 23.04(mAP);行人 AP 提升最大(14.72 vs 单区间 full 的 10.92),且单区间训练网络在 full 序列上反而退化,证明增益来自膜电位状态记忆而非数据量。",
+   "stance": "support",
+   "relation": "支持'膜电位作为时序记忆是脉冲模型可用容量'的核心主张,是事件相机 SNN 路线的可量化训练范式证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 1 给出 strain{1,5}×stest{1,5,full} 全交叉的 mAP/AP50/AP75/APcar/APped。",
+   "locator": "page 7",
+   "source_context": "1 1 125 23.38 47.23 20.97 35.39 11.36 1 5 125 23.63 47.74 21.02 35.42 11.83 1 full 125 23.04 45.89 20.68 35.17 10.92 5 1 125 25.26 50.98 21.88 36.09 14.43 5 5 125 25.31 50.99 21.89 36.05 14.57 5 full 125 25.30 51.49 21.91 35.87 14.72",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mAP AP50 APped",
+    "value_or_direction": "strain 5 vs strain 1: mAP 25.26/25.30 vs 23.38/23.04; APped 14.43/14.72 vs 11.36/10.92",
+    "comparator": "single-interval training (strain 1) vs sequence-aware training (strain 5)",
+    "task_or_sample": "Gen1 Automotive Detection Dataset, same SSD Spiking DenseNet, stest in {1,5,full}",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 1 全部六行数字在第 7 页表面文本逐字核对一致;'单区间训练在 full 上退化'与第 7 页正文 'the performance of the strain=1 training decreases slightly when tested on the full sequence' 及行人下降叙述一致;主张中每个数字均可在 source_context 内找到。"
+   }
+  },
+  {
+   "card_id": "2607.26703-C03",
+   "claim": "边界:在 Gen1 榜单上 Sequence-SOD 的最好成绩 26.88 mAP 仍显著低于 ANN/RNN 方法(RVT-B 47.2)与混合架构(HsVT-B 47.8、STMOD 44.3、SpikingViT 39.4),也低于较新 SNN 检测器(SpikeYOLO 40.4、SFOD 32.1);其价值在于同架构隔离验证序列训练(同基线 ODSNN 18.9 → 26.88),而非架构 SOTA。",
+   "stance": "limit",
+   "relation": "为'脉冲检测已追平 ANN 检测'的解读划界:全脉冲检测器在标准检测精度上仍落后 ANN/混合方法约 20 个 mAP 点,综述必须并列该差距。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 3 给出 ANN/混合/SNN 三类检测器在 Gen1 的 mAP 与参数量;作者自述不与架构型方法竞争。",
+   "locator": "page 9",
+   "source_context": "RVT-B [24] RNN/Trans. YOLOX [49] ✓ ✓ 50 47.2 18.5 RVT-S [24] RNN/Trans. YOLOX [49] ✓ ✓ 50 46.5 9.9 Hybrid SNN–ANN [34] Hybrid/RNN YOLOX [49] ✓ ✓ 50 43.0 7.7 HsVT-B [35] Hybrid/Trans. Head* ✓ * 50 47.8 17.2 EMS-YOLO [29] SNN YOLOv3 [47] ✗ ✗ * 26.7 6.2 Spiking CenterNet [31] SNN CenterNet ✗ * 100 22.9 13.0 SpikeFPN [33] SNN FPN ✗ * 60 22.3 22.0 STMOD [38] Hybrid/SNN ADH ✓ * 5 44.3 6.9 SFOD [30] SNN SSD ✗ ✓ 100 32.1 11.9 SpikingViT [32] Hybrid/SNN/Trans. YOLOX [49] ✓ ✓ 50 39.4 21.5 SpikeYOLO [36] SNN YOLO head ✗ * 2500 40.4 23.1 ODSNN [7] (Baseline) SNN SSD ✗ ✗ 100 18.9 8.2 S-SOD (ours) SNN SSD ✗ ✗ 125 23.38 8.2 S-SOD (ours) SNN SSD ✓ ✗ 125 25.30 8.2 S-SOD (ours) SNN SSD ✓ ✓ 125 26.88 8.2",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mAP",
+    "value_or_direction": "S-SOD 26.88 vs RVT-B 47.2, HsVT-B 47.8, STMOD 44.3, SpikeYOLO 40.4, SFOD 32.1, ODSNN baseline 18.9",
+    "comparator": "ANN/RNN, hybrid SNN, and SNN detectors on Gen1",
+    "task_or_sample": "Gen1 Automotive Detection Dataset test split",
+    "locator": "page 9, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 3 各行 mAP 数字(47.2/46.5/43.0/47.8/26.7/22.9/22.3/44.3/32.1/39.4/40.4/18.9/23.38/25.30/26.88)在第 9 页表面文本逐字核对一致;'非架构 SOTA、隔离训练变量'的定位与第 8 页 'not intended to compete primarily through architectural novelty' 原句一致。"
+   }
+  },
+  {
+   "card_id": "2607.26703-C04",
+   "claim": "理论能耗折算显示 SNN 相对等价 ANN 拓扑有大幅优势:整体推理能耗 ANN 12.17 mJ vs SNN 0.10 mJ(116×),其中骨干 199×(平均发放率 0.0235)、检测头 31×(0.0960);口径为 45nm CMOS 32-bit 浮点(EMult 3.7pJ、EAc 0.9pJ)乘以实测发放率。",
+   "stance": "support",
+   "relation": "支持'脉冲计算在事件相机检测上具备数量级能效潜力'的路线主张,同时其理论口径构成解读边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 4 给出 ANN/SNN 的 FLOPs、发放率、能耗(mJ)与倍率;第 9 页给出折算公式与工艺常数。",
+   "locator": "page 11",
+   "source_context": "Table 4 Energy consumption of an ANN and a SNN Method Network F LOP sM ult F LOP sAc Rl E (mJ) EAN N EM ethod ANN Backbone 2295.49 M 2298.21 M − 10.56 1× Heads 351.32 M 351.32 M − 1.61 1× Overall 2646.81 M 2649.53 M − 12.17 1× SNN Backbone − 2298.21 M 0.0235 0.05 199× Heads − 351.32 M 0.0960 0.05 31× Overall − 2649.53 M 0.0296 0.10 116×",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "E (mJ) estimated inference energy and spike rate Rl",
+    "value_or_direction": "ANN overall 12.17 mJ vs SNN overall 0.10 mJ (116×); backbone 199× at Rl 0.0235; heads 31× at Rl 0.0960",
+    "comparator": "equivalent ANN topology vs SNN",
+    "task_or_sample": "Gen1 Automotive Detection Dataset inference",
+    "locator": "page 11, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 4 全部数字(2295.49M/2298.21M/10.56/1×、351.32M/1.61、2646.81M/2649.53M/12.17、0.0235/0.05/199×、0.0960/0.05/31×、0.0296/0.10/116×)在第 11 页表面文本逐字核对一致;45nm 与 3.7pJ/0.9pJ 常数出自第 9 页公式段,主张明确标注为理论折算口径。"
+   }
+  },
+  {
+   "card_id": "2607.26703-C05",
+   "claim": "边界(作者自述):SNN 检测器精度仍低于传统 ANN 与 RNN,本方法并未闭合该差距,只解决'孤立事件样本后重置网络状态'这一项局限;更好的训练方法、神经元模型与检测架构仍是开放问题。",
+   "stance": "limit",
+   "relation": "为综述问题提供 SNN 视觉路线的诚实自评:序列训练是增量改进而非范式跃迁,精度差距仍是该路线的主要边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "讨论与局限节直陈精度差距未闭合与本研究定位。",
+   "locator": "page 10",
+   "source_context": "Furthermore, SNNs still suffer from a lower accuracy compared to tra- ditional ANNs and Recurrent Neural Networks (RNNs). Our method does not close this gap completely. Instead, it addresses one limitation of previous SNN object detec - tors, namely the reset of the network state after isolated event samples.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "第 10 页讨论节原句逐字核对(连字符断行按提取原样保留);'未闭合差距'与表 3 中 26.88 vs 47.2 的数字互证;'仅解决状态重置一项'限定了贡献范围,与摘要及结论措辞一致。"
+   }
+  },
+  {
+   "card_id": "2607.26703-C06",
+   "claim": "边界:SNN 的能效优势是条件性的——能耗依赖具体数据集与相应发放率(ANN 恒定执行相同操作数),且该级能效只有在神经形态硬件上部署才能实现;论文全部训练/评估在 GPU 上以时间步仿真完成,40Hz 预测频率亦为依赖输入数据的理论值。",
+   "stance": "conditional",
+   "relation": "限定'脉冲检测 116× 能效'的适用条件:综述引用该数字时必须同时引用数据集相关发放率与神经形态硬件前提。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 10 页能耗讨论原句给出两个条件;第 6 页自述理论频率依赖输入数据。",
+   "locator": "page 10",
+   "source_context": "important to note however, that the energy consumption of SNNs depends on the specific dataset and the resulting spike rates in contrast to ANNs, which always execute the same number of operations. Moreover, SNNs can only achieve this level of energy efficiency, when deployed on neuromor- phic hardware.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "第 10 页能耗讨论原句逐字核对(连字符断行按提取原样保留);'GPU 时间步仿真'出自第 4 页 'we simulate the computations in the form of time steps on a Graphics Processing Unit (GPU)';'40Hz 依赖输入数据'出自第 6 页 'the prediction frequency relies on the input data',三处共同支撑条件性措辞。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Cordone, Miramond & Thierion (IJCNN 2022):ODSNN,同架构单区间基线",
+  "Gehrig & Scaramuzza (CVPR 2023):RVT 循环视觉 Transformer 与增强策略来源",
+  "Perot 等(NeurIPS 2020):RED/Gen1 1 兆像素事件检测",
+  "Gen1 Automotive Detection Dataset(Prophesee,公开数据集)"
+ ],
+ "notes": "期刊论文:Cognitive Computation (2026) 18:91,Springer 开放获取(Projekt DEAL);作者来自 RPTU Kaiserslautern-Landau 与 DFKI,Carl Zeiss Stiftung 'Sustainable Embedded AI' 项目资助;2023-12 投稿、2026-07 接收,时间跨度较长。定位为训练策略研究而非架构 SOTA,是事件相机×SNN 路线中归因最干净的对照实验之一。"
+}

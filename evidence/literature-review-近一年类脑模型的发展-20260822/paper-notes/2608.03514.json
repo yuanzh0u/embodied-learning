@@ -1,0 +1,345 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.03514",
+  "title": "Beyond Peak TOPS/W: A System-Level Perspective on Hybrid Digital, Analogue and Neuromorphic Computing",
+  "published": "2026-08-04T11:57:50Z",
+  "url": "https://arxiv.org/abs/2608.03514",
+  "authors": [
+   "Eiman Kanjo",
+   "Varuna De Silva"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "position",
+  "relevance": {
+   "decision": "include",
+   "reason": "该立场文章系统论证'峰值 TOPS/W 不能作为能效证据'并给出任务级能量分解与系统级评测束,直接回答综述'各路线验证强度与边界'的方法学维度,与 SpiNNaker2 等实测论文互为印证。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Motivation and central proposition",
+    "role": "problem",
+    "purpose": "确认核心命题:能效是系统属性而非芯片属性,物理基底应在数字编排下按可测系统级优势扩张角色。"
+   },
+   {
+    "locator": "2.1.1 Smaller and More Efficient Models",
+    "role": "relevant-core",
+    "purpose": "理解数字计算的强基线:压缩/量化/剪枝/MCUNet 级片上推理构成任何物理基底必须击败的对照。"
+   },
+   {
+    "locator": "3.2 Activity-Dependent Energy",
+    "role": "relevant-core",
+    "purpose": "核查脉冲计数与 syn-op 能耗为何不等于系统能耗,任务级分解公式。"
+   },
+   {
+    "locator": "3.5 Workload Suitability and Evaluation",
+    "role": "relevant-core",
+    "purpose": "收集神经形态负载适用边界(强场景与不确定场景)与七项评测维度。"
+   },
+   {
+    "locator": "5.1 Mixed-Signal Integration and Interface Costs",
+    "role": "method-or-design",
+    "purpose": "理解混合信号接口成本结构:DAC/ADC、驱动、检测、标定如何吞噬物理核收益。"
+   },
+   {
+    "locator": "5.4 Deployment Criteria and Functional Complementarity",
+    "role": "method-or-design",
+    "purpose": "核查混合架构成立的四条件与'数字保持默认'的回退准则。"
+   },
+   {
+    "locator": "6 Energy Efficiency as a System Property",
+    "role": "method-or-design",
+    "purpose": "理解任务/任务周期能量边界:传感、存储搬运、标定摊销、待机与执行项。"
+   },
+   {
+    "locator": "7.1 System-Level Benchmarking",
+    "role": "results-or-analysis",
+    "purpose": "核查多指标评测束、三种结果层次区分,以及表 1 中 AIMC/光子加速器报告值及其测量边界。"
+   },
+   {
+    "locator": "4 System-Level Challenges and Non-Idealities",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集器件变化、漂移、接口、标定等非理想性与'无通用有效精度'论断。"
+   },
+   {
+    "locator": "8 Bringing It Together: Pathways to Adoption",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认采用路径判断:增量式、负载特定、数字治理下的专用引擎。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1.2 Power Management and Event-Driven Operation / 2.1.3 Adaptive and Collaborative Intelligence",
+    "reason": "数字侧功耗管理与协同智能为背景铺垫,核心主张已由 2.1.1 与第 6 节覆盖。"
+   },
+   {
+    "locator": "2.2.1 Analogue In-Memory Computing / 2.2.2 Photonic Processing / 5.2 Hybrid System Architecture / 5.3 Hybrid Design Patterns",
+    "reason": "各基底器件原理与设计模式细节,综述只需其结论性边界(已在 4、5.1、5.4 获取)。"
+   }
+  ]
+ },
+ "research_question": "在能耗与数据搬运约束下,模拟存内、光子与神经形态等物理基底应以何种系统级集成条件与评测边界,才能在数字编排的混合架构中获得可信、可部署的能效收益?",
+ "contributions": [
+  "提出以'部署系统指标'取代孤立峰值 TOPS/W 的评测主张:八元组多指标束(任务能量、端到端时延、任务性能、数据搬运、摊销标定开销、性能漂移、可编程性、部署成本),并要求区分专用核、完整混合系统与优化数字基线三层结果",
+  "给出任务级能耗分解:基线功率×执行时间 + 突触事件 + 路由脉冲包 + 神经元状态更新 + 存储/传感/主机开销,论证'每突触操作能耗'不能替代'每完成任务能耗'",
+  "系统梳理混合数字-模拟架构原则:数字主机负责配置、调度、校准、验证与回退,物理基底只在可测系统级优势下扩张角色,并给出部署四条件",
+  "明确神经形态负载适用边界:持续时序结构与稀疏变化负载最强,密集静态输入转长脉冲串、高发放率、算子频繁回落主机时收益不确定"
+ ],
+ "method": {
+  "summary": "本文为立场/视角文章,不包含原创实验:先梳理数字计算的效率基线(压缩、量化、剪枝、MCUNet 级片上推理、DVFS),再分析模拟存内、光子、神经形态三类物理基底的原理与系统级非理想性(器件变化、漂移、接口转换、标定成本)。在此基础上提出任务级能量分解与混合数字-模拟架构设计模式,并以表 1 汇总已发表加速器(IBM PCM AIMC、光子 MAC 等)的报告值及其测量边界,论证跨基底数值不可直接比较,最后给出系统级基准要求与采用路径判断。",
+  "assumptions": [
+   "数字计算基线会持续改进,物理基底必须相对强优化数字基线而非未优化实现证明优势",
+   "接口、转换、标定与主机开销在系统级能量核算中不可忽略",
+   "混合数字编排可以管理物理基底的不确定性与回退"
+  ]
+ },
+ "study_context": {
+  "datasets": [],
+  "tasks": [
+   "概念/框架分析:数字-模拟-光子-神经形态混合系统的能效核算、负载匹配、软件与部署"
+  ],
+  "embodiments": [
+   "边缘与物理 AI 系统:可穿戴、机器人、无人机、传感器节点"
+  ],
+  "sample_or_scale": "无实验;以 IBM PCM AIMC 芯片(34-tile/64-core)、光子加速器、Innatera Pulsar、SynSense DYNAP-SE2 等已发表芯片结果为定量锚点"
+ },
+ "evaluation": {
+  "design": "非实验的文献综合与框架论证:以表 1 汇总已报告加速器结果及其各自声明的测量边界,说明为何数值不可跨技术排名;提出多指标评测束并援引 NeuroBench 等框架",
+  "baselines": [
+   "强优化数字基线(作为应然对照提出,非本文实测)",
+   "IBM PCM AIMC 芯片结果(转引)",
+   "光子加速器结果(转引)",
+   "NeuroBench 基准框架(转引)"
+  ],
+  "metrics": [
+   "任务能量(含接口、控制、主机)",
+   "端到端时延",
+   "任务性能(精度/误差/稳定性)",
+   "数据搬运量与位置",
+   "摊销标定开销",
+   "温度/电源/老化下的性能漂移",
+   "可编程性与部署成本"
+  ],
+  "ablations": []
+ },
+ "findings": [
+  {
+   "finding": "峰值 TOPS/W 不足以比较使用不同表示、精度与工作条件的基底,且可能排除转换、控制、主机处理、散热与通信;应报告多指标束并至少区分专用核、完整混合系统、优化数字基线三种结果",
+   "scope": "评测方法学主张",
+   "locator": "7.1 System-Level Benchmarking"
+  },
+  {
+   "finding": "表 1 转引:IBM 34-tile PCM AIMC 芯片报告最高 12.4 TOPS/W(芯片持续结果,含 tile 间通信与模拟外设,但排除完整产品所需的辅助数字计算与 SRAM);64 核芯片单相低精度 63.1 TOPS/9.76 TOPS/W、四相高精度 16.1 TOPS/2.48 TOPS/W——各来源测量边界不同,数值不可用于跨技术排名",
+   "scope": "转引自已发表 AIMC 芯片论文",
+   "locator": "7.1 System-Level Benchmarking"
+  },
+  {
+   "finding": "脉冲计数不决定系统能耗:任务级分解需计入基线功率×执行时间、突触事件数、路由脉冲包数、状态更新与存储/传感/主机项;每突触操作能耗只表征核心,与常规数字系统比较必须用每完成任务能耗",
+   "scope": "神经形态能耗核算框架",
+   "locator": "3.2 Activity-Dependent Energy"
+  },
+  {
+   "finding": "神经形态架构对持续时序结构与稀疏变化的负载(事件视觉、常开音频、雷达、触觉、生物信号、流式异常检测、闭环控制)是最强候选;密集静态输入需先转长脉冲串、维持精度需高发放率、或不支持算子频繁回落主机时收益不确定",
+   "scope": "负载适用性判断",
+   "locator": "3.5 Workload Suitability and Evaluation"
+  },
+  {
+   "finding": "混合架构仅在负载匹配物理引擎且计入系统开销后仍有优势时才合理(四条件:负载兼容、活动/复用足够、精度鲁棒性可接受、端到端系统优势);数字执行在需要可复现性、负载频繁变化或利用率低时应保持默认",
+   "scope": "部署准则",
+   "locator": "5.4 Deployment Criteria and Functional Complementarity"
+  },
+  {
+   "finding": "采用路径判断:模拟/光子/神经形态技术将作为数字治理系统内的专用引擎被增量式、负载特定地采用;近期机会集中在重复矩阵运算、稀疏时序处理与常开感知(可穿戴、机器人、无人机)",
+   "scope": "领域方向判断",
+   "locator": "8 Bringing It Together: Pathways to Adoption"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "不存在通用的有效精度:可达精度取决于器件、电路、编码、阵列规模、工作条件与负载容忍度,无法给出跨平台的单一精度数字",
+    "locator": "4 System-Level Challenges and Non-Idealities"
+   },
+   {
+    "limitation": "表 1 中各来源声明的测量边界不同(工作负载、精度、包含的系统组件各异),数值不可用于对底层技术进行排名",
+    "locator": "7.1 System-Level Benchmarking"
+   },
+   {
+    "limitation": "混合架构仅当负载匹配且系统开销后仍有优势时才成立;数字执行在要求可复现、负载多变、利用率低或转换/标定/映射成本超过物理核优势时应保持默认",
+    "locator": "5.4 Deployment Criteria and Functional Complementarity"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "立场文章无原创实验,全部定量锚点(12.4 TOPS/W、9.76/2.48 TOPS/W、3 ns 光子周期等)转引自他人芯片论文;其结论强度受引用测量边界准确性的约束,不能作为独立实测证据",
+    "basis": "表 1 全部条目均带 Ref 引用编号,正文自述为 perspective"
+   },
+   {
+    "boundary": "未给出神经形态路线相对数字基线的量化收益范围(如系统级典型节省百分比),只提供评判框架;框架本身未经案例研究回填验证",
+    "basis": "全文以原则与公式为主,无端到端案例数据"
+   }
+  ]
+ },
+ "transfer_boundary": "本文结论是评测边界与架构方向的判断框架,不提供新的实测能效数字;不能把其转引的 12.4 TOPS/W 等读作系统级能效,也不能把'混合数字编排是可信路径'这一方向判断当作已部署系统的实证结论;框架主要针对边缘/物理 AI 场景,对云端大训练的外推未论证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "把'测量边界'作为一等公民:明确要求报告核/完整混合系统/优化数字基线三层结果",
+   "任务级能量分解公式化,可操作地说明脉冲计数与 syn-op 能耗的不足",
+   "对神经形态负载给出正反两面边界(何时强、何时收益不确定),避免单向宣传",
+   "以真实芯片报告值(IBM PCM AIMC 等)佐证测量边界差异问题"
+  ],
+  "design_risks": [
+   "无原创实验,定量锚点全部为二手转引",
+   "多指标束刻意不做加权合成,留给读者的可操作性有限",
+   "对'混合系统已具优势'的隐含乐观基于少数芯片演示,未被系统级部署数据支撑"
+  ],
+  "baseline_fairness": "作者明确要求与强优化数字基线比较并承认数字基线持续改进,立场公允;但本文自身无可比基线(非实验)",
+  "metric_validity": "提出的任务能量/端到端时延/摊销标定等指标本身即是对 TOPS/W 指标有效性的批判与替代,内部一致",
+  "reproducibility": "无实验可复现;引用来源可追溯,公式(16)-(21)给出明确核算结构",
+  "external_validity": "框架主要面向边缘与物理 AI(可穿戴、机器人、无人机);对云端训练与大规模部署的适用性讨论有限"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.03514-C01",
+   "claim": "边界:峰值每瓦操作数(TOPS/W)不足以比较使用不同表示、精度与工作条件的计算基底,且可能排除转换、控制、主机处理、散热与通信开销;作者主张未来进展应以部署系统指标而非孤立峰值 TOPS/W 声明来评估。",
+   "stance": "limit",
+   "relation": "直接限定综述中所有'神经形态/存内计算能效数字'的证据强度:未声明测量边界的 TOPS/W 声明不能作为路线优势证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "7.1 节开篇即给出峰值指标不足的两点理由(表示/精度/条件不同;边界排除项)。",
+   "locator": "7.1 System-Level Benchmarking",
+   "source_context": "Peak operations per watt is insufficient for comparing substrates that use different representations, precisions and operating conditions. It may also exclude conversion, control, host processing, cooling and communication.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "7.1 节原句逐字核对,主张措辞(insufficient/exclude)与原文一致;摘要中亦有对应表述,该主张为作者判断而非实验结果,故按 author-claim 记录,适用于所有基底间能效比较场景。"
+   }
+  },
+  {
+   "card_id": "2608.03514-C02",
+   "claim": "转引实测锚点:IBM 34-tile PCM 模拟存内芯片报告最高 12.4 TOPS/W,但该值为芯片持续结果——含 tile 间通信与模拟外设电路,排除完整产品所需的辅助数字计算与 SRAM;64 核芯片单相低精度 63.1 TOPS/9.76 TOPS/W、四相高精度 16.1 TOPS/2.48 TOPS/W。因各来源测量边界不同,这些数值不可用于跨技术排名。",
+   "stance": "support",
+   "relation": "为综述提供 AIMC 路线'公开能效数字的真实边界'的具体实例,佐证峰值指标不可直接比较的方法学主张。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "表 1 汇总转引 AIMC/光子加速器报告值与各自声明的测量边界,并明确不可排名。",
+   "locator": "7.1 System-Level Benchmarking",
+   "source_context": "AIMC (PCM, 34-tile chip, 14 nm) Energy efficiency Up to 12.4 TOPS/W Chip-sustained result including inter-tile communication and analogue peripheral circuitry, but excluding the auxiliary digital compute and SRAM required by a complete product [ 2 ] AIMC (PCM, 64-core chip, 14 nm) Throughput and energy efficiency 63.1 TOPS, 9.76 TOPS/W (one-phase, low precision); 16.1 TOPS, 2.48 TOPS/W (four-phase, high precision); 8-bit I/O",
+   "evidence_type": "cited-experiment",
+   "quantitative": {
+    "metric": "Energy efficiency / Throughput",
+    "value_or_direction": "Up to 12.4 TOPS/W (34-tile); 63.1 TOPS, 9.76 TOPS/W (one-phase, low precision); 16.1 TOPS, 2.48 TOPS/W (four-phase, high precision)",
+    "comparator": "AIMC PCM 34-tile chip vs 64-core chip, different stated measurement boundaries",
+    "task_or_sample": "reported accelerator results with stated measurement boundaries (Table 1)",
+    "locator": "7.1 System-Level Benchmarking"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 1 文本逐字复制,12.4/63.1/9.76/16.1/2.48 及边界描述均与提取文本一致;数字为本文转引(ref [2][17])的他人芯片结果,故置信记 citation-supported;同节'values cannot be used to rank'原句支撑不可排名结论。"
+   }
+  },
+  {
+   "card_id": "2608.03514-C03",
+   "claim": "条件性边界:神经形态架构是具有持续时序结构与稀疏变化负载(事件视觉、常开音频、雷达、触觉、生物信号、流式异常检测、闭环控制)的最强候选;但当密集静态输入需先转换为长脉冲序列、维持精度需要高发放率、或不支持算子频繁把执行交回主机时,收益不确定。",
+   "stance": "conditional",
+   "relation": "给出 SNN/神经形态路线适用负载的正反边界,是综述判定'该路线验证强度'的核心条件主张。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.5 节先列最强候选负载,再给出三类收益不确定情形。",
+   "locator": "3.5 Workload Suitability and Evaluation",
+   "source_context": "Neuromorphic architectures are strongest candidates for workloads with persistent temporal structure and sparse changes, including event-based vision, always-on audio, radar, tactile sensing, biosignal analysis, streaming anomaly detection and closed-loop control.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.5 节原句逐字核对;三类不确定情形出自同节相邻原句(Benefits are less certain when dense static inputs must first be converted into long spike sequences...),两部分合并为条件性主张,范围限于负载匹配性判断而非任何具体芯片实测。"
+   }
+  },
+  {
+   "card_id": "2608.03514-C04",
+   "claim": "能耗核算主张:每突触操作能耗只对表征核心有意义,与常规数字系统比较必须使用每完成任务能耗;任务级分解需计入基线功率×执行时间、突触事件数、路由脉冲包数、神经元状态更新及存储/传感/主机开销,脉冲计数本身不决定系统能耗。",
+   "stance": "support",
+   "relation": "支持综述对 SNN 能效证据的分级标准:仅报告 syn-op 能耗或发放率稀疏性的论文证据强度低于报告任务级能耗者。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.2 节给出任务级能量分解框架并以 syn-op vs 任务能耗对照句收尾。",
+   "locator": "3.2 Activity-Dependent Energy",
+   "source_context": "Energy per synaptic operation is informative for characterising a core, but energy per completed task is required for comparison with conventional digital systems",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.2 节原句逐字核对;分解项(基线功率、突触事件、路由包、状态更新等)出自同节公式(16)的正文描述,主张措辞与原文一致,适用范围为神经形态系统能耗核算方法。"
+   }
+  },
+  {
+   "card_id": "2608.03514-C05",
+   "claim": "方向判断:模拟、光子与神经形态技术将作为数字治理系统内的专用引擎被采用,数字主机负责工作负载分配、内存、校准、验证与物理结果不可靠时的回退;采用将是增量式且负载特定的,近期机会集中在重复矩阵运算、稀疏时序处理与常开感知。",
+   "stance": "support",
+   "relation": "支持综述对类脑硬件路线的定位:不是数字基础设施的替代者,而是数字编排下的专用引擎,为'混合系统'章节提供框架。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 8 节给出采用路径的总结性判断。",
+   "locator": "8 Bringing It Together: Pathways to Adoption",
+   "source_context": "Analogue, photonic and neuromorphic technologies are therefore likely to be adopted as specialised engines within digitally governed systems. Digital hosts will typically manage workload allocation, memory, calibration, verification and fallback when a physical result is uncertain or unreliable.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "第 8 节原句逐字核对,专用引擎+数字治理+回退职责的表述与原文一致;'增量式、负载特定'出自同节 Adoption is likely to be incremental and workload-specific 原句,为作者方向判断而非实证结论。"
+   }
+  },
+  {
+   "card_id": "2608.03514-C06",
+   "claim": "评测缺口:作者指出模拟、光子与神经形态加速器应与强优化数字基线比较,而非与未优化的通用实现比较,且能耗边界应覆盖整个任务或任务周期(含传感、存储搬运、标定摊销、待机与执行)——现有报告普遍未满足该标准,构成领域评测空白。",
+   "stance": "gap",
+   "relation": "标识综述必须记录的验证缺口:当前类脑/存内路线缺少与强优化数字基线的系统级对照,多数能效声明证据不足。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 6 节给出强数字基线要求与任务/任务周期能量边界分解。",
+   "locator": "6 Energy Efficiency as a System Property",
+   "source_context": "Analogue, photonic and neuromorphic accelerators should therefore be compared with a strong, optimised digital baseline rather than with an unoptimised general-purpose implementation.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "第 6 节原句逐字核对;'能耗边界覆盖整任务/任务周期'出自同节 For edge and physical-AI systems, the energy boundary should include the whole task or mission 原句;该主张指出的是领域普遍未达标的评测空白,故 stance 记 gap,范围限于边缘/物理 AI 系统的能效评测。"
+   }
+  }
+ ],
+ "core_citations": [
+  "IBM analogue-AI PCM chips (Le Gallo et al., 34-tile and 64-core)",
+  "NeuroBench benchmarking framework",
+  "Innatera Pulsar mixed-signal spiking processor",
+  "SynSense DYNAP-SE2",
+  "Mythic embedded-flash AIMC / EnCharge AI capacitor AIMC",
+  "MCUNet / T-MAC (digital efficiency baselines)",
+  "E-prop and event-based learning references"
+ ],
+ "notes": "cs.AR 立场/视角文章(2026-08-04),作者 Eiman Kanjo、Varuna De Silva(英国,边缘/普适计算与嵌入式 AI 背景)。全文无原创实验,价值在于评测边界框架:与 SpiNNaker2(2607.24396,单芯片实测)和 NeuroTrain(2605.15058,开放基准)构成'实测-框架-基准'三角,可直接用于综述'验证强度'章节:凡未声明测量边界与数字基线的 TOPS/W 声明应降级处理。LaTeXML 提取丢失公式编号内的符号,但正文主张句完整。"
+}

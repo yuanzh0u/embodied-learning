@@ -1,0 +1,430 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.13859",
+  "title": "BiSpikCLM: A Spiking Language Model integrating Softmax-Free Spiking Attention and Spike-Aware Alignment Distillation",
+  "published": "2026-04-14T09:57:15Z",
+  "url": "https://arxiv.org/abs/2605.13859",
+  "authors": [
+   "Sihang Guo",
+   "Chenlin Zhou",
+   "Jiaqi Wang",
+   "Kehai Chen",
+   "Qingyan Meng",
+   "Zhengyu Ma"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "首个全二值、无 MatMul、无 softmax 的脉冲因果语言模型,并系统给出与同规模 ANN、既有脉冲 LLM、量化 ANN 的三层对比与能耗折算,是'全二值脉冲+蒸馏训练'路线的核心证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:既有脉冲 LLM 在注意力层仍保留浮点 MatMul/softmax,或训练困难;收集贡献列表与表 1 属性对比。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "梳理 SpikeBERT/SpikeLM/SpikeGPT/SpikeLLM 的脉冲形式与训练方式脉络。"
+   },
+   {
+    "locator": "3.2 BiSpikCLM Architecture",
+    "role": "method-or-design",
+    "purpose": "确认基于 OPT 架构的三组件设计与'fully spike-driven'声明。"
+   },
+   {
+    "locator": "3.2.2 Softmax-Free Spiking Attention (SFSA)",
+    "role": "method-or-design",
+    "purpose": "理解 SFSA:脉冲点积整值注意力分数+因果掩码+脉冲神经元权重。"
+   },
+   {
+    "locator": "3.3 Spike-Aware Alignment Distillation",
+    "role": "method-or-design",
+    "purpose": "理解 SpAD 五级对齐(嵌入/注意力/特征/软目标/硬目标)与跨域对齐策略。"
+   },
+   {
+    "locator": "4.1 Training Details",
+    "role": "data-or-setting",
+    "purpose": "确认训练数据 FineWeb-Edu 10B token 与规模 0.125B-1.3B。"
+   },
+   {
+    "locator": "4.2 Model Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "核查八项零样本基准与同规模 ANN 相对精度 82.60%-94.56%。"
+   },
+   {
+    "locator": "4.3 Energy Consumption",
+    "role": "results-or-analysis",
+    "purpose": "核查 45nm 芯片仿真能耗折算、9.43 mJ vs 126.01 mJ 与 4.16%-5.87% 计算成本。"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "核查 SpAD 对齐组件消融(STA +1.11%、全组合 36.25%)。"
+   },
+   {
+    "locator": "4.4 Ablation Studies",
+    "role": "results-or-analysis",
+    "purpose": "核查脉冲模块消融:全脉冲设计 36.05% 精度与 5.24 mJ 能耗。"
+   },
+   {
+    "locator": "Appendix G Comparison with SpikeLLM",
+    "role": "results-or-analysis",
+    "purpose": "核查与 SpikeLLM 的 SNN/ANN 比率对比(82-95% vs 65-83%)。"
+   },
+   {
+    "locator": "Appendix L Comparison with Quantized ANNs",
+    "role": "results-or-analysis",
+    "purpose": "核查与 BitNet/SmoothQuant/OmniQuant/TriLM 的同规模量化对比(表 8)。"
+   },
+   {
+    "locator": "Appendix M Effect of Training Scale and Conversational Ability",
+    "role": "results-or-analysis",
+    "purpose": "核查 25B token 扩展实验(+3.06%)与对话能力定性变化。"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集'首个全二值 MatMul-free CLM'结论与作者自述局限。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Appendix B/C/E/F/H/I/J/K/N",
+    "reason": "算法伪码、对齐公式推导、替代梯度、能耗公式、权重/发放可视化、长上下文稀疏分析等细节,主文与附录 G/L/M 已覆盖综述所需定量主张。"
+   }
+  ]
+ },
+ "research_question": "能否构建全二值、无浮点矩阵乘法与 softmax 的脉冲因果语言模型,并通过 ANN-to-SNN 的层级对齐蒸馏,在远少于 ANN 的训练 token 与计算成本下获得可比性能?",
+ "contributions": [
+  "BiSpikCLM:首个全二值脉冲、无 MatMul 的因果语言模型;SFSA 用 Hadamard 掩码脉冲点积+脉冲神经元替代因果自注意力的 softmax 与浮点乘法(表 1 中唯一在注意力层面同时做到 Softmax-Free/Exp-Free/FP-Mul-Free 的解码器式模型)",
+  "SpAD 蒸馏框架:在嵌入、注意力图、中间特征、输出 logits(软/硬目标)五个层级对齐 ANN 教师与 SNN 学生,使模型能从随机初始化训练并大幅降低所需 token 量",
+  "给出三层系统对比:同规模 ANN(OPT)、既有脉冲 LLM(SpikeGPT/SpikeLLM)、量化 ANN(BitNet/OmniQuant 等),并以 45nm 芯片仿真折算能耗",
+  "TriSpikCLM 三值扩展作为精度-能耗权衡基线;25B token 扩展实验证明架构对数据规模响应良好"
+ ],
+ "method": {
+  "summary": "基于 OPT 家族架构的解码器式脉冲语言模型,核心是把因果自注意力改造为 SFSA:Q/K/V 均为二值脉冲序列,脉冲点积产生整值注意力分数,经因果掩码后再过脉冲神经元得到稀疏注意力权重,从而消除 softmax 与浮点乘法;前馈层同样脉冲化(SFFN)。训练上不做 ANN-to-SNN 转换,而是用 SpAD 从随机初始化直接训练,通过嵌入对齐(EA)、脉冲注意力对齐(SAA)、脉冲特征对齐(SFA)、软目标(STA)与硬目标(HTA)五类损失把 ANN 教师的知识迁移到脉冲学生,显著降低所需训练 token。",
+  "assumptions": [
+   "整值脉冲点积+脉冲神经元足以保留因果注意力的表征能力",
+   "层级对齐蒸馏可弥合连续表征与离散时间脉冲活动的域差",
+   "SOPs 对 FLOPs 的 45nm 芯片折算能代表真实神经形态能耗"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "FineWeb-Edu(取 10B token 预训练;扩展实验 125M 用 5B、1.3B 用 25B)"
+  ],
+  "tasks": [
+   "自回归语言建模预训练",
+   "八项零样本常识推理/QA(ARC-e/ARC-c/WG/BQ/PIQA/HS/OBQA/HQA)",
+   "对话能力定性评测"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "0.125B/0.35B/1.3B 三个规模;时间步 T=2/4;对比 OPT-125M/350M/1.3B"
+ },
+ "evaluation": {
+  "design": "与同规模 OPT(ANN 对应物)、既有脉冲 LLM(SpikeGPT、SpikeLLM)和量化 ANN(BitNet/SmoothQuant/OmniQuant/TriLM)分组对比;能耗按发放率与 SOPs 折算为 45nm 神经形态芯片每样本毫焦;组件/时间步/数据量/对齐四类消融。",
+  "baselines": [
+   "OPT-125M/350M/1.3B(同规模 ANN)",
+   "SpikeGPT(216M,二值,从零训练)",
+   "SpikeLLM(7-70B,整数 W2A16/W2A8,后训练量化)",
+   "BitNet(1.58-bit)",
+   "SmoothQuant(OmniQuant W4A4)",
+   "TriLM(1.58-bit)",
+   "TriSpikCLM(本文三值扩展)"
+  ],
+  "metrics": [
+   "八项零样本基准平均准确率",
+   "SNN/ANN 精度比率(%)",
+   "每样本能耗(mJ,SOPs 折算)",
+   "计算成本占比(4.16%-5.87%)",
+   "发放率"
+  ],
+  "ablations": [
+   "SFSA/SFFN 换回 ANN 模块的精度-能耗消融",
+   "时间步 2/4 与训练 token 1B-25B 扫描",
+   "SpAD 五组件逐步叠加(STA +1.11% 最大,全组合 36.25%,+1.68%)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "BiSpikCLM-1.3B 仅用 10B 训练 token(OPT-1.3B 需 180B,约 5.6%)达到 42.19% 零样本平均准确率(4 时间步),接近 OPT-1.3B 的 49.73%,每次推理仅耗其 10.6% 能量;2 时间步时保持 41.33%、5.88% 能量",
+   "scope": "1.3B 模型,八项零样本基准",
+   "locator": "1 Introduction"
+  },
+  {
+   "finding": "各规模上 BiSpikCLM 达到同规模 ANN 零样本精度的 82.60%-94.56%",
+   "scope": "0.125B-1.3B 全部规模",
+   "locator": "4.2 Model Evaluation"
+  },
+  {
+   "finding": "能耗折算:125M 上 9.43 mJ vs ANN 基线 126.01 mJ,精度保持 93% 以上;0.125B-1.3B 仅 4.16%-5.87% 计算成本;时间步 2→4 使 125M 准确率 36.05%→36.50%",
+   "scope": "45nm 神经形态芯片仿真(SOPs vs FLOPs)",
+   "locator": "4.3 Energy Consumption"
+  },
+  {
+   "finding": "SpAD 组件消融:STA 单项增益最大(+1.11%),EA 最小(+0.33%),SFA/SAA 分别 +0.63%/+0.38%;全组合最佳 36.25%(+1.68%),证明层级对齐互补",
+   "scope": "125M 模型消融",
+   "locator": "4 Experiments"
+  },
+  {
+   "finding": "与 SpikeLLM 对比:BiSpikCLM 的 SNN/ANN 比率稳定在 82%-95%,高于 SpikeLLM 的 65.41%-82.55%,且用更小模型与纯二值脉冲形式;但该比率随自身规模增大而下降(125M 94.56% → 1.3B 84.84%)",
+   "scope": "附录 G 表 4 跨规模对比",
+   "locator": "Appendix G Comparison with SpikeLLM"
+  },
+  {
+   "finding": "与量化 ANN 同规模对比:BiSpikCLM(T=4)42.19% 与 BitNet 1.58-bit(42.66%)相当、高于 SmoothQuant W4A4(40.88%),低于 OmniQuant W4A4(43.90%)与 TriLM 1.5B(43.16%)",
+   "scope": "附录 L 表 8,1.3B/1.2B 模型",
+   "locator": "Appendix L Comparison with Quantized ANNs"
+  },
+  {
+   "finding": "数据扩展:1.3B 从 10B 增至 25B token,平均准确率 41.33%→44.39%(+3.06%);125M 从 1B 增至 5B 提升 1.05%;25B 版本能正确回答事实性问题而 10B 版本不能",
+   "scope": "附录 M 扩展实验",
+   "locator": "Appendix M Effect of Training Scale and Conversational Ability"
+  },
+  {
+   "finding": "作者自述局限:精度在部分基准上仍落后于大规模 ANN LLM,训练更大模型需仔细调节时间步与蒸馏日程",
+   "scope": "结论中的 Limitations 段",
+   "locator": "5 Conclusion"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "计算成本虽大幅降低,精度在部分基准上仍落后于大规模 ANN LLM",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "训练更大模型需要仔细调节时间步与蒸馏日程(训练稳定性成本)",
+    "locator": "5 Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "能耗为 45nm 芯片仿真折算(SOPs vs FLOPs),非实测;SNN/ANN 精度保持率随规模增大而下降(94.56%@125M→84.84%@1.3B),按现有趋势外推到 7B+ 规模的保持率存疑",
+    "basis": "4.3 节能耗方法与附录 G 表 4 的比率随规模递减"
+   },
+   {
+    "boundary": "评测全部为零样本分类式 QA,无困惑度、生成质量或下游微调;与 OPT 的对比在训练 token 上不对等(10B vs 180B),'接近 ANN'的表述依赖这一不对称设置",
+    "basis": "4.2 节评测设计与 1 Introduction 的 token 对比叙述"
+   },
+   {
+    "boundary": "SpAD 依赖 ANN 教师,并非纯 SNN 自监督训练;'从随机初始化训练'仍以 ANN 先验为知识来源,蒸馏依赖这条此前的批评(SpikeBERT)对 BiSpikCLM 部分成立",
+    "basis": "3.3 节 SpAD 设计与 2.2 节对蒸馏路线的讨论"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于 0.125B-1.3B 规模、≤25B 训练 token、八项零样本 QA 与折算能耗;不能外推到 7B 以上规模(相对精度随规模下降)、真实芯片实测能耗、长文本生成质量或指令微调后的对话系统场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三层对照体系完整:同规模 ANN、既有脉冲 LLM、量化 ANN,定位清晰",
+   "消融覆盖组件/时间步/数据量/对齐四个维度,并附 25B token 扩展实验回应'proof-of-concept'质疑",
+   "能耗计算方法透明(发放率→SOPs→45nm 折算,附录 F 给出公式)",
+   "表 1 以 Softmax-Free/Exp-Free/FP-Mul-Free 三属性系统刻画脉冲 LLM 谱系"
+  ],
+  "design_risks": [
+   "与 OPT 的对比训练 token 不对等(10B vs 180B),有利叙述但混淆规模效应",
+   "SNN/ANN 比率随规模下降的趋势未被讨论,规模外推风险被淡化",
+   "能耗为折算值;TriSpikCLM 显示三值化可再换精度,权衡空间未充分展开",
+   "评测缺少困惑度与生成质量指标"
+  ],
+  "baseline_fairness": "与同规模 OPT 对比在训练数据量上不对等,但作者如实披露并用'更少 token'作为主张;与 SpikeLLM 的对比存在规模(1.3B vs 7-70B)与位宽(二值 vs 整数 W2A16)双重混淆,比率对比只能作弱证据。",
+  "metric_validity": "八基准零样本平均准确率为标准做法;能耗指标基于 SOPs 折算且方法公开,但属理论值而非实测;SNN/ANN 比率指标设计合理。",
+  "reproducibility": "训练细节(附录 D)、SFSA 算法(附录 B)、能耗公式(附录 F)齐备;未见明确代码/权重发布声明。",
+  "external_validity": "仅英文零样本 QA 与两例定性对话;对多语言、长上下文(附录 N 仅初步分析)、指令跟随与真实部署场景未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.13859-C01",
+   "claim": "BiSpikCLM 是首个全二值脉冲、无 MatMul 的因果语言模型:SFSA 在注意力模块层面同时消除 softmax、指数函数与浮点乘法(表 1 中唯一三项全勾的解码器式模型),架构基于 OPT 家族,经 SpAD 从随机初始化训练,规模 1.3B。",
+   "stance": "support",
+   "relation": "支持\"脉冲大模型的注意力层已可做到全二值无浮点运算\"的年度进展主张,是该路线的首创性坐标。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言贡献第一条与表 1 属性对比共同支撑'first'声明与三属性勾选。",
+   "locator": "1 Introduction",
+   "source_context": "We propose BiSpikCLM , the first binary spiking MatMul-free causal language model equipped with a fully spike-driven attention mechanism. Our SFSA replaces the causal self-attention, which relies on floating-point operations and softmax, enabling efficient autoregressive language modeling with binary spikes.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "attention-module properties (Softmax-Free, Exp-Free, FP-Mul-Free); Params",
+    "value_or_direction": "BiSpikCLM 1.3B Binary SpAD Decoder-only (only model with all three properties)",
+    "comparator": "SpikeGPT (216M Binary, train from scratch), SpikeLLM (7-70B Integer, post-training quantization)",
+    "task_or_sample": "Table 1 comparison of spiking language models",
+    "locator": "1 Introduction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言贡献段逐字核对'first binary spiking MatMul-free causal language model';表 1 中 BiSpikCLM 行为唯一三项 ✓ 的解码器式模型,与 SpikeGPT(仅两项)、SpikeLLM(整数形式)形成对照;'first'属作者首创性声明,宜按其对比范围理解。"
+   }
+  },
+  {
+   "card_id": "2605.13859-C02",
+   "claim": "BiSpikCLM-1.3B 仅用 10B 训练 token(OPT-1.3B 需 180B,约 5.6%)达到 42.19% 零样本平均准确率(4 时间步),接近 OPT-1.3B 的 49.73%,每次推理仅耗其 10.6% 能量;2 时间步时保持 41.33% 准确率与 5.88% 能量成本。",
+   "stance": "support",
+   "relation": "支持\"蒸馏训练使脉冲 LLM 以极小数据与能量预算逼近同规模 ANN\"的进展主张,是该文最核心的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言贡献第三条给出完整的 token/精度/能量三元组对比。",
+   "locator": "1 Introduction",
+   "source_context": "With only 10B training tokens, significantly fewer than the 180B tokens used to train OPT-1.3B, our SpAD framework enables BiSpikCLM-1.3B to achieve 42.19% zero-shot accuracy on common reasoning benchmarks using 4 time steps, approaching the 49.73% of OPT-1.3B, while consuming just 10.6% of the energy per inference. Remarkably, even at 2 time steps, the model maintains 41.33% accuracy with only 5.88% of the energy cost.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "zero-shot accuracy; energy per inference; training tokens",
+    "value_or_direction": "42.19% (4 time steps) vs 49.73%; 10.6% energy; 41.33% at 2 time steps with 5.88% energy; 10B vs 180B tokens",
+    "comparator": "OPT-1.3B (ANN counterpart trained with 180B tokens)",
+    "task_or_sample": "common reasoning benchmarks, zero-shot, BiSpikCLM-1.3B",
+    "locator": "1 Introduction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对,42.19/49.73/10.6%/41.33/5.88%/10B/180B 全部一致;5.6% 为 10/180 的换算,摘要同义句亦核对。注意对比在训练 token 上不对等,主张措辞限定为'以更少 token 接近',非等预算比较。"
+   }
+  },
+  {
+   "card_id": "2605.13859-C03",
+   "claim": "能耗折算(45nm 神经形态芯片仿真,SOPs 对 FLOPs):125M 规模 BiSpikCLM 每样本 9.43 mJ vs ANN 基线 126.01 mJ,同时保持 93% 以上精度;0.125B-1.3B 全规模仅 4.16%-5.87% 计算成本;时间步 2→4 在 125M 上把准确率从 36.05% 提到 36.50%。",
+   "stance": "support",
+   "relation": "支持\"全二值脉冲 LLM 具备一个数量级以上推理能耗优势\"的主张,为综述的能效维度提供折算级证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 节给出能耗折算方法与三组关键数字,并指出时间步-能耗权衡。",
+   "locator": "4.3 Energy Consumption",
+   "source_context": "BiSpikCLM consumes an order of magnitude less energy than ANN baselines (e.g., 9.43 mJ vs. 126.01 mJ at 125M) while achieving over 93% of the accuracy. Across 0.125B–1.3B parameters, it maintains competitive performance at only 4.16%–5.87% of the computational cost.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "per-sample energy; computational cost fraction; accuracy across time steps",
+    "value_or_direction": "9.43 mJ vs. 126.01 mJ at 125M; over 93% of the accuracy; 4.16%–5.87% of the computational cost; 36.05% → 36.50% at 125M",
+    "comparator": "ANN baselines (FLOPs-based)",
+    "task_or_sample": "inference energy simulation on 45nm neuromorphic chip (SOPs vs FLOPs), 0.125B-1.3B models",
+    "locator": "4.3 Energy Consumption"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.3 节原句逐字核对,9.43/126.01/93%/4.16%-5.87% 一致;36.05→36.50 出自同节时间步句;能耗方法(45nm 仿真、SOPs 折算)在同节开头明示,故主张限定为折算值而非实测。"
+   }
+  },
+  {
+   "card_id": "2605.13859-C04",
+   "claim": "与 SpikeLLM 对比:BiSpikCLM 的 SNN/ANN 精度比率在各规模上稳定于 82%-95%,持续高于 SpikeLLM 的 65.41%-82.55%(如 BiSpikCLM 1.3B/T=4 为 42.19%/84.84%,SpikeLLM 7B/W2A16 为 49.92%/78.17%,70B/W2A16 为 60.47%/82.55%),且以更小模型与纯二值脉冲形式达成;作者归因于 spike-aware 蒸馏。",
+   "stance": "support",
+   "relation": "支持\"从头训练+蒸馏路线在 ANN 性能保持率上优于后训练量化转换路线(SpikeLLM)\"的比较主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 G 表 4 跨规模给出两路线的精度与 SNN/ANN 比率,正文总结 82-95% 对比结论。",
+   "locator": "Appendix G Comparison with SpikeLLM",
+   "source_context": "Notably, the SNN/ANN ratio of BiSpikCLM is consistently higher (82–95%) than that of SpikeLLM, indicating that our spike-based models retain more of the original ANN performance. This improvement is largely attributed to our spike-aware knowledge distillation framework, which effectively transfers information from ANN teachers to spiking students.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SNN/ANN Ratio (%); Avg. Acc. (%)",
+    "value_or_direction": "BiSpikCLM 82–95% (1.300, T=4: 42.19, 84.84); SpikeLLM 49.92/78.17 (7.000, W2A16), 53.76/81.34 (13.00, W2A16), 60.47/82.55 (70.00, W2A16), 41.77/65.41 (W2A8, T=4)",
+    "comparator": "SpikeLLM (Integer W2A16/W2A8 at 7.000/13.00/70.00 params)",
+    "task_or_sample": "zero-shot accuracy across model scales, Table 4",
+    "locator": "Appendix G Comparison with SpikeLLM"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "82–95% 总结句与表 4 各行(42.19/84.84、49.92/78.17、53.76/81.34、60.47/82.55、41.77/65.41)均逐字核对;两路线在模型规模与脉冲形式上不对等(1.3B 二值 vs 7-70B 整数),比率对比只能作为弱证据,主张已按'保持率更高'措辞限定。"
+   }
+  },
+  {
+   "card_id": "2605.13859-C05",
+   "claim": "路线边界(同规模量化 ANN 对比,表 8):BiSpikCLM-1.3B(T=4)平均 42.19%,与 BitNet 1.58-bit(42.66%)相当、高于 SmoothQuant W4A4(40.88%),但低于 OmniQuant W4A4(43.90%)与 TriLM 1.5B(43.16%);作者明确定位'主要贡献不是在精度上超越量化方法',并自述部分基准精度仍落后于大规模 ANN LLM。",
+   "stance": "limit",
+   "relation": "限定\"全二值脉冲 LLM 已超越低位量化方案\"的强解读:当前精度与 1.58-bit 量化 ANN 大致持平而非领先。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 L 表 8 给出与四种量化 LLM 的逐基准对比,正文明确不以精度超越量化为目标。",
+   "locator": "Appendix L Comparison with Quantized ANNs",
+   "source_context": "While quantized ANNs like 42 , 48 , and 20 may exhibit a marginal edge in accuracy, we emphasize that these represent fundamentally different methodological paradigms. Therefore, the primary contribution of our work is not to surpass quantization methods in accuracy, but to pioneer and validate a new, energy-efficient pathway for large language models.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Zero-shot Accuracy (%) Avg.",
+    "value_or_direction": "BiSpikCLM (T=4) 42.19; BitNet (1.58-bit) 42.66; SmoothQuant (W4A4) 40.88; OmniQuant (W4A4) 43.90; TriLM (1.58-bit) 43.16",
+    "comparator": "BitNet, SmoothQuant, OmniQuant, TriLM quantized LLMs",
+    "task_or_sample": "zero-shot accuracy on 8 benchmarks (ARC-e/ARC-c/WG/BQ/PIQA/HS/OBQA/HQA), 1.3B/1.2B models, Table 8",
+    "locator": "Appendix L Comparison with Quantized ANNs"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 8 各行数字(42.19/42.66/40.88/43.90/43.16)与引用句均逐字核对;'不以精度超越量化为目标'为作者原话;该卡用于限定路线边界,精度持平结论限于这批零样本基准与 1.3B/1.2B 规模。"
+   }
+  },
+  {
+   "card_id": "2605.13859-C06",
+   "claim": "数据扩展实验:1.3B 模型训练 token 从 10B 增至 25B,零样本平均准确率从 41.33% 升至 44.39%(+3.06%);125M 从 1B 增至 5B 提升 1.05%(36.05%→37.10%);损失曲线平滑收敛,且 25B 版本能正确回答事实性问题(美国首都)而 10B 版本不能,表明架构对数据规模仍有正响应。",
+   "stance": "support",
+   "relation": "支持\"脉冲 LLM 不是小规模玩具、随数据扩展仍会提升\"的可扩展性主张,回应 proof-of-concept 质疑。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 M 表 9/表 10 给出 token 扩展的定量增益与对话质量对比。",
+   "locator": "Appendix M Effect of Training Scale and Conversational Ability",
+   "source_context": "More impressively, the 1.3B model’s average accuracy increased by 3.06% when scaling from 10B to 25B tokens.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "zero-shot average accuracy vs training tokens",
+    "value_or_direction": "1.3B: 41.33 (10B tokens) → 44.39 (25B tokens), +3.06%; 125M: 36.05 (1B tokens) → 37.10 (5B tokens), +1.05%",
+    "comparator": "25B-token run vs 10B-token run (and 5B vs 1B for 125M)",
+    "task_or_sample": "Table 9 zero-shot accuracy, BiSpikCLM 125M and 1.3B models",
+    "locator": "Appendix M Effect of Training Scale and Conversational Ability"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.06% 句与表 9 数字(41.33/44.39、36.05/37.10)逐字核对;+1.05% 出自同节'average accuracy of the 125M model improved by 1.05%';对话能力差异由表 10 定性示例支撑,主张措辞相应限定为定性描述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "SpikeGPT",
+   "note": "216M 二值从零训练解码器式 SNN LM,直接可比对象"
+  },
+  {
+   "title": "SpikeLLM",
+   "note": "7-70B 整数(W2A16/W2A8)后训练量化脉冲 LLM,附录 G 对照"
+  },
+  {
+   "title": "SpikeBERT / SpikeLM",
+   "note": "编码器式/三值蒸馏或从零训练的脉冲语言模型,表 1 谱系对照"
+  },
+  {
+   "title": "OPT (Optimized Pretrained Transformer)",
+   "note": "架构基座与同规模 ANN 教师/基线"
+  },
+  {
+   "title": "BitNet / TriLM / SmoothQuant / OmniQuant",
+   "note": "量化 ANN 基线(附录 L 表 8)"
+  },
+  {
+   "title": "FineWeb-Edu",
+   "note": "预训练语料"
+  }
+ ],
+ "notes": "作者团队含脉冲计算方向研究者(Chenlin Zhou 等曾参与 SpikeLLM/SpikeGPT 系列工作,本文表 1 谱系与该系列一脉相承);论文带 Impact Statement(ML 会议格式)。TriSpikCLM(三值扩展)用于展示精度-能耗权衡。与 NeuronSpark(纯 SNN 从零训练、无教师)相对,BiSpikCLM 代表'全二值+ANN 教师蒸馏'路线;与 SDLLM(推理期转换)相对,代表'从零训练'路线。能耗为折算口径,与 SDLLM 的功率折算同类。"
+}

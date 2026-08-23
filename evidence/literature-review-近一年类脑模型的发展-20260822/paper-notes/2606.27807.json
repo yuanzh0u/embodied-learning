@@ -1,0 +1,371 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.27807",
+  "title": "SpikeVLA: Vision-Language-Action Models with Spiking Neural Networks",
+  "published": "2026-06-26T07:45:45Z",
+  "url": "https://arxiv.org/abs/2606.27807",
+  "authors": [
+   "Ruiqi Song",
+   "Dujun Nie",
+   "Siyu Teng",
+   "Baiyong Ding",
+   "Xiaotong Zhang",
+   "Dong Li",
+   "Chenming Zhang",
+   "Yuchen Li",
+   "Hangbin Wu",
+   "Long Chen"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "首个把 VLA 三段(视觉/语言/动作)全部脉冲化的具身导航架构,给出与 NaVILA 及 INT4 量化的系统对比,是'脉冲模型进入具身 VLA'路线的代表作,且如实报告了精度-能效权衡。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:大规模 Transformer VLA 的推理延迟与能耗限制低功耗实时部署。"
+   },
+   {
+    "locator": "3.2 Spike Neural Network Vision Encoder",
+    "role": "method-or-design",
+    "purpose": "理解脉冲 Transformer 视觉编码器与差分脉冲神经元设计。"
+   },
+   {
+    "locator": "3.3 Multimodal Spiking Large Language Model",
+    "role": "method-or-design",
+    "purpose": "理解基于 LLaMA-8B 的多模态脉冲大模型与 token 级稀疏机制。"
+   },
+   {
+    "locator": "3.4 Spiking Neural Network for Action Policy",
+    "role": "method-or-design",
+    "purpose": "理解拉普拉斯核群体编码、IF 神经元与 PPO 代理梯度训练。"
+   },
+   {
+    "locator": "4.1 Experimental Setups",
+    "role": "data-or-setting",
+    "purpose": "核查基准(R2R/RxR/Isaac)与表 1-3 的精度与资源数字。"
+   },
+   {
+    "locator": "4.2 Main Results",
+    "role": "results-or-analysis",
+    "purpose": "核查低层控制表 4 与 INT4 量化对比表 5。"
+   },
+   {
+    "locator": "4.3 Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "核查模块逐个脉冲化与编码核消融(表 6)。"
+   },
+   {
+    "locator": "A.2.3 Theoretical Energy Consumption Evaluation",
+    "role": "appendix-or-supplement",
+    "purpose": "确认能耗度量为 45nm 理论折算而非实测。"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集作者自述局限:神经形态芯片未验证。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1/2.2 Related Work",
+    "reason": "相关工作脉络已从引言获得。"
+   },
+   {
+    "locator": "A.1/A.2.1/A.2.2/A.2.4 数据集与指标定义",
+    "reason": "指标定义与社区标准一致,主文已足够。"
+   },
+   {
+    "locator": "C.1-C.2.4 超参数消融与视觉编码器细节",
+    "reason": "时间步/群体规模/网络维度的次要消融,主文结论不依赖。"
+   }
+  ]
+ },
+ "research_question": "VLA 模型能否把视觉编码、多模态推理与动作策略三段全部替换为事件驱动脉冲计算,在保持竞争导航与控制精度的同时大幅降低推理能耗?",
+ "contributions": [
+  "提出 SpikeVLA:首个基于 SNN 的 VLA 架构,统一脉冲化视觉编码(Spike-V)、多模态脉冲大模型(Spike-L)与动作策略(Spike-A)三模块",
+  "Spike-A 用拉普拉斯核群体编码 + 全连接 SNN + PPO 代理梯度训练,把脉冲活动解码为稳定连续控制,并系统比较四种编码核",
+  "在 VLN-CE R2R/RxR 与 VLN-CE-Isaac(Unitree Go2)上给出精度-内存-能耗-算术计算量四维对比,并与 INT4 量化 VLA 直接对照",
+  "逐模块脉冲化消融,量化每个模块转换的能效收益与性能代价"
+ ],
+ "method": {
+  "summary": "SpikeVLA 把 VLA 流水线三段全部脉冲化:Spike-V 用脉冲 Transformer(差分脉冲神经元,增量式表达连续激活)从当前帧+历史帧提取时间视觉特征;Spike-L 在 LLaMA-8B 监督微调基础上引入 IF 神经元与 token 级脉冲动力学,把统一 token 序列在细粒度时间步上演化并合并为多级 spike token;Spike-A 用拉普拉斯核群体编码把连续观测转为脉冲,经全连接 SNN 后按时间步发放率解码为连续动作,用 PPO 与代理梯度时空反向传播端到端训练。能耗统一用 45nm 工艺理论折算(EMAC 4.6pJ、EAC 0.9pJ)。",
+  "assumptions": [
+   "事件驱动稀疏发放可在少时间步下保持表示保真(差分编码假设)",
+   "理论能耗折算(45nm)能代表神经形态硬件潜力",
+   "脉冲 LLM 可承袭 ANN 预训练权重的语义能力"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "VLN-CE R2R val-unseen",
+   "VLN-CE RxR val-unseen",
+   "VLN-CE-Isaac(1,077 episodes,Unitree Go2 平台)",
+   "多地形低层运动控制 suite"
+  ],
+  "tasks": [
+   "指令驱动导航(RGB-only、无路点监督)",
+   "四足低层闭环控制(线/角速度跟踪与碰撞)"
+  ],
+  "embodiments": [
+   "Unitree Go2 四足机器人(Isaac 仿真闭环)"
+  ],
+  "sample_or_scale": "Spike-L 基于 LLaMA-8B;与 NaVid/UniNaVid/NaVILA/MapNav 及全景方法并列表对比"
+ },
+ "evaluation": {
+  "design": "统一基准对比:导航指标 NE/OS/SR/SPL/nDTW + 资源效率 Mem/Eng/ACEs;同条件复现 NaVILA-R 于 Isaac;与 INT4 量化 VLA 直接对照(表 5);低层控制用线/角速度误差与能耗(表 4);消融含模块逐个转换、四种编码核与超参(表 6、附录 C)。",
+  "baselines": [
+   "NaVILA(最强 RGB 基线,FP16 与 INT4 两版)",
+   "NaVid",
+   "UniNaVid",
+   "MapNav",
+   "AO-Planner",
+   "ETPNav/HNR/BEVBert/CMA 等全景+路点方法(仅并列展示)",
+   "ANN 策略(动作策略消融基线)"
+  ],
+  "metrics": [
+   "NE/OS/SR/SPL/nDTW",
+   "GPU 内存 Mem(MB/GB)、理论能耗 Eng(J/µJ)、ACEs 算术计算量",
+   "线/角速度跟踪误差",
+   "奖励与平均片段长度 MEL"
+  ],
+  "ablations": [
+   "Spike-V/L/A 逐模块脉冲转换(图 3)",
+   "Laplacian/Gaussian/Triangular/IMQ 四种群体编码核(表 6)",
+   "时间步、群体编码规模、Actor/Critic 维度(附录 C.2)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "R2R Val-Unseen 上 SpikeVLA(NE 5.38/OS 63.4/SR 53.3/SPL 47.9)与最强 RGB 基线 NaVILA(5.28/61.5/53.9/49.3)竞争力相当:OS 更高、SR/SPL 略低;内存 6249.18MB vs 16119.98MB,能耗 49.09J vs 141.25J(约 34%),ACEs 1196.16 vs 3930.21",
+   "scope": "表 1,RGB-only 无路点设定",
+   "locator": "4.1 Experimental Setups, Table 1"
+  },
+  {
+   "finding": "VLN-CE-Isaac(Unitree Go2,1077 episodes)上 SpikeVLA NE 6.02/OS 53.6/SR 32.7/SPL 28.5,NE/OS 优于 NaVILA-R 但 SR 低约 3.8 个点(36.5→32.7);能耗 44.23J vs 141.25J",
+   "scope": "表 2,闭环仿真",
+   "locator": "4.1 Experimental Setups, Table 2"
+  },
+  {
+   "finding": "与 INT4 量化 VLA 相比,SpikeVLA 精度更高(R2R SR 53.3 vs 48.2)、能耗更低(49.09J vs 72.49J)、内存更小(6.1GB vs 8.6GB),但 ACEs 更高(1196.16 vs 982.55)",
+   "scope": "表 5,R2R Val-Unseen",
+   "locator": "4.2 Main Results, Table 5"
+  },
+  {
+   "finding": "低层闭环控制:线速度误差 0.42 vs NaVILA 0.23(约 1.8 倍),角速度误差 0.29 略优(vs 0.38),能耗 0.31µJ vs 5.80µJ",
+   "scope": "表 4,四足低层控制",
+   "locator": "4.2 Main Results, Table 4"
+  },
+  {
+   "finding": "编码核消融:拉普拉斯核最优(奖励 26.72、MEL 983.94),但全部 SNN 策略奖励(22.73-26.72)均低于 ANN 策略 33.45;逐模块脉冲化导航性能仅适度退化而能耗单调下降",
+   "scope": "表 6 与图 3 消融",
+   "locator": "4.3 Ablation Study, Table 6"
+  },
+  {
+   "finding": "作者自述能效与实时性在神经形态芯片上仍未验证,当前验证止于仿真与 GPU 平台",
+   "scope": "结论局限段",
+   "locator": "5 Conclusion"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "SpikeVLA 的能效与实时性在神经形态芯片上仍未验证,目前仅在仿真与 GPU 平台验证;神经形态硬件验证是下一步工作",
+    "locator": "5 Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "能耗与 ACEs 均为理论/理想化度量(45nm 工艺折算 EMAC 4.6pJ/EAC 0.9pJ),不是硬件实测;把 49.09J/34% 读作实测功耗会高估证据强度",
+    "basis": "A.2.3 Theoretical Energy Consumption Evaluation 明确 'we use theoretical energy consumption as our energy metric'"
+   },
+   {
+    "boundary": "Isaac 闭环 SR 32.7 低于 NaVILA-R 的 36.5,低层控制线速度误差 0.42 约为基线两倍,SNN 策略奖励 26.72 低于 ANN 的 33.45——脉冲化当前以可测的任务/控制精度换取能效",
+    "basis": "表 2/表 4/表 6 数字对比"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于仿真环境(VLN-CE、Isaac 仿真)的 RGB-only 导航与四足控制;不能外推到真实机器人部署、神经形态芯片实测能效、真实延迟,以及操作臂等非导航具身任务;能耗数字为 45nm 理论折算而非实测。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "首个三段全脉冲 VLA,且逐模块转换消融量化每段能效收益",
+   "与同设定最强 RGB 基线 NaVILA 正面对比,并补 INT4 量化对照,定位清晰",
+   "精度-内存-能耗-算术计算量四维联合报告",
+   "导航、Isaac 闭环、低层控制三层验证,并同条件复现 NaVILA-R"
+  ],
+  "design_risks": [
+   "能耗与 ACEs 均为理论/理想化度量,非硬件实测",
+   "Isaac SR 与低层控制线速度误差有可见退化,与摘要'competitive'表述存在张力",
+   "SNN 动作策略奖励仍明显低于 ANN 策略",
+   "Spike-L 依赖 LLaMA-8B 的 ANN 预训练,非从头训练脉冲 LLM"
+  ],
+  "baseline_fairness": "与 NaVILA 同为 RGB-only、无路点设定且复现于 Isaac,比较公平;与全景+路点方法只并列展示未直接比较,处理得当。",
+  "metric_validity": "导航指标为社区标准;能耗为 45nm 理论折算、ACEs 为理想化硬件度量,均不能替代实测功耗/延迟;低层控制用速度跟踪误差,可直接反映控制质量。",
+  "reproducibility": "基准、指标、消融与理论能耗公式描述完整;未见代码或数据集发布声明。",
+  "external_validity": "全部在仿真中验证,无真实机器人实验;神经形态芯片部署为未来工作,极端环境(深空)主张目前无证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.27807-C01",
+   "claim": "SpikeVLA 是首个基于 SNN 的 VLA 架构,把视觉编码(Spike-V,脉冲 Transformer+差分脉冲神经元)、多模态推理(Spike-L,LLaMA-8B+IF 神经元+token 级脉冲稀疏)与动作策略(Spike-A,拉普拉斯核群体编码+全连接 SNN+PPO)统一为事件驱动范式,作者明确定位为性能-能效权衡。",
+   "stance": "support",
+   "relation": "支持综述问题中'脉冲模型从视觉/语言扩展到完整 VLA 具身闭环'的年度进展主张,标志 SNN 进入具身大模型主战场。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言原句给出 first 声明与三模块定位;3.2-3.4 给出各模块设计。",
+   "locator": "1 Introduction",
+   "source_context": "To address these challenges, we propose SpikeVLA, the first VLA architecture built on spiking neural networks, which represents a trade-off between performance and efficiency, as shown in Fig. 1 . SpikeVLA consists of three complementary modules. Spike-V provides energy-efficient visual representations through event-driven spiking visual encoding.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对,'first VLA architecture built on spiking neural networks' 与 'trade-off between performance and efficiency' 直接支撑首倡性与权衡定位;三模块名称与 3.2/3.3/3.4 节标题一致,无夸大措辞。"
+   }
+  },
+  {
+   "card_id": "2606.27807-C02",
+   "claim": "在 VLN-CE R2R Val-Unseen(RGB-only、无路点)上,SpikeVLA 取得 NE 5.38/OS 63.4/SR 53.3/SPL 47.9,与最强 RGB 基线 NaVILA(5.28/61.5/53.9/49.3)竞争力相当(OS 更高、SR/SPL 略低),同时内存 6249.18MB(NaVILA 16119.98MB)、能耗 49.09J(141.25J)、ACEs 1196.16(3930.21)。",
+   "stance": "support",
+   "relation": "支持'脉冲 VLA 在导航精度上首次追平最强 ANN VLA 基线、能耗降为约三分之一'的进展主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 1 完整给出方法行与资源效率列;正文称内存从 16.1GB 降到 6.2GB、能耗约为 NaVILA 的 34%。",
+   "locator": "4.1 Experimental Setups",
+   "source_context": "NaVid ( 39 ) RGB. ✗ 5.47 49.0 37.0 35.0 14231.96 157.29 4376.68 UniNaVid ( 38 ) RGB. ✗ 5.58 53.3 47.0 42.7 14231.96 157.29 4376.68 NaVILA ( 8 ) RGB. ✗ 5.28 61.5 53.9 49.3 16119.98 141.25 3930.21 MapNav ( 40 ) RGB. ✗ 4.93 53.0 39.7 37.2 - - - SpikeVLA(ours) RGB. ✗ 5.38 63.4 53.3 47.9 6249.18 49.09 1196.16",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "NE OS SR SPL Mem(MB) Eng(J) ACEs",
+    "value_or_direction": "SpikeVLA NE 5.38, OS 63.4, SR 53.3, SPL 47.9, Mem 6249.18, Eng 49.09, ACEs 1196.16 vs NaVILA 5.28, 61.5, 53.9, 49.3, 16119.98, 141.25, 3930.21",
+    "comparator": "NaVILA (strongest RGB-only baseline)",
+    "task_or_sample": "VLN-CE R2R val-unseen, RGB-only, no waypoint supervision",
+    "locator": "4.1 Experimental Setups, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 1 中 NaVILA 与 SpikeVLA 两行的全部数字逐字核对一致;SPL 47.9 低于 NaVILA 49.3、OS 63.4 高于 61.5 的'相当但互有高低'措辞与正文 'slightly exceeds the strongest RGB baseline, NaVILA, on some metrics' 一致,未拔高。"
+   }
+  },
+  {
+   "card_id": "2606.27807-C03",
+   "claim": "与 INT4 量化 VLA 相比,SpikeVLA 在 R2R Val-Unseen 上精度更高(SR 53.3 vs 48.2、SPL 47.9 vs 43.6)、能耗更低(49.09J vs 72.49J)、内存更小(6.1GB vs 8.6GB),但理想化算术计算量 ACEs 更高(1196.16 vs 982.55)——脉冲化在精度-内存-能耗三 维优于 INT4,而在计算量维度不占优。",
+   "stance": "support",
+   "relation": "支持'脉冲 VLA 与低位量化路线直接竞争'的主张,同时以 ACEs 反向维度标出脉冲路线的边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 5 给出 FP16/INT4/SpikeVLA 三行完整对比,是少见的脉冲 vs 量化 VLA 直接对照。",
+   "locator": "4.2 Main Results",
+   "source_context": "Table 5 : Comparison with ANN quantized model. Method R2R Val-Unseen Resource Efficiency NE OS SR SPL Mem(GB) Eng(J) ACEs( ) NaVILA (FP16) 5.28 61.5 53.9 49.3 15.7 141.25 3930.21 NaVILA (INT4) 5.66 56.8 48.2 43.6 8.6 72.49 982.55 SpikeVLA 5.38 63.4 53.3 47.9 6.1 49.09 1196.16",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR SPL Mem(GB) Eng(J) ACEs",
+    "value_or_direction": "SpikeVLA SR 53.3, SPL 47.9, Mem 6.1, Eng 49.09, ACEs 1196.16 vs NaVILA (INT4) 48.2, 43.6, 8.6, 72.49, 982.55",
+    "comparator": "NaVILA (INT4) and NaVILA (FP16)",
+    "task_or_sample": "R2R Val-Unseen",
+    "locator": "4.2 Main Results, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 5 三行数字(5.28/61.5/53.9/49.3/15.7/141.25/3930.21;5.66/56.8/48.2/43.6/8.6/72.49/982.55;5.38/63.4/53.3/47.9/6.1/49.09/1196.16)在 4.2 节表 5 表面文本逐字核对一致;ACEs 更高一维的措辞与表格方向一致,避免单向拔高。"
+   }
+  },
+  {
+   "card_id": "2606.27807-C04",
+   "claim": "边界:低层闭环控制存在可见精度退化——SpikeVLA 线速度跟踪误差 0.42 vs NaVILA 0.23(约 1.8 倍),角速度误差 0.29 略优(vs 0.38),能耗 0.31µJ vs 5.80µJ;作者以'matches NaVILA overall, only minor differences'表述,但线速度误差接近两倍应视为该路线当前边界。",
+   "stance": "limit",
+   "relation": "限定'全脉冲 VLA 已达到 ANN VLA 控制质量'的强解读:高频低层控制上脉冲策略仍有精度代价,综述引用时须并列该数字。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 4 给出低层策略的线/角速度误差与资源效率;正文措辞偏乐观,表格数字显示线速度误差明显更大。",
+   "locator": "4.2 Main Results",
+   "source_context": "Table 4 : Closed-loop performance of the low-level policy. Method Linear Vel. Angular Vel. Resource Efficiency Error Error Mem(MB) Eng(µJ) ACEs( ) NaVILA 0.23 0.38 1.20 5.80 161.48 SpikeVLA 0.42 0.29 2.35 0.31 5.53",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Linear Vel. Error and Angular Vel. Error and Eng(µJ)",
+    "value_or_direction": "SpikeVLA linear 0.42 vs NaVILA 0.23; angular 0.29 vs 0.38; Eng 0.31 vs 5.80",
+    "comparator": "NaVILA low-level action policy",
+    "task_or_sample": "closed-loop low-level control on legged robot",
+    "locator": "4.2 Main Results, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 4 两行数字(0.23/0.38/1.20/5.80/161.48 与 0.42/0.29/2.35/0.31/5.53)逐字核对一致;1.8 倍的比值由 0.42/0.23 计算得出并在 claim 中明示为读者换算;'minor differences' 的正文措辞出自同节,故 stance 取 limit 以反映表格与措辞的张力。"
+   }
+  },
+  {
+   "card_id": "2606.27807-C05",
+   "claim": "边界:脉冲动作策略的回报仍系统性低于 ANN 策略——四种群体编码核中拉普拉斯核最优(奖励 26.72、MEL 983.94),但全部低于 ANN 的 33.45(差距约 20%);模块逐个脉冲化时导航性能只有'适度退化'而计算与能耗单调下降,能效收益以一定控制性能为代价。",
+   "stance": "limit",
+   "relation": "为'脉冲 VLA 已全面对等 ANN VLA'的解读划定边界:SNN 策略层仍存在可量化的性能差距,是脉冲具身路线的关键改进空间。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 6 给出 ANN 与四种编码核 SNN 的奖励/MEL/资源对比;图 3 消融显示逐模块转换的性能-能耗权衡。",
+   "locator": "4.3 Ablation Study",
+   "source_context": "Table 6 : Rewards across different population encoders. MEL donates Mean Episode Length, where higher values indicate better survival and task persistence. Kernel Classes Rewards MEL Resource Efficiency Mem(MB) Eng(µJ) ACEs( ) ANN 33.45 976.81 1.20 5.80 161.48 Gaussian RBF kernel 23.10 973.11 2.35 0.41 7.34 Inverse Multiquadric kernel 22.73 939.35 2.35 0.68 12.06 Triangular kernel 25.15 966.29 2.35 0.25 4.42 Laplacian kernel 26.72 983.94 2.35 0.31 5.53",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Rewards MEL Eng(µJ)",
+    "value_or_direction": "Laplacian kernel 26.72 rewards vs ANN 33.45; Gaussian 23.10, IMQ 22.73, Triangular 25.15; Eng 0.31 vs 5.80",
+    "comparator": "ANN policy vs spiking population encoders",
+    "task_or_sample": "legged locomotion control ablation",
+    "locator": "4.3 Ablation Study, Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 6 全部数字(33.45/976.81、23.10、22.73、25.15、26.72/983.94、0.31/5.80)逐字核对一致;'约 20% 差距'为 (33.45-26.72)/33.45 的读者换算并明示;'适度退化而能耗单调下降'出自同节 'navigation performance shows only a modest degradation, while compute and energy costs decrease monotonically'。"
+   }
+  },
+  {
+   "card_id": "2606.27807-C06",
+   "claim": "边界:作者自述 SpikeVLA 的能效与实时性在神经形态芯片上仍未验证,当前全部验证止于仿真与 GPU 平台;神经形态硬件验证被列为下一步工作,因此低功耗部署主张目前是潜力而非实证。",
+   "stance": "limit",
+   "relation": "限定脉冲 VLA 路线的验证强度:理论能耗优势尚未经受硬件实测检验,综述应将其归为'仿真+折算证据'级别。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论局限段直陈神经形态芯片未验证;附录 A.2.3 确认能耗为 45nm 理论折算。",
+   "locator": "5 Conclusion",
+   "source_context": "While SpikeVLA has demonstrated strong performance in simulations and on GPU platforms, its energy efficiency and real-time performance on neuromorphic chips remain unverified. Further validation on neuromorphic hardware will be the next step in our work.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "结论原句逐字核对,'remain unverified' 直接支撑边界措辞;'理论折算而非实测'的补充依据见 A.2.3('we use theoretical energy consumption as our energy metric',45nm,EMAC 4.6pJ/EAC 0.9pJ),两处共同限定低功耗部署主张的证据级别。"
+   }
+  }
+ ],
+ "core_citations": [
+  "NaVid(39):RGB-only VLN 基线",
+  "NaVILA(8):最强 RGB 基线与主要对比对象(FP16/INT4)",
+  "UniNaVid(38):流式统一导航模型",
+  "COSMO(41)/VL-Nav(9):效率导向 VLA,相关工作定位",
+  "Spike-driven Transformer/SpikingLLM 系列(22/4/16/15/3/31/30):ANN-to-SNN 转换与脉冲基础模型脉络"
+ ],
+ "notes": "致谢提及国家自然科学基金联合基金资助;分类 cs.RO。该文把 SNN 从视觉/语言基准推进到 VLA 具身闭环(导航+四足控制),与 SDLLM 等脉冲大模型工作共同构成 2026 年'脉冲化 scaling'浪潮;其对 INT4 量化的直接对照与逐模块消融是该路线少见的诚实报告范式。"
+}

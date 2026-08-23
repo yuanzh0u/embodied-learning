@@ -1,0 +1,409 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.12365",
+  "title": "Adaptive Spiking Neurons for Vision and Language Modeling",
+  "published": "2026-04-14T06:53:51Z",
+  "url": "https://arxiv.org/abs/2604.12365",
+  "authors": [
+   "Chenlin Zhou",
+   "Sihang Guo",
+   "Jiaqi Wang",
+   "Dongyang Ma",
+   "Jin Cheng",
+   "Qingyan Meng",
+   "Zhengyu Ma",
+   "Yonghong Tian"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "提出'功能性视角'统一评估基础脉冲神经元并给出 ASN/NASN 新神经元,在 19 个数据集上横跨视觉与语言两种模态验证,并给出 0.4B→1.0B 参数与预训练数据扩展实验,是'神经元机制+脉冲大模型'交叉路线的关键证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "确认问题:既有基础脉冲神经元无法同时满足高效训练、自适应发放、架构兼容与脉冲驱动推理四性质。"
+   },
+   {
+    "locator": "2.3. Foundation Spiking Neurons",
+    "role": "relevant-core",
+    "purpose": "梳理 LIF/PLIF/PSN/ILIF/NILIF/SpikingBrain 各神经元的优劣定位。"
+   },
+   {
+    "locator": "3.1. A Functional View of Spiking Neurons",
+    "role": "method-or-design",
+    "purpose": "理解功能性视角下三类代表神经元的统一形式。"
+   },
+   {
+    "locator": "3.2. Adaptive Spiking Neuron",
+    "role": "method-or-design",
+    "purpose": "理解 ASN 的整数训练/脉冲推理与可学习偏移参数设计。"
+   },
+   {
+    "locator": "3.3. Normalized Adaptive Spiking Neuron",
+    "role": "method-or-design",
+    "purpose": "理解 NASN 的归一化变体与推理期常数项分解。"
+   },
+   {
+    "locator": "4.1. ImageNet-1k Classification",
+    "role": "results-or-analysis",
+    "purpose": "核查 ImageNet-1k 上 75.53 与 LIF/NILIF 基线对比。"
+   },
+   {
+    "locator": "4.2. CIFAR Datasets",
+    "role": "results-or-analysis",
+    "purpose": "核查 CIFAR-10/100 相对 Spikingformer 基线的增益。"
+   },
+   {
+    "locator": "4.3. Natural language understanding",
+    "role": "results-or-analysis",
+    "purpose": "核查 GLUE 67.5% 与脉冲驱动类方法对比。"
+   },
+   {
+    "locator": "4.4. Question Answering Tasks",
+    "role": "results-or-analysis",
+    "purpose": "核查 QAT 平均 29.4% 与对 Qwen-1.5B 的能耗对比(245.1 mJ vs 3398.3 mJ)。"
+   },
+   {
+    "locator": "4.5. Commonsense Reasoning Tasks",
+    "role": "results-or-analysis",
+    "purpose": "核查 CRT 43.3% 与大模型对比及参数效率主张。"
+   },
+   {
+    "locator": "5.1. Discussion",
+    "role": "results-or-analysis",
+    "purpose": "核查参数 0.4B→1.0B 与预训练 token 0.1B→0.5B 的扩展实验。"
+   },
+   {
+    "locator": "5.2. Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "核查 CIFAR-100 上七种神经元的消融与扩展性对比。"
+   },
+   {
+    "locator": "6. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认'通用脉冲神经元'总体定位。"
+   },
+   {
+    "locator": "Limitation",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集作者自述限制(能耗为理论折算、未做神经形态任务)。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2. Related works / 2.1. Spiking Neural Networks in Vision Tasks / 2.2. Spiking Neural Networks in Language Tasks",
+    "reason": "背景综述,关键脉络已从引言与 2.3 获得。"
+   },
+   {
+    "locator": "3.4. Gradient Optimization",
+    "reason": "标准 STE 直通估计器描述,仅 262 字符,方法要点已在 3.2/3.3 覆盖。"
+   },
+   {
+    "locator": "4. Experiments",
+    "reason": "仅为实验总览段,具体设置在各小节。"
+   }
+  ]
+ },
+ "research_question": "如何设计同时满足高效训练、自适应发放、架构兼容与脉冲驱动推理的新一代通用脉冲神经元,并在视觉与语言两类模态上验证其有效性与可扩展性?",
+ "contributions": [
+  "提出设计新一代脉冲神经元的'功能性视角':高效训练、自适应发放、架构兼容、脉冲驱动推理四性质必须同时满足,并据此系统分析 LIF/PLIF/PSN/ILIF/NILIF 的缺口",
+  "提出自适应脉冲神经元 ASN:在 ILIF 的整数训练/脉冲推理范式上引入逐层可学习的激活窗口偏移参数,实现受膜电位调节的自适应发放",
+  "提出归一化变体 NASN:通过近似归一化虚拟步长稳定数值与梯度,适配复杂架构训练",
+  "在 19 个数据集(视觉+语言,五类任务)上系统验证,并给出 0.4B→1.0B 参数与 0.1B→0.5B 预训练 token 的扩展实验"
+ ],
+ "method": {
+  "summary": "ASN 沿用 ILIF 的整数训练-脉冲推理范式:训练时神经元输出被舍入并裁剪到固定整数区间,推理时把整数展开为 0/1 脉冲串,使线性层退化为脉冲稀疏加法加常数项。关键创新是逐层可学习的偏移参数,它动态平移量化窗口以对齐各层膜电位分布,实现自适应发放。NASN 进一步对虚拟步长做近似归一化以稳定梯度,推理时相应缩放权重并补常数项;梯度用直通估计器(STE)端到端传播。",
+  "assumptions": [
+   "逐层膜电位分布可通过单一偏移参数对齐(一阶近似)",
+   "整数裁剪区间的舍入/裁剪不可导可用 STE 充分近似",
+   "能耗按操作数折算(mJ),代表神经形态潜力而非实测"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "ImageNet-1K",
+   "CIFAR-10/CIFAR-100",
+   "GLUE 八任务",
+   "ARC-e/ARC-c/BoolQ/HeadQA/OBQA(QAT)",
+   "HellaSwag/PIQA/WinoGrande(CRT)"
+  ],
+  "tasks": [
+   "大规模与中等规模图像分类(Spikingformer-8-384 架构)",
+   "自然语言理解(WE-Spikingformer, MLM 预训练于 Wikipedia-English)",
+   "问答与常识推理(WD-SpikingFormer-0.4B/1.0B,预训练于 FineWeb-Edu)"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "从 0.1B(WE-Spikingformer)到 1.0B 参数(WD-SpikingFormer);语言预训练 0.1B-0.5B token"
+ },
+ "evaluation": {
+  "design": "在同一架构下只替换神经元(LIF/NILIF/ASN/NASN)做受控对比,并与 SNN 基线(Spikformer/SD-Transformer/Spikingformer)、ANN 基线(BERT/Q2BERT/Qwen-1.5B)、脉冲语言模型(SpikeLLM-7B/SpikeBERT/LIF-BERT)对比;附能耗折算、参数/数据扩展曲线与 CIFAR-100 七神经元消融",
+  "baselines": [
+   "Spikformer",
+   "SD-Transformer",
+   "Spikingformer(含 † 变体)",
+   "LIF/PLIF/PSN/ILIF/NILIF 神经元",
+   "BERT / Q2BERT",
+   "SpikeBERT / LIF-BERT / SpikeLM",
+   "Qwen-1.5B",
+   "SpikeLLM-7B"
+  ],
+  "metrics": [
+   "Top-1 准确率(视觉)",
+   "平均准确率(GLUE/QAT/CRT)",
+   "能耗折算 E(mJ)",
+   "时间步(4)",
+   "参数量与预训练 token 数(扩展实验)"
+  ],
+  "ablations": [
+   "CIFAR-100 七种神经元消融(LIF 80.22→NASN 81.11)",
+   "ASN vs ILIF、NASN vs NILIF 成对比较",
+   "参数 0.4B→1.0B 与 token 0.1B→0.5B 扩展"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "ImageNet-1k 上 NASN(Spikingformer-8-384,4 时间步)达 75.53% Top-1,超 LIF 版 Spikingformer† 1.18、超 NILIF 版 0.12,能耗折算 5.67 mJ",
+   "scope": "表 2,同架构受控对比",
+   "locator": "4.1. ImageNet-1k Classification"
+  },
+  {
+   "finding": "GLUE 平均 67.5%,比 NILIF 版 WE-Spikingformer 高 1.2;在脉冲驱动(softmax-free)类别内大幅超过 SpikeBERT(59.7%)与 LIF-BERT(34.6%),但仍低于保留 softmax 与 GeLU 的 SpikeLM",
+   "scope": "表 4,约 0.1B 参数",
+   "locator": "4.3. Natural language understanding"
+  },
+  {
+   "finding": "QAT 平均 29.4%(较同架构 NILIF 高 1.0),能耗 245.1 mJ 仅为 Qwen-1.5B(3398.3 mJ)的 7%,精度差距 29.4% vs 33.2%",
+   "scope": "表 5,WD-SpikingFormer-0.4B",
+   "locator": "4.4. Question Answering Tasks"
+  },
+  {
+   "finding": "CRT 平均 43.3%,仅比 NILIF 基线高 0.1,但仍与 Qwen-1.5B(44.3)、SpikeLLM-7B(46.3)保持接近,作者以 0.4B 参数的参数效率解释",
+   "scope": "表 6",
+   "locator": "4.5. Commonsense Reasoning Tasks"
+  },
+  {
+   "finding": "扩展实验:参数 0.4B→1.0B 时 QAT 29.4→29.8、CRT 43.3→43.5;预训练 token 0.1B→0.5B 时 QAT 29.8→35.5(提升 5.7)、CRT 43.5→45.1,表明方法可适应更大规模预训练",
+   "scope": "图 2",
+   "locator": "5.1. Discussion"
+  },
+  {
+   "finding": "CIFAR-100 消融中 NASN 81.11 最佳,高于 NILIF 80.98、ILIF 80.32、PSN 77.84、LIF 80.22;作者称随规模扩大 NASN 相对 NILIF 优势更明显",
+   "scope": "表 7 与图 3",
+   "locator": "5.2. Ablation Study"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "能耗估计基于理论计算,不包含真实神经形态硬件上的实测",
+    "locator": "Limitation"
+   },
+   {
+    "limitation": "尽管在 19 个视觉与语言数据集上结果一致,仍缺乏 DVS 等神经形态任务上的进一步验证",
+    "locator": "Limitation"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "语言侧绝对精度仍明显低于同规模 ANN 与非纯脉冲方法(QAT 29.4% vs Qwen-1.5B 33.2%,GLUE 低于 SpikeLM);'通用脉冲神经元'的证据主要是相对 NILIF 的增量(0.1-1.2 个点),而非追平 ANN",
+    "basis": "表 4/5/6 的绝对数值与作者对 SpikeLM 的定性说明"
+   },
+   {
+    "boundary": "参数扩展增益很小(0.4B→1.0B 仅 +0.4/+0.2),扩展性主张主要靠预训练数据(0.1B→0.5B token)支撑;'可扩展到脉冲大模型'的验证止步于 1.0B 参数、0.5B token",
+    "basis": "5.1. Discussion 的两组数字"
+   },
+   {
+    "boundary": "自适应机制只有单一逐层偏移参数,自适应发放的'功能性'主张未与生物神经元动力学做定量对照",
+    "basis": "3.2/3.3 节机制描述"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于'整数训练/脉冲推理范式下替换神经元'的受控对比(同架构 Spikingformer/WE-WD SpikingFormer 系列);不能外推为脉冲大模型已追平 ANN 语言能力,能耗优势为折算值而非芯片实测,且未覆盖 DVS 等事件流任务与 1.0B 以上参数规模。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同架构只换神经元的受控对比设计,归因清晰",
+   "横跨视觉与语言两种模态、19 个数据集,验证广度在神经元类工作中罕见",
+   "同时报告精度、能耗折算与时间步;附参数/数据扩展实验,回应'能否扩展'的关键质疑",
+   "七神经元消融覆盖主流基础神经元"
+  ],
+  "design_risks": [
+   "相对 NILIF 的增益普遍在 0.1-1.2 个点,接近噪声量级且未报告方差/多次运行",
+   "语言基线不对称:SpikeLM 更高但被以'非纯脉冲'为由划出比较类别,类别划分由作者定义",
+   "能耗为理论折算,Qwen-1.5B 的 3398.3 mJ 与脉冲模型 245.1 mJ 的口径依赖假设",
+   "绝对精度与 ANN 的差距在 QAT/CRT 上仍然显著"
+  ],
+  "baseline_fairness": "同架构受控对比公平;跨类别比较(SpikeLM/Qwen)存在口径差异,作者已明示 SpikeLM 保留 softmax 与 GeLU,但分类标准由作者设定",
+  "metric_validity": "准确率与能耗折算指标一致可比;能耗未实测,7% 能耗占比的表述依赖操作数折算模型",
+  "reproducibility": "沿用 WE/WD-Spikingformer 公开配置,预训练语料(Wikipedia-English/FineWeb-Edu)明确;正文未见代码链接与多次运行方差",
+  "external_validity": "视觉+语言覆盖较好,但无 DVS/神经形态任务(作者自认),也无生成任务;1.0B 以上规模未验证"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.12365-C01",
+   "claim": "作者提出设计新一代脉冲神经元的功能性视角:高效训练、自适应发放、架构兼容、脉冲驱动推理四性质必须同时满足,并据此指出 LIF 训练效率低、PSN 与主流脉冲 Transformer 架构兼容性存疑、ILIF/NILIF 缺乏膜电位自适应性。",
+   "stance": "support",
+   "relation": "为综述'脉冲神经元机制路线'提供分析框架:该文把神经元设计问题形式化为四性质约束,是理解近一年机制类工作共同议程的坐标。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言以四性质主张与表 1 对既有神经元的逐一评估支撑该视角。",
+   "locator": "1. Introduction",
+   "source_context": "We argue that the four basic characteristics of spiking neurons—efficient training, adaptive firing, architecture compatibility, and spike-driven inference—must be considered simultaneously.",
+   "evidence_type": "position",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对;四性质清单及表 1 对 LIF/PLIF/PSN/ILIF/NILIF 的勾叉评估均在该节,各神经元缺口表述与引言前文一致,作为作者主张引用而非独立结论。"
+   }
+  },
+  {
+   "card_id": "2604.12365-C02",
+   "claim": "ImageNet-1k 上,同架构(Spikingformer-8-384,4 时间步)受控对比中 NASN 达 75.53% Top-1,超过 LIF 版 Spikingformer† 1.18 个点、超过 NILIF 版 0.12 个点,能耗折算 5.67 mJ。",
+   "stance": "support",
+   "relation": "支持'可学习自适应窗口神经元在大规模视觉任务上带来可测增益'的进展主张,增益幅度同时提示改进量级有限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1 节正文与表 2 给出同架构三神经元对比。",
+   "locator": "4.1. ImageNet-1k Classification",
+   "source_context": "Our model achieves 75.53 Top-1 accuracy, exceeding the baseline LIF-based Spikingformer † by 1.18 and outperforming NILIF-based Spikingformer † by 0.12 under the same architectural settings.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Top-1 accuracy",
+    "value_or_direction": "75.53, +1.18 over LIF, +0.12 over NILIF",
+    "comparator": "LIF-based Spikingformer and NILIF-based Spikingformer",
+    "task_or_sample": "ImageNet-1k, Spikingformer-8-384, 4 timesteps",
+    "locator": "4.1. ImageNet-1k Classification"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "75.53/1.18/0.12 均为 4.1 节原句数字,能耗 5.67 mJ 见同节表 2(Ours 行);同架构替换神经元的设置使该增益可归因于神经元本身,范围限于 ImageNet-1k 单架构。"
+   }
+  },
+  {
+   "card_id": "2604.12365-C03",
+   "claim": "问答任务(QAT)上,NASN 版 WD-SpikingFormer-0.4B 平均 29.4%(比同架构 NILIF 高 1.0),能耗折算 245.1 mJ 仅为 Qwen-1.5B(3398.3 mJ,平均 33.2%)的约 7%,呈现明显能耗-精度权衡而非精度追平。",
+   "stance": "conditional",
+   "relation": "支持'脉冲语言模型能耗大幅领先'的同时限定'精度仍落后约 3.8 个点'的边界,为综述中脉冲大模型路线的验证强度提供定量锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.4 节正文给出精度与能耗两组数字及权衡表述。",
+   "locator": "4.4. Question Answering Tasks",
+   "source_context": "Compared to Qwen-1.5B, which utilizes the same pretraining setup as WE-Spikingformer, our model reduces energy consumption by an order of magnitude, requiring only 245.1 mJ compared to 3398.3 mJ (representing only 7% of the energy).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average accuracy and energy consumption",
+    "value_or_direction": "29.4 avg, 245.1 mJ vs 3398.3 mJ, only 7% of the energy",
+    "comparator": "Qwen-1.5B and NILIF-based WD-SpikingFormer-0.4B",
+    "task_or_sample": "Question Answering Tasks: ARC-e, ARC-c, BoolQ, HeadQA, OBQA",
+    "locator": "4.4. Question Answering Tasks"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "245.1/3398.3/7% 出自 4.4 节原句;29.4 与 +1.0(对 NILIF)在同节前文,33.2 为表 5 Qwen-1.5B 平均值;精度差距(29.4 对 33.2)亦为同节原文,故以条件式记录能耗优势与精度落后的并存事实。"
+   }
+  },
+  {
+   "card_id": "2604.12365-C04",
+   "claim": "GLUE 上 NASN 版 WE-Spikingformer 平均 67.5%,比 NILIF 版高 1.2 个点;在 softmax-free 脉冲驱动类别内大幅超过 SpikeBERT(59.7%)与 LIF-BERT(34.6%),但作者承认保留 softmax 与 GeLU 的 SpikeLM 性能更高。",
+   "stance": "support",
+   "relation": "支持'自适应神经元显著缩小脉冲驱动语言模型与混合架构的差距'主张;类别内对比的说服力依赖作者对'纯脉冲'的定义。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 节给出 GLUE 平均值与三类基线对比及 SpikeLM 定性说明。",
+   "locator": "4.3. Natural language understanding",
+   "source_context": "Our method achieves an average accuracy of 67.5%, outperforming the NILIF version of WE-Spikingformer by 1.2%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average accuracy on GLUE",
+    "value_or_direction": "67.5, +1.2 over NILIF",
+    "comparator": "NILIF WE-Spikingformer; SpikeBERT 59.7; LIF-BERT 34.6",
+    "task_or_sample": "GLUE benchmark, ~0.1B parameters, 12 encoder blocks",
+    "locator": "4.3. Natural language understanding"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "67.5 与 1.2 为 4.3 节原句;59.7(SpikeBERT)、34.6(LIF-BERT)在同节后文;SpikeLM 更高但含 softmax/GeLU 的说明亦为该节原文,故主张同时保留类别划分这一前提。"
+   }
+  },
+  {
+   "card_id": "2604.12365-C05",
+   "claim": "扩展实验显示:参数从 0.4B 增至 1.0B 时 QAT 29.4→29.8、CRT 43.3→43.5(增益很小);预训练 token 从 0.1B 增至 0.5B 时 NASN(1.0B) 的 QAT 从 29.8 升至 35.5(提升 5.7)、CRT 从 43.5 升至 45.1,作者据此称方法可适应更大规模预训练。",
+   "stance": "support",
+   "relation": "为综述'神经元机制路线能否支撑脉冲大模型扩展'提供直接证据:数据扩展收益显著而参数扩展收益有限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节给出参数与预训练数据两组扩展数字。",
+   "locator": "5.1. Discussion",
+   "source_context": "NASN (1.0B) with 0.1B tokens vs. NASN (1.0B) with 0.5B tokens. QAT: 29.8 vs. 35.5 ; CRT: 43.5 vs. 45.1 .",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average accuracy on QAT and CRT",
+    "value_or_direction": "QAT 29.8 vs 35.5, improvement of 5.7; CRT 43.5 vs 45.1",
+    "comparator": "NASN (1.0B) with 0.1B tokens vs NASN (1.0B) with 0.5B tokens",
+    "task_or_sample": "WD-SpikingFormer pretraining on FineWeb-Edu",
+    "locator": "5.1. Discussion"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "29.8/35.5/43.5/45.1 出自 5.1 节原句,5.7 的提升在同节后文原句;参数扩展组(29.4→29.8、43.3→43.5)亦为该节数字,故同时记录两组以避免只引用数据扩展的单边结论。"
+   }
+  },
+  {
+   "card_id": "2604.12365-C06",
+   "claim": "路线边界:能耗数字全部为理论折算,未经真实神经形态硬件实测;且尽管在 19 个视觉/语言数据集上验证,作者自认尚未在 DVS 等神经形态任务上验证。",
+   "stance": "limit",
+   "relation": "限定'通用脉冲神经元'主张的证据强度:通用性体现在模态广度,但硬件实测与事件流任务两条关键验证仍缺位。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Limitation 一节明确两条作者自述限制。",
+   "locator": "Limitation",
+   "source_context": "Our energy consumption estimates are based on theoretical calculations and do not include measurements on real neuromorphic hardware.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Limitation 节原句逐字核对,第二条(DVS 等神经形态任务待验证)在同节后文;两条均为作者自述,综述引用能耗优势时应统一标注为折算值。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Fang et al. 2021 (PLIF, 可学习膜时间常数)",
+  "Fang et al. 2023b (PSN, 并行脉冲神经元)",
+  "Luo et al. 2024 (ILIF, 整数训练/脉冲推理范式)",
+  "Lei et al. 2025 (NILIF, 归一化 ILIF)",
+  "Pan et al. 2025 (SpikingBrain, 自适应阈值)",
+  "Zhou et al. 2023b (Spikformer/SSA)",
+  "Zhou et al. 2026b (Spikingformer)",
+  "Zhou et al. 2026a (WE/WD-SpikingFormer, WTA 脉冲 Transformer)",
+  "Xing et al. 2024a (SpikeLLM)",
+  "Yao et al. 2023 (Spike-Driven Transformer/SDSA)"
+ ],
+ "notes": "北京大学团队(Chenlin Zhou、Yonghong Tian 等,Spikformer/Spikingformer 与 WE/WD-SpikingFormer 系列作者),2026 年 4 月发布;定位为'新一代通用基础脉冲神经元',与 ILIF/NILIF(整数训练范式)和 SpikingBrain(自适应阈值)正面竞争。语言侧基座为 0.4B-1.0B 的 WTA 脉冲 Transformer,属'中小规模脉冲语言模型'而非十亿级以上脉冲 LLM。"
+}

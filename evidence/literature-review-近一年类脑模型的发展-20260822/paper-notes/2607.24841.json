@@ -1,0 +1,357 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.24841",
+  "title": "Neuromorphic Diffusion Language Models: Addressing Compute and Memory Bottlenecks via Sparsity and Block Denoising",
+  "published": "2026-07-24T11:14:57Z",
+  "url": "https://arxiv.org/abs/2607.24841",
+  "authors": [
+   "Dengyu Wu",
+   "Clement Ruah",
+   "Jiechen Chen",
+   "Bipin Rajendran",
+   "Osvaldo Simeone"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "首个把脉冲神经形态计算与掩码块扩散语言模型结合的工作,并给出区制依赖(compute/memory-bound)的 roofline 分析,代表'脉冲+扩散生成范式'新路线;其估算级验证强度对综述判断该路线边界很重要。"
+  },
+  "sections_read": [
+   {
+    "locator": "I Introduction",
+    "role": "problem",
+    "purpose": "确认问题:AR-LLM 每 token 全参数访问低算术强度;MDLM 收益依赖内存受限区制;收集三条贡献声明。"
+   },
+   {
+    "locator": "II-B Neuromorphic Computing Principles",
+    "role": "method-or-design",
+    "purpose": "理解 IF 神经元软复位与事件驱动稀疏(无脉冲即无计算与访存)的机制基础。"
+   },
+   {
+    "locator": "III-A Architecture",
+    "role": "method-or-design",
+    "purpose": "理解块扩散生成范式与编码器-解码器(E2D2)结构。"
+   },
+   {
+    "locator": "III-B Conversion",
+    "role": "method-or-design",
+    "purpose": "理解量化+IF 转换管线:量化步长=发放阈值、bitwise 三值脉冲时间编码。"
+   },
+   {
+    "locator": "IV-B Token Throughput",
+    "role": "method-or-design",
+    "purpose": "理解 roofline 框架下块尺寸×稀疏度的区制依赖权衡。"
+   },
+   {
+    "locator": "V-A Setup",
+    "role": "data-or-setting",
+    "purpose": "确认实验设置:WMT 14 de-en、约 250M 参数 E2D2、GPU 仿真、转换后微调。"
+   },
+   {
+    "locator": "V-B 4 In-chip Memory vs. Off-chip Memory Systems",
+    "role": "results-or-analysis",
+    "purpose": "理解 OCMS(GPU/HBM)与 ICMS(片上内存)两组硬件参数设定。"
+   },
+   {
+    "locator": "V-C Results",
+    "role": "results-or-analysis",
+    "purpose": "核查图 3/4/5 的结论:ICMS 上 MDLM 无块尺寸增益、N-MDLM 借稀疏提取增益、吞吐与能效超过 AR-LLM/MDLM 且 BLEU 仅轻微下降。"
+   },
+   {
+    "locator": "VI Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集结论与'神经形态硬件验证为未来工作'的边界声明。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II-A Autoregressive vs. Masked Diffusion Language Models / IV-A Computational and Memory-Transfer Load",
+    "reason": "预备知识与逐 token 负载推导公式,综述只需结论层面的机制描述。"
+   },
+   {
+    "locator": "V-B 1/V-B 2/V-B 3 Performance Metrics",
+    "reason": "指标定义公式已在 V-C 结果与卡中引用其结论,公式符号在提取中大量缺失,逐条核对无增量。"
+   }
+  ]
+ },
+ "research_question": "把脉冲神经形态计算(事件驱动稀疏)与掩码块扩散语言模型结合,能否在具有片上内存的现代推理平台(计算受限区制)上同时提升解码吞吐与能效,其收益的区制条件是什么?",
+ "contributions": [
+  "提出 N-MDLM:首个将块并行扩散解码与 IF 脉冲事件驱动稀疏计算结合的神经形态语言模型类,由常规 MDLM 经量化+IF 转换管线获得",
+  "token 级 roofline 分析框架:把块尺寸与激活稀疏度对每 token 计算量、内存搬运、吞吐与能耗的影响统一刻画,并区分计算受限/内存受限区制",
+  "实验(翻译任务)验证:稀疏使 N-MDLM 在普通 MDLM 无法获益的计算受限(ICMS)平台提取吞吐增益,吞吐与能效同时超过 AR-LLM 与 MDLM,且 BLEU 仅轻微下降",
+  "给出区制依赖的设计准则:稀疏收益在计算受限区与稀疏度线性成比例,最佳部署是高内存带宽系统+较大块尺寸"
+ ],
+ "method": {
+  "summary": "从预训练的 E2D2 编码器-解码器 MDLM(约 250M 参数)出发,采用量化式 ANN-to-SNN 转换:自适应步长量化把激活变为整数值(量化步长等于 IF 神经元发放阈值),再用 bitwise 编码(三值脉冲、多时间步)表示,线性层由改进 IF 神经元以事件驱动方式近似重建;转换后再做一轮微调。推理采用块扩散范式:编码器处理已生成前缀,解码器对掩码块做迭代并行去噪,每次参数访问产出整块 token;未激活通道不触发突触操作也不搬运权重。用推理时逐层实测的脉冲稀疏度,配合 roofline 式模型与 OCMS/ICMS 两组硬件参数,估算吞吐与每 token 能耗。",
+  "assumptions": [
+   "IF 发放率可匹配量化函数输出(量化步长=阈值),线性变换可由脉冲内积近似重建",
+   "前向开销由线性层主导;事件驱动假设下仅脉冲贡献计算负载、仅活跃行被加载",
+   "OCMS/ICMS 硬件参数(来自 GPU 指标与片上/片外访存能耗文献)能代表目标平台"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "WMT 14 de-en(德英翻译)"
+  ],
+  "tasks": [
+   "机器翻译(块扩散并行生成)"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "E2D2 编码器-解码器架构,约 250M 参数;GPU 仿真 bitwise 脉冲编码;转换后 Adam 微调一轮"
+ },
+ "evaluation": {
+  "design": "与 AR-LLM、MDLM、N-AR-LLM(对 AR-LLM 施加同一转换)在 OCMS 与 ICMS 两组硬件参数下对比;扫描块尺寸与稀疏参数;吞吐按 AR-LLM 基线归一化。",
+  "baselines": [
+   "AR-LLM(自回归基线)",
+   "MDLM(块扩散基线)",
+   "N-AR-LLM(神经形态化 AR-LLM)"
+  ],
+  "metrics": [
+   "归一化 token 吞吐(vs AR-LLM)",
+   "每 token 能耗(roofline 估算)",
+   "BLEU(翻译质量)",
+   "逐层脉冲稀疏度"
+  ],
+  "ablations": [
+   "块尺寸扫描(吞吐饱和点)",
+   "稀疏参数扫描(能耗-精度权衡)",
+   "OCMS vs ICMS 区制对比"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "提出 N-MDLM 并配套 token 级 roofline 分析框架:块并行去噪提升每参数访问产出的 token 数,事件驱动稀疏同时削减计算与参数搬运",
+   "scope": "模型类与分析框架贡献",
+   "locator": "I Introduction"
+  },
+  {
+   "finding": "核心结果(图 5):N-MDLM 在吞吐与每 token 能耗上同时优于 AR-LLM 与 MDLM,BLEU 仅轻微下降,效率增益对翻译质量影响极小",
+   "scope": "WMT 14 de-en,ICMS 配置",
+   "locator": "V-C Results"
+  },
+  {
+   "finding": "区制机制(图 3):OCMS(内存受限)上 MDLM 吞吐随块尺寸上升;ICMS(计算受限)上 MDLM 增大块尺寸无增益,而 N-MDLM 借稀疏降低计算与内存流量、把系统推回内存受限区,从而在普通 MDLM 失效的硬件上提取增益,吞吐随块尺寸增长后饱和",
+   "scope": "图 3 归一化吞吐分析",
+   "locator": "V-C Results"
+  },
+  {
+   "finding": "区制依赖权衡:计算受限时延迟增益与稀疏度线性成比例、与块尺寸无关;内存受限时增大块尺寸稀释稀疏收益;最大化稀疏收益应部署在高内存带宽系统并用较大块尺寸",
+   "scope": "roofline 分析(式 14)",
+   "locator": "IV-B Token Throughput"
+  },
+  {
+   "finding": "实验设置:E2D2 架构约 250M 参数,从预训练模型经量化+IF 转换后微调,WMT 14 de-en 上以 GPU 仿真评测",
+   "scope": "V-A Setup",
+   "locator": "V-A Setup"
+  },
+  {
+   "finding": "作者把神经形态硬件上的验证与 (块尺寸,稀疏度) 自适应联合优化列为未来工作",
+   "scope": "结论与展望",
+   "locator": "VI Conclusions"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前验证为仿真与分析层面,神经形态硬件上的实测验证属于未来工作",
+    "locator": "VI Conclusions"
+   },
+   {
+    "limitation": "(块尺寸,稀疏度) 需在变化系统约束下自适应联合优化,尚无自动策略",
+    "locator": "VI Conclusions"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全部吞吐/能耗结论为 roofline 估算:由逐层实测稀疏度推算理论 SOPs 与搬运比特,再套用 OCMS(GPU tensor core/HBM 指标)与 ICMS(受片上/片外访存能耗文献启发)参数;非端到端实测,对真实神经形态芯片的外推有限",
+    "basis": "V-B 1 的估算流程描述与 V-B 4 的硬件参数来源说明"
+   },
+   {
+    "boundary": "提取文本中关键数值(具体块尺寸、稀疏参数取值、BLEU 分数、能耗绝对值)均位于图表与被剥离的公式中,正文仅存方向性结论;该文的具体倍数主张不可在本提取中核对",
+    "basis": "全文提取中图 3/4/5 说明与公式符号大量缺失"
+   },
+   {
+    "boundary": "验证仅覆盖约 250M 参数的单语向翻译任务;对十亿级模型、开放域生成或对话场景,以及转换所需微调成本均未评估",
+    "basis": "V-A Setup 的规模与任务设置"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于'约 250M 翻译模型+roofline 估算+两组参数化硬件(OCMS/ICMS)'的范围;不能外推为神经形态扩散 LLM 在真实芯片上的实测吞吐/能耗,不能外推到十亿级参数或开放域生成任务,且区制结论(稀疏收益条件)依赖硬件参数假设。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "把'稀疏×扩散'协同效应形式化为区制依赖的 roofline 分析,机制解释清晰",
+   "对照完整:AR-LLM/MDLM/N-AR-LLM 三基线+两类硬件参数,吞吐按对应硬件的 AR-LLM 归一化",
+   "结论明确绑定 compute-bound/memory-bound 区制,外推边界自觉",
+   "N-AR-LLM 对照可分离'脉冲化'与'扩散化'两类收益来源"
+  ],
+  "design_risks": [
+   "无任何硬件实测,能耗/吞吐全为估算值",
+   "关键数值在图中且未保留于提取文本,方向性结论无法复核具体倍数",
+   "单一任务(翻译)、单一规模(约 250M),泛化未知",
+   "转换后需额外微调,训练成本未量化"
+  ],
+  "baseline_fairness": "同架构同任务的 AR-LLM/MDLM/N-AR-LLM 对比公平,且 N-AR-LLM 可分离脉冲化贡献;但吞吐基线依赖假设的硬件参数,跨硬件结论不可直接比较。",
+  "metric_validity": "BLEU 为翻译质量标准指标;吞吐与能耗为 roofline 估算指标,方法透明但依赖稀疏度实测与硬件参数假设,效度止于分析层面。",
+  "reproducibility": "分析框架公式与硬件参数表完整,但提取文本缺失块尺寸/量化位数/微调步数等关键取值;未见代码发布声明。",
+  "external_validity": "仅 WMT 14 de-en 翻译;对开放域生成、指令遵循、更大模型与真实神经形态硬件均未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.24841-C01",
+   "claim": "提出 N-MDLM 模型类:由常规 MDLM 经量化与 IF 脉冲模型转换得到的神经形态块扩散语言模型,块并行去噪提高每参数访问的 token 产出、事件驱动稀疏同时削减计算与访存;并配套 token 级 roofline 分析框架,把块尺寸与激活稀疏对解码效率的联合效应统一刻画。",
+   "stance": "support",
+   "relation": "支持\"脉冲计算正从 AR 范式扩展到扩散式生成范式\"的路线进展主张,为综述提供'脉冲+扩散'新分支的起源证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言贡献列表三条:模型类、分析框架、实验验证。",
+   "locator": "I Introduction",
+   "source_context": "The main contributions of this work are as follows: • Neuromorphic MDLM : We introduce N-MDLMs , a novel class of neuromorphic LLMs obtained via conversion of a conventional MDLM [ 3 ] based on quantization and integrate-and-fire (IF) spiking models [ 10 ] . • Analysis: We develop a token-level roofline-inspired analytical framework that characterizes the achievable decoding efficiency of N-MDLMs as a function of block size and activation sparsity, capturing the joint and synergistic effects of block-parallel generation and event-driven computation on both computation and memory access.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言贡献段逐字核对,'novel class'、量化+IF 转换、roofline 框架与块尺寸×稀疏的联合刻画均与原文一致;'novel/first'属作者首创性声明,按其引用范围(常规 MDLM+IF 转换的组合)理解。"
+   }
+  },
+  {
+   "card_id": "2607.24841-C02",
+   "claim": "实验规模与设置:N-MDLM 基于 E2D2 编码器-解码器扩散架构(约 250M 参数),在 WMT 14 de-en 翻译数据上从预训练模型经量化转换管线后再用 Adam 微调一轮,脉冲过程以 bitwise 编码在 GPU 上仿真,实验取每去噪步解除一个 token 的设置。",
+   "stance": "support",
+   "relation": "为综述标定该路线的验证规模:约 250M、单一翻译任务、GPU 仿真——与十亿级脉冲 LLM 路线相比规模与任务范围明显更窄。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-A Setup 给出架构、参数量、数据集、仿真与微调设置。",
+   "locator": "V-A Setup",
+   "source_context": "For translation experiments on the WMT 14 de-en dataset [ 6 ] we adopt the efficient encoder-decoder diffusion (E2D2) architecture in [ 4 ] with encoder layers and decoder layers, embedding dimension and hidden intermediate dimension (approximately 250M parameters) [ 4 ] . The N-MDLM introduced in Sec. III-A is simulated on GPU using bitwise coding for time steps.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "model parameters",
+    "value_or_direction": "approximately 250M parameters",
+    "comparator": "E2D2 encoder-decoder diffusion architecture (pretrained baseline)",
+    "task_or_sample": "WMT 14 de-en translation, GPU simulation with bitwise coding",
+    "locator": "V-A Setup"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "V-A Setup 原句逐字核对,'approximately 250M parameters'、E2D2、WMT 14 de-en、GPU 仿真与 bitwise 编码一致;层数/维度等符号在提取中缺失,故主张未列这些值,仅保留可核对数字。"
+   }
+  },
+  {
+   "card_id": "2607.24841-C03",
+   "claim": "核心结果(图 5,WMT 14 de-en、ICMS):N-MDLM 在归一化吞吐与每 token 能耗两项上同时优于 AR-LLM 与 MDLM,而 BLEU 仅轻微下降,即效率增益对翻译质量影响极小;能耗收益主要来自内存访问摊销,事件驱动计算进一步把最低能耗推到最高稀疏度处。",
+   "stance": "support",
+   "relation": "支持\"稀疏×扩散组合可在计算受限平台同时改善吞吐与能效且精度损失可控\"的路线主张,是该文最核心的结果证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C Results 图 4/5 段落:吞吐与能耗均按式(15)(16)估算,N-MDLM 双超基线且 BLEU 轻微下降。",
+   "locator": "V-C Results",
+   "source_context": "The results show that neuromorphic masked diffusion language models (N-MDLMs) outperform AR-LLM and MDLM in terms of both throughput and energy efficiency, with only a slight drop in BLEU, indicating that the efficiency gains are achieved with minimal impact on translation quality.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "图 5 结论句逐字核对,'both throughput and energy efficiency'与'slight drop in BLEU'为原文措辞;具体倍数与 BLEU 数值位于图中且未保留于提取文本,故主张限定为方向性结论而非具体数字,能耗口径为式(16)估算值。"
+   }
+  },
+  {
+   "card_id": "2607.24841-C04",
+   "claim": "区制机制(图 3):在 OCMS(内存受限,GPU 类)上 MDLM 吞吐随块尺寸上升;但在 ICMS(片上内存、计算受限)上普通 MDLM 增大块尺寸不产生任何增益;N-MDLM 引入稀疏后同时降低计算与内存流量、把系统推回内存受限区,从而在普通 MDLM 无法改善的硬件上提取性能增益,吞吐随块尺寸增长并在进入计算受限区后饱和。",
+   "stance": "support",
+   "relation": "支持\"脉冲稀疏是让扩散式生成在片上内存平台获得吞吐收益的关键补丁\"的机制主张,解释了该路线相对 MDLM 的增量价值。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C Results 图 3 段落完整给出 OCMS/ICMS 上 MDLM 与 N-MDLM 的区制对比与饱和行为。",
+   "locator": "V-C Results",
+   "source_context": "In contrast, in the compute-bound regime of ICMS, increasing the block size does not yield gains for MDLM (solid line). This is because, in a compute-bound regime, the throughput is limited by the compute rate , and it does not benefit from amortizing memory access via diffusion. By introducing sparsity, N-MDLM reduces both computation and memory traffic.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "图 3 段落原句逐字核对:ICMS 上 MDLM 无块尺寸增益、N-MDLM 借稀疏降低计算与内存流量均一致;'OCMS 上 MDLM 吞吐随块尺寸上升'出自同节前句'As reported in [ 3 ], in the memory-bound regime of OCMS, MDLM is seen to have an increasing throughput as a function of the block size'。结论基于归一化吞吐估算。"
+   }
+  },
+  {
+   "card_id": "2607.24841-C05",
+   "claim": "区制依赖的边界条件(式 14 分析):当系统计算受限时,N-MDLM 的延迟增益与稀疏度线性成比例、与块尺寸无关;当系统内存受限时,增大块尺寸会稀释稀疏收益(有效数据加载稀疏度被块尺寸摊薄);增大块尺寸把系统推向计算受限、增大稀疏度推向内存受限,故最大稀疏收益需要高内存带宽系统(如近存计算神经形态器件)配合较大块尺寸。",
+   "stance": "conditional",
+   "relation": "限定\"脉冲稀疏必然带来加速\"的一般化解读:收益依赖硬件区制与块尺寸-稀疏度配比,为综述给出该路线的适用条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B 节给出块尺寸×稀疏度的区制权衡与部署准则。",
+   "locator": "IV-B Token Throughput",
+   "source_context": "The expression ( 14 ) highlights a regime-dependent tradeoff between the block size and the sparsity level : when the system is compute-bound, the latency gains in N-MDLMs are linearly proportional to the sparsity level regardless of the block size . In contrast, when the system is in a memory-bound regime, increasing the block size reduces the benefits of sparsity, with the effective data-loading sparsity reduced to .",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "IV-B 原句逐字核对,区制依赖的三条结论(线性比例、稀疏收益稀释、块尺寸/稀疏度的反向推动)均一致;该结论为分析性推导而非实测,故 stance 取 conditional 并把适用范围绑定在 roofline 框架假设内。"
+   }
+  },
+  {
+   "card_id": "2607.24841-C06",
+   "claim": "验证边界(作者自述):本文吞吐/能耗结论止于仿真与分析层面,'未来工作将聚焦神经形态硬件上的验证'与块尺寸-稀疏度的自适应联合优化;结合估算方法(逐层实测稀疏度→理论 SOPs 与搬运比特→套用 OCMS/ICMS 硬件参数),该路线当前没有任何芯片实测数据。",
+   "stance": "limit",
+   "relation": "限定\"神经形态扩散 LLM 已被证明高效\"的强解读:证据强度止于 roofline 估算级,硬件实测仍是空白。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节未来工作句明确硬件验证缺口;V-B 1 说明吞吐/能耗为估算而非实测。",
+   "locator": "VI Conclusions",
+   "source_context": "Future work will focus on validation on neuromorphic hardware and on adaptive strategies to jointly optimize and under varying system constraints.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "结论节未来工作句逐字核对,'validation on neuromorphic hardware'属未来工作即当前未完成;估算性质由 V-B 1 节'collected sparsity values are used to estimate theoretical number of spike operations (OPs)'支撑,主张措辞据此限定为估算级证据。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Efficient encoder-decoder diffusion (E2D2) architecture",
+   "note": "被转换的预训练 MDLM 基座(引用 [4])"
+  },
+  {
+   "title": "Masked diffusion language models (MDLM)",
+   "note": "块扩散生成范式来源(引用 [3])"
+  },
+  {
+   "title": "SpikingBERT / neuromorphic transformers (量化+IF 转换管线)",
+   "note": "本文引用 [10][14][11] 的神经形态 transformer 先行工作,转换方法即源于此脉络"
+  },
+  {
+   "title": "Roofline model",
+   "note": "分析框架基础(引用 [12])"
+  },
+  {
+   "title": "WMT 14 de-en",
+   "note": "翻译评测数据集(引用 [6])"
+  }
+ ],
+ "notes": "IEEE 双栏格式(罗马节号),作者含 Osvaldo Simeone 与 Bipin Rajendran;该团队脉络(SpikingBERT/SpikeLLM 等)此前做神经形态 AR transformer,本文把同一量化+IF 转换范式推广到掩码扩散生成,并强调片上内存(ICMS)平台的区制分析——与多数脉冲 LLM 论文的'能耗折算'不同,本文显式区分 compute-bound/memory-bound 并论证稀疏的区制条件。注意:提取文本丢失几乎全部图表数值(块尺寸、稀疏参数、BLEU、能耗具体值),本 note 的定量主张仅限文本可核对部分(约 250M 参数等),具体倍数需查原文 PDF/图。"
+}
