@@ -219,6 +219,15 @@ def main() -> int:
             handle.write(rendered + "\n")
     else:
         print(rendered)
+    failed = [item for item in query_results if item.get("error")]
+    if failed:
+        labels = ", ".join(str(item["label"]) for item in failed)
+        print(
+            f"WARNING: {len(failed)}/{len(query_results)} queries failed "
+            f"(no results for them; partial batch saved): {labels}",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

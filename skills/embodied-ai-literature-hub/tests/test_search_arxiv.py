@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import email.message
 import importlib.util
+import io
+import json
+import sys
+import tempfile
 import unittest
 import urllib.error
 from pathlib import Path
@@ -101,6 +106,59 @@ class SearchArxivRetryTest(unittest.TestCase):
             search_arxiv.retry_wait_seconds(TimeoutError("timeout"), 0, args_with_retry_waits(-5, 60)),
             0.0,
         )
+
+
+class SearchArxivExitCodeTest(unittest.TestCase):
+    def run_main(self, fetch_side_effect: list[object]) -> tuple[int, str, dict]:
+        with tempfile.TemporaryDirectory() as tmp:
+            query_file = Path(tmp) / "queries.json"
+            query_file.write_text(
+                json.dumps(
+                    {
+                        "queries": [
+                            {"label": "q-one", "query": "all:alpha"},
+                            {"label": "q-two", "query": "all:beta"},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            output_file = Path(tmp) / "out.json"
+            argv = [
+                "search_arxiv.py",
+                "--query-file",
+                str(query_file),
+                "--start-date",
+                "2026-01-01",
+                "--end-date",
+                "2026-06-30",
+                "--output",
+                str(output_file),
+            ]
+            stderr = io.StringIO()
+            with mock.patch.object(sys, "argv", argv):
+                with mock.patch.object(search_arxiv.time, "sleep"):
+                    with mock.patch.object(search_arxiv, "fetch", side_effect=fetch_side_effect):
+                        with contextlib.redirect_stderr(stderr):
+                            code = search_arxiv.main()
+            return code, stderr.getvalue(), json.loads(output_file.read_text(encoding="utf-8"))
+
+    def test_partial_failure_exits_nonzero_and_warns(self) -> None:
+        code, stderr, output = self.run_main([RuntimeError("arXiv request failed: 429"), b"<feed />"])
+
+        self.assertEqual(1, code)
+        self.assertIn("1/2 queries failed", stderr)
+        self.assertIn("q-one", stderr)
+        self.assertIn("429", output["queries"][0]["error"])
+        self.assertNotIn("error", output["queries"][1])
+        self.assertEqual(0, output["paper_count"])
+
+    def test_all_success_exits_zero_without_warning(self) -> None:
+        code, stderr, output = self.run_main([b"<feed />", b"<feed />"])
+
+        self.assertEqual(0, code)
+        self.assertEqual("", stderr)
+        self.assertEqual(0, output["paper_count"])
 
 
 if __name__ == "__main__":

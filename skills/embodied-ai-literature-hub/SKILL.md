@@ -30,6 +30,7 @@ description: Discover and recover large embodied-AI literature pools through mul
    - Keep candidate papers separate from accepted evidence.
    - Use the official API as the first pass, but do not rely on it as the only candidate source.
    - If the API returns `429`, timeouts, SSL errors, or transient server errors, do not treat that as zero evidence. `search_arxiv.py` waits and retries up to 3 times per query, honoring `Retry-After` for `429` when present; after retries are exhausted, use the Browser fallback in `references/browser-fallback.md`.
+   - Failed queries are never silent: `search_arxiv.py` exits non-zero with a `WARNING: N/M queries failed` line on stderr and still writes the partial batch JSON. On exit code 1, re-run the failed query labels (with `--sleep-seconds` at 3 or higher) or route them through the Browser fallback — the partial batch alone under-reports those queries' dimensions.
    - Merge every API and Browser round with `scripts/build_candidate_registry.py`; do not maintain ad-hoc paper lists.
    - Update screening status (`discovered`, `title-screened`, `full-text-queued`, `extracted`, `accepted`, `rejected`, `unavailable`) instead of deleting candidates.
    - For registries with hundreds of papers, use `scripts/screen_candidates.py` to create a reproducible title/abstract priority queue. Prior evidence may seed ranking, but the script never marks a paper accepted.
