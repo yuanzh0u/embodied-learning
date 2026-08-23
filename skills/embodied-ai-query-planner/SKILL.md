@@ -20,6 +20,7 @@ Use it upstream of `$embodied-ai-literature-hub` whenever a literature run needs
 - Optional: review mode: `rapid`, `scoping` (default), or `systematic`.
 - Optional: explicit candidate, full-text, or accepted-evidence floors. These are never caps.
 - Optional: dynamic suggestions from LLM/agent reasoning.
+- Optional: persona file with perspective-driven queries. See [persona-expansion.md](references/persona-expansion.md).
 - Optional: calibration notes from live search.
 
 ## Workflow
@@ -42,9 +43,10 @@ python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
 ```
 
 4. If the topic needs associative expansion beyond the static taxonomy, create a dynamic suggestion file. See [dynamic-expansion.md](references/dynamic-expansion.md).
-5. If the user requested fresh calibration, search arXiv pages, project pages, author pages, Reddit, and X/Twitter for current terms. Save only terms/query hints, not claims. See [web-calibration.md](references/web-calibration.md).
-6. Re-run the script with `--dynamic-file` and/or `--calibration-file` to merge dynamic suggestions and calibrated terms.
-7. Pass the JSON plan to `$embodied-ai-literature-hub` or `search_arxiv.py --query-file`.
+5. If the topic benefits from multiple expert perspectives (e.g. pitfall-oriented topics), extract local reference context with `scripts/gen_persona_context.py`, generate a reviewed persona file, and pass it via `--persona-file`. See [persona-expansion.md](references/persona-expansion.md).
+6. If the user requested fresh calibration, search arXiv pages, project pages, author pages, Reddit, and X/Twitter for current terms. Save only terms/query hints, not claims. See [web-calibration.md](references/web-calibration.md).
+7. Re-run the script with `--dynamic-file`, `--persona-file`, and/or `--calibration-file` to merge dynamic suggestions, persona queries, and calibrated terms.
+8. Pass the JSON plan to `$embodied-ai-literature-hub` or `search_arxiv.py --query-file`.
 
 ## Output Contract
 
@@ -53,6 +55,7 @@ python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
 - `browser_fallback_queries`: web/browser search strings for candidate discovery when the API under-recovers.
 - `web_calibration_queries`: search strings for fresh keyword calibration.
 - `dynamic_suggestions`: LLM/agent-suggested query additions and adjacent families, separate from static taxonomy.
+- `personas`, `persona_suggestions`, `persona_coverage`: perspective-driven layer, present only when `--persona-file` is provided; every persona query carries `persona_id` and `coverage_dimension`.
 - `calibration_notes`: source and confidence notes, especially for social calibration.
 - `review_mode` and `search_targets`: candidate/full-text/accepted-paper floors scaled by the query surface.
 - `coverage_dimensions`: query labels grouped into direct, mechanism, limit, evaluation, deployment, and adjacent evidence surfaces.
@@ -65,7 +68,8 @@ Each query entry must include `label`, `tier`, `query`, and `why`.
 - Prefer wide recall plus strong downstream filtering.
 - Never stop because a fixed paper count was reached. Counts are floors; coverage and saturation decide completion.
 - Use `rapid` only for a bounded decision or early scan, `scoping` for normal topic maps, and `systematic` for high-consequence or explicitly exhaustive work.
-- Keep static taxonomy, dynamic suggestions, and web calibration visibly separate.
+- Keep static taxonomy, persona suggestions, dynamic suggestions, and web calibration visibly separate.
+- Plans without `--persona-file` must stay identical to pre-persona output; the persona layer is purely additive.
 - Do not hard-filter with `cat:` by default; include suggested categories as metadata.
 - Treat Reddit and X/Twitter as low-confidence social calibration only.
 - Do not use web or social content as accepted paper evidence.
