@@ -400,12 +400,13 @@ def render_research_index(
 ) -> str:
     canonical = f"{base_url}/research/"
     noindex = '<meta name="robots" content="noindex,nofollow">' if preview else ""
+    topic_count = len(topics)
     return f"""<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>具身智能研究专题目录｜Embodied AI Evidence Hub</title>
-<meta name="description" content="38 个具身智能循证研究专题，覆盖 VLA、世界模型、4D 时空推理、机器人数据、多模态感知与闭环评测。">
+<meta name="description" content="{topic_count} 个具身智能循证研究专题，覆盖 VLA、世界模型、4D 时空推理、机器人数据、多模态感知与闭环评测。">
 {noindex}<link rel="canonical" href="{canonical}"><meta property="og:title" content="具身智能研究专题目录｜Embodied AI Evidence Hub">
-<meta property="og:description" content="38 个具身智能循证研究专题及其论文、正式证据事件与审计边界。"><meta property="og:url" content="{canonical}">
+<meta property="og:description" content="{topic_count} 个具身智能循证研究专题及其论文、正式证据事件与审计边界。"><meta property="og:url" content="{canonical}">
 <meta property="og:image" content="{_asset_url(base_url, str(site['social_image']))}"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="../assets/research.css"></head><body>
 <header class="site-header"><a class="site-brand" href="../"><strong>Embodied AI Evidence Hub</strong><span>具身智能证据知识库</span></a><nav><a href="../knowledge-map/">知识图谱</a><a href="{site['repository_url']}">GitHub</a></nav></header>
@@ -528,6 +529,7 @@ def validate_site(
     *,
     preview: bool,
     require_knowledge_map: bool = False,
+    expected_topic_count: int | None = None,
 ) -> None:
     sitemap_path = output / "sitemap.xml"
     robots_path = output / "robots.txt"
@@ -537,8 +539,15 @@ def validate_site(
             raise RuntimeError(f"静态站缺少文件：{required}")
     tree = ElementTree.parse(sitemap_path)
     locations = [node.text for node in tree.findall("{http://www.sitemaps.org/schemas/sitemap/0.9}url/{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
-    if len(locations) != 40 or len(locations) != len(set(locations)):
-        raise RuntimeError(f"Sitemap 必须包含 40 个唯一 canonical URL，当前为 {len(locations)}。")
+    if expected_topic_count is None:
+        # check-only mode: derive the expected topic count from the sitemap
+        # (home + directory listing + one canonical per topic), so the site
+        # stays self-consistent as the topic set grows.
+        expected_topic_count = len(locations) - 2
+    if (
+        len(locations) != expected_topic_count + 2 or len(locations) != len(set(locations))
+    ):
+        raise RuntimeError(f"Sitemap 必须包含 {expected_topic_count + 2} 个唯一 canonical URL，当前为 {len(locations)}。")
     if any("#" in str(url) or "/knowledge-map/" in str(url) or "/data/" in str(url) for url in locations):
         raise RuntimeError("Sitemap 包含 hash、知识图谱或数据快照地址。")
     robots = _read_text(robots_path)
@@ -549,8 +558,8 @@ def validate_site(
         raise RuntimeError("生产 robots.txt 未允许 OAI-SearchBot 或未指向 Sitemap。")
 
     topic_pages = sorted((output / "research").glob("*/index.html"))
-    if len(topic_pages) != 38:
-        raise RuntimeError(f"静态站必须包含 38 个专题页，当前为 {len(topic_pages)}。")
+    if expected_topic_count is not None and len(topic_pages) != expected_topic_count:
+        raise RuntimeError(f"静态站必须包含 {expected_topic_count} 个专题页，当前为 {len(topic_pages)}。")
     canonicals: set[str] = set()
     descriptions: list[str] = []
     for page in topic_pages:
@@ -617,8 +626,8 @@ def validate_site(
                     continue
                 if not target.exists():
                     raise RuntimeError(f"站内链接目标不存在：{href}")
-    if len(canonicals) != 38:
-        raise RuntimeError("专题页 canonical 数量不等于 38。")
+    if expected_topic_count is not None and len(canonicals) != expected_topic_count:
+        raise RuntimeError(f"专题页 canonical 数量不等于 {expected_topic_count}。")
 
     graph = output / "knowledge-map" / "index.html"
     if require_knowledge_map and not graph.is_file():
@@ -654,8 +663,8 @@ def build_site(
         raise RuntimeError("静态研究站只接受 schema v2 快照。")
     topics_meta = manifest.get("topics")
     site = manifest.get("site")
-    if not isinstance(topics_meta, list) or len(topics_meta) != 38 or not isinstance(site, dict):
-        raise RuntimeError("生产静态站要求 38 个 schema v2 专题及完整站点配置。")
+    if not isinstance(topics_meta, list) or not topics_meta or not isinstance(site, dict):
+        raise RuntimeError("生产静态站要求 schema v2 专题及完整站点配置。")
     base_url_config = str(site.get("base_url") or "").rstrip("/")
     if base_url != base_url_config:
         raise RuntimeError(f"构建 base URL 与 site-config.json 不一致：{base_url} != {base_url_config}")
@@ -709,7 +718,7 @@ def build_site(
     _write_text(output / "sitemap.xml", _sitemap(topics, base_url))
     _write_text(output / "llms.txt", _llms(topics, base_url))
     _copy_verification_files(wiki_root, output)
-    validate_site(output, base_url, preview=preview)
+    validate_site(output, base_url, preview=preview, expected_topic_count=len(topics))
     return manifest
 
 
