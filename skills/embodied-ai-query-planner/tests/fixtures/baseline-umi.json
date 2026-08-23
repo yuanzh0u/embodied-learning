@@ -1,0 +1,596 @@
+{
+  "planner": "embodied-ai-query-planner",
+  "topic": "UMI 数据可用性",
+  "start_date": null,
+  "end_date": null,
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-HARDWARE"
+  ],
+  "families": [
+    "umi"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 100,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 100,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "umi-exact-lineage",
+        "umi-abbrev-robot-data",
+        "umi-named-variants",
+        "ea-data-robot-demonstrations",
+        "ea-data-demonstration-quality",
+        "ea-hardware-teleop-device"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "umi-force-torque",
+        "ea-hardware-slam-demonstration",
+        "ea-hardware-arkit-tracking"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "umi-handheld-gripper-language",
+        "ea-data-in-the-wild",
+        "ea-data-dataset-curation",
+        "ea-hardware-handheld-gripper"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "umi-usability-limitations"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [],
+  "dynamic_suggestions": [],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "umi-exact-lineage",
+      "tier": "exact-lineage",
+      "query": "all:\"Universal Manipulation Interface\"",
+      "why": "Find the original UMI lineage and papers spelling out the full method name.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-exact-lineage"
+      ]
+    },
+    {
+      "label": "umi-abbrev-robot-data",
+      "tier": "exact-lineage",
+      "query": "all:UMI AND all:robot AND all:data",
+      "why": "Catch metadata that uses the UMI acronym without the expanded phrase.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-abbrev-robot-data"
+      ]
+    },
+    {
+      "label": "umi-named-variants",
+      "tier": "named-variant",
+      "query": "(all:\"UMI-3D\" OR all:\"UMI 3D\" OR all:DexUMI OR all:RealDexUMI)",
+      "why": "Find named variants that expose 3D, dexterity, and wearable-data limitations.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-named-variants"
+      ]
+    },
+    {
+      "label": "umi-force-torque",
+      "tier": "sensor-extension",
+      "query": "all:UMI AND all:force AND all:torque",
+      "why": "Find UMI extensions for contact-rich or force-aware data collection.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-force-torque"
+      ]
+    },
+    {
+      "label": "umi-handheld-gripper-language",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:demonstration",
+      "why": "Catch UMI-like handheld interfaces that may not mention the acronym.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-handheld-gripper-language"
+      ]
+    },
+    {
+      "label": "umi-usability-limitations",
+      "tier": "limitation",
+      "query": "all:usability AND all:gripper AND all:\"robot learning\"",
+      "why": "Find papers that critique operator burden, gripper design, and data usability.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "umi-usability-limitations"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-hardware-teleop-device",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"data collection\" AND all:robot",
+      "why": "Find hardware routes used to collect robot demonstrations.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-teleop-device"
+      ]
+    },
+    {
+      "label": "ea-hardware-slam-demonstration",
+      "tier": "tracking",
+      "query": "all:SLAM AND all:\"robot manipulation\" AND all:demonstration",
+      "why": "Capture tracking and reconstruction limitations in collection devices.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-hardware-slam-demonstration"
+      ]
+    },
+    {
+      "label": "ea-hardware-arkit-tracking",
+      "tier": "tracking",
+      "query": "all:ARKit AND all:robot AND all:tracking",
+      "why": "Find low-cost pose-tracking and VIO routes relevant to data capture.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-arkit-tracking"
+      ]
+    },
+    {
+      "label": "ea-hardware-handheld-gripper",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:robot",
+      "why": "Catch UMI-like collection devices that may not use UMI in metadata.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-handheld-gripper"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "umi-exact-lineage",
+      "tier": "exact-lineage",
+      "query": "all:\"Universal Manipulation Interface\"",
+      "why": "Find the original UMI lineage and papers spelling out the full method name.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-exact-lineage"
+      ]
+    },
+    {
+      "label": "umi-abbrev-robot-data",
+      "tier": "exact-lineage",
+      "query": "all:UMI AND all:robot AND all:data",
+      "why": "Catch metadata that uses the UMI acronym without the expanded phrase.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-abbrev-robot-data"
+      ]
+    },
+    {
+      "label": "umi-named-variants",
+      "tier": "named-variant",
+      "query": "(all:\"UMI-3D\" OR all:\"UMI 3D\" OR all:DexUMI OR all:RealDexUMI)",
+      "why": "Find named variants that expose 3D, dexterity, and wearable-data limitations.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-named-variants"
+      ]
+    },
+    {
+      "label": "umi-force-torque",
+      "tier": "sensor-extension",
+      "query": "all:UMI AND all:force AND all:torque",
+      "why": "Find UMI extensions for contact-rich or force-aware data collection.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-force-torque"
+      ]
+    },
+    {
+      "label": "umi-handheld-gripper-language",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:demonstration",
+      "why": "Catch UMI-like handheld interfaces that may not mention the acronym.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "umi-handheld-gripper-language"
+      ]
+    },
+    {
+      "label": "umi-usability-limitations",
+      "tier": "limitation",
+      "query": "all:usability AND all:gripper AND all:\"robot learning\"",
+      "why": "Find papers that critique operator burden, gripper design, and data usability.",
+      "source_key": "umi",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "umi-usability-limitations"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-hardware-teleop-device",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"data collection\" AND all:robot",
+      "why": "Find hardware routes used to collect robot demonstrations.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-teleop-device"
+      ]
+    },
+    {
+      "label": "ea-hardware-slam-demonstration",
+      "tier": "tracking",
+      "query": "all:SLAM AND all:\"robot manipulation\" AND all:demonstration",
+      "why": "Capture tracking and reconstruction limitations in collection devices.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-hardware-slam-demonstration"
+      ]
+    },
+    {
+      "label": "ea-hardware-arkit-tracking",
+      "tier": "tracking",
+      "query": "all:ARKit AND all:robot AND all:tracking",
+      "why": "Find low-cost pose-tracking and VIO routes relevant to data capture.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-arkit-tracking"
+      ]
+    },
+    {
+      "label": "ea-hardware-handheld-gripper",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:robot",
+      "why": "Catch UMI-like collection devices that may not use UMI in metadata.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-handheld-gripper"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "browser-umi-named-lineage",
+      "query": "site:arxiv.org/abs (\"Universal Manipulation Interface\" OR \"UMI-FT\" OR \"UMI-3D\" OR DexUMI OR RealDexUMI) robot manipulation",
+      "why": "Find UMI lineage and named variants through arXiv pages when API metadata search misses exact names.",
+      "source_key": "umi",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-umi-usability-quality",
+      "query": "site:arxiv.org/abs (UMI OR \"handheld gripper\" OR \"hand-held gripper\") (\"demonstration quality\" OR usability OR ergonomics) \"robot learning\"",
+      "why": "Find negative or conditional UMI data-usability discussions around gripper design and operator burden.",
+      "source_key": "umi",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-umi-sensing-transfer-limits",
+      "query": "site:arxiv.org/abs (UMI OR \"Universal Manipulation Interface\") (SLAM OR occlusion OR tactile OR force OR retargeting OR dexterous)",
+      "why": "Find UMI-adjacent limitation papers about sensing, tracking, force, tactile feedback, or embodiment transfer.",
+      "source_key": "umi",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "web-topic-calibration",
+      "query": "\"UMI 数据可用性\" \"robot\" \"arXiv\"",
+      "why": "Find paper-facing terminology for the requested topic.",
+      "source_key": "generic",
+      "source_type": "web",
+      "channel": "web_calibration"
+    }
+  ]
+}

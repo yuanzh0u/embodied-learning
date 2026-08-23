@@ -273,6 +273,205 @@ class QueryPlannerTests(unittest.TestCase):
             self.assertTrue(all({"label", "query"} <= set(item) for item in loaded))
 
 
+class PersonaLayerTests(unittest.TestCase):
+    """Tests for the optional persona-driven query layer (--persona-file).
+
+    Red line: without --persona-file the output must stay byte-identical to the
+    pre-persona planner (golden baselines in tests/fixtures/)."""
+
+    FIXTURES = PLANNER.parent.parent / "tests" / "fixtures"
+    PERSONA_FILE = FIXTURES / "persona-vt-pitfalls.json"
+
+    def test_persona_file_absent_matches_baseline(self) -> None:
+        cases = [
+            (
+                ["--topic", "UMI 数据可用性", "--knowledge-id", "EA-DATA", "--review-mode", "scoping"],
+                "baseline-umi.json",
+            ),
+            (
+                ["--topic", "VLA的数据金字塔", "--dynamic-file", str(self.FIXTURES / "fixture-dynamic-vla.json")],
+                "baseline-vla.json",
+            ),
+        ]
+        for extra_args, golden_name in cases:
+            with self.subTest(golden=golden_name):
+                plan = run_json(*extra_args)
+                plan.pop("generated_at", None)
+                with open(self.FIXTURES / golden_name, encoding="utf-8") as handle:
+                    golden = json.load(handle)
+                self.assertEqual(golden, plan)
+                self.assertNotIn("personas", plan)
+                self.assertNotIn("persona_suggestions", plan)
+                self.assertNotIn("persona_coverage", plan)
+                self.assertNotIn("persona_regeneration", plan["stopping_rule"])
+
+    def test_persona_queries_merged_and_attributed(self) -> None:
+        plan = run_json(
+            "--topic", "近半年触觉数据联合训练的坑",
+            "--knowledge-id", "EA-SENSOR",
+            "--knowledge-id", "EA-DATA",
+            "--persona-file", str(self.PERSONA_FILE),
+        )
+
+        persona_queries = [item for item in plan["queries"] if item.get("persona_id")]
+        self.assertEqual(7, len(persona_queries))
+        by_label = {item["label"]: item for item in persona_queries}
+        self.assertEqual("P-FAILURE-HUNTER", by_label["persona-failure-negative-transfer"]["persona_id"])
+        self.assertEqual("persona", by_label["persona-failure-negative-transfer"]["persona_source"])
+        self.assertEqual("limits-and-counterevidence", by_label["persona-failure-negative-transfer"]["coverage_dimension"])
+        self.assertEqual("query-planning-only", by_label["persona-failure-negative-transfer"]["evidence_role"])
+        self.assertEqual("persona-suggestion", by_label["persona-failure-negative-transfer"]["source_type"])
+
+        deduped = next(
+            item for item in plan["queries"] if item["label"] == "persona-failure-negative-transfer"
+        )
+        self.assertIn("persona-failure-duplicate-of-first", deduped.get("merged_labels", []))
+
+        self.assertEqual(5, len(plan["personas"]))
+        self.assertEqual(5, len(plan["persona_coverage"]))
+        failure = next(item for item in plan["persona_coverage"] if item["persona_id"] == "P-FAILURE-HUNTER")
+        self.assertEqual(2, failure["query_count"])
+        self.assertEqual({"limits-and-counterevidence": 2}, failure["dimensions"])
+        self.assertIn("persona_regeneration", plan["stopping_rule"])
+        self.assertEqual(2, plan["stopping_rule"]["persona_regeneration"]["max_regeneration_rounds"])
+        # suggestions list the generated layer pre-dedupe (8 in the fixture,
+        # including the intentional duplicate); plan queries hold 7 unique.
+        self.assertEqual(8, len(plan["persona_suggestions"]))
+        self.assertTrue(all(item["source"].startswith("persona:") for item in plan["persona_suggestions"]))
+
+    def test_explicit_dimension_precedence(self) -> None:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8", delete=False) as handle:
+            json.dump(
+                {
+                    "personas": [{"id": "P1", "name": "测试角色", "focus": "f", "primary_dimensions": ["direct-topic"]}],
+                    "queries": [
+                        {
+                            "label": "persona-explicit-dim",
+                            "tier": "persona-method",
+                            "query": 'all:"explicit dimension wins"',
+                            "why": "w",
+                            "persona": "P1",
+                            "coverage_dimension": "limits-and-counterevidence",
+                        }
+                    ],
+                },
+                handle,
+            )
+            persona_path = handle.name
+
+        try:
+            plan = run_json("--topic", "触觉联合训练", "--persona-file", persona_path)
+        finally:
+            Path(persona_path).unlink(missing_ok=True)
+
+        entry = next(item for item in plan["queries"] if item["label"] == "persona-explicit-dim")
+        self.assertEqual("limits-and-counterevidence", entry["coverage_dimension"])
+        self.assertEqual("persona-method", entry["tier"])
+        dimension = next(d for d in plan["coverage_dimensions"] if d["dimension"] == "limits-and-counterevidence")
+        self.assertIn("persona-explicit-dim", dimension["query_labels"])
+
+    def test_tier_fallback_mapping(self) -> None:
+        planner = load_planner_module()
+        cases = {
+            "persona-direct": "direct-topic",
+            "persona-method": "mechanisms-and-interfaces",
+            "persona-limit": "limits-and-counterevidence",
+            "persona-eval": "evaluation-and-validation",
+            "persona-deploy": "deployment-and-operations",
+            "persona-adjacent": "adjacent-and-transfer",
+        }
+        for tier, expected_dimension in cases.items():
+            with self.subTest(tier=tier):
+                dimension, resolved_tier = planner.resolve_persona_dimension(
+                    {"tier": tier}, None, [], "probe"
+                )
+                self.assertEqual(expected_dimension, dimension)
+                self.assertEqual(tier, resolved_tier)
+        # Five of the six convention tiers ALSO classify correctly through
+        # coverage_group()'s substring keywords; persona-direct is the one
+        # exception ("direct" is not a coverage_group keyword), which is why
+        # merge_persona must resolve tiers through the explicit table.
+        for tier, expected_dimension in cases.items():
+            if tier == "persona-direct":
+                self.assertEqual("adjacent-and-transfer", planner.coverage_group(tier))
+            else:
+                self.assertEqual(expected_dimension, planner.coverage_group(tier))
+
+    def test_persona_file_repeatable_and_invalid_tolerated(self) -> None:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8", delete=False) as handle:
+            json.dump(
+                {
+                    "personas": [{"id": "P-MAIN", "name": "主角色", "focus": "f", "primary_dimensions": ["direct-topic"]}],
+                    "queries": [
+                        {"label": "persona-main-q1", "tier": "persona-direct", "query": 'all:"main one"', "why": "w", "persona": "P-MAIN"},
+                        {"query": "all:\"missing label and fine\"", "why": "w"},
+                        {"label": "persona-bad-ref", "tier": "persona-direct", "query": 'all:"unknown ref"', "why": "w", "persona": "P-GHOST"},
+                        {"label": "persona-no-query", "tier": "persona-direct", "why": "w", "persona": "P-MAIN"},
+                    ],
+                },
+                handle,
+            )
+            first_path = handle.name
+        with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8", delete=False) as handle:
+            json.dump(
+                {
+                    "personas": [
+                        {"id": "P-MAIN", "name": "重复角色", "focus": "duplicate", "primary_dimensions": []},
+                        {"id": "P-SECOND", "name": "第二角色", "focus": "f2", "primary_dimensions": ["limits-and-counterevidence"]},
+                    ],
+                    "queries": [
+                        {"label": "persona-second-q1", "tier": "persona-limit", "query": 'all:"second file"', "why": "w", "persona": "P-SECOND"},
+                        {"label": "persona-cross-ref", "tier": "persona-direct", "query": 'all:"cross file ref"', "why": "w", "persona": "P-MAIN"},
+                    ],
+                },
+                handle,
+            )
+            second_path = handle.name
+
+        try:
+            plan = run_json(
+                "--topic", "触觉联合训练",
+                "--persona-file", first_path,
+                "--persona-file", second_path,
+            )
+        finally:
+            Path(first_path).unlink(missing_ok=True)
+            Path(second_path).unlink(missing_ok=True)
+
+        labels = {item["label"] for item in plan["queries"] if item.get("persona_id")}
+        self.assertIn("persona-main-q1", labels)
+        self.assertIn("persona-second-q1", labels)
+        self.assertIn("persona-cross-ref", labels)
+        self.assertNotIn("persona-bad-ref", labels)
+        self.assertNotIn("persona-no-query", labels)
+
+        self.assertEqual(2, len(plan["personas"]))
+        main_persona = next(p for p in plan["personas"] if p["id"] == "P-MAIN")
+        self.assertEqual("主角色", main_persona["name"])
+
+        notes_blob = "\n".join(plan["notes"])
+        self.assertIn("references unknown persona 'P-GHOST'", notes_blob)
+        self.assertIn("is missing 'query'", notes_blob)
+        self.assertIn("has no persona reference", notes_blob)
+        self.assertIn("Duplicate persona id 'P-MAIN'", notes_blob)
+
+        main_coverage = next(c for c in plan["persona_coverage"] if c["persona_id"] == "P-MAIN")
+        self.assertEqual(2, main_coverage["query_count"])
+
+    def test_persona_count_in_budget(self) -> None:
+        plan = run_json(
+            "--topic", "近半年触觉数据联合训练的坑",
+            "--knowledge-id", "EA-SENSOR",
+            "--persona-file", str(self.PERSONA_FILE),
+            "--max-queries", "3",
+        )
+
+        self.assertEqual(3, len(plan["queries"]))
+        persona_labels_in_budget = [item["label"] for item in plan["queries"] if item.get("persona_id")]
+        self.assertLessEqual(len(persona_labels_in_budget), 3)
+        self.assertTrue(plan["persona_coverage"])
+
+
 class CoverageGroupTests(unittest.TestCase):
     """Regression tests for coverage_group() classifying by the tier string's own
     keywords, not by taxonomy-alias-normalizing it first (see the docstring in

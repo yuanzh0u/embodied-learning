@@ -18,6 +18,38 @@ except ImportError as exc:  # pragma: no cover - import path failure is surfaced
 
 SOCIAL_SOURCES = {"reddit", "x", "twitter", "x-twitter", "x/twitter"}
 DEFAULT_MAX_QUERIES = 50
+
+# Persona-layer tier <-> coverage-dimension convention. Tier names are chosen
+# so that coverage_group()'s substring fallback ALSO classifies them correctly
+# (e.g. "persona-method" contains "method"), but merge_persona() resolves the
+# mapping through this explicit table first so correctness never depends on
+# substring luck. Note: "persona-direct" intentionally does NOT match any
+# coverage_group() keyword ("core"/"exact"/"named"/"quality"); the explicit
+# table is what routes it to direct-topic.
+PERSONA_DIMENSION_TIERS: dict[str, str] = {
+    "persona-direct": "direct-topic",
+    "persona-method": "mechanisms-and-interfaces",
+    "persona-limit": "limits-and-counterevidence",
+    "persona-eval": "evaluation-and-validation",
+    "persona-deploy": "deployment-and-operations",
+    "persona-adjacent": "adjacent-and-transfer",
+}
+PERSONA_TIER_BY_DIMENSION: dict[str, str] = {value: key for key, value in PERSONA_DIMENSION_TIERS.items()}
+VALID_COVERAGE_DIMENSIONS = frozenset(PERSONA_DIMENSION_TIERS.values())
+
+PERSONA_REGENERATION_RULE = {
+    "retrieval_phase_trigger": (
+        "After each literature-hub retrieval round, run suggest_persona_regeneration.py: "
+        "any coverage dimension with passed=false or unique_candidates below minimum_unique_candidates "
+        "requests a targeted gap-filling persona."
+    ),
+    "reading_phase_trigger": (
+        "During deep reading, if accepted-evidence stance distribution has limit+gap share below "
+        "0.20, request a counter-evidence seeker persona."
+    ),
+    "max_regeneration_rounds": 2,
+    "note": "Regeneration output re-enters the plan only via --persona-file after review; it never bypasses coverage gates.",
+}
 REVIEW_MODES: dict[str, dict[str, object]] = {
     "rapid": {
         "candidate_floor": 30,
@@ -60,6 +92,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--start-date", help="Optional YYYY-MM-DD scope metadata.")
     parser.add_argument("--end-date", help="Optional YYYY-MM-DD scope metadata.")
     parser.add_argument("--dynamic-file", action="append", default=[], help="JSON file with LLM/agent dynamic query suggestions. May be repeated.")
+    parser.add_argument("--persona-file", action="append", default=[], help="JSON persona file with perspective-driven queries. May be repeated.")
     parser.add_argument("--calibration-file", action="append", default=[], help="JSON calibration file. May be repeated.")
     parser.add_argument(
         "--review-mode",
@@ -159,6 +192,9 @@ def query_entry(raw: dict[str, Any], source_key: str, source_type: str) -> dict[
         "calibration_confidence",
         "dynamic_source",
         "dynamic_confidence",
+        "persona_id",
+        "persona_source",
+        "coverage_dimension",
         "evidence_role",
     ):
         if optional in raw:
@@ -234,7 +270,11 @@ def coverage_group(tier: str) -> str:
 def build_coverage_dimensions(queries: list[dict[str, Any]], minimum_per_dimension: int) -> list[dict[str, Any]]:
     grouped: dict[str, list[str]] = {}
     for item in queries:
-        group = coverage_group(str(item.get("tier") or "baseline"))
+        explicit = str(item.get("coverage_dimension") or "").strip()
+        if explicit:
+            group = explicit
+        else:
+            group = coverage_group(str(item.get("tier") or "baseline"))
         grouped.setdefault(group, []).append(str(item["label"]))
     return [
         {
@@ -426,6 +466,149 @@ def merge_dynamic(paths: list[str]) -> tuple[list[str], list[str], list[dict[str
     return topic_keys, family_keys, arxiv_entries, browser_entries, web_entries, notes, suggestions
 
 
+def resolve_persona_dimension(
+    query_item: dict[str, Any],
+    persona: dict[str, Any] | None,
+    notes: list[str],
+    label: str,
+) -> tuple[str, str]:
+    """Resolve (coverage_dimension, tier) for a persona query.
+
+    Priority: explicit query dimension > query tier (convention table) >
+    persona primary_dimensions[0] > coverage_group() substring fallback.
+    """
+    dimension = str(query_item.get("coverage_dimension") or "").strip()
+    if dimension:
+        if dimension in VALID_COVERAGE_DIMENSIONS:
+            return dimension, str(query_item.get("tier") or PERSONA_TIER_BY_DIMENSION[dimension])
+        notes.append(
+            f"Persona query '{label}' has unknown coverage_dimension '{dimension}'; "
+            f"expected one of {sorted(VALID_COVERAGE_DIMENSIONS)}. Falling back to tier/persona inference."
+        )
+
+    tier = str(query_item.get("tier") or "").strip()
+    if tier in PERSONA_DIMENSION_TIERS:
+        return PERSONA_DIMENSION_TIERS[tier], tier
+
+    for candidate in (persona or {}).get("primary_dimensions", []):
+        if candidate in VALID_COVERAGE_DIMENSIONS:
+            return candidate, PERSONA_TIER_BY_DIMENSION[candidate]
+
+    group = coverage_group(tier or "persona-adjacent")
+    return group, tier or PERSONA_TIER_BY_DIMENSION.get(group, "persona-adjacent")
+
+
+def merge_persona(paths: list[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str], list[dict[str, Any]]]:
+    """Merge persona files: personas, arXiv query entries, notes, suggestions."""
+    personas: list[dict[str, Any]] = []
+    arxiv_entries: list[dict[str, Any]] = []
+    notes: list[str] = []
+    suggestions: list[dict[str, Any]] = []
+    known_personas: dict[str, dict[str, Any]] = {}
+
+    for path in paths:
+        data = load_json_file(path, "queries")
+        if data.get("_error"):
+            notes.append(f"Persona file unavailable: {data['_error']}")
+            continue
+
+        file_personas: dict[str, dict[str, Any]] = {}
+        for index, item in enumerate(as_list(data.get("personas")), start=1):
+            if not isinstance(item, dict):
+                notes.append(f"Persona entry {index} in {path} is not an object; skipped.")
+                continue
+            persona_id = str(item.get("id") or "").strip()
+            if not persona_id:
+                notes.append(f"Persona entry {index} in {path} has no id; skipped.")
+                continue
+            if persona_id in file_personas or persona_id in known_personas:
+                notes.append(f"Duplicate persona id '{persona_id}' in {path}; kept the first definition.")
+                continue
+            record = {
+                "id": persona_id,
+                "name": str(item.get("name") or persona_id),
+                "focus": str(item.get("focus") or ""),
+                "primary_dimensions": [str(d) for d in as_list(item.get("primary_dimensions"))],
+            }
+            file_personas[persona_id] = record
+            known_personas[persona_id] = record
+            personas.append(record)
+
+        for index, query_item in enumerate(as_list(data.get("queries")), start=1):
+            if not isinstance(query_item, dict) or not query_item.get("query"):
+                notes.append(f"Persona query {index} in {path} is missing 'query'; skipped.")
+                continue
+            persona_id = str(query_item.get("persona") or query_item.get("persona_id") or "").strip()
+            if not persona_id:
+                notes.append(f"Persona query {index} in {path} has no persona reference; skipped.")
+                continue
+            persona = file_personas.get(persona_id) or known_personas.get(persona_id)
+            if persona is None:
+                notes.append(f"Persona query {index} in {path} references unknown persona '{persona_id}'; skipped.")
+                continue
+
+            label = str(query_item.get("label") or f"persona-query-{index}")
+            dimension, tier = resolve_persona_dimension(query_item, persona, notes, label)
+            entry = {
+                "label": label,
+                "tier": tier,
+                "query": str(query_item["query"]),
+                "why": str(query_item.get("why", "Persona-driven query for broader perspective coverage.")),
+                "persona_id": persona["id"],
+                "persona_source": "persona",
+                "coverage_dimension": dimension,
+                "evidence_role": "query-planning-only",
+            }
+            arxiv_entries.append(entry)
+            suggestions.append(
+                {
+                    "label": label,
+                    "channel": "arxiv_api",
+                    "source": f"persona:{persona['id']}",
+                    "confidence": str(query_item.get("confidence") or "medium"),
+                    "query": entry["query"],
+                    "why": entry["why"],
+                    "coverage_dimension": dimension,
+                }
+            )
+
+    for persona in personas:
+        if not any(item["persona_id"] == persona["id"] for item in arxiv_entries):
+            notes.append(f"Persona '{persona['id']}' generated no usable queries.")
+
+    if paths and not arxiv_entries and not personas:
+        notes.append("Persona files were provided but contained no usable personas or queries.")
+    return personas, arxiv_entries, notes, suggestions
+
+
+def build_persona_coverage(
+    personas: list[dict[str, Any]],
+    final_queries: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Per-persona contribution stats, computed AFTER dedupe so counts reflect
+    queries that actually entered the plan (a persona query absorbed by an
+    earlier duplicate keeps only the winning entry's attribution)."""
+    coverage: list[dict[str, Any]] = []
+    for persona in personas:
+        entries = [item for item in final_queries if item.get("persona_id") == persona["id"]]
+        if not entries:
+            continue
+        dimension_counts: dict[str, int] = {}
+        for item in entries:
+            dimension = str(item.get("coverage_dimension") or "")
+            dimension_counts[dimension] = dimension_counts.get(dimension, 0) + 1
+        coverage.append(
+            {
+                "persona_id": persona["id"],
+                "name": persona["name"],
+                "query_labels": [item["label"] for item in entries],
+                "dimensions": dimension_counts,
+                "query_count": len(entries),
+            }
+        )
+    return coverage
+
+
 def merge_calibration(paths: list[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
     arxiv_entries: list[dict[str, Any]] = []
     web_entries: list[dict[str, Any]] = []
@@ -497,10 +680,11 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
     topic = args.topic or ""
     inferred_topics, inferred_families, inference_notes = unpack_inferred(infer_keys(topic))
     dynamic_topics, dynamic_families, dynamic_arxiv, dynamic_browser, dynamic_web, dynamic_notes, dynamic_suggestions = merge_dynamic(args.dynamic_file)
+    persona_personas, persona_arxiv, persona_notes, persona_suggestions = merge_persona(args.persona_file)
     topic_keys = unique_valid([*args.knowledge_id, *inferred_topics, *dynamic_topics], set(TOPIC_PLANS))
     family_keys = unique_valid([*args.family, *inferred_families, *dynamic_families], set(FAMILY_PLANS))
 
-    plan_notes = [*inference_notes, *dynamic_notes]
+    plan_notes = [*inference_notes, *dynamic_notes, *persona_notes]
     if not topic_keys and not family_keys:
         plan_notes.append("No EA topic or specialized family matched; emitted generic embodied-AI topic queries.")
 
@@ -509,6 +693,7 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
     web_queries: list[dict[str, Any]] = []
 
     raw_queries.extend(query_entry(item, "dynamic", "dynamic-suggestion") for item in dynamic_arxiv)
+    raw_queries.extend(query_entry(item, "persona", "persona-suggestion") for item in persona_arxiv)
     browser_queries.extend(dynamic_browser)
     web_queries.extend(dynamic_web)
 
@@ -575,7 +760,18 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         int(mode["minimum_per_dimension"]),
     )
 
-    return {
+    stopping_rule: dict[str, Any] = {
+        "minimum_batches": int(mode["minimum_batches"]),
+        "saturation_rounds": int(mode["saturation_rounds"]),
+        "max_new_unique_rate": float(mode["max_new_unique_rate"]),
+        "requires_candidate_floor": True,
+        "requires_full_text_floor": True,
+        "requires_accepted_paper_floor": True,
+        "requires_all_coverage_dimensions": True,
+        "note": "Stop only when every requirement passes; source-count floors alone never establish coverage.",
+    }
+
+    plan: dict[str, Any] = {
         "generated_at": stable_now(),
         "planner": "embodied-ai-query-planner",
         "topic": topic,
@@ -590,16 +786,7 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         # Compatibility field for older Hub callers. This is a floor, never a stopping cap.
         "minimum_candidate_count": targets["candidate_floor"],
         "coverage_dimensions": coverage_dimensions,
-        "stopping_rule": {
-            "minimum_batches": int(mode["minimum_batches"]),
-            "saturation_rounds": int(mode["saturation_rounds"]),
-            "max_new_unique_rate": float(mode["max_new_unique_rate"]),
-            "requires_candidate_floor": True,
-            "requires_full_text_floor": True,
-            "requires_accepted_paper_floor": True,
-            "requires_all_coverage_dimensions": True,
-            "note": "Stop only when every requirement passes; source-count floors alone never establish coverage.",
-        },
+        "stopping_rule": stopping_rule,
         "notes": plan_notes,
         "dynamic_suggestions": dynamic_suggestions,
         "calibration_notes": calibration_notes,
@@ -608,6 +795,14 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         "browser_fallback_queries": browser_queries,
         "web_calibration_queries": web_queries,
     }
+    # Persona-layer fields exist only when persona files are provided, so that
+    # plans without --persona-file stay byte-identical to pre-persona output.
+    if args.persona_file:
+        stopping_rule["persona_regeneration"] = dict(PERSONA_REGENERATION_RULE)
+        plan["personas"] = persona_personas
+        plan["persona_suggestions"] = persona_suggestions
+        plan["persona_coverage"] = build_persona_coverage(persona_personas, arxiv_queries)
+    return plan
 
 
 def render_markdown(plan: dict[str, Any]) -> str:
@@ -660,6 +855,17 @@ def render_markdown(plan: dict[str, Any]) -> str:
             lines.append(
                 f"| {item['label']} | {item['channel']} | {item.get('source', '')} | {item.get('confidence', '')} | `{item['query']}` | {item.get('why', '')} |"
             )
+    if plan.get("personas"):
+        lines.extend(["", "## Personas", "", "| ID | Name | Focus | Primary dimensions |", "|---|---|---|---|"])
+        for persona in plan["personas"]:
+            dimensions = ", ".join(persona.get("primary_dimensions", [])) or "none"
+            lines.append(f"| {persona['id']} | {persona['name']} | {persona.get('focus', '')} | {dimensions} |")
+        lines.extend(["", "## Persona Queries", "", "| Label | Persona | Tier | Dimension | Query | Why |", "|---|---|---|---|---|---|"])
+        for item in plan["arxiv_api_queries"]:
+            if item.get("persona_id"):
+                lines.append(
+                    f"| {item['label']} | {item['persona_id']} | {item['tier']} | {item.get('coverage_dimension', '')} | `{item['query']}` | {item.get('why', '')} |"
+                )
     lines.extend(["", "## Calibration Notes", ""])
     for note in plan["calibration_notes"]:
         lines.append(f"- {note}")
