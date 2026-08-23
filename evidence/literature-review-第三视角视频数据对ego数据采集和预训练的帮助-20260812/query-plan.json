@@ -1,0 +1,1239 @@
+{
+  "generated_at": "2026-08-12T08:13:06.493161+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "第三视角视频数据对ego数据采集和预训练的帮助",
+  "start_date": "2025-08-12",
+  "end_date": "2026-08-12",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-MODEL",
+    "EA-XEMBODIMENT",
+    "EA-SENSOR"
+  ],
+  "families": [
+    "droid-ego4d"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 124,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 124,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-exocentric-video-robot",
+        "dynamic-ego-exo-paired",
+        "dynamic-third-person-camera-robot",
+        "dynamic-multi-view-manipulation",
+        "dynamic-external-camera-learning",
+        "dynamic-third-person-pretrain",
+        "dynamic-multi-camera-vla",
+        "dynamic-ego-centric-pretrain",
+        "dynamic-hand-object-reconstruction-multi-view",
+        "droid-ego-egocentric-video",
+        "droid-ego-in-the-wild",
+        "droid-ego-data-mixture",
+        "ea-data-in-the-wild",
+        "ea-data-dataset-curation",
+        "ea-model-finetuning",
+        "ea-xembodiment-retargeting-dexterous",
+        "ea-xembodiment-human-to-robot",
+        "ea-sensor-tactile-force",
+        "ea-sensor-point-cloud"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "dynamic-ego-exo4d",
+        "droid-robot-manipulation",
+        "ego4d-robot-learning",
+        "ea-data-robot-demonstrations",
+        "ea-data-demonstration-quality",
+        "ea-model-vla",
+        "ea-model-named-foundation",
+        "ea-xembodiment-cross-embodiment",
+        "ea-sensor-multimodal-policy"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "ea-model-action-tokenization",
+        "ea-xembodiment-action-representation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "ea-sensor-occlusion"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (high): Static taxonomy lacks exocentric/third-person/Ego-Exo4D terms that are central to this topic."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-exocentric-video-robot",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:exocentric AND all:\"robot learning\"",
+      "why": "Exocentric (third-person) video is the core term for this topic but is absent from the static taxonomy."
+    },
+    {
+      "label": "dynamic-ego-exo4d",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"Ego-Exo4D\"",
+      "why": "Ego-Exo4D is the primary paired ego-exo dataset; papers using it directly address the topic."
+    },
+    {
+      "label": "dynamic-ego-exo-paired",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"ego-exo\" AND all:robot",
+      "why": "Ego-exo paired data is the specific data paradigm this topic investigates."
+    },
+    {
+      "label": "dynamic-third-person-camera-robot",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"third-person\" AND all:\"robot\" AND all:camera",
+      "why": "Third-person camera is the common phrasing for exocentric view in robot learning."
+    },
+    {
+      "label": "dynamic-multi-view-manipulation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"multi-view\" AND all:\"robot manipulation\"",
+      "why": "Multi-view setups combining ego and exo perspectives are directly relevant to the topic."
+    },
+    {
+      "label": "dynamic-external-camera-learning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"external camera\" AND all:\"robot learning\"",
+      "why": "External camera is another term for third-person view in robot data collection."
+    },
+    {
+      "label": "dynamic-third-person-pretrain",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"third-person\" AND all:\"pretraining\" AND all:robot",
+      "why": "Directly targets pretraining with third-person video data for robot learning."
+    },
+    {
+      "label": "dynamic-multi-camera-vla",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"multi-camera\" AND all:\"vision-language-action\"",
+      "why": "Multi-camera VLA papers discuss view selection and ego-exo complementarity."
+    },
+    {
+      "label": "dynamic-ego-centric-pretrain",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"egocentric\" AND all:\"pretraining\" AND all:robot",
+      "why": "Egocentric pretraining is the downstream consumer of third-person data augmentation."
+    },
+    {
+      "label": "dynamic-hand-object-reconstruction-multi-view",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"hand-object\" AND all:\"multi-view\" AND all:reconstruction",
+      "why": "Multi-view hand-object reconstruction is a key mechanism by which third-person data helps ego data."
+    },
+    {
+      "label": "dynamic-exo-ego-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "\"exocentric\" \"egocentric\" \"robot\" \"pretraining\" site:arxiv.org",
+      "why": "Browser fallback for ego-exo paired pretraining papers that may not appear in API metadata."
+    },
+    {
+      "label": "dynamic-exo-ego-web",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "\"ego-exo\" \"robot learning\" \"pretraining\" 2025 2026",
+      "why": "Calibrate current terminology for ego-exo paired data in robot learning."
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-exocentric-video-robot",
+      "tier": "dynamic-association",
+      "query": "all:exocentric AND all:\"robot learning\"",
+      "why": "Exocentric (third-person) video is the core term for this topic but is absent from the static taxonomy.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-exocentric-video-robot"
+      ]
+    },
+    {
+      "label": "dynamic-ego-exo4d",
+      "tier": "named-dataset",
+      "query": "all:\"Ego-Exo4D\"",
+      "why": "Ego-Exo4D is the primary paired ego-exo dataset; papers using it directly address the topic.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-exo4d"
+      ]
+    },
+    {
+      "label": "dynamic-ego-exo-paired",
+      "tier": "dynamic-association",
+      "query": "all:\"ego-exo\" AND all:robot",
+      "why": "Ego-exo paired data is the specific data paradigm this topic investigates.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-exo-paired"
+      ]
+    },
+    {
+      "label": "dynamic-third-person-camera-robot",
+      "tier": "dynamic-association",
+      "query": "all:\"third-person\" AND all:\"robot\" AND all:camera",
+      "why": "Third-person camera is the common phrasing for exocentric view in robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-third-person-camera-robot"
+      ]
+    },
+    {
+      "label": "dynamic-multi-view-manipulation",
+      "tier": "dynamic-association",
+      "query": "all:\"multi-view\" AND all:\"robot manipulation\"",
+      "why": "Multi-view setups combining ego and exo perspectives are directly relevant to the topic.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multi-view-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-external-camera-learning",
+      "tier": "dynamic-association",
+      "query": "all:\"external camera\" AND all:\"robot learning\"",
+      "why": "External camera is another term for third-person view in robot data collection.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-external-camera-learning"
+      ]
+    },
+    {
+      "label": "dynamic-third-person-pretrain",
+      "tier": "dynamic-association",
+      "query": "all:\"third-person\" AND all:\"pretraining\" AND all:robot",
+      "why": "Directly targets pretraining with third-person video data for robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-third-person-pretrain"
+      ]
+    },
+    {
+      "label": "dynamic-multi-camera-vla",
+      "tier": "dynamic-association",
+      "query": "all:\"multi-camera\" AND all:\"vision-language-action\"",
+      "why": "Multi-camera VLA papers discuss view selection and ego-exo complementarity.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multi-camera-vla"
+      ]
+    },
+    {
+      "label": "dynamic-ego-centric-pretrain",
+      "tier": "dynamic-association",
+      "query": "all:\"egocentric\" AND all:\"pretraining\" AND all:robot",
+      "why": "Egocentric pretraining is the downstream consumer of third-person data augmentation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-centric-pretrain"
+      ]
+    },
+    {
+      "label": "dynamic-hand-object-reconstruction-multi-view",
+      "tier": "dynamic-association",
+      "query": "all:\"hand-object\" AND all:\"multi-view\" AND all:reconstruction",
+      "why": "Multi-view hand-object reconstruction is a key mechanism by which third-person data helps ego data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-object-reconstruction-multi-view"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-exocentric-video-robot",
+      "tier": "dynamic-association",
+      "query": "all:exocentric AND all:\"robot learning\"",
+      "why": "Exocentric (third-person) video is the core term for this topic but is absent from the static taxonomy.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-exocentric-video-robot"
+      ]
+    },
+    {
+      "label": "dynamic-ego-exo4d",
+      "tier": "named-dataset",
+      "query": "all:\"Ego-Exo4D\"",
+      "why": "Ego-Exo4D is the primary paired ego-exo dataset; papers using it directly address the topic.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-exo4d"
+      ]
+    },
+    {
+      "label": "dynamic-ego-exo-paired",
+      "tier": "dynamic-association",
+      "query": "all:\"ego-exo\" AND all:robot",
+      "why": "Ego-exo paired data is the specific data paradigm this topic investigates.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-exo-paired"
+      ]
+    },
+    {
+      "label": "dynamic-third-person-camera-robot",
+      "tier": "dynamic-association",
+      "query": "all:\"third-person\" AND all:\"robot\" AND all:camera",
+      "why": "Third-person camera is the common phrasing for exocentric view in robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-third-person-camera-robot"
+      ]
+    },
+    {
+      "label": "dynamic-multi-view-manipulation",
+      "tier": "dynamic-association",
+      "query": "all:\"multi-view\" AND all:\"robot manipulation\"",
+      "why": "Multi-view setups combining ego and exo perspectives are directly relevant to the topic.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multi-view-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-external-camera-learning",
+      "tier": "dynamic-association",
+      "query": "all:\"external camera\" AND all:\"robot learning\"",
+      "why": "External camera is another term for third-person view in robot data collection.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-external-camera-learning"
+      ]
+    },
+    {
+      "label": "dynamic-third-person-pretrain",
+      "tier": "dynamic-association",
+      "query": "all:\"third-person\" AND all:\"pretraining\" AND all:robot",
+      "why": "Directly targets pretraining with third-person video data for robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-third-person-pretrain"
+      ]
+    },
+    {
+      "label": "dynamic-multi-camera-vla",
+      "tier": "dynamic-association",
+      "query": "all:\"multi-camera\" AND all:\"vision-language-action\"",
+      "why": "Multi-camera VLA papers discuss view selection and ego-exo complementarity.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-multi-camera-vla"
+      ]
+    },
+    {
+      "label": "dynamic-ego-centric-pretrain",
+      "tier": "dynamic-association",
+      "query": "all:\"egocentric\" AND all:\"pretraining\" AND all:robot",
+      "why": "Egocentric pretraining is the downstream consumer of third-person data augmentation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-centric-pretrain"
+      ]
+    },
+    {
+      "label": "dynamic-hand-object-reconstruction-multi-view",
+      "tier": "dynamic-association",
+      "query": "all:\"hand-object\" AND all:\"multi-view\" AND all:reconstruction",
+      "why": "Multi-view hand-object reconstruction is a key mechanism by which third-person data helps ego data.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-object-reconstruction-multi-view"
+      ]
+    },
+    {
+      "label": "droid-robot-manipulation",
+      "tier": "named-dataset",
+      "query": "all:DROID AND all:\"robot manipulation\"",
+      "why": "Find DROID robot data papers and reuse discussions.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-robot-manipulation"
+      ]
+    },
+    {
+      "label": "ego4d-robot-learning",
+      "tier": "named-dataset",
+      "query": "all:Ego4D AND all:\"robot learning\"",
+      "why": "Catch robot-learning papers that draw on egocentric human video data.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ego4d-robot-learning"
+      ]
+    },
+    {
+      "label": "droid-ego-egocentric-video",
+      "tier": "adjacent-data",
+      "query": "all:\"egocentric video\" AND all:\"robot learning\"",
+      "why": "Find human-observation data papers near Ego4D even when the dataset is not named.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-egocentric-video"
+      ]
+    },
+    {
+      "label": "droid-ego-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot demonstration\"",
+      "why": "Capture natural-environment data collection and scaling constraints.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-in-the-wild"
+      ]
+    },
+    {
+      "label": "droid-ego-data-mixture",
+      "tier": "data-mixture",
+      "query": "all:\"data mixture\" AND all:\"robot learning\"",
+      "why": "Find cross-dataset mixture papers that discuss data compatibility and noise.",
+      "source_key": "droid-ego4d",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "droid-ego-data-mixture"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-exo-ego-browser",
+      "query": "\"exocentric\" \"egocentric\" \"robot\" \"pretraining\" site:arxiv.org",
+      "why": "Browser fallback for ego-exo paired pretraining papers that may not appear in API metadata.",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-exo-ego-web",
+      "query": "\"ego-exo\" \"robot learning\" \"pretraining\" 2025 2026",
+      "why": "Calibrate current terminology for ego-exo paired data in robot learning.",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    }
+  ]
+}
