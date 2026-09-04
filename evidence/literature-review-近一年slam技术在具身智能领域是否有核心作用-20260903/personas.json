@@ -1,0 +1,140 @@
+{
+  "topic": "近一年SLAM技术在具身智能领域是否有核心作用",
+  "generated_by": "llm",
+  "reference_context_file": "work/literature-review-近一年slam技术在具身智能领域是否有核心作用-20260903/persona-context.json",
+  "personas": [
+    {
+      "id": "P-SLAM-SYSTEM-ENGINEER",
+      "name": "SLAM 系统工程师",
+      "focus": "从 SLAM 系统本体出发：近一年 SLAM 前端/后端在学习化、3DGS/神经隐式表示、实时性上的演进，以及这些形态是否被具身任务实际采用",
+      "primary_dimensions": ["direct-topic", "mechanisms-and-interfaces"],
+      "inspired_by": [
+        "EA-HARDWARE: 单目 SLAM 型 UMI 在遮挡、动态、弱纹理和 tracking failure 场景风险高，LiDAR-centric 3D sensing 可扩展可采任务分布",
+        "RUN-VLOC-20260715 (LR-VLOC): 3DGS 位姿细化通常是局部优化，高度依赖检索初值和局部几何质量，不能视为全局纠错器"
+      ]
+    },
+    {
+      "id": "P-VLA-RESEARCHER",
+      "name": "VLA 与世界模型研究者",
+      "focus": "检验端到端具身模型是否正在内化空间能力（隐式记忆、mapless 导航、世界模型路径规划），从而绕开显式 SLAM 地图",
+      "primary_dimensions": ["mechanisms-and-interfaces", "limits-and-counterevidence"],
+      "inspired_by": [
+        "EA-MODEL: 语言、视觉和动作的主要矛盾是粒度与物理接口错配，不是简单缺少更大的 VLM",
+        "EA-4D: 几何可作为训练期 privileged teacher 或蒸馏目标，不必一律增加部署时输入；是否保留显式 4D 模块取决于排序增益、延迟和失败拒识价值"
+      ]
+    },
+    {
+      "id": "P-DATA-INFRA-AUDITOR",
+      "name": "数据基础设施审计员",
+      "focus": "清点 SLAM 在具身数据采集、位姿真值与评测协议中的隐形角色：遥操作位姿恢复、手持采集、SLAM-based ground truth、相机重定位",
+      "primary_dimensions": ["deployment-and-operations", "evaluation-and-validation"],
+      "inspired_by": [
+        "EA-HARDWARE: ARKit 可用于低成本 VIO、位姿跟踪和快速原型，但不适作唯一计量真值",
+        "EA-HARDWARE: UMI 的核心价值是把自然场景人类示教转成机器人可学习的数据闭环"
+      ]
+    },
+    {
+      "id": "P-COUNTER-EVIDENCE-SEEKER",
+      "name": "反面证据搜寻者",
+      "focus": "主动寻找 SLAM 失效、被绕开、被替代的证据：动态环境失败、长时漂移、地图维护成本、map-free 路线的成功案例、SLAM 被降级为可插拔组件的部署实践",
+      "primary_dimensions": ["limits-and-counterevidence"],
+      "inspired_by": [
+        "RUN-VLOC-20260715 (LR-VLOC): 3DGS 的照片真实度不等于几何可定位性；冗余高斯和多对一像素—高斯关系可能破坏对应唯一性",
+        "EA-4D: 4D 场景图适合长期动态记忆和结构化查询，但受 SLAM、相似物体歧义、长序列成本和局部形变限制"
+      ]
+    },
+    {
+      "id": "P-BASIC-FACTS",
+      "name": "基础事实覆盖者",
+      "focus": "广泛覆盖主题基础事实：SLAM 与机器人/具身智能的总体交集、综述、基准与教程性材料",
+      "primary_dimensions": ["direct-topic"],
+      "inspired_by": ["STORM 默认角色安全网设计"]
+    }
+  ],
+  "queries": [
+    {
+      "label": "persona-slam-engineer-robustness",
+      "tier": "persona-direct",
+      "query": "all:\"visual SLAM\" AND all:robustness",
+      "why": "SLAM 系统工程师：定位近一年 SLAM 鲁棒性进展本身",
+      "persona": "P-SLAM-SYSTEM-ENGINEER"
+    },
+    {
+      "label": "persona-slam-engineer-neural-frontend",
+      "tier": "persona-method",
+      "query": "all:SLAM AND all:\"neural\" AND all:real-time",
+      "why": "SLAM 系统工程师：神经化组件（学习特征/匹配/深度）进入实时 SLAM 栈的证据",
+      "persona": "P-SLAM-SYSTEM-ENGINEER"
+    },
+    {
+      "label": "persona-vla-implicit-navigation",
+      "tier": "persona-method",
+      "query": "all:\"vision-language-action\" AND all:navigation",
+      "why": "VLA 研究者：VLA 是否直接承担导航与空间任务",
+      "persona": "P-VLA-RESEARCHER"
+    },
+    {
+      "label": "persona-vla-mapfree",
+      "tier": "persona-limit",
+      "query": "all:\"map-free\" AND all:navigation",
+      "why": "VLA 研究者：map-free 路线声称无需显式地图即可导航",
+      "persona": "P-VLA-RESEARCHER"
+    },
+    {
+      "label": "persona-vla-worldmodel-replace-map",
+      "tier": "persona-limit",
+      "query": "all:\"world model\" AND all:mapping AND all:navigation",
+      "why": "VLA 研究者：世界模型是否以生成式地图替代 SLAM 建图",
+      "persona": "P-VLA-RESEARCHER"
+    },
+    {
+      "label": "persona-auditor-teleop-pose",
+      "tier": "persona-deploy",
+      "query": "all:teleoperation AND all:\"pose tracking\"",
+      "why": "数据基础设施审计员：遥操作/示教采集中位姿跟踪的部署证据",
+      "persona": "P-DATA-INFRA-AUDITOR"
+    },
+    {
+      "label": "persona-auditor-ground-truth",
+      "tier": "persona-eval",
+      "query": "all:SLAM AND all:\"ground truth\"",
+      "why": "数据基础设施审计员：SLAM 作为评测真值生产工具的可靠性边界",
+      "persona": "P-DATA-INFRA-AUDITOR"
+    },
+    {
+      "label": "persona-auditor-camera-relocalization",
+      "tier": "persona-deploy",
+      "query": "all:relocalization AND all:robot",
+      "why": "数据基础设施审计员：相机重定位在机器人数据管线中的角色",
+      "persona": "P-DATA-INFRA-AUDITOR"
+    },
+    {
+      "label": "persona-counter-dynamic-failure",
+      "tier": "persona-limit",
+      "query": "all:SLAM AND all:failure AND all:dynamic",
+      "why": "反面证据搜寻者：动态环境与失效模式证据",
+      "persona": "P-COUNTER-EVIDENCE-SEEKER"
+    },
+    {
+      "label": "persona-counter-implicit-memory",
+      "tier": "persona-limit",
+      "query": "all:\"implicit memory\" AND all:navigation",
+      "why": "反面证据搜寻者：隐式记忆路线宣称替代显式地图的反方证据",
+      "persona": "P-COUNTER-EVIDENCE-SEEKER"
+    },
+    {
+      "label": "persona-basic-slam-robot",
+      "tier": "persona-direct",
+      "query": "all:SLAM AND all:robot AND all:embodied",
+      "why": "基础事实覆盖者：SLAM 与具身智能的总体交集",
+      "persona": "P-BASIC-FACTS"
+    },
+    {
+      "label": "persona-basic-slam-survey",
+      "tier": "persona-direct",
+      "query": "all:\"simultaneous localization and mapping\" AND all:survey",
+      "why": "基础事实覆盖者：近一年 SLAM 综述提供领域全景基础事实",
+      "persona": "P-BASIC-FACTS"
+    }
+  ]
+}

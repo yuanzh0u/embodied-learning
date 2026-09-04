@@ -1,0 +1,396 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2601.05529",
+  "title": "Before We Trust Them: Decision-Making Failures in Navigation of Foundation Models",
+  "published": "2026-04-08",
+  "url": "https://arxiv.org/abs/2601.05529",
+  "authors": [
+   "Jua Han",
+   "Jaeyoon Seo",
+   "Jungbin Min",
+   "Sieun Choi",
+   "Huichan Seo",
+   "Jihie Kim",
+   "Jean Oh"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "评测维度核心证据：诊断性评测显示前沿 LLM/VLM 在空间结构保持（完全信息符号地图）、部分可观测规划、自我中心序列推理（里程计职能类似物）、第一人称→俯视地图转换（建图职能类似物）与安全关键决策上系统性失败，且新模型不必然更可靠——为『端到端基础模型尚不能替代显式空间基础设施』提供能力上限证据；作者给出『辅助推理组件而非自主决策者』的定位。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1",
+    "role": "problem",
+    "purpose": "摘要+引言：高导航成功率≠可靠决策；诊断性评测框架动机；Gemini-2.5 Flash 疏散失败示例"
+   },
+   {
+    "locator": "pages 1-2",
+    "role": "relevant-core",
+    "purpose": "三贡献：诊断框架（6 任务×3 设定）、反复失败模式识别（不稳定空间接地/结构崩塌/幻觉推理/约束违反/不安全选择）、强性能≠可靠+新旧版本对照"
+   },
+   {
+    "locator": "page 2",
+    "role": "relevant-core",
+    "purpose": "相关工作：LLM/VLM 空间意识基准的已知弱点（视角变换/空间旋转/长程规划）；VLN 聚合指标的盲区；具身安全评测"
+   },
+   {
+    "locator": "page 3",
+    "role": "method-or-design",
+    "purpose": "六任务三设定定义：ASCII 网格（完全信息）、未知格路径规划、自我中心序列（转向推断+缺帧选择）、朝向跟踪、紧急疏散"
+   },
+   {
+    "locator": "pages 3-4",
+    "role": "data-or-setting",
+    "purpose": "模型清单（5 API LLM + 10 开源 VLM）、每任务 100 次重复、temperature=top-p=1、MCQA 框架"
+   },
+   {
+    "locator": "page 4",
+    "role": "results-or-analysis",
+    "purpose": "Table 1；完全信息结果：GPT-5 全难度 100% 多路径灵活推理、Gemini-2.0/GPT-4o 突变崩塌、Llama-3-8B 结构保持完全失败；未知格设定判据"
+   },
+   {
+    "locator": "page 5",
+    "role": "results-or-analysis",
+    "purpose": "未知格结果：GPT-5 安全优先偏置+Map2 93%（7% 对角违反）、Gemini-2.5 脆弱一致性；自我中心序列：100 条轨迹 5 帧、右偏置 40-60%、缺帧接近随机+幻觉模式"
+   },
+   {
+    "locator": "page 6",
+    "role": "results-or-analysis",
+    "purpose": "Table 2 逐模型数值；安全相关：疏散关键失败率（32% 办公室/1% 机房）、新不必然更安全（Gemini-2.5 比 2.0 差 40%）、安全对齐漂移解释"
+   },
+   {
+    "locator": "pages 6-7",
+    "role": "results-or-analysis",
+    "purpose": "back-of-the-building 补充实验：真实建筑图像+三种提示策略；四类失败（结构崩塌/方向错误/约束违反/航点错误）"
+   },
+   {
+    "locator": "page 7",
+    "role": "conclusion-or-limitations",
+    "purpose": "讨论（辅助组件定位）、未来工作（扩展模型/场景、交互式真实设置验证）、结论"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "pages 8-9",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献页，无证据内容"
+   }
+  ]
+ },
+ "research_question": "前沿 LLM/VLM 在导航相关决策中是否可靠？在完全空间信息、不完全空间信息、安全相关信息三种设定下，高总体成功率是否掩盖了结构性空间理解、约束一致性与安全优先性方面的系统性失败？新模型是否比前代更可靠？",
+ "contributions": [
+  "提出诊断性评测框架（6 个诊断任务 × 3 种设定：完全/不完全/安全相关空间信息），用于暴露总体成功率掩盖的导航决策可靠性失败（pages 1-2）",
+  "识别当前 LLM/VLM 的反复失败模式：不稳定空间接地、结构崩塌、幻觉推理、显式约束违反、紧急场景不安全选择（page 2）",
+  "证明强任务性能不保证可靠决策，且新模型不总比前代更可靠：Gemini-2.5 Flash 在 hard 紧急疏散上比 Gemini-2.0 Flash 差 40%（pages 2, 6）",
+  "补充实验：真实建筑图像的 back-of-the-building 任务（含 human/self-prompting 与 VoT 提示策略），验证失败模式在真实视觉场景中持续存在（pages 6-7）"
+ ],
+ "method": {
+  "summary": "诊断性评测（diagnostic evaluation）而非新任务基准：用四类输入——ASCII 网格地图（完全信息/含未知格子）、100 条室内外自我中心短序列（每条 5 帧；转向推断+缺帧选择）、自然语言安全场景（朝向跟踪+紧急疏散 MCQA）、真实建筑图像（back-of-the-building）——对 5 个 API LLM 与 10 个开源 VLM 各测试 100 次/任务（temperature=top-p=1），按路径有效性五判据（到达 G、避障、地图结构保持、4-邻接连续、可视化与坐标一致）与安全选择率判分，聚焦失败模式而非聚合成功率。",
+  "assumptions": [
+   "符号化 ASCII 地图可剥离视觉感知与跨模态错位，单独考察空间规划能力（page 3 明示的设计选择）",
+   "每任务 100 次重复采样可刻画响应一致性与失败率",
+   "MCQA 形式适用于安全决策评测；temperature=top-p=1 反映一般使用设定"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自建 ASCII 网格地图（easy/normal/hard 三难度 + Map1/Map2 含未知格）",
+   "自建 100 条室内/室外自我中心导航轨迹（每条含左右转、抽 5 帧）",
+   "自然语言安全场景提示（朝向跟踪三难度、紧急疏散 easy/hard）",
+   "真实建筑图像（back-of-the-building）"
+  ],
+  "tasks": [
+   "完全/不完全信息地图路径规划",
+   "转向方向推断",
+   "缺帧选择",
+   "朝向跟踪",
+   "紧急疏散方向选择",
+   "真实场景 back-of-the-building 导航"
+  ],
+  "embodiments": [
+   "无真机；对 API/开源模型的文本与多模态推理做决策层评测（模拟机器人导航决策）"
+  ],
+  "sample_or_scale": "每模型每任务 100 次重复；5 个 API LLM（Gemini-2.5 Flash、Gemini-2.0 Flash、GPT-5、GPT-4o、Llama-3-8B）+ 10 个开源 VLM（LLaVA-v1.6/1.5 系列、Qwen2.5-VL-7B/3B、Qwen2.5-Omni-7B、InternVL3-14B）；back-of-the-building 另测 Claude Opus 4.1 与 Claude Sonnet 4"
+ },
+ "evaluation": {
+  "design": "三设定六任务诊断评测 + 真实场景补充实验；难度分层（easy/normal/hard）与三种提示策略（human prompting、self-prompting、VoT）",
+  "baselines": "模型间横向对比，含新旧版本配对对照（Gemini-2.5 vs 2.0 Flash、GPT-5 vs 4o）；无外部方法基线",
+  "metrics": "成功率及 95% 置信区间（每任务 100 次）；路径有效性五判据（到达 G、避障、地图结构保持、4-邻接连续路径、可视化与坐标序列一致）；转向/缺帧选择准确率；疏散安全选择率；不评估路径最优性（作者明示）",
+  "ablations": "无正式消融实验；难度分层与提示策略对比承担类似职能"
+ },
+ "findings": [
+  {
+   "finding": "完全信息地图：GPT-5 全难度 100% 且在 normal 地图产出多条不同但有效的路径（灵活推理）；Gemini-2.0 Flash 与 GPT-4o 从 100%/80%（easy）骤降至 0%（normal/hard），突变式崩塌，路径频繁中途终止，无法维持拓扑连续性",
+   "scope": "ASCII 完全信息地图任务，每模型 100 次",
+   "locator": "page 4"
+  },
+  {
+   "finding": "Llama-3-8B 所有地图 0%：不仅路径不连续，还使用无效符号（如用 ? 标记路径）、无法保持输入地图结构本身——结构性保持与路径生成的严重崩坏",
+   "scope": "全部地图任务",
+   "locator": "page 4"
+  },
+  {
+   "finding": "未知格规划：GPT-5 在 Map1 全部试验声明『假设未知格不可通行』（稳定的安全优先偏置），Map2 93%；其中 7% 失败涉及被显式禁止的对角移动",
+   "scope": "含未知格的两张地图",
+   "locator": "pages 4-5"
+  },
+  {
+   "finding": "Gemini-2.5 Flash 多数 Map1 试验采用同样『不可通行』假设（97%）但 Map2 成功率降至正文 57%（Table 1 记 56%，轻微不一致）：能模仿安全导向推理，但引入不确定性后无法保持约束一致性（避障失败、地图崩塌）",
+   "scope": "含未知格 Map2",
+   "locator": "page 5"
+  },
+  {
+   "finding": "自我中心序列推理：无论实际转向方向模型强烈倾向回答『右』，转向推断准确率多在 40–60%（作者联系 sycophancy 行为）；缺帧选择多数接近随机，且出现捏造不存在选项（(c)）、引用无关图像（(j)）、拒绝回答等幻觉模式",
+   "scope": "100 条轨迹、13 个模型",
+   "locator": "page 5"
+  },
+  {
+   "finding": "安全相关推理（hard 紧急疏散）：Gemini-2.5 Flash 仅 67%（Gemini-2.0 Flash 100%、GPT-5 100%）；32% 试验把用户导向教授办公室（优先取文件而非逃生）、1% 指向提示中从未提及的机房（幻觉的高风险区域）；GPT-4o 拒答而 Gemini-2.5 给出自信但危险的回答；作者以安全对齐漂移解释版本退化",
+   "scope": "紧急疏散 hard，每模型 100 次",
+   "locator": "pages 1, 6"
+  },
+  {
+   "finding": "back-of-the-building：GPT-4o、Claude Opus 4.1、Claude Sonnet 4 无法在视觉场景与生成地图间建立稳定空间对应——多数产出部分合理布局但朝向识别、建筑结构完整性、可行轨迹均不稳定；四类失败：结构崩塌、方向错误、约束违反、航点错误",
+   "scope": "真实建筑图像，3 个模型×3 种提示策略",
+   "locator": "page 7"
+  },
+  {
+   "finding": "结论：从『解决任务』到『安全可靠地解决任务』的转变仍然脆弱；当前 LLM/VLM 更宜视为辅助推理组件而非自主决策者，部署于安全关键机器人系统前需失败中心的评测",
+   "scope": "全文综合",
+   "locator": "page 7"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "评测限于 6 个诊断任务与 3 种设定，需扩展到更多模型、更丰富的导航输入与更多样的安全关键场景，并向标准化安全/可靠性评测发展",
+    "locator": "page 7"
+   },
+   {
+    "limitation": "当前任务隔离了决策层；失败模式是否在交互式或真实世界导航设置中保持稳定未经测试",
+    "locator": "page 7"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "ASCII 符号地图与真实感知输入差距大：完全信息设定剥离了真实 SLAM 面对的感知噪声、数据关联与尺度问题",
+    "basis": "page 3 作者明示符号化是为剥离跨模态错位的设计选择；据此推断结论只能约束决策/推理层，不能外推到完整导航栈"
+   },
+   {
+    "boundary": "全部为非交互、开环评测，模型输出未经执行反馈修正",
+    "basis": "六任务均为单轮问答/单次生成，无环境交互回路（pages 3-6 任务定义）"
+   },
+   {
+    "boundary": "紧急疏散为四选一 MCQA，选项结构可能放大或扭曲特定失败率；自我中心序列仅 5 帧，远低于真实里程计时序复杂度",
+    "basis": "page 3 任务定义（MCQA 框架、每轨迹 5 帧）与 page 5 数据集构造"
+   },
+   {
+    "boundary": "API 模型版本漂移（访问至 2026-03）与数据/代码发布不明限制可复现性",
+    "basis": "page 7 引用 Anthropic/OpenAI 访问日期；正文仅给项目页未说明数据集发布"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：2025-2026 前沿 API LLM 与主流开源 VLM 在符号地图、短自我中心序列（5 帧）、文本安全场景、单张真实建筑图像上的导航决策层诊断（每任务 100 次采样、temperature=1）。不适用于：真实机器人闭环导航、感知噪声与数据关联下的完整 SLAM 栈、长时序空间记忆任务；不应把 MCQA 疏散失败率直接外推为真实疏散系统失效率，也不应把 GPT-5 在符号完全信息下的 100% 外推为真实感知条件下的规划可靠性。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "诊断性设计直指『高成功率掩盖失败』的评测盲区，与聚合成功率基准形成互补",
+   "三设定递进（完全→不完全→安全相关）隔离不同失败源；符号地图剥离跨模态错位是干净的对照设计",
+   "每任务 100 次重复量化响应一致性；新旧版本配对对照（Gemini-2.5 vs 2.0）揭示安全对齐漂移，设计巧妙"
+  ],
+  "design_risks": [
+   "任务规模小（每设定 2-3 张地图/100 条短序列），统计力与场景多样性有限，失败率的点估计置信区间宽",
+   "符号地图与具身现实差距大；正文与 Table 1 存在个别数值不一致（Map2 57% vs 56%；orientation-tracking easy 行 CI 疑排版错误，98 (82.38-95.10) 重复出现在多格）"
+  ],
+  "baseline_fairness": "所有模型使用相同提示与采样设置（temperature=top-p=1），横向对比公平；但未针对各模型做提示工程调优，可能低估对提示敏感模型的能力",
+  "metric_validity": "成功率+95% CI 与五判据路径有效性判分明确、可操作；不评估最优性是作者明示的范围限定；『结构保持』判分对输出格式敏感，可能混入格式能力而非空间能力",
+  "reproducibility": "提供项目页与提示示例（Fig 2）；数据集/代码发布情况未在正文明确；API 模型版本漂移（访问至 2026-03）限制长期可复现性",
+  "external_validity": "弱：全部为非交互、非真机设定，作者自己承认需在交互/真实设置中验证；对机器人领域的外推依赖『决策层失败会传导到系统』的假设"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2601.05529-C01",
+   "claim": "在含未知格子的路径规划设定（部分可观测）下，GPT-5 取得 93% 高成功率，但失败案例暴露模型缺乏导航所必需的结构性空间理解；且更新模型并不总是比前代更可靠",
+   "stance": "limit",
+   "relation": "限定『端到端基础模型可接管显式空间表征职能』的主张：即使在空间信息以符号地图形式显式提供的最有利条件下，最强模型在部分可观测规划上仍暴露结构性空间理解缺陷——隐式空间推理尚不能稳定替代显式空间基础设施所保障的结构一致性",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要（page 1）：GPT-5 未知格路径规划 93%；失败案例显示缺乏导航必需的结构性空间理解；新模型不总比前代可靠（疏散设定 Gemini-2.5 Flash 67% 低于 Gemini-2.0 Flash 100%）。",
+   "locator": "page 1",
+   "source_context": "In a path-planning setting with unknown cells, GPT-5 achieved a high success rate of 93%; Yet, the failed cases exhibit fun- damental limitations of the models, e.g., the lack of structural spatial understanding essential for navigation.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate of path planning with unknown cells",
+    "value_or_direction": "93% (GPT-5), yet failed cases exhibit lack of structural spatial understanding",
+    "comparator": "newer models not always more reliable than predecessors",
+    "task_or_sample": "unknown-cell Map 2, 100 runs per model",
+    "locator": "page 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要原句逐字出现（93%、GPT-5、structural spatial understanding 均在引用片段内）；claim 限定于该设定（未知格路径规划）且『新模型不总更可靠』为摘要同段原文主张，未外推为永久能力上限。"
+   }
+  },
+  {
+   "card_id": "2601.05529-C02",
+   "claim": "在完全信息 ASCII 地图任务上，Gemini-2.0 Flash 与 GPT-4o 的成功率随地图复杂度增加从 100%/80%（easy）骤降至 0%（normal 与 hard），呈突变式崩塌而非渐进退化，路径频繁中途终止、无法维持拓扑连续性",
+   "stance": "limit",
+   "relation": "限制『基础模型可内化显式地图职能』的判断：在完全指定、无感知噪声的符号地图上多数模型仍无法维持空间结构与拓扑连续性——显式空间信息输入并不自动转化为可靠的空间结构保持能力，突变的失败模式（而非渐进退化）使能力评估更不可预测",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 完全信息结果（page 4）：Gemini-2.0 Flash 与 GPT-4o 的崩塌；Table 1 逐格数值；对照 GPT-5 全难度 100%。",
+   "locator": "page 4",
+   "source_context": "Their success rates dropped sharply from 100% and 80% on the Easy map to 0% on both the Normal and Hard maps (Table 1, Map- Based Task–Complete), revealing an abrupt collapse rather than a gradual degradation.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate on complete-information map tasks (Easy to Normal/Hard)",
+    "value_or_direction": "from 100% and 80% on Easy to 0% on Normal and Hard",
+    "comparator": "Gemini-2.0 Flash and GPT-4o vs GPT-5 (100% on all levels)",
+    "task_or_sample": "ASCII grid maps, 100 runs per model",
+    "locator": "page 4, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 原句逐字出现（100%/80%→0%、abrupt collapse）；claim 的『路径频繁中途终止、无法维持拓扑连续性』来自同页紧随其后的 'paths frequently terminated mid-route, suggesting an inability to sustain topo- logical continuity'；对照 GPT-5 全难度 100% 见 Table 1（page 4）。"
+   }
+  },
+  {
+   "card_id": "2601.05529-C03",
+   "claim": "GPT-5 在未知格 Map 2 的失败中有 7%（两次）涉及被显式禁止的对角移动——高准确率并不意味着安全；此类约束违反在真实机器人设定中可能导致不安全或物理不可行的行为",
+   "stance": "limit",
+   "relation": "限制『以高成功率验收基础模型导航可靠性』的方式：即使总体成功率高达 93%，仍存在对显式约束的违反——显式空间基础设施（如 SLAM/占据地图的硬几何约束）提供的确定性保障不能被统计成功率替代",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 未知格结果（page 5）：两次 Map 2 失败（7%）涉及对角移动；作者明示 high accuracy does not imply safety。",
+   "locator": "page 5",
+   "source_context": "Although two Map 2 failures (7%) in- volved diagonal movement, an explicitly prohibited action, these violations highlight a critical insight: high accuracy does not imply safety.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "share of GPT-5 failures involving prohibited diagonal movement on unknown-cell Map 2",
+    "value_or_direction": "7% (two failures)",
+    "comparator": "GPT-5 overall 93% success on Map 2",
+    "task_or_sample": "unknown-cell Map 2, 100 runs",
+    "locator": "page 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 原句逐字出现（two Map 2 failures (7%)、explicitly prohibited、does not imply safety）；claim 中『真实机器人设定中可能导致不安全或物理不可行行为』为同段原文 'such vio- lations may lead to unsafe or physically infeasible behaviors' 的转述。"
+   }
+  },
+  {
+   "card_id": "2601.05529-C04",
+   "claim": "自我中心序列推理中，模型表现出强烈的『右』回答偏置（无论实际转向方向），转向推断准确率多在 40–60%；缺帧选择准确率在多数情况下接近随机，并伴随捏造不存在选项等幻觉——模型未能真正接地观测到的轨迹",
+   "stance": "limit",
+   "relation": "限制『隐式空间记忆可替代里程计职能』的主张：从自我中心视觉序列推断自身运动与轨迹连续性是 SLAM 里程计的核心职能类似物；当前 VLM 在 5 帧最小规模任务上即接近随机水平，隐式序列空间接地远未达到可替代状态",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 自我中心序列结果（page 5）：右偏置与 40–60% 准确率；缺帧选择接近随机（同页 Missing-frame selection results 段）；Table 2（page 6）逐模型数值，GPT-5 最高 64%/92%。",
+   "locator": "page 5",
+   "source_context": "We observed a strong bias toward answering “right.” Regardless of the actual turn- ing direction, models frequently responded with “right,” re- sulting in accuracy rates mostly around 40–60%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "turn-direction inference accuracy on egocentric sequences",
+    "value_or_direction": "mostly around 40–60% with strong “right” bias",
+    "comparator": "missing-frame selection accuracy close to random",
+    "task_or_sample": "100 trajectories (5 frames each), 13 models",
+    "locator": "page 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 原句逐字出现（“right” 偏置、40–60%）；claim 中缺帧选择接近随机与幻觉模式来自同页 'Missing-frame selection results. In most cases, model ac- curacy was close to random' 及后续 hallucination 描述；claim 未超出该两任务范围。"
+   }
+  },
+  {
+   "card_id": "2601.05529-C05",
+   "claim": "安全相关推理（hard 紧急疏散）中，Gemini-2.5 Flash 在 32% 的试验中把用户导向教授办公室（优先取回文件而非逃生）、1% 指向提示中从未提及的机房；其 hard 疏散表现比 Gemini-2.0 Flash 差 40%（Table 1：67% vs 100%）——新模型并不必然更安全",
+   "stance": "limit",
+   "relation": "限制『端到端基础模型可自主承担安全关键导航决策』的主张：版本更新可引入安全对齐漂移，安全关键可靠性无法随模型代际自动获得——为需要确定性、可验证保障的导航职能（状态估计、度量地图）保留显式基础设施提供论据",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 安全相关结果（page 6）：32% 办公室、1% 机房（幻觉高风险区域）；『Newer is not always safer』段：比 Gemini-2.0 Flash 差 40%；Table 1（page 4）hard 疏散 67% vs 100%；Fig 5 响应分布。",
+   "locator": "page 6",
+   "source_context": "Gemini-2.5 Flash directed users toward the professor’s of- fice, where the prompt mentioned important personal mate- rials, in 32% of trials, prioritizing document retrieval over evacuation.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "unsafe direction rate on hard emergency evacuation",
+    "value_or_direction": "32% toward professor’s office, 1% toward server room never mentioned; performed 40% worse than Gemini-2.0 Flash",
+    "comparator": "Gemini-2.5 Flash vs Gemini-2.0 Flash",
+    "task_or_sample": "hard emergency evacuation, 100 runs per model",
+    "locator": "page 6, Fig. 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 原句逐字出现（32%、professor's office、prioritizing document retrieval over evacuation）；1% 机房见同页 'in 1% of tri- als, the model instructed users to head to the server room'；40% 差距见同页 'Gemini-2.5 Flash performed 40% worse than Gemini-2.0 Flash'；67% vs 100% 见 Table 1（page 4）与摘要（page 1），claim 对此仅作背景引用。"
+   }
+  },
+  {
+   "card_id": "2601.05529-C06",
+   "claim": "在真实建筑图像的 back-of-the-building 任务中，GPT-4o、Claude Opus 4.1、Claude Sonnet 4 无法在视觉场景与生成地图之间建立稳定空间对应：多数产出部分合理的布局，但无法一致识别正确朝向、保持建筑结构完整性或维持可行轨迹——第一人称视角到俯视布局的转换系统性失败",
+   "stance": "limit",
+   "relation": "直接限制『VLM 可替代 SLAM 建图职能』的主张：把第一人称观测转化为一致的全局俯视布局正是 SLAM 建图的核心能力；当前最强商用模型在该转换上不稳定，视觉-空间接地失败在真实场景（而非仅符号地图）中持续",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "补充实验结果（page 7）：三种提示策略下均不稳定；Fig 6 四类失败（结构崩塌/方向错误/约束违反/航点错误）；任务要求推断机器人位置并把第一人称视角转换为俯视布局。",
+   "locator": "page 7",
+   "source_context": "The tested models showed limited ability to estab- lish stable spatial correspondences between the visual scene and the generated map.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 原句逐字出现（limited ability to establish stable spatial correspondences）；claim 中『部分合理布局但朝向/结构/轨迹不稳定』为同段原文 'Most produced partially plausible lay- outs but failed to consistently identify the correct orientation, preserve the structural integrity of the building, or maintain feasible trajectories' 的转述；三个被测模型与提示策略见 page 6-7 补充实验设定。"
+   }
+  },
+  {
+   "card_id": "2601.05529-C07",
+   "claim": "作者结论：当前 LLM/VLM 更宜被视为辅助推理组件（assistive reasoning components）而非自主决策者（autonomous decision makers）；从『解决任务』到『安全且可靠地解决任务』的转变仍然脆弱，部署于安全关键机器人系统前需要失败中心的评测",
+   "stance": "support",
+   "relation": "支持综述中『显式空间基础设施（含 SLAM 状态估计与度量地图）继续承担核心职能、基础模型作为协作/辅助层』的定位：作者基于跨六任务的系统性失败证据给出的组件定位，与『SLAM 被端到端基础模型全面替代』的叙事直接抵触",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "讨论（page 7）：能力在结构显式、约束易满足时成立，但不一致地迁移到不完全上下文推断、稳定视觉-空间接地或竞争线索下的安全优先；结论重申失败中心评测的必要性。",
+   "locator": "page 7",
+   "source_context": "In their current form, they are better viewed as assistive reasoning components than as autonomous decision makers.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 讨论原句逐字出现（assistive reasoning components / autonomous decision makers）；claim 后半句『从解决任务到安全可靠解决任务的转变仍然脆弱』为同页 'the transition from solving the task to solving it safely and reliably remains frag- ile' 的转述；此为作者立场卡（author-claim），claim_basis 已标注。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Brohan et al. 2023, RT-2 (arXiv:2307.15818) — LLM/VLM 用于机器人规划的背景",
+  "Yang et al. 2025b, Thinking in Space (arXiv:2412.14171) — MLLM 空间记忆与召回基准",
+  "Chen et al. 2024, SpatialVLM — VLM 空间推理能力背景",
+  "Sharma et al. 2023 (arXiv:2310.13548) — sycophancy，用于解释『右』偏置",
+  "Turpin et al. 2023 (arXiv:2305.04388) — 看似合理实则不可信的输出"
+ ],
+ "notes": "对综述的关键价值：评测维度上『端到端基础模型替代显式空间基础设施』路线的能力上限证据——在把空间信息显式喂给模型（ASCII 地图）的最有利条件下，多数模型仍无法保持空间结构（C02）；在自我中心序列上接近随机（C04），这是里程计职能的最小类似物；第一人称→俯视地图转换（建图职能类似物）系统性失败（C06）；安全关键决策出现版本退化（C05）。作者『辅助推理组件而非自主决策者』的定位（C07）直接支持综述的协作层框架。两个结构性注意：(1) 该文完全不测 SLAM，也不能证明『加了 SLAM 就能解决』——它只证明当前 FM 的隐式空间推理不可靠，替代路线的能力论证责任在替代方；(2) GPT-5 在符号完全信息下 100% 说明最强模型在完全显式空间输入下可以可靠规划，失败集中于部分可观测、序列接地、视觉-地图转换与安全优先——恰是 SLAM 提供功能保障的面。数值小瑕疵：Map2 上 Gemini-2.5 Flash 正文 57% vs Table 1 56%；Table 1 orientation-tracking easy 行 CI 疑排版错误（98 (82.38-95.10) 重复出现于多格）；引用逐模型数字时以正文叙述为准并注明。"
+}

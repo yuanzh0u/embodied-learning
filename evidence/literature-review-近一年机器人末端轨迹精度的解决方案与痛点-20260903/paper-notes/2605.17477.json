@@ -1,0 +1,360 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.17477",
+  "title": "Rapid Vibration Suppression and Trajectory Tracking of a Serial Manipulator with Multi-Flexible Links",
+  "published": "2026-05-17",
+  "url": "https://arxiv.org/abs/2605.17477",
+  "authors": [
+   "Chengyi Wang",
+   "Yilong Huang",
+   "Ji Wang"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "属于控制层方案族（PDE 级 backstepping 边界控制抑制柔性连杆振动以保末端轨迹精度）：在 Quanser 2 自由度柔性臂实物上与 LQR+前馈对照验证，直接回答综述问题中柔性/振动误差源的核心机制、传感适用条件与未解痛点。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题（柔性臂结构柔性引发振动、降低末端精度）与建模/控制策略谱系"
+   },
+   {
+    "locator": "D. Main Contribution",
+    "role": "relevant-core",
+    "purpose": "三条贡献：PDE 级设计消除 spillover、边界执行注入分布式阻尼、理论与实验双重验证"
+   },
+   {
+    "locator": "II. MODELING OF AN NDSFMR",
+    "role": "method-or-design",
+    "purpose": "nDSFMR 建模：Timoshenko 梁+关节 ODE、Hamilton 原理与坐标重构"
+   },
+   {
+    "locator": "III. OUTPUT-FEEDBACK CONTROL DESIGN OF AN NDSFMR",
+    "role": "method-or-design",
+    "purpose": "backstepping 状态反馈、观测器与输出反馈闭环框架总览"
+   },
+   {
+    "locator": "A. State-Feedback Control Design",
+    "role": "method-or-design",
+    "purpose": "backstepping 变换、控制律(48)与闭环稳定性定理 1"
+   },
+   {
+    "locator": "B. Observer Design",
+    "role": "method-or-design",
+    "purpose": "只用边界测量重构未测分布状态的观测器设计与定理 2"
+   },
+   {
+    "locator": "C. Output-Feedback Closed-Loop System",
+    "role": "method-or-design",
+    "purpose": "输出反馈闭环与定理 3 的有界性保证"
+   },
+   {
+    "locator": "IV. EXPERIMENT ON A 2DSFMR",
+    "role": "data-or-setting",
+    "purpose": "实验设计总览：Quanser 2DSFMR、LQR+前馈基线(76)"
+   },
+   {
+    "locator": "A. Quanser 2DSFMR",
+    "role": "data-or-setting",
+    "purpose": "硬件配置、传感（编码器+基座应变片）与实现（MATLAB/Simulink+Q8-USB）"
+   },
+   {
+    "locator": "B. Trajectory Tracking on Primary Link of 2DSFMR",
+    "role": "results-or-analysis",
+    "purpose": "主连杆子系统三种轨迹下的观测器精度与跟踪/振动抑制对比结果"
+   },
+   {
+    "locator": "C. Trajectory Tracking on 2DSFMR",
+    "role": "results-or-analysis",
+    "purpose": "整机极坐标轨迹跟踪与 LQR+前馈的对比结果"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与未来工作（自适应处理负载不确定、最优运动规划避开执行器极限）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "APPENDIX",
+    "reason": "附录为核函数解析式与定理证明，仅在需要核对公式细节时查阅"
+   },
+   {
+    "locator": "REFERENCES",
+    "reason": "参考文献列表，仅用于追溯背景"
+   }
+  ]
+ },
+ "research_question": "如何在仅有关节执行器与边界测量（关节角编码器+连杆基座应变片）的条件下，对 n 自由度串联柔性连杆机械臂实现快速振动抑制与末端轨迹跟踪？",
+ "contributions": [
+  "建立 nDSFMR 物理一致的无限维模型（Timoshenko 梁+关节 ODE 耦合，Hamilton 原理推导），控制器直接在 PDE 层设计，避免有限维近似的 spillover 效应",
+  "backstepping 边界控制：仅用关节执行等效注入沿整条柔性结构的分布式阻尼，阻尼剖面可由设计参数调节，实现快速振动抑制",
+  "输出反馈观测器：仅用基座应变与关节角两类边界测量重构控制器所需的未测分布状态",
+  "在 Quanser 2DSFMR 实物平台上与 LQR+前馈基线完成实验验证"
+ ],
+ "method": {
+  "summary": "每个连杆-关节建模为细长 Timoshenko 梁（弯曲+剪切）与关节 ODE 耦合，经 Riemann 变换化为 (2+2) 一阶双曲 PDE 加关节 ODE；backstepping 变换将原系统映射到指数稳定的目标系统，得到含边界项与积分核的状态反馈控制律；观测器从基座应变与关节角的边界测量重构未测分布状态形成输出反馈；定理保证闭环状态一致最终有界（指数收敛+有界余项，衰减率可由设计参数调节）且控制输入有界。",
+  "assumptions": [
+   "参考轨迹及其一、二阶导数有界（式(1)）",
+   "柔性连杆为细长 Timoshenko 梁，物理参数已知（表 I 来自直接测量与 Quanser 手册）",
+   "关节谐波减速器消除机械回差，电机力矩常数已知",
+   "观测器需在大初始误差下收敛（实验中故意将初值设为 1 以测试）"
+  ]
+ },
+ "study_context": {
+  "datasets": [],
+  "tasks": [
+   "主连杆单关节跟踪：正弦（幅值 40pi/180、0.2 Hz）、方波（35pi/180、0.1 Hz）、锯齿（35pi/180、0.2 Hz）",
+   "整机 2DSFMR 极坐标 (r,phi) 轨迹跟踪：正弦/方波/锯齿轮廓，经逆运动学得到期望关节角"
+  ],
+  "embodiments": [
+   "Quanser 2 自由度串联柔性连杆机械臂（2DSFMR）：Maxon 273759(90 W) 与 118752(20 W) 电机+谐波减速，两连杆均长 0.195 m，连杆基座应变片+光学编码器，Q8-USB DAQ 与 AMPAQ 电流放大器"
+  ],
+  "sample_or_scale": "单台 2 自由度实验平台；每次试验 31 s（前 1 s 为传感器误差补偿缓冲）；三种植入大初始观测误差的参考轨迹；无统计重复"
+ },
+ "evaluation": {
+  "design": "实物实验对照：主连杆子系统（副连杆作集中质量）与整机 2DSFMR 两级，均在相同硬件与三种轨迹（正弦/方波/锯齿）上对比 backstepping 输出反馈与 LQR+前馈(76)；另附观测器误差统计（RMSE/MAE/ME）",
+  "baselines": [
+   "LQR + 前馈（式(76)，反馈与前馈增益由系统参数与权重矩阵导出）"
+  ],
+  "metrics": [
+   "关节角跟踪误差 Delta-theta",
+   "连杆横向位移（振动）upsilon(0,t)",
+   "末端跟踪误差 varpi(0,t)（固定坐标系）",
+   "整机末端极径/极角跟踪误差",
+   "观测器状态估计误差 RMSE/MAE/ME"
+  ],
+  "ablations": [
+   "三种轨迹（含间断的方波/锯齿）x 两种控制器的对照",
+   "观测器在大初始误差与突变信号下的收敛性"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "主连杆实验：相对 LQR+前馈，backstepping 输出反馈在三种参考轨迹下关节跟踪误差更小、振动抑制更快、末端跟踪误差更小且在方波/锯齿下更快收敛到零",
+   "scope": "Quanser 2DSFMR 主连杆-关节子系统（副连杆作集中质量），三种参考轨迹",
+   "locator": "B. Trajectory Tracking on Primary Link of 2DSFMR"
+  },
+  {
+   "finding": "整机 2DSFMR：backstepping 的末端极径与极角跟踪误差均小于 LQR+前馈，方波/锯齿轨迹下末端误差更快收敛到零",
+   "scope": "整机 2 自由度柔性臂极坐标轨迹跟踪实验",
+   "locator": "C. Trajectory Tracking on 2DSFMR"
+  },
+  {
+   "finding": "观测器仅用边界测量即可重构分布状态：ME 约 0.013（源于注入的大初始误差），RMSE 0.00013-0.00130、MAE 0.00009-0.00047",
+   "scope": "三种参考轨迹下对横向位移斜率在 x*=0 与 0.5L*1 的估计",
+   "locator": "B. Trajectory Tracking on Primary Link of 2DSFMR"
+  },
+  {
+   "finding": "机制：backstepping 仅用边界执行即可等效注入沿整条柔性结构的分布式阻尼（区别于在特定位置注入阻尼的已有 PDE 方法），阻尼剖面可由设计参数调节",
+   "scope": "方法设计主张（作者贡献 2）",
+   "locator": "D. Main Contribution"
+  },
+  {
+   "finding": "PDE 级控制器设计直接消除有限维 ODE 近似固有的 spillover 效应（作者贡献 1 的动机）",
+   "scope": "与 ODE 近似方法（AMM/FEM/集中参数）对比的设计主张",
+   "locator": "D. Main Contribution"
+  },
+  {
+   "finding": "实际关节参考轨迹在间断点附近因电机速度/加速度约束被平滑，与理想轮廓略有差异",
+   "scope": "实验中的参考轨迹实现（Remark 3）",
+   "locator": "Remark 3"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前框架不含自适应机制，无法处理突发负载不确定（如末端抓取引起），作者列为未来工作",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "需要集成最优运动规划以避开挑战执行器极限的高梯度/间断参考点，作者列为未来工作",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "实际参考轨迹在间断点附近因电机速度/加速度约束被平滑，与理想轮廓略有差异",
+    "locator": "Remark 3"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论基于物理参数已知的 Quanser 平台与 2 自由度规模；对参数未知、负载突变或更高自由度机械臂未验证（作者亦承认抓取负载不确定是未来工作）",
+    "basis": "表 I 参数来自直接测量与厂商手册；V. CONCLUSION 的未来工作"
+   },
+   {
+    "boundary": "跟踪误差对比仅定性（'更小/更快'），正文无误差数值与统计显著性，跨论文量化比较受限",
+    "basis": "IV 节结果仅以图呈现，数值仅出现在观测器误差表"
+   },
+   {
+    "boundary": "控制律含积分核与观测器，实现复杂度高于 LQR+前馈，向更高维柔性臂的可扩展性未讨论",
+    "basis": "式(48)(51)-(55) 的核函数与附录推导，实验仅 2 自由度"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于物理参数已知、以编码器+基座应变片为传感、低频小幅（0.1-0.2 Hz 量级）轨迹的 2 自由度柔性连杆平台；对参数不确定、负载突变、高维或高频任务的迁移未验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "实物平台（Quanser 2DSFMR）验证，与 LQR+前馈基线在相同硬件与轨迹上对照",
+   "覆盖正弦/方波/锯齿三类含间断的参考轮廓，同时考察振动抑制与跟踪双目标",
+   "观测器精度给出 RMSE/MAE/ME 数值统计，且故意注入大初始误差测试鲁棒性"
+  ],
+  "design_risks": [
+   "控制器跟踪误差对比无量化数值（仅图与'更小/更快'描述），无法计算相对改善幅度",
+   "基线单一（LQR+前馈），未与更强的自适应/学习类边界控制方法对比",
+   "无统计重复，单次 31 s 试验",
+   "理论保证为一致最终有界而非渐近精确跟踪，稳态误差幅度未量化"
+  ],
+  "baseline_fairness": "LQR+前馈增益由系统参数与权重矩阵导出并在同一硬件实现，公平；但 LQR 属经典基线，未覆盖更强基线。",
+  "metric_validity": "关节误差/连杆振动/末端误差三组指标覆盖到位且观测器指标有数值；但控制器间跟踪改善仅定性，削弱横向可比性。",
+  "reproducibility": "硬件参数（表 I）、轨迹定义、实现栈（MATLAB/Simulink+Q8-USB）与实验视频链接齐全，核函数解析式在附录，可复现性较好。",
+  "external_validity": "2 自由度 Quanser 柔性臂、低频小幅轨迹的结论；向工业级高维柔性臂或未知负载场景外推未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.17477-C01",
+   "claim": "在 Quanser 2DSFMR 主连杆-关节子系统实验（正弦 40pi/180@0.2 Hz、方波 35pi/180@0.1 Hz、锯齿 35pi/180@0.2 Hz 三种参考轨迹，副连杆作集中质量）中，backstepping 输出反馈控制器相对 LQR+前馈取得更小的关节跟踪误差、更快的振动抑制、更小且更快收敛到零的末端跟踪误差（正文未给出数值）。",
+   "stance": "support",
+   "relation": "支撑综述命题'PDE 级 backstepping 边界控制在柔性连杆机械臂上以更低传感要求实现优于经典 LQR 前馈的末端轨迹精度'，是柔性/振动误差源方案族的量化效果证据（方向性）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.B 节实验结果原文明确陈述三种参考轨迹下所提控制器的关节误差更小、振动抑制更快、末端误差更小且更快收敛，结论节重申相对 LQR+前馈基线的优越性。",
+   "locator": "B. Trajectory Tracking on Primary Link of 2DSFMR",
+   "source_context": "As shown in the Fig. 3 a) and b), the proposed controller achieves a smaller joint tracking error and faster vibration suppression across all three reference trajectories compared to the LQR+feedforward approach. Fig. 3 c) shows that the proposed controller yields a smaller tip tracking error than the LQR approach, and moreover, it is obvious that the proposed controller achieves faster convergence of the tip tracking error to zero under the square and sawtooth trajectories. This indicates that the proposed controller enables faster convergence of the flexible manipulator’s tip to the references while achieving higher tracking accuracy than the LQR+feedforward controller.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "joint tracking error, vibration suppression speed, tip tracking error",
+    "value_or_direction": "smaller joint/tip tracking error and faster vibration suppression and error convergence (no numeric values reported in text)",
+    "comparator": "LQR + feedforward baseline",
+    "task_or_sample": "primary link-joint of Quanser 2DSFMR, sinusoidal/square/sawtooth references",
+    "locator": "Fig. 3, B. Trajectory Tracking on Primary Link of 2DSFMR"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 IV.B 节原文整段：'smaller joint tracking error and faster vibration suppression across all three reference trajectories'与'smaller tip tracking error ... faster convergence ... to zero'均限定在与 LQR+feedforward 的对比及三种轨迹范围内，卡中注明正文无数值，未虚构量化幅度。"
+   }
+  },
+  {
+   "card_id": "2605.17477-C02",
+   "claim": "在整机 2DSFMR 极坐标轨迹跟踪实验（正弦/方波/锯齿 (r,phi) 轮廓）中，backstepping 方法的末端极径与极角跟踪误差均小于 LQR+前馈，且在方波与锯齿轨迹下末端跟踪误差更快收敛到零。",
+   "stance": "support",
+   "relation": "支撑综述命题'边界控制方案族在多连杆柔性机械臂整机末端轨迹上仍保持对经典基线的精度优势'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.C 节整机实验结果陈述 backstepping 的末端极径与极角误差均更小，且方波/锯齿下末端误差更快收敛到零。",
+   "locator": "C. Trajectory Tracking on 2DSFMR",
+   "source_context": "Additionally, both the tip polar radial and tip polar angle tracking errors under the backstepping is smaller than those of the LQR+Feedforward method, and furthermore, both proposed controllers achieve faster convergence to zero of the end-effector tracking error of 2DSFMR under the square and sawtooth trajectories.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 IV.C 节原文：'both the tip polar radial and tip polar angle tracking errors under the backstepping is smaller than those of the LQR+Feedforward method'与'faster convergence to zero of the end-effector tracking error ... under the square and sawtooth trajectories'，卡的范围限定（整机、三种轮廓、方波/锯齿下更快收敛）与原文一致。"
+   }
+  },
+  {
+   "card_id": "2605.17477-C03",
+   "claim": "观测器仅用边界测量重构未测分布状态：在三种植入大初始误差的参考轨迹下，横向位移斜率估计的最大误差约 0.013（源于注入的初始误差），RMSE 为 0.00013-0.00130、MAE 为 0.00009-0.00047（表 II，x*=0 与 0.5L*1 两位置）。",
+   "stance": "support",
+   "relation": "支撑综述'适用条件'命题：PDE 边界控制方案只需编码器+基座应变片即可重构分布状态，无需分布式传感；同时给出该方案族少见的数值化精度证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.B 节表 II 给出观测器在三种轨迹、两个空间位置上估计横向位移斜率的 ME/RMSE/MAE 统计：ME 约 0.013（注入初始误差所致），RMSE 与 MAE 保持在 1e-4 量级。",
+   "locator": "B. Trajectory Tracking on Primary Link of 2DSFMR",
+   "source_context": "the state estimates of ϖ 1,x ∗ (x ∗ , t ∗ ), at x ∗ = 0 and x ∗ = 0.5L ∗ 1 , converge rapidly, despite the large initial estimation error and the abrupt signal variations in the square and sawtooth waves. The statistical results further confirm this behavior. Although the ME reaches 0.013 due to the injected initial error, both the MAE and RMSE remain very low, demonstrating the robustness and accuracy of the proposed estimation scheme.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "observer estimation error of transverse displacement slope (ME/RMSE/MAE)",
+    "value_or_direction": "ME about 0.013 (from injected initial error); RMSE 0.00013-0.00130; MAE 0.00009-0.00047",
+    "comparator": "against real values under three trajectories with large injected initial observer error",
+    "task_or_sample": "slope estimates at x*=0 and 0.5L*1 under sinusoidal/square/sawtooth references (TABLE II)",
+    "locator": "TABLE II, B. Trajectory Tracking on Primary Link of 2DSFMR"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 IV.B 节正文'Although the ME reaches 0.013 due to the injected initial error, both the MAE and RMSE remain very low'与同节 TABLE II 的数值行（ME 0.01321/0.01318，RMSE 0.00016-0.00130，MAE 0.00009-0.00047），卡中数值范围与表 II 一致且未超出三种轨迹/两位置的范围。"
+   }
+  },
+  {
+   "card_id": "2605.17477-C04",
+   "claim": "机制主张：backstepping 边界控制仅用边界（关节级）执行即可等效注入沿整条柔性结构的分布式阻尼，区别于在特定位置注入阻尼的已有 PDE 方法；阻尼剖面可由设计参数调节，从而实现快速振动抑制与末端快速收敛。",
+   "stance": "support",
+   "relation": "支撑综述'核心机制'命题：柔性连杆振动抑制方案族中 backstepping 的独特机制是等效分布式阻尼注入，且只需边界执行器。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "贡献 2 原文陈述所提 backstepping 控制用仅边界执行实现沿整个柔性结构注入等效分布式阻尼，阻尼剖面可由控制设计参数调节。",
+   "locator": "D. Main Contribution",
+   "source_context": "In contrast, the proposed backstepping-based control achieves an equivalent spatially distributed damping injected along the entire flexible structure using only boundary actuation. The damping profile can be tuned via control design parameters, leading to rapid vibration suppression and fast convergence of the end-effector to the desired trajectory.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 D. Main Contribution 原文贡献 2 的两句：'spatially distributed damping injected along the entire flexible structure using only boundary actuation'与'damping profile can be tuned via control design parameters'，卡的机制表述为忠实转述，未添加原文没有的效果声明。"
+   }
+  },
+  {
+   "card_id": "2605.17477-C05",
+   "claim": "输出反馈实现的传感要求仅为两类边界测量——连杆基座应变与关节角——观测器据此重构控制器所需的未测分布状态，实验在实物 2DSFMR 平台上完成。",
+   "stance": "conditional",
+   "relation": "为综述'适用条件'维度提供证据：该方案族不需要分布式传感（每个连杆只需基座应变片+关节编码器），降低部署门槛。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节明确陈述输出反馈通过设计观测器，仅从基座应变与关节角的边界测量重构未测状态，并在物理 2DSFMR 平台上完成验证。",
+   "locator": "V. CONCLUSION",
+   "source_context": "This is subsequently extended to an output-feedback approach by designing an observer that reconstructs the unmeasured states from only boundary measurements of the base strain E bi (t) and the joint angle θ i (t). Finally, the experimental validation is conducted on a physical 2DSFMR platform.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 V. CONCLUSION 原文：'reconstructs the unmeasured states from only boundary measurements of the base strain E bi (t) and the joint angle θ i (t)'与'experimental validation is conducted on a physical 2DSFMR platform'，卡的传感要求（两类边界测量）与平台范围与原文一致。"
+   }
+  },
+  {
+   "card_id": "2605.17477-C06",
+   "claim": "未解痛点：当前框架缺乏自适应机制，无法处理突发负载不确定（如末端抓取引起），作者将引入自适应控制列为未来工作；同段结论强调相对 LQR+前馈基线在快速振动抑制与轨迹跟踪上的优越性。",
+   "stance": "gap",
+   "relation": "支撑综述'未解痛点'维度：PDE 边界控制方案族对负载/抓取引起的参数突变未解决，需要与自适应机制结合。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节在陈述对 LQR+前馈的优越性之后，明确把'引入自适应控制处理突发负载不确定（如末端抓取）'列为未来工作，说明当前版本未解决该问题。",
+   "locator": "V. CONCLUSION",
+   "source_context": "Comparative results against the baseline LQR+feedforward method demonstrate the su- perior capability of our proposed strategy in achieving fast vibration suppression and trajectory tracking. Future work will incorporate adaptive control to handle sud- den payload uncertainties (e.g., during end-effector grasping)",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 V. CONCLUSION 原文的 Future work 句首段：'Future work will incorporate adaptive control to handle sud- den payload uncertainties (e.g., during end-effector grasping)'，卡中断言的'当前无自适应机制'由该未来工作陈述与全文方法（未含自适应律）共同entail，未超出原文范围。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "控制器对比无量化数值（仅观测器有 RMSE/MAE/ME），是该方案族论文中数值报告不完整的样本；正文定理给的是一致最终有界而非渐近跟踪，综述引用时应注意表述。"
+}

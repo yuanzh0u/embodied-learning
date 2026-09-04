@@ -1,0 +1,316 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.02437",
+  "title": "U-ARM : Ultra low-cost general teleoperation interface for robot manipulation",
+  "published": "2026-03-19",
+  "url": "https://arxiv.org/abs/2509.02437",
+  "authors": [
+   "Yanwen Zou",
+   "Zhaoye Zhou",
+   "Chenyang Shi",
+   "Zewei Ye",
+   "Junda Huang",
+   "Yan Ding",
+   "Bo Zhao"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "EA-HARDWARE 数据采集硬件论文，代表与 UMI/ActiveUMI（位姿估计/SLAM 驱动的末端轨迹记录范式）相对的另一条路线：关节空间主从遥操作。全文 'SLAM' 一词零出现，训练数据直接从从臂本体编码器记录，度量一致性与本体一致性由架构保证而非由位姿估计保证。对综述问题它是必要的边界/反例证据：检验'SLAM 在具身数据采集环节是否不可或缺'——本文证明存在完全不依赖外部位姿估计、且成本低一个数量级的可用采集范式（尽管其数据质量主张未经策略训练验证）。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认论文动机：真机操作数据采集是 VLA 规模化的瓶颈；末端轨迹记录设备 vs 主从遥操作两类接口的优劣与成本格局（ALOHA $50k+、GELLO $270+）"
+   },
+   {
+    "locator": "page 2-3, Section II Related Work（A 数据采集、B 双臂遥操作系统、C 低成本遥操作系统）",
+    "role": "relevant-core",
+    "purpose": "定位范式分类（末端空间控制+IK vs 关节空间直接映射）、Table I 成本对比表，以及'控制与记录分离'的核心论点"
+   },
+   {
+    "locator": "page 4-5, Section III System Design（A 硬件设计：构型/机械/舵机改装；B 算法设计：编码器校准与滤波插值）",
+    "role": "method-or-design",
+    "purpose": "理解三种关节构型设计、拆齿轮留编码器的传感器方案、关节角映射算法（Algorithm 1）与 Table III 关节限位"
+   },
+   {
+    "locator": "page 5-6, Section IV A-B（仿真适配与真机任务设置）",
+    "role": "data-or-setting",
+    "purpose": "确认仿真平台（ManiSkill/SAPIEN，7 种机械臂示例）、5 个真机任务定义与指标口径（急停计为失败）"
+   },
+   {
+    "locator": "page 6-7, Section IV C Real-world Experiment（Table IV、observations、trajectory smoothness、operator proficiency）",
+    "role": "results-or-analysis",
+    "purpose": "核对 U-Arm vs Joycon 的采集时间/成功率数字、39% 效率声明、Can-stacking 精度劣势归因与熟练度曲线"
+   },
+   {
+    "locator": "page 7-8, Section V Conclusion 与 limitations 段",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述局限（舵机连接器松动、关节 5 独立运动依赖紧固件调校）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（UMI、GELLO、ALOHA、DexCap、Joycon、LeRobot），无需逐条精读；论文无附录"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何以约 $50 级 BOM 的 3D 打印主从臂兼容绝大多数商用机械臂（三种标准关节构型），并通过机械与控制优化（拆齿轮舵机+阻尼调校、关节角映射+滤波插值）缓解冗余自由度的控制困难，实现高效可用的低成本遥操作数据采集。对综述问题的意义：提供'数据采集完全不依赖 SLAM/外部位姿估计'的范式样本，是检验'SLAM 在具身数据采集环节是否不可或缺'的反例/边界证据。",
+ "contributions": [
+  "三种机械构型（两种 6-DoF + 一种 7-DoF）的 3D 打印主从臂，覆盖商用臂的三种标准关节轴序（Pieper 准则 6-DoF 与拟人 7-DoF），单臂 BOM $50.5（6-DoF）/ $56.8（7-DoF），硬件全部开源",
+  "舵机改装方案：拆除 Zhongling 舵机内部齿轮仅保留编码器测角，以关节轴螺丝松紧精细调阻尼，替代 GELLO 的 Dynamixel 电机（$24/个）与橡皮筋被动阻力",
+  "关节角映射算法（Algorithm 1：初始位姿对齐 + 滤波阈值 τ + N 步插值），缓解高自由度主臂冗余自由度的控制困难，操作者数次试用即可上手",
+  "实测比 Joycon 采集效率高 39%（平均 17.70s vs 29.04s）且成功率相当（75.8% vs 83.0%）；开源 SAPIEN/ManiSkill 仿真遥操作示例（7 种机械臂）与真机操作数据集"
+ ],
+ "method": {
+  "summary": "U-Arm 是关节空间主从遥操作系统。硬件：三种构型的 3D 打印主臂（PLA、最小壁厚 4mm、关节双轴固定），Zhongling 舵机拆除齿轮仅留编码器作为关节角传感器，阻尼由螺丝松紧调节，并刻意收窄物理关节限位（Table III）以覆盖桌面任务同时增强刚性。控制：关节角映射（Algorithm 1）——每次示教开始时从臂先运动到预定义初始位姿，主臂在其附近初始化对齐；主臂关节角增量 Δθ 经滤波阈值 τ 过滤、N 步插值后作为从臂目标角连续发送；舵机编码器（0-270°）安装前手动调至 135° 中位。仿真侧适配 ManiSkill/SAPIEN 提供 7 种机械臂示例。关键架构事实：遥操作设备只用于控制，学习数据直接从执行任务的从臂（本体编码器）记录——全程无外部位姿估计、无世界坐标系估计，全文 'SLAM' 一词零出现；其度量一致性与本体一致性由'机器人自身即真值源'的架构保证。",
+  "assumptions": [
+   "商用 6/7-DoF 串联机械臂的关节轴序基本落入三种标准构型（Table II），主臂只需复现关节轴序而非连杆长度比例",
+   "桌面操作任务所需关节范围在收窄的物理限位（Table III）之内",
+   "从臂本体编码器读数即为训练数据真值，无需外部位姿估计或后处理",
+   "操作者经 10-20 次试用后可达到约 80% 的稳定成功率"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "开源真机操作数据集（U-Arm 采集，规模/条数未报告）",
+   "SAPIEN/ManiSkill 仿真遥操作示例（7 种机械臂，含 ARX-X5、XArm6、SO-100、Panda）"
+  ],
+  "tasks": [
+   "Fanta-from-shelf-2：将芬达瓶从货架二层移入篮子",
+   "Oreo-from-shelf-1：将奥利奥包装从货架一层移入篮子",
+   "Fanta-to-shelf-2：从纸箱拾取芬达瓶放回货架二层",
+   "Can-stacking：将易拉罐叠放到另一罐上（精细精度任务）",
+   "Block-from-litterbox：从猫砂盆中抓取积木"
+  ],
+  "embodiments": [
+   "主臂：U-Arm（真机实验用 Config-1；另设计 Config-2 6-DoF 与 Config-3 7-DoF）",
+   "从臂：XArm6（真机实验）；仿真含 ARX-X5、XArm6、SO-100、Panda 等 7 种",
+   "对比设备：Joycon 游戏手柄（末端空间控制 + IK）；Table I 另列 VR 头显/Space Mouse/GELLO/ALOHA/DexPilot 成本对比"
+  ],
+  "sample_or_scale": "5 个真机任务，隐含每任务 50 trials（熟练度分析按 1-10/11-20/21-30/31-40/41-50 五段）；操作者人数未报告；成功率统计中急停计为失败；仿真侧 7 种机械臂示例"
+ },
+ "evaluation": {
+  "design": "仿真适配演示（7 种机械臂）+ 真机对照实验：U-Arm Config-1 vs Joycon 遥操作 XArm6 执行 5 个任务，记录采集时间（s）与成功率（%，急停计为失败）；另做末端轨迹平滑性定性对比（Fig 6）与操作者熟练度分段分析（Fig 7，1-50 trials 五段）",
+  "baselines": [
+   "Joycon 游戏手柄（$20，末端空间控制+IK，实测对照）",
+   "Table I 成本表对比（未实测）：VR Headset (Meta Quest 3) $500、Space Mouse $220、GELLO $270、ALOHA $24,000、DexPilot $1700"
+  ],
+  "metrics": [
+   "数据采集时间（s）",
+   "任务成功率（%，急停计为失败）",
+   "末端轨迹平滑性（定性，Fig 6）",
+   "分段成功率（操作者熟练度，Fig 7）"
+  ],
+  "ablations": [
+   "无正式消融实验；构型设计与阻尼调校为工程迭代（Config-2 交换关节 5/6 改善舒适度为脚注说明）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "采集效率：5 任务平均采集时间 17.70s vs Joycon 29.04s（作者称 39% 时间缩减），平均成功率 75.8% vs 83.0% 相当；作者归因于主从臂的臂仿形结构使大范围移动阶段更直觉高效。",
+   "scope": "5 个真机桌面任务，XArm6 + U-Arm Config-1 vs Joycon",
+   "locator": "page 6, Table IV 与 Observations 段"
+  },
+  {
+   "finding": "精度权衡：精细任务 Can-stacking 上 U-Arm 39.6% 显著低于 Joycon 64.0%（差 24.4 pp）——Joycon 松杆即停、主从实时映射更易引入小失误；作者认为这是效率换精度的可接受权衡。",
+   "scope": "Can-stacking 单任务（精细操作类）",
+   "locator": "page 6, Table IV 与 Observations 段"
+  },
+  {
+   "finding": "操作者熟练度：U-Arm 初始成功率略低，10-20 次试用后稳定在约 80%；Joycon 从一开始成功率较高、上手更快，但稳态性能相当。",
+   "scope": "1-50 trials 五段成功率分析",
+   "locator": "page 6-7, Fig 7"
+  },
+  {
+   "finding": "轨迹平滑性：U-Arm 末端轨迹平滑连续，Joycon 为分段轴对齐运动（摇杆离散输入所致）；作者主张主从遥操作产生的轨迹分布更接近自然人手运动，利于与以自我中心人类示教为代表的其他数据源共训。",
+   "scope": "真机任务末端轨迹的定性对比（Fig 6），无量化指标",
+   "locator": "page 6, Fig 6 与 Trajectory Smoothness 段"
+  },
+  {
+   "finding": "成本格局：单臂 BOM $50.5（7-DoF 版 $56.8），约为 GELLO（$270）的 1/5.4、VR 头显（$500）的 1/10、ALOHA（$24,000）的 1/475；Joycon（$20）更便宜但效率低 39% 且难以灵巧操作。",
+   "scope": "Table I 所列代表性遥操作设备的价格对比（未逐一实测）",
+   "locator": "page 3, Table I；page 1 Abstract"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "长时间使用后，标准插头设计的舵机连接器可能出现松动；未来版本可用焊接或更牢固的连接器缓解",
+    "locator": "page 8, Conclusion 后 limitations 段"
+   },
+   {
+    "limitation": "Config-1 与 Config-3 中关节 5 的独立运动依赖紧固件松紧的精细调校（尽管实验显示该关节在常见桌面任务中很少使用）",
+    "locator": "page 8, Conclusion 后 limitations 段"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "论文只评估遥操作层面的采集时间与成功率，未在任何任务上训练与评测策略——'高质量数据'主张（轨迹更平滑、更接近人类运动分布）停留在定性层面，无法判断 SLAM-free 关节数据 vs 位姿估计类数据（UMI/ActiveUMI）对下游策略训练的相对价值",
+    "basis": "page 5-7 实验章节的全部评估范围（无 policy training 实验；开源数据集未附带策略基准结果）"
+   },
+   {
+    "boundary": "成本与配置口径多处不一致：正文称 ALOHA 双臂系统超过 $50,000 而 Table I 记 $24,000；'Ours $50.5' 为单臂 BOM、双臂需翻倍；Fig 1 caption 的 '95% 商用臂兼容'（page 2）无统计来源；Section IV 称真机用 Config-1 而 Fig 5 caption（page 7）称 Config2；仿真部分称 7 种机械臂但仅列名 4 种",
+    "basis": "page 1 Introduction、page 2 Fig 1 caption、page 3 Table I、page 5 Section IV、page 6-7 的交叉核对"
+   },
+   {
+    "boundary": "操作者人数与分工未报告，单人操作者偏差无法排除；急停计为失败使成功率同时混合设备可控性与任务难度两个因素；39% 效率提升无方差/显著性报告",
+    "basis": "page 5 Section IV（'emergency stop being counted as a failure'）与 page 6 Table IV 的报告范围"
+   },
+   {
+    "boundary": "关节空间映射以主臂复现关节轴序为前提，对非标准构型（并联臂、异构手腕）与移动底盘不适用；收窄的物理关节限位也可能限制部分任务的工作空间覆盖",
+    "basis": "page 4 Table II（兼容商用臂清单）与 page 5 Table III（关节范围）的定义范围"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在商用串联 6/7-DoF 机械臂（关节轴序属于三种标准构型之一）、桌面尺度操作任务、XArm6 级从臂平台上，约 $50 BOM 的关节空间主从遥操作可实现比 Joycon 快 39% 的数据采集且总体成功率相当；对精细精度任务（Can-stacking 39.6% vs 64.0%）、非标准构型本体、移动操作平台的效果，以及所采数据对下游策略训练的价值均未被证明。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同平台同任务上以采集时间+成功率直接对照同类低价设备（Joycon），并诚实报告不利结果（Can-stacking 落后 24.4 pp）及其机理解释",
+   "操作者熟练度分段分析（1-50 trials）揭示学习曲线，避免了只报稳态成绩",
+   "全开源（硬件设计、SAPIEN 仿真示例、真机数据集）+ 明确到舵机型号与改装步骤的 BOM，工程可复现性强"
+  ],
+  "design_risks": [
+   "未做任何策略训练/评测实验，'高质量数据'主张停留在遥操作层面——对数据采集范式比较而言这是最关键的缺失",
+   "成本与配置描述多处不一致（ALOHA $50k vs $24k、Config-1 vs Config2、7 种 vs 4 种机械臂、95% 兼容无来源），削弱数字可信度",
+   "操作者人数未报告；39% 效率与成功率差均无方差/显著性报告",
+   "轨迹平滑性为定性图示对比，无比值化指标"
+  ],
+  "baseline_fairness": "Joycon 对照设定合理（同为低价设备、同任务同平台，末端 vs 关节空间控制的差异正是研究对象）；但缺少与 GELLO（同为 leader-follower、$270）的直接实测对比——成本优势的实测支撑只对 Joycon 成立，VR/ALOHA/DexPilot 仅在 Table I 做价格表对比未实测；引用 ALOHA 成本时正文与表格口径不一致。",
+  "metric_validity": "采集时间与成功率为直接有效指标；但成功率将急停计为失败，混合了设备可控性与任务难度；39% 效率基于 5 任务平均且无统计检验；轨迹平滑性无比值化；未报告每任务 trial 数的显式声明（需从熟练度分析反推为 50）。",
+  "reproducibility": "全开源（GitHub：硬件 CAD、仿真示例、真机数据集），BOM 明确到舵机型号与改装步骤（拆齿轮、调阻尼、135° 中位）；但滤波阈值 τ 与插值步数 N 的具体取值、ROS 部署细节与操作者协议未给出。",
+  "external_validity": "真机实验仅在 XArm6 + Config-1 上进行，Config-2/3 仅仿真示例；'适配 95% 商用臂'为声明无实测统计；任务限于桌面单臂操作，双臂协同与移动操作未验证；结论对精细精度任务明确不适用（作者自认权衡）。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.02437-C01",
+   "claim": "作者将示教接口分为两类并主张：末端执行器轨迹记录设备（DexCap、UMI、OpenTelevision）虽然轻便易用，但采集的数据存在运动学奇异、超出机器人工作空间、精度不足或需要复杂后处理等问题；主从遥操作系统（ALOHA、GELLO）通过机械同构主臂实现直觉的、物理约束的示教，帮助保证采集轨迹物理可行、机器人可执行。",
+   "stance": "limit",
+   "relation": "限制'SLAM/外部位姿估计是具身数据采集不可或缺的基础设施'的判断：UMI/DexCap/OpenTelevision 正是依赖外部位姿估计（视觉 SLAM、动捕、VR 追踪）的末端轨迹记录范式，作者主张该类设备存在结构性缺陷（奇异、超工作空间、精度、后处理），并给出完全绕开外部位姿估计的替代范式（关节空间主从映射）——全文 'SLAM' 一词零出现，SLAM 在这条数据采集路线中既非组件也非需求。",
+   "summary": "作者主张末端轨迹记录类设备（含 UMI）有结构性缺陷，主从遥操作是替代范式",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 1, Section I Introduction",
+   "source_context": "End-effector trajectory recording devices such as DexCap [7], UMI [8], and OpenTelevision [9], are often lightweight and easy to use. However, the collected data can suffer from issues such as kinematic singularities, exceeding the robot’s workspace, insufficient precision or need complicated post-processing. In contrast, leader-follower teleoperation systems such as ALOHA [10] and GELLO [11] enable intuitive and physically constrained demonstrations through mechanically isomorphic leader arms. These systems help ensure that collected trajectories are physically feasible and executable by the robot.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 原文：设备两分类（End-effector trajectory recording devices vs leader-follower teleoperation systems）、四类缺陷（kinematic singularities / exceeding the robot's workspace / insufficient precision / complicated post-processing）与'physically feasible and executable'均为原文措辞，claim 未超出原文范围；relation 中对 UMI/DexCap/OpenTelevision 依赖外部位姿估计的说明是本综述的路线映射，不属于 claim。"
+   }
+  },
+  {
+   "card_id": "2509.02437-C02",
+   "claim": "作者主张真机遥操作数据的关键优势在于控制与记录的分离：遥操作设备只用于控制，用于学习的数据直接从执行任务的机器人上采集，从而保证记录的示教与部署分布最接近。在 U-Arm 的关节角映射架构下，这意味着训练数据的关节/位姿真值由从臂本体编码器给出，不经过任何外部位姿估计环节。",
+   "stance": "limit",
+   "relation": "与 UMI/ActiveUMI（由相机 SLAM/VR SLAM 估计示教位姿再映射到机器人）形成路线级对照：主从遥操作以'机器人自身即真值源'获得度量一致性与本体一致性，SLAM 的度量职能在此范式中被架构性绕开——支持'具身数据采集环节 SLAM 并非不可或缺'的一侧证据；代价是必须真机在线（无法像 UMI 那样免机器人采集）。",
+   "summary": "遥操作数据控制与记录分离：数据直接从机器人记录，架构上绕开外部位姿估计",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 3, Section II-B",
+   "source_context": "A key advantage of real-world teleoperation data lies in the separation between control and recording: teleoperation devices are typically used only for control, while the data for learning is collected directly from the robot executing the task. This ensures that the recorded demonstrations share the closest distribution with deployment.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 原文（Section II-B Teleoperation System for Bimanual Robot 开头）。claim 前半句为原文忠实转述；后半句'从臂本体编码器给出真值'由 page 5 'This work uses joint angle mapping for teleoperation. The Zhongling servos ... have an encoder range of 0-270°' 及数据流架构（数据从机器人侧记录）支持，未添加原文之外的结论。"
+   }
+  },
+  {
+   "card_id": "2509.02437-C03",
+   "claim": "成本对比（Table I）：U-Arm 单臂 BOM 为 $50.5（摘要另报 7-DoF 版 $56.8，page 1），对比 GELLO $270（Dynamixel 电机每个 $24）、VR Headset（Meta Quest 3）$500、Space Mouse $220、Joycon $20、ALOHA $24,000、DexPilot $1700——U-Arm 约为 GELLO 的 1/5.4、VR 头显的 1/10、ALOHA 的 1/475。",
+   "stance": "limit",
+   "relation": "成本轴上的对照证据：消费级 VR 头显（$500）是 ActiveUMI 等位姿估计类采集方案的载体，比 SLAM-free 的关节编码器主臂（$50.5）贵一个数量级——在低成本规模化采集目标下，关节空间范式以显著更低的硬件成本绕开了 SLAM/追踪硬件需求；但 Joycon（$20）更便宜且上手更快，说明低成本本身不构成充分优势，效率与数据质量才是关键（见 C04）。",
+   "summary": "$50.5 单臂 BOM 比 GELLO/VR 头显低 5-10 倍、比 ALOHA 低约两个数量级（Table I）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 3, Table I",
+   "source_context": "Device Price (USD) Remarks VR Headset (Meta Quest 3) [30] $500 May cause motion sickness Space Mouse [31] $220 Hard to operate bi- manually GELLO [11] $270 Uses Dynamixel motors, $24 each Game Controller (Joycon) [12] $20 Difficult for dex- terous manipula- tion Ours $50.5 Sufficient for bi- manual manipula- tion ALOHA [10] $24,000 Identical leader- follower hardware design DexPilot [25] $1700 Faces occlusion problems",
+   "evidence_type": "system",
+   "quantitative": {
+    "metric": "单臂物料成本 BOM（USD）",
+    "value_or_direction": "U-Arm（Ours）$50.5 vs GELLO $270、VR Headset (Meta Quest 3) $500、ALOHA $24,000、Joycon $20、DexPilot $1700、Space Mouse $220",
+    "comparator": "Table I 所列 GELLO、VR Headset (Meta Quest 3)、ALOHA、Joycon、DexPilot、Space Mouse",
+    "task_or_sample": "代表性遥操作设备的价格对比（Table I，未逐一实测）",
+    "locator": "page 3, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 3 Table I：VR Headset (Meta Quest 3) $500、Space Mouse $220、GELLO $270（Dynamixel $24 each）、Joycon $20、Ours $50.5、ALOHA $24,000、DexPilot $1700；7-DoF 版 $56.8 见 page 1 Abstract（'a bill of materials (BOM) cost of $50.5 for the 6-DoF leader arm and $56.8 for the 7-DoF version'）。倍数关系（1/5.4、1/10、1/475）为 270/50.5、500/50.5、24000/50.5 的直接算术。注意正文 page 1 称 ALOHA 双臂超过 $50,000 与 Table I 的 $24,000 口径不一致，本卡以 Table I 为准并已记入局限。"
+   }
+  },
+  {
+   "card_id": "2509.02437-C04",
+   "claim": "真机对照实验（U-Arm Config-1 vs Joycon 遥操作 XArm6，5 个任务）：U-Arm 平均采集时间 17.70s vs Joycon 29.04s（作者称 39% 时间缩减），平均成功率 75.8% vs 83.0%；其中精细任务 Can-stacking 上 U-Arm 39.6% 显著低于 Joycon 64.0%，作者归因于 Joycon 松杆即停而主从实时映射更易引入小失误，并认为这是效率换精度的可接受权衡。",
+   "stance": "conditional",
+   "relation": "条件性证据：SLAM-free 主从范式在采集效率上胜出（-39% 时间）且总体成功率相当，证明'不用 SLAM 也能高效采集'的可行性；但在精细暂停控制任务上成功率明显落后，且论文未训练任何策略，无法回答'哪类数据对下游策略学习更好'这一真正决定采集范式优劣的问题——因此它证明的是'SLAM 并非数据采集的唯一可行路径'，而非'替代 SLAM 的路径更优'。",
+   "summary": "比 Joycon 快 39% 且成功率相当（75.8% vs 83.0%），但精细任务落后 24.4 pp；无策略训练实验",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Table IV",
+   "source_context": "Task U-Arm (Config-1) Joycon Time (s) Success (%) Time (s) Success (%) Fanta-from-shelf-2 14.43 88.8% 27.85 94.0% Oreo-from-shelf-1 11.28 88.5% 22.23 100.0% Fanta-to-shelf-2 19.88 72.2% 31.90 60.0% Can-stacking 20.93 39.6% 31.35 64.0% Block-from-litterbox 21.99 90.0% 31.89 96.0% Average 17.70 75.8% 29.04 83.0% a) Observations: Across all tasks, the U-Arm demon- strated a 39% reduction in operation time compared to the Joycon, without a substantial decrease in success rate.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均采集时间（s）与任务成功率（%）",
+    "value_or_direction": "U-Arm 17.70s / 75.8% vs Joycon 29.04s / 83.0%（39% 时间缩减）；Can-stacking：39.6% vs 64.0%",
+    "comparator": "Joycon 游戏手柄",
+    "task_or_sample": "5 个真机桌面任务（XArm6，U-Arm Config-1 vs Joycon，急停计为失败）",
+    "locator": "page 6, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 6 Table IV（Average 行 17.70 / 75.8% / 29.04 / 83.0%；Can-stacking 行 39.6% / 64.0%）与紧随其后的 Observations 段（'a 39% reduction in operation time ... without a substantial decrease in success rate'）。Can-stacking 归因（松杆即停 vs 实时映射引入小失误）与'可接受权衡'的表述逐字见于同页 Observations 段后续文字。claim 范围限于该 5 任务实验，未外推。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Universal Manipulation Interface: In-the-Wild Robot Teaching Without In-the-Wild Robots",
+   "arxiv_id": "2402.10329",
+   "role": "末端轨迹记录范式的代表（本文批评对象之一），与 ActiveUMI 证据卡交叉对照的 SLAM 驱动采集路线"
+  },
+  {
+   "title": "GELLO: A General, Low-Cost, and Intuitive Teleoperation Framework for Robot Manipulators",
+   "arxiv_id": "2309.13037",
+   "role": "直接前驱：低成本 3D 打印主从遥操作，U-Arm 的成本削减对象（$270 → $50.5，拆齿轮留编码器替代 Dynamixel）"
+  },
+  {
+   "title": "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware (ALOHA)",
+   "arxiv_id": "2304.13705",
+   "role": "高成本主从系统参照（Table I $24,000，正文另称双臂超 $50,000）"
+  },
+  {
+   "title": "DexCap: Scalable and Portable Mocap Data Collection System for Dexterous Manipulation",
+   "arxiv_id": "2403.07788",
+   "role": "C01 中末端轨迹记录设备类别的另一代表（动捕位姿来源）"
+  }
+ ],
+ "notes": "补充观察：(1) 全文 'SLAM' 一词零出现（仅 2 处 'mocap'，均在 Related Work 对多相机动捕系统的列举与参考文献中）——该论文代表数据采集硬件中'架构性绕开位姿估计'的路线，与 UMI（视觉 SLAM 位姿求解）和 ActiveUMI（VR inside-out SLAM）构成三路线对照：关节空间主从（真值=机器人编码器）vs 相机 SLAM vs VR SLAM。三条路线的度量一致性来源分别为：机器人本体、视觉 SLAM、消费级 VR SLAM；成本量级分别为 ~$50、~$100（UMI gripper）与 ~$500（VR 头显）。(2) 论文未做策略训练实验，其'数据质量'论证停留在遥操作层指标（时间/成功率/轨迹平滑性），因此它是'SLAM 非不可或缺'的存在性证据，不是'替代 SLAM 更优'的比较性证据。(3) 注意版本：本 note 基于 arXiv v5（2026-03-19 版式戳）。(4) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。"
+}

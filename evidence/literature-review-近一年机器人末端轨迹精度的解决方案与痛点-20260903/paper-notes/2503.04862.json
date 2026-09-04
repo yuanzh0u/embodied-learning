@@ -1,0 +1,346 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2503.04862",
+  "title": "High-Precision Transformer-Based Visual Servoing for Humanoid Robots in Aligning Tiny Objects",
+  "published": "2025-10-19",
+  "url": "https://arxiv.org/abs/2503.04862",
+  "authors": [
+   "Jialong Xue",
+   "Wei Gao",
+   "Yu Wang",
+   "Chao Ji",
+   "D.W. Zhao",
+   "Yan Shi",
+   "Shiwu Zhang"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接命中综述的'视觉伺服实现微小物体高精度对准'方案族：在人形机器人低精度编码器（约0.4mm定位精度）平台上，用Transformer融合双相机+头部关节角实现M4-M8螺丝0.8-1.3mm收敛误差与93-100%成功率，机制（多感知头增益调度）、量化效果与适用条件（旋转预对齐假设）齐备，并给出模仿学习/RGB-D深度不适配高精度的痛点证据，是回答综述问题的核心样本。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题：人形机器人编码器精度低、结构刚性差导致高精度操作难；模仿学习在高公差任务上成功率低（ACT 20%）；RGB-D深度噪声约1cm不适配微小物体。"
+   },
+   {
+    "locator": "II. METHODOLOGY",
+    "role": "method-or-design",
+    "purpose": "总体架构：双频控制（10Hz距离估计+50Hz IK），忽略手臂关节以增强标定鲁棒性（IBVS思想）。"
+   },
+   {
+    "locator": "B. Distance Estimation Transformer",
+    "role": "relevant-core",
+    "purpose": "DET网络结构：ResNet18双相机特征+头部关节角嵌入，Transformer编码器融合；近距离精度被远距离样本损失压制的机理。"
+   },
+   {
+    "locator": "C. Details of Multi-Perception-Head",
+    "role": "relevant-core",
+    "purpose": "MPH机制：4个感知头按距离置信区间调度输出增益1/μ，GCW高斯截断权重平滑边界，部署时选最高置信头。"
+   },
+   {
+    "locator": "D. Data Collection",
+    "role": "method-or-design",
+    "purpose": "自动真值采集：躯干系下工具位移=末端位移的等价证明（式9），两次运动学计算差分相消零点标定误差。"
+   },
+   {
+    "locator": "E. Kinematics Controller",
+    "role": "method-or-design",
+    "purpose": "50Hz运动学控制器：比例速度+积分目标+SLSQP逆运动学（NLopt+Pinocchio）。"
+   },
+   {
+    "locator": "III. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "设置（M8/M6/M4各100次试验、SR与CE定义、基线）与结果（表II数值、训练收敛、失败案例）。"
+   },
+   {
+    "locator": "IV. CONCLUSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与作者自述局限：平移-旋转耦合迫使旋转预对齐假设，旋转误差RGB难辨识，3D点云或更适合。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "如何仅用人形机器人自带的头部/躯干双相机与头部关节角（不依赖人工标记、力传感器或RGB-D深度），在低精度编码器（约0.4mm定位精度）的人形平台上实现微小物体（M4-M8螺丝头槽）的高精度平移对准？",
+ "contributions": [
+  "Distance Estimation Transformer（DET）架构：融合头部与躯干双相机图像及头部偏航/俯仰关节角，端到端估计手持工具与目标的相对平移距离，无需人工设计视觉特征或标记",
+  "Multi-Perception-Head（MPH）机制：按距离置信区间调度感知头输出增益（1/μ放大+Gaussian Clipped Weight损失权重），克服远距离样本损失压制近距离精度的训练偏差，显著提升近距收敛精度",
+  "基于运动学的自动真值数据采集方法：利用两次相近运动学计算的差分相消零点标定误差，避免大规模人工测量",
+  "双频控制架构：10Hz神经网络距离估计+50Hz SLSQP逆运动学优化，实现时间平滑的末端运动控制"
+ ],
+ "method": {
+  "summary": "Transformer化IBVS：头部与躯干相机图像各经ResNet18提取特征图并展平，加2D正弦位置编码后线性投影；头部偏航/俯仰关节角经线性层嵌入；两者拼接输入Transformer编码器，解码器用多个查询生成4个感知头，每个头输出按1/μ放大的相对笛卡尔位置及softmax置信度，部署时选最高置信头乘μ还原距离估计。训练用GCW（高斯截断权重）使距离损失在置信区间边界平滑衰减，缓解远样本主导。控制层面：10Hz的DET估计工具-目标距离并更新末端目标位置，误差乘比例系数得期望速度，50Hz下用SLSQP逆运动学（NLopt求解、Pinocchio提供正运动学/雅可比）生成平滑关节命令。刻意忽略手臂关节、只用影响相机姿态的头部关节，以对标定与机械结构误差保持鲁棒（IBVS原则）。",
+  "assumptions": [
+   "工具与目标已旋转预对齐（任务容差内），每组测量内末端姿态与工具抓持构型保持一致，从而躯干系下工具位移等于末端位移（式9）",
+   "零点标定误差在两次运动学计算的差分中 largely 相消，残余为可忽略的二阶小量",
+   "近距离（<0.128m操作范围）平移误差在RGB图像中可辨识，旋转误差暂不处理",
+   "收敛后下压啮合可作为成功判据（对准后由操作者/系统下压验证）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采数据：每个任务（M8/M6/M4）40个测量组，每组1个对准基准+15-25个关联数据点，真值由运动学差分自动生成",
+   "三任务数据合并训练以提升鲁棒性与泛化；图像预处理为1280×960缩放后取中央640×480"
+  ],
+  "tasks": [
+   "手持电动螺丝刀尖端对准M8/M6/M4螺丝头槽的平移对准，每种规格100次物理试验"
+  ],
+  "embodiments": [
+   "人形机器人：双7-DOF臂+2-DOF头部，14-bit输出编码器（定位精度约0.4mm），每臂6-DOF五指灵巧手",
+   "头部HikRobot MV-CS020-10UC（12mm镜头、40°对角FOV、1624×1240）+躯干Logitech C1000e（78°FOV、1920×1080）",
+   "车载NVIDIA AGX Orin（275 TOPS）"
+  ],
+  "sample_or_scale": "3种螺丝规格×100次试验；训练125 epochs（AdamW、lr=1e-5）；DET感知头数4（表I置信区间0-0.128m）"
+ },
+ "evaluation": {
+  "design": "每种螺丝规格100次物理试验；成功判据为控制器收敛后下压时螺丝刀尖能物理啮合螺槽；收敛误差为人工测量的尖端-槽中心欧氏距离；辅以训练动态分析（近距离样本损失/误差收敛）与典型失败案例分析。",
+  "baselines": [
+   "DET-SPH：同DET骨干但单感知头、固定输出增益20 m^-1（消融MPH机制）",
+   "ResNet18+MLP：传统CNN架构（消融Transformer融合）",
+   "背景对比（引用已发表结果）：ACT在5mm公差Socket Peg插入仅20%成功率、Thread Velcro约3mm公差20%，BeT与RT-1从未成功"
+  ],
+  "metrics": [
+   "成功率SR（100次试验）",
+   "收敛误差CE（mm，人工测量的尖端到槽中心欧氏距离）",
+   "训练层面：近距离（<0.016m）样本估计误差收敛速度"
+  ],
+  "ablations": [
+   "MPH vs SPH：隔离多感知头增益调度机制的贡献（表II、图6）",
+   "Transformer vs CNN：DET vs ResNet18+MLP（表II）",
+   "近距离训练收敛对比：DET-MPH 8 epochs达<0.001m vs DET-SPH约20 epochs；收敛后SPH近距离估计误差约为MPH的1.6倍（图6b）",
+   "失败案例分析：SPH在尖端-相机-螺槽共线时的深度歧义（图7）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "绝对性能：DET-MPH在M8/M6/M4螺丝对准上成功率100%/100%/93%，收敛误差1.3±0.6/1.0±0.4/0.8±0.5 mm；螺丝越小图像空间中位置偏差越显著因而误差略降，但M4更小尺寸带来的公差收紧使成功率下降。",
+   "scope": "人形机器人双手相机平台、3种规格各100次试验",
+   "locator": "III. EXPERIMENTS, Table II"
+  },
+  {
+   "finding": "相对基线：较DET-SPH平均成功率高16%、精度好25%；较ResNet18+MLP平均成功率高47%、精度好54%，同时验证DET架构与MPH机制的贡献。",
+   "scope": "同一硬件与任务设置（表II）",
+   "locator": "B. Results and Discussion, Table II"
+  },
+  {
+   "finding": "核心机制与痛点：多距离训练中远距离样本（RGB深度线索少、误差大、损失大）不成比例地主导收敛，压制近距离精度；MPH的距离相关输出缩放+GCW权重使近距离样本估计误差在8个epoch内降至0.001m以下（SPH需约20个epoch），收敛后SPH近距离估计误差约为MPH的1.6倍。",
+   "scope": "训练动态分析（<0.016m样本，Head1区间）",
+   "locator": "B. Distance Estimation Transformer, Fig. 6"
+  },
+  {
+   "finding": "典型失败模式：螺丝刀尖位于头部相机与螺槽中心连线上时，双相机都近似看到尖端居中于螺头，网络误判对准——纯RGB视觉伺服沿视线方向的深度歧义是结构性痛点，MPH近距离高增益可缓解（放大此类近距误差以驱动学习）。",
+   "scope": "DET-SPH失败案例分析（图7）",
+   "locator": "B. Results and Discussion, Fig. 7"
+  },
+  {
+   "finding": "痛点背景证据（引用）：ACT在5mm公差Socket Peg插入与约3mm公差Thread Velcro插入任务上仅20%成功率，BeT与RT-1从未成功；RGB-D相机深度噪声约1cm，无法定位微小物体或特征。",
+   "scope": "引言引用的已发表结果（[10] ACT、[15] RealSense D435i）",
+   "locator": "I. INTRODUCTION"
+  },
+  {
+   "finding": "数据效率：真值由机器人运动学自动生成（每任务40组×15-25点），且通过两次相近运动学计算差分相消零点标定误差，避免人工测量大规模数据的成本。",
+   "scope": "数据采集流程（II-D）",
+   "locator": "D. Data Collection"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "方法受平移与旋转变换固有耦合的根本约束，必须假设工具与目标已旋转预对齐；该假设在众多真实场景中难以满足，可能限制实际适用性",
+    "locator": "IV. CONCLUSIONS"
+   },
+   {
+    "limitation": "与平移误差不同，旋转误差在RGB图像中从某些方向难以辨识，3D点云可能更适合测量旋转误差；平移+旋转双域高精度对准留待未来工作",
+    "locator": "IV. CONCLUSIONS"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "收敛误差为人工测量（毫米级分辨率与0.8-1.3mm量级同阶），且未报告统计显著性；对公差显著小于0.8mm的任务（如M3以下螺丝、精密轴孔配合）无证据支持",
+    "basis": "III-A中CE定义为'manually measured Euclidean distance'；表II最小CE为0.8±0.5mm且为M4任务"
+   },
+   {
+    "boundary": "任务为接触前的平移对准（下压啮合由外部验证），不含插入/力控阶段；旋转预对齐与固定抓持构型是数据采集与控制推导（式9）的前提，换工具或需姿态对准的装配不适用",
+    "basis": "II-D式(5)-(9)推导依赖每组内末端旋转与抓持一致；IV. CONCLUSIONS作者自述旋转对准未解决"
+   },
+   {
+    "boundary": "训练数据覆盖M8/M6/M4三种已见规格（合并训练），对未见物体尺寸/类型的零样本泛化未评估；双相机几何（头12mm窄FOV+躯干广角）为特定配置",
+    "basis": "III-A数据设置仅含三规格；文中未报告留出规格或新物体测试"
+   }
+  ]
+ },
+ "transfer_boundary": "仅在旋转预对齐、固定工具抓持、头+躯干双相机人形平台上验证的平移对准方法（M4-M8螺丝、0.8-1.3mm收敛误差、93-100%成功率），不处理旋转对准与接触后力控，对小于约0.8mm公差或需姿态对准的任务无证据。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "每种规格100次物理试验且成功判据客观（下压物理啮合），避免纯视觉指标的自证循环",
+   "两个消融基线设计合理：DET-SPH共享骨干以隔离MPH机制贡献，ResNet18+MLP隔离Transformer融合贡献",
+   "训练动态（图6）与失败案例（图7）分析为机制解释提供因果链证据，非仅端到端数字",
+   "自动真值采集方法（运动学差分相消标定误差）可复制且降低数据成本"
+  ],
+  "design_risks": [
+   "收敛误差为人工测量，测量分辨率与误差量级同阶，0.1mm级差异（如1.3 vs 1.0mm）的可靠性存疑；未报告统计显著性检验",
+   "DET-SPH的固定增益20 m^-1为作者自设，未探索SPH增益调优空间，MPH增益调度收益可能部分来自调参",
+   "ResNet18+MLP基线的输入融合细节（是否同样接入双相机+关节角）披露不足，CNN基线或被低估",
+   "无代码/数据开源声明，100次试验的试验间方差（初始位姿分布）未完整披露"
+  ],
+  "baseline_fairness": "DET-SPH与本文共享网络骨干与训练流程，机制消融较公平；但SPH固定增益未经调参搜索，ResNet18+MLP的输入配置披露不足，两个基线都可能非最优，相对改进幅度（16%/47%）应视为上界参考。",
+  "metric_validity": "SR的物理啮合判据与任务语义一致、客观有效；CE为人工测量的欧氏距离，量级与人工测量分辨率同阶，mm级数值的小差异不宜过度解读；未区分x/y/z轴误差来源。",
+  "reproducibility": "硬件（相机型号/镜头/FOV、编码器精度）、网络结构、超参数（表I感知头区间与α、lr、epochs、输入裁剪）披露较全；但无代码/数据开源，人工测量CE的流程未标准化，复现需自建相似平台。",
+  "external_validity": "结论限定于螺丝对准任务、旋转预对齐前提与特定双相机几何；作者自述旋转误差RGB难辨识、真实场景预对齐难保证；对更小公差、非平面目标、动态光照的泛化未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2503.04862-C01",
+   "claim": "在双手相机人形机器人平台上，所提DET-MPH视觉伺服方法对M4-M8螺丝头槽对准任务达到93%-100%成功率与0.8-1.3mm平均收敛误差（每种规格100次物理试验）。",
+   "stance": "support",
+   "relation": "支撑综述命题'Transformer视觉伺服可在低精度本体上实现毫米级/亚毫米级微小物体对准'，为感知伺服方案族提供量化效果锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "结论节原文总结：方法在M4-M8螺丝对准任务上展示平均0.8-1.3mm位置精度与93%-100%成功率，显著优于单感知头或传统CNN框架；表II给出分规格数值（M8 100%/1.3±0.6mm、M6 100%/1.0±0.4mm、M4 93%/0.8±0.5mm）。",
+   "locator": "IV. CONCLUSIONS / B. Results and Discussion, Table II",
+   "source_context": "The proposed method demonstrates an average positional precision of 0.8- 1.3 mm and a success rate of 93%-100% for the alignment tasks with M4-M8 screws, showing a significantly better performance than frameworks with either single perception head or traditional convolutional neural network.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (SR) and convergence error (CE)",
+    "value_or_direction": "SR 93%-100%, CE 0.8-1.3 mm (M8 100%/1.3±0.6, M6 100%/1.0±0.4, M4 93%/0.8±0.5 mm)",
+    "comparator": "DET-SPH and ResNet18+MLP baselines",
+    "task_or_sample": "M8/M6/M4 screw head slot alignment with a handheld screwdriver on a humanoid robot, 100 trials per size",
+    "locator": "Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "在IV. CONCLUSIONS逐字核对0.8-1.3mm与93%-100%两个数字（含0.8- 1.3跨行连字符原样保留），并与Table II逐行数值（M8/M6/M4的SR与CE）交叉核对一致；主张限定于双手相机人形平台的螺丝平移对准实验，未外推到其他公差或任务。"
+   }
+  },
+  {
+   "card_id": "2503.04862-C02",
+   "claim": "同一硬件与任务设置下，DET-MPH较单感知头基线DET-SPH平均成功率高16%、精度好25%；较ResNet18+MLP基线平均成功率高47%、精度好54%。",
+   "stance": "support",
+   "relation": "支撑综述命题'DET多相机-关节角Transformer融合与MPH增益调度均对高精度对准有可量化贡献'（消融证据）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B节原文给出与两个基线的相对比较：对DET-SPH为16%平均成功率提升与25%精度提升，对ResNet18+MLP为47%与54%；作者据此认为DET架构与MPH机制共同增强了视觉特征提取与控制精度。",
+   "locator": "B. Results and Discussion",
+   "source_context": "They reveal that the proposed method achieves significantly better performance, with 16% higher average success rate and 25% better precision compared to the DET-SPH baseline, and 47% higher average success rate and 54% better precision compared to the ResNet18+MLP baseline. The results sub- stantiate the effectiveness of both the DET architecture and the MPH mechanism in enhancing visual feature extraction and control precision for tiny object alignment tasks.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate and precision improvement",
+    "value_or_direction": "+16% SR / +25% precision vs DET-SPH; +47% SR / +54% precision vs ResNet18+MLP",
+    "comparator": "DET-SPH and ResNet18+MLP baselines",
+    "task_or_sample": "M8/M6/M4 screw alignment, 100 trials per size, same hardware",
+    "locator": "Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对III-B的相对比较句（含sub- stantiate跨行连字符原样保留），16%/25%与47%/54%四个数字及比较对象与原文一致，且与Table II中三规格SR/CE均值的方向性一致；主张限定于同设置消融实验。"
+   }
+  },
+  {
+   "card_id": "2503.04862-C03",
+   "claim": "该文识别的核心训练痛点是多距离训练中远距离样本主导损失从而压制近距离精度；其对策（MPH）是距离相关的输出缩放：每个感知头以距离区间相关的增益放大输出，使网络能提取对精确控制关键的精细位置差异特征。",
+   "stance": "support",
+   "relation": "支撑综述命题'近距高精度视觉伺服的关键机制是针对距离区间的增益/损失调度'，并把'远样本损失压制近距精度'列为该方案族的痛点证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "II-B节原文：远距离RGB深度线索有限导致估计误差与损失量大，近距离损失小，形成压制效应降低近距精度——这对收敛后需要高精度的机器人应用是关键问题；为此实现距离相关的输出缩放以对抗远样本主导，使网络能提取对精确控制关键的精细位置差异特征。",
+   "locator": "B. Distance Estimation Transformer",
+   "source_context": "like the tiny object alignment task discussed in this paper. To address this issue, distance-dependent output scaling is implemented to counteract the dominance of farther samples. This approach enables the network to extract refined features of positional discrepancy that are critical for precise control.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对II-B机制段末尾：'distance-dependent output scaling is implemented to counteract the dominance of farther samples'与'extract refined features of positional discrepancy ... critical for precise control'均为原文；其前文（含de- grades/ap- plications跨行连字符）的压制效应描述亦核对无误；主张限定为作者对机制与痛点的陈述。"
+   }
+  },
+  {
+   "card_id": "2503.04862-C04",
+   "claim": "在小于0.016m的近距离训练样本上，DET-MPH仅需8个epoch即达到低于0.001m的估计误差，而DET-SPH需要近20个epoch才能达到同等水平，说明远距离样本的大损失贡献压制了SPH处理近距离样本的能力。",
+   "stance": "support",
+   "relation": "支撑综述命题'MPH增益调度改善近距精度的机制可被训练动态证据支撑'，为方案族机制有效性提供过程级量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B节训练动态分析原文：DET-MPH对<0.016m样本的估计误差收敛显著快于DET-SPH，8 epoch内低于0.001m而SPH需近20 epoch；作者解释为SPH中远距离样本的更大损失贡献压制了近距样本处理能力，MPH实现全操作范围更均衡的训练。",
+   "locator": "B. Results and Discussion",
+   "source_context": "the estimation error of DET-MPH converges significantly faster than that of DET-SPH for samples with distances less than 0.016m. Specifically, DET-MPH achieves an estimation error of below 0.001m within only 8 epochs during training for the close-range samples, whereas DET-SPH requires nearly 20 epochs to reach the same level of performance.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "close-range (<0.016 m) estimation error convergence",
+    "value_or_direction": "below 0.001 m within 8 epochs (DET-MPH) vs nearly 20 epochs (DET-SPH)",
+    "comparator": "DET-SPH with fixed output gain",
+    "task_or_sample": "training-time close-range samples (Head1 confidence interval)",
+    "locator": "Fig. 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对III-B训练动态段：0.016m阈值、0.001m误差水平、8 epoch对近20 epoch的对比及压制效应归因句均与原文一致；图6(a)(b)标题亦交叉核对；主张限定于训练阶段近距样本的估计误差收敛，非部署精度。"
+   }
+  },
+  {
+   "card_id": "2503.04862-C05",
+   "claim": "作者自述的根本局限：方法受平移与旋转变换固有耦合约束，必须假设工具与目标已旋转预对齐；该假设虽在当前实现中操作上必要，但在众多真实场景中难以实现，可能限制方法的实际适用性。",
+   "stance": "limit",
+   "relation": "限制综述命题'视觉伺服可独立解决高精度对准'——旋转自由度缺失是纯RGB平移对准方案的结构性痛点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV. CONCLUSIONS原文明确：平移-旋转耦合使方法必须假设预对齐存在；作者同时指出旋转误差在RGB图像中从某些方向难以辨识，3D点云可能更适合，未来工作将发展平移+旋转双域对准策略。",
+   "locator": "IV. CONCLUSIONS",
+   "source_context": "However, the method is fundamentally constrained by the inherent coupling between translational and rotational transformations, necessitating the assumption of pre-existing rotational alignment between tool and target. This assump- tion, though operationally necessary in our current imple- mentation, may be difficult to achieve in numerous real- world scenarios, potentially limiting the method’s practical applicability.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对IV. CONCLUSIONS局限段：'fundamentally constrained by the inherent coupling'、预对齐假设与'potentially limiting the method's practical applicability'（含assump- tion/imple- mentation/real- world跨行连字符与撇号原样保留）与原文一致；主张为作者自述边界。"
+   }
+  },
+  {
+   "card_id": "2503.04862-C06",
+   "claim": "纯RGB双相机视觉伺服存在沿视线方向的深度歧义失败模式：当螺丝刀尖位于头部相机与螺槽中心连线上时，头部与躯干相机都近似看到尖端居中于螺头，导致网络误判已对准；MPH近距离高增益通过放大此类近距误差驱动网络辨识细微位置差异从而缓解该问题。",
+   "stance": "limit",
+   "relation": "限制综述命题'双相机RGB视觉伺服足以消除对准歧义'——视线共线误差在图像空间不可见，是感知伺服方案族的几何性痛点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B节失败案例分析原文（图7）：DET-SPH实验中的典型失败是尖端处于头部相机与螺槽中心连线上，双相机都误判居中对准；DET-MPH架构在近距离的更高增益放大该近距误差，产生显著训练损失驱动网络辨识图像空间中的细微位置差异。",
+   "locator": "B. Results and Discussion",
+   "source_context": "Fig. 7(a) illustrates a typical failure case observed in exper- iments with DET-SPH , where the screwdriver tip is on the line connecting the head camera and the screw head center. The head and torso cameras both perceive that the screw- driver tip has approximately centered over the screw head, causing the network to falsely conclude proper alignment.",
+   "evidence_type": "analysis",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对III-B失败案例段与图7标题：视线共线场景描述、双相机同时误判的因果链（含exper- iments/screw- driver跨行连字符与DET-SPH后的空格原样保留）与原文一致；其后MPH高增益缓解机制句亦核对；主张限定于该实验观察到的失败模式。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2304.13705",
+  "2212.06817",
+  "2401.02117",
+  "2010.11929"
+ ],
+ "notes": "本族定位：感知伺服（视觉）方案族的人形机器人分支。对综述映射：方案='Transformer多相机+关节角融合IBVS（DET）+多感知头增益调度（MPH）'；量化效果=M4-M8对准0.8-1.3mm、93-100%；适用条件=旋转预对齐、固定抓持、近距离（<0.128m）；痛点=远样本损失压制近距精度、视线共线深度歧义、旋转误差RGB不可辨识、RGB-D噪声约1cm、模仿学习高公差任务成功率低（ACT 20%）。注意CE为人工测量，亚毫米宣称需谨慎表述（仅M4达0.8mm）。"
+}

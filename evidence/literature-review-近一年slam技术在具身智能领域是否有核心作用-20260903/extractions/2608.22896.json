@@ -1,0 +1,784 @@
+{
+ "generated_at": "2026-09-03T12:20:45.940489+00:00",
+ "paper_id": "2608.22896",
+ "title": "SuperMap: A Spatio-Temporal SLAM System for Visual-Language Navigation",
+ "alphaxiv": {
+  "version_id": "01a03782-2f08-7d59-ae6a-6d10579b4014",
+  "canonical_id": "2608.22896v1",
+  "abs_url": "https://www.alphaxiv.org/abs/2608.22896",
+  "source": "alphaxiv mirror of arXiv text layer (non-OCR)"
+ },
+ "available": true,
+ "source_format": "pdf",
+ "extraction_method": "pdf-text",
+ "structure": "page-based-text-layer",
+ "text_chars": 54014,
+ "page_count": 16,
+ "pages": [
+  {
+   "page": 1,
+   "text": "SuperMap: A Spatio-Temporal SLAM System\nfor Visual-Language Navigation\nShibo Zhao\n†\n, Guofei Chen\n†\n, Honghao Zhu, Zhiheng Li, Changwei Yao,\nNader Zantout, Seungchan Kim, Wenshan Wang, Ji Zhang, and Sebastian Scherer\nThe Robotics Institute, Carnegie Mellon University\n{guofeic, shiboz, basti}@andrew.cmu.edu\n†\nEqual contribution\nFig. 1: We present SuperMap, a real-time, spatio-temporal SLAM system capable of instance-level object detection, tracking dynamic changes,\nand maintaining a scene graph for spatial reasoning. The figure shows how SuperMap detects short-term human movements (A1, A2) and\nlong-term environmental changes (B1, B2, C1, C2), such as the disappearance of a trashcan and the appearance of a cart, demonstrating\nconsistent spatio-temporal representation.\nAbstract—Robotic navigation in human environments re-\nquires a spatio-temporal semantic representation that can rec-\noncile open-vocabulary perception with long-term environmental\nchanges. While foundation models provide strong zero-shot recog-\nnition, their predictions are intermittent and view-dependent, and\nnaively integrating them into mapping pipelines leads to identity\ndrift and stale semantics over time. We present SuperMap,\na 4D spatio-temporal mapping framework for language-guided\nnavigation that integrates high-frequency geometric SLAM with\nasynchronous open-vocabulary perception. Our core contribution\nis a consistency-driven mapping engine that combines 3D-aware\ninstance association/re-activation with a principled existence-and-\nlabel confidence update to maintain stable object identities and\nprune outdated map content under occlusions and scene changes.\nSuperMap produces a queryable 4D scene-graph representation\nthat interfaces naturally with Vision-Language Models by sup-\nporting compositional queries over object semantics, relations,\nand history. We demonstrate SuperMap on benchmarks and real\nrobots, including dynamic scenes with appearance/disappearance\nand relocation, and provide ablations and runtime analysis. We\nrelease the full system as open-source to provide the community\nwith a deployable baseline for open-vocabulary spatio-temporal\nmapping. Project website: superodometry.com/supermap\nI. INTRODUCTION\nRobots deployed in human environments are increasingly\nexpected to execute open-vocabulary navigation goals, e.g.,\n“go to the monitor next to the whiteboard” or “return to the\nchair that was near the plant earlier.” Fulfilling such commands\nrobustly requires more than accurate pose estimation and\ngeometric reconstruction: the robot must maintain an object-\ncentric spatio-temporal map representation that preserves in-\narXiv:2608.22896v1 [cs.RO] 24 Aug 2026",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 2,
+   "text": "TABLE I: Capability Checklist for Semantic Mapping and Semantic SLAM Methods. ✓indicates support, ✗indicates limited or no support\nCapability Semantic Mapping Semantic SLAM\nHOV-SG[30] ConceptGraphs[5] RayFronts[1] OpenScene[16] OpenMask3D[28] SeeGround[11] Kimera[24] OVO-SLAM[15] Khronos[25] SuperMap (Ours)\nReal-Time ✗ ✗ ✓ ✗ ✗ ✗ ✓ ✓ ✗ ✓\nOpen-Vocabulary ✓ ✓ ✓ ✓ ✓ ✓ ✗ ✓ ✗ ✓\nInstance-Level ✓ ✓ ✗ ✗ ✗ ✗ ✗ ✓ ✗ ✓\nShort-Term ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✓ ✓\nLong-Term ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✓ ✓\nScene Graph ✓ ✓ ✗ ✗ ✗ ✗ ✓ ✗ ✗ ✓\nstance identities, semantic attributes, and spatial relations over\ntime, and that remains valid as the environment evolves. This\nrequirement is difficult to meet in practice because real-world\nscenes are dynamic—objects may be occluded, relocated,\nremoved, or newly introduced during operation. Consequently,\nsystems that rely primarily on per-frame recognition or static\nsemantic maps often degrade over long horizons: instance\nidentities fragment, semantic content becomes stale, and the\nrelational structure needed for language grounding is unavail-\nable or inconsistent.\nRecent progress in semantic SLAM and open-vocabulary\nperception has produced strong components—state estimation\nand dense reconstruction, 2D tracking, and open-vocabulary\ndetection/segmentation [24, 10]. However, simply combining\nthese modules rarely yields a map that is reliably usable\nfor navigation. Many systems remain closed-vocabulary and\nclass-level [24, 10], limiting instance identity tracking, while\ndynamic-SLAM methods often focus on short-term motion\n(e.g., moving people) and overlook long-term changes such as\nobject relocation outside the robot’s view [18, 31, 27, 3]. In\npractice, missed detections and occlusions fragment identities,\nscene changes introduce stale map content, and most represen-\ntations lack an efficient query interface for downstream tasks\nlike language-guided navigation. As a result, there remains a\ngap between “semantic mapping outputs” and a robot-usable\nmap representation that can be queried and acted upon online.\nRecent scene graph approaches [5, 30, 14, 20] incorporate\nopen-vocabulary detectors [23] to support natural language\nnavigation, but they are time consuming (minutes to hours)\nto construct and not suitable for real-time mapping. More-\nover, they struggle to capture dynamic relationships between\nobjects, limiting their ability to model scene evolution.\nIn summary, existing approaches predominantly address\neither dynamic change detection (e.g., identifying moving hu-\nmans or vehicles) or static object recognition (e.g., identifying\nobjects and their relationships). However, few methods tackle\nboth challenges simultaneously: understanding which objects\nchange and how they evolve spatially and temporally. Ad-\ndressing this dual challenge is crucial for robots to effectively\nperceive and adapt to dynamic real-world environments.\nTo meet this challenge, we introduce SuperMap: an open-\nsource system that constructs a queryable open-vocabulary\n4D scene memory online. We evaluate SuperMap on pub-\nlic benchmarks for open-vocabulary semantic and instance\nmapping, and on real-robot deployments in dynamic indoor\nenvironments that include object appearance/disappearance\nand long-horizon changes. We provide ablations to attribute\nmapping improvements to specific maintenance components\n(association, updates, and graph construction), and runtime\nprofiling to clarify which modules dominate compute. Finally,\nwe demonstrate language-guided robot navigation driven by\nscene-graph queries, where structured 4D scene memory im-\nproves robust grounding compared to using raw detections or\nvideo-only inputs.\nOur contributions are as follows:\n• Open-Vocabulary, Spatio-Temporal Semantic SLAM:\nAn online robotic system that builds a persistent,\nqueryable open-vocabulary 4D scene memory suitable for\ndownstream language-conditioned tasks.\n• Spatio-Temporal Object Tracking: An online pipeline\nthat integrates 2D–3D association, validation, and\nchange-aware updates to maintain instance consistency\nunder occlusions, partial observations, label variability,\nand scene change.\n• Instance-level Scene Graph: Our 4D scene graph seam-\nlessly incorporates spatial and temporal information for\neach object, equipping robots with instance-level spatio-\ntemporal reasoning capabilities (e.g., locating moved ob-\njects, recalling past scenes).\n• Open-Source Framework: We will release our change-\ndetection benchmark, comprehensive ablations and run-\ntime profiling, and the real-robot visual–language navi-\ngation pipeline to facilitate reproducible research in the\nrobotics community.\nII. RELATED WORKS\nA. Semantic Mapping\nEquipping mobile robots with the ability to perceive and\nunderstand their surroundings is crucial for real-world appli-\ncations. To this end, researchers have developed semantic maps\nto capture environmental meaning and context [22]. However,\nmany recent methods [16, 5] rely on offline processing,\nrequiring pre-collected environmental data (images and depth)\nto build semantically labeled maps shown in Table I.\nFor example, OpenScene [16] uses OpenSeg [32] to extract\nCLIP embeddings [19] from images and then trains a scene-\nspecific 3D model, but it operates offline, requiring a full scene\nscan. OpenMask3D [28] back-projects 2D object masks from\nmultiple views to form 3D segments, while SeeGround [11]\ncombines 2D-VLM with 3D geometric cues for instance\nsegmentation. Despite improving 3D accuracy, these methods\nassume complete scene data, limiting online usability.\nLERF [9] and LangSplat [17] employ radiance fields to\nbuild 3D maps with CLIP-based features, offering flexible\nsemantic queries but lacking real-time capability due to com-\nputational demands. RayFronts [1] enables online semantic",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 3,
+   "text": "Fig. 2: Overview. The system delivers accurate state estimation together with a rich, multi-level map representation that spans from geometric\ndetails to abstract semantics. It consists of three main modules. First, an online 3D reconstruction module built on a LiDAR SLAM backbone\nperforms state estimation and generates a dense 3D model of the environment. Next, the estimated state and reconstructed geometry are\nused to identify short-term and long-term object changes, enabling instance-level object mapping. Finally, the object-level representation is\norganized into an abstract 4D scene graph that captures both spatial and temporal relationships among objects.\nmapping for outdoor environments but struggles with change\ndetection and fails to achieve instance-level 3D semantics.\nB. Semantic SLAM\nTo jointly estimate poses within the pipeline, we trans-\nform the mapping pipeline into a SLAM pipeline. In recent\nyears, numerous SLAM systems have integrated semantic\ninformation during the mapping process. One notable ex-\nample is Kimera [24], which offers a real-time semantic\nmapping solution by building a 3D scene graph. However,\nit relies on closed-set CNN segmentation, which limits its\nability to generalize to novel classes. LiDAR-based SLAM\napproaches, such as SuMa++ [2] and LIOM [34], incorporate\nCNN-based per-point labels into LiDAR maps. Despite their\neffectiveness, these methods do not support open-vocabulary\nsegmentation, restricting their adaptability to diverse environ-\nments. SlideSLAM [13] and OVO-SLAM [15] employ open-\nvocabulary detectors for instance segmentation, allowing for\nmore flexible scene understanding. However, these methods\nface challenges when dealing with long-term and short-term\ndynamic objects.\nC. Open-Vocabulary Scene Graph\nHOV-SG [30], ConceptGraphs [5] and CLIO [14] segment\nand label objects from a full point cloud using SAM and CLIP,\norganizing them into a hierarchical graph with open-ended\nlabels from CLIP. However, HOV-SG and ConceptGraphs\nrequire offline 3D reconstruction before applying SAM and\nCLIP, making them unsuitable for online SLAM or real-time\ndynamic tasks. CLIO implements real-time open-vocabulary\nscene graph generation but lacks spatio-temporal capabilities.\nD. Spatio-Temporal Semantic SLAM\nRecently, Khronos [25] addresses both short-term and long-\nterm dynamics in map representation. However, this method\nis limited to closed-set objects and lacks the capability for\ninstance-level tracking. Additionally, Khronos struggles to op-\nerate in real time, making it unsuitable for robotic operations.\nTo the best of our knowledge, SuperMap is the first real-time,\nspatio-temporal, open-vocabulary, and instance-level object\nmapping framework that effectively handles both short-term\nand long-term dynamic objects.\nIII. SPATIO-TEMPORAL SLAM PROBLEM\nThe spatio-temporal SLAM problem aims to provide an\nexplicit scene representation that captures how object-level\nchanges evolve across space and time through incremental\ndata acquisition. We model the scene as a composition of\nobjects, represented as a scene graph where nodes correspond\nto objects and edges denote spatio-temporal relationships.\nIn our setting, the system processes a continuous stream\nof either an RGB-D video sequence or a point-cloud video\nsequence, where RGB frames C\n1:T \n= {C\n1\n, C\n2\n, . . . , C\nT \n} and\ndepth(LiDAR) frames D\n1:T \n= {D\n1\n, D\n2\n, . . . , D\nT \n} are given\nas input, and T is the sequence length and t ∈ {1, . . . , T } is\nthe time index. Camera poses P\n1:T \n= {P\n1\n, P\n2\n, . . . , P\nT \n} must",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 4,
+   "text": "be estimated. At each time t, the system outputs a consistent\nglobal map M\nt \nconsisting of semantic instance-level objects\nO\nt \n= {O \nj\nt \n}\nN\nt\nj=1\n, where j indexes objects and N\nt \nis the number\nof objects at time t.\nThe spatio-temporal SLAM problem is defined as follows:\ngiven the current observation Q\nt \n= {C\nt\n, D\nt\n} and the existing\nmap M\nt−1\n, estimate pose P\nt\n, determine the instance IDs I\nt\nand the updated map M\nt \nby maximizing (or estimating)\nP (I\nt\n, M\nt\n, P\nt \n| M\nt−1\n, Q\nt\n). (1)\nApplying the chain rule, we obtain\nP (I\nt\n, M\nt\n, P\nt \n| M\nt−1\n, Q\nt\n) = P (P\nt \n| M\nt−1\n, Q\nt\n)\n| {z }\npose estimation (geometric)\n× P (I\nt \n| M\nt−1\n, Q\nt\n, P\nt\n)\n| {z }\nspatio-temporal instance association\n× P (M\nt \n| M\nt−1\n, Q\nt\n, P\nt\n, I\nt\n)\n| {z }\nonline map update\n.\n(2)\nThis involves three tasks: pose estimation, spatio-temporal\nobject instance association and the online map update [4].\nIV. METHOD\nThe architecture of our spatio-temporal SLAM system,\nSuperMap, is shown in Figure 2. Given synchronized depth\nmeasurements, IMU data, and RGB images, SuperMap runs\nfully onboard to jointly estimate the robot state and maintain\nan instance-level spatio-temporal map representation as the\nenvironment evolves. We describe three main components: (1)\nOnline 3D Reconstruction for dense geometric mapping, (2)\nSpatio-Temporal Object Updates for robust instance associa-\ntion, and (3) Spatio-Temporal Scene Graph Construction that\nexposes the map as a queryable interface for VLN.\nA. Geometric Layer: Online 3D Reconstruction\nWe use SuperOdometry [35] to obtain the robot pose\nP\nt \nand a colorized dense 3D reconstruction from image,\ndepth/LiDAR, and IMU streams. The observation Q\nt \nrequires\naccurate camera poses P\nt \nand depth observations D\nt\n. For each\ntime t, we estimate the robot’s state in SE(3), denoted as\nT\n(t)\nW B \n, where W is the world frame and B is the body frame.\nGiven a fixed extrinsic calibration T\nBC \n, the camera pose P\nt\nis derived as:\nP\nt \n= T\n(t)\nW C \n= T\n(t)\nW B \n· T\nBC \n(3)\nThis estimated pose and the synchronized depth D\nt \nform\nthe observation Q\nt\n. These geometric priors are critical for: (i)\nback-projecting 2D semantic observations into the 3D world,\n(ii) performing motion compensation for temporal tracking,\nand (iii) maintaining global map consistency. By anchoring all\nsubsequent instance-level detections to this metric foundation,\nwe ensure that the resulting spatio-temporal map is physically\ngrounded and suitable for downstream navigation tasks.\nB. Instance Layer: Spatio-Temporal Instance Association\nFor each image frame we first infer the 2D instance-level\ndetection and segmentations using vision models [12] [21],\nthen address the estimation of instance IDs I\nt \nby solving\nP (I\nt \n| M\nt−1\n, Q\nt\n). The objective is to assign a unique instance\nID to 2D detections by leveraging 3D spatial consistency.\n1) Hybrid Tracking State: We define the tracklet state\nS\ni\n(t) ∈ R\n6 \n(or R\n8 \nif including scale velocity) as a decoupled\nvector:\nS\ni\n(t) = [c\ni\n(t)\n⊤\n, s\ni\n(t)\n⊤\n, \n˙\nc\ni\n(t)\n⊤\n]\n⊤ \n(4)\nwhere c\ni\n(t) = [x, y]\n⊤ \nis the 2D image centroid, s\ni\n(t) =\n[w, h]\n⊤ \nrepresents the bounding box width and height, and\n˙\nc\ni\n(t) is the translational velocity in the image plane.\n2) 3D-to-2D Motion-Compensated State: Since standard\n2D trackers (e.g., ByteTrack [33]) struggle with rapid ego-\nmotion. We resolve this by defining a hybrid tracking state\nS\ni\n(t) that is updated via 3D-to-2D Motion Compensation.\nInstead of a linear motion model, we derive the predicted\ncentroid \nˆ\nc\ni\n(t) by projecting the 3D centroid X\ni \nof the instance\nin M\nt−1 \nusing the current pose P\nt\n:\nˆ\nc\ni\n(t) = π(K · P \n−1\nt \n· X\ni\n) (5)\nThe Kalman Filter state transition uses this projection as the\nprior:\nˆ\nS\ni\n(t) = FS\ni\n(t − 1) + w\nt\n, w\nt \n∼ N (0, Q) (6)\nwhere F is the state transition matrix and w\nt \nrepresents\nprocess noise. This projection-based prior allows the system\nto maintain identity through occlusions and aggressive robot\nmaneuvers.\n3) Probabilistic Geometric Consistency Update: The ob-\nservation Q\nt \nupdates the map M\nt \nby evaluating the posterior\nP (M\nt \n| M\nt−1\n, Q\nt\n, I\nt\n). We model the depth observation for\neach point X\nk \n∈ M\nt−1 \nas a random variable.\nLet d\nproj \n= ∥T\nCW \nX\nk\n∥\nz \nbe the expected (projected) depth\nof the point in the current camera frame, and D(u) be the\nraw sensor depth at the projected pixel u = π(X\nk\n). The depth\nresidual is defined as:\n∆d = d\nproj \n− D(u) (7)\nWe model the measurement likelihood under the assumption\nof Gaussian sensor noise, p(∆d) ∼ N (0, σ\n2\n). The occupancy\nstate o\nk \nof the map point is updated via a log-odds formulation\nto ensure numerical stability and recursive update capability:\nL(o\nk \n| Q\n1:t\n) = L(o\nk \n| Q\n1:t−1\n) + logit(P (o\nk \n| Q\nt\n)) (8)\nwhere L(n) = log \nn\n1−n \n. The inverse sensor model P (o\nk \n| Q\nt\n)\nis determined by the thresholded geometric consistency of ∆d:\ns\n(t)\nk \n=\n\n\n\n\n\nObservable if |∆d| ≤ τ\nϵ\nUnobservable if ∆d > τ\nϵ \n(Point behind surface)\nDisappeared if ∆d < −τ\nϵ \n(Point in front of surface)\n(9)",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 5,
+   "text": "Points classified as dynamic are penalized in the log-odds\nupdate, effectively pruning transient or moved objects from\nthe global map to maintain a consistent representation of the\nenvironment. This enables the change detection in dynamic\nscenes, and also provides geometric cue for fusing the seman-\ntic inference across frames.\n4) Bayesian Semantic Fusion: To handle the uncertainty\nin the output of vision models, each instance maintains a\ncategorical distribution P (L\nj \n= c). Given observations z\n1:t\nfrom an open-vocabulary detector, the posterior belief is:\nP (L\nj \n= c | z\n1:t\n) = η · P (z\nt \n| L\nj \n= c) · P (L\nj \n= c | z\n1:t−1\n)\n(10)\nwhere P (z\nt \n| L\nj \n= c) is the detector’s confusion matrix.\nFor observable points in (9), we update the semantic label\nusing (10), and consequently remove object points whose\nposterior belief is too small. This fusion suppresses transient\nmisclassifications.\nC. Topological Layer: Spatio-Temporal Scene Graph\nThe map M\nt \nis abstracted into a graph G = (V, E\ns\n, E\nt\n).\nNodes V represent object instances.\n• Spatial Edges (E\ns\n): Established via class-dependent ge-\nometric predicates. For objects A, B: On(A, B) ⇐⇒\n(z\nA\nmin \n≈ z\nB\nmax\n) ∧ (IoU\nxy \n(B\nA\n, B\nB \n) > γ).\n• Temporal Edges (E\nt\n): Link nodes across time based on\nI\nt \nresults, tracing object trajectories.\nFor real-time operation, we first cluster objects based on\ntheir centroid distances and then add a spatial edge when\nan object pair satisfies class-dependent geometric predicates\n(e.g., on, beside, under). The temporal edges trace an ob-\nject’s trajectory from our object association result, preserving\nits identity throughout the sequence. The resulting graph\ncompactly captures both instantaneous layout and long-term\ndynamics, providing an abstract representation of the scene\nthat is easy to reason on. Full construction details appear in\nthe supplementary material.\nD. Visual Language Navigation via 4D Scene Graphs\nThe 4D scene graph G provides a high-level interface\nbetween raw sensor data and the symbolic inputs required by\nVision–Language Models (VLMs). By delegating geometric\ndetail to the spatio-temporal map, the VLM can perform\nzero-shot reasoning over long-term scene dynamics without\nprocessing raw point clouds or video streams.\na) Spatio-Temporal Serialization: We serialize a local\nsubgraph into a structured text representation for linguistic\nreasoning. Each node v ∈ V is encoded by its instance\nID, semantic label, and 3D centroid X\nv \n∈ R\n3\n. Spatial and\ntemporal edges (E\nS \n, E\nT \n) are represented as symbolic relations\n(e.g., Instance 1 on Instance 2\n). Reliability is improved by\n(1) prepending a schema that defines the graph structure and\ncoordinate frame, and (2) injecting explicit spatio-temporal\ncues that encourage trajectory- and relation-aware reasoning.\nb) Grounded Actuation and Waypoint Generation:\nTo convert VLM outputs into deterministic control sig-\nnals, the model must return target instance IDs within\n<answer></answer> tags. A parser extracts these IDs and\nretrieves their 3D centroids X\nj \nfrom the map M\nt\n, which\nare then used as navigation waypoints. This process translates\nhigh-level language instructions into precise, grounded robot\nactions.\nV. EXPERIMENTS\nA. Experiment Settings\na) Hardware Configuration: We evaluate SuperMap on\na custom-built mecanum-wheeled mobile platform designed\nfor agile indoor navigation. The sensor suite comprises a Livox\nMid-360 LiDAR, which provides a 360\n◦\n× 59\n◦ \nfield of view,\nand a panoramic camera providing 360\n◦ \nRGB coverage. We\nimplement a software-based timestamp alignment to associate\nvisual and LiDAR streams. All computations, including LVI-\nodometry, instance tracking, 4D graph maintenance, and VLM\ninterfacing, run onboard in real-time on an Intel i9-14900H\nCPU and an NVIDIA RTX 4090 Laptop GPU (16GB VRAM).\nWe aim to address the following research questions through\nour experiments:\n• Semantic Quality: How does SuperMap’s incremental\nobject-centric mapping compare to state-of-the-art offline\nand online 3D semantic mapping approaches on the\nScanNet benchmark (Sec. V-B)?\n• Spatio-Temporal Consistency: Can the 4D graph accu-\nrately detect scene changes (appearances/disappearances)\nwhile maintaining persistent identities for static objects\nover long-duration trajectories (Sec. V-C)?\n• Grounded Reasoning: Does the structured scene graph\nrepresentation improve the accuracy and token efficiency\nof VLM reasoning comparing to video input (Sec. V-F)?\n• Online Visual-language Navigation: Can the integrated\npipeline support end-to-end, zero-shot, language-guided\nnavigation using solely onboard compute (Sec. V-G)?\nB. Semantic Quality: Quantitative Results for Class-level and\nInstance-level Segmentation\nTo evaluate the semantic fidelity of SuperMap, we conduct a\ncomparative analysis against state-of-the-art open-vocabulary\nmapping frameworks, focusing on both class-level precision\nand instance-level consistency.\na) Class-level Segmentation: Table II summarizes the\nperformance on the ScanNet benchmark. SuperMap achieves\na competitive accuracy of 55.48%, outperforming established\nobject-centric baselines such as ConceptGraphs [5] and Con-\nceptFusion [7]. While our accuracy is slightly lower (1.32%)\nthan the point-feature fusion method RayFronts [1], SuperMap\nmaintains a significantly lower computational footprint, mak-\ning it more suitable for high-rate robotic feedback loops.\nThese results demonstrate its effectiveness in open-vocabulary\nsegmentation among works on object-centric mapping.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 6,
+   "text": "TABLE II: Class-level Segmentation Benchmarking on ScanNet. Best results are highlighted as first and second .\nMethod Mapping Approach Without Background With Background\nmIoU (%) f-mIoU (%) Acc (%) mIoU (%) f-mIoU (%) Acc (%)\nConceptFusion [7]\npoint-feature\n21.76 26.71 34.10 18.57 23.06 28.77\nNACLIP-3D [6] 22.32 24.32 33.46 22.32 24.32 33.46\nTrident-3D [26] 29.97 37.62 51.06 24.80 27.77 38.43\nRayFronts [1] 41.29 46.42 56.76 32.29 39.04 49.15\nConceptGraphs [5]\nobject-level\n21.62 24.32 31.05 20.83 23.61 35.80\nHOV-SG [30] 26.79 36.05 35.17 23.48 28.92 38.52\nSuperMap (Ours) 27.42 43.50 55.48 22.61 29.10 33.00\nTABLE III: Instance-level Segmentation Benchmark on ScanNet. Best results are highlighted as first and second .\nMethod Chair Window Refrigerator Sofa Door\nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25\nHOV-SG [30] 4.58 4.73 0.00 0.00 0.00 0.00 30.00 31.25 9.70 10.40\nConceptGraphs [5] \n0.00 2.33 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00\nSuperMap (Ours) 63.76 74.72 42.20 67.92 62.50 62.50 33.35 83.35 10.00 25.00\nb) Instance-level Segmentation: Unlike offline frame-\nworks that rely on global scene context, SuperMap targets\nonline robotic deployment, where incremental data fusion and\nzero-shot generalization are essential. This setting requires\nestablishing object correspondences from partial, streaming\nobservations in real time. To enable zero-shot perception,\nwe integrate GroundingDINO [12] for language-grounded\ndetection and SAM2 [21] for robust instance segmentation.\nWe report comparative results against HOV-SG [30] and Con-\nceptGraphs [5] in Table III. SuperMap significantly outper-\nforms these baselines, particularly for discrete objects con-\ntained within the camera’s instantaneous field of view. This\ngain demonstrates the efficacy of our 3D-aware tracking-\nby-detection approach over methods relying on point-feature\nclustering or over-segmented geometries.\nC. Spatio-Temporal Consistency on Qualitative Evaluation\nWe evaluate SuperMap’s ability to maintain map in-\ntegrity over extended durations while identifying environmen-\ntal changes. In a 10-minute real-world experiment (30m ×\n20m indoor area), we introduced structural changes: three\nobjects were removed (a plant, a trash can, and a chair) and\nthree were added (a bucket, a cart, and a safety sign).\na) Qualitative Performance: Fig. 3 qualitatively demon-\nstrates SuperMap’s long-horizon instance consistency under\nboth disappearance and appearance events. The top row shows\nthree objects that disappear from the scene. In all cases, the\ninstance IDs remain consistent over time, indicating that the\nsystem preserves object identity even when objects are no\nlonger observed.\nFor example, the top row shows three objects that newly\nappear in the scene. In the top-left example, we place a\nnew bucket instance (bucket 1964) between Chair 155 and\nChair 203. In the bottom-left example, Chair 7 disappears\nbetween table 1 and chair 4. Nonetheless, the small ID label\nin the Rerun visualization remains unchanged, showing that\nthe system maintains the same instance association before and\nafter the disappearance event. It demonstrates consistent object\ntracking and identity maintenance over long time horizons.\nD. Spatial-Temporal Consistency on Quantitative Evaluation\nWe quantitatively assess SuperMap using six target objects\n(Fig. 3) against manually annotated 3D bounding boxes and\nsemantic labels. We define two primary metrics:\n• Object Detection Recall: Measured during the appear-\nance interval (when the object is present). A True Positive\n(TP) requires a 3D IoU > 0.1, centroid distance < 0.3m,\nand the correct semantic label.\n• Change Detection Recall: Evaluates the system’s ability\nto detect an object during its appearance and confirm its\nremoval during the disappearance interval. A TP requires\ndetection in the former and zero false-positive detections\nin the latter.\nAs shown in Table IV, DualMap [8] achieves near-zero recall\nfor object detection due to unstable 2D segmentation and\ninconsistent 3D box estimation, which causes most instances\nto be filtered out by its mapping module. While it maintains a\nnominal ∼ 0.5 recall for change detection, this is a mathemat-\nical artifact: the method “succeeds” during the disappearance\ninterval only because it failed to detect the object initially.\nMeanwhile, Khronos fails to produce consistent 3D estimation\nresults (details shown in Supplementary) due to latent seman-\ntic inference bottlenecks that cause significant frame drops\nand degraded semantic mask quality. In contrast, SuperMap\nmaintains high recall across both metrics, demonstrating robust\ninstance detection.\nE. SuperMap System Ablation Study\nWe evaluated the contribution of our individual sub-\nmodules, specifically the 2D tracking, geometric consistency\nupdate, and Bayesian semantic fusion. Using a scene with 41\nannotated objects, we quantified the performance of the spatio-\ntemporal object map using precision, recall, and F1 scores.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 7,
+   "text": "Fig. 3: Spatio-temporal Consistency. For each example (left to right), we show the 2D detections, the dense 3D reconstruction, and the\nobject-centric map rendered in Rerun before and after the scene change. Top: three appearance events (bucket, cart, safety sign), where\nnewly introduced objects receive new IDs while nearby objects retain their original IDs, demonstrating long-horizon re-identification and\nstable instance association in 3D. Bottom: three disappearance events (chair, plant, trash can), where the same instance ID is preserved\nacross time despite the object leaving the field of view.\nTABLE IV: Spatial–Temporal Change Detection Performance.\nMethod Task Appeared Disappeared\nBuc. Cart Sign Plant Trash Chair\nKhronos [25]\nDetect.\n– – – – – –\nDualMap [8] 0.000 0.000 0.000 0.000 0.310 0.000\nSuperMap (ours) 1.000 0.262 0.583 0.755 0.434 1.000\nKhronos [25]\nChange\n– – – – – –\nDualMap [8] 0.553 0.527 0.507 0.561 0.642 0.449\nSuperMap (ours) 1.000 0.622 0.790 0.865 0.679 1.000\nTABLE V: Performance Comparison of Ablation Study\nConfiguration Precision Recall F1\nW/o 2D Tracker 0.7787 0.4595 0.5780\nW/o Semantic Fusion 0.7929 0.3870 0.5201\nW/o Geometric Consistency Update 0.8189 0.4448 0.5764\nAll (proposed) 0.8677 0.4955 0.6308\nAs shown in Table V, the full system outperforms all\nbaseline configurations across every metric, yielding the most\naccurate object map. This improvement stems from two pri-\nmary factors. The 2D tracker maintains consistent identity\nassociation during significant viewpoint changes to prevent\nobject fragmentation. Additionally, the integration of geomet-\nric and semantic fusion allows the system to remain resilient\nagainst momentary detection failures. By re-evaluating past\ninferences against new evidence over multiple frames, the map\neffectively self-corrects and filters out detection noise.\nF. Grounding Reasoning\nWe evaluate the 4D scene graph as a grounding engine\nfor Large Vision-Language Models (VLMs) using Gemini\n2.0 Flash [29]. We compare reasoning performance between\nstructured Scene Graph Input (serialized predicates) and raw\nVideo Input (RGB sequences). As shown in Fig. 4, the 4D\nscene graph provides superior accuracy for complex queries:\n• Spatial Logic (Prompt 1): Given a fire emergency sce-\nnario, the VLM utilizes the graph’s metric edges to dis-\nambiguate a specific “extinguisher” relative to a “cone”\nand “plant.” While raw video suffers from perspective\ndistortion and object confusion, the scene graph enables\nprecise distance calculation and instance retrieval.\n• Temporal Logic (Prompt 2): When tracing a “bag’s”\npast trajectory to find a dropped item, the VLM traverses\nthe graph’s temporal edges E\nT \n. The structured history al-\nlows for filtered, timestamped retrieval of dynamic states.\nConversely, video-based reasoning relies on unreliable\n“common-sense” heuristics and suffers from hallucina-\ntions as temporal depth increases.\nG. Visual Language Navigation\nWe evaluate the downstream utility of SuperMap through\nzero-shot, language-guided navigation in previously unseen\nenvironments. Using the real-time 4D scene graph, the robot\nnavigates reliably based solely on spatial relationships among\n3D objects.\na) Onboard Grounding and Execution: During au-\ntonomous exploration, the robot incrementally builds an\ninstance-level semantic map. When given a natural language\ncommand (e.g., “Go to the whiteboard next to the painting,\nthen go to the painting next to the fridge”), the VLM interprets\nthe spatial relations encoded in the 4D scene graph to resolve\nambiguity and outputs precise 3D goal coordinates for the\nnavigation stack.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 8,
+   "text": "Fig. 4: Comparison of Reasoning Results using Video Input and Scene-graph Input. Compared to raw video, the scene-graph\nrepresentation yields more reliable spatial reasoning, clearer temporal inference, and more accurate instance-level object retrieval.\nFig. 5: Online Visual–Language Navigation using Scene Graphs. Our system enables robots to understand and reason about the spatial\nrelationships in language instructions for VLN. See the supplementary video for more details.\nb) Experimental Validation: As shown in Fig. 5, Ours\nsupport navigation in visually ambiguous environments:\n• Spatial ordering : The robot selects the correct target\namong four visually identical whiteboards by reasoning\nover their relative spatial scene graph (left subfigure).\n• Relational retrieval: The robot identifies the relationship\nbetween the fridge and the painting to reach the intended\nadjacent destination (right subfigure).\nH. Runtime and Memory\nTo assess the computational efficiency of our system, we\nmeasure the throughput of each module. The pose estimation\nmodule maintains a consistent 10 Hz output, while 2D instance\nsegmentation operates at 1 Hz due to the heavy inference\nrequirements of semantic segmentation. The remainder of the\narchitecture performs 3D mapping and 4D scene graph updates\nat 3 Hz and 5 Hz, respectively.\nVI. CONCLUSION\nWe present SuperMap, a real-time, open-vocabulary SLAM\nsystem that constructs and maintains an instance-level 4D se-\nmantic map. By integrating geometric constraints from SLAM\nwith semantic features from 2D foundation models, SuperMap\nperforms joint 2D-3D object tracking, instance validation, and\nchange detection online. This unified pipeline ensures spatio-\ntemporal consistency despite occlusions, partial observations,\nor dynamic environmental changes. The resulting 4D scene\ngraph provides an explicit, continuously updated world model,\nempowering robots with long-term memory, robust spatio-\ntemporal reasoning, and language-guided navigation.\nVII. LIMITATION\nWhile SuperMap provides a robust framework for spatio-\ntemporal mapping, its performance in tracking highly dynamic\nobjects remains limited. Future iterations could address this\nby incorporating specialized tracking-by-detection modules\nor efficient segmentation-based tracking to improve temporal\ncoherence. Furthermore, our current pipeline relies on a pre-\ndefined list of object prompts for open-vocabulary 2D detec-\ntion. Integrating an automated prompting mechanism based on\nopen-world object discovery would significantly enhance the\nsystem’s adaptability, allowing it to function in truly novel\nenvironments without prior semantic knowledge.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 9,
+   "text": "REFERENCES\n[1] Omar Alama, Avigyan Bhattacharya, Haoyang He, Se-\nungchan Kim, Yuheng Qiu, Wenshan Wang, Cherie Ho,\nNikhil Keetha, and Sebastian Scherer. Rayfronts: Open-\nset semantic ray frontiers for online scene understanding\nand exploration. arXiv preprint arXiv:2504.06994, 2025.\n[2] Xieyuanli Chen, Andres Milioto, Emanuele Palazzolo,\nPhilippe Giguere, Jens Behley, and Cyrill Stachniss.\nSuma++: Efficient lidar-based semantic slam. In 2019\nIEEE/RSJ International Conference on Intelligent Robots\nand Systems (IROS), pages 4530–4537. IEEE, 2019.\n[3] Linyan Cui and Chaowei Ma. Sof-slam: A semantic\nvisual slam for dynamic environments. IEEE access, 7:\n166528–166539, 2019.\n[4] Yinan Deng, Bicheng Yao, Yihang Tang, Yi Yang, and\nYufeng Yue. Openvox: Real-time instance-level open-\nvocabulary probabilistic voxel representation. arXiv\npreprint arXiv:2502.16528, 2025.\n[5] Qiao Gu, Ali Kuwajerwala, Sacha Morin,\nKrishna Murthy Jatavallabhula, Bipasha Sen, Aditya\nAgarwal, Corban Rivera, William Paul, Kirsty Ellis,\nRama Chellappa, et al. Conceptgraphs: Open-vocabulary\n3d scene graphs for perception and planning. In 2024\nIEEE International Conference on Robotics and\nAutomation (ICRA), pages 5021–5028. IEEE, 2024.\n[6] Sina Hajimiri, Ismail Ben Ayed, and Jose Dolz.\nPay attention to your neighbours: Training-free open-\nvocabulary semantic segmentation. In 2025 IEEE/CVF\nWinter Conference on Applications of Computer Vision\n(WACV), pages 5061–5071. IEEE, 2025.\n[7] Krishna Murthy Jatavallabhula, Alihusein Kuwajerwala,\nQiao Gu, Mohd Omama, Tao Chen, Alaa Maalouf,\nShuang Li, Ganesh Iyer, Soroush Saryazdi, Nikhil\nKeetha, et al. Conceptfusion: Open-set multimodal 3d\nmapping. arXiv preprint arXiv:2302.07241, 2023.\n[8] Jiajun Jiang, Yiming Zhu, Zirui Wu, and Jie Song.\nDualmap: Online open-vocabulary semantic mapping for\nnatural language navigation in dynamic changing scenes.\nIEEE Robotics and Automation Letters, 10(12), 2025.\n[9] Justin Kerr, Chung Min Kim, Ken Goldberg, Angjoo\nKanazawa, and Matthew Tancik. Lerf: Language em-\nbedded radiance fields. In Proceedings of the IEEE/CVF\nInternational Conference on Computer Vision, pages\n19729–19739, 2023.\n[10] Ghanta Sai Krishna, Kundrapu Supriya, and Sabur\nBaidya. 3ds-slam: A 3d object detection based seman-\ntic slam towards dynamic indoor environments. arXiv\npreprint arXiv:2310.06385, 2023.\n[11] Rong Li, Shijie Li, Lingdong Kong, Xulei Yang, and\nJunwei Liang. Seeground: See and ground for zero-shot\nopen-vocabulary 3d visual grounding. In Proceedings\nof the IEEE/CVF Conference on Computer Vision and\nPattern Recognition (CVPR), 2025.\n[12] Shilong Liu, Zhaoyang Zeng, Tianhe Ren, Feng Li, Hao\nZhang, Jie Yang, Qing Jiang, Chunyuan Li, Jianwei\nYang, Hang Su, et al. Grounding dino: Marrying dino\nwith grounded pre-training for open-set object detection.\nIn European Conference on Computer Vision, pages 38–\n55. Springer, 2024.\n[13] Xu Liu, Jiuzhou Lei, Ankit Prabhu, Yuezhan Tao, Igor\nSpasojevic, Pratik Chaudhari, Nikolay Atanasov, and Vi-\njay Kumar. Slideslam: Sparse, lightweight, decentralized\nmetric-semantic slam for multi-robot navigation. arXiv\npreprint arXiv:2406.17249, 2024.\n[14] Dominic Maggio, Yun Chang, Nathan Hughes, Matthew\nTrang, Dan Griffith, Carlyn Dougherty, Eric Cristofalo,\nLukas Schmid, and Luca Carlone. Clio: Real-time task-\ndriven open-set 3d scene graphs. IEEE Robotics and\nAutomation Letters, 2024.\n[15] Tomas Berriel Martins, Martin R Oswald, and Javier\nCivera. Ovo-slam: Open-vocabulary online simul-\ntaneous localization and mapping. arXiv preprint\narXiv:2411.15043, 2024.\n[16] Songyou Peng, Kyle Genova, Chiyu Jiang, Andrea\nTagliasacchi, Marc Pollefeys, Thomas Funkhouser, et al.\nOpenscene: 3d scene understanding with open vocabu-\nlaries. In Proceedings of the IEEE/CVF conference on\ncomputer vision and pattern recognition, pages 815–824,\n2023.\n[17] Minghan Qin, Wanhua Li, Jiawei Zhou, Haoqian Wang,\nand Hanspeter Pfister. Langsplat: 3d language gaussian\nsplatting. In Proceedings of the IEEE/CVF Conference\non Computer Vision and Pattern Recognition, pages\n20051–20060, 2024.\n[18] Yuheng Qiu, Chen Wang, Wenshan Wang, Mina Henein,\nand Sebastian Scherer. Airdos: Dynamic slam benefits\nfrom articulated objects. In 2022 International Confer-\nence on Robotics and Automation (ICRA), pages 8047–\n8053. IEEE, 2022.\n[19] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya\nRamesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry,\nAmanda Askell, Pamela Mishkin, Jack Clark, et al.\nLearning transferable visual models from natural lan-\nguage supervision. In International conference on ma-\nchine learning, pages 8748–8763. PmLR, 2021.\n[20] Krishan Rana, Jesse Haviland, Sourav Garg, Jad Abou-\nChakra, Ian Reid, and Niko Suenderhauf. Sayplan:\nGrounding large language models using 3d scene graphs\nfor scalable robot task planning. arXiv preprint\narXiv:2307.06135, 2023.\n[21] Nikhila Ravi, Valentin Gabeur, Yuan-Ting Hu, Ronghang\nHu, Chaitanya Ryali, Tengyu Ma, Haitham Khedr, Ro-\nman R¨adle, Chloe Rolland, Laura Gustafson, et al. Sam\n2: Segment anything in images and videos. arXiv preprint\narXiv:2408.00714, 2024.\n[22] Sonia Raychaudhuri and Angel X Chang. Semantic\nmapping in indoor embodied ai–a comprehensive survey\nand future directions. arXiv preprint arXiv:2501.05750,\n2025.\n[23] Tianhe Ren, Shilong Liu, Ailing Zeng, Jing Lin, Kun-\nchang Li, He Cao, Jiayu Chen, Xinyu Huang, Yukang",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 10,
+   "text": "Chen, Feng Yan, et al. Grounded sam: Assembling open-\nworld models for diverse visual tasks. arXiv preprint\narXiv:2401.14159, 2024.\n[24] Antoni Rosinol, Marcus Abate, Yun Chang, and Luca\nCarlone. Kimera: an open-source library for real-time\nmetric-semantic localization and mapping. In 2020 IEEE\nInternational Conference on Robotics and Automation\n(ICRA), pages 1689–1696. IEEE, 2020.\n[25] Lukas Schmid, Marcus Abate, Yun Chang, and Luca Car-\nlone. Khronos: A unified approach for spatio-temporal\nmetric-semantic slam in dynamic environments. arXiv\npreprint arXiv:2402.13817, 2024.\n[26] Yuheng Shi, Minjing Dong, and Chang Xu. Harnessing\nvision foundation models for high-performance, training-\nfree open vocabulary segmentation. arXiv preprint\narXiv:2411.09219, 2024.\n[27] Seungwon Song, Hyungtae Lim, Alex Junho Lee, and\nHyun Myung. Dynavins: A visual-inertial slam for\ndynamic environments. IEEE Robotics and Automation\nLetters, 7(4):11523–11530, 2022.\n[28] Ayc¸a Takmaz, Elisabetta Fedele, Robert W Sumner, Marc\nPollefeys, Federico Tombari, and Francis Engelmann.\nOpenmask3d: Open-vocabulary 3d instance segmenta-\ntion. arXiv preprint arXiv:2306.13631, 2023.\n[29] Gemini Team, Rohan Anil, Sebastian Borgeaud, Jean-\nBaptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalk-\nwyk, Andrew M Dai, Anja Hauth, Katie Millican, et al.\nGemini: a family of highly capable multimodal models.\narXiv preprint arXiv:2312.11805, 2023.\n[30] Abdelrhman Werby, Chenguang Huang, Martin B¨uchner,\nAbhinav Valada, and Wolfram Burgard. Hierarchical\nopen-vocabulary 3d scene graphs for language-grounded\nrobot navigation. In First Workshop on Vision-Language\nModels for Navigation and Manipulation at ICRA 2024,\n2024.\n[31] Chao Yu, Zuxin Liu, Xin-Jun Liu, Fugui Xie, Yi Yang,\nQi Wei, and Qiao Fei. Ds-slam: A semantic visual slam\ntowards dynamic environments. In 2018 IEEE/RSJ in-\nternational conference on intelligent robots and systems\n(IROS), pages 1168–1174. IEEE, 2018.\n[32] Yuhui Yuan, Rao Fu, Lang Huang, Weihong Lin, Chao\nZhang, Xilin Chen, and Jingdong Wang. Hrformer: High-\nresolution vision transformer for dense predict. Advances\nin neural information processing systems, 34:7281–7293,\n2021.\n[33] Yifu Zhang, Peize Sun, Yi Jiang, Dongdong Yu, Fucheng\nWeng, Zehuan Yuan, Ping Luo, Wenyu Liu, and Xing-\ngang Wang. Bytetrack: Multi-object tracking by associ-\nating every detection box. In European conference on\ncomputer vision, pages 1–21. Springer, 2022.\n[34] Shibo Zhao, Zheng Fang, HaoLai Li, and Sebastian\nScherer. A robust laser-inertial odometry and mapping\nmethod for large-scale highway environments. In 2019\nIEEE/RSJ International Conference on Intelligent Robots\nand Systems (IROS), pages 1285–1292. IEEE, 2019.\n[35] Shibo Zhao, Hengrui Zhang, Peng Wang, Lucas\nNogueira, and Sebastian Scherer. Super odometry: Imu-\ncentric lidar-visual-inertial estimator for challenging en-\nvironments. In 2021 IEEE/RSJ International Conference\non Intelligent Robots and Systems (IROS), pages 8729–\n8736. IEEE, 2021.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 11,
+   "text": "Supplementary: A Spatio-Temporal SLAM System\nfor Visual-Language Navigation\nShibo Zhao\n†\n, Guofei Chen\n†\n, Honghao Zhu, Zhiheng Li, Changwei Yao,\nNader Zantout, Seungchan Kim, Wenshan Wang, Ji Zhang, and Sebastian Scherer\nThe Robotics Institute, Carnegie Mellon University\n{guofeic, shiboz, basti}@andrew.cmu.edu\n†\nEqual contribution\nINTRODUCTION\nThis supplementary material provides additional experimen-\ntal results, qualitative analyses, implementation details, and\nclarifications that complement the main paper. Our goal is not\nto maximize isolated per-frame segmentation scores; instead,\nSuperMap is designed to improve robustness in dynamic\nenvironments and to enable long-horizon, object-centric scene\nunderstanding for downstream robotics tasks.\nMost semantic SLAM systems [24, 5] are evaluated using\nstatic perception metrics such as mIoU and mAP. While these\nmetrics measure per-frame recognition quality, they do not\ncapture a key requirement for real-world autonomy: long-\nhorizon consistency in dynamic scenes. In practice, robots\nshould not only detect objects but also maintain stable instance\nidentities as objects become occluded, move, leave the scene,\nor reappear. Achieving this requires reliable data association,\ntemporal memory, and mechanisms to update the map as the\nenvironment evolves—capabilities that are largely unmeasured\nby standard segmentation benchmarks.\nSuperMap addresses this limitation by maintaining object-\nlevel identities within a spatio-temporal map. As shown in the\nsupplementary videos, the system can (i) remove objects that\nare no longer present, (ii) integrate newly observed objects,\nand (iii) re-associate previously seen objects under partial\nobservations or moderate semantic drift. These properties\nare important for downstream tasks such as language-guided\nnavigation, spatio-temporal reasoning, and long-term planning.\nThese observations motivate evaluation protocols that ex-\ntend beyond static instance segmentation. To support this\nperspective, we provide additional qualitative analyses and\nreal-robot deployment videos illustrating the system’s tempo-\nral behavior. As for the quantitative evaluation, it has been\ndiscussed in Table IV in the main paper experiment section\nV-A D.\nEXPERIMENTS\nA. Qualitative Analysis of Object Tracking Ablations\nJoint 2D–3D tracking and the consistency check are key\ncomponents of SuperMap. We evaluate their contribution to\n(i) maintaining consistent instance identities over time, (ii)\nremoving objects that disappear from the scene, and (iii)\nreducing projection-induced errors and other outliers.\n1) 2D-Only Tracking vs. 2D–3D Tracking: Figures 1 and 2\ncompare a 2D-only ByteTrack[33] baseline with our 2D–3D\nvariant, which refines 2D bounding-box states using estimated\nvisibility and projections of 3D object centroids.\n• Large viewpoint change. In Fig. 1, rapid camera motion\ncauses the 2D-only tracker to lose tracks for nearby chairs\nand tables, leading to fragmented identities and degraded\nmapping. In contrast, the 2D–3D tracker preserves these\nidentities by leveraging 3D cues, resulting in more tem-\nporally coherent instance IDs.\n• Dynamic objects. In Fig. 2, a person moves across the\nrobot’s field of view. The 2D-only baseline repeatedly\ninitializes new tracks for the same person, whereas our\n2D–3D tracker maintains a single continuous ID, which\nis consistently reflected in the semantic map.\n2) Impact of the Consistency Check: Figure 3 ablates the\ngeometric and semantic consistency checks used to remove\nstale or spurious map points in a dynamic scene, where a\nperson walks in front of a static cabinet:\n1) No check. Without consistency checking, points associ-\nated with the person persist after the person has moved\naway, leaving stale artifacts in the map.\n2) Geometric only. The geometric check removes unsup-\nported points, but projection-induced outliers can still\nremain on the cabinet surface.\n3) Geometric + semantic (ours). Combining geometric\nand semantic checks removes both stale points and\nprojection outliers, producing an up-to-date map.\nThis ablation demonstrates that joint consistency checking is\nimportant for reliable mapping in dynamic environments.\nB. Qualitative Instance-Level Segmentation Results\nWe present qualitative comparisons of instance-level seg-\nmentation results against recent state-of-the-art methods.\nAcross representative sequences, SuperMap better preserves\ninstance identities over time, whereas ConceptGraphs and\nHOV-SG more frequently fragment a single physical object\ninto multiple instances. We also observe that the instance\nfeatures used by ConceptGraphs and HOV-SG (based on\nCLIP embeddings) can become less discriminative over long\nsequences, which increases confusion between foreground\nobjects and background regions.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 12,
+   "text": "TABLE I: 3D instance segmentation on ScanNet with memory and runtime statistics. TPF denotes mapping time per\nframe. Best results are highlighted as first and second .\nMethod Chair Window Refrigerator Sofa Door Avg. Mem (MB) Peak Mem (MB) TPF (s)\nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25\nHOV-SG [30] 4.58 4.73 0.00 0.00 0.00 0.00 30.00 31.25 9.70 10.40 8755.86 10226.66 8.623\nConceptGraphs [5] 0.00 2.33 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 859.86 886.18 0.092\nSuperMap (Ours) 63.76 74.72 42.20 67.92 62.50 62.50 33.35 83.35 10.00 25.00 2030.09 2184.86 0.3604\nFig. 1: Ablation on tracking under large viewpoint changes. Our 2D–3D tracker (top) preserves consistent object tracks\nand yields a coherent map across significant viewpoint changes, whereas the 2D-only tracker (bottom) suffers from track\nfragmentation, resulting in incorrect object identities. Notably, the 2D-only tracker (bottom) exhibits clear ID switches between\nt = 0 s and t = 2.5 s.\nC. Object-Level Mapping in Long-Term Dynamic Environ-\nments\nFigures 5–10 illustrate long-term scene changes across two\ntraversals of the same environment. We highlight three newly\nappeared objects (a yellow bucket, a cart, and a safety sign)\nand three disappeared objects (a plant on a table, a blue trash\ncan, and a chair). These examples demonstrate that SuperMap\ncan both identify object-level changes and update the spatio-\ntemporal map accordingly. Additional qualitative results are\nprovided in the supplementary video.\nD. Runtime Details of Each Component\nFor reproducibility, we report the update rates of each\nmodule in our system:\n• Pose estimation: 10 Hz\n• Dense 3D mapping and 3D bounding box update: 3 Hz\n• 2D instance segmentation: 1 Hz\n• 4D scene graph update: 5 Hz\nMemory usage and mapping-time statistics are summa-\nrized in Table I. As shown in Table I, SuperMap achieves\nsubstantially stronger instance-level performance across cate-\ngories while maintaining moderate runtime and memory usage.\nAlthough our method does not achieve the lowest memory\nfootprint, this is expected because SuperMap maintains per-",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 13,
+   "text": "Fig. 2: Ablation on tracking dynamic objects. The first row shows our 2D–3D tracking, while the second row shows 2D-only\ntracking. The 2D-only tracker frequently loses the target, resulting in the same person being represented as multiple objects\nin the map. In contrast, our 2D–3D tracker maintains a consistent identity over time.\nsistent object-level representations, temporal associations, and\na 4D scene graph to support long-horizon consistency. These\ndesign choices intentionally trade minimal memory usage for\ntemporally consistent mapping and richer scene understanding.\nIn practice, the memory consumption remains within the\ncapacity of standard robotic computing platforms and enables\ncapabilities that lightweight per-frame methods do not provide.\nConceptGraph incorporates CLIP features to support open-\nvocabulary object querying. However, the queried semantic\nfeatures are typically sparse in the reconstructed map. As\na result, while target objects can be retrieved, the resulting\nspatial localization remains coarse, and the precision falls\nsignificantly below standard detection benchmarks such as\nmAP@50 and mAP@25.\nVIII. METHOD\nWe present the spatio-temporal object update procedure\nused in our semantic SLAM system. The algorithm processes\na sequence of observations comprising detected boxes B\ndet\n, an\nRGB image I, a depth map D\nI \n, and pose information Odom\n(odometry or estimated camera pose). We use a multi-object\ntracker T (Kalman-filter based, following ByteTrack [33]) to\nmaintain temporal identity consistency across frames.\nA. 2D-3D Consistency Check\nTo update objects in the map, we perform two key checks:\n• Whether the object’s voxels remain occupied.\n• Whether the occupied and visible voxels are supported\nby the latest semantic inference from the image.\nThe geometric consistency check is implemented in lines\n2–5, while the semantic consistency is in lines 6–19.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 14,
+   "text": "Fig. 3: Ablation of the consistency check. Comparison of mapping results without consistency checks, with geometric-only\nchecks, and with joint geometric+semantic checks (ours). Without consistency checks, stale points from dynamic objects persist\nin the map. Geometric checks remove some unsupported points but may leave projection artifacts. The joint geometric and\nsemantic consistency check produces a cleaner and more up-to-date map.\nFig. 4: Qualitative comparison of instance-level segmentation. Background points are removed for clarity. SuperMap\nmaintains more consistent instance identities and shows fewer confusions between objects and background compared to prior\nmethods.\nB. 3D-aware Instance Tracking\nTo enhance the matching between new bounding boxes\nand existing map objects, we introduce a 3D-aware instance\ntracking mechanism.\nOur tracking algorithm builds on Algorithm 1 from Byte-\nTrack [33], preserving the original 2D state representation\nand motion model for tracklets. In addition, we incorporate\ngeometric cues to update the internal states of the tracklets.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 15,
+   "text": "Fig. 5: Newly appeared object (yellow bucket). When revis-\niting the environment, SuperMap detects the newly introduced\nbucket and incorporates it into the object-level map.\nFig. 6: Newly appeared object (cart). The system recognizes\nthe cart as a new instance and updates the map accordingly.\nFig. 7: Newly appeared object (safety sign). SuperMap adds\nthe newly observed sign to the spatio-temporal map.\nFig. 8: Disappeared object (plant on table). The system\nremoves the plant from the map after it is no longer observed.\nFig. 9: Disappeared object (blue trash can). SuperMap\nupdates the map to reflect the removal of the trash can.\nFig. 10: Disappeared object (chair). The system correctly\nremoves the chair from the object-level map once it is absent.",
+   "extraction_method": "pdf-text"
+  },
+  {
+   "page": 16,
+   "text": "Algorithm 1 Instance Layer: Spatio-Temporal Instance Asso-\nciation\nRequire: Observation stream S = {(B\ndet\n, I, D\nI \n, Odom)};\ntracker T\nEnsure: Updated map M\n1: M ← InitMap(); T ← InitTracker()\n2: for all (B\ndet\n, I, D\nI \n, Odom) ∈ S do\n(1) Gather local map context\n3: O\nnbr \n← GetNeighborObjects(M, Odom)\n(2) Geometric consistency check (Eq. 7)\n4: (O\nfront\n, O\non\n, O\nbehind\n) ←\nCompareDepth(D\nI \n, O\nnbr\n, Odom)\n5: O\nneg \n← O\nfront \n▷ inconsistent depth\n(3) Track update and detection association\n6: T\nalive \n← T .GetAliveTracks()\n7: for all O ∈ O\non \ndo\n8: if O.id ∈ T\nalive \nthen\n9: T .UpdateFromMap(O) ▷ compensate track\nstate using 3D cues\n10: end if\n11: end for\n12: T\ntrk \n← T .Associate(T\nalive\n, B\ndet\n) ▷ ByteTrack [33]\n(4) Instance mask and 3D reconstruction\n13: M\nmask \n← GenerateMasks(I, T\ntrk\n) ▷ SAM2 [21]\n14: O\nadd \n← Unproject(D\nI \n, M\nmask\n, Odom)\n(5) Semantic consistency check and map update\n15: for all O ∈ O\non \ndo\n16: if O.id /∈ T\ntrk \nthen\n17: O\nneg \n← O\nneg \n∪ {O} ▷ semantic inconsistency\n18: end if\n19: end for\n20: O\nnbr \n← ObjNegate(O\nnbr\n, O\nneg\n)\n21: O\nnbr \n← ObjMerge(O\nnbr\n, O\nadd\n)\n22: M ← MapMerge(M, O\nnbr\n)\n23: end for",
+   "extraction_method": "pdf-text"
+  }
+ ],
+ "text": "## page 1\n\nSuperMap: A Spatio-Temporal SLAM System\nfor Visual-Language Navigation\nShibo Zhao\n†\n, Guofei Chen\n†\n, Honghao Zhu, Zhiheng Li, Changwei Yao,\nNader Zantout, Seungchan Kim, Wenshan Wang, Ji Zhang, and Sebastian Scherer\nThe Robotics Institute, Carnegie Mellon University\n{guofeic, shiboz, basti}@andrew.cmu.edu\n†\nEqual contribution\nFig. 1: We present SuperMap, a real-time, spatio-temporal SLAM system capable of instance-level object detection, tracking dynamic changes,\nand maintaining a scene graph for spatial reasoning. The figure shows how SuperMap detects short-term human movements (A1, A2) and\nlong-term environmental changes (B1, B2, C1, C2), such as the disappearance of a trashcan and the appearance of a cart, demonstrating\nconsistent spatio-temporal representation.\nAbstract—Robotic navigation in human environments re-\nquires a spatio-temporal semantic representation that can rec-\noncile open-vocabulary perception with long-term environmental\nchanges. While foundation models provide strong zero-shot recog-\nnition, their predictions are intermittent and view-dependent, and\nnaively integrating them into mapping pipelines leads to identity\ndrift and stale semantics over time. We present SuperMap,\na 4D spatio-temporal mapping framework for language-guided\nnavigation that integrates high-frequency geometric SLAM with\nasynchronous open-vocabulary perception. Our core contribution\nis a consistency-driven mapping engine that combines 3D-aware\ninstance association/re-activation with a principled existence-and-\nlabel confidence update to maintain stable object identities and\nprune outdated map content under occlusions and scene changes.\nSuperMap produces a queryable 4D scene-graph representation\nthat interfaces naturally with Vision-Language Models by sup-\nporting compositional queries over object semantics, relations,\nand history. We demonstrate SuperMap on benchmarks and real\nrobots, including dynamic scenes with appearance/disappearance\nand relocation, and provide ablations and runtime analysis. We\nrelease the full system as open-source to provide the community\nwith a deployable baseline for open-vocabulary spatio-temporal\nmapping. Project website: superodometry.com/supermap\nI. INTRODUCTION\nRobots deployed in human environments are increasingly\nexpected to execute open-vocabulary navigation goals, e.g.,\n“go to the monitor next to the whiteboard” or “return to the\nchair that was near the plant earlier.” Fulfilling such commands\nrobustly requires more than accurate pose estimation and\ngeometric reconstruction: the robot must maintain an object-\ncentric spatio-temporal map representation that preserves in-\narXiv:2608.22896v1 [cs.RO] 24 Aug 2026\n\n## page 2\n\nTABLE I: Capability Checklist for Semantic Mapping and Semantic SLAM Methods. ✓indicates support, ✗indicates limited or no support\nCapability Semantic Mapping Semantic SLAM\nHOV-SG[30] ConceptGraphs[5] RayFronts[1] OpenScene[16] OpenMask3D[28] SeeGround[11] Kimera[24] OVO-SLAM[15] Khronos[25] SuperMap (Ours)\nReal-Time ✗ ✗ ✓ ✗ ✗ ✗ ✓ ✓ ✗ ✓\nOpen-Vocabulary ✓ ✓ ✓ ✓ ✓ ✓ ✗ ✓ ✗ ✓\nInstance-Level ✓ ✓ ✗ ✗ ✗ ✗ ✗ ✓ ✗ ✓\nShort-Term ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✓ ✓\nLong-Term ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✓ ✓\nScene Graph ✓ ✓ ✗ ✗ ✗ ✗ ✓ ✗ ✗ ✓\nstance identities, semantic attributes, and spatial relations over\ntime, and that remains valid as the environment evolves. This\nrequirement is difficult to meet in practice because real-world\nscenes are dynamic—objects may be occluded, relocated,\nremoved, or newly introduced during operation. Consequently,\nsystems that rely primarily on per-frame recognition or static\nsemantic maps often degrade over long horizons: instance\nidentities fragment, semantic content becomes stale, and the\nrelational structure needed for language grounding is unavail-\nable or inconsistent.\nRecent progress in semantic SLAM and open-vocabulary\nperception has produced strong components—state estimation\nand dense reconstruction, 2D tracking, and open-vocabulary\ndetection/segmentation [24, 10]. However, simply combining\nthese modules rarely yields a map that is reliably usable\nfor navigation. Many systems remain closed-vocabulary and\nclass-level [24, 10], limiting instance identity tracking, while\ndynamic-SLAM methods often focus on short-term motion\n(e.g., moving people) and overlook long-term changes such as\nobject relocation outside the robot’s view [18, 31, 27, 3]. In\npractice, missed detections and occlusions fragment identities,\nscene changes introduce stale map content, and most represen-\ntations lack an efficient query interface for downstream tasks\nlike language-guided navigation. As a result, there remains a\ngap between “semantic mapping outputs” and a robot-usable\nmap representation that can be queried and acted upon online.\nRecent scene graph approaches [5, 30, 14, 20] incorporate\nopen-vocabulary detectors [23] to support natural language\nnavigation, but they are time consuming (minutes to hours)\nto construct and not suitable for real-time mapping. More-\nover, they struggle to capture dynamic relationships between\nobjects, limiting their ability to model scene evolution.\nIn summary, existing approaches predominantly address\neither dynamic change detection (e.g., identifying moving hu-\nmans or vehicles) or static object recognition (e.g., identifying\nobjects and their relationships). However, few methods tackle\nboth challenges simultaneously: understanding which objects\nchange and how they evolve spatially and temporally. Ad-\ndressing this dual challenge is crucial for robots to effectively\nperceive and adapt to dynamic real-world environments.\nTo meet this challenge, we introduce SuperMap: an open-\nsource system that constructs a queryable open-vocabulary\n4D scene memory online. We evaluate SuperMap on pub-\nlic benchmarks for open-vocabulary semantic and instance\nmapping, and on real-robot deployments in dynamic indoor\nenvironments that include object appearance/disappearance\nand long-horizon changes. We provide ablations to attribute\nmapping improvements to specific maintenance components\n(association, updates, and graph construction), and runtime\nprofiling to clarify which modules dominate compute. Finally,\nwe demonstrate language-guided robot navigation driven by\nscene-graph queries, where structured 4D scene memory im-\nproves robust grounding compared to using raw detections or\nvideo-only inputs.\nOur contributions are as follows:\n• Open-Vocabulary, Spatio-Temporal Semantic SLAM:\nAn online robotic system that builds a persistent,\nqueryable open-vocabulary 4D scene memory suitable for\ndownstream language-conditioned tasks.\n• Spatio-Temporal Object Tracking: An online pipeline\nthat integrates 2D–3D association, validation, and\nchange-aware updates to maintain instance consistency\nunder occlusions, partial observations, label variability,\nand scene change.\n• Instance-level Scene Graph: Our 4D scene graph seam-\nlessly incorporates spatial and temporal information for\neach object, equipping robots with instance-level spatio-\ntemporal reasoning capabilities (e.g., locating moved ob-\njects, recalling past scenes).\n• Open-Source Framework: We will release our change-\ndetection benchmark, comprehensive ablations and run-\ntime profiling, and the real-robot visual–language navi-\ngation pipeline to facilitate reproducible research in the\nrobotics community.\nII. RELATED WORKS\nA. Semantic Mapping\nEquipping mobile robots with the ability to perceive and\nunderstand their surroundings is crucial for real-world appli-\ncations. To this end, researchers have developed semantic maps\nto capture environmental meaning and context [22]. However,\nmany recent methods [16, 5] rely on offline processing,\nrequiring pre-collected environmental data (images and depth)\nto build semantically labeled maps shown in Table I.\nFor example, OpenScene [16] uses OpenSeg [32] to extract\nCLIP embeddings [19] from images and then trains a scene-\nspecific 3D model, but it operates offline, requiring a full scene\nscan. OpenMask3D [28] back-projects 2D object masks from\nmultiple views to form 3D segments, while SeeGround [11]\ncombines 2D-VLM with 3D geometric cues for instance\nsegmentation. Despite improving 3D accuracy, these methods\nassume complete scene data, limiting online usability.\nLERF [9] and LangSplat [17] employ radiance fields to\nbuild 3D maps with CLIP-based features, offering flexible\nsemantic queries but lacking real-time capability due to com-\nputational demands. RayFronts [1] enables online semantic\n\n## page 3\n\nFig. 2: Overview. The system delivers accurate state estimation together with a rich, multi-level map representation that spans from geometric\ndetails to abstract semantics. It consists of three main modules. First, an online 3D reconstruction module built on a LiDAR SLAM backbone\nperforms state estimation and generates a dense 3D model of the environment. Next, the estimated state and reconstructed geometry are\nused to identify short-term and long-term object changes, enabling instance-level object mapping. Finally, the object-level representation is\norganized into an abstract 4D scene graph that captures both spatial and temporal relationships among objects.\nmapping for outdoor environments but struggles with change\ndetection and fails to achieve instance-level 3D semantics.\nB. Semantic SLAM\nTo jointly estimate poses within the pipeline, we trans-\nform the mapping pipeline into a SLAM pipeline. In recent\nyears, numerous SLAM systems have integrated semantic\ninformation during the mapping process. One notable ex-\nample is Kimera [24], which offers a real-time semantic\nmapping solution by building a 3D scene graph. However,\nit relies on closed-set CNN segmentation, which limits its\nability to generalize to novel classes. LiDAR-based SLAM\napproaches, such as SuMa++ [2] and LIOM [34], incorporate\nCNN-based per-point labels into LiDAR maps. Despite their\neffectiveness, these methods do not support open-vocabulary\nsegmentation, restricting their adaptability to diverse environ-\nments. SlideSLAM [13] and OVO-SLAM [15] employ open-\nvocabulary detectors for instance segmentation, allowing for\nmore flexible scene understanding. However, these methods\nface challenges when dealing with long-term and short-term\ndynamic objects.\nC. Open-Vocabulary Scene Graph\nHOV-SG [30], ConceptGraphs [5] and CLIO [14] segment\nand label objects from a full point cloud using SAM and CLIP,\norganizing them into a hierarchical graph with open-ended\nlabels from CLIP. However, HOV-SG and ConceptGraphs\nrequire offline 3D reconstruction before applying SAM and\nCLIP, making them unsuitable for online SLAM or real-time\ndynamic tasks. CLIO implements real-time open-vocabulary\nscene graph generation but lacks spatio-temporal capabilities.\nD. Spatio-Temporal Semantic SLAM\nRecently, Khronos [25] addresses both short-term and long-\nterm dynamics in map representation. However, this method\nis limited to closed-set objects and lacks the capability for\ninstance-level tracking. Additionally, Khronos struggles to op-\nerate in real time, making it unsuitable for robotic operations.\nTo the best of our knowledge, SuperMap is the first real-time,\nspatio-temporal, open-vocabulary, and instance-level object\nmapping framework that effectively handles both short-term\nand long-term dynamic objects.\nIII. SPATIO-TEMPORAL SLAM PROBLEM\nThe spatio-temporal SLAM problem aims to provide an\nexplicit scene representation that captures how object-level\nchanges evolve across space and time through incremental\ndata acquisition. We model the scene as a composition of\nobjects, represented as a scene graph where nodes correspond\nto objects and edges denote spatio-temporal relationships.\nIn our setting, the system processes a continuous stream\nof either an RGB-D video sequence or a point-cloud video\nsequence, where RGB frames C\n1:T \n= {C\n1\n, C\n2\n, . . . , C\nT \n} and\ndepth(LiDAR) frames D\n1:T \n= {D\n1\n, D\n2\n, . . . , D\nT \n} are given\nas input, and T is the sequence length and t ∈ {1, . . . , T } is\nthe time index. Camera poses P\n1:T \n= {P\n1\n, P\n2\n, . . . , P\nT \n} must\n\n## page 4\n\nbe estimated. At each time t, the system outputs a consistent\nglobal map M\nt \nconsisting of semantic instance-level objects\nO\nt \n= {O \nj\nt \n}\nN\nt\nj=1\n, where j indexes objects and N\nt \nis the number\nof objects at time t.\nThe spatio-temporal SLAM problem is defined as follows:\ngiven the current observation Q\nt \n= {C\nt\n, D\nt\n} and the existing\nmap M\nt−1\n, estimate pose P\nt\n, determine the instance IDs I\nt\nand the updated map M\nt \nby maximizing (or estimating)\nP (I\nt\n, M\nt\n, P\nt \n| M\nt−1\n, Q\nt\n). (1)\nApplying the chain rule, we obtain\nP (I\nt\n, M\nt\n, P\nt \n| M\nt−1\n, Q\nt\n) = P (P\nt \n| M\nt−1\n, Q\nt\n)\n| {z }\npose estimation (geometric)\n× P (I\nt \n| M\nt−1\n, Q\nt\n, P\nt\n)\n| {z }\nspatio-temporal instance association\n× P (M\nt \n| M\nt−1\n, Q\nt\n, P\nt\n, I\nt\n)\n| {z }\nonline map update\n.\n(2)\nThis involves three tasks: pose estimation, spatio-temporal\nobject instance association and the online map update [4].\nIV. METHOD\nThe architecture of our spatio-temporal SLAM system,\nSuperMap, is shown in Figure 2. Given synchronized depth\nmeasurements, IMU data, and RGB images, SuperMap runs\nfully onboard to jointly estimate the robot state and maintain\nan instance-level spatio-temporal map representation as the\nenvironment evolves. We describe three main components: (1)\nOnline 3D Reconstruction for dense geometric mapping, (2)\nSpatio-Temporal Object Updates for robust instance associa-\ntion, and (3) Spatio-Temporal Scene Graph Construction that\nexposes the map as a queryable interface for VLN.\nA. Geometric Layer: Online 3D Reconstruction\nWe use SuperOdometry [35] to obtain the robot pose\nP\nt \nand a colorized dense 3D reconstruction from image,\ndepth/LiDAR, and IMU streams. The observation Q\nt \nrequires\naccurate camera poses P\nt \nand depth observations D\nt\n. For each\ntime t, we estimate the robot’s state in SE(3), denoted as\nT\n(t)\nW B \n, where W is the world frame and B is the body frame.\nGiven a fixed extrinsic calibration T\nBC \n, the camera pose P\nt\nis derived as:\nP\nt \n= T\n(t)\nW C \n= T\n(t)\nW B \n· T\nBC \n(3)\nThis estimated pose and the synchronized depth D\nt \nform\nthe observation Q\nt\n. These geometric priors are critical for: (i)\nback-projecting 2D semantic observations into the 3D world,\n(ii) performing motion compensation for temporal tracking,\nand (iii) maintaining global map consistency. By anchoring all\nsubsequent instance-level detections to this metric foundation,\nwe ensure that the resulting spatio-temporal map is physically\ngrounded and suitable for downstream navigation tasks.\nB. Instance Layer: Spatio-Temporal Instance Association\nFor each image frame we first infer the 2D instance-level\ndetection and segmentations using vision models [12] [21],\nthen address the estimation of instance IDs I\nt \nby solving\nP (I\nt \n| M\nt−1\n, Q\nt\n). The objective is to assign a unique instance\nID to 2D detections by leveraging 3D spatial consistency.\n1) Hybrid Tracking State: We define the tracklet state\nS\ni\n(t) ∈ R\n6 \n(or R\n8 \nif including scale velocity) as a decoupled\nvector:\nS\ni\n(t) = [c\ni\n(t)\n⊤\n, s\ni\n(t)\n⊤\n, \n˙\nc\ni\n(t)\n⊤\n]\n⊤ \n(4)\nwhere c\ni\n(t) = [x, y]\n⊤ \nis the 2D image centroid, s\ni\n(t) =\n[w, h]\n⊤ \nrepresents the bounding box width and height, and\n˙\nc\ni\n(t) is the translational velocity in the image plane.\n2) 3D-to-2D Motion-Compensated State: Since standard\n2D trackers (e.g., ByteTrack [33]) struggle with rapid ego-\nmotion. We resolve this by defining a hybrid tracking state\nS\ni\n(t) that is updated via 3D-to-2D Motion Compensation.\nInstead of a linear motion model, we derive the predicted\ncentroid \nˆ\nc\ni\n(t) by projecting the 3D centroid X\ni \nof the instance\nin M\nt−1 \nusing the current pose P\nt\n:\nˆ\nc\ni\n(t) = π(K · P \n−1\nt \n· X\ni\n) (5)\nThe Kalman Filter state transition uses this projection as the\nprior:\nˆ\nS\ni\n(t) = FS\ni\n(t − 1) + w\nt\n, w\nt \n∼ N (0, Q) (6)\nwhere F is the state transition matrix and w\nt \nrepresents\nprocess noise. This projection-based prior allows the system\nto maintain identity through occlusions and aggressive robot\nmaneuvers.\n3) Probabilistic Geometric Consistency Update: The ob-\nservation Q\nt \nupdates the map M\nt \nby evaluating the posterior\nP (M\nt \n| M\nt−1\n, Q\nt\n, I\nt\n). We model the depth observation for\neach point X\nk \n∈ M\nt−1 \nas a random variable.\nLet d\nproj \n= ∥T\nCW \nX\nk\n∥\nz \nbe the expected (projected) depth\nof the point in the current camera frame, and D(u) be the\nraw sensor depth at the projected pixel u = π(X\nk\n). The depth\nresidual is defined as:\n∆d = d\nproj \n− D(u) (7)\nWe model the measurement likelihood under the assumption\nof Gaussian sensor noise, p(∆d) ∼ N (0, σ\n2\n). The occupancy\nstate o\nk \nof the map point is updated via a log-odds formulation\nto ensure numerical stability and recursive update capability:\nL(o\nk \n| Q\n1:t\n) = L(o\nk \n| Q\n1:t−1\n) + logit(P (o\nk \n| Q\nt\n)) (8)\nwhere L(n) = log \nn\n1−n \n. The inverse sensor model P (o\nk \n| Q\nt\n)\nis determined by the thresholded geometric consistency of ∆d:\ns\n(t)\nk \n=\n\n\n\n\n\nObservable if |∆d| ≤ τ\nϵ\nUnobservable if ∆d > τ\nϵ \n(Point behind surface)\nDisappeared if ∆d < −τ\nϵ \n(Point in front of surface)\n(9)\n\n## page 5\n\nPoints classified as dynamic are penalized in the log-odds\nupdate, effectively pruning transient or moved objects from\nthe global map to maintain a consistent representation of the\nenvironment. This enables the change detection in dynamic\nscenes, and also provides geometric cue for fusing the seman-\ntic inference across frames.\n4) Bayesian Semantic Fusion: To handle the uncertainty\nin the output of vision models, each instance maintains a\ncategorical distribution P (L\nj \n= c). Given observations z\n1:t\nfrom an open-vocabulary detector, the posterior belief is:\nP (L\nj \n= c | z\n1:t\n) = η · P (z\nt \n| L\nj \n= c) · P (L\nj \n= c | z\n1:t−1\n)\n(10)\nwhere P (z\nt \n| L\nj \n= c) is the detector’s confusion matrix.\nFor observable points in (9), we update the semantic label\nusing (10), and consequently remove object points whose\nposterior belief is too small. This fusion suppresses transient\nmisclassifications.\nC. Topological Layer: Spatio-Temporal Scene Graph\nThe map M\nt \nis abstracted into a graph G = (V, E\ns\n, E\nt\n).\nNodes V represent object instances.\n• Spatial Edges (E\ns\n): Established via class-dependent ge-\nometric predicates. For objects A, B: On(A, B) ⇐⇒\n(z\nA\nmin \n≈ z\nB\nmax\n) ∧ (IoU\nxy \n(B\nA\n, B\nB \n) > γ).\n• Temporal Edges (E\nt\n): Link nodes across time based on\nI\nt \nresults, tracing object trajectories.\nFor real-time operation, we first cluster objects based on\ntheir centroid distances and then add a spatial edge when\nan object pair satisfies class-dependent geometric predicates\n(e.g., on, beside, under). The temporal edges trace an ob-\nject’s trajectory from our object association result, preserving\nits identity throughout the sequence. The resulting graph\ncompactly captures both instantaneous layout and long-term\ndynamics, providing an abstract representation of the scene\nthat is easy to reason on. Full construction details appear in\nthe supplementary material.\nD. Visual Language Navigation via 4D Scene Graphs\nThe 4D scene graph G provides a high-level interface\nbetween raw sensor data and the symbolic inputs required by\nVision–Language Models (VLMs). By delegating geometric\ndetail to the spatio-temporal map, the VLM can perform\nzero-shot reasoning over long-term scene dynamics without\nprocessing raw point clouds or video streams.\na) Spatio-Temporal Serialization: We serialize a local\nsubgraph into a structured text representation for linguistic\nreasoning. Each node v ∈ V is encoded by its instance\nID, semantic label, and 3D centroid X\nv \n∈ R\n3\n. Spatial and\ntemporal edges (E\nS \n, E\nT \n) are represented as symbolic relations\n(e.g., Instance 1 on Instance 2\n). Reliability is improved by\n(1) prepending a schema that defines the graph structure and\ncoordinate frame, and (2) injecting explicit spatio-temporal\ncues that encourage trajectory- and relation-aware reasoning.\nb) Grounded Actuation and Waypoint Generation:\nTo convert VLM outputs into deterministic control sig-\nnals, the model must return target instance IDs within\n<answer></answer> tags. A parser extracts these IDs and\nretrieves their 3D centroids X\nj \nfrom the map M\nt\n, which\nare then used as navigation waypoints. This process translates\nhigh-level language instructions into precise, grounded robot\nactions.\nV. EXPERIMENTS\nA. Experiment Settings\na) Hardware Configuration: We evaluate SuperMap on\na custom-built mecanum-wheeled mobile platform designed\nfor agile indoor navigation. The sensor suite comprises a Livox\nMid-360 LiDAR, which provides a 360\n◦\n× 59\n◦ \nfield of view,\nand a panoramic camera providing 360\n◦ \nRGB coverage. We\nimplement a software-based timestamp alignment to associate\nvisual and LiDAR streams. All computations, including LVI-\nodometry, instance tracking, 4D graph maintenance, and VLM\ninterfacing, run onboard in real-time on an Intel i9-14900H\nCPU and an NVIDIA RTX 4090 Laptop GPU (16GB VRAM).\nWe aim to address the following research questions through\nour experiments:\n• Semantic Quality: How does SuperMap’s incremental\nobject-centric mapping compare to state-of-the-art offline\nand online 3D semantic mapping approaches on the\nScanNet benchmark (Sec. V-B)?\n• Spatio-Temporal Consistency: Can the 4D graph accu-\nrately detect scene changes (appearances/disappearances)\nwhile maintaining persistent identities for static objects\nover long-duration trajectories (Sec. V-C)?\n• Grounded Reasoning: Does the structured scene graph\nrepresentation improve the accuracy and token efficiency\nof VLM reasoning comparing to video input (Sec. V-F)?\n• Online Visual-language Navigation: Can the integrated\npipeline support end-to-end, zero-shot, language-guided\nnavigation using solely onboard compute (Sec. V-G)?\nB. Semantic Quality: Quantitative Results for Class-level and\nInstance-level Segmentation\nTo evaluate the semantic fidelity of SuperMap, we conduct a\ncomparative analysis against state-of-the-art open-vocabulary\nmapping frameworks, focusing on both class-level precision\nand instance-level consistency.\na) Class-level Segmentation: Table II summarizes the\nperformance on the ScanNet benchmark. SuperMap achieves\na competitive accuracy of 55.48%, outperforming established\nobject-centric baselines such as ConceptGraphs [5] and Con-\nceptFusion [7]. While our accuracy is slightly lower (1.32%)\nthan the point-feature fusion method RayFronts [1], SuperMap\nmaintains a significantly lower computational footprint, mak-\ning it more suitable for high-rate robotic feedback loops.\nThese results demonstrate its effectiveness in open-vocabulary\nsegmentation among works on object-centric mapping.\n\n## page 6\n\nTABLE II: Class-level Segmentation Benchmarking on ScanNet. Best results are highlighted as first and second .\nMethod Mapping Approach Without Background With Background\nmIoU (%) f-mIoU (%) Acc (%) mIoU (%) f-mIoU (%) Acc (%)\nConceptFusion [7]\npoint-feature\n21.76 26.71 34.10 18.57 23.06 28.77\nNACLIP-3D [6] 22.32 24.32 33.46 22.32 24.32 33.46\nTrident-3D [26] 29.97 37.62 51.06 24.80 27.77 38.43\nRayFronts [1] 41.29 46.42 56.76 32.29 39.04 49.15\nConceptGraphs [5]\nobject-level\n21.62 24.32 31.05 20.83 23.61 35.80\nHOV-SG [30] 26.79 36.05 35.17 23.48 28.92 38.52\nSuperMap (Ours) 27.42 43.50 55.48 22.61 29.10 33.00\nTABLE III: Instance-level Segmentation Benchmark on ScanNet. Best results are highlighted as first and second .\nMethod Chair Window Refrigerator Sofa Door\nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25\nHOV-SG [30] 4.58 4.73 0.00 0.00 0.00 0.00 30.00 31.25 9.70 10.40\nConceptGraphs [5] \n0.00 2.33 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00\nSuperMap (Ours) 63.76 74.72 42.20 67.92 62.50 62.50 33.35 83.35 10.00 25.00\nb) Instance-level Segmentation: Unlike offline frame-\nworks that rely on global scene context, SuperMap targets\nonline robotic deployment, where incremental data fusion and\nzero-shot generalization are essential. This setting requires\nestablishing object correspondences from partial, streaming\nobservations in real time. To enable zero-shot perception,\nwe integrate GroundingDINO [12] for language-grounded\ndetection and SAM2 [21] for robust instance segmentation.\nWe report comparative results against HOV-SG [30] and Con-\nceptGraphs [5] in Table III. SuperMap significantly outper-\nforms these baselines, particularly for discrete objects con-\ntained within the camera’s instantaneous field of view. This\ngain demonstrates the efficacy of our 3D-aware tracking-\nby-detection approach over methods relying on point-feature\nclustering or over-segmented geometries.\nC. Spatio-Temporal Consistency on Qualitative Evaluation\nWe evaluate SuperMap’s ability to maintain map in-\ntegrity over extended durations while identifying environmen-\ntal changes. In a 10-minute real-world experiment (30m ×\n20m indoor area), we introduced structural changes: three\nobjects were removed (a plant, a trash can, and a chair) and\nthree were added (a bucket, a cart, and a safety sign).\na) Qualitative Performance: Fig. 3 qualitatively demon-\nstrates SuperMap’s long-horizon instance consistency under\nboth disappearance and appearance events. The top row shows\nthree objects that disappear from the scene. In all cases, the\ninstance IDs remain consistent over time, indicating that the\nsystem preserves object identity even when objects are no\nlonger observed.\nFor example, the top row shows three objects that newly\nappear in the scene. In the top-left example, we place a\nnew bucket instance (bucket 1964) between Chair 155 and\nChair 203. In the bottom-left example, Chair 7 disappears\nbetween table 1 and chair 4. Nonetheless, the small ID label\nin the Rerun visualization remains unchanged, showing that\nthe system maintains the same instance association before and\nafter the disappearance event. It demonstrates consistent object\ntracking and identity maintenance over long time horizons.\nD. Spatial-Temporal Consistency on Quantitative Evaluation\nWe quantitatively assess SuperMap using six target objects\n(Fig. 3) against manually annotated 3D bounding boxes and\nsemantic labels. We define two primary metrics:\n• Object Detection Recall: Measured during the appear-\nance interval (when the object is present). A True Positive\n(TP) requires a 3D IoU > 0.1, centroid distance < 0.3m,\nand the correct semantic label.\n• Change Detection Recall: Evaluates the system’s ability\nto detect an object during its appearance and confirm its\nremoval during the disappearance interval. A TP requires\ndetection in the former and zero false-positive detections\nin the latter.\nAs shown in Table IV, DualMap [8] achieves near-zero recall\nfor object detection due to unstable 2D segmentation and\ninconsistent 3D box estimation, which causes most instances\nto be filtered out by its mapping module. While it maintains a\nnominal ∼ 0.5 recall for change detection, this is a mathemat-\nical artifact: the method “succeeds” during the disappearance\ninterval only because it failed to detect the object initially.\nMeanwhile, Khronos fails to produce consistent 3D estimation\nresults (details shown in Supplementary) due to latent seman-\ntic inference bottlenecks that cause significant frame drops\nand degraded semantic mask quality. In contrast, SuperMap\nmaintains high recall across both metrics, demonstrating robust\ninstance detection.\nE. SuperMap System Ablation Study\nWe evaluated the contribution of our individual sub-\nmodules, specifically the 2D tracking, geometric consistency\nupdate, and Bayesian semantic fusion. Using a scene with 41\nannotated objects, we quantified the performance of the spatio-\ntemporal object map using precision, recall, and F1 scores.\n\n## page 7\n\nFig. 3: Spatio-temporal Consistency. For each example (left to right), we show the 2D detections, the dense 3D reconstruction, and the\nobject-centric map rendered in Rerun before and after the scene change. Top: three appearance events (bucket, cart, safety sign), where\nnewly introduced objects receive new IDs while nearby objects retain their original IDs, demonstrating long-horizon re-identification and\nstable instance association in 3D. Bottom: three disappearance events (chair, plant, trash can), where the same instance ID is preserved\nacross time despite the object leaving the field of view.\nTABLE IV: Spatial–Temporal Change Detection Performance.\nMethod Task Appeared Disappeared\nBuc. Cart Sign Plant Trash Chair\nKhronos [25]\nDetect.\n– – – – – –\nDualMap [8] 0.000 0.000 0.000 0.000 0.310 0.000\nSuperMap (ours) 1.000 0.262 0.583 0.755 0.434 1.000\nKhronos [25]\nChange\n– – – – – –\nDualMap [8] 0.553 0.527 0.507 0.561 0.642 0.449\nSuperMap (ours) 1.000 0.622 0.790 0.865 0.679 1.000\nTABLE V: Performance Comparison of Ablation Study\nConfiguration Precision Recall F1\nW/o 2D Tracker 0.7787 0.4595 0.5780\nW/o Semantic Fusion 0.7929 0.3870 0.5201\nW/o Geometric Consistency Update 0.8189 0.4448 0.5764\nAll (proposed) 0.8677 0.4955 0.6308\nAs shown in Table V, the full system outperforms all\nbaseline configurations across every metric, yielding the most\naccurate object map. This improvement stems from two pri-\nmary factors. The 2D tracker maintains consistent identity\nassociation during significant viewpoint changes to prevent\nobject fragmentation. Additionally, the integration of geomet-\nric and semantic fusion allows the system to remain resilient\nagainst momentary detection failures. By re-evaluating past\ninferences against new evidence over multiple frames, the map\neffectively self-corrects and filters out detection noise.\nF. Grounding Reasoning\nWe evaluate the 4D scene graph as a grounding engine\nfor Large Vision-Language Models (VLMs) using Gemini\n2.0 Flash [29]. We compare reasoning performance between\nstructured Scene Graph Input (serialized predicates) and raw\nVideo Input (RGB sequences). As shown in Fig. 4, the 4D\nscene graph provides superior accuracy for complex queries:\n• Spatial Logic (Prompt 1): Given a fire emergency sce-\nnario, the VLM utilizes the graph’s metric edges to dis-\nambiguate a specific “extinguisher” relative to a “cone”\nand “plant.” While raw video suffers from perspective\ndistortion and object confusion, the scene graph enables\nprecise distance calculation and instance retrieval.\n• Temporal Logic (Prompt 2): When tracing a “bag’s”\npast trajectory to find a dropped item, the VLM traverses\nthe graph’s temporal edges E\nT \n. The structured history al-\nlows for filtered, timestamped retrieval of dynamic states.\nConversely, video-based reasoning relies on unreliable\n“common-sense” heuristics and suffers from hallucina-\ntions as temporal depth increases.\nG. Visual Language Navigation\nWe evaluate the downstream utility of SuperMap through\nzero-shot, language-guided navigation in previously unseen\nenvironments. Using the real-time 4D scene graph, the robot\nnavigates reliably based solely on spatial relationships among\n3D objects.\na) Onboard Grounding and Execution: During au-\ntonomous exploration, the robot incrementally builds an\ninstance-level semantic map. When given a natural language\ncommand (e.g., “Go to the whiteboard next to the painting,\nthen go to the painting next to the fridge”), the VLM interprets\nthe spatial relations encoded in the 4D scene graph to resolve\nambiguity and outputs precise 3D goal coordinates for the\nnavigation stack.\n\n## page 8\n\nFig. 4: Comparison of Reasoning Results using Video Input and Scene-graph Input. Compared to raw video, the scene-graph\nrepresentation yields more reliable spatial reasoning, clearer temporal inference, and more accurate instance-level object retrieval.\nFig. 5: Online Visual–Language Navigation using Scene Graphs. Our system enables robots to understand and reason about the spatial\nrelationships in language instructions for VLN. See the supplementary video for more details.\nb) Experimental Validation: As shown in Fig. 5, Ours\nsupport navigation in visually ambiguous environments:\n• Spatial ordering : The robot selects the correct target\namong four visually identical whiteboards by reasoning\nover their relative spatial scene graph (left subfigure).\n• Relational retrieval: The robot identifies the relationship\nbetween the fridge and the painting to reach the intended\nadjacent destination (right subfigure).\nH. Runtime and Memory\nTo assess the computational efficiency of our system, we\nmeasure the throughput of each module. The pose estimation\nmodule maintains a consistent 10 Hz output, while 2D instance\nsegmentation operates at 1 Hz due to the heavy inference\nrequirements of semantic segmentation. The remainder of the\narchitecture performs 3D mapping and 4D scene graph updates\nat 3 Hz and 5 Hz, respectively.\nVI. CONCLUSION\nWe present SuperMap, a real-time, open-vocabulary SLAM\nsystem that constructs and maintains an instance-level 4D se-\nmantic map. By integrating geometric constraints from SLAM\nwith semantic features from 2D foundation models, SuperMap\nperforms joint 2D-3D object tracking, instance validation, and\nchange detection online. This unified pipeline ensures spatio-\ntemporal consistency despite occlusions, partial observations,\nor dynamic environmental changes. The resulting 4D scene\ngraph provides an explicit, continuously updated world model,\nempowering robots with long-term memory, robust spatio-\ntemporal reasoning, and language-guided navigation.\nVII. LIMITATION\nWhile SuperMap provides a robust framework for spatio-\ntemporal mapping, its performance in tracking highly dynamic\nobjects remains limited. Future iterations could address this\nby incorporating specialized tracking-by-detection modules\nor efficient segmentation-based tracking to improve temporal\ncoherence. Furthermore, our current pipeline relies on a pre-\ndefined list of object prompts for open-vocabulary 2D detec-\ntion. Integrating an automated prompting mechanism based on\nopen-world object discovery would significantly enhance the\nsystem’s adaptability, allowing it to function in truly novel\nenvironments without prior semantic knowledge.\n\n## page 9\n\nREFERENCES\n[1] Omar Alama, Avigyan Bhattacharya, Haoyang He, Se-\nungchan Kim, Yuheng Qiu, Wenshan Wang, Cherie Ho,\nNikhil Keetha, and Sebastian Scherer. Rayfronts: Open-\nset semantic ray frontiers for online scene understanding\nand exploration. arXiv preprint arXiv:2504.06994, 2025.\n[2] Xieyuanli Chen, Andres Milioto, Emanuele Palazzolo,\nPhilippe Giguere, Jens Behley, and Cyrill Stachniss.\nSuma++: Efficient lidar-based semantic slam. In 2019\nIEEE/RSJ International Conference on Intelligent Robots\nand Systems (IROS), pages 4530–4537. IEEE, 2019.\n[3] Linyan Cui and Chaowei Ma. Sof-slam: A semantic\nvisual slam for dynamic environments. IEEE access, 7:\n166528–166539, 2019.\n[4] Yinan Deng, Bicheng Yao, Yihang Tang, Yi Yang, and\nYufeng Yue. Openvox: Real-time instance-level open-\nvocabulary probabilistic voxel representation. arXiv\npreprint arXiv:2502.16528, 2025.\n[5] Qiao Gu, Ali Kuwajerwala, Sacha Morin,\nKrishna Murthy Jatavallabhula, Bipasha Sen, Aditya\nAgarwal, Corban Rivera, William Paul, Kirsty Ellis,\nRama Chellappa, et al. Conceptgraphs: Open-vocabulary\n3d scene graphs for perception and planning. In 2024\nIEEE International Conference on Robotics and\nAutomation (ICRA), pages 5021–5028. IEEE, 2024.\n[6] Sina Hajimiri, Ismail Ben Ayed, and Jose Dolz.\nPay attention to your neighbours: Training-free open-\nvocabulary semantic segmentation. In 2025 IEEE/CVF\nWinter Conference on Applications of Computer Vision\n(WACV), pages 5061–5071. IEEE, 2025.\n[7] Krishna Murthy Jatavallabhula, Alihusein Kuwajerwala,\nQiao Gu, Mohd Omama, Tao Chen, Alaa Maalouf,\nShuang Li, Ganesh Iyer, Soroush Saryazdi, Nikhil\nKeetha, et al. Conceptfusion: Open-set multimodal 3d\nmapping. arXiv preprint arXiv:2302.07241, 2023.\n[8] Jiajun Jiang, Yiming Zhu, Zirui Wu, and Jie Song.\nDualmap: Online open-vocabulary semantic mapping for\nnatural language navigation in dynamic changing scenes.\nIEEE Robotics and Automation Letters, 10(12), 2025.\n[9] Justin Kerr, Chung Min Kim, Ken Goldberg, Angjoo\nKanazawa, and Matthew Tancik. Lerf: Language em-\nbedded radiance fields. In Proceedings of the IEEE/CVF\nInternational Conference on Computer Vision, pages\n19729–19739, 2023.\n[10] Ghanta Sai Krishna, Kundrapu Supriya, and Sabur\nBaidya. 3ds-slam: A 3d object detection based seman-\ntic slam towards dynamic indoor environments. arXiv\npreprint arXiv:2310.06385, 2023.\n[11] Rong Li, Shijie Li, Lingdong Kong, Xulei Yang, and\nJunwei Liang. Seeground: See and ground for zero-shot\nopen-vocabulary 3d visual grounding. In Proceedings\nof the IEEE/CVF Conference on Computer Vision and\nPattern Recognition (CVPR), 2025.\n[12] Shilong Liu, Zhaoyang Zeng, Tianhe Ren, Feng Li, Hao\nZhang, Jie Yang, Qing Jiang, Chunyuan Li, Jianwei\nYang, Hang Su, et al. Grounding dino: Marrying dino\nwith grounded pre-training for open-set object detection.\nIn European Conference on Computer Vision, pages 38–\n55. Springer, 2024.\n[13] Xu Liu, Jiuzhou Lei, Ankit Prabhu, Yuezhan Tao, Igor\nSpasojevic, Pratik Chaudhari, Nikolay Atanasov, and Vi-\njay Kumar. Slideslam: Sparse, lightweight, decentralized\nmetric-semantic slam for multi-robot navigation. arXiv\npreprint arXiv:2406.17249, 2024.\n[14] Dominic Maggio, Yun Chang, Nathan Hughes, Matthew\nTrang, Dan Griffith, Carlyn Dougherty, Eric Cristofalo,\nLukas Schmid, and Luca Carlone. Clio: Real-time task-\ndriven open-set 3d scene graphs. IEEE Robotics and\nAutomation Letters, 2024.\n[15] Tomas Berriel Martins, Martin R Oswald, and Javier\nCivera. Ovo-slam: Open-vocabulary online simul-\ntaneous localization and mapping. arXiv preprint\narXiv:2411.15043, 2024.\n[16] Songyou Peng, Kyle Genova, Chiyu Jiang, Andrea\nTagliasacchi, Marc Pollefeys, Thomas Funkhouser, et al.\nOpenscene: 3d scene understanding with open vocabu-\nlaries. In Proceedings of the IEEE/CVF conference on\ncomputer vision and pattern recognition, pages 815–824,\n2023.\n[17] Minghan Qin, Wanhua Li, Jiawei Zhou, Haoqian Wang,\nand Hanspeter Pfister. Langsplat: 3d language gaussian\nsplatting. In Proceedings of the IEEE/CVF Conference\non Computer Vision and Pattern Recognition, pages\n20051–20060, 2024.\n[18] Yuheng Qiu, Chen Wang, Wenshan Wang, Mina Henein,\nand Sebastian Scherer. Airdos: Dynamic slam benefits\nfrom articulated objects. In 2022 International Confer-\nence on Robotics and Automation (ICRA), pages 8047–\n8053. IEEE, 2022.\n[19] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya\nRamesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry,\nAmanda Askell, Pamela Mishkin, Jack Clark, et al.\nLearning transferable visual models from natural lan-\nguage supervision. In International conference on ma-\nchine learning, pages 8748–8763. PmLR, 2021.\n[20] Krishan Rana, Jesse Haviland, Sourav Garg, Jad Abou-\nChakra, Ian Reid, and Niko Suenderhauf. Sayplan:\nGrounding large language models using 3d scene graphs\nfor scalable robot task planning. arXiv preprint\narXiv:2307.06135, 2023.\n[21] Nikhila Ravi, Valentin Gabeur, Yuan-Ting Hu, Ronghang\nHu, Chaitanya Ryali, Tengyu Ma, Haitham Khedr, Ro-\nman R¨adle, Chloe Rolland, Laura Gustafson, et al. Sam\n2: Segment anything in images and videos. arXiv preprint\narXiv:2408.00714, 2024.\n[22] Sonia Raychaudhuri and Angel X Chang. Semantic\nmapping in indoor embodied ai–a comprehensive survey\nand future directions. arXiv preprint arXiv:2501.05750,\n2025.\n[23] Tianhe Ren, Shilong Liu, Ailing Zeng, Jing Lin, Kun-\nchang Li, He Cao, Jiayu Chen, Xinyu Huang, Yukang\n\n## page 10\n\nChen, Feng Yan, et al. Grounded sam: Assembling open-\nworld models for diverse visual tasks. arXiv preprint\narXiv:2401.14159, 2024.\n[24] Antoni Rosinol, Marcus Abate, Yun Chang, and Luca\nCarlone. Kimera: an open-source library for real-time\nmetric-semantic localization and mapping. In 2020 IEEE\nInternational Conference on Robotics and Automation\n(ICRA), pages 1689–1696. IEEE, 2020.\n[25] Lukas Schmid, Marcus Abate, Yun Chang, and Luca Car-\nlone. Khronos: A unified approach for spatio-temporal\nmetric-semantic slam in dynamic environments. arXiv\npreprint arXiv:2402.13817, 2024.\n[26] Yuheng Shi, Minjing Dong, and Chang Xu. Harnessing\nvision foundation models for high-performance, training-\nfree open vocabulary segmentation. arXiv preprint\narXiv:2411.09219, 2024.\n[27] Seungwon Song, Hyungtae Lim, Alex Junho Lee, and\nHyun Myung. Dynavins: A visual-inertial slam for\ndynamic environments. IEEE Robotics and Automation\nLetters, 7(4):11523–11530, 2022.\n[28] Ayc¸a Takmaz, Elisabetta Fedele, Robert W Sumner, Marc\nPollefeys, Federico Tombari, and Francis Engelmann.\nOpenmask3d: Open-vocabulary 3d instance segmenta-\ntion. arXiv preprint arXiv:2306.13631, 2023.\n[29] Gemini Team, Rohan Anil, Sebastian Borgeaud, Jean-\nBaptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalk-\nwyk, Andrew M Dai, Anja Hauth, Katie Millican, et al.\nGemini: a family of highly capable multimodal models.\narXiv preprint arXiv:2312.11805, 2023.\n[30] Abdelrhman Werby, Chenguang Huang, Martin B¨uchner,\nAbhinav Valada, and Wolfram Burgard. Hierarchical\nopen-vocabulary 3d scene graphs for language-grounded\nrobot navigation. In First Workshop on Vision-Language\nModels for Navigation and Manipulation at ICRA 2024,\n2024.\n[31] Chao Yu, Zuxin Liu, Xin-Jun Liu, Fugui Xie, Yi Yang,\nQi Wei, and Qiao Fei. Ds-slam: A semantic visual slam\ntowards dynamic environments. In 2018 IEEE/RSJ in-\nternational conference on intelligent robots and systems\n(IROS), pages 1168–1174. IEEE, 2018.\n[32] Yuhui Yuan, Rao Fu, Lang Huang, Weihong Lin, Chao\nZhang, Xilin Chen, and Jingdong Wang. Hrformer: High-\nresolution vision transformer for dense predict. Advances\nin neural information processing systems, 34:7281–7293,\n2021.\n[33] Yifu Zhang, Peize Sun, Yi Jiang, Dongdong Yu, Fucheng\nWeng, Zehuan Yuan, Ping Luo, Wenyu Liu, and Xing-\ngang Wang. Bytetrack: Multi-object tracking by associ-\nating every detection box. In European conference on\ncomputer vision, pages 1–21. Springer, 2022.\n[34] Shibo Zhao, Zheng Fang, HaoLai Li, and Sebastian\nScherer. A robust laser-inertial odometry and mapping\nmethod for large-scale highway environments. In 2019\nIEEE/RSJ International Conference on Intelligent Robots\nand Systems (IROS), pages 1285–1292. IEEE, 2019.\n[35] Shibo Zhao, Hengrui Zhang, Peng Wang, Lucas\nNogueira, and Sebastian Scherer. Super odometry: Imu-\ncentric lidar-visual-inertial estimator for challenging en-\nvironments. In 2021 IEEE/RSJ International Conference\non Intelligent Robots and Systems (IROS), pages 8729–\n8736. IEEE, 2021.\n\n## page 11\n\nSupplementary: A Spatio-Temporal SLAM System\nfor Visual-Language Navigation\nShibo Zhao\n†\n, Guofei Chen\n†\n, Honghao Zhu, Zhiheng Li, Changwei Yao,\nNader Zantout, Seungchan Kim, Wenshan Wang, Ji Zhang, and Sebastian Scherer\nThe Robotics Institute, Carnegie Mellon University\n{guofeic, shiboz, basti}@andrew.cmu.edu\n†\nEqual contribution\nINTRODUCTION\nThis supplementary material provides additional experimen-\ntal results, qualitative analyses, implementation details, and\nclarifications that complement the main paper. Our goal is not\nto maximize isolated per-frame segmentation scores; instead,\nSuperMap is designed to improve robustness in dynamic\nenvironments and to enable long-horizon, object-centric scene\nunderstanding for downstream robotics tasks.\nMost semantic SLAM systems [24, 5] are evaluated using\nstatic perception metrics such as mIoU and mAP. While these\nmetrics measure per-frame recognition quality, they do not\ncapture a key requirement for real-world autonomy: long-\nhorizon consistency in dynamic scenes. In practice, robots\nshould not only detect objects but also maintain stable instance\nidentities as objects become occluded, move, leave the scene,\nor reappear. Achieving this requires reliable data association,\ntemporal memory, and mechanisms to update the map as the\nenvironment evolves—capabilities that are largely unmeasured\nby standard segmentation benchmarks.\nSuperMap addresses this limitation by maintaining object-\nlevel identities within a spatio-temporal map. As shown in the\nsupplementary videos, the system can (i) remove objects that\nare no longer present, (ii) integrate newly observed objects,\nand (iii) re-associate previously seen objects under partial\nobservations or moderate semantic drift. These properties\nare important for downstream tasks such as language-guided\nnavigation, spatio-temporal reasoning, and long-term planning.\nThese observations motivate evaluation protocols that ex-\ntend beyond static instance segmentation. To support this\nperspective, we provide additional qualitative analyses and\nreal-robot deployment videos illustrating the system’s tempo-\nral behavior. As for the quantitative evaluation, it has been\ndiscussed in Table IV in the main paper experiment section\nV-A D.\nEXPERIMENTS\nA. Qualitative Analysis of Object Tracking Ablations\nJoint 2D–3D tracking and the consistency check are key\ncomponents of SuperMap. We evaluate their contribution to\n(i) maintaining consistent instance identities over time, (ii)\nremoving objects that disappear from the scene, and (iii)\nreducing projection-induced errors and other outliers.\n1) 2D-Only Tracking vs. 2D–3D Tracking: Figures 1 and 2\ncompare a 2D-only ByteTrack[33] baseline with our 2D–3D\nvariant, which refines 2D bounding-box states using estimated\nvisibility and projections of 3D object centroids.\n• Large viewpoint change. In Fig. 1, rapid camera motion\ncauses the 2D-only tracker to lose tracks for nearby chairs\nand tables, leading to fragmented identities and degraded\nmapping. In contrast, the 2D–3D tracker preserves these\nidentities by leveraging 3D cues, resulting in more tem-\nporally coherent instance IDs.\n• Dynamic objects. In Fig. 2, a person moves across the\nrobot’s field of view. The 2D-only baseline repeatedly\ninitializes new tracks for the same person, whereas our\n2D–3D tracker maintains a single continuous ID, which\nis consistently reflected in the semantic map.\n2) Impact of the Consistency Check: Figure 3 ablates the\ngeometric and semantic consistency checks used to remove\nstale or spurious map points in a dynamic scene, where a\nperson walks in front of a static cabinet:\n1) No check. Without consistency checking, points associ-\nated with the person persist after the person has moved\naway, leaving stale artifacts in the map.\n2) Geometric only. The geometric check removes unsup-\nported points, but projection-induced outliers can still\nremain on the cabinet surface.\n3) Geometric + semantic (ours). Combining geometric\nand semantic checks removes both stale points and\nprojection outliers, producing an up-to-date map.\nThis ablation demonstrates that joint consistency checking is\nimportant for reliable mapping in dynamic environments.\nB. Qualitative Instance-Level Segmentation Results\nWe present qualitative comparisons of instance-level seg-\nmentation results against recent state-of-the-art methods.\nAcross representative sequences, SuperMap better preserves\ninstance identities over time, whereas ConceptGraphs and\nHOV-SG more frequently fragment a single physical object\ninto multiple instances. We also observe that the instance\nfeatures used by ConceptGraphs and HOV-SG (based on\nCLIP embeddings) can become less discriminative over long\nsequences, which increases confusion between foreground\nobjects and background regions.\n\n## page 12\n\nTABLE I: 3D instance segmentation on ScanNet with memory and runtime statistics. TPF denotes mapping time per\nframe. Best results are highlighted as first and second .\nMethod Chair Window Refrigerator Sofa Door Avg. Mem (MB) Peak Mem (MB) TPF (s)\nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25 \nmAP\n50 \nmAP\n25\nHOV-SG [30] 4.58 4.73 0.00 0.00 0.00 0.00 30.00 31.25 9.70 10.40 8755.86 10226.66 8.623\nConceptGraphs [5] 0.00 2.33 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 859.86 886.18 0.092\nSuperMap (Ours) 63.76 74.72 42.20 67.92 62.50 62.50 33.35 83.35 10.00 25.00 2030.09 2184.86 0.3604\nFig. 1: Ablation on tracking under large viewpoint changes. Our 2D–3D tracker (top) preserves consistent object tracks\nand yields a coherent map across significant viewpoint changes, whereas the 2D-only tracker (bottom) suffers from track\nfragmentation, resulting in incorrect object identities. Notably, the 2D-only tracker (bottom) exhibits clear ID switches between\nt = 0 s and t = 2.5 s.\nC. Object-Level Mapping in Long-Term Dynamic Environ-\nments\nFigures 5–10 illustrate long-term scene changes across two\ntraversals of the same environment. We highlight three newly\nappeared objects (a yellow bucket, a cart, and a safety sign)\nand three disappeared objects (a plant on a table, a blue trash\ncan, and a chair). These examples demonstrate that SuperMap\ncan both identify object-level changes and update the spatio-\ntemporal map accordingly. Additional qualitative results are\nprovided in the supplementary video.\nD. Runtime Details of Each Component\nFor reproducibility, we report the update rates of each\nmodule in our system:\n• Pose estimation: 10 Hz\n• Dense 3D mapping and 3D bounding box update: 3 Hz\n• 2D instance segmentation: 1 Hz\n• 4D scene graph update: 5 Hz\nMemory usage and mapping-time statistics are summa-\nrized in Table I. As shown in Table I, SuperMap achieves\nsubstantially stronger instance-level performance across cate-\ngories while maintaining moderate runtime and memory usage.\nAlthough our method does not achieve the lowest memory\nfootprint, this is expected because SuperMap maintains per-\n\n## page 13\n\nFig. 2: Ablation on tracking dynamic objects. The first row shows our 2D–3D tracking, while the second row shows 2D-only\ntracking. The 2D-only tracker frequently loses the target, resulting in the same person being represented as multiple objects\nin the map. In contrast, our 2D–3D tracker maintains a consistent identity over time.\nsistent object-level representations, temporal associations, and\na 4D scene graph to support long-horizon consistency. These\ndesign choices intentionally trade minimal memory usage for\ntemporally consistent mapping and richer scene understanding.\nIn practice, the memory consumption remains within the\ncapacity of standard robotic computing platforms and enables\ncapabilities that lightweight per-frame methods do not provide.\nConceptGraph incorporates CLIP features to support open-\nvocabulary object querying. However, the queried semantic\nfeatures are typically sparse in the reconstructed map. As\na result, while target objects can be retrieved, the resulting\nspatial localization remains coarse, and the precision falls\nsignificantly below standard detection benchmarks such as\nmAP@50 and mAP@25.\nVIII. METHOD\nWe present the spatio-temporal object update procedure\nused in our semantic SLAM system. The algorithm processes\na sequence of observations comprising detected boxes B\ndet\n, an\nRGB image I, a depth map D\nI \n, and pose information Odom\n(odometry or estimated camera pose). We use a multi-object\ntracker T (Kalman-filter based, following ByteTrack [33]) to\nmaintain temporal identity consistency across frames.\nA. 2D-3D Consistency Check\nTo update objects in the map, we perform two key checks:\n• Whether the object’s voxels remain occupied.\n• Whether the occupied and visible voxels are supported\nby the latest semantic inference from the image.\nThe geometric consistency check is implemented in lines\n2–5, while the semantic consistency is in lines 6–19.\n\n## page 14\n\nFig. 3: Ablation of the consistency check. Comparison of mapping results without consistency checks, with geometric-only\nchecks, and with joint geometric+semantic checks (ours). Without consistency checks, stale points from dynamic objects persist\nin the map. Geometric checks remove some unsupported points but may leave projection artifacts. The joint geometric and\nsemantic consistency check produces a cleaner and more up-to-date map.\nFig. 4: Qualitative comparison of instance-level segmentation. Background points are removed for clarity. SuperMap\nmaintains more consistent instance identities and shows fewer confusions between objects and background compared to prior\nmethods.\nB. 3D-aware Instance Tracking\nTo enhance the matching between new bounding boxes\nand existing map objects, we introduce a 3D-aware instance\ntracking mechanism.\nOur tracking algorithm builds on Algorithm 1 from Byte-\nTrack [33], preserving the original 2D state representation\nand motion model for tracklets. In addition, we incorporate\ngeometric cues to update the internal states of the tracklets.\n\n## page 15\n\nFig. 5: Newly appeared object (yellow bucket). When revis-\niting the environment, SuperMap detects the newly introduced\nbucket and incorporates it into the object-level map.\nFig. 6: Newly appeared object (cart). The system recognizes\nthe cart as a new instance and updates the map accordingly.\nFig. 7: Newly appeared object (safety sign). SuperMap adds\nthe newly observed sign to the spatio-temporal map.\nFig. 8: Disappeared object (plant on table). The system\nremoves the plant from the map after it is no longer observed.\nFig. 9: Disappeared object (blue trash can). SuperMap\nupdates the map to reflect the removal of the trash can.\nFig. 10: Disappeared object (chair). The system correctly\nremoves the chair from the object-level map once it is absent.\n\n## page 16\n\nAlgorithm 1 Instance Layer: Spatio-Temporal Instance Asso-\nciation\nRequire: Observation stream S = {(B\ndet\n, I, D\nI \n, Odom)};\ntracker T\nEnsure: Updated map M\n1: M ← InitMap(); T ← InitTracker()\n2: for all (B\ndet\n, I, D\nI \n, Odom) ∈ S do\n(1) Gather local map context\n3: O\nnbr \n← GetNeighborObjects(M, Odom)\n(2) Geometric consistency check (Eq. 7)\n4: (O\nfront\n, O\non\n, O\nbehind\n) ←\nCompareDepth(D\nI \n, O\nnbr\n, Odom)\n5: O\nneg \n← O\nfront \n▷ inconsistent depth\n(3) Track update and detection association\n6: T\nalive \n← T .GetAliveTracks()\n7: for all O ∈ O\non \ndo\n8: if O.id ∈ T\nalive \nthen\n9: T .UpdateFromMap(O) ▷ compensate track\nstate using 3D cues\n10: end if\n11: end for\n12: T\ntrk \n← T .Associate(T\nalive\n, B\ndet\n) ▷ ByteTrack [33]\n(4) Instance mask and 3D reconstruction\n13: M\nmask \n← GenerateMasks(I, T\ntrk\n) ▷ SAM2 [21]\n14: O\nadd \n← Unproject(D\nI \n, M\nmask\n, Odom)\n(5) Semantic consistency check and map update\n15: for all O ∈ O\non \ndo\n16: if O.id /∈ T\ntrk \nthen\n17: O\nneg \n← O\nneg \n∪ {O} ▷ semantic inconsistency\n18: end if\n19: end for\n20: O\nnbr \n← ObjNegate(O\nnbr\n, O\nneg\n)\n21: O\nnbr \n← ObjMerge(O\nnbr\n, O\nadd\n)\n22: M ← MapMerge(M, O\nnbr\n)\n23: end for",
+ "quality": {
+  "grade": "high",
+  "text_chars": 54014,
+  "structure": "page-based",
+  "empty_pages_merged": []
+ },
+ "evidence_eligible": true,
+ "needs_visual_validation": false,
+ "term_matches": [
+  {
+   "term": "SLAM",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 28,
+   "snippet": "SuperMap: A Spatio-Temporal SLAM System for Visual-Language Navigation Shibo Zhao † , Guofei Chen † , Honghao Zhu, Zhiheng Li, Changwei Yao, Nader Zantout, Seungchan Kim, Wenshan Wang, Ji"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 387,
+   "snippet": "n Fig. 1: We present SuperMap, a real-time, spatio-temporal SLAM system capable of instance-level object detection, tracking dynamic changes, and maintaining a scene graph for spatial reasoning. The figure shows how Supe"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 1324,
+   "snippet": "-guided navigation that integrates high-frequency geometric SLAM with asynchronous open-vocabulary perception. Our core contribution is a consistency-driven mapping engine that combines 3D-aware instance association/re-a"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 1119,
+   "snippet": "ttent and view-dependent, and naively integrating them into mapping pipelines leads to identity drift and stale semantics over time. We present SuperMap, a 4D spatio-temporal mapping framework for language-guided navigat"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 1234,
+   "snippet": "antics over time. We present SuperMap, a 4D spatio-temporal mapping framework for language-guided navigation that integrates high-frequency geometric SLAM with asynchronous open-vocabulary perception. Our core contributi"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 1421,
+   "snippet": "y perception. Our core contribution is a consistency-driven mapping engine that combines 3D-aware instance association/re-activation with a principled existence-and- label confidence update to maintain stable object iden"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 60,
+   "snippet": "SuperMap: A Spatio-Temporal SLAM System for Visual-Language Navigation Shibo Zhao † , Guofei Chen † , Honghao Zhu, Zhiheng Li, Changwei Yao, Nader Zantout, Seungchan Kim, Wenshan Wang, Ji Zhang, and Sebastian Scherer The"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 794,
+   "snippet": "consistent spatio-temporal representation. Abstract—Robotic navigation in human environments re- quires a spatio-temporal semantic representation that can rec- oncile open-vocabulary perception with long-term environment"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 1272,
+   "snippet": "a 4D spatio-temporal mapping framework for language-guided navigation that integrates high-frequency geometric SLAM with asynchronous open-vocabulary perception. Our core contribution is a consistency-driven mapping eng"
+  },
+  {
+   "term": "pose estimation",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 2501,
+   "snippet": "lfilling such commands robustly requires more than accurate pose estimation and geometric reconstruction: the robot must maintain an object- centric spatio-temporal map representation that preserves in- arXiv:2608.22896v"
+  },
+  {
+   "term": "foundation model",
+   "locator": "page 1",
+   "section_index": 1,
+   "char_start": 972,
+   "snippet": "lary perception with long-term environmental changes. While foundation models provide strong zero-shot recog- nition, their predictions are intermittent and view-dependent, and naively integrating them into mapping pipel"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 64,
+   "snippet": "E I: Capability Checklist for Semantic Mapping and Semantic SLAM Methods. ✓indicates support, ✗indicates limited or no support Capability Semantic Mapping Semantic SLAM HOV-SG[30] ConceptGraphs[5] RayFronts[1] OpenScene["
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 168,
+   "snippet": "limited or no support Capability Semantic Mapping Semantic SLAM HOV-SG[30] ConceptGraphs[5] RayFronts[1] OpenScene[16] OpenMask3D[28] SeeGround[11] Kimera[24] OVO-SLAM[15] Khronos[25] SuperMap (Ours) Real-Time ✗ ✗ ✓ ✗ ✗"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 272,
+   "snippet": "] OpenScene[16] OpenMask3D[28] SeeGround[11] Kimera[24] OVO-SLAM[15] Khronos[25] SuperMap (Ours) Real-Time ✗ ✗ ✓ ✗ ✗ ✗ ✓ ✓ ✗ ✓ Open-Vocabulary ✓ ✓ ✓ ✓ ✓ ✓ ✗ ✓ ✗ ✓ Instance-Level ✓ ✓ ✗ ✗ ✗ ✗ ✗ ✓ ✗ ✓ Short-Term ✗ ✗ ✗ ✗ ✗ ✗"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 43,
+   "snippet": "TABLE I: Capability Checklist for Semantic Mapping and Semantic SLAM Methods. ✓indicates support, ✗indicates limited or no support Capability Semantic Mapping Semantic SLAM HOV-SG[30] ConceptGraphs[5] Ra"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 151,
+   "snippet": "pport, ✗indicates limited or no support Capability Semantic Mapping Semantic SLAM HOV-SG[30] ConceptGraphs[5] RayFronts[1] OpenScene[16] OpenMask3D[28] SeeGround[11] Kimera[24] OVO-SLAM[15] Khronos[25] SuperMap (Ours) Re"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 1940,
+   "snippet": "igation. As a result, there remains a gap between “semantic mapping outputs” and a robot-usable map representation that can be queried and acted upon online. Recent scene graph approaches [5, 30, 14, 20] incorporate open"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 1370,
+   "snippet": "ese modules rarely yields a map that is reliably usable for navigation. Many systems remain closed-vocabulary and class-level [24, 10], limiting instance identity tracking, while dynamic-SLAM methods often focus on short"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 1877,
+   "snippet": "t query interface for downstream tasks like language-guided navigation. As a result, there remains a gap between “semantic mapping outputs” and a robot-usable map representation that can be queried and acted upon online."
+  },
+  {
+   "term": "navigation",
+   "locator": "page 2",
+   "section_index": 2,
+   "char_start": 2155,
+   "snippet": "open-vocabulary detectors [23] to support natural language navigation, but they are time consuming (minutes to hours) to construct and not suitable for real-time mapping. More- over, they struggle to capture dynamic rel"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 268,
+   "snippet": "First, an online 3D reconstruction module built on a LiDAR SLAM backbone performs state estimation and generates a dense 3D model of the environment. Next, the estimated state and reconstructed geometry are used to iden"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 800,
+   "snippet": "d fails to achieve instance-level 3D semantics. B. Semantic SLAM To jointly estimate poses within the pipeline, we trans- form the mapping pipeline into a SLAM pipeline. In recent years, numerous SLAM systems have integr"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 895,
+   "snippet": "in the pipeline, we trans- form the mapping pipeline into a SLAM pipeline. In recent years, numerous SLAM systems have integrated semantic information during the mapping process. One notable ex- ample is Kimera [24], whi"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 505,
+   "snippet": "nd long-term object changes, enabling instance-level object mapping. Finally, the object-level representation is organized into an abstract 4D scene graph that captures both spatial and temporal relationships among objec"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 669,
+   "snippet": "ures both spatial and temporal relationships among objects. mapping for outdoor environments but struggles with change detection and fails to achieve instance-level 3D semantics. B. Semantic SLAM To jointly estimate pose"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 871,
+   "snippet": "ntly estimate poses within the pipeline, we trans- form the mapping pipeline into a SLAM pipeline. In recent years, numerous SLAM systems have integrated semantic information during the mapping process. One notable ex- a"
+  },
+  {
+   "term": "3D reconstruction",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 226,
+   "snippet": "antics. It consists of three main modules. First, an online 3D reconstruction module built on a LiDAR SLAM backbone performs state estimation and generates a dense 3D model of the environment. Next, the estimated state a"
+  },
+  {
+   "term": "3D reconstruction",
+   "locator": "page 3",
+   "section_index": 3,
+   "char_start": 2019,
+   "snippet": "rom CLIP. However, HOV-SG and ConceptGraphs require offline 3D reconstruction before applying SAM and CLIP, making them unsuitable for online SLAM or real-time dynamic tasks. CLIO implements real-time open-vocabulary sce"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 241,
+   "snippet": "t is the number of objects at time t. The spatio-temporal SLAM problem is defined as follows: given the current observation Q t = {C t , D t } and the existing map M t−1 , estimate pose P t , determine the instance ID"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 950,
+   "snippet": "ate [4]. IV. METHOD The architecture of our spatio-temporal SLAM system, SuperMap, is shown in Figure 2. Given synchronized depth measurements, IMU data, and RGB images, SuperMap runs fully onboard to jointly estimate th"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 1302,
+   "snippet": "omponents: (1) Online 3D Reconstruction for dense geometric mapping, (2) Spatio-Temporal Object Updates for robust instance associa- tion, and (3) Spatio-Temporal Scene Graph Construction that exposes the map as a querya"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 2479,
+   "snippet": "oral map is physically grounded and suitable for downstream navigation tasks. B. Instance Layer: Spatio-Temporal Instance Association For each image frame we first infer the 2D instance-level detection and segmentations"
+  },
+  {
+   "term": "pose estimation",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 607,
+   "snippet": "M t , P t | M t−1 , Q t ) = P (P t | M t−1 , Q t ) | {z } pose estimation (geometric) × P (I t | M t−1 , Q t , P t ) | {z } spatio-temporal instance association × P (M t | M t−1 , Q t , P t , I t ) | {z } online map"
+  },
+  {
+   "term": "pose estimation",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 807,
+   "snippet": ") | {z } online map update . (2) This involves three tasks: pose estimation, spatio-temporal object instance association and the online map update [4]. IV. METHOD The architecture of our spatio-temporal SLAM system, Supe"
+  },
+  {
+   "term": "3D reconstruction",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 1264,
+   "snippet": "ment evolves. We describe three main components: (1) Online 3D Reconstruction for dense geometric mapping, (2) Spatio-Temporal Object Updates for robust instance associa- tion, and (3) Spatio-Temporal Scene Graph Constru"
+  },
+  {
+   "term": "3D reconstruction",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 1512,
+   "snippet": "s a queryable interface for VLN. A. Geometric Layer: Online 3D Reconstruction We use SuperOdometry [35] to obtain the robot pose P t and a colorized dense 3D reconstruction from image, depth/LiDAR, and IMU streams. The"
+  },
+  {
+   "term": "3D reconstruction",
+   "locator": "page 4",
+   "section_index": 4,
+   "char_start": 1608,
+   "snippet": "ry [35] to obtain the robot pose P t and a colorized dense 3D reconstruction from image, depth/LiDAR, and IMU streams. The observation Q t requires accurate camera poses P t and depth observations D t . For each time"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 5",
+   "section_index": 5,
+   "char_start": 3975,
+   "snippet": "tic Quality: How does SuperMap’s incremental object-centric mapping compare to state-of-the-art offline and online 3D semantic mapping approaches on the ScanNet benchmark (Sec. V-B)? • Spatio-Temporal Consistency: Can th"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 5",
+   "section_index": 5,
+   "char_start": 4042,
+   "snippet": "compare to state-of-the-art offline and online 3D semantic mapping approaches on the ScanNet benchmark (Sec. V-B)? • Spatio-Temporal Consistency: Can the 4D graph accu- rately detect scene changes (appearances/disappear"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 5",
+   "section_index": 5,
+   "char_start": 4853,
+   "snippet": "mparative analysis against state-of-the-art open-vocabulary mapping frameworks, focusing on both class-level precision and instance-level consistency. a) Class-level Segmentation: Table II summarizes the performance on t"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 5",
+   "section_index": 5,
+   "char_start": 1906,
+   "snippet": "ls appear in the supplementary material. D. Visual Language Navigation via 4D Scene Graphs The 4D scene graph G provides a high-level interface between raw sensor data and the symbolic inputs required by Vision–Language"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 5",
+   "section_index": 5,
+   "char_start": 3099,
+   "snippet": "3D centroids X j from the map M t , which are then used as navigation waypoints. This process translates high-level language instructions into precise, grounded robot actions. V. EXPERIMENTS A. Experiment Settings a) Ha"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 5",
+   "section_index": 5,
+   "char_start": 3378,
+   "snippet": "t mecanum-wheeled mobile platform designed for agile indoor navigation. The sensor suite comprises a Livox Mid-360 LiDAR, which provides a 360 ◦ × 59 ◦ field of view, and a panoramic camera providing 360 ◦ RGB coverage"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 6",
+   "section_index": 6,
+   "char_start": 118,
+   "snippet": ". Best results are highlighted as first and second . Method Mapping Approach Without Background With Background mIoU (%) f-mIoU (%) Acc (%) mIoU (%) f-mIoU (%) Acc (%) ConceptFusion [7] point-feature 21.76 26.71 34.10 18"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 6",
+   "section_index": 6,
+   "char_start": 4110,
+   "snippet": "tion, which causes most instances to be filtered out by its mapping module. While it maintains a nominal ∼ 0.5 recall for change detection, this is a mathemat- ical artifact: the method “succeeds” during the disappearanc"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 7",
+   "section_index": 7,
+   "char_start": 2933,
+   "snippet": "cina- tions as temporal depth increases. G. Visual Language Navigation We evaluate the downstream utility of SuperMap through zero-shot, language-guided navigation in previously unseen environments. Using the real-time 4"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 7",
+   "section_index": 7,
+   "char_start": 3026,
+   "snippet": "ream utility of SuperMap through zero-shot, language-guided navigation in previously unseen environments. Using the real-time 4D scene graph, the robot navigates reliably based solely on spatial relationships among 3D ob"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 7",
+   "section_index": 7,
+   "char_start": 3600,
+   "snippet": "e ambiguity and outputs precise 3D goal coordinates for the navigation stack."
+  },
+  {
+   "term": "3D reconstruction",
+   "locator": "page 7",
+   "section_index": 7,
+   "char_start": 108,
+   "snippet": "ample (left to right), we show the 2D detections, the dense 3D reconstruction, and the object-centric map rendered in Rerun before and after the scene change. Top: three appearance events (bucket, cart, safety sign), whe"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 1392,
+   "snippet": "ONCLUSION We present SuperMap, a real-time, open-vocabulary SLAM system that constructs and maintains an instance-level 4D se- mantic map. By integrating geometric constraints from SLAM with semantic features from 2D fou"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 1513,
+   "snippet": "D se- mantic map. By integrating geometric constraints from SLAM with semantic features from 2D foundation models, SuperMap performs joint 2D-3D object tracking, instance validation, and change detection online. This uni"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 1260,
+   "snippet": "segmentation. The remainder of the architecture performs 3D mapping and 4D scene graph updates at 3 Hz and 5 Hz, respectively. VI. CONCLUSION We present SuperMap, a real-time, open-vocabulary SLAM system that constructs"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 2073,
+   "snippet": "e SuperMap provides a robust framework for spatio- temporal mapping, its performance in tracking highly dynamic objects remains limited. Future iterations could address this by incorporating specialized tracking-by-detec"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 285,
+   "snippet": "ance-level object retrieval. Fig. 5: Online Visual–Language Navigation using Scene Graphs. Our system enables robots to understand and reason about the spatial relationships in language instructions for VLN. See the supp"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 540,
+   "snippet": ") Experimental Validation: As shown in Fig. 5, Ours support navigation in visually ambiguous environments: • Spatial ordering : The robot selects the correct target among four visually identical whiteboards by reasoning"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 1981,
+   "snippet": "ory, robust spatio- temporal reasoning, and language-guided navigation. VII. LIMITATION While SuperMap provides a robust framework for spatio- temporal mapping, its performance in tracking highly dynamic objects remains"
+  },
+  {
+   "term": "world model",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 1872,
+   "snippet": "g 4D scene graph provides an explicit, continuously updated world model, empowering robots with long-term memory, robust spatio- temporal reasoning, and language-guided navigation. VII. LIMITATION While SuperMap provides"
+  },
+  {
+   "term": "pose estimation",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 1040,
+   "snippet": "f our system, we measure the throughput of each module. The pose estimation module maintains a consistent 10 Hz output, while 2D instance segmentation operates at 1 Hz due to the heavy inference requirements of semantic"
+  },
+  {
+   "term": "foundation model",
+   "locator": "page 8",
+   "section_index": 8,
+   "char_start": 1549,
+   "snippet": "metric constraints from SLAM with semantic features from 2D foundation models, SuperMap performs joint 2D-3D object tracking, instance validation, and change detection online. This unified pipeline ensures spatio- tempor"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 432,
+   "snippet": "nd Cyrill Stachniss. Suma++: Efficient lidar-based semantic slam. In 2019 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), pages 4530–4537. IEEE, 2019. [3] Linyan Cui and Chaowei Ma. Sof-slam:"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 586,
+   "snippet": "s 4530–4537. IEEE, 2019. [3] Linyan Cui and Chaowei Ma. Sof-slam: A semantic visual slam for dynamic environments. IEEE access, 7: 166528–166539, 2019. [4] Yinan Deng, Bicheng Yao, Yihang Tang, Yi Yang, and Yufeng Yue. O"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 610,
+   "snippet": "[3] Linyan Cui and Chaowei Ma. Sof-slam: A semantic visual slam for dynamic environments. IEEE access, 7: 166528–166539, 2019. [4] Yinan Deng, Bicheng Yao, Yihang Tang, Yi Yang, and Yufeng Yue. Openvox: Real-time instan"
+  },
+  {
+   "term": "localization",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 3500,
+   "snippet": "ier Civera. Ovo-slam: Open-vocabulary online simul- taneous localization and mapping. arXiv preprint arXiv:2411.15043, 2024. [16] Songyou Peng, Kyle Genova, Chiyu Jiang, Andrea Tagliasacchi, Marc Pollefeys, Thomas Funkho"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 1669,
+   "snippet": "Nikhil Keetha, et al. Conceptfusion: Open-set multimodal 3d mapping. arXiv preprint arXiv:2302.07241, 2023. [8] Jiajun Jiang, Yiming Zhu, Zirui Wu, and Jie Song. Dualmap: Online open-vocabulary semantic mapping for natur"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 1812,
+   "snippet": "Wu, and Jie Song. Dualmap: Online open-vocabulary semantic mapping for natural language navigation in dynamic changing scenes. IEEE Robotics and Automation Letters, 10(12), 2025. [9] Justin Kerr, Chung Min Kim, Ken Gold"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 3517,
+   "snippet": "lam: Open-vocabulary online simul- taneous localization and mapping. arXiv preprint arXiv:2411.15043, 2024. [16] Songyou Peng, Kyle Genova, Chiyu Jiang, Andrea Tagliasacchi, Marc Pollefeys, Thomas Funkhouser, et al. Open"
+  },
+  {
+   "term": "embodied",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 5170,
+   "snippet": "Raychaudhuri and Angel X Chang. Semantic mapping in indoor embodied ai–a comprehensive survey and future directions. arXiv preprint arXiv:2501.05750, 2025. [23] Tianhe Ren, Shilong Liu, Ailing Zeng, Jing Lin, Kun- chang"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 1841,
+   "snippet": "nline open-vocabulary semantic mapping for natural language navigation in dynamic changing scenes. IEEE Robotics and Automation Letters, 10(12), 2025. [9] Justin Kerr, Chung Min Kim, Ken Goldberg, Angjoo Kanazawa, and Ma"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 9",
+   "section_index": 9,
+   "char_start": 3095,
+   "snippet": "tweight, decentralized metric-semantic slam for multi-robot navigation. arXiv preprint arXiv:2406.17249, 2024. [14] Dominic Maggio, Yun Chang, Nathan Hughes, Matthew Trang, Dan Griffith, Carlyn Dougherty, Eric Cristofalo"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 513,
+   "snippet": "nos: A unified approach for spatio-temporal metric-semantic slam in dynamic environments. arXiv preprint arXiv:2402.13817, 2024. [26] Yuheng Shi, Minjing Dong, and Chang Xu. Harnessing vision foundation models for high-p"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 863,
+   "snippet": "Alex Junho Lee, and Hyun Myung. Dynavins: A visual-inertial slam for dynamic environments. IEEE Robotics and Automation Letters, 7(4):11523–11530, 2022. [28] Ayc¸a Takmaz, Elisabetta Fedele, Robert W Sumner, Marc Pollefe"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 1781,
+   "snippet": ", Xin-Jun Liu, Fugui Xie, Yi Yang, Qi Wei, and Qiao Fei. Ds-slam: A semantic visual slam towards dynamic environments. In 2018 IEEE/RSJ in- ternational conference on intelligent robots and systems (IROS), pages 1168–1174"
+  },
+  {
+   "term": "localization",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 257,
+   "snippet": "imera: an open-source library for real-time metric-semantic localization and mapping. In 2020 IEEE International Conference on Robotics and Automation (ICRA), pages 1689–1696. IEEE, 2020. [25] Lukas Schmid, Marcus Abate,"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 274,
+   "snippet": "urce library for real-time metric-semantic localization and mapping. In 2020 IEEE International Conference on Robotics and Automation (ICRA), pages 1689–1696. IEEE, 2020. [25] Lukas Schmid, Marcus Abate, Yun Chang, and L"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 2546,
+   "snippet": "and Sebastian Scherer. A robust laser-inertial odometry and mapping method for large-scale highway environments. In 2019 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), pages 1285–1292. IEEE,"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 1590,
+   "snippet": "open-vocabulary 3d scene graphs for language-grounded robot navigation. In First Workshop on Vision-Language Models for Navigation and Manipulation at ICRA 2024, 2024. [31] Chao Yu, Zuxin Liu, Xin-Jun Liu, Fugui Xie, Yi"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 1650,
+   "snippet": "navigation. In First Workshop on Vision-Language Models for Navigation and Manipulation at ICRA 2024, 2024. [31] Chao Yu, Zuxin Liu, Xin-Jun Liu, Fugui Xie, Yi Yang, Qi Wei, and Qiao Fei. Ds-slam: A semantic visual slam"
+  },
+  {
+   "term": "manipulation",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 1665,
+   "snippet": "First Workshop on Vision-Language Models for Navigation and Manipulation at ICRA 2024, 2024. [31] Chao Yu, Zuxin Liu, Xin-Jun Liu, Fugui Xie, Yi Yang, Qi Wei, and Qiao Fei. Ds-slam: A semantic visual slam towards dynamic"
+  },
+  {
+   "term": "world model",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 54,
+   "snippet": "Chen, Feng Yan, et al. Grounded sam: Assembling open- world models for diverse visual tasks. arXiv preprint arXiv:2401.14159, 2024. [24] Antoni Rosinol, Marcus Abate, Yun Chang, and Luca Carlone. Kimera: an open-so"
+  },
+  {
+   "term": "foundation model",
+   "locator": "page 10",
+   "section_index": 10,
+   "char_start": 645,
+   "snippet": "] Yuheng Shi, Minjing Dong, and Chang Xu. Harnessing vision foundation models for high-performance, training- free open vocabulary segmentation. arXiv preprint arXiv:2411.09219, 2024. [27] Seungwon Song, Hyungtae Lim, Al"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 11",
+   "section_index": 11,
+   "char_start": 33,
+   "snippet": "Supplementary: A Spatio-Temporal SLAM System for Visual-Language Navigation Shibo Zhao † , Guofei Chen † , Honghao Zhu, Zhiheng Li, Changwei Yao, Nader Zantout, Seungchan Kim, Wenshan Wang, Ji"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 11",
+   "section_index": 11,
+   "char_start": 768,
+   "snippet": "understanding for downstream robotics tasks. Most semantic SLAM systems [24, 5] are evaluated using static perception metrics such as mIoU and mAP. While these metrics measure per-frame recognition quality, they do not"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 11",
+   "section_index": 11,
+   "char_start": 2995,
+   "snippet": "s and tables, leading to fragmented identities and degraded mapping. In contrast, the 2D–3D tracker preserves these identities by leveraging 3D cues, resulting in more tem- porally coherent instance IDs. • Dynamic object"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 11",
+   "section_index": 11,
+   "char_start": 4156,
+   "snippet": "s that joint consistency checking is important for reliable mapping in dynamic environments. B. Qualitative Instance-Level Segmentation Results We present qualitative comparisons of instance-level seg- mentation results"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 11",
+   "section_index": 11,
+   "char_start": 65,
+   "snippet": "ementary: A Spatio-Temporal SLAM System for Visual-Language Navigation Shibo Zhao † , Guofei Chen † , Honghao Zhu, Zhiheng Li, Changwei Yao, Nader Zantout, Seungchan Kim, Wenshan Wang, Ji Zhang, and Sebastian Scherer The"
+  },
+  {
+   "term": "navigation",
+   "locator": "page 11",
+   "section_index": 11,
+   "char_start": 1812,
+   "snippet": "are important for downstream tasks such as language-guided navigation, spatio-temporal reasoning, and long-term planning. These observations motivate evaluation protocols that ex- tend beyond static instance segmentatio"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 12",
+   "section_index": 12,
+   "char_start": 93,
+   "snippet": "on ScanNet with memory and runtime statistics. TPF denotes mapping time per frame. Best results are highlighted as first and second . Method Chair Window Refrigerator Sofa Door Avg. Mem (MB) Peak Mem (MB) TPF (s) mAP 50"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 12",
+   "section_index": 12,
+   "char_start": 1009,
+   "snippet": "ID switches between t = 0 s and t = 2.5 s. C. Object-Level Mapping in Long-Term Dynamic Environ- ments Figures 5–10 illustrate long-term scene changes across two traversals of the same environment. We highlight three ne"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 12",
+   "section_index": 12,
+   "char_start": 1670,
+   "snippet": "h module in our system: • Pose estimation: 10 Hz • Dense 3D mapping and 3D bounding box update: 3 Hz • 2D instance segmentation: 1 Hz • 4D scene graph update: 5 Hz Memory usage and mapping-time statistics are summa- rize"
+  },
+  {
+   "term": "pose estimation",
+   "locator": "page 12",
+   "section_index": 12,
+   "char_start": 1636,
+   "snippet": "we report the update rates of each module in our system: • Pose estimation: 10 Hz • Dense 3D mapping and 3D bounding box update: 3 Hz • 2D instance segmentation: 1 Hz • 4D scene graph update: 5 Hz Memory usage and mappi"
+  },
+  {
+   "term": "SLAM",
+   "locator": "page 13",
+   "section_index": 13,
+   "char_start": 1224,
+   "snippet": "patio-temporal object update procedure used in our semantic SLAM system. The algorithm processes a sequence of observations comprising detected boxes B det , an RGB image I, a depth map D I , and pose information Odom ("
+  },
+  {
+   "term": "localization",
+   "locator": "page 13",
+   "section_index": 13,
+   "char_start": 1005,
+   "snippet": "hile target objects can be retrieved, the resulting spatial localization remains coarse, and the precision falls significantly below standard detection benchmarks such as mAP@50 and mAP@25. VIII. METHOD We present the sp"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 13",
+   "section_index": 13,
+   "char_start": 540,
+   "snippet": "onally trade minimal memory usage for temporally consistent mapping and richer scene understanding. In practice, the memory consumption remains within the capacity of standard robotic computing platforms and enables capa"
+  },
+  {
+   "term": "mapping",
+   "locator": "page 14",
+   "section_index": 14,
+   "char_start": 57,
+   "snippet": "Fig. 3: Ablation of the consistency check. Comparison of mapping results without consistency checks, with geometric-only checks, and with joint geometric+semantic checks (ours). Without consistency checks, stale point"
+  },
+  {
+   "term": "3D reconstruction",
+   "locator": "page 16",
+   "section_index": 16,
+   "char_start": 753,
+   "snippet": "te(T alive , B det ) ▷ ByteTrack [33] (4) Instance mask and 3D reconstruction 13: M mask ← GenerateMasks(I, T trk ) ▷ SAM2 [21] 14: O add ← Unproject(D I , M mask , Odom) (5) Semantic consistency check and map update"
+  }
+ ],
+ "attempts": [
+  {
+   "method": "pdf-text",
+   "available": true,
+   "quality": "high",
+   "channel": "alphaxiv-fulltext-api"
+  }
+ ],
+ "fallback_reason": ""
+}

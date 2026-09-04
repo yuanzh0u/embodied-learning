@@ -1,0 +1,415 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.19592",
+  "title": "Implicit Action Chunking for Smooth Continuous Control",
+  "published": "2026-05-19",
+  "url": "https://arxiv.org/abs/2605.19592",
+  "authors": [
+   "Bosun Liang",
+   "Shuo Pei",
+   "Zirui Chen",
+   "Chuanzhi Fan",
+   "Chen Sun",
+   "Yuankai Wu",
+   "Huachun Tan",
+   "Yong Wei Wang"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本族'分块抖动的机制根源+替代方案'核心文献：论文系统论证显式动作分块的三大结构性缺陷（开环执行致块内方差与重规划边界不连续、动作空间 R^d→R^hd 膨胀、与逐步交互接口不兼容），并提出隐式动作分块（DWS 双窗口）替代方案，附 AFR/jerk/成功率量化与组件消融。注意其载体是仿真 RL 连续控制（DMC/能量管理/CARLA，TD3/SAC 骨干）而非 VLA 模型或真机操作，引用时需注明该边界。"
+  },
+  "sections_read": [
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "获取'RL 高频振荡痛点'与'显式动作分块三大缺陷'的论证及三项贡献"
+   },
+   {
+    "locator": "2. Preliminaries",
+    "role": "relevant-core",
+    "purpose": "确认 actor-critic 骨干与专家引导 RL（EGRL）设定，理解与安全屏蔽机制的兼容性问题"
+   },
+   {
+    "locator": "3.1. Implicit Action Chunking Formulation",
+    "role": "method-or-design",
+    "purpose": "理解隐式分块形式化：d 维输出 + 确定性执行算子 F_h 生成 h 步执行段"
+   },
+   {
+    "locator": "3.2. Execution Window",
+    "role": "method-or-design",
+    "purpose": "理解 ZOH/耗散衰减两种调制 profile 与窗口内平滑界（命题1）"
+   },
+   {
+    "locator": "3.3. Value Window",
+    "role": "method-or-design",
+    "purpose": "理解 h 步窗口对齐 TD 目标如何修正开环执行造成的 critic 偏差（命题2）"
+   },
+   {
+    "locator": "3.4. Temporal Smoothness Regularizer",
+    "role": "method-or-design",
+    "purpose": "理解一阶动作差分正则如何抑制窗口边界不连续"
+   },
+   {
+    "locator": "4.1. Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "获取环境、基线与指标（AFR 等）定义"
+   },
+   {
+    "locator": "4.2. Case Study of DeepMind Control Suite",
+    "role": "results-or-analysis",
+    "purpose": "提取 DMC 上 AFR 降低>80% 与任务回报量化结果"
+   },
+   {
+    "locator": "4.3. Case Study of Energy Management Task",
+    "role": "results-or-analysis",
+    "purpose": "提取 FCEV 能量管理任务的成本/AFR/SOC 权衡结果"
+   },
+   {
+    "locator": "4.4. Case Study of Autonomous Vehicle Task",
+    "role": "results-or-analysis",
+    "purpose": "提取 CARLA LCO/AEB 的成功率与舒适度/平滑度量化结果"
+   },
+   {
+    "locator": "4.5. Execution Profile Comparison",
+    "role": "results-or-analysis",
+    "purpose": "ZOH 与耗散衰减 profile 对比（AEB）"
+   },
+   {
+    "locator": "4.6. Sensitivity Analysis",
+    "role": "results-or-analysis",
+    "purpose": "窗口长度 h 与正则权重 λ_S 的敏感性"
+   },
+   {
+    "locator": "4.7. Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "组件消融：执行窗口/价值窗口/正则的互补性（Table 7）"
+   },
+   {
+    "locator": "5. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述局限（固定执行时域的归纳偏置）"
+   },
+   {
+    "locator": "D.2. Performance and Smoothness Analysis",
+    "role": "results-or-analysis",
+    "purpose": "附录 DMC 完整数值表（Reacher-Hard/Ball-in-Cup 等 5 seeds 均值±标准差）"
+   },
+   {
+    "locator": "A. Theoretical Properties of DWS",
+    "role": "method-or-design",
+    "purpose": "核对命题 A.1-A.3：窗口内平滑界与窗口目标无偏性的证明思路"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "reason": "仅用于核对核心引用，无综述所需证据"
+   },
+   {
+    "locator": "E.1-E.3 / F.2.1-F.3.5 详细环境与指标附录",
+    "reason": "环境参数与指标公式细节已由正文与 D/F 关键小节覆盖，逐字读对综述问题增益低"
+   }
+  ]
+ },
+ "research_question": "论文自问：能否在不扩大动作空间（保持标准 d 维逐步输出）的前提下，把动作分块的时间抽象优势'隐式'地引入 RL 控制接口，同时获得执行级平滑、保持逐步反应性，并与 actor-critic 骨干及专家引导 DRL 兼容？",
+ "contributions": [
+  "提出 DWS 隐式动作分块框架：策略保持 d 维输出，由确定性执行算子 F_h（ZOH 或线性耗散衰减调制 profile，h=3）把参考动作展开为 h 步局部连贯执行段，从结构上抑制窗口内高频抖动（命题1 给出窗口内动作变差的上界）",
+  "提出价值窗口：用按序 on-policy 窗口缓冲切出连续 h 步执行段，构造窗口对齐 h 步 TD 目标（含终止掩码），修正开环窗口执行下逐步 critic 的偏差/短视（命题2/A.3 证明其为执行过程 h 步 Bellman 备份的无偏样本）",
+  "轻量 actor 侧时序正则（一阶动作差分 L2），专门抑制窗口边界处的不连续",
+  "跨域验证：DMC 5 个低维任务+Cheetah/Walker、FCEV 能量管理、CARLA 视觉自动驾驶（LCO/AEB），LCO 上 100% 成功率且与专家引导 DRL 无缝兼容"
+ ],
+ "method": {
+  "summary": "DWS 是可插拔于 off-policy actor-critic（TD3/SAC/HG-TD3）的包装器：(1) 执行窗口——在每个窗口边界 k=mh 采样参考动作 a_k，经调制 profile w（ZOH：w_k=1；线性耗散衰减：w_k=1−k/h）生成 u_{t+k}=w_k·a_k 逐步执行，将决策频率与执行频率解耦，ZOH 等效把控制频率上限压到 1/h；(2) 价值窗口——从按序窗口缓冲切出连续 h 步段，构造 G_t^(h)=Σγ^k r_{t+k}+γ^h m_t Q(s_{t+h},ũ_{t+h}) 的窗口-逐步混合 Bellman 误差；(3) actor 侧一阶动作差分正则（λ_S=0.10）抑制边界跳变。默认 h=3、ZOH。",
+  "assumptions": [
+   "控制任务可建模为 MDP 且允许 h 步开环承诺（窗口内环境不突变）",
+   "执行 profile 固定且先验给定（ZOH 或线性衰减），不随状态自适应",
+   "存在按序（非 shuffle）的 on-policy 窗口缓冲以切出连续执行段",
+   "骨干为 off-policy actor-critic 架构（TD3/SAC 类），策略输出为连续动作"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "DeepMind Control Suite（Reacher-Easy/Hard、Ball-in-Cup-Catch、Cart-pole-Swingup、Point-Mass-Easy，另加 Cheetah/Walker 高维运动任务）",
+   "LearningEMS 框架下的 FCEV（燃料电池电动车）能量管理任务（WLTC 工况）",
+   "CARLA 仿真 LCO（窄道变道超车）与 AEB（自动紧急制动）视觉任务"
+  ],
+  "tasks": [
+   "精密跟踪/脉冲恢复/不稳定平衡/惯性控制（DMC）",
+   "长时域能量管理与 SOC 维持（EMS）",
+   "视觉端到端横向/纵向安全控制（CARLA，语义分割观测）"
+  ],
+  "embodiments": [
+   "MuJoCo 仿真机械臂/摆杆类任务（无真机）",
+   "仿真车辆控制与能量管理（无机器人操作本体、无 VLA 骨干）"
+  ],
+  "sample_or_scale": "DMC：每算法训练 1M 步、5 个随机种子，报告均值±标准差；CARLA：300 训练轮、统一交互预算；AEB 评测 n=20；LCO 鲁棒性扫描 NPC 速度 0-5 m/s"
+ },
+ "evaluation": {
+  "design": "三域评测：DMC（5+2 任务，回报+平滑度双指标，5 seeds）；EMS（成本/AFR/SOC 权衡）；CARLA LCO（任务结果+舒适度/平滑度指标，含速度鲁棒性扫描）与 AEB（安全裕度 TTC_a 与舒适度）。另有执行 profile 对比、h 与 λ_S 敏感性分析、组件消融（LCO 最难设置 V5）",
+  "baselines": [
+   "Vanilla-TD3 / Vanilla-SAC（标准逐步 actor-critic）",
+   "L2C2（局部 Lipschitz 约束平滑）",
+   "LipsNet++（自适应 Lipschitz+频域滤波）",
+   "SmODE（ODE 平滑网络）",
+   "ActionChunk（显式动作分块，TD3/SAC 双骨干实例化）",
+   "CARLA 上全部基线统一使用 HG-TD3（人类引导 TD3）骨干以公平比较"
+  ],
+  "metrics": [
+   "任务回报/成本/成功率（SR）、碰撞率（CR）、出界率（BR）、路径完成度（PC）",
+   "平均波动率 AFR（L2/L1）、Smoothness 指标、Jerk RMS/P95、动作差分 Delta Max/P95",
+   "CARLA 舒适度：ActSmooth、YawSmooth、YawRate、AbsAccMean/P95、Sideslip>3°",
+   "AEB：TTC_a、AccRMS_a、JerkRMS_a（主动制动窗口）"
+  ],
+  "ablations": [
+   "组件消融（LCO V5）：仅执行窗口/仅价值窗口/仅正则/价值窗口+正则 vs 完整 DWS（Table 7）",
+   "执行 profile：ZOH vs 耗散衰减（AEB，Table 4）",
+   "窗口大小 h∈{1..5} 与正则权重 λ_S∈{0,0.03,0.10,0.30,0.40} 敏感性（DMC+EMS）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "论文给出显式动作分块的三大结构性缺陷论证：(1) 开环块执行允许块内快速方差并在重规划边界产生尖锐不连续；(2) 策略输出从 R^d 膨胀到 R^hd，随 h 增大损害探索效率与训练稳定；(3) 与标准逐步交互接口/actor-critic 骨干/经验回放及逐点安全覆盖机制架构性不兼容",
+   "scope": "作者对显式分块范式的机制分析（引言论证，引用 Yang et al. 2025 等支持）",
+   "locator": "1. Introduction"
+  },
+  {
+   "finding": "DWS 机制：保持 d 维动作输出的同时，用确定性执行算子把参考动作调制成 h 步局部连贯执行段（执行窗口），配合窗口对齐的 h 步 TD 目标（价值窗口）修正 critic 偏差，并用一阶动作差分正则抑制窗口边界不连续",
+   "scope": "方法设计（含命题1/2 理论支撑：窗口内变差上界、窗口目标无偏性）",
+   "locator": "1. Introduction"
+  },
+  {
+   "finding": "DMC 上 DWS 在精度类任务中相对 vanilla 基线降低 AFR 超 80%（Reacher-Hard 从 0.56 降到 0.10），同时保持反应性；DWS-SAC 在 Reacher-Hard 达 975.35±13.50 近最优回报，而 LipsNet++ 崩溃至 0.40±1.05，ActionChunk-TD3 在 Ball-in-Cup 完全失败（回报 3.12）",
+   "scope": "DMC 仿真、TD3/SAC 骨干、5 seeds",
+   "locator": "4.2. Case Study of DeepMind Control Suite"
+  },
+  {
+   "finding": "EMS 任务上 DWS 取得最高累积奖励（-1393.15）与最低运营成本（157.04），较最强基线 ActionChunk 奖励提升 56.7%、成本降低 10.6%；SmODE/L2C2 虽 AFR 更低（0.105/0.107）但导致 SOC 漂移，DWS 以适中 AFR 0.127 维持 SOC 0.40",
+   "scope": "LearningEMS FCEV 仿真任务（Table 1）",
+   "locator": "4.3. Case Study of Energy Management Task"
+  },
+  {
+   "finding": "CARLA LCO（NPC 5 m/s 最难设置）上 DWS 达 100% 成功率、0% 碰撞与出界，而全部基线 ≤20%（LipsNet++ 仅 20%，HG-TD3/L2C2/ActionChunk/SmODE 为 0%）；DWS 较 LipsNet++ 降低转向执行抖动（ActSmooth）88.7%、横摆角速度振荡 78.5%，并在 0-5 m/s 全速度段保持 100% 成功率",
+   "scope": "CARLA 仿真 LCO 任务、HG-TD3 统一骨干（Table 2 与鲁棒性扫描）",
+   "locator": "4.4. Case Study of Autonomous Vehicle Task"
+  },
+  {
+   "finding": "AEB 任务上 DWS 奖励最高（390.70±2.72），较 HG-TD3 安全裕度 TTC_a 提升 4.9%、主动制动窗口 JerkRMS_a 降低 50.9%，较 LipsNet++ 奖励 +7.5%、AccRMS_a 降低 47.4%",
+   "scope": "CARLA AEB 仿真，n=20（Table 3）",
+   "locator": "4.4. Case Study of Autonomous Vehicle Task"
+  },
+  {
+   "finding": "组件消融（LCO V5）显示三组件互补：仅执行窗口 SR 0.50、仅价值窗口 SR 0.65、价值窗口+正则 0.80，仅完整 DWS 达 SR 1.00/CR 0.00 且平滑度全面最优，说明平滑（执行窗口）与价值对齐（价值窗口）必须同时成立才能兼顾成功率与平滑度",
+   "scope": "CARLA LCO 最难设置组件消融（Table 7）",
+   "locator": "4.7. Ablation Study"
+  },
+  {
+   "finding": "敏感性分析：h=3、λ_S=0.10 为最佳默认；h/λ_S 过小平滑不足，过大则反应性与任务回报下降（尽管波动指标更低），呈现平滑-反应性权衡",
+   "scope": "DMC Reacher-Easy 与 LearningEMS（Tables 5-6）",
+   "locator": "4.6. Sensitivity Analysis"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "固定执行时域引入结构性归纳偏置，在高动态环境（尤其窗口内发生突变时）可能限制策略表达与适应性；未来需状态相关/可学习执行 profile、自适应窗口长度或混合方案",
+    "locator": "5. Conclusion"
+   },
+   {
+    "limitation": "尚未扩展到 offline RL 架构（作者认为其与标准回放缓冲的兼容性对大规模预训练有利，但未验证）",
+    "locator": "5. Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全部证据来自仿真（MuJoCo/CARLA/EMS），无真机实验、无机器人操作任务、无 VLA/模仿学习骨干；对'VLA 动作分块'族仅为机制层借鉴而非直接验证",
+    "basis": "4.1-4.4 节环境全部为仿真器；骨干为 TD3/SAC/HG-TD3"
+   },
+   {
+    "boundary": "ZOH profile 本质是把控制频率上限压到 1/h 的低通滤波，平滑增益部分来自执行带宽限制；对需要窗口内瞬时高频机动的任务（论文自己也指出 AEB 制动更受益于保持稳定指令）可能损失性能，且窗口内扰动无法响应",
+    "basis": "3.2 节 ZOH 描述（'strictly caps the control frequency at 1/h'）与 4.5 节 profile 权衡讨论；h=3 短窗口是缓解而非消除"
+   },
+   {
+    "boundary": "LCO 上多数基线成功率为 0%（窄道+出界即终止的设定放大了抖动惩罚），100% vs 0% 的对比对该任务终止条件敏感；附录 F.2.6 承认基线在较易设置（V0）可达非平凡成功率",
+    "basis": "Table 2 与 F.2.3/F.2.6 的解释性讨论"
+   }
+  ]
+ },
+ "transfer_boundary": "证据仅覆盖仿真 RL 连续控制（DMC/EMS/CARLA、TD3/SAC 系骨干、固定 h=3 短窗口与固定执行 profile），不能直接外推到 VLA 模型、真机机器人操作或需要窗口内高频响应的任务。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "基线覆盖三类竞态方案（正则化平滑、架构平滑、显式分块）并在 DMC 上双骨干（TD3/SAC）实例化，CARLA 上统一 HG-TD3 骨干保证公平",
+   "提供理论命题（窗口内平滑上界、窗口目标对执行过程 h 步 Bellman 备份的无偏性）而非纯经验设计",
+   "组件消融+两维超参敏感性+鲁棒性速度扫描+5 seeds 标准差，实验内部效度较高",
+   "AFR 等平滑指标均基于实际执行动作计算，保证窗口执行下评估一致"
+  ],
+  "design_risks": [
+   "LCO 任务设定（窄道、出界即终止）使多数基线 SR=0，主表差距对该终止条件高度敏感，外部解读需谨慎",
+   "'AFR 降低>80%'与'ActSmooth 88.7%'等跨域指标口径不同，不可直接横向比较",
+   "平滑增益与低通滤波（ZOH 带宽限制）天然相关，缺少任务确需高频动作时的失败案例分析",
+   "EMS 与 CARLA 为非机器人操作域，对末端执行器轨迹精度的直接证据有限"
+  ],
+  "baseline_fairness": "DMC 上各方法同骨干同 1M 步训练；CARLA 上全部基线统一使用人类引导机制与交互预算，公平性设计明确；但 ActionChunk 在 DMC 多任务上训练失败（如 Ball-in-Cup 回报 3.12），其超参是否为其最优配置未说明，显式分块基线的代表性存疑。",
+  "metric_validity": "AFR/Smoothness/Jerk RMS/P95/Delta 等指标族较全面且基于执行动作；但各域指标口径不同（DMC 动作空间 vs CARLA 车辆运动学量），跨域数值不可直接比较；平滑度指标与任务成功之间的因果关系主要由 LCO 案例解释支撑。",
+  "reproducibility": "环境、基线、超参、评测协议在附录 B/C/D/F 中给出较完整细节（含 5 seeds 与 std），理论证明在附录 A；但未见代码发布声明，CARLA/EMS 场景细节复现仍需工程投入。",
+  "external_validity": "三域均为仿真且无机器人操作本体与 VLA 骨干；对'分块边界不连续'痛点给出了机制层方案（固定执行窗口+边界正则），但结论向真机操作、VLA 推理延迟场景、可变时域动力学的迁移未经检验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.19592-C01",
+   "claim": "论文论证显式动作分块存在三大结构性缺陷：(1) 开环块执行对执行级平滑保证有限，允许块内快速方差并在重规划边界诱导尖锐不连续；(2) 策略输出从 R^d 膨胀到 R^hd，随时域 h 增大加剧优化复杂度并损害探索效率与训练稳定；(3) 与标准逐步交互接口（actor-critic 骨干、经验回放、逐点安全覆盖）架构性不兼容。",
+   "stance": "limit",
+   "relation": "支撑综述中'动作分块带来抖动/不连续的机制根源'命题：分块边界不连续与动作空间膨胀是显式分块范式的内生缺陷，是平滑执行方案族要解决的核心痛点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言在综述 Q-Chunking/Decoupled Q-Chunking 等显式分块 RL 工作后，明确归纳三个问题并指出开环执行是块内方差与边界不连续的来源（引用 Yang et al. 2025 支持边界不连续论断）。",
+   "locator": "1. Introduction",
+   "source_context": "This approach introduces three problems. (1) It offers limited guarantees on execution- level smoothness, the open-loop nature of chunk execution allows for rapid intra-chunk variance and induces sharp dis- continuities at replanning boundaries (Yang et al., 2025). (2) It exacerbates optimization complexity by expanding the policy output from R d to R hd , which can hamper ex- ploration efficiency and training stability as the horizon h grows.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对引言第(1)(2)条原文，第三条（接口不兼容）在同段随后给出；主张限定为作者对显式分块范式的论证性判断而非实验测量，转述未超出原文表述范围。"
+   }
+  },
+  {
+   "card_id": "2605.19592-C02",
+   "claim": "DWS 的核心机制是在不扩大动作空间的前提下实现隐式动作分块：策略保留标准 d 维输出，用 h 步执行窗口（确定性执行算子把参考动作变换为局部连贯运动）与同步价值窗口（窗口对齐 TD 目标）耦合，辅以时序正则，从而桥接时间抽象与逐步控制。",
+   "stance": "support",
+   "relation": "支撑综述中'隐式动作分块方案族'的核心机制命题：以执行算子+价值对齐替代显式轨迹预测来获得分块的平滑收益。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言方案段落明确：DWS 保留标准 d 维动作输出以规避优化不稳定，通过执行算子把参考动作变换为局部连贯运动并用时序正则强化，同时用同步价值窗口对齐 critic 训练与 h 步执行承诺。",
+   "locator": "1. Introduction",
+   "source_context": "To address these challenges, we propose Dual-Window Smoothing (DWS), an implicit action chunking framework that bridges the gap between temporal abstraction and step- wise control by coupling an h-step execution window with a synchronized value window. Diverging from explicit tra- jectory prediction, DWS retains a standard d-dimensional action output to circumvent optimization instability, instead achieving smoothness via an execution operator that trans- forms reference actions into locally coherent motion, rein- forced by temporal regularization.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对引言方案段与第3节方法（3.1 形式化、3.2 执行窗口、3.3 价值窗口）一致；主张为对方法设计的忠实转述，双窗口与 d 维输出要点均出自原文。"
+   }
+  },
+  {
+   "card_id": "2605.19592-C03",
+   "claim": "在 DMC 精度类任务上，DWS 相对 vanilla 基线将平均波动率（AFR）降低超 80%（Reacher-Hard 从 0.56 降至 0.10），且在 Ball-in-Cup 等高动态环境中降低物理 jerk 的同时保留宏观反应性。",
+   "stance": "support",
+   "relation": "支撑综述中'隐式分块/执行窗口方案可量化改善控制平滑度'的命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 节引用 Figure 6 的量化结果：精度任务 AFR 降低超 80%，Reacher-Hard 从 0.56 到 0.10；附录 Table 10 的 5-seed 数值（DWS-SAC AFR L2 0.01±0.00 vs Vanilla-TD3 0.56±0.65）与正文一致。",
+   "locator": "4.2. Case Study of DeepMind Control Suite",
+   "source_context": "As quantified in Figure 6, DWS reduces the AFR by over 80% in precision tasks compared to vanilla baselines (e.g., AFR from 0.56 to 0.10 in Reacher-Hard). Importantly, this improvement preserves responsiveness. Even in highly dynamic environments such as Ball-in-Cup, DWS reduces physical jerk while preserving macroscopic reactivity for successful swing-up and recovery.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Average Fluctuation Rate (AFR)",
+    "value_or_direction": "reduced by over 80%; 0.56 to 0.10 in Reacher-Hard",
+    "comparator": "DWS compared to vanilla TD3/SAC baselines",
+    "task_or_sample": "DMC 精度类任务（Reacher-Hard 等，5 seeds）",
+    "locator": "4.2. Case Study of DeepMind Control Suite, Figure 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.2 节原文与附录 Table 10：Reacher-Hard 上 Vanilla-TD3 AFR L2 为 0.56±0.65、DWS-SAC 为 0.01±0.00，正文 0.56→0.10 与 DWS-TD3 0.10±0.24 一致；主张限定在 DMC 仿真任务。"
+   }
+  },
+  {
+   "card_id": "2605.19592-C04",
+   "claim": "在 CARLA LCO 任务（NPC 5 m/s 最难设置）上，DWS 达到 100% 成功率且 0% 碰撞与出界，而全部基线成功率 ≤20%（SOTA 平滑基线 LipsNet++ 仅 20%）；DWS 较 LipsNet++ 降低转向执行抖动（ActSmooth）88.7%、横摆角速度振荡 78.5%。",
+   "stance": "support",
+   "relation": "支撑综述中'平滑执行方案在高安全要求任务中同时改善成功率与执行平滑度'的命题（视觉端到端控制场景）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.4 节 LCO 主结果（Table 2）：DWS 100%/0%/0%，LipsNet++ 20%，HG-TD3/L2C2/ActionChunk/SmODE 均 0%；正文给出 ActSmooth 与 yaw rate 相对 LipsNet++ 的降幅 88.7%/78.5%，附录 F.2.3 的速度扫描显示 DWS 在 0-5 m/s 全速度段保持 100%。",
+   "locator": "4.4. Case Study of Autonomous Vehicle Task",
+   "source_context": "DWS achieves a 100% success rate with 0% collisions and boundary violations, exhibiting robust compliance with safety constraints. In stark contrast, all baselines struggle significantly; notably, LipsNet++ (2025), a state-of-the-art smooth-policy baseline, only attains a 20% success rate. DWS not only completes the task reliably but does so with superior stability, reducing steering actua- tion jitter (ActSmooth) by 88.7% and yaw rate oscillation by 78.5% compared to LipsNet++.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (SR); steering action smoothness (ActSmooth); yaw rate oscillation",
+    "value_or_direction": "DWS SR 100% (LipsNet++ 20%, others 0%); ActSmooth reduced 88.7%; yaw rate reduced 78.5%",
+    "comparator": "DWS compared to LipsNet++ and other HG-TD3-based baselines",
+    "task_or_sample": "CARLA LCO 任务，NPC 速度 5 m/s（Table 2）",
+    "locator": "4.4. Case Study of Autonomous Vehicle Task, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.4 节正文与 Table 2：DWS 行 SR 100.0/CR 0.0/BR 0.0，LipsNet++ SR 20.0，其余基线 SR 0.0；ActSmooth 0.001 vs LipsNet++ 0.012、YawRate 0.019 vs 0.087 与 88.7%/78.5% 降幅一致；主张限定 CARLA 仿真 LCO 设置。"
+   }
+  },
+  {
+   "card_id": "2605.19592-C05",
+   "claim": "在 LCO 最难设置的组件消融中，各部分变体均优于 HG-TD3 骨干（仅执行窗口 SR 0.50、仅价值窗口 0.65、价值窗口+正则 0.80、仅正则 0.60，骨干 0.00），但只有完整 DWS 同时达到 100% 成功率、零碰撞与最优整体平滑度，说明平滑执行与价值对齐缺一不可。",
+   "stance": "support",
+   "relation": "支撑综述中'平滑方案的效果来自机制组合而非单一技巧'的命题，并为隐式分块的双窗口机制提供组件级归因证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.7 节 Table 7 的组件消融显示强组件间依赖：执行窗口单独使用改善舒适度指标但成功率受限，价值窗口单独使用大幅提升成功率但仍不及完整框架，加正则进一步改善权衡，完整 DWS 唯一达到 100%/0%。",
+   "locator": "4.7. Ablation Study",
+   "source_context": "The results again reveal a strong interde- pendence among components. Each partial variant improves over the HG-TD3 backbone on either task success or mo- tion smoothness, but none matches the complete model. In particular, the execution window alone improves comfort- related metrics but remains limited in task success, while the value window alone substantially boosts success yet still falls short of the full framework.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (SR) and collision rate (CR) in component ablation",
+    "value_or_direction": "full DWS SR 1.00/CR 0.00; value window only 0.65/0.10; value window + regularizer 0.80/0.20; execution window only 0.50/0.25; smoothness regularizer only 0.60/0.40; HG-TD3 0.00/0.75",
+    "comparator": "full DWS compared to partial variants and HG-TD3 backbone",
+    "task_or_sample": "CARLA LCO 组件消融，NPC 速度 5 m/s（Table 7）",
+    "locator": "4.7. Ablation Study, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.7 节正文与 Table 7 各行 SR/CR 数值（0.00/0.65/0.60/0.80/0.50/1.00），转述的组件结论与正文'none matches the complete model'一致；主张限定在 LCO V5 消融设置。"
+   }
+  },
+  {
+   "card_id": "2605.19592-C06",
+   "claim": "作者自述局限：固定执行时域引入结构性归纳偏置，在高动态环境中（尤其窗口内发生突变时）可能限制策略表达能力与适应性，未来需要状态相关或可学习的执行 profile、自适应窗口长度或混合方案来放松固定调度假设。",
+   "stance": "gap",
+   "relation": "支撑综述中'固定窗口/固定调度是分块平滑方案的共性未解痛点'命题（与 PACE 相位自适应、SEAM 混合策略等动态化尝试形成对照）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论章节在总结强经验表现后明确承认固定执行时域的归纳偏置风险，并把状态相关/可学习执行 profile 与自适应窗口长度列为未来工作。",
+   "locator": "5. Conclusion",
+   "source_context": "While DWS demonstrates strong empirical performance across diverse domains, its fixed execution horizon intro- duces a structural inductive bias that may limit policy expres- siveness and adaptability in highly dynamic environments, especially when abrupt changes occur within a window.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对结论章节局限段：固定执行时域的归纳偏置与窗口内突变场景为作者原话，未来方向（状态相关/可学习 profile、自适应窗口长度、混合方案）在同段随后给出；转述无外加推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2512.10926",
+  "2506.07339",
+  "2512.05964",
+  "2508.11143",
+  "2012.06644"
+ ],
+ "notes": "家族定位：本篇是'隐式动作分块'分支的代表，与 SmoothVLA（训练侧奖励正则）、PACE（相位感知执行）、SEAM（混合执行策略）、Action ControlNet（适配器）互补；其对显式分块三大缺陷的论证可直接作为综述'痛点-机制根源'小节的支撑证据。注意：无 VLA/真机/机器人操作实验，AFR 等指标基于执行动作而非末端轨迹，引用时须注明域边界。"
+}

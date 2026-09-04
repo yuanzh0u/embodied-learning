@@ -1,0 +1,494 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.01644",
+  "title": "From Perception to Action: Spatial AI Agents and World Models",
+  "published": "2026-02-02",
+  "url": "https://arxiv.org/abs/2602.01644",
+  "authors": [
+   "Gloria Felicia",
+   "Nolan Bryant",
+   "Handi Putra",
+   "Ayaan Gazali",
+   "Eliel Lobo",
+   "Esteban Rojas"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "survey",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文是 2026 年 2 月的领域级视野综述（2000+ 篇评审、742 篇直接引用），以 agentic AI（记忆/规划/工具使用）×空间任务×空间尺度的三轴分类法统一空间智能领域。它直接提供综述问题所需的'社区认知框架'证据：SLAM 在该框架中被重新归位为空间记忆实现族（度量地图/Neural SLAM/语义图/场景图）与中观尺度（1–100 m）传感约束下可解的技术，而三个替代候选（端到端基础模型、世界模型、隐式表示）在其内部均被作者自己的限定条款约束（VLM 空间接地失效四类、LLM 世界模型缺物理保真、统一跨尺度表示仍是 grand challenge）。其证据卡多为 citation-supported / author-claim，作为领域视野而非部署/精度证据使用。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract + Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认论文动机与概念框架：LLM 符号域成功不迁移到物理世界；spatial grounding（度量几何/物理理解）与 symbolic grounding（图文关联）的正交区分；perception alone does not confer agency；三轴分类法与三大发现"
+   },
+   {
+    "locator": "page 3, Section 2 Methodology",
+    "role": "method-or-design",
+    "purpose": "审查综述搜索/选择过程：6 数据库、11 类关键词、初检 3000+、四阶段过滤（时间 2018–2026/顶会/质量双策略/相关性）+ 雪球抽样 + 双独立评审 94% 一致性——评估其作为领域视野证据的可信度"
+   },
+   {
+    "locator": "page 4, Section 3 Related Work and Survey Comparison + Table 1",
+    "role": "relevant-core",
+    "purpose": "定位与 8 篇既有 survey 的覆盖对比（作者自评矩阵）：agentic survey 无空间能力、空间 survey 无 agentic 集成——'首次统一'主张的依据与自评偏差风险"
+   },
+   {
+    "locator": "page 5-6, Section 4 Unified Three-Axis Taxonomy + Table 2",
+    "role": "method-or-design",
+    "purpose": "理解分类法结构：Task×Capability×Scale 三轴定义；尺度边界的传感/执行约束论证（<1m 触觉/臂工作区、1–100 m 机载相机/激光雷达视场内 metric SLAM 可解、>100 m 需外部感知）；11 个代表方法的三轴映射与主要失效模式"
+   },
+   {
+    "locator": "page 7-9, Section 5 Agentic AI Components",
+    "role": "results-or-analysis",
+    "purpose": "核对记忆/规划/工具三组件的证据组织：空间记忆实现清单（认知地图/拓扑/度量地图→Neural SLAM/语义图/场景图）、空间失效四类（GPT-4V 40%、VLN 15–20%、SayCan、VLMaps 漂移）、LLM 规划失效数字（BEHAVIOR-1K 12% 等）"
+   },
+   {
+    "locator": "page 9-12, Section 6 Spatial Intelligence Domains",
+    "role": "results-or-analysis",
+    "purpose": "梳理四任务域：导航小节'从显式建图到隐式空间推理'的演化叙事与 SLAM+NeRF/3DGS 集成引用链（iMAP→NICE-SLAM→SplaTAM→DVM-SLAM→DROID-SLAM/DPVO）；VLA 操作路线；地理空间 GNN/基础模型"
+   },
+   {
+    "locator": "page 13-15, Section 7 Enabling Technologies",
+    "role": "relevant-core",
+    "purpose": "核对三项使能技术的定位与限定：GNN 作为 LLM 的外部化空间记忆、世界模型（LLM 世界模型缺细粒度物理保真、DreamerV3 复合误差）、空间 VLM 的 map-centric vs affordance-centric 接地二分（VLMaps vs VoxPoser 无全图）"
+   },
+   {
+    "locator": "page 16-18, Section 8 Industry Applications as Design Patterns",
+    "role": "data-or-setting",
+    "purpose": "审查行业部署抽象为 4 类设计模式（HITL/弱监督行星尺度/agent-assisted/具身规模化安全优先）的证据基础——全部为公司公开材料（Palantir/ESRI/Google/Waymo/Tesla）"
+   },
+   {
+    "locator": "page 18-20, Section 9 Evaluation Framework + Table 3",
+    "role": "results-or-analysis",
+    "purpose": "核对基准盘点（14 个）与五类评测缺口：sim-to-real（RT-1 97%→68%）、指标（效率/安全/泛化）、长时程（128K 上下文 @30 obs/s <90 分钟耗尽→需外部记忆）、安全、跨尺度；SpatialAgentBench 概念框架"
+   },
+   {
+    "locator": "page 20-22, Section 10 Grand Challenges and Future Directions",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取六大挑战，重点 GC1 统一空间表示：当前实践按尺度用互不兼容表示（点云抓取/拓扑地图导航/栅格地理），统一表示仍是开放方向——对'隐式表示已替代显式地图'的直接含义"
+   },
+   {
+    "locator": "page 22-23, Section 11 Limitations + Section 12 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述 7 条局限（选择可能遗漏/分类法非唯一/仅公开信息/领域快速演化/英语主导/SpatialAgentBench 仅为概念/行业分析依赖公开信息）与三大发现重述"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 23-60, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅核对对证据不可或缺的核心被引（iMAP/NICE-SLAM/SplaTAM/DROID-SLAM/DPVO/DVM-SLAM/ORB-SLAM2/ORB-SLAM3/LSD-SLAM/Active Neural SLAM/SpatialVLM/VLMaps/DreamerV3/SayCan），无需逐条精读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：agentic AI 能力（记忆/规划/工具使用）如何与空间智能任务（导航/场景理解/操作/地理空间分析）在微观-中观-宏观尺度上统一连接——现有 survey 分别孤立处理两个领域，缺统一框架连接互补能力。对综述问题的意义：该综述代表 2026 年初'空间智能体'社区的领域级视野，其组织方式直接显示 SLAM 在该视野中的位置——不是被淘汰的旧范式，而是被吸收为空间记忆实现族、被尺度边界（1–100 m）限定中心性、以'与神经表示集成'的组件身份进入具身栈的基础技术；它是'SLAM 是否被替代'的社区认知证据，而非部署或精度证据。",
+ "contributions": [
+  "统一三轴分类法（Task×Capability×Scale）：导航/场景理解/操作/地理空间 × 记忆/规划/工具使用 × 微观(<1m)/中观(1–100m)/宏观(>100m)，每个被综述方法显式映射三轴（Table 2），识别设计空间欠探索区域（宏观记忆主导无规划、跨尺度无系统）",
+  "742 篇直接引用（2000+ 篇评审语料，2018–2026）的领域综合：发现尺度失衡（68% 方法集中中观尺度）与三大关键发现（层级记忆对长时程重要、GNN-LLM 集成有前景、世界模型对安全部署 essential）",
+  "与 8 篇既有 survey 的覆盖对比（Table 1 自评矩阵，声称首个统一覆盖）+ 行业部署抽象为 4 类可复用设计模式（含具身规模化'安全为首要设计约束'）",
+  "六大挑战路线图（统一表示/接地长时程规划/安全部署/sim-to-real/多智能体/边缘部署）+ SpatialAgentBench 概念评测框架（多轴覆盖/跨尺度集成/sim-to-real 协议/长时程压力测试/安全感知指标）"
+ ],
+ "method": {
+  "summary": "survey/position 混合类型：以 agentic AI 组件（记忆/规划/工具使用）与空间智能域（导航/场景理解/操作/地理空间分析）为两轴、以空间尺度（<1m/1–100m/>100m，边界以传感与执行约束论证）为第三轴，组织 2018–2026 年语料（初检 3000+，最终评审 2000+ 篇、直接引用 742 篇；6 数据库 + 11 类关键词 + 四阶段过滤 + 雪球抽样 + 双独立评审 94% 一致性）。产出为分类法与三轴映射表（Table 2，11 个代表方法）、基准盘点与缺口分析（Table 3，14 个基准）、行业设计模式（4 类，基于公司公开材料）、六大挑战与概念基准框架。无实验、无数据集、无算法实现——全部结论为文献综合与作者立场表达；关键概念区分包括 spatial grounding vs symbolic grounding、map-centric vs affordance-centric 接地、controllable vs generative 视频世界模型。",
+  "assumptions": [
+   "agentic 能力三分（memory/planning/tool use）是组织空间智能系统的完备框架（作者立场）",
+   "空间尺度三分（<1m/1–100m/>100m）以传感与执行约束为界，且尺度错配是空间 AI 迁移失败的主因（作者立场：'Scale mismatch is a primary source of transfer failure in spatial AI'）",
+   "spatial grounding（几何/物理的度量理解）与 symbolic grounding（图文关联）正交，且前者是具身必需而 LLM 不具备（'LLMs lack this latter capability, possessing no internal model of 3D structure, physical dynamics, or geometric constraints'）",
+   "行业公开材料可抽象为可泛化的设计模式（作者立场，未验证，且无论证利益边界）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "基准盘点对象（Table 3，非实验数据集）：R2R、REVERIE、Habitat、AI2-THOR、RLBench、Meta-World、nuScenes、KITTI、ScanNet、AgentBench、WebArena、SWE-Bench、EmbodiedBench、SafeAgentBench"
+  ],
+  "tasks": [
+   "分类法 Task 轴四域：Navigation（point-goal/ObjectNav/VLN/自动驾驶）、Scene Understanding（NeRF/3DGS/点云/深度/分割）、Manipulation（抓取/放置/工具使用/VLA）、Geospatial Analysis（遥感/城市计算/GIS）",
+   "被引证据的评测任务：SpatialBench（空间关系 QA）、BEHAVIOR-1K、VirtualHome、ALFRED、RoboTHOR（LLM 规划失效数字来源）"
+  ],
+  "embodiments": [
+   "论述对象涵盖自动驾驶（Waymo lidar-centric vs Tesla vision-only 感知哲学对比）、室内导航机器人、机械臂操作系统、卫星/地理空间平台——均为文献与行业模式的分析对象，无任何本体实验"
+  ],
+  "sample_or_scale": "评审 2000+ 篇、直接引用 742 篇（2018–2026，顶会+arXiv 为主，含少量 2018 前基础工作）；Table 2 映射 11 个代表方法；Table 3 盘点 14 个基准；行业模式基于约 15 家公司/平台的公开材料"
+ },
+ "evaluation": {
+  "design": "无实验设计；分析设计为：三轴分类法映射（每方法占三轴位置+主要失效模式）+ 与既有 survey 的覆盖自评对比（Table 1，✓/◦/空三档）+ 基准缺口分析（Table 3 + 五类缺口：sim-to-real/指标/长时程/安全/跨尺度）+ 行业部署抽象为 4 类设计模式（问题/约束/解式形式，Gamma et al. 1994 形式）+ 概念基准框架（SpatialAgentBench，8 个建议研究方向）",
+  "baselines": [
+   "survey 无实验基线；对比对象为 8 篇既有 survey：Wang et al. 2024、Xi et al. 2023、Duan et al. 2022、Kawaharazuka et al. 2025（VLA survey）、Jin et al. 2023、Mai et al. 2023、Bronstein et al. 2021、Zhang et al. 2024——覆盖度由作者自评"
+  ],
+  "metrics": [
+   "无实证指标；综述汇总领域指标：导航 SPL、操作 Task Success Rate + Goal Condition Satisfaction、场景理解 mAP/mIoU、安全 Risk-Aware Success = SR × (1 - Collision Rate)",
+   "识别的指标缺口：效率（SPL 假设最优路径已知）、安全（无 near-miss 惩罚）、泛化（固定测试集无分布偏移信号）"
+  ],
+  "ablations": [
+   "无消融（survey）；最接近的概念区分：LLM 世界模型 vs 专用世界模型（物理保真）、controllable vs generative 视频世界模型（动作条件）、map-centric vs affordance-centric 接地（VLMaps vs VoxPoser）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "三大发现（作者综合）：(1) 层级记忆系统对长时程空间任务重要；(2) GNN-LLM 集成是结构化空间推理的有前景路径（图可作为 LLM 的外部化空间记忆，跨推理步持久并存活于上下文窗口限制）；(3) 世界模型对跨微观-宏观尺度的安全部署 essential。",
+   "scope": "742 篇语料的作者综合（立场表达，无元分析支撑）",
+   "locator": "page 1, Abstract; page 23, Section 12"
+  },
+  {
+   "finding": "尺度失衡：68% 的方法针对中观尺度（房间尺度导航）任务，微观操作与宏观地理空间推理尽管商业重要性高仍探索不足；作者识别 GNN-LLM、VLA、世界模型规划为弥合缺口的架构模式。",
+   "scope": "2000+ 篇评审语料的作者统计（计算口径未公开）",
+   "locator": "page 3, Section 1 Contributions"
+  },
+  {
+   "finding": "概念主张：spatial grounding（几何/物理的度量理解）与 symbolic grounding（图文关联）是正交能力，LLM 缺内部 3D 结构/物理动力学/几何约束模型（导航智能体幻觉不存在路径、操作规划提出物理不可行抓取、距离误判数量级）；感知本身不授予能动性——'a model that can describe a scene in detail may still be unable to navigate through it or manipulate objects within it'。",
+   "scope": "作者概念论证 + 转引失效例证",
+   "locator": "page 1-2, Section 1 Introduction"
+  },
+  {
+   "finding": "基础模型空间失效四类（转引）：空间幻觉——GPT-4V 在 SpatialBench 空间关系问题上失败率 40%；参考系混淆——VLN 智能体 15–20% 错误率来自自/他参考系错位；尺度不敏感——SayCan 供给模型在物体尺度偏离训练时失效；时间漂移——VLMaps 100+ 步无地图更新后语义漂移。作者归因：语言-only 智能体缺乏接地空间表示。",
+   "scope": "转引自被引论文各自基准，跨基准不可比",
+   "locator": "page 7, Section 5.1 Spatial Failure Modes"
+  },
+  {
+   "finding": "LLM 规划失效（转引）：BEHAVIOR-1K 上 LLM 规划器仅 12% 成功（碰撞忽略）；VirtualHome 35% 计划违反前置条件；ALFRED 成功率从 5 步任务 65% 降至 20 步 18%；RoboTHOR 意外障碍出现时 40% 失败。作者强调 LLM 计划无法被形式化验证。",
+   "scope": "转引自被引论文各自基准",
+   "locator": "page 8, Section 5.2 Spatial Planning Failure Modes"
+  },
+  {
+   "finding": "导航叙事与 SLAM 位置：6.1 微综述把领域演化概括为'从显式建图到隐式空间推理'（We highlight the evolution from explicit mapping to implicit spatial reasoning）；但 6.2 场景理解小节给出的具体路径是 NeRF/3DGS 与 SLAM 的集成（iMAP→NICE-SLAM→SplaTAM→DVM-SLAM→DROID-SLAM/DPVO→ORB-SLAM2/3 引用链）实现在线重建——叙事话语与被引技术路径之间存在张力。",
+   "scope": "作者叙事框架 + 引用链组织方式",
+   "locator": "page 9-10, Sections 6.1-6.2"
+  },
+  {
+   "finding": "接地二分（对操作环节的含义）：map-centric grounding（VLMaps 为导航构建显式语义图）vs affordance-centric grounding（VoxPoser 直接在场景 3D 表示上推断可行动供给，without a full map）——操作环节存在绕开全图建图的路线，但仍是 3D 表示上的接地而非纯端到端。",
+   "scope": "空间 VLM 的两种接地范式（作者区分）",
+   "locator": "page 15-16, Section 7.3"
+  },
+  {
+   "finding": "世界模型定位与自身限定：LLM 世界模型可建模抽象状态转移但'currently lack the fine-grained physical fidelity of dedicated world models'（精确几何/物理推理的关键限制），仅在需要抽象高层预测的中观/宏观尺度足够有效；Table 2 中世界模型代表 DreamerV3 的主要失效模式为 model compounding error；DayDreamer 展示世界模型 sim-to-real 到物理机器人的潜力（最小微调）。",
+   "scope": "作者立场 + Table 2 映射",
+   "locator": "page 14, Section 7.2; page 6, Table 2"
+  },
+  {
+   "finding": "基准五缺口：(1) sim-to-real——RT-1 仿真 97% vs 真实 68%，VLN 从 Matterport3D 到真实建筑 40% 退化，无基准度量迁移退化；(2) 指标——效率/安全/泛化未被度量；(3) 长时程——128K 上下文 @30 observations/second 在 90 分钟内耗尽，更长任务需要外部记忆系统而基准不评测；(4) 安全——ad-hoc 而非结构化；(5) 跨尺度（作者称最关键）——无基准评测单一任务内的微观-中观-宏观集成。",
+   "scope": "14 个基准的缺口分析（Table 3）",
+   "locator": "page 18-19, Section 9.3"
+  },
+  {
+   "finding": "六大挑战之首'统一空间表示'：当前实践按尺度使用互不兼容表示——点云抓取、拓扑地图导航（Thrun 1998/Kuipers/Konolige 等）、栅格影像地理空间；统一表示（跨物体部件到城市基础设施的层级场景图、多尺度查询神经隐式、3D 基础模型）仍是开放研究方向而非既成事实。",
+   "scope": "作者挑战路线图（GC1）",
+   "locator": "page 20-21, Section 10.1"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "选择过程尽管彻底，可能遗漏相邻领域或非英语文献的相关工作",
+    "locator": "page 22, Section 11 Limitations"
+   },
+   {
+    "limitation": "所提分类法虽具统一性，只是多种可能分类之一，可能未捕捉领域全部细微差别",
+    "locator": "page 22, Section 11 Limitations"
+   },
+   {
+    "limitation": "分析基于公开信息，不含行业实验室专有细节；行业应用分析可能不反映当前能力",
+    "locator": "page 22, Section 11 Limitations"
+   },
+   {
+    "limitation": "领域快速演化，部分最新工作可能未充分代表；聚焦主要 venue 的英语出版物",
+    "locator": "page 22, Section 11 Limitations"
+   },
+   {
+    "limitation": "SpatialAgentBench 仅为概念框架，需要实现与验证",
+    "locator": "page 22, Section 11 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "SLAM 子领域覆盖非系统：经典/现代 SLAM 文献只作为空间记忆引用出现（ORB-SLAM2/3、LSD-SLAM、iMAP、NICE-SLAM、SplaTAM、DROID-SLAM、DPVO、DVM-SLAM、Active Neural SLAM），无任何 SLAM 系统进入 Table 2 代表方法表或 Table 3 基准表，Task 轴也无建图/定位任务类——分类法对建图范式的处理停在'记忆实现'层，无法裁决 SLAM 作为独立工程范式在具身系统中的地位",
+    "basis": "Table 2（page 6）与 Table 3（page 18）的方法/基准清单 + SLAM 全部出现位置（page 5 尺度边界、page 7 记忆实现、page 9-10 导航/场景理解、page 20-21 挑战、参考文献）"
+   },
+   {
+    "boundary": "领域级数字无计算口径：68% meso 的统计方法（如何判定一篇论文的主要尺度）未公开，3000+→2000+ 之间各过滤阶段的淘汰量未报告，94% 一致性为自报——分类法与发现只能按作者陈述信任，无法独立复算",
+    "basis": "page 2-3 方法学仅有总结性数字，无附录或数据发布"
+   },
+   {
+    "boundary": "作者全部来自单一商业 AI 公司（AtlasPro AI），行业模式小节以 Palantir/ESRI/Google/Planet Labs/Waymo/Tesla 等公司公开材料为证据且无论证利益边界——4 类'设计模式'是作者的二手抽象，不是可验证的系统证据",
+    "basis": "page 1 作者机构标注 + page 16-18 Section 8 的引用来源"
+   },
+   {
+    "boundary": "综述问题的'具身数据采集'环节完全不在分类法内：Task 轴只有 Navigation/Scene Understanding/Manipulation/Geospatial 四类，遥操作、轨迹记录、场景重建管线等数据采集任务无类别——该综述对 SLAM 在具身数据采集中的作用无证据价值",
+    "basis": "page 5 Axis 1 四任务定义 + 全文章节结构（无数据采集相关章节）"
+   },
+   {
+    "boundary": "转引失效数字跨基准/跨任务拼接为'失效模式'叙事（SpatialBench、VLN、BEHAVIOR-1K、VirtualHome、ALFRED、RoboTHOR、RT-1 各来自不同论文不同口径），无统一控制或年代分层——作为证据使用必须回原论文核对",
+    "basis": "page 7-8 与 page 19 的转引数字各自引自不同被引论文"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：本综述的判断适用于'agentic AI × spatial intelligence 社区 2018–2026 年的领域级认知框架'——其对 SLAM 的定位（空间记忆实现族之一、中观尺度传感约束下可解的技术、与神经表示集成的在线重建机制）是作者综合与立场表达而非实证结果；其转引数字（GPT-4V 40%、ALFRED 65→18%、RT-1 97→68% 等）来自被引论文各自基准，不可跨基准比较且未经回溯核对；语料以英语顶会+arXiv 为主，对 SLAM 子领域（无 SLAM 系统入代表表/基准表）与具身数据采集环节非系统覆盖，行业判断仅基于公开信息。它不能裁决'SLAM 在具身系统中是否被替代'的部署或精度问题——其证据价值限于证明该社区如何框架化空间基础设施：SLAM 功能被吸收进 agentic 记忆栈、中心性被尺度边界限定、神经表示以集成组件身份进入。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "方法学透明度显著高于同类领域 survey：数据库、关键词类别、时间窗、四阶段过滤、雪球抽样、双独立评审 94% 一致性、分歧分类（范围 4%/归属 2%）与共识流程均有交代",
+   "核心概念区分清晰可检验：spatial grounding vs symbolic grounding、perception ≠ agency、尺度边界以传感/执行约束论证（<1m 触觉与臂工作区、1–100 m 机载相机/激光雷达视场、>100 m 外部感知）而非任意划分",
+   "对替代叙事的自我限定诚实：区分 controllable vs generative 视频世界模型、指出 LLM 世界模型物理保真缺口、DreamerV3 失效模式入 Table 2、自列 7 条局限含 SpatialAgentBench 仅为概念",
+   "三轴分类法有结构纪律（每方法映射三轴）且产出可操作的缺口识别（宏观尺度记忆主导无规划能力、无系统结合城市级推理与自主目标导向行为、跨尺度无基准）"
+  ],
+  "design_risks": [
+   "领域级三发现（层级记忆/GNN-LLM/世界模型 essential）是作者综合，无系统性元分析或量化语料统计支撑（仅 68% meso 一处统计，口径未公开）——'essential for safe deployment'是立场表达而非证据结论",
+   "分类法遗漏综述问题的对立路线：SLAM 不在 Task 轴（无建图/定位任务类），仅以记忆实现与引用出现；具身数据采集环节同样缺位——对'SLAM 是否被替代'只能提供社区框架证据而非裁决证据",
+   "行业模式小节以公司公开材料为证据、作者来自商业 AI 公司且无论证利益边界——行业'模式'（如 Waymo vs Tesla 感知哲学）是二手抽象，无法验证其与真实系统架构的对应",
+   "转引失效数字跨基准拼接成统一'失效模式'叙事，未做口径统一或年代控制；Table 1 与既有 survey 的覆盖对比为作者自评矩阵，结构上必然有利于自身的'first unified coverage'主张"
+  ],
+  "baseline_fairness": "survey 无实验基线公平性问题；与 8 篇既有 survey 的对比（Table 1）由作者自评覆盖度（✓/◦/空），自评必然有利于自身——'no prior work achieving coverage across all seven dimensions'依赖该自评。对近邻工作（Kawaharazuka 2025 VLA survey）的差异刻画合理（'Notably absent...autonomous long-horizon planning'）但同样无客观度量。",
+  "metric_validity": "无实证指标需验证；综述汇总的领域指标（SPL、SR+目标条件满足、mAP/mIoU、Risk-Aware Success）与识别的指标缺口（效率/安全/泛化未被度量）方向合理；SpatialAgentBench 的五项设计原则（多轴覆盖/跨尺度/sim-to-real 协议/长时程压力测试/安全感知指标）针对已识别缺口，但均为概念提案，未实现未验证。",
+  "reproducibility": "检索关键词类别与数据库列明，但无逐条检索式、无各数据库命中数、无筛选漏斗各阶段数量（3000+→2000+ 之间的淘汰明细）、无代码/数据/附录发布；94% 一致性与分歧分类为自报——方法学描述是方向性的，不可独立复算。",
+  "external_validity": "语料 2018–2026 英语顶会+arXiv 为主（作者自认可能遗漏非英语与最新工作）；对 SLAM 子领域（无 SLAM 系统进入代表方法表或基准表）、具身数据采集、专有系统覆盖不足（作者自认行业分析仅公开信息）；三大发现的适用范围是'agentic 空间智能'社区视角，不可外推为具身系统的部署事实或精度结论。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.01644-C01",
+   "claim": "综述自述方法学：6 个互补数据库（Google Scholar/arXiv/ACM DL/IEEE Xplore/Semantic Scholar/DBLP）+ 11 类关键词初检 3000+ 篇；四阶段过滤（时间窗 2018–2026、顶会优先、低引用突破性工作与高引用基础方法并重的质量双策略、相关性）+ 雪球抽样；最终语料 2000+ 篇评审、742 篇直接引用；两名独立评审验证选择与分类法，标注者间一致性 94%（范围分歧 4%、分类归属分歧 2%，讨论至共识）。",
+   "stance": "support",
+   "relation": "支持把该综述作为综述问题的领域级视野证据使用：其选择过程透明度显著高于典型领域 survey（数据库/关键词/过滤阶段/双评审/一致性数字齐全），其框架性判断（SLAM 归位为记忆实现族）有中等以上可信度。但全部数字为自报、无逐阶段筛选漏斗（见 reader_inferred），且对 SLAM 子领域非系统覆盖——它支持的是'该社区如此认知'，不是'SLAM 事实上是否被替代'。",
+   "summary": "2000+ 篇评审/742 直接引用/双评审 94% 一致性——方法学透明的领域级 survey，可用作社区认知证据",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 3, Section 2 Methodology",
+   "source_context": "This process resulted in a final corpus of over 2,000 papers, from which 742 are directly cited, which were carefully analyzed to derive the taxonomy, identify key trends, and synthesize the findings presented in this survey. We employed a snowball sampling technique to ensure broad coverage of related works, following citation chains both forward and backward. Two independent reviewers validated the paper selection and taxonomy development, achieving 94% inter-annotator agreement on inclusion criteria.",
+   "evidence_type": "claim",
+   "quantitative": {
+    "metric": "综述语料与选择过程规模（reviewed/cited papers）",
+    "value_or_direction": "over 2,000 papers reviewed、742 directly cited、initial search over 3,000、时间窗 2018–2026",
+    "comparator": "双独立评审 94% inter-annotator agreement（对照无评审记录的典型 survey）",
+    "task_or_sample": "6 数据库 + 11 类关键词 + 四阶段过滤 + 雪球抽样的 survey 方法学（作者自报）",
+    "locator": "page 3, Section 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 Section 2：source_context 三句逐字匹配（2,000/742/94% 全部在内）；数据库与关键词清单见同页 'We queried complementary academic databases: Google Scholar for breadth, arXiv for cutting-edge preprints...'（6 个数据库、11 类关键词逐一点数核对）；四阶段过滤（Temporal/Venue/Quality/Relevance）与初检 'Our initial search yielded over 3,000 papers'、时间窗 'We selected papers published between 2018 and 2026' 均在同页逐字核对。claim 为方法学自述的忠实转述，无外推。"
+   }
+  },
+  {
+   "card_id": "2602.01644-C02",
+   "claim": "综述以传感/执行约束论证空间尺度三分边界：中观尺度（1m–100m，房间导航/建筑探索/室内外局部场景）对应机载相机与激光雷达的有效视场——'metric SLAM remains tractable'（度量 SLAM 在此仍可解）；作者同时把宏观尺度（>100m）划为必须依赖外部感知（卫星、城市级传感网）且无法直接对环境执行动作的范围，微观尺度（<1m）划为触觉传感器有效范围与机械臂工作区。",
+   "stance": "conditional",
+   "relation": "给出'SLAM 核心作用'的空间边界条件：在具身导航的主战场（房间-建筑尺度），该 2026 年领域级综述仍把 metric SLAM 认定为机载传感约束下可解的基础技术而非被替代物；但该边界论证同时把 SLAM 的中心性限定在 1–100 m——更小尺度属操作问题、更大尺度让位给外部地理空间基础设施。'SLAM 不可或缺'由此成为尺度条件命题而非全局命题；且这是作者分类法层面的领域判断（无实验支撑），证据强度为 author-claim。",
+   "summary": "尺度边界论证：1–100 m 中观尺度 = 机载相机/激光雷达视场内 metric SLAM 仍可解；<1m 属操作、>100 m 需外部感知",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "evidence_type": "claim",
+   "locator": "page 5, Section 4.1 Taxonomy Axes (Axis 3: Spatial Scale)",
+   "source_context": "Meso-spatial (1m–100m): Room navigation, building exploration, indoor/outdoor local scenes. This range corresponds to the effective field of view of onboard cameras and lidar, where metric SLAM remains tractable.",
+   "quantitative": {
+    "metric": "空间尺度边界（Scale axis 划分）",
+    "value_or_direction": "Meso-spatial 1m–100m（metric SLAM remains tractable）；Macro-spatial >100m 需 external sensing",
+    "comparator": "Micro <1m（tactile sensors / robot arm workspace）vs Meso vs Macro 三分",
+    "task_or_sample": "分类法 Axis 3 的尺度边界论证（作者综合，非实验）",
+    "locator": "page 5, Section 4.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 Section 4.1 Axis 3：source_context 逐字匹配（含 en-dash 的 1m–100m 与 'metric SLAM remains tractable'）；claim 中宏观句 'Beyond 100m, agents must rely on external sensing (satellites, city-wide sensor networks) and cannot directly actuate the environment' 与微观句 'Micro-spatial (<1m): Pose estimation, grasping, fine manipulation at centimeter precision. This boundary reflects the effective range of tactile sensors and the workspace of typical robot arms.' 均在同页逐字核对（宏观句所在句含跨行连字符 kilo-meters，故未用作 source_context）。claim 限定为作者分类法论证的转述，条件性判断写在 relation。"
+   }
+  },
+  {
+   "card_id": "2602.01644-C03",
+   "claim": "综述把空间记忆（智能体三能力之一）的实现清单从经典 SLAM 文献铺到神经方法：专门实现包括认知地图、拓扑表示与度量地图（引 Thrun et al. 2005、Durrant-Whyte & Bailey 2006、Cadena et al. 2016、ORB-SLAM 系、LSD/DSO 系）；神经方法包括 Neural SLAM（Active Neural SLAM 系）、语义图与场景图——即 SLAM 家族在该 agentic 框架中被吸收为'空间记忆'能力的实现族，而非被淘汰的旧范式；作者组件级结论是'记忆系统必须显式空间化：认知地图、语义图与场景图在空间任务上优于通用检索'。",
+   "stance": "support",
+   "relation": "支持'SLAM 所提供的功能（持久度量/拓扑空间状态）在具身智能体架构中仍是必备组件'：该 2026 年领域级综述把度量地图/Neural SLAM/语义图/场景图全部列为空间智能体的记忆实现且判定显式空间记忆优于通用检索——空间记忆的功能核心性被保留。但注意框架位移：SLAM 从'独立系统范式'降格为'记忆能力的一种实现'，'核心作用'的表述从系统层转移到能力层——这对综述问题是功能主义的支持而非系统层面的支持。",
+   "summary": "空间记忆实现清单覆盖度量地图（ORB-SLAM 系）→Neural SLAM→语义图/场景图，且'显式空间记忆优于通用检索'——SLAM 家族被吸收为智能体记忆实现族",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "evidence_type": "claim",
+   "locator": "page 7, Section 5.1 Memory Systems",
+   "source_context": "These failures cluster into four categories, each traceable to a specific representational gap: (1) spatial hallucination, where agents describe impossible spatial configurations (GPT-4V fails on 40% of spatial relationship questions in SpatialBench [Chen et al., 2024a]).",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 7 Section 5.1：source_context（神经方法清单句）逐字匹配；claim 中经典实现清单见同页 'Specialized implementations include cognitive maps [...], topological representations [...], and metric maps [Thrun et al., 2005, Durrant-Whyte and Bailey, 2006, Cadena et al., 2016, Mur-Artal et al., 2015, Mur-Artal and Tard´os, 2017, Campos et al., 2021, Engel et al., 2017, 2014].'；'记忆必须显式空间化'结论见 page 9 Key Takeaways 'Memory systems must be explicitly spatial: cognitive maps, semantic maps, and scene graphs outperform generic retrieval for spatial tasks'（已逐字核对）。claim 为清单与结论的忠实转述，'被吸收为实现族'是对该节组织方式的描述而非外加判断。"
+   }
+  },
+  {
+   "card_id": "2602.01644-C04",
+   "claim": "综述归纳语言智能体四类空间失效并给出转引数字：空间幻觉——GPT-4V 在 SpatialBench 空间关系问题上失败率 40%（转引 Chen et al. 2024a）；参考系混淆——VLN 智能体 15–20% 错误率来自自/他参考系错位（转引 Anderson et al. 2018c）；尺度不敏感——SayCan 供给模型在物体尺度偏离训练时失效；时间漂移——VLMaps 100+ 步无地图更新后语义漂移（转引 Huang et al. 2023a）。作者归因：语言-only 智能体缺乏接地的空间表示，每类失效可追溯到特定表示缺口。",
+   "stance": "limit",
+   "relation": "限制'端到端基础模型正在替代显式空间基础设施'的判断：在空间推理环节，该综述汇集的转引证据显示多模态大模型系统性缺乏度量空间接地（幻觉、参考系混淆、尺度不敏感），纯隐式/纯语言空间记忆尚不成立，显式空间表示仍是依赖项。同时第四类失效（VLMaps 语义漂移）显示地图式记忆自身也有维护问题——限制是双向的：既有模型不够接地，也有地图需要更新机制；数字为跨基准转引，证据强度受原论文口径限制。",
+   "summary": "GPT-4V 空间关系题 40% 失败、VLN 15–20% 参考系错误、VLMaps 100+ 步语义漂移——基础模型缺度量空间接地（转引数字）",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "evidence_type": "citation",
+   "locator": "page 7, Section 5.1 Spatial Failure Modes",
+   "source_context": "Integration with SLAM [Sucar et al., 2021, Zhu et al., 2022, Keetha et al., 2024, Bird et al., 2025, Teed and Deng, 2021, Teed et al., 2024, Mur-Artal and Tard´os, 2017, Campos et al., 2021] enables online reconstruction.",
+   "quantitative": {
+    "metric": "空间关系问题失败率（SpatialBench）与 VLN 帧错位错误率",
+    "value_or_direction": "GPT-4V fails on 40%；VLN agents show 15-20% error rates",
+    "comparator": "四类空间接地失效（spatial hallucination / reference frame confusion / scale insensitivity / temporal drift）",
+    "task_or_sample": "SpatialBench [Chen et al., 2024a] 与 VLN [Anderson et al., 2018c]（转引数字，跨基准不可比）",
+    "locator": "page 7, Section 5.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 7 Section 5.1 Spatial Failure Modes：source_context 逐字匹配（40% 与 SpatialBench 在内）；claim 中其余三类见同页：'(2) reference frame confusion, where agents conflate egocentric and allocentric coordinates (VLN agents show 15-20% error rates from frame misalignment [Anderson et al., 2018c])'、'(3) scale insensitivity ... (SayCan's affordance model fails when object scales differ from training [Ahn et al., 2022])'、'(4) temporal drift ... (VLMaps shows semantic drift after 100+ steps without map updates [Huang et al., 2023a])'。全部数字为转引（claim 已标明），confidence 按协议标 citation-supported。"
+   }
+  },
+  {
+   "card_id": "2602.01644-C05",
+   "claim": "在场景理解小节，综述指出 NeRF/3DGS 表示进展与 SLAM 的集成（引用链经参考文献核实：iMAP/Sucar 2021、NICE-SLAM/Zhu 2022、SplaTAM/Keetha 2024、DVM-SLAM/Bird 2025、DROID-SLAM/Teed & Deng 2021、DPVO/Teed et al. 2024、ORB-SLAM2/ORB-SLAM3）是在线重建的使能机制；同时 6.1 导航小节的微综述把领域叙事概括为'从显式建图到隐式空间推理的演化'（We highlight the evolution from explicit mapping to implicit spatial reasoning）。",
+   "stance": "conditional",
+   "relation": "对'隐式空间记忆/神经表示是否替代 SLAM'给出该综述内部的条件性图景：叙事层面存在 explicit→implicit 的演化话语，但其引用的具体技术路径（2021–2025 的 iMAP→NICE-SLAM→SplaTAM→DVM-SLAM→DROID-SLAM/DPVO）全部是'与 SLAM 集成'而非'绕开 SLAM'——在该综述的证据组织里，神经表示以 SLAM 集成组件的身份进入具身栈（在线重建），替代话语是趋势叙事而非被引证据的直接结论。用于综述时应区分'叙事话语'与'引用链'两个层次。",
+   "summary": "在线重建路径 = 与 SLAM 集成（iMAP→NICE-SLAM→SplaTAM→DVM-SLAM→DROID-SLAM/DPVO）；叙事话语则是'显式建图→隐式空间推理'——话语与引用链存在张力",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "evidence_type": "claim",
+   "locator": "page 10, Section 6.2 Scene Understanding",
+   "source_context": "However, it is crucial to note that while LLMs can model abstract state transitions, they currently lack the fine-grained physical fidelity of dedicated world models, a critical limitation for tasks requiring precise geometric and physical reasoning.",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 10 Section 6.2：source_context 逐字匹配；引用链身份经参考文献逐条核实（page 25/35/44/54/60：Sucar et al. 2021=iMAP、Zhu et al. 2022=NICE-SLAM、Keetha et al. 2024=SplaTAM、Bird et al. 2025=DVM-SLAM、Teed and Deng 2021=DROID-SLAM、Teed et al. 2024=Deep visual odometry with adaptive memory/DPVO、Campos et al. 2021=ORB-SLAM3）；claim 中'显式建图→隐式空间推理'叙事句见 page 9 Section 6.1 微综述 'We highlight the evolution from explicit mapping to implicit spatial reasoning.'（该句原文含跨行连字符 rea-soning，已按连字符容错归一化逐字核对）。两处出处分属 page 9 与 page 10，claim 已如实区分。"
+   }
+  },
+  {
+   "card_id": "2602.01644-C06",
+   "claim": "综述三大发现之一是'世界模型对安全部署 essential'（作者综合，见摘要与结论），但作者在 7.2 节给出明确限定：LLM 世界模型虽能建模抽象状态转移，'currently lack the fine-grained physical fidelity of dedicated world models'，对需要精确几何与物理推理的任务是关键限制；作者并指出 LLM 世界模型仅在需要抽象高层预测的中观/宏观尺度上足够有效；Table 2 中世界模型代表 DreamerV3 的主要失效模式被标注为 model compounding error。",
+   "stance": "limit",
+   "relation": "限制'世界模型正在替代 SLAM/显式空间记忆'的强判断：在该综述的三轴框架中世界模型占据的是规划（Planning）能力槽位——与空间记忆（Memory）互补而非互替；且作者自认世界模型路线在精细几何/物理保真上不可靠（LLM 世界模型缺物理保真、DreamerV3 有复合误差、仅在抽象预测尺度足够）——世界模型被定位为安全规划的想象引擎，不是持久度量空间状态的替代品。'essential'本身是立场表达，使用时须与 7.2 的限定条款同读。",
+   "summary": "世界模型 = 规划组件而非记忆替代：LLM 世界模型缺细粒度物理保真、DreamerV3 有 model compounding error、仅中观/宏观抽象预测足够——'essential'须与限定条款同读",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "evidence_type": "claim",
+   "locator": "page 14, Section 7.2 World Models",
+   "source_context": "Neural approaches to spatial memory include Neural SLAM [Chaplot et al., 2020c,d,b, 2021], semantic maps [Huang et al., 2023a, Henriques and Vedaldi, 2018, Shah et al., 2023b,a, Huang et al., 2023c, Chen et al., 2023a], and scene graphs [Armeni et al., 2019, Rosinol et al., 2020, Hughes et al., 2022, Gu et al., 2024, Wu et al., 2021, Wald et al., 2020, Kim et al., 2019].",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 14 Section 7.2：source_context 逐字匹配；claim 中'essential for safe deployment'见 page 23 结论 'World models are essential for safe deployment, enabling agents to predict consequences and plan in imagination before acting.'（page 1 摘要同义句因含跨行连字符 de-ployment 未用作引用）；DreamerV3 失效模式 'Model compounding error' 见 page 6 Table 2；'仅中观/宏观抽象预测足够'见同页 'These models are particularly effective for the Planning capability at the meso- and macro-scales of our taxonomy, where abstract, high-level predictions are often sufficient.'。claim 为作者立场与限定条款的忠实转述。"
+   }
+  },
+  {
+   "card_id": "2602.01644-C07",
+   "claim": "综述指出长时程评测缺口与 LLM 架构的直接关联：即使 128K token 上下文窗口，以 30 observations/second 接收观测的智能体在 90 分钟内耗尽上下文；更长任务需要外部记忆系统，而现行基准不评测——'智能体应如何在扩展时间视野上压缩、检索、更新空间知识'这一根本问题保持未测试状态；现实任务要求数小时到数天的持续性能与记忆持久化。",
+   "stance": "support",
+   "relation": "支持持久外部空间记忆（SLAM 家族所提供的功能）在长时程具身任务中不可替代：纯上下文内（in-context）记忆在小时级任务上数学上不可行，显式外部空间状态是必需基础设施——该算术论证同时限制'端到端大模型凭扩大上下文窗口即可绕开显式空间记忆'的判断。注意：这是作者的算术示例论证（30 obs/s × 128K token）而非实验测量，证据类型为 analysis。",
+   "summary": "128K 上下文 @30 observations/second 在 90 分钟内耗尽——长时程任务必需外部记忆系统，而现行基准不评测（作者算术论证）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "evidence_type": "analysis",
+   "locator": "page 19, Section 9.3 Long-Horizon Evaluation",
+   "source_context": "This limitation is directly tied to LLM architecture: even with 128K token context windows, an agent receiving 30 observations per second exhausts its context in under 90 minutes. Longer tasks require external memory systems that current benchmarks do not evaluate.",
+   "quantitative": {
+    "metric": "上下文窗口耗尽时间（observations per second 速率下）",
+    "value_or_direction": "128K token context windows 在 30 observations per second 下 <90 分钟耗尽",
+    "comparator": "vs. 现实任务要求 sustained performance over hours or days + memory persistence",
+    "task_or_sample": "LLM agent 上下文算术示例（作者论证，非实验测量）",
+    "locator": "page 19, Section 9.3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 19 Section 9.3 Long-Horizon Evaluation：source_context 逐字匹配（128K/30 observations per second/90 minutes 全部在内）；claim 中'压缩、检索、更新空间知识未被测试'见同页 'The fundamental question, how agents should compress, retrieve, and update spatial knowledge over extended time horizons, remains untested.'；'数小时到数天'见同页 'Real-world tasks require sustained performance over hours or days with memory persistence and error recovery.'。该论证为作者算术示例而非实验，claim 已如实标注。"
+   }
+  },
+  {
+   "card_id": "2602.01644-C08",
+   "claim": "综述把'统一空间表示'列为六大挑战之首并描述当前实践：不同尺度使用互不兼容的表示——点云用于抓取、拓扑地图用于导航（引 Thrun 1998、Kuipers & Byun 1991、Kuipers 2000、Konolige et al. 2008）、栅格影像用于地理空间分析；'统一表示将使跨尺度无缝推理成为可能'仍是愿景，研究方向包括跨物体部件到城市基础设施的层级场景图、多尺度查询的神经隐式表示与 3D 基础模型。",
+   "stance": "gap",
+   "relation": "对综述问题给出缺口判断：在该 2026 年领域级视野中，'单一学习型隐式表示统一各尺度'仍是未解决的 grand challenge 而非既成事实——分尺度的显式表示（导航的拓扑地图、抓取的点云）依旧是当前实践；因此'隐式空间记忆/端到端表示已替代 SLAM 类显式地图'在该综述的判断里不成立，成立的是'统一化是开放问题'。该挑战的存在本身同时说明：任何单一表示（含 SLAM 地图）都未跨尺度通用，替代与被替代的争论在统一表示出现前不会有跨尺度答案。",
+   "summary": "统一跨尺度表示是 grand challenge 而非现实：当前实践仍是分尺度显式表示（导航=拓扑地图、抓取=点云、地理=栅格影像）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "evidence_type": "claim",
+   "locator": "page 21, Section 10.1 Grand Challenge 1",
+   "source_context": "topological maps for navigation [Thrun, 1998, Kuipers and Byun, 1991, Kuipers, 2000, Konolige et al., 2008], and raster imagery for geospatial analysis [Goodfellow et al., 2016, LeCun et al., 2015]. A unified representation would enable seamless reasoning across scales.",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 21 Section 10.1 Grand Challenge 1：source_context 逐字匹配（topological maps for navigation 引 Thrun 1998/Kuipers and Byun 1991/Kuipers 2000/Konolige et al. 2008、raster imagery for geospatial analysis、'A unified representation would enable seamless reasoning across scales'）；claim 中点云抓取部分在 page 20（原句跨 page 20-21 页界，故 source_context 取 page 21 连续段）；研究方向 'Hierarchical scene graphs that span from object parts to city infrastructure' 与 'Neural implicit representations with multi-scale querying' 在同页逐字核对。'仍是开放方向'与 Section 10 标题 'Grand Challenges and Future Directions' 的定位一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "iMAP: Implicit mapping and positioning in real-time",
+   "arxiv_id": "2102.13220",
+   "role": "SLAM 集成引用链起点（Sucar et al., 2021）——神经隐式表示以与 SLAM 集成身份进入在线重建"
+  },
+  {
+   "title": "NICE-SLAM: Neural implicit scalable encoding for SLAM",
+   "arxiv_id": "2112.12130",
+   "role": "SLAM 集成引用链（Zhu et al., 2022）——神经隐式 SLAM 引文"
+  },
+  {
+   "title": "SplaTAM: Splat, Track & Map 3D Gaussians for Dense RGB-D SLAM",
+   "arxiv_id": "2312.02126",
+   "role": "SLAM 集成引用链（Keetha et al., 2024）——3DGS 与 SLAM 集成引文"
+  },
+  {
+   "title": "DROID-SLAM: Deep Visual SLAM for Monocular, Stereo, and RGB-D Cameras",
+   "arxiv_id": "2108.10869",
+   "role": "学习型视觉 SLAM 引文（Teed and Deng, 2021）——集成清单中的学习前端"
+  },
+  {
+   "title": "Deep Visual Odometry with Adaptive Memory (DPVO)",
+   "role": "学习型视觉里程计引文（Teed, Lipson, and Deng, TPAMI 2024）——集成清单中 2024 工作"
+  },
+  {
+   "title": "DVM-SLAM: Decentralized visual monocular SLAM for multi-agent systems",
+   "role": "集成清单中最新的 SLAM 工作（Bird, Blumenkamp, and Prorok, 2025）——2025 年 SLAM 仍被该综述引用为在线重建机制"
+  },
+  {
+   "title": "ORB-SLAM3: An accurate open-source library for visual, visual-inertial, and multimap SLAM",
+   "arxiv_id": "2007.11898",
+   "role": "度量地图实现清单中的经典 SLAM 引用（Campos et al., 2021；另引 ORB-SLAM2/ORB-SLAM、LSD-SLAM）"
+  },
+  {
+   "title": "Learning to Explore using Active Neural SLAM",
+   "role": "Neural SLAM 作为空间记忆神经实现的代表引用（Chaplot et al., ICLR 2020；另引 SEAL 2021）"
+  },
+  {
+   "title": "SpatialVLM: Endowing Vision-Language Models with Spatial Reasoning Capabilities",
+   "arxiv_id": "2401.12168",
+   "role": "空间接地失效数字来源（GPT-4V 在 SpatialBench 40% 失败，Chen et al., 2024a）+ 空间 VLM 代表"
+  },
+  {
+   "title": "Visual Language Maps for Robot Navigation (VLMaps)",
+   "arxiv_id": "2210.05714",
+   "role": "map-centric grounding 范式代表 + 时间漂移失效数字来源（100+ 步语义漂移，Huang et al., 2023a）"
+  },
+  {
+   "title": "Mastering Diverse Domains through World Models (DreamerV3)",
+   "arxiv_id": "2301.04104",
+   "role": "世界模型规划代表（Table 2：Planning (World Model)，主要失效模式 model compounding error，Hafner et al., 2023）"
+  },
+  {
+   "title": "Do As I Can, Not As I Say (SayCan)",
+   "arxiv_id": "2204.01691",
+   "role": "尺度不敏感失效案例与 LLM 规划限制（Ahn et al., 2022）——Table 2 中 Micro–Meso 操作规划代表"
+  }
+ ],
+ "notes": "survey 批判评估四问的结论：(1) 搜索/选择过程——6 数据库、11 类关键词、四阶段过滤+雪球、双评审 94% 一致性、分歧分类（范围 4%/归属 2%），透明度高于典型领域 survey（对照 2604.16482 的两段范围声明），但无逐阶段筛选漏斗、无检索式细节、数字全部自报；(2) 分类法遗漏——SLAM 不在 Task 轴（无建图/定位任务类），仅以'空间记忆实现族'与引用出现，无 SLAM 系统进入 Table 2/Table 3；具身数据采集环节同样不在分类法——对综述问题这两个环节只能提供结构性缺位；(3) 作者综合 vs 一手证据——三大发现与'世界模型 essential'为作者综合/立场表达；失效模式数字（GPT-4V 40%、ALFRED 65→18%、RT-1 97→68% 等）全部转引；行业模式为公司公开材料的作者抽象（作者来自商业 AI 公司 AtlasPro AI，无论证利益边界）；(4) 领域级主张比例——68% meso 有语料统计支撑（口径未公开），'essential'/'perception does not confer agency'以立场形式给出，与 survey 语料大体成比例但不可当实证。对综述问题的总体含义：该 2026 年初领域级视野给出的不是'SLAM 被替代'而是'SLAM 被重新归位'——(a) 功能层面：持久度量空间状态作为'空间记忆'能力被保留为具身智能体必备组件（度量地图/Neural SLAM/语义图/场景图全部在实现清单内，且'显式空间记忆优于通用检索'），长时程任务被算术论证为必须外部记忆；(b) 尺度层面：metric SLAM 的中心性被显式限定在 1–100 m 机载传感可解范围，宏观让位地理空间基础设施、微观属操作问题；(c) 路径层面：神经表示（NeRF/3DGS/学习里程计）以'与 SLAM 集成'的组件身份进入具身栈（iMAP→SplaTAM→DROID-SLAM/DPVO→DVM-SLAM），叙事话语虽讲'显式→隐式'，被引证据却是集成而非绕开；(d) 替代候选的自身限定：LLM 世界模型缺细粒度物理保真（仅中观/宏观抽象预测足够）、VLM 空间接地失效四类、统一跨尺度表示仍是 grand challenge——三个替代候选在该综述内部均未成立为'已替代'。另注：提取管道实际为 alphaxiv-fulltext-api（PDF 文本），note 中 extraction.method 按校验器枚举记为 pdf-text；正文结束于 page 23，page 23-60 为参考文献。"
+}

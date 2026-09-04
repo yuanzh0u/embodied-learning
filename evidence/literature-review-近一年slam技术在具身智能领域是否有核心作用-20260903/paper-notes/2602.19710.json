@@ -1,0 +1,429 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.19710",
+  "title": "PoseVLA: Universal Pose Pretraining for Generalizable Vision-Language-Action Policies",
+  "published": "2026-07-07",
+  "url": "https://arxiv.org/abs/2602.19710",
+  "authors": [
+   "Haitao Lin",
+   "Hanyang Yu",
+   "Jingshun Huang",
+   "He Zhang",
+   "Yonggen Ling",
+   "Ping Tan",
+   "Xiangyang Xue",
+   "Yanwei Fu"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文是'位姿预训练内化'路线的代表方法论文（EA-MODEL），直接对应综述问题的'操作'与'空间推理'环节：它把 SLAM 的核心输出量（SE(3) 位姿、相机系轨迹）转为 VLM 词表中的离散 token 作为预训练代理任务，运行时零显式位姿估计（page 5），同时其约 155 万条轨迹语料依赖数据集标定参数投影到统一相机系（page 5）——单篇内同时给出'几何监督是 VLA 泛化关键驱动'（Table V/VI 消融）与'操作执行环节运行时位姿估计可被内化替代'（推理零开销）两端证据，且明确将移动/egocentric 操作留作未来工作（page 9），为综述的分域判断提供了操作域边界样本。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认动机：VQA 中心预训练的 VLM 骨干存在粒度失配（忽视细微 3D 状态变化）与数据异质性缺口（互联网视觉数据无动作 grounding、机器人示教稀缺），导致特征塌缩与训练低效"
+   },
+   {
+    "locator": "page 2-3, Section II Related Work",
+    "role": "relevant-core",
+    "purpose": "定位 3D grounding VLM 谱系（SpatialLM/Spatial-Reasoner/N3D-VLA）与 VLA 离散/连续动作路线；确认本文差异化：pose token 统一对象位姿与运动轨迹于共享表征"
+   },
+   {
+    "locator": "page 3-5, Section III.A-III.D 方法（VLM 架构、统一位姿表征、先验条件化）",
+    "role": "method-or-design",
+    "purpose": "理解结构化序列 τ_t={c_t,b_t,p_t}、位姿 token 词表（rot/trans_xy/trans_z/size 各 2048 bins）、相机中心系设计动机（对齐异构 3D 数据源）、raymap+depth 加性融合"
+   },
+   {
+    "locator": "page 5, Section III.E-III.F 训练策略与预训练数据集",
+    "role": "data-or-setting",
+    "purpose": "确认两阶段预训练（空间 grounding + 轨迹对齐）、模态掩码训练、1.4M 图像 6.5M 3D 标注 + 约 1.55M 轨迹语料构成、推理零位姿开销声明"
+   },
+   {
+    "locator": "page 6-8, Section IV.A-IV.C（3D grounding、仿真、真实世界）",
+    "role": "results-or-analysis",
+    "purpose": "核对 Objectron AP15 87.3 / SUN RGB-D 45.5、RoboTwin 2.0 Easy 79.91/Hard 79.10、LIBERO 96.0、真实 4 任务 81.25% 平均"
+   },
+   {
+    "locator": "page 8-9, Section IV.D 消融研究",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table V 增量消融（+3D 数据 +34.6/+35.7、EE pose +7.0、Cam→Base 混合结果）与 Table VI 正交消融（robotic-only vs 3D-only vs full、Qwen3PI、OpenVLA binning）"
+   },
+   {
+    "locator": "page 9, Section V Limitations and Future Work; Section VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：3D 数据规模化未充分探索、预训练限于刚性物体、平行夹爪→多指手、静态桌面→移动/egocentric 为未来工作、空间先验与语义推理的 trade-off"
+   },
+   {
+    "locator": "page 13-14, Appendix A-C",
+    "role": "appendix-or-supplement",
+    "purpose": "确认非均匀位姿离散化细节（bin 宽反比于数据密度、z 轴分布偏斜）、全部 50 任务成绩表（Table VII）与 t-SNE 特征可视化（缓解表征塌缩）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 10-12, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（PaliGemma、π0/π0.5、OpenVLA、VLM4VLA、SpatialVLA），无需逐条精读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：VQA 中心预训练的 VLM 骨干对细微 3D 状态变化不敏感且与稀疏本体动作监督纠缠，如何高效注入可迁移的具身空间先验？解法是把 VLA 训练解耦为'以统一相机中心空间的离散位姿 token 为通用表征的大规模预训练'与'轻量本体对齐后训练'。对综述问题的意义：显式位姿估计（SLAM 的典型输出量）在此作为预训练代理任务而非运行时组件——检验'SLAM 知识内核被 VLA 预训练内化吸收'的替代叙事在操作域的成立条件与边界。",
+ "contributions": [
+  "解耦学习范式：VLA 训练分为相机中心空间的通用 3D 空间先验预训练 + 本体对齐后训练（flow-matching action expert 从头训练）",
+  "离散位姿 token 作为跨域通用接口：对象位姿与夹爪轨迹统一为 <rot>/<trans_xy>/<trans_z>/<size> 扩展词表（各 2048 bins，按数据密度非均匀离散化，近场分配更高分辨率）",
+  "预训练语料：1.4M 图像 + 6.5M 3D 标注（Omni3D/Omni6DPose/BOP）+ 约 1.55M 机器人轨迹（AgibotWorld Beta 1M 真机 + InternData-A1 550K 仿真，全部投影到统一相机系）",
+  "结果：RoboTwin 2.0 平均 79.5%（摘要口径；Table II Easy 79.91/Hard 79.10）SOTA、LIBERO 96.0%（Long 92.4 并列第一）、真实世界 4 任务仅 100 demos/任务 达 81.25% 平均"
+ ],
+ "method": {
+  "summary": "Pose-VLA 基于 PaliGemma（SigLIP 视觉编码器）扩展词表加入位姿 token。模型以 next-token prediction 生成结构化序列 S=(τ_1..τ_T)，每个元组 τ_t={c_t, b_t, p_t}（对象类别、2D 框中心、相机系 SE(3) 位姿）。几何先验经加性融合注入：相机内参 K 生成每像素 raymap（r=K^{-1}[u,v,1]^T）、深度图+有效掩码，patch 化后与 RGB token 相加（类似位置编码）；训练时随机零化 raymap/depth（模态掩码）保证 RGB-only 推理鲁棒。两阶段预训练：(1) 空间基础预训练——3D grounding 数据（1.4M 图像/6.5M 标注）建立几何 grounding；(2) 位姿对齐预训练——约 1.55M 条机器人轨迹的末端位姿经数据集标定参数投影到相机系，与非机器人 3D 数据共享几何参考系。后训练附加 action expert（flow matching），动作空间采用相机系 EE pose 而非关节角。关键设计声明：3D 位姿预测严格只是预训练代理任务，推理时 action expert 端到端输出连续动作，显式位姿/相机轨迹估计开销为零。",
+  "assumptions": [
+   "训练数据集提供相机-机器人标定参数（extrinsics），使 EE 位姿可投影到统一相机系；新本体/新相机布置需重新标定，论文未讨论标定误差敏感性",
+   "深度图与相机内参在预训练数据中可得；推理可用 RGB-only（模态掩码训练保证）",
+   "场景为静态刚性物体桌面操作：预训练由刚性对象数据驱动，可变形状态未进入位姿词表（作者自述局限）",
+   "PaliGemma 3B 骨干足以承载空间先验（Qwen3-VL 骨干消融显示仅后训练不够）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "空间 grounding 预训练：Omni3D（Objectron/SUN RGB-D/ARKitScene）、Omni6DPose（SOPE/ROPE）、BOP Challenge（YCB-V/LineMOD/HOT3D）共 1.4M 图像 6.5M 3D 标注",
+   "轨迹对齐预训练：AgibotWorld Beta（真机 1M 轨迹，100 台同构机器人，200 任务 87 原子技能）+ InternData-A1（仿真 550K 轨迹，ARX/Aloha/Franka，4 本体 227 场景）",
+   "后训练评测：RoboTwin 2.0（2500 clean + 25000 randomized 演示）、LIBERO（每 suite 500 演示）、真实世界自采集（平均 100 demos/任务）"
+  ],
+  "tasks": [
+   "3D 空间 grounding（Omni3D mAP@0.15，SUN RGB-D 与 Objectron 子集）",
+   "RoboTwin 2.0 双臂操作 50 任务（Easy/Hard 两设定，每任务 100 trials）",
+   "LIBERO 四 suite（Spatial/Object/Goal/Long）",
+   "真实世界 4 任务：叠三碗、挂杯到木架挂钩、长时程抽屉取放笔、可变形毛巾折叠（每任务 60 trials）"
+  ],
+  "embodiments": [
+   "仿真：RoboTwin 2.0（双臂）、LIBERO（Franka 类单臂）",
+   "真实：Dual-arm Xtrainer 平台，头部 RealSense D455（Eye-on-Base）+ 腕部 D405（Eye-on-Hand），每臂 1-DoF 平行夹爪",
+   "骨干：PaliGemma 3B + flow-matching action expert（从头训练）；训练 16×NVIDIA H20 GPU，两阶段各 2 天"
+  ],
+  "sample_or_scale": "3D grounding 评测：Omni3D test set；仿真：每任务 100 trials × 50 任务 × Easy/Hard；真实：每任务 60 trials（3 seeds × 20）；后训练统一预算 80K steps、batch 32（Upperbound 版 100K steps、batch 288）"
+ },
+ "evaluation": {
+  "design": "四层评测：(1) 3D grounding（Omni3D mAP@0.15，IoU 阈值 0.15，检测置信度固定 1.0，基线数字取自 Qwen3-VL 官方报告）；(2) 仿真多任务对比（RoboTwin 2.0 Easy/Hard，统一 80K steps batch 32 后训练预算，RGB-only 评测屏蔽 depth/raymap 保证与基线公平；LIBERO 四 suite）；(3) 真实世界 4 任务 60 trials（对照 PaliGemma/π0/π0.5）；(4) 系统消融：Table IV 模态（RGB/raymap/depth）、Table V 增量（3D 数据→机器人数据→动作空间→坐标系）、Table VI 正交（backbone/tokenization/数据混合）",
+  "baselines": [
+   "3D grounding：Qwen3-VL 系列（2B/4B/235B）、VST-SFT/RL(3B)、Seed1.5-VL、Gemini-2.0-Pro、Gemini Robotics-ER（数字引自 Qwen3-VL 官方报告）",
+   "仿真：π0、π0.5、PaliGemma+action expert、OpenVLA、SpatialVLA、GR00T-N1、CoT-VLA、WorldVLA、π0-FAST",
+   "消融：Qwen3PI（Qwen3-VL 骨干仅后训练）、OpenVLA binning tokenization、robotic-only/3D-only 数据混合"
+  ],
+  "metrics": [
+   "mAP@0.15（Omni3D 协议，AP15）",
+   "任务成功率（仿真每任务 100 trials；真实每任务 60 trials）"
+  ],
+  "ablations": [
+   "几何模态（RGB only 39.0/86.4 → Full 45.5/87.3，SUN RGB-D 上 depth 贡献主导）",
+   "增量消融（Table V）：+3D 数据 +34.6/+35.7；+机器人数据 +2.7/+2.9；EE pose +7.0/+7.1；Cam→Base −0.5(Easy 反升)/−2.4(Hard)",
+   "正交消融（Table VI）：Qwen3PI 57.7/55.3、OpenVLA binning 68.5/65.9、robotic-only 71.3/68.3、3D-only 77.2/76.2、full 79.9/79.1",
+   "真实任务 depth 消融：Task3 去 depth 掉 15.0 pp（81.7→66.7）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "3D grounding：Objectron AP15 87.3，较最强开源基线 Qwen3-VL 235B（71.2）高 16.1 绝对值；闭源 Seed1.5-VL 仅 8.1、Gemini-2.0-Pro 仅 5.5；SUN RGB-D 45.5 仅次于 Gemini Robotics-ER 48.3——3B 位姿中心预训练模型在空间 grounding 上大幅超过规模大数十倍的通用 VLM。",
+   "scope": "Omni3D test set（SUN RGB-D + Objectron 子集），mAP@0.15，基线数字取自 Qwen3-VL 官方报告",
+   "locator": "page 6, Table I"
+  },
+  {
+   "finding": "RoboTwin 2.0（统一 80K steps/batch 32 后训练，RGB-only 评测）：Pose-VLA Easy 79.91%/Hard 79.10%，π0 67.00/65.12、π0.5 79.48/76.16、PaliGemma+expert 35.40/33.36——空间预训练消除了 vanilla VLM 骨干的特征塌缩（+45 pp）。",
+   "scope": "RoboTwin 2.0 全 50 任务平均，每任务 100 trials，Easy/Hard 设定",
+   "locator": "page 7, Table II"
+  },
+  {
+   "finding": "LIBERO：avg 96.0%（π0.5 96.8% 第一，OpenVLA 76.5、GR00T-N1 93.9、π0 94.1），LIBERO-Long 92.4% 与 π0.5 并列第一——3D 空间先验对多阶段长时程任务有结构性帮助。",
+   "scope": "LIBERO 四 suite 各 10 任务",
+   "locator": "page 7, Table III"
+  },
+  {
+   "finding": "真实世界：4 任务平均 81.25%（PaliGemma 29.6%、π0.5 71.65%），挂杯任务 78.3% vs 53.3%、长时程抽屉任务 81.7% vs 73.3%；去 depth 后 Task3 掉 15.0 pp（81.7→66.7）、Task1 掉 8.3 pp——显式 3D 几何输入对精细空间对齐仍不可缺。",
+   "scope": "Dual-arm Xtrainer，4 任务 × 60 trials，约 100 demos/任务",
+   "locator": "page 8, Section IV-C 与 Fig. 5"
+  },
+  {
+   "finding": "坐标系与动作空间消融（Table V）：关节角→EE pose 提升 +7.0/+7.1；相机系→基座系在 Hard 掉 2.4 pp 但 Easy 反升 0.5 pp（79.9→80.4）——相机中心系优势是条件性的，仅在视觉/几何扰动大的设定成立。",
+   "scope": "RoboTwin 2.0 增量消融，统一后训练预算",
+   "locator": "page 8, Table V；page 9, Section IV-D"
+  },
+  {
+   "finding": "正交数据消融（Table VI）：robotic-only 71.3/68.3 < 3D-only 77.2/76.2 < full 79.9/79.1；Qwen3PI（强 3D grounding 的 Qwen3-VL 骨干仅后训练）57.7/55.3 落后 full 超过 20 pp——通用 3D 视觉数据（而非机器人数据）是空间能力的关键驱动，且空间先验必须经位姿中心预训练注入而非依赖骨干自带。",
+   "scope": "RoboTwin 2.0 正交消融，统一后训练预算",
+   "locator": "page 9, Table VI"
+  },
+  {
+   "finding": "作者自述局限：3D 数据规模化与机器人视频高效 3D 标注未充分探索；预训练由刚性物体数据驱动（可变形 3D 关键点/抓取标注待入词表）；平行夹爪→多指手、静态桌面→移动与 egocentric 操作均为未来工作；空间先验最大化与骨干原语义推理存在 trade-off。",
+   "scope": "Section V Limitations and Future Work",
+   "locator": "page 9, Section V"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "大规模 3D 数据 scaling 与机器人视频高效 3D 标注受算力约束未充分探索",
+    "locator": "page 9, Section V"
+   },
+   {
+    "limitation": "预训练由刚性物体数据集驱动；可变形状态（3D 关键点/密集抓取标注）进入位姿词表是关键下一步；从平行夹爪扩展到多指灵巧手待验证",
+    "locator": "page 9, Section V"
+   },
+   {
+    "limitation": "真实实验尚未扩展到非结构化环境更多样行为；从静态桌面过渡到移动与 egocentric 操作是未来工作",
+    "locator": "page 9, Section V"
+   },
+   {
+    "limitation": "空间先验最大化与骨干原语义推理能力存在 trade-off（复杂语义干扰物下退化），语义保持训练范式是开放方向",
+    "locator": "page 9, Section V"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "训练数据管线隐性依赖相机-机器人标定：约 155 万条轨迹全部'via calibration parameters provided by datasets'投影到相机系；对缺少标定的新本体/新相机布置的迁移路径与标定误差敏感性未讨论——位姿基础设施（标定/位姿求解）存在于数据上游而非运行时",
+    "basis": "page 5, Section III-F 的数据构成描述与 page 3, Section III-B 的相机系设计动机"
+   },
+   {
+    "boundary": "全部验证限于静态桌面双臂/单臂操作：移动底盘、大范围空间、动态环境（SLAM 的核心场景）完全未触及；'运行时零位姿估计开销'的结论不能外推到导航或移动操作域",
+    "basis": "page 6-8 实验设定范围与 page 9, Section V 作者自述未来工作"
+   },
+   {
+    "boundary": "相机系优于基座系的结论是条件性的：Table V 末行显示 Cam→Base 在 Easy +0.5（79.9→80.4）反升、仅 Hard −2.4；主文只强调 Hard 优势，引用时不可概括为'相机系普遍更优'",
+    "basis": "page 8, Table V 末行与 page 9, Section IV-D 正文的交叉核对"
+   },
+   {
+    "boundary": "3D grounding 对比协议不完全统一：Table I 基线数字取自 Qwen3-VL 官方报告而非统一复测；mAP@0.15 的 IoU 阈值较宽松，87.3 的高分需结合阈值理解",
+    "basis": "page 6, Table I 表注（'BASELINE RESULTS ARE SOURCED FROM THE OFFICIAL QWEN3-VL REPORT'）与 page 5-6 评测协议描述"
+   },
+   {
+    "boundary": "成功率无方差/显著性报告（仿真每任务 100 trials 粒度 1%）；真实世界仅 4 任务单一平台单一实验室，跨平台复现性未知；代码/权重发布未明确声明（仅项目页）",
+    "basis": "page 6-8 实验章节与 page 1 项目页链接"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在静态桌面双臂/单臂操作、训练数据具备相机-机器人标定参数、以 PaliGemma 级 VLM 为骨干并采用 flow-matching action expert 后训练的设定下，'离散位姿 token 预训练（1.4M 图像 6.5M 3D 标注 + 约 1.55M 相机系轨迹）+ 相机系 EE pose 动作空间'相对 VQA 中心预训练带来大幅操作成功率提升（RoboTwin Hard 对 vanilla PaliGemma +35.7 pp、对 π0 +14.0 pp），且通用非机器人 3D 数据的贡献大于机器人示教数据（3D-only 77.2/76.2 vs robotic-only 71.3/68.3）；对移动操作、导航、动态环境、多指手、非标定部署、语义干扰密集场景的效果均未验证；相机系动作空间的优势仅在视觉扰动大的 Hard 设定显著（Easy 上基座系反超 +0.5 pp）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "统一后训练预算（80K steps、batch 32）下的公平仿真对比，全部变体从各自预训练 checkpoint 出发",
+   "增量（Table V）+ 正交（Table VI）双消融设计，分离数据混合、动作空间、坐标系、骨干、tokenization 各因素；PaliGemma+expert 对照（同骨干无空间预训练）是最有说服力的内部对照（35.4 vs 79.9）",
+   "RGB-only 评测（屏蔽 depth/raymap）保证与 RGB 基线输入一致；模态掩码训练使深度输入成为纯增益项",
+   "真实世界 4 任务 × 60 trials 并给出 depth 消融（Task3 −15.0 pp），验证显式几何输入的边际价值"
+  ],
+  "design_risks": [
+   "3D grounding 基线取自 Qwen3-VL 官方报告而非统一复测，跨模型协议可能不一致；mAP@0.15 阈值宽松",
+   "相机系 vs 基座系消融结果混合（Easy +0.5 base 系反超、Hard −2.4），主文叙述只取 Hard 方向",
+   "真实世界仅 4 任务、单一平台；成功率无方差/显著性报告",
+   "Table V 增量消融各行的输入模态配置（是否含 raymap/depth）未完全说明，行间比较含少量不确定因素"
+  ],
+  "baseline_fairness": "仿真对比在同一数据与预算下统一后训练，π0/π0.5 从官方 checkpoint 出发，设定公平；LIBERO 基线数字沿用原文献（领域惯例）；3D grounding 基线为官方报告数字，属于最弱的一环；PaliGemma+expert 同骨干对照设计有力。",
+  "metric_validity": "成功率为标准直接度量（100 trials 任务级）；mAP@0.15 为 Omni3D 协议惯例但 IoU 阈值宽松，Objectron 87.3 与闭源模型 8.1/5.5 的差距部分来自闭源模型不熟悉该协议的格式输出，跨范式的绝对比较需谨慎；无置信区间。",
+  "reproducibility": "训练配置完整（16×H20、AdamW、cosine schedule 5e-5 峰值、bfloat16、batch 8/GPU、两阶段各 2 天）；语料构成公开数据集为主；有项目页 hetolin.github.io/PoseVLA 但代码/权重发布声明未在正文出现；位姿词表与非均匀离散化细节在附录可复现。",
+  "external_validity": "结论限于桌面操作（仿真双臂 + 真实双臂）与 PaliGemma 级骨干；对移动/egocentric 操作、导航、动态环境无证据（作者明示未来工作）；对非标定相机部署、多指手、可变形物体预训练无证据；对更大骨干（Qwen3-VL 骨干仅测了后训练路径）的空间预训练收益未测。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.19710-C01",
+   "claim": "在 RoboTwin 2.0 增量消融（统一 80K steps、batch 32 后训练预算）中，为 vanilla PaliGemma+action expert（Easy 35.4%/Hard 33.4%）加入非机器人 3D grounding 预训练数据后，成功率提升至 Easy 70.2%/Hard 69.1%（+34.6/+35.7 个百分点）；作者据此判断 3D 空间任务预训练建立了比 VQA 主导预训练更稳健的几何基础。",
+   "stance": "conditional",
+   "relation": "支持中间判断'几何/位姿监督对 VLA 操作泛化至关重要'：SLAM 的知识内核（空间 grounding）被证明是操作性能的最大单一驱动因素；但供给方式是离线预训练内化而非运行时 SLAM 组件——构成'几何核心、形态迁移'的条件性证据。",
+   "summary": "非机器人 3D 数据预训练带来 +34.6/+35.7 pp 成功率提升（Table V）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 8, Table V",
+   "source_context": "As shown in the incremental analysis (Table V), incorporating diverse non-robotic 3D grounding data to the vanilla PaliGemma baseline yields a substantial +35.7% boost in success rate. This confirms that pre-training on 3D spatial tasks establishes a more robust geometric foundation than conventional VQA-dominated pre-training.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RoboTwin 2.0 平均成功率（Easy/Hard）",
+    "value_or_direction": "35.4/33.4 → 70.2/69.1（+34.6/+35.7 个百分点）",
+    "comparator": "vanilla PaliGemma + Action-Expert（无 3D 空间预训练）",
+    "task_or_sample": "RoboTwin 2.0 全 50 任务平均，Easy/Hard 设定，统一 80K steps batch 32 后训练",
+    "locator": "page 8, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 8：引文两句连续出现于 Table V 下方的 Ablation of Pose Pre-training Data 段；数值 35.4/33.4、70.2(+34.6)、69.1(+35.7) 逐字见于同页 Table V 表体。claim 限定于该消融设定（统一后训练预算），未外推。"
+   }
+  },
+  {
+   "card_id": "2602.19710-C02",
+   "claim": "位姿预测在 Pose-VLA 中严格只是预训练阶段学习空间表征的辅助代理任务；推理时 action expert 将隐式特征端到端直接映射为连续动作，显式位姿估计或相机轨迹估计的额外开销为零。",
+   "stance": "limit",
+   "relation": "对'SLAM 在具身智能操作执行环节的运行时核心作用'构成限制：在本文的静态桌面操作域，显式位姿估计（SLAM 的典型输出量）可作为预训练代理任务被内化为隐式特征，部署回路完全不需要在线位姿估计——支持端到端 VLA 替代运行时 SLAM 的叙事；该结论的域边界见 C05（移动/导航未验证）。",
+   "summary": "位姿仅是预训练代理任务，推理时零显式位姿/相机轨迹估计开销",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 5, Section III-E Remark on Inference",
+   "source_context": "At inference time, the action expert maps implicit features directly to continuous actions end-to-end, introducing zero overhead for explicit pose or camera trajectory estimation.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 Section III-E 末段 Remark on Inference：前句为 'We emphasize that 3D pose prediction serves strictly as an auxiliary proxy task during pre-training to learn spatial representations.'（'pre-training' 一词在原文跨行断为 'pre- training'，故引文取后句完整句）。claim 忠实转述作者对系统设计的声明，未添加原文之外的实验承诺。"
+   }
+  },
+  {
+   "card_id": "2602.19710-C03",
+   "claim": "轨迹对齐预训练阶段将约 155 万条机器人轨迹（AgibotWorld Beta 真机 1M + InternData-A1 仿真 550K）的末端执行器位姿全部经由数据集提供的标定参数变换到统一相机中心坐标系，使非机器人 3D 数据与机器人示教数据共享同一几何参考系。",
+   "stance": "support",
+   "relation": "支持上游数据制备环节对位姿/标定基础设施的依赖：'内化几何'的预训练语料本身建立在相机-机器人标定（extrinsics）与位姿投影之上——SLAM 类几何基础设施以隐性方式存在于数据生产端，即使运行时不再需要。",
+   "summary": "约 1.55M 条轨迹经数据集标定参数投影到统一相机系构成预训练语料",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 5, Section III-F Pre-training Datasets",
+   "source_context": "This stage aligns spatial features with motion control using nearly 1.55M trajectories. All end-effector poses are transformed into a unified camera-centric frame via calibration parameters provided by datasets.",
+   "evidence_type": "system",
+   "quantitative": {
+    "metric": "轨迹对齐预训练语料规模",
+    "value_or_direction": "约 1.55M 条轨迹（真机 1M + 仿真 550K）",
+    "comparator": "无（语料规模陈述；与空间 grounding 语料 1.4M 图像/6.5M 标注并列构成两阶段语料）",
+    "task_or_sample": "轨迹对齐预训练语料（AgibotWorld Beta + InternData-A1）",
+    "locator": "page 5, Section III-F"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 Section III-F：引文两句连续；'AgibotWorld Beta (Real): 1M trajectories' 与 'InternData-A1 (Sim): 550K trajectories' 逐字见于同页。claim 忠实于原文，'依赖标定参数'为原文直接陈述，未添加原文之外的标定误差讨论。"
+   }
+  },
+  {
+   "card_id": "2602.19710-C04",
+   "claim": "坐标系选择的消融结果混合：把动作预测从相机中心系改为机器人基座系，在视觉/几何扰动大的 RoboTwin-Hard 设定中成功率下降 2.4 个百分点（79.1→76.7，数值见 page 8 Table V 末行），作者归因于相机中心表征面对显著视觉变化时更鲁棒；但同一消融的 Easy 设定中基座系反而上升 0.5 个百分点（79.9→80.4，Table V），相机系优势仅在 Hard 设定成立。",
+   "stance": "conditional",
+   "relation": "坐标系（几何基础问题）对端到端 VLA 的鲁棒性有可测但条件性的影响：仅在视觉扰动大的 Hard 设定中相机中心系占优（−2.4 pp），Easy 设定基座系反超（+0.5 pp）——引用时不可概括为'相机系普遍更优'；该证据说明几何表征选择影响策略性能，但不构成运行时 SLAM 必要性的直接证据。",
+   "summary": "相机系 vs 基座系消融混合：Hard −2.4 pp 相机系更稳，Easy +0.5 pp 基座系反超",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 9, Section IV-D（数值表见 page 8, Table V 末行）",
+   "source_context": "Conversely, we observe that predicting actions in the base frame leads to a performance drop (−2.4%) in RoboTwin- Hard scenarios. This indicates that camera-centric representa- tions provide more robustness when facing significant visual variations in downstream policy transfer.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RoboTwin-Hard 平均成功率变化",
+    "value_or_direction": "相机系→基座系下降 2.4 个百分点（79.1→76.7；Easy 设定 79.9→80.4 反升 0.5）",
+    "comparator": "相机中心坐标系动作空间（Cam）",
+    "task_or_sample": "RoboTwin 2.0 全 50 任务平均（Easy/Hard 设定，统一 80K steps batch 32 后训练）",
+    "locator": "page 9, Section IV-D"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对 page 9 Section IV-D（'RoboTwin- Hard' 与 'representa- tions' 为原文跨行连字符的逐字形式）；−2.4% 见于引文句内。Easy +0.5 与 80.4/76.7 等数值逐字核对 page 8 Table V 末行 'Pre-train: Cam → Base 80.4 (+0.5) 76.7 (-2.4)'，claim 中已显式标注该表来源；79.1/79.9 见 page 9 Table VI Full Model 行。claim 如实呈现混合结果，未跟随主文只取 Hard 方向的单边叙述。"
+   }
+  },
+  {
+   "card_id": "2602.19710-C05",
+   "claim": "作者将'从静态桌面设定过渡到移动与 egocentric 操作'明确列为未来工作——本文全部验证（RoboTwin 2.0、LIBERO、真实 4 任务）都在静态桌面操作设定内完成，移动操作、大范围空间一致性与动态环境未被触及。",
+   "stance": "gap",
+   "relation": "划定该文证据对综述问题的适用边界：位姿预训练内化在桌面操作域成立，但 SLAM 最核心的场景（移动平台、长时程、大范围空间一致性）恰是本文未验证的空白——'端到端替代运行时 SLAM'的主张不能从本文外推到导航或移动操作域。",
+   "summary": "移动与 egocentric 操作被明确列为未来工作，桌面域结论不可外推",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 9, Section V Limitations and Future Work",
+   "source_context": "transitioning from static tabletop setups to mobile and egocentric manipulation presents an exciting frontier for future work",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对 page 9 Section V（前词 'In par- ticular' 因跨行连字符从引文中截去，句义完整）；全部实验章节（page 6-8）均为静态桌面设定的核对支持 claim 的'全部验证在桌面域'表述。"
+   }
+  },
+  {
+   "card_id": "2602.19710-C06",
+   "claim": "在统一后训练预算（80K steps、batch 32）下的 RoboTwin 2.0 对比中，Pose-VLA（RGB-only 评测）Easy 79.91%/Hard 79.10%，超过 π0（67.00/65.12）约 12-14 个百分点、超过 vanilla PaliGemma+expert（35.40/33.36）逾 45 个百分点；LIBERO 四 suite 平均 96.0%（Long 92.4 与 π0.5 并列第一，平均仅次于 π0.5 的 96.8）。",
+   "stance": "support",
+   "relation": "量化背书：位姿中心预训练注入的空间先验转化为操作性能的大幅领先，说明空间 grounding 能力在 VLA 时代的操作域是性能的实质性组成——几何监督的价值有可观的量化量级，而非边际修饰。",
+   "summary": "RoboTwin 2.0 Easy 79.91/Hard 79.10（超 π0 约 12-14 pp）；LIBERO 96.0%",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 7, Table II（正文 SOTA 声明见 page 6）",
+   "source_context": "Average (%) 67.00 65.12 79.48 76.16 35.40 33.36 79.91 79.10 89.40 88.60",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均成功率（Easy/Hard）与 LIBERO 平均",
+    "value_or_direction": "Pose-VLA 79.91/79.10 vs π0 67.00/65.12、π0.5 79.48/76.16、PaliGemma expert 35.40/33.36；LIBERO avg 96.0（Long 92.4）",
+    "comparator": "π0、π0.5、PaliGemma+action expert",
+    "task_or_sample": "RoboTwin 2.0 全 50 任务（每任务 100 trials）与 LIBERO 四 suite",
+    "locator": "page 7, Tables II-III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 page 7 Table II 平均行的逐字表文（列序：π0 Easy/Hard、π0.5 Easy/Hard、PaliGemma expert Easy/Hard、Pose-VLA(w/o depth) Easy/Hard、Upperbound Easy/Hard）；LIBERO 数字逐字核对同页 Table III（'Pose-VLA(w/o depth) 96.5 98.0 97.1 92.4 96.0'）；'new state-of-the-art...79.1% in the challenging Hard setting' 声明逐字见于 page 6。摘要口径 79.5% 为 Easy/Hard 平均。"
+   }
+  },
+  {
+   "card_id": "2602.19710-C07",
+   "claim": "正交数据混合消融（统一 80K steps、batch 32）显示：仅用机器人轨迹预训练 Easy 71.3%/Hard 68.3%，低于仅用非机器人 3D 数据的 77.2%/76.2% 与完整混合的 79.9%/79.1%——作者判断通用 3D 视觉数据（而非机器人数据）是该框架空间能力的关键驱动，并以此论证对昂贵机器人示教依赖的缓解。",
+   "stance": "conditional",
+   "relation": "支持分层判断：VLA 空间能力的主要来源是非机器人 3D 数据的几何监督（其 3D 标注本身由位姿/标定基础设施生产），机器人示教数据的边际贡献较小——几何监督的核心性成立，但载体是 3D 标注语料而非运行时系统；对'具身数据采集'环节而言，这提示 3D 标注数据的价值可能高于同等规模的机器人示教。",
+   "summary": "3D-only 预训练（77.2/76.2）优于 robotic-only（71.3/68.3），通用 3D 数据是关键驱动",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 9, Table VI",
+   "source_context": "Crucially, pre-training on robot data only severely degrades results, proving that generic 3D vision data is the key driver of our framework’s spatial capabilities. Conversely, relying solely on non-robotic 3D data (3D data only) maintains highly competitive performance.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RoboTwin 2.0 平均成功率（Easy/Hard）",
+    "value_or_direction": "Robotic data only 71.3/68.3 < 3D data only 77.2/76.2 < Full 79.9/79.1",
+    "comparator": "完整数据混合（非机器人 3D + 机器人轨迹）与 3D-only",
+    "task_or_sample": "RoboTwin 2.0 全 50 任务平均，统一 80K steps batch 32 后训练",
+    "locator": "page 9, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文两句逐字核对 page 9 Table VI 上方段落（'framework’s' 为原文弯引号形式）；表值 71.3/68.3、77.2/76.2、79.9/79.1 逐字见于同页 Table VI 数据混合段。claim 限定于该消融设定。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "PaliGemma: A versatile 3B VLM for transfer",
+   "arxiv_id": "2407.07726",
+   "role": "骨干 VLM（SigLIP 视觉编码器 + 词表扩展基础），Table V 的 vanilla PaliGemma+expert 是同骨干无空间预训练的内部对照"
+  },
+  {
+   "title": "π0: A Vision-Language-Action Flow Model for General Robot Control",
+   "arxiv_id": "2410.24164",
+   "role": "action expert 架构与后训练协议来源（flow matching）；RoboTwin/LIBERO/真实世界的主要对比基线"
+  },
+  {
+   "title": "OpenVLA: An Open-Source Vision-Language-Action Model",
+   "arxiv_id": "2406.09246",
+   "role": "tokenization 消融对照（uniform delta binning 68.5/65.9 vs 本文非均匀位姿 token 79.9/79.1）；LIBERO 协议来源"
+  },
+  {
+   "title": "VLM4VLA: Revisiting Vision-Language-Models in Vision-Language-Action Models",
+   "arxiv_id": "2601.03309",
+   "role": "动机证据：VLM 辅助任务微调（depth/VQA）不保证控制性能提升——本文以位姿预训练反驳并给出 3D 数据消融"
+  },
+  {
+   "title": "SpatialVLA: Exploring Spatial Representations for Visual-Language-Action Model",
+   "arxiv_id": "2501.15830",
+   "role": "空间表征 VLA 谱系的最近邻先行工作（LIBERO 基线之一，78.1）"
+  }
+ ],
+ "notes": "补充观察：(1) 该文是'SLAM 知识内核被 VLA 预训练内化'的代表样本：位姿（SLAM 的核心输出量）成为预训练代理任务的监督信号，运行时零显式位姿估计——在操作域支持端到端替代叙事；但 1.55M 轨迹语料依赖数据集标定参数，位姿基础设施隐性存在于上游数据生产（C02 与 C03 构成同一篇内的两端）。(2) 相机系 vs 基座系消融结果混合（Easy +0.5 基座系反超、Hard −2.4 相机系更稳），主文仅强调 Hard 优势，引用需注意条件性。(3) 3D grounding 上 3B 位姿中心模型（Objectron AP15 87.3）大幅超过 Qwen3-VL 235B（71.2）与闭源 Gemini-2.0-Pro（5.5）——通用 VLM 的隐式空间能力不随规模免费获得，显式几何监督仍不可替代（与 Mind over Space 等 MLLM 空间能力评测文献互证）。(4) extraction.method 按校验器枚举记为 pdf-text（实际提取管道 alphaxiv-fulltext-api）。(5) arXiv 2602.19710 于 2026-02 首发、v3 版 2026-07-07，在综述窗口内。"
+}

@@ -1,0 +1,352 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.30809",
+  "title": "GaussLite: Online Task-Conditioned 3D Gaussian Splatting for Real-Time Robotic Mapping",
+  "published": "2026-06-29",
+  "url": "https://arxiv.org/abs/2606.30809",
+  "authors": [
+   "Annika Thomas",
+   "Mason Peterson",
+   "Jonathan P. How"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接相关（EA-VLOC）：以机器人任务为条件的在线 3DGS 建图方法论文（MIT How 组，GRAND-SLAM 同组），含真实 Clearpath Husky 机载演示。为综述问题提供四个方向的证据：(a) 位姿估计被显式外部化——真实机器人上由经典 LiDAR-惯性里程计 DLIO 在线供给，经典里程计作为被消费的基础设施；(b) 建图层以自然语言任务为条件（LLM 解析 + 开放词汇检测进入建图循环），基础模型与地图表征互补而非替代；(c) 任务条件化以全图保真度与任务可变性（不能中途换任务）为代价，给出'任务专用 vs 通用基础设施'的边界条件；(d) 验证仍停留在 ROI 渲染代理指标，无下游任务执行闭环。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认动机：现有 3DGS 均匀分配表征容量，浪费机载算力于任务无关区域；机器人硬件实时/内存/算力约束与多机带宽约束；提出仿生视觉的任务驱动非均匀分配原则"
+   },
+   {
+    "locator": "page 2-3, Section II Related Work（A. GS-SLAM / B. 压缩剪枝LOD / C. 主动感知与非均匀重建 / D. 语言条件 3D 感知）与贡献列表",
+    "role": "relevant-core",
+    "purpose": "定位谱系：GS-SLAM（Gaussian-SLAM/SplaTAM/MonoGS/SplatMAP/DenseSplat/Compact-3DGS-SLAM）、几何式压缩与 LOD（分配准则均为几何而非任务）、主动感知与注视渲染、语言条件 3D（LERF/LangSplat/ConceptGraphs/Clio/Bayesian Fields）——确认'任务条件化在线分配'的空白定位"
+   },
+   {
+    "locator": "page 3-5, Section III Methodology（III-A 表示 / III-B 任务条件注意前端 / III-C 相关性驱动播种 / III-D 相关性驱动优化 / III-E 多智能体融合）",
+    "role": "method-or-design",
+    "purpose": "理解架构：Phi-3-mini 结构化任务解析 + Grounding DINO + FastSAM + 3D 空间谓词过滤产生逐像素相关性图；SB/SIS/GFD 播种分配与 ROI/MVO 优化分配；active-optimization 计数驱动的体素投票融合；位姿作为外部输入的关键架构事实"
+   },
+   {
+    "locator": "page 5, Section IV-A Experimental Setup（数据集/任务规格/基线/指标）",
+    "role": "data-or-setting",
+    "purpose": "确认评测协议：Replica 仿真 GT 位姿 + Campus 真机（Husky/ZED 2i/RTX 4070 Laptop/DLIO 在线位姿）；三类任务 33 个场景-任务对；预算匹配的基线设定；ROI 内渲染指标与人工标注掩码"
+   },
+   {
+    "locator": "page 5-7, Section IV-B Main Results（Tables I-II）、IV-C Ablations（Table III, Fig. 5）、IV-D Multi-Agent Fusion（Table IV, Fig. 4）",
+    "role": "results-or-analysis",
+    "purpose": "核对主结果（ROI PSNR 增益与归因声明）、组件消融与全图质量权衡、多智能体融合三策略对比及 7.08% 交换比例"
+   },
+   {
+    "locator": "page 7, Section V Discussion and Limitations 与 Section VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自陈四项局限（深度噪声/LLM 幻觉/措辞覆盖/任务中途不重分配）、收益与任务-场景不对称性的关系，以及'任务条件化认知地图'的结语定位"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的被引（Gaussian-SLAM、DLIO），无需逐条精读；8 页正文无附录"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：在线 3DGS 机器人建图在机载算力/内存/多机带宽受限时，如何把表征容量从均匀分配改为按任务相关性分配——(a) 自然语言任务如何在线转换为逐像素相关性信号（LLM 解析 + 开放词汇检测 + 可提示分割 + 3D 空间谓词过滤）；(b) 播种、初始化、优化与致密化如何按相关性再分配；(c) 多机器人任务特化地图如何低带宽融合。对综述问题的意义：检验'面向机器人任务的地图'的演化方向——任务条件化使 SLAM/建图向具身任务的认知地图靠近（支持其具身相关性），但同时牺牲通用重建属性（任务专用化的边界）；其位姿外部化架构直接展示经典里程计被当作消费级基础设施。",
+ "contributions": [
+  "开放集任务-注意管线：结构化 LLM 解析（Phi-3-mini 3.8B，每任务一次 <4s）+ 开放词汇检测（Grounding DINO）+ 可提示分割（FastSAM）+ 3D 空间关系过滤（NEAR/ON 质心谓词），把自然语言任务转换为在线 mapper 每帧预算内的逐像素相关性掩码",
+  "相关性驱动高斯建图：播种密度（SB）、分层初始尺度（SIS）、梯度聚焦致密化（GFD）、ROI 优化与多视角优化（ROI/MVO）按相关性分配；匹配高斯预算与实时预算下 Replica 平均 +2.72 dB、真机 +2.23 dB ROI PSNR（摘要口径）",
+  "任务特化多智能体融合：按每体素对 active-optimization 计数投票合并两代理任务特化地图，无需全局重优化，仅交换平均 7.08% 的地图，较朴素拼接平均 +3.42 dB ROI PSNR（摘要口径）"
+ ],
+ "method": {
+  "summary": "GaussLite 输入为带已知位姿的 RGB-D 流与自然语言任务描述。(1) 任务-注意前端：用 Phi-3-mini few-shot 解析任务为结构化任务图（目标名词短语/锚定对象/二元空间谓词 NEAR、ON）；每个运动触发关键帧上 Grounding DINO 按 query set 检测 2D 框（滤除过大的框），FastSAM 精化为像素掩码；检测帧之间用 3D 视锥角重投影 + FastSAM 重分割避免全量检测前向；2D 掩码质心经当前高斯地图渲染的深度提升到世界坐标后按空间谓词过滤（3D 空间过滤还用机器人自身演化中的地图剪除不一致检测），得到二值逐像素相关性图 w。(2) 相关性驱动建图（建立在 Gaussian-SLAM mapper 上）：每帧播种预算按 ROI 比例 ρ 切分（SB）；背景用分层采样网格、ROI/背景差异化初始尺度（0.5/0.7 倍局部中位最近邻距离，SIS）；播种像素按 Sobel 边缘幅值加权（GFD）；每帧先全图 warmup 再只对 active 高斯渲染并更新（ROI，约减半每迭代渲染成本）；训练视角从近期关键帧窗口随机采样（MVO）；克隆/分裂子代继承父代 active 标志；每个高斯携带 active 标志与 active-optimization 计数 κ。(3) 多智能体融合：世界离散为体素格，在双代理均贡献高斯的体素上保留聚合 κ 更高的来源（平局归更密者），可选短联合优化平滑接缝；因仅 ROI 子集有有效 κ，实际交换数据仅为全图小部分。对综述问题关键的架构事实：相机位姿被显式当作外部输入（Replica 用仿真 GT、Campus 用 DLIO LiDAR-惯性里程计在线产出），本文的建图贡献与位姿估计完全解耦。",
+  "assumptions": [
+   "相机位姿由外部源提供且质量足够（仿真 GT 或经典 LIO）；LIO 误差对相关性掩码与地图质量的影响未评估",
+   "轻量指令微调 LLM 能以 few-shot schema 正确解析任务措辞；开放词汇检测器对目标/锚定类别可检出且 FastSAM 掩码可用",
+   "任务-场景存在空间不对称（任务只占场景一小部分）时收益最大；任务覆盖全图时退化为近均匀建图（作者自述 graceful degradation）",
+   "空间谓词限于质心式 NEAR/ON（部分观测下仍良定义）；INSIDE/BEHIND 等需完整几何的谓词被延后",
+   "环境基本静态；机载算力约 RTX 4070 Laptop 级、高斯预算 1M-3M"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Replica（8 个合成室内 RGB-D 序列，全部基线使用仿真 GT 位姿以隔离建图质量与追踪误差）",
+   "Campus（自采集：highbay、office、outdoor 三场景；Clearpath Husky rover 车载 ZED 2i 立体相机采集，RTX 4070 Laptop GPU 在线处理，DLIO LiDAR-惯性里程计在线产出位姿）"
+  ],
+  "tasks": [
+   "自然语言任务规格驱动的建图：manipulation（'Prepare to pick up the object on the desk' / 'Pick up the box'）、semantic search（'Identify the chair closest to the table' / 'Map the lawn chairs'）、navigation（'Locate all obstacles in the scene and find a path to the door' / 'Avoid the trash cans/dirt'），共 24 个 Replica + 9 个 Campus 场景-任务对",
+   "多智能体任务特化地图融合（Campus Highbay 与 Outdoor 两序列、两代理）"
+  ],
+  "embodiments": [
+   "Clearpath Husky 轮式 rover（Campus 真机演示）+ ZED 2i 立体相机 + RTX 4070 Laptop GPU 机载处理",
+   "位姿来源：DLIO LiDAR-惯性里程计（真机在线）/ 仿真 GT（Replica）；系统本体不含视觉位姿估计",
+   "Replica 为仿真数据，无机器人本体"
+  ],
+  "sample_or_scale": "33 个场景-任务对（Replica 24 + Campus 9）；单次运行、无方差/显著性报告；高斯预算上限 Replica 1M / Campus 3M；实时预算 ≤0.5 s/帧（约 4 Hz）；多智能体融合仅 2 个真机序列"
+ },
+ "evaluation": {
+  "design": "与三个预算匹配的外部基线（同位姿源、同高斯预算、同每帧实时预算、无离线精化）在 Replica 与 Campus 上对比 ROI 渲染质量；组件级消融在 GT ROI 掩码下逐步启用 SB/MVO/ROI/SIS/GFD（分离映射器响应与上游检测误差）；多智能体融合对比三种策略（朴素拼接 / 体素投票 / 体素投票+联合优化精化）",
+  "baselines": [
+   "Gaussian-SLAM [2]（本文底座 mapper，对比隔离任务条件化贡献）",
+   "SplaTAM [25]（经典 RGB-D 3DGS-SLAM）",
+   "MonoGS [24]（激进小初始高斯尺度的另一设计路线）",
+   "融合策略基线：Combine Maps（朴素拼接）"
+  ],
+  "metrics": [
+   "ROI PSNR / SSIM / LPIPS（在人工标注的任务相关掩码内计算）",
+   "全图 PSNR（消融的权衡分析，Fig. 5）",
+   "高斯数与每帧时间（预算匹配约束）",
+   "多智能体地图交换比例（平均 7.08%）"
+  ],
+  "ablations": [
+   "组件消融：SB/MVO/ROI/SIS/GFD 逐步启用（Table III，GT ROI 掩码，Replica Office0 与 Campus Highbay）",
+   "全图渲染质量权衡（Fig. 5）",
+   "多智能体融合策略（Table IV：Combine/Voxel Voting/Refinement）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Replica 主结果（Table I，预算匹配 ≤1M 高斯、≤0.5 s/帧）：GaussLite 平均 ROI PSNR 29.81 dB 为三基线最优（SplaTAM 28.56、Gaussian-SLAM 26.62、MonoGS 26.10），8 场景中 7 个 PSNR 胜出，平均超 SplaTAM +1.25、Gaussian-SLAM +3.19、MonoGS +3.71 dB；SSIM 0.835 最优、LPIPS 0.230 与 SplaTAM 并列最优。",
+   "scope": "24 个 Replica 场景-任务对（manipulation/search/navigation 三类任务平均）",
+   "locator": "page 5-6, Table I"
+  },
+  {
+   "finding": "Campus 真机结果（Table II，≤3M 高斯实时建图）：全部设定最优 ROI PSNR——单代理平均 21.05 dB（超 SplaTAM +1.70、Gaussian-SLAM +2.99、MonoGS +1.99 dB），多代理融合 ROI 上 21.38 dB 且 SSIM 0.706 显著领先；摘要口径为平均 +2.72 dB（Replica）/+2.23 dB（真机室内外）。",
+   "scope": "9 个 Campus 场景-任务对 + 多代理融合评测",
+   "locator": "page 6, Table II"
+  },
+  {
+   "finding": "组件消融（Table III，GT ROI 掩码）：全部组件正贡献；最大单项来自 ROI Seed Budgeting（Replica +1.38 dB）与 Stratified Initial Scaling（Replica +1.18 / Campus +2.99 dB——小初始尺度在真实深度与曝光噪声下尤其重要）；全管线把 ROI PSNR 从 34.57 提到 38.23 dB（Replica Office0）、21.50 到 25.25 dB（Campus Highbay）；代价是全图 PSNR 随预算重分配温和下降（Fig. 5，作者称为任务条件化的预期权衡）。",
+   "scope": "Replica Office0 与 Campus Highbay，GT ROI 掩码",
+   "locator": "page 6-7, Table III 与 Fig. 5"
+  },
+  {
+   "finding": "多智能体融合（Table IV）：体素投票+短联合优化优于朴素拼接——Campus Highbay 22.84 vs 21.10 dB、Campus Outdoor 19.92 vs 15.76 dB；体素投票单独已接近专家质量；因仅 ROI 子集携带有效 κ 计数，代理间数据交换平均仅 7.08% 的全图。注意 page 6 正文 '+1.74 dB on Replica and +4.16 on Campus' 中 'Replica' 系笔误（融合仅在 Campus 两序列评估；+1.74/+4.16 恰为 Table IV 中 Highbay/Outdoor 的 Refinement-Combine 差值）。",
+   "scope": "Campus Highbay 与 Outdoor 两真机序列、两代理",
+   "locator": "page 7, Table IV；笔误见 page 6, Section IV-D"
+  },
+  {
+   "finding": "位姿供给架构：系统建立在 Gaussian-SLAM mapper 上，把相机位姿显式当作外部输入（Replica 仿真 GT、Campus 由 DLIO LiDAR-惯性里程计在线产出）——本文贡献全部在建图侧，位姿估计被剥离为独立模块消费。",
+   "scope": "系统架构事实（Sec. III-C 与 IV-A.1）",
+   "locator": "page 4, Section III-C；page 5, Section IV-A.1"
+  },
+  {
+   "finding": "作者明确承认四项局限：空间谓词依赖渲染深度、严重噪声下可能误判；LLM 解析器在异常措辞下可能幻觉目标对象；仅在少量任务措辞上评估；任务中途改变不重分配预算、欠重建区域需重观测或离线精化。讨论节还指出收益与任务区域-全场景不对称性成正比。",
+   "scope": "作者自陈局限与讨论（Sec. V）",
+   "locator": "page 7, Section V"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "空间谓词评估依赖渲染深度，深度严重噪声时可能误判（spatial predicate evaluation may misfire when depth is severely noisy）",
+    "locator": "page 7, Section V Discussion and Limitations"
+   },
+   {
+    "limitation": "LLM 解析器在异常任务措辞下可能幻觉出目标对象",
+    "locator": "page 7, Section V Discussion and Limitations"
+   },
+   {
+    "limitation": "仅在少量任务措辞上评估，未全面覆盖自然语言变化",
+    "locator": "page 7, Section V Discussion and Limitations"
+   },
+   {
+    "limitation": "任务在序列中途改变时系统不重新分配预算：欠重建区域无法追溯精化，必须重新观测或离线进一步精化",
+    "locator": "page 7, Section V Discussion and Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无下游任务执行闭环：全部定量评估为人工标注 ROI 掩码内的渲染指标（PSNR/SSIM/LPIPS），三类任务（manipulation/search/navigation）只是建图的条件规格，没有任何机器人策略实际消费该地图完成任务；'任务相关保真度→下游任务收益'的链条未经执行验证（作者仅论证下游感知算法依赖像素强度保真度）",
+    "basis": "page 5 Section IV-A.4 Metrics 与 page 5-7 全部实验内容；page 6 IV-B 的 downstream 论证句"
+   },
+   {
+    "boundary": "位姿外部供给的依赖未表征：Replica 用仿真 GT、Campus 用 DLIO LIO，系统不含视觉位姿估计；LIO 误差/漂移对相关性掩码（3D 空间过滤依赖世界坐标质心）与最终地图的影响未评估",
+    "basis": "page 4 Section III-C 首段与 page 5 IV-A.1"
+   },
+   {
+    "boundary": "语义前端的误差传播未单独量化：组件消融（Table III）使用 GT ROI 掩码以隔离映射器响应，主表（Tables I-II）中的检测/解析误差对最终 ROI PSNR 的实际贡献未被分解；任务措辞仅 6 种、场景-任务对 33 个且单次运行无方差",
+    "basis": "page 5-7 实验章节（IV-A.2 任务规格、IV-C 消融设定说明）"
+   },
+   {
+    "boundary": "任务条件化牺牲地图通用性：全图 PSNR 随预算重分配下降（Fig. 5），任务中途改变不可重分配（作者自陈）——对需要全局高保真、多任务复用或事后变更用途的场景（如具身数据采集存档、通用环境模型）适配性受限",
+    "basis": "page 6 IV-C 末段与 Fig. 5；page 7 Section V 末句"
+   },
+   {
+    "boundary": "结果呈现存在笔误：page 6 '+1.74 dB on Replica and +4.16 on Campus' 的 'Replica' 应为 Campus Highbay（融合实验仅在 Campus 两序列进行，Table IV 差值 21.10→22.84 与 15.76→19.92 与两个数字精确对应）；引用融合数字时应以 Table IV 为准",
+    "basis": "page 6 Section IV-D 与 page 7 Table IV 交叉核对"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在带外部位姿（仿真 GT 或经典 LIO）的 RGB-D 流、任务-场景存在空间不对称、任务措辞限于已评估的 6 种（manipulation/search/navigation 三类）、机载 RTX 4070 Laptop 级算力与 1M-3M 高斯预算条件下，按任务相关性分配表征容量可在匹配预算下取得 ROI 渲染保真度增益（Replica 平均 +1.25~+3.71 dB、真机 +1.70~+2.99 dB，全管线消岭 +3.66/+3.75 dB）；对任务中途变化、异常任务措辞（LLM 幻觉）、严重深度噪声、需要全局保真或多任务复用的场景，效果未证明或作者明言受限；多智能体融合结论限于两代理、两真机序列。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "归因设计干净：同位姿源、匹配高斯预算、匹配每帧实时预算、无离线精化——增益可归因于'预算花在哪里'；Gaussian-SLAM 是本文底座，对比它直接分离任务条件化贡献",
+   "消融使用 GT ROI 掩码，把映射器对相关性信号的响应与上游检测/解析误差分离",
+   "含真实机载演示（Husky + ZED 2i + RTX 4070 Laptop + 在线 DLIO 位姿），室内外三场景，而非仅仿真",
+   "dB→MSE 换算参考（+1 dB ≈ 21% MSE 降低）帮助解读增益幅度"
+  ],
+  "design_risks": [
+   "无下游任务闭环：主指标为渲染代理，任务收益为假设",
+   "基线从 released configuration 重调 per-frame 迭代数与 frame-step 以匹配实时预算——为公平所必需，但改变了基线原配置，可能不利于为离线/宽松预算设计的系统",
+   "任务措辞仅 6 种、33 个场景-任务对、单次运行无方差；LLM 解析幻觉与检测误差对最终地图的影响未量化",
+   "page 6 融合增益句的 'Replica' 笔误提示结果表述需以表格为准",
+   "ROI 掩码为人工标注，度量带主观性"
+  ],
+  "baseline_fairness": "三基线在位姿源、高斯预算（1M/3M）、实时预算、无离线精化上严格匹配，且 Gaussian-SLAM 作为底座使对照直接隔离本文贡献——公平性设计良好；但基线 per-frame 迭代数与 frame-step 被重调以满足同一实时约束（偏离 released 配置），且所有方法被 cap 在 1M/3M 高斯，对擅长更大预算的系统可能不利；融合策略对比（Combine/Vote/Refine）内部一致。",
+  "metric_validity": "ROI PSNR/SSIM/LPIPS 在任务相关掩码内计算，直接对齐'任务相关保真度'目标且给出 MSE 换算；但全部为渲染指标，无任务执行/规划/操作成功度量；ROI 掩码人工标注引入主观性；全图 PSNR 的下降被作者作为预期权衡披露（透明）。",
+  "reproducibility": "硬件与组件描述具体（Husky、ZED 2i、RTX 4070 Laptop、Phi-3-mini 3.8B、Grounding DINO、FastSAM、DLIO、预算 1M/3M、≤0.5 s/帧）、消融表格完整；但分配比例 ρ、谓词阈值 τ/ϵ、体素分辨率 δ 与损失权重 λ 的取值未给出，代码/数据发布声明未见（Campus 为 in-house 数据集），复现依赖联系作者。",
+  "external_validity": "含真实室内外机载演示（外延性好于纯仿真工作），但场景-任务对少（Campus 9 个）、任务措辞固定 6 种、两代理融合仅 2 序列；动态场景、任务中途变化、更复杂空间谓词（INSIDE/BEHIND，作者明言延后）、非轮式本体未覆盖；结论对'任务区域占场景比例'敏感（作者自述收益与不对称性成正比）。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.30809-C01",
+   "claim": "系统架构上，GaussLite 建立在 Gaussian-SLAM mapper 之上并把相机位姿显式当作外部输入，将建图贡献与位姿估计解耦：Replica 用仿真 GT 位姿，真实 Campus 数据集的位姿由 DLIO LiDAR-惯性里程计在线产出（数据在 Clearpath Husky rover 上以 ZED 2i 立体相机采集、RTX 4070 Laptop GPU 机载处理）。即该机器人建图系统的真实部署由经典 LiDAR-惯性里程计供给位姿，视觉位姿估计不在系统内。",
+   "stance": "support",
+   "relation": "支持'经典 SLAM/里程计仍是机器人建图管线中被直接消费的基础设施'：任务条件化 3DGS 建图这一前沿方向把位姿估计从研究问题中剥离为外部输入，真机部署由经典 LiDAR-惯性里程计（DLIO）在线供给——建图层的全部创新叠加在位姿基础设施之上。同时注意其对综述问题的另一面：该系统刻意绕开视觉 SLAM 前端（选 LIO），说明视觉位姿估计在此类管线中是可被替换的组件而非必需品。",
+   "summary": "位姿被显式外部化：真机由经典 LIO（DLIO）在线供给，建图创新全部叠加其上",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 4, Section III-C",
+   "source_context": "We build on the Gaussian-SLAM [2] mapper and treat camera poses as an external input, decoupling our mapping contribution from pose estimation; on Replica we use sim- ulation ground-truth poses, while on our campus dataset we use LiDAR-inertial odometry from DLIO [44].",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 4 III-C 首句（'sim- ulation' 为 PDF 跨行连字符 'sim-\nulation' 的逐字形式）；Campus 采集平台（Clearpath Husky rover、ZED 2i 立体相机、RTX 4070 Laptop GPU）与 'Pose estimates are produced online by DLIO [44]' 逐字见于 page 5 IV-A.1。claim 忠实转述位姿外部化架构与两种位姿来源，'视觉位姿估计不在系统内'由原文穷举的两种来源（GT/DLIO）直接蕴含，未添加原文之外的对比声明。"
+   }
+  },
+  {
+   "card_id": "2606.30809-C02",
+   "claim": "GaussLite 是任务驱动的 3DGS 建图系统：表征密度以自然语言任务规格为条件——给定带位姿的 RGB-D 流与任务（如 'prepare to pick up the object on the desk'），一次性 LLM 解析器抽取目标与锚定对象，开放词汇检测器逐帧接地、分割产生实时逐像素相关性掩码，mapper 按任务相关性分配播种密度、梯度流与尺度。作者在引言中称其为首个接受自然语言任务输入并在线空间分配场景表征的系统，并首个把该原则扩展到机器人团队。",
+   "stance": "support",
+   "relation": "支持'建图层正围绕具身任务重新组织'：机器人地图的保真度分配直接由操作/搜索/导航任务规格驱动，LLM 与开放词汇基础模型作为前端信号源被消费进建图循环——基础模型与地图表征在此是互补组件而非替代关系；作者结语把地图定位为'保真度跟随机器人目的的任务条件化认知地图'，即地图向具身任务语义靠拢而非被隐式记忆吸收。",
+   "summary": "任务驱动 3DGS 建图：自然语言任务 → LLM 解析 + 开放词汇检测 → 逐像素相关性 → 表征容量在线分配",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 1, Abstract 与 Introduction",
+   "source_context": "We introduce GaussLite, a task-driven 3DGS mapping system that conditions its representation density on a natural-language task specification. Given a posed RGB-D stream and a task such as “prepare to pick up the object on the desk,” GaussLite uses a one- shot LLM parser to extract target and anchor objects, which are grounded per-frame by an open-vocabulary detector and segmented to produce per-pixel relevance masks in real time.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 摘要（'one- shot' 为跨行连字符 'one-\nshot' 的逐字形式，弯引号与原文一致）；'GaussLite is the first to accept natural-language task inputs and spatially allocate the scene representation online' 与 'We are also the first to extend this principle to robot teams' 逐字见于同页引言。'首个'主张按作者措辞转述并标注为作者声明，claim 未添加原文没有的量化承诺。"
+   }
+  },
+  {
+   "card_id": "2606.30809-C03",
+   "claim": "匹配预算对比（同位姿源、同高斯预算、同每帧实时预算、无离线精化）：Campus 真机数据上 GaussLite 在全部设定取得最优 ROI PSNR，平均超 SplaTAM +1.70 dB、Gaussian-SLAM +2.99 dB、MonoGS +1.99 dB；Replica 上平均 ROI PSNR 29.81 dB 亦为三基线最优（超 SplaTAM +1.25、Gaussian-SLAM +3.19、MonoGS +3.71 dB，8 场景中 7 个胜出）。作者强调：由于所有对比在匹配高斯数与实时每帧预算下进行，这些增益完全归因于预算被花在哪里（where the budget is spent）。",
+   "stance": "support",
+   "relation": "支持'任务条件化分配在真实机器人约束下有效'：与 SOTA GS-SLAM 基线在同等算力/内存预算下，仅靠把预算重分配到任务相关区域即取得真机（室内外）与仿真的稳定 ROI 保真度增益——机器人建图的核心权衡（算力 vs 保真度）正由任务语义解决，建图层在具身管线中的主动价值仍在被挖掘而非被端到端模型吸收。",
+   "summary": "匹配预算下真机 +1.70/+2.99/+1.99 dB、Replica +1.25/+3.19/+3.71 dB ROI PSNR，增益全部来自预算重分配",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Section IV-B",
+   "source_context": "On the Campus dataset (Tab. II), GaussLite achieves the best ROI PSNR in all settings, outperforming SplaTAM by +1.70 dB, Gaussian-SLAM by +2.99 dB, and MonoGS by +1.99 dB in mean ROI PSNR. Because all comparisons are at matched Gaussian count and real-time per-frame budget, these gains are entirely attributable to where the budget is spent.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean ROI PSNR gain (dB) at matched budget",
+    "value_or_direction": "Campus: +1.70 dB over SplaTAM, +2.99 dB over Gaussian-SLAM, +1.99 dB over MonoGS; Replica: best mean ROI PSNR 29.81 dB, gains +1.25, +3.19, +3.71 dB, best on 7/8 scenes",
+    "comparator": "SplaTAM, Gaussian-SLAM, MonoGS (budget-matched external baselines)",
+    "task_or_sample": "24 Replica + 9 Campus scene-task pairs, matched Gaussian budget (1M/3M) and real-time budget (Tables I-II)",
+    "locator": "page 6, Tables I-II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 6 正文（Campus +1.70/+2.99/+1.99；Replica 29.81 dB、+1.25/+3.19/+3.71、7/8 scenes）与 Tables I-II 平均列（GaussLite Replica 29.81 / Campus 单代理 21.05、多代理 21.38）；预算匹配条件（同位姿源、匹配高斯预算、无离线精化）逐字见于 page 5 IV-A.3。claim 把增益归因限定在作者声明的'预算花在哪里'框架内，未外推到其他预算设定。"
+   }
+  },
+  {
+   "card_id": "2606.30809-C04",
+   "claim": "任务条件化的代价：随各组件启用、预算从背景重分配到 ROI，ROI PSNR 单调上升的同时全图 PSNR 温和下降——作者称之为任务条件化建图的预期权衡（intended tradeoff）。即任务条件化地图以牺牲通用重建的全局保真度为代价；作者在讨论节补充：收益与任务区域-全场景的不对称性成正比，任务覆盖全图时系统优雅退化为近均匀建图（附少量注意开销）。",
+   "stance": "conditional",
+   "relation": "对'SLAM 地图作为通用基础设施'的条件性证据：任务条件化把地图从'通用重建'变为'任务专用表征'——收益取决于任务空间集中度，全图任务下无增益；与 C05（任务改变不可重分配）合起来，任务条件化地图的通用性/可复用性是其作为基础设施的边界条件。综述应区分'任务条件化建图'与'通用 SLAM 基础设施'两种角色，前者不能简单替代后者。",
+   "summary": "ROI PSNR 单调升、全图 PSNR 温和降——任务条件化以全局保真度为代价，收益取决于任务-场景不对称性",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 6, Section IV-C, Fig. 5",
+   "source_context": "ROI PSNR rises monotonically, while full-image PSNR drops modestly as budget is reallocated away from the background, which is the intended tradeoff of task-conditioned mapping.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 6 IV-C 末段；不对称性与优雅退化（'pays off in proportion to the asymmetry between the task region and the full scene'、'degrades gracefully to near-uniform mapping with a small attention overhead'）逐字见于 page 7 Section V。'牺牲全局保真度'是 full-image PSNR 下降的直接蕴含，claim 未添加原文没有的量化幅度。"
+   }
+  },
+  {
+   "card_id": "2606.30809-C05",
+   "claim": "作者明确承认的关键局限：当前系统在任务中途改变时不重新分配预算——欠重建的区域无法追溯精化，除非重新观测或离线进一步精化。同段另承认三项：空间谓词评估依赖渲染深度、深度严重噪声时可能误判；LLM 解析器在异常措辞下可能幻觉出目标对象；仅在少量任务措辞上评估、未覆盖自然语言变化。",
+   "stance": "limit",
+   "relation": "限制'任务条件化地图可作为通用具身基础设施'的主张：任务绑定使地图不可复用于变更后的任务（需重观测），语义前端（LLM 解析、开放词汇检测）引入幻觉与措辞敏感性等新失败模式——这些是任务条件化路线相对通用 SLAM 地图的结构性代价，构成 SLAM 语义化/任务化方向的边界证据。",
+   "summary": "作者自陈：任务中途改变不重分配预算、欠重建区域需重观测；另有深度噪声误判、LLM 幻觉、措辞覆盖窄三项局限",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 7, Section V Discussion and Limitations",
+   "source_context": "Finally, the current system does not re-allocate budget when the task changes mid- sequence: regions that were under-reconstructed cannot be retroactively refined without re-observing them or conducting further refinement offline.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 7 Section V 末句（'mid- sequence' 为跨行连字符 'mid-\nsequence' 的逐字形式）；前三项局限逐字见于同段前文（'Spatial predicate evaluation relies on rendered depth and may misfire when depth is severely noisy. The LLM parser can hallucinate target objects under unusual phrasings. We evaluate on a small set of task phrasings rather than comprehensively across natural-language variation.'）。claim 按作者措辞转述四项局限，未添加作者未承认的问题。"
+   }
+  },
+  {
+   "card_id": "2606.30809-C06",
+   "claim": "评估协议：全部定量结果为按任务相关性分层的渲染质量——在人工标注的 ROI 掩码内计算 PSNR/SSIM/LPIPS（各方法高斯数被 cap 在 Replica 1M / Campus 3M，并受 RTX 4070 Laptop GPU 实时约束）。三类任务（manipulation/search/navigation）仅作为建图的条件规格存在，论文没有任何机器人策略实际消费该地图完成操作/导航任务的闭环实验。",
+   "stance": "gap",
+   "relation": "对综述问题的缺口证据：'任务相关保真度→下游任务收益'的链条未经任务执行验证——作者论证 ROI PSNR 对任务驱动机器人最直接可行动（下游感知算法依赖像素强度保真度），但未运行任何下游感知/规划/操作实验。与 LEGO-SLAM（2511.16144）同构：以具身任务为动机的建图论文，验证停留在渲染代理指标，具身收益仍是假设。",
+   "summary": "评估全部为人工标注 ROI 内的渲染指标，无任何下游任务执行闭环",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Section IV-A.4 Metrics",
+   "source_context": "We report rendering quality stratified by task relevance using hand-annotated ROI masks including PSNR, SSIM, LPIPS computed within ground-truth task-relevant masks only.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 IV-A.4（人工标注 ROI 掩码内计算 PSNR/SSIM/LPIPS）；1M/3M 高斯上限与 RTX 4070 Laptop 实时约束逐字见于同节末句；通读 page 5-7 全部实验（Tables I-IV、Figs. 4-5）确认除 ROI 渲染指标、消融与融合评测外无任务执行实验；'downstream perception algorithms depend on the fidelity of the underlying pixel intensities' 的论证逐字见于 page 6 IV-B。claim 为对评估范围的事实性陈述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Gaussian-SLAM: Photo-realistic Dense SLAM with Gaussian Splatting",
+   "arxiv_id": "2312.10070",
+   "role": "GaussLite 的底座 mapper：对比它可直接隔离任务条件化贡献（Tables I-II 中的 'Gaussian-SLAM' 行）"
+  },
+  {
+   "title": "Direct LiDAR-Inertial Odometry: Lightweight LIO with Continuous-time Motion Correction",
+   "arxiv_id": "2203.03749",
+   "role": "真实机器人（Campus/Husky）上的在线位姿来源——本文建图系统消费的经典里程计基础设施"
+  }
+ ],
+ "notes": "补充观察：(1) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。(2) 与综述问题的对接：GaussLite 同时展示 GS-SLAM 演化的两个矢量——建图被任务/语言条件化推向'认知地图'（保真度跟随机器人目的），而位姿估计被完全外部化给经典 LIO 或仿真 GT；两者共同支持'SLAM 栈分层化'的结构判断：位姿基础设施（经典、成熟、被消费）+ 语义化任务建图（活跃研究前沿），而非整栈被端到端模型替代。(3) 多智能体融合对'具身数据采集'环节有直接意义：两代理仅交换平均 7.08% 的地图即可融合优于拼接的共享地图（Table IV：Highbay 22.84 vs 21.10、Outdoor 19.92 vs 15.76 dB），适配机器人团队的带宽约束。(4) 与 LEGO-SLAM（2511.16144）并置可见两条不同的语义化路线：GaussLite 把语义作为容量分配信号（地图仍是 RGB 高斯、任务条件化、可多机融合），LEGO-SLAM 把语义嵌入地图本体（每高斯带语言特征、可开放词汇查询）——前者服务'任务相关算力分配'，后者服务'语言可查询地图'，均为 SLAM 吸收基础模型特征而非被替代。(5) 写作笔误已记录：page 6 融合增益句的 'Replica' 应为 Campus Highbay（reader_inferred 第 5 条）。(6) GRAND-SLAM（同组多智能体 GS-SLAM，[27]）为多机方向谱系背景。"
+}

@@ -1,0 +1,426 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.00307",
+  "title": "ScaRF-SLAM: Scale-Consistent Reconstruction with Feed-Forward Models and Classical Visual SLAM",
+  "published": "2026-09-01",
+  "url": "https://arxiv.org/abs/2606.00307",
+  "authors": [
+   "Yuhao Zhang",
+   "Yifu Tao",
+   "Frank Dellaert",
+   "Maurice Fallon"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接相关（EA-VLOC）：Oxford Robotics Institute（Fallon 组）+ Georgia Tech（Dellaert，GTSAM 作者）的 RA-L 2026 SLAM 系统论文，正面回应综述问题的核心张力——几何基础模型（GFM：VGGT/MASt3R/DepthAnything3）是否替代经典 SLAM。为综述提供四方面证据：(a) 实验对照显示正确初始化的经典特征 SLAM 追踪精度仍系统性优于全 GFM SLAM（EuRoC 单目 + ScaRF 鱼眼-惯性两表）；(b) 作者把'部分全 GFM SLAM 报告超过经典方法'归因于数据集偏差（小规模+缺正确初始化），为综述采信替代论据提供批判性检查清单；(c) 系统设计上经典 SLAM 承担全部状态估计、GFM 仅做建图资源——'分工而非替代'的解耦架构样本，且作者在结论中明确主张'学习几何的进展不必替换经典几何管线'；(d) 验证停留于 SLAM/重建基准指标 + ANYmal-D 四足平台定性演示，无任何具身下游任务（操作/导航策略/空间推理）消费该地图。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认动机：全 GFM SLAM 把追踪与建图紧耦合在同一管线内，对 GFM 预测质量敏感（输入视角数少则几何精度降、多则 GPU 内存与延迟升），且难以复用经典 SLAM 的成熟度与模块性（多模态/多相机/鱼眼）；提出解耦设计——经典视觉 SLAM 做鲁棒低延迟追踪、GFM 仅做稠密建图"
+   },
+   {
+    "locator": "page 2, Section II Related Work（A. Feature-based SLAM / B. Dense SLAM and Mapping / C. GFM-enabled SLAM）与贡献列表",
+    "role": "relevant-core",
+    "purpose": "定位谱系：特征 SLAM（OpenVINS/ORB-SLAM3/Maplab）成熟但只产稀疏地图；稠密 SLAM（KinectFusion/ElasticFusion 依赖主动深度；CodeSLAM/SimpleMapping/OKVIS2-X 学习深度+经典 SLAM 先验）；GFM-SLAM（MASt3R-SLAM/ViSTA-SLAM/AIM-SLAM/VGGT-SLAM 2.0/MASt3R-Fusion）紧耦合且向辅助模态扩展工程成本高——本文'解耦、仅优化尺度、锚定 SLAM 位姿'的差异化定位；流式/离线重建方法'不足以构成 SLAM 完整解'的判断"
+   },
+   {
+    "locator": "page 3, Section III Methodology 概览（三点设计优势）+ III-A Notation（DA3 的位姿/内参输入模式）+ III-B Frame-Level Scale Optimization",
+    "role": "method-or-design",
+    "purpose": "理解架构：经典 SLAM 提供即时位姿，关键帧分组为批次（子图）喂 DA3 预测深度+置信度；GFM 预测被定位为'先验而非测量'；每帧一个正尺度变量，LightGlue 稀疏匹配+几何验证后用 GTSAM 最小化匹配 3D 点 L2 距离（位姿固定不动）"
+   },
+   {
+    "locator": "page 3-4, Section III-C Point Cloud Fusion / III-D Submap-Level Scale Optimization / III-E Map Update / III-F Mapping Keyframe Selection",
+    "role": "method-or-design",
+    "purpose": "投影式点云融合（投影深度与观测深度阈值内判对应、置信度加权平均，点数减 41%）；相邻子图共享一帧重叠图像提供匹配点，优化每子图尺度变量（滑动窗口+回环后全局重优化）；回环后用 LightGlue 建子图边、按更新位姿变换子图并重跑优化——建图模块是增量 SLAM 组件而非后处理；关键帧选择按批次中位深度自适应平移阈值 τ_t 与深度过滤 d_max=ατ_t（α=20）"
+   },
+   {
+    "locator": "page 4, Section IV Dataset（ScaRF 数据集构建）",
+    "role": "data-or-setting",
+    "purpose": "确认真值链路：Insta360 ONE RS 双鱼眼（FoV>180°）+IMU 刚性安装于 LiDAR-惯性建图设备，IMU 信号时间对齐；真值位姿=LiDAR 扫描配准到高精度 TLS 地图+标定外参；真值 3D=注册 LiDAR 扫描（TLS 数月前采集不完全反映现状）；动机是现有室内 SLAM 数据集规模小或缺高质量真值"
+   },
+   {
+    "locator": "page 5, Section V 评测设置 + V-A Monocular Tracking（Tables I-II）",
+    "role": "results-or-analysis",
+    "purpose": "核对追踪对照：EuRoC（单目，排除初始化阶段）与 ScaRF（鱼眼+惯性；MASt3R-SLAM 因 CUDA OOM 只评前 100s）；经典 ORB-SLAM3/OV-SLAM vs 全 GFM 方法（MASt3R-SLAM/VGGT-SLAM2/VGGT(D)-SLAM2/DA3-Long/MASt3R-Fusion）；作者对 VGGT→DA3 换模改进的解读（GFM-SLAM 仍是 promising direction）"
+   },
+   {
+    "locator": "page 5-6, Section V-B Reconstruction Evaluation（Fig. 5, Table III, Figs. 6-8）",
+    "role": "results-or-analysis",
+    "purpose": "核对重建结果：全局误差（Sim(3) 对齐）2.9cm 最佳；chunk-wise 协议（每 chunk 独立 Sim(3)+ICP，剥离全局轨迹质量影响）；室内精确度 10-20% 优势与约 2cm 误差（含无位姿输入变体仍取胜）；户外 KITTI/Spires 持续更低误差；VGGT(D)-SLAM2 户外回环后优化易失败被回退里程计模式"
+   },
+   {
+    "locator": "page 7, Section V-C Ablation Study（Tables IV-V, Table VI）与 V-D Runtime Analysis（Table VII）",
+    "role": "results-or-analysis",
+    "purpose": "核对消融（全部用真值位姿做全局评估，隔离建图组件）：帧级/子图级优化与点云融合逐项贡献；批次 11→6 退化对比（本方法 -1.60% vs DA3 直接使用 -8.03%）；自适应关键帧选择收益（Oxford Spires 误差 0.1468/0.1299→0.1135/0.0863 m）；运行时分解（笔记本 1.5s/6帧子图≈3.3Hz；Jetson 上 DA3 推理 4.64s vs 0.93s）；瓶颈在深度模型推理与特征匹配"
+   },
+   {
+    "locator": "page 7, Section V-E Robot Experiment（Fig. 10）",
+    "role": "results-or-analysis",
+    "purpose": "确认机器人实验性质：ANYmal-D 四足搭载 Insta360 采集数据（含室内外过渡与高约束空间），仅定性演示多会话/多相机/多模态稠密 SLAM 的灵活性——无定量指标、无下游任务"
+   },
+   {
+    "locator": "page 8, Section VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论主张：当前 GFM 的局限不在稠密几何生成而在其预测对精确位姿估计的可靠性；分离状态估计与稠密重建更鲁棒实用；'学习几何的进展不必替换经典几何管线，可通过审慎的系统级集成实现'；混合设计将在稠密建图走向真实部署中起关键作用"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的被引（DepthAnything3、MASt3R-SLAM、VGGT-SLAM 2.0、ORB-SLAM3、OpenVINS、LASER[22]、Oxford Spires），无需逐条精读；8 页正文无附录"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：几何基础模型（GFM：DepthAnything3/VGGT/MASt3R 等）出现后，SLAM 系统应如何整合它们——是紧耦合（GFM 同时驱动追踪与建图，如 MASt3R-SLAM/VGGT-SLAM 2.0）还是解耦（经典 SLAM 追踪 + GFM 仅建图）？具体子问题：(a) GFM 预测的几何不精确性如何反向损害位姿估计；(b) 在固定 SLAM 位姿上做轻量尺度优化（帧级+子图级）+ 投影点云融合能否获得全局一致的稠密重建；(c) 地图如何在线响应回环后的轨迹修正（建图作为增量 SLAM 组件而非后处理）；(d) 关键帧选择如何按场景尺度自适应以在有限批次下保证视角多样性。对综述问题的意义：这是对'基础模型是否替代 SLAM'最直接的正面实验回答之一——作者的答案是混合集成而非替代，且以单目/单目-惯性两套追踪对照实验支撑；同时它给出'GFM-SLAM 报告优势源于数据集偏差'的反叙事解释，为综述评估替代论据提供协议检查视角。",
+ "contributions": [
+  "解耦式 GFM 建图框架：经典特征 SLAM（实验用 ORB-SLAM3、OpenVINS+位姿图的 OV-SLAM）承担鲁棒低延迟追踪，GFM（DepthAnything3）仅承担稠密建图；保留经典 SLAM 的传感器可重构性（视觉-惯性/多相机/鱼眼），避免 GFM 几何误差传播进位姿估计",
+  "轻量两级尺度优化 + 投影式点云融合：帧级（LightGlue 稀疏匹配 + GTSAM，每帧一个尺度变量）与子图级（相邻子图共享重叠帧提供匹配点）优化全部锚定 SLAM 位姿、只估计尺度因子；对任意长度序列获得全局一致重建，对小批次 GFM 退化鲁棒",
+  "在线地图更新机制：回环触发时用 LightGlue 在含回环帧的子图间建边、按更新位姿变换各子图并重跑子图级优化——建图模块定位为增量 SLAM 系统的组件而非离线后处理",
+  "自适应关键帧选择：按批次中位深度调整平移阈值 τ_t（开阔场景增大至 1m 上限）与深度过滤 d_max=ατ_t（α=20），平衡视角多样性与几何可靠性",
+  "ScaRF 数据集：鱼眼相机穿越多层办公环境（多回环/窄楼梯/低纹理走廊），TLS+LiDAR 注册的高精度真值轨迹与真值点云，弥补室内 SLAM 数据集规模/真值不足",
+  "系统性对照实验：经典 vs 全 GFM SLAM 追踪（EuRoC/ScaRF，含同一 GFM 换装对照 VGGT(D)-SLAM2）、室内外重建（ScaRF/KITTI/Oxford Spires，全局+chunk-wise 双协议）、组件消融与运行时分析（笔记本 + Jetson AGX Orin）"
+ ],
+ "method": {
+  "summary": "ScaRF-SLAM 是解耦的稠密建图系统。(1) 追踪：任意经典特征 SLAM 在线提供高频位姿；原始鱼眼图给 SLAM、校正针孔图给 GFM（GFM 仅支持针孔+有限 FoV）。(2) 建图：近期带位姿关键帧分组为批次（子图，实验批次 6 含 1 重叠帧），喂给 DA3（可选用其内参/位姿辅助输入模式：DA3 把内部预测位姿经 Sim(3) 对齐到输入位姿并缩放深度）预测逐帧稠密深度与置信度；低置信深度剔除后反投影为点云。(3) 帧级尺度优化：每帧一个正尺度变量 s_i，LightGlue 稀疏匹配+几何验证产生帧间对应，GTSAM 最小化匹配 3D 点 L2 距离（位姿 T 取自 SLAM、固定不动）。(4) 点云融合：把各帧点云按位姿/内参投影到参考帧，投影深度与观测深度差在阈值内判为对应，置信度加权平均融合（点数减 41%）。(5) 子图级尺度优化：相邻子图共享一帧重叠图像自然提供子图间匹配点，优化每子图尺度变量；滑动窗口只优化最新 N 个子图，回环后做全局重优化。(6) 地图更新：回环触发时用 LightGlue 在含回环帧的子图间建边、按更新位姿变换各子图并重跑子图级优化。(7) 关键帧选择：图像流先时间降采样对齐建图速率，再按 SLAM 位姿的平移/角度阈值选帧；τ_t 按批次中位深度自适应调整。对综述问题的关键架构事实：GFM 是被消费的建图资源（其输出被显式称为'先验而非测量'），位姿估计完全由经典 SLAM 提供——'基础模型进建图、SLAM 管状态估计'的分工设计；建图异步运行于 3Hz 关键帧率，追踪低延迟由经典 SLAM 保证。",
+  "assumptions": [
+   "经典特征 SLAM 可用且位姿足够准确（重建质量直接受位姿质量影响；消融用真值位姿隔离评估建图组件）",
+   "GFM（DA3）预测的深度是先验而非测量：即使视觉上几何一致，也需要尺度校正才能用于一致重建（作者原话，引 LASER[22] 支持'GFM 预测即使 up to scale 也不完全几何准确'）",
+   "输入图像可校正为针孔供 GFM 使用（GFM 限于针孔+有限 FoV；追踪可用原始鱼眼——两种 FoV 的不对等是设计前提）",
+   "环境基本静态；单前向相机图像流 + 可选 IMU；无动态物体/光照剧变处理",
+   "GPU 内存受限决定批次大小（实验批次 6），系统设计明确面向资源受限与在线场景"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EuRoC（无人机视觉-惯性基准，MH01-MH05，单目评测、排除初始化阶段）",
+   "ScaRF 数据集（自采集：多层办公环境、多回环、窄楼梯、低纹理走廊；Insta360 ONE RS 双鱼眼 FoV>180° + IMU，刚性安装于 LiDAR-惯性建图设备并 IMU 时间对齐；真值位姿=LiDAR 扫描配准到 TLS 地图，真值 3D=注册 LiDAR 扫描）",
+   "KITTI 00/05（户外，3723m/2205m，频繁回环）",
+   "Oxford Spires：Blenheim-Palace-01（493m）/ Christ-Church-02（642m），室内外过渡",
+   "ANYmal-D 四足机器人采集数据（仅定性实验）"
+  ],
+  "tasks": [
+   "单目 SLAM / 单目-惯性 SLAM 追踪（ATE 评测）",
+   "稠密重建（precision/recall/重建误差；全局 Sim(3) 对齐与 chunk-wise 双协议；真值为 LiDAR 点云）",
+   "多会话/多相机（前后）/多模态（视觉-惯性）稠密 SLAM（定性机器人演示）"
+  ],
+  "embodiments": [
+   "主体无机器人本体：设备采集数据 + 笔记本（Intel Core Ultra 7 265HX + NVIDIA RTX PRO 3000 Blackwell 12GB）与 Jetson AGX Orin 评测；机器人实验为 ANYmal-D 四足搭载 Insta360 相机（仅定性，无任务执行）"
+  ],
+  "sample_or_scale": "EuRoC 5 序列；ScaRF 5 序列（建筑尺度、含两层楼，chunk 10m）；KITTI 2 序列（chunk 200m）；Oxford Spires 2 序列（chunk 30m）；单次运行，无方差/显著性报告；重建评测对全部方法统一 25% 置信度过滤 + 体素降采样（室内 2cm/户外 10cm）；建图 3Hz、批次 6（GFM 基线因内存同限批次 6，Scal3R 用 16，KITTI 上 DA3-Long/VGGT(D) 用 30、Scal3R 60、本方法仍 6）"
+ },
+ "evaluation": {
+  "design": "三层对照：(a) 追踪——全 GFM SLAM（MASt3R-SLAM/VGGT-SLAM2/作者换装 DA3 的 VGGT(D)-SLAM2/DA3-Long）vs 经典（ORB-SLAM3 单目；OV-SLAM、MASt3R-Fusion 单目-惯性），EuRoC（全部针孔图）与 ScaRF（鱼眼+惯性；MASt3R-SLAM 因 OOM 截断前 100s；轨迹对齐并缩放到真值后评估）；(b) 重建——本方法（OV-SLAM/ORB-SLAM 位姿 + DA3 建图）vs GFM-SLAM 系统与离线方法 Scal3R，ScaRF 室内（统一 3Hz、批次 6）与户外 KITTI/Spires；全局（Sim(3) 对齐）与 chunk-wise（每 chunk 独立 Sim(3)+ICP 精配准，剥离全局轨迹质量影响）双协议；明确不报 coverage error 并给出理由（低置信过滤会人为放大该指标）以 recall 代完备性；(c) 消融——尺度优化三组件逐项关闭、批次 6 vs 11、自适应 vs 固定阈值关键帧（全部用真值位姿全局评估）；另运行时分解（笔记本 vs Jetson）。",
+  "baselines": [
+   "MASt3R-SLAM（全 GFM 实时稠密 SLAM，两视图 pointmap 先验）",
+   "VGGT-SLAM 2.0 及其 DA3 换装版 VGGT(D)-SLAM2（子图式 GFM-SLAM，SL(4) 优化）",
+   "MASt3R-Fusion（GFM + IMU/GNSS 扩展）",
+   "DA3-Long（DA3 长序列处理脚本，无完整 SLAM）",
+   "Scal3R（离线测试时训练重建）",
+   "ORB-SLAM3（经典特征 SLAM：单目与单目-惯性两种模式）",
+   "OV-SLAM（OpenVINS + 位姿图优化，单目-惯性）"
+  ],
+  "metrics": [
+   "ATE (m)（轨迹对齐后）",
+   "precision / recall (%)（阈值 3cm）与重建误差 (m)（重建点到最近真值邻域的平均距离；全局 + chunk-wise：室内 10m chunk、Oxford Spires 30m、KITTI 200m）",
+   "运行时分解（秒/子图：DA3 推理、LightGlue、帧级优化、点云融合、子图级优化）"
+  ],
+  "ablations": [
+   "帧级尺度优化 / 子图级尺度优化 / 点云融合逐项关闭（batch 6，真值位姿，Table IV）",
+   "批次大小 6 vs 11 的敏感性对比（本方法 vs 直接聚合 DA3，Tables IV-V）",
+   "自适应 vs 固定阈值（τ_t=0.3m）关键帧选择（Oxford Spires，Table VI）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "追踪对照：EuRoC 上 ORB-SLAM3（单目）ATE 0.0206/0.0193/0.0298/0.0996/0.0459 m 全序列低于 MASt3R-SLAM（0.0274-0.1180）与 VGGT-SLAM2（0.0614-0.6447）；ScaRF（鱼眼+惯性）上经典方法 OV-SLAM 0.1075/0.0444/0.0316/0.0644/0.0309 m 显著优于紧耦合 GFM 方法（VGGT-SLAM2 达 0.77-1.06 m，MASt3R-Fusion 0.118-0.250 m，MASt3R-SLAM 因 OOM 仅评 100s）；作者归因于 GFM 几何不精确性 + 经典方法可直接用原始鱼眼图且有成熟惯性支持。",
+   "scope": "EuRoC MH01-05（单目）与 ScaRF R01-05（单目-惯性），Tables I-II；MASt3R-SLAM 在 ScaRF 截断 100s",
+   "locator": "page 5, Tables I-II, Section V-A"
+  },
+  {
+   "finding": "作者对'全 GFM SLAM 报告超过经典'的归因：数据集偏差（小规模+缺正确初始化，而初始化对经典单目方法关键）；同时承认换装 DA3 使 VGGT(D)-SLAM2 明显改进，GFM-SLAM 仍是 promising direction、未来模型可能缩小或弥合与经典方法的差距。",
+   "scope": "作者分析性主张，非受控实验",
+   "locator": "page 2, Section I; page 5, Section V-A.1"
+  },
+  {
+   "finding": "重建（ScaRF 室内，chunk 10m/阈值 3cm/25% 置信度过滤）：本方法精确度 81.06/80.44/81.26/81.63/82.90%（不给 DA3 位姿输入的变体也有 78.64/76.41/79.47/80.50/81.94%），远超次优 VGGT(D)-SLAM2（44.13-64.20%）与 DA3-Long（50.32-65.64%）；重建误差 0.0198-0.0216 m（约 2cm/10m chunk）；全局重建误差平均 2.9cm 为最佳。作者将有位姿输入时的 10-20% 精确度优势归因于解耦设计。",
+   "scope": "ScaRF R01-R05，Table III 与 Fig. 5；统一 3Hz、批次 6",
+   "locator": "page 5-6, Fig. 5, Table III"
+  },
+  {
+   "finding": "重建（户外）：KITTI 00/05 与 Oxford Spires 上本方法（含无回环变体）chunk-wise 重建误差持续低于全部对比方法；VGGT(D)-SLAM2 在户外回环后易发生优化失败（即使检测到的回环正确），被回退到里程计模式（图中标 ×）；摘要口径为户外 10cm/30m chunk。",
+   "scope": "KITTI 00/05（chunk 200m）、Blenheim-Palace-01/Christ-Church-02（chunk 30m），Fig. 7；>20m 深度点剔除",
+   "locator": "page 6-7, Fig. 7; page 1, Abstract"
+  },
+  {
+   "finding": "消融（真值位姿、全局评估）：批次 6 时较直接聚合 DA3 预测最高 +17.44% 绝对精确度（R04）/+25.9% 相对提升；帧级与子图级尺度优化各自独立贡献、关闭任一均退化；批次 11→6 时本方法精确度仅降 1.60% 而 DA3 直接使用降 8.03%——作者指出该特性对 GPU 内存受限设备与机器人'反应式建图'（不能等待大量图像累积）尤为重要。自适应关键帧选择把 Oxford Spires 重建误差从 0.1468/0.1299 降到 0.1135/0.0863 m。",
+   "scope": "ScaRF R01-R05（Tables IV-V）与 Oxford Spires（Table VI）",
+   "locator": "page 7, Tables IV-VI"
+  },
+  {
+   "finding": "运行时：笔记本上 6 帧子图平均 1.5s（DA3 推理 0.93s + LightGlue 0.32s 为主），对应约 3.3Hz 最大实时关键帧率（本文设 3Hz）；Jetson AGX Orin 上 DA3 推理增至 4.64s；作者自陈瓶颈在深度模型推理与稀疏特征匹配，且当前实现与 SLAM 松耦合（仅用轨迹信息），复用 SLAM 已跟踪特征与共视图的紧耦合实现可显著提效。",
+   "scope": "Table VII；假设 SLAM 并发异步提供带位姿帧",
+   "locator": "page 7, Table VII, Section V-D"
+  },
+  {
+   "finding": "结论主张：当前 GFM 的局限不在稠密几何生成而在其预测对精确位姿估计的可靠性；把重建锚定在经典 SLAM 的更可靠位姿上、仅优化 GFM 点云尺度即可结合两者长处；普适判断——'学习几何的进展不必替换经典几何管线，可通过审慎的系统级集成实现'，轻量几何约束叠加在学习预测上在精度/效率/鲁棒间取得有利平衡，混合设计将在稠密建图走向真实部署中起关键作用。",
+   "scope": "作者结论与立场主张",
+   "locator": "page 8, Section VI"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "运行时瓶颈在深度模型推理（DA3 与 LightGlue），稀疏特征提取与匹配是主要计算开销；Jetson 平台运行时因算力下降显著增加（DA3 推理 4.64s vs 笔记本 0.93s）；当前实现与 SLAM 非常松耦合（仅用轨迹信息），复用 SLAM 已跟踪特征与共视图的更紧耦合实现可显著提效（本文未实现）",
+    "locator": "page 7, Section V-D Runtime Analysis"
+   },
+   {
+    "limitation": "全 GFM-SLAM 仍是 promising direction：把 VGGT 换成 DA3 即带来明显改进，未来基础模型可能缩小或弥合与经典方法的追踪差距——作者自己为'经典仍占优'的结论标注了时间边界",
+    "locator": "page 5, Section V-A.1"
+   },
+   {
+    "limitation": "评测覆盖受限的坦白记录：MASt3R-SLAM 在 ScaRF 因 CUDA 显存溢出只评前 100s；KITTI 上因 IMU 数据不足省略 MASt3R-Fusion；VGGT(D)-SLAM2 户外回环后全局优化失败需回退里程计模式",
+    "locator": "page 5, Table II 脚注; page 6, Section V-B.2; page 7, Fig. 7 说明"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无具身下游任务验证：全部定量结果为 SLAM/重建代理指标（ATE/precision/recall/重建误差），机器人实验（ANYmal-D）仅定性演示建图效果；'practical robotic scenarios 中可靠运行'的主张无任务级证据——操作、导航策略、空间推理任务均未消费该地图；对综述而言，本文证明的是'SLAM+GFM 混合系统的技术有效性'而非'SLAM 服务具身任务的有效性'",
+    "basis": "page 7 Section V-E 原文自述 'qualitatively evaluates'；page 5-7 全部定量实验为 SLAM/重建指标，无任何任务级度量"
+   },
+   {
+    "boundary": "'经典 SLAM 追踪仍占优'结论的时间与对照边界：对照限于 2025-2026 的 GFM（VGGT/DA3）与特定全 GFM 系统（MASt3R-SLAM/VGGT-SLAM2 系）；作者自认未来模型可能缩小差距——该结论应视为有 timestamp 的快照，随基础模型迭代需重估；综述引用时应保留此限定",
+    "basis": "page 5 V-A.1 'future models may further narrow or close the performance gap'；page 8 结论措辞限定 'current GFMs'"
+   },
+   {
+    "boundary": "追踪对照的输入不对等：ScaRF 上本方法与经典方法直接用原始鱼眼图像，GFM 方法被迫用校正针孔图（GFM 只支持针孔+有限 FoV）——'经典方法能直接用鱼眼'既是本文结论的一部分也是设定差异；EuRoC 上全部方法统一针孔图部分缓解，但鱼眼-惯性设定的优势归因混合了'方法能力'与'输入模态'两个因素",
+    "basis": "page 5 'All evaluated GFM-based methods use rectified pinhole images... Our system uses the raw fisheye images for pose estimation'；page 3 'current GFMs are primarily trained on rectified pinhole images with limited FoV'"
+   },
+   {
+    "boundary": "重建对比中 GFM-SLAM 基线受内存约束被迫用批次 6，恰与本文'小批次鲁棒'的卖点重合——对比设定与卖点存在部分循环；公平性措施（同频率、统一过滤/降采样）已尽力，但批次约束对紧耦合方法的不利无法完全剥离",
+    "basis": "page 6 'Due to the higher GPU memory demands of DA3-Long and VGGT(D)-SLAM2, DA3 can only process images with a batch size of 6... For fairness, we use the same batch size for our method'；page 7 批次敏感性分析"
+   },
+   {
+    "boundary": "静态环境与被动视觉假设：无动态物体、光照剧变、主动深度失效场景的评估；真值链路依赖 TLS/LiDAR 注册（TLS 数月前采集不完全反映现状，作者改用注册 LiDAR 扫描做真值）；3Hz 建图率与 1.5s 子图延迟对反应式机器人任务是否足够未讨论（追踪低延迟由 SLAM 保证、建图异步运行，但延迟对下游任务的影响无度量）",
+    "basis": "page 4 Section IV 真值构建描述；page 3 'only dense mapping runs asynchronously at slightly higher latency'；page 7 V-D 运行时数据；全文无动态/任务级实验"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 EuRoC（单目）与 ScaRF（建筑尺度室内、鱼眼+惯性）/KITTI/Oxford Spires（户外）数据集、笔记本级 GPU（RTX PRO 3000 12GB、批次 6、3Hz 关键帧率）条件下：(a) 正确初始化的经典特征 SLAM 追踪精度系统性优于 2025-2026 的全 GFM SLAM 系统（EuRoC：ORB-SLAM3 0.0193-0.0996m vs MASt3R-SLAM 0.0274-0.1180m；ScaRF：OV-SLAM 0.0309-0.1075m vs VGGT-SLAM2 0.44-1.06m）；(b) 锚定经典 SLAM 位姿、仅做两级尺度优化的 DA3 建图，chunk-wise 精确度较次优方法高 10-20%、重建误差约 2cm/10m chunk（室内）与约 10cm/30m chunk（户外），且批次 6（资源受限）下仅退化 1.60%（DA3 直接使用退化 8.03%）。'混合集成优于替代'的结论限于本文对照的全 GFM 系统（MASt3R-SLAM/VGGT-SLAM2 系）与当前 GFM 能力边界——作者自认 GFM-SLAM 仍是 promising direction、未来模型可能缩小差距；数据集偏差归因（C02）是作者分析而非受控实验；无具身下游任务验证，机器人实验仅定性；动态环境、光照剧变未涉及。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "对照设计直接命中'经典 vs 全 GFM'问题：作者构造 VGGT(D)-SLAM2（同一 GFM 换装进 GFM-SLAM 框架）作为受控中间对照，隔离'GFM 能力'与'架构耦合方式'两个变量",
+   "评测协议细致且自我批判：chunk-wise 评估剥离全局轨迹质量影响；对全部方法统一置信度过滤与体素降采样；明确论证不报 coverage error 的理由（低置信过滤会人为放大该指标偏差）并以 recall 代完备性",
+   "真值链路严格（TLS 地图 + LiDAR 扫描配准 + IMU 时间对齐 + 标定外参），代码与数据集开源（github.com/ori-drs/ScaRF-SLAM）",
+   "消融全部用真值位姿全局评估，干净隔离建图组件贡献；批次敏感性分析明确面向资源受限机器人场景并附 Jetson 实测；对基线失败（OOM/优化失败）如实记录而非静默剔除"
+  ],
+  "design_risks": [
+   "ScaRF 追踪对照的输入模态不对等（本方法/经典用原始鱼眼、GFM 方法用校正针孔图），'经典可直接用鱼眼'的结论与设定差异纠缠；EuRoC 全针孔的对照缓解但未消除此问题",
+   "重建对比中 GFM-SLAM 基线因显存被迫批次 6，与本文'小批次鲁棒'卖点部分循环；MASt3R-SLAM 在 ScaRF 截断 100s、KITTI 上 MASt3R-Fusion 缺席、户外 VGGT(D)-SLAM2 回退里程计模式——多个基线未以完整形态覆盖全部设定",
+   "单次运行、无方差/显著性报告；'GFM-SLAM 报告优势源于数据集偏差'的归因是作者解释（author-claim），本文未在那些原始基准上做受控重放实验直接证明",
+   "机器人实验仅定性（无任何定量指标）；重建质量全部以 LiDAR 真值几何误差度量，无渲染质量或任务效用维度",
+   "自建 ScaRF 数据集由作者自己设计并评测自己的方法，存在为方法特性（鱼眼、多回环、低纹理走廊）定制场景的风险（虽已开源可复核）"
+  ],
+  "baseline_fairness": "总体公平且透明：统一置信度过滤/体素降采样/频率对齐（3Hz，MASt3R 系保留其默认 10Hz 并说明理由）、EuRoC 排除初始化阶段、ATE 对齐协议声明清晰、对基线失败如实标注（OOM 截断、× 标记回退）。不公平残余：GFM 基线受内存约束被迫小批次（作者已声明并以此作为对比卖点，但该设定同时不利于基线）、ScaRF 上输入模态不对等（鱼眼 vs 针孔）、KITTI 上 MASt3R-Fusion 缺席。作者在多数设定下同时给出对自己不利的信息（如 VGGT(D)-SLAM2 换 DA3 后明显改进），透明度较高。",
+  "metric_validity": "ATE、precision/recall、重建误差均为标准度量；不报 coverage error 的理由论证充分（低置信过滤会人为放大）并以 recall 做完备性代理——指标选择有方法论自觉；chunk-wise 协议剥离全局轨迹影响是重建对比的有效改进。局限：全部为 SLAM/重建几何代理指标，无渲染质量（对 GFM-SLAM 系统本可比）与任务效用度量；precision 阈值（3cm）与置信度百分位（25%）为固定选择，敏感性未报。",
+  "reproducibility": "高：代码与数据集开源（github.com/ori-drs/ScaRF-SLAM）；硬件具体（Intel Core Ultra 7 265HX / RTX PRO 3000 Blackwell 12GB / Jetson AGX Orin）；关键超参给出（α=20、τ_t 上限 1m、批次 6、3Hz、体素 2cm/10cm、25% 置信度、chunk 长度）；组件全部公开（DA3/LightGlue/GTSAM/ORB-SLAM3/OpenVINS）；运行时分项报告。未给出的细节：角度阈值 τ_R 与深度阈值 τ_d 的取值、滑动窗口子图数 N、点云融合投影深度阈值。",
+  "external_validity": "场景覆盖较广（建筑尺度室内+户外街景+室内外过渡+多回环+窄楼梯+低纹理走廊），且明确针对现有室内 SLAM 数据集的规模/真值缺口；但静态环境假设未检验动态场景，机器人平台（ANYmal-D）仅定性演示；最关键的外部效度限制是时间性：'经典 SLAM 追踪仍占优'依赖 2025-2026 的 GFM 能力快照（VGGT/DA3），作者自认未来模型可能缩小或弥合差距——该结论需随基础模型进展持续重估，不构成对 GFM 路线的终局判断。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.00307-C01",
+   "claim": "追踪对照实验：正确初始化的经典特征 SLAM 在两种设定下均系统性优于全 GFM SLAM 系统——EuRoC 单目（排除初始化阶段）上 ORB-SLAM3 五序列 ATE 0.0206/0.0193/0.0298/0.0996/0.0459 m，全部低于 MASt3R-SLAM（0.0274/0.0291/0.0580/0.1180/0.0674）、VGGT-SLAM2（0.0614-0.6447）与 VGGT(D)-SLAM2（0.0620-0.3456）；ScaRF 鱼眼-惯性设定上经典单目-惯性方法（OV-SLAM 0.1075/0.0444/0.0316/0.0644/0.0309）显著优于紧耦合 GFM 方法（VGGT-SLAM2 达 0.7667-1.0573）。作者把性能差距归因于 GFM 预测的几何不精确性反向损害位姿估计。",
+   "stance": "support",
+   "relation": "支持综述问题'SLAM 仍是核心基础设施'一侧的最直接实验证据：在 GFM 出现后的第一波全 GFM SLAM 系统上，位姿估计——SLAM 的最核心职能——仍由 20 年成熟度的经典特征 SLAM 系统性占优；基础模型尚未能替代 SLAM 的状态估计职能，且该差距在单目与单目-惯性两种模态下一致。引用时须同时保留作者自认的时间边界（未来 GFM 可能缩小差距，见 C02/limitations）。",
+   "summary": "EuRoC 与 ScaRF 两表：经典 SLAM（ORB-SLAM3/OV-SLAM）追踪精度系统性优于全 GFM SLAM，作者归因 GFM 几何不精确性损害位姿估计",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Tables I-II, Section V-A",
+   "source_context": "The results show that, when properly initialized, ORB- SLAM3 consistently outperforms fully GFM-enabled methods in tracking. We attribute the performance gap to geometric inaccuracies in GFM predictions, which in turn adversely affect pose estimation.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE (m)",
+    "value_or_direction": "EuRoC MH01-MH05: ORB-SLAM3 0.0206, 0.0193, 0.0298, 0.0996, 0.0459 vs MASt3R-SLAM 0.0274, 0.0291, 0.0580, 0.1180, 0.0674, VGGT-SLAM2 0.0614, 0.0800, 0.1284, 0.6447, 0.3560; ScaRF R01-R05: OV-SLAM 0.1075, 0.0444, 0.0316, 0.0644, 0.0309 vs VGGT-SLAM2 1.0573, 0.9097, 0.8694, 0.7667, 0.4423",
+    "comparator": "MASt3R-SLAM, VGGT-SLAM2, VGGT(D)-SLAM2, DA3-Long, MASt3R-Fusion",
+    "task_or_sample": "EuRoC MH01-MH05 (monocular, Table I); ScaRF R01-R05 (fisheye mono-inertial, Table II, MASt3R-SLAM truncated to first 100 s due to OOM)",
+    "locator": "page 5, Tables I-II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 Tables I-II 全部行数值（ORB-SLAM3* 行 0.0206/0.0193/0.0298/0.0996/0.0459；MASt3R-SLAM 0.0274/0.0291/0.0580/0.1180/0.0674；VGGT-SLAM2 0.0614/0.0800/0.1284/0.6447/0.3560；VGGT(D)-SLAM2 0.0962/0.0718/0.0620/0.3456/0.2246；OV-SLAM† 0.1075/0.0444/0.0316/0.0644/0.0309；VGGT-SLAM2* 1.0573/0.9097/0.8694/0.7667/0.4423）与正文结论句（source_context 逐字，'ORB- SLAM3' 为 PDF 跨行连字符逐字形式）；表脚注逐字确认'Only first 100 s used due to OOM issue with MASt3R-SLAM'与'initialization phase is excluded'。claim 中各数值与比较方向均与表格一致，未外推到未评测的数据集或模态。"
+   }
+  },
+  {
+   "card_id": "2606.00307-C02",
+   "claim": "作者对'部分全 GFM SLAM 方法在某些基准上报告追踪超过经典方法（如单目 ORB-SLAM3）'的现象给出反解释：归因于数据集偏差——这些数据集规模小且缺乏对经典单目方法至关重要的正确初始化；在具备正确初始化的数据集（EuRoC）上，经典视觉 SLAM 仍取得更高追踪精度。该归因是作者的分析性主张（引 [6][7] 即 TUM RGB-D/BAD SLAM 基准上的报告），非受控重放实验。",
+   "stance": "support",
+   "relation": "为综述提供'替代论据'的批判性检查清单：综述若采信'GFM-SLAM 已在某些基准超越经典 SLAM'的证据（这类报告在 2025-2026 大量出现），必须先检查评测协议——初始化条件、数据集规模与偏差；本文显示同一批方法在正确初始化的基准上结论反转。同时注意作者并未否认 GFM-SLAM 前景（page 5 自承换装 DA3 即明显改进、未来模型可能弥合差距），这是对替代叙事的质疑而非否决。",
+   "summary": "作者把全 GFM SLAM 报告的追踪优势归因于小规模数据集+缺乏正确初始化的偏差；正确初始化下经典 SLAM 仍更准",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Section I Introduction",
+   "source_context": "we attribute this to dataset bias: these datasets are small-scale and lack proper ini- tialization, which is critical for classical monocular methods. We show that when evaluated on datasets with proper initial- ization (e.g., EuRoC [8]), classical visual SLAM still achieves higher tracking accuracy (Section V-A).",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字核对 page 2 开头段（'ini- tialization'/'initial- ization' 为 PDF 跨行连字符逐字形式）；该句承接的前半句 'Although some fully GFM-based SLAM methods report improved tracking over classical ones (e.g., monocular ORB- SLAM3) on certain benchmarks [6], [7]' 逐字见于 page 1 末行（跨页断句），[6][7] 与 page 8 参考文献（TUM RGB-D 基准 [6]、BAD SLAM [7]）核对一致。claim 如实标注这是作者归因（author-claim）而非受控实验，且保留作者对 GFM-SLAM 前景的平行表述（page 5 'suggesting that fully GFM-enabled SLAM remains a promising direction'）。"
+   }
+  },
+  {
+   "card_id": "2606.00307-C03",
+   "claim": "系统架构主张：不用 GFM 做状态估计，而是利用经典 SLAM 的成熟度——支持多样模态（视觉-惯性）、相机装置（多相机）与相机模型（鱼眼）——做追踪，GFM 只用于稠密建图；建图锚定在 SLAM 位姿上、只优化深度尺度，从而避免 GFM 预测误差传播进追踪。摘要平行表述为'用经典视觉 SLAM 做鲁棒低延迟追踪、GFM 专用于建图'（page 1）。",
+   "stance": "support",
+   "relation": "支持'SLAM 作为被复用的基础设施而非被替代的组件'的架构层证据：GFM 被明确定位为建图资源（消费 SLAM 位姿输出），状态估计仍由经典 SLAM 承担；且作者点出经典 SLAM 的多模态/多相机/鱼眼成熟度恰是当前 GFM 路线缺失的能力——这是'分工而非替代'的正面设计样本，与 GaussLite 的位姿外部化、LEGO-SLAM 的经典组件保留形成跨论文互证。",
+   "summary": "解耦架构：经典 SLAM（多模态/多相机/鱼眼成熟度）做追踪，GFM 仅做稠密建图，建图锚定 SLAM 位姿只优化尺度",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Section I Introduction",
+   "source_context": "Instead of relying on GFMs for state estimation, we leverage the maturity of classical SLAM that supports diverse modalities (e.g., visual-inertial), camera rigs (e.g., multi-camera), and camera models (e.g., fisheye) for tracking, while using GFMs for dense mapping only.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字核对 page 2 第一段末；摘要平行表述 'In brief, we use classical visual SLAM for robust low-latency tracking and use GFMs exclusively for mapping.' 逐字核对于 page 1；'avoids propagating inaccuracies from GFM predictions into pose estimation' 逐字见于 page 1 摘要；'By anchoring mapping to poses produced by the SLAM module and optimizing across depth scales' 逐字见于 page 1。claim 的架构描述（锚定 SLAM 位姿、仅优化尺度）与 page 3 III 节 'our method is fully anchored to the SLAM poses and only optimizes the scale factors' 一致，未添加原文没有的性能承诺。"
+   }
+  },
+  {
+   "card_id": "2606.00307-C04",
+   "claim": "结论的普适主张：学习几何的进展不必替换经典几何管线，而可通过审慎的系统级集成实现——在学习预测之上施加轻量几何约束即可在精度、效率、鲁棒性之间取得有利平衡；作者并断言此类混合设计将在稠密建图系统走向真实部署中起关键作用。同页结论还限定当前 GFM 的局限'不在稠密几何生成，而在其预测对精确位姿估计的可靠性'。",
+   "stance": "support",
+   "relation": "对综述问题最直接的立场证据：这是 SLAM 系统研究主流社区（RA-L 接收、Oxford ORI+Georgia Tech）对'基础模型是否替代经典 SLAM'的明确回答——不必替换、混合集成；且给出了替代论成立的条件边界（GFM 的短板在位姿估计可靠性而非几何生成）。综述可将其作为'基础设施延续论'在 2026 年的代表声音，同时保留其时间限定（current GFMs）。",
+   "summary": "结论主张：学习几何的进展不必替换经典几何管线，轻量几何约束叠加学习预测即可平衡精度/效率/鲁棒；混合设计是稠密建图走向真实部署的关键",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 8, Section VI Conclusion",
+   "source_context": "Beyond the quantitative gains, our findings highlight a broader insight: progress in learned geometry does not neces- sarily require replacing classical geometric pipelines, but can instead be achieved through careful system level integration. In particular, enforcing lightweight geometric constraints on top of learned predictions provides a favorable balance between accuracy, efficiency, and robustness.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 两句逐字核对 page 8 结论段（'neces- sarily' 为 PDF 跨行连字符逐字形式）；claim 中引用的另一句 'Our results suggest that the limitations of current GFMs lie not in dense geometry generation, but in the reliability of their predictions for accurate pose estimation.' 亦逐字核对于同页；紧随的 'We believe that such hybrid designs will play a key role in advancing dense mapping systems toward real-world deployment.' 逐字核对，支撑'关键作用'表述。claim 忠实区分了作者论断（broader insight）与其实验支撑范围，未把作者观点当作已证事实陈述。"
+   }
+  },
+  {
+   "card_id": "2606.00307-C05",
+   "claim": "重建主结果（ScaRF 室内，chunk 10m、阈值 3cm、25% 置信度过滤、统一 3Hz、批次 6）：锚定经典 SLAM 位姿的 DA3 建图在精确度上超越全部对比方法 10-20%（Ours 81.06/80.44/81.26/81.63/82.90% vs 次优 VGGT(D)-SLAM2 44.13-64.20%、DA3-Long 50.32-65.64%），同时保持约 2cm 重建误差（Ours 0.0198-0.0216 m）；即使不给 DA3 提供位姿输入（w/o Ext.），仅靠尺度优化仍以 76.41-81.94% 精确度超过全部基线。作者把有位姿输入时的优势归因于解耦设计。",
+   "stance": "support",
+   "relation": "支持'经典 SLAM 位姿 + 基础模型几何'混合路线的量化有效性：基础设施（SLAM 位姿）与基础模型（几何先验）互补而非竞争——锚定 SLAM 位姿后 GFM 几何变得可用且更准；无位姿输入变体仍取胜还说明尺度优化本身（几何约束）是独立贡献。此结果与 C01 合起来构成'混合优于两端（纯经典无稠密、纯 GFM 不稳）'的完整证据。",
+   "summary": "锚定 SLAM 位姿的 GFM 建图精确度超全部基线 10-20%、误差约 2cm/10m chunk；无位姿输入变体仍靠尺度优化取胜",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Table III, Section V-B.1",
+   "source_context": "Table III shows that our method outperforms the other approaches—including when operating without provid- ing poses to DA3. This highlights the effectiveness of the scale optimization of our method. With pose inputs enabled (benefiting from the decoupled design), it outperforms other methods in precision by 10%–20%, while maintaining around 2 cm reconstruction error.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "chunk-wise precision (%) and reconstruction error (m), chunk 10 m, threshold 3 cm, 25th-percentile confidence filtering",
+    "value_or_direction": "Ours precision 81.06, 80.44, 81.26, 81.63, 82.90 (w/o pose inputs 78.64, 76.41, 79.47, 80.50, 81.94), error 0.0216, 0.0209, 0.0198, 0.0199, 0.0198 m; best competing VGGT(D)-SLAM2 precision 60.61, 44.13, 61.18, 64.20, 52.38",
+    "comparator": "Scal3R (offline), DA3-Long, MASt3R-SLAM, MASt3R-Fusion, VGGT-SLAM2, VGGT(D)-SLAM2",
+    "task_or_sample": "ScaRF dataset R01-R05, indoor building-scale, unified 3 Hz mapping and batch size 6 (Table III)",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 三句逐字核对 page 6 Section V-B.1（'provid- ing' 为 PDF 跨行连字符逐字形式，en-dash '—' 与 '10%–20%' 逐字一致）；Table III 数值逐行核对：Ours 精确度 81.06/80.44/81.26/81.63/82.90、误差 0.0216/0.0209/0.0198/0.0199/0.0198；Ours w/o Ext. 78.64/76.41/79.47/80.50/81.94；VGGT(D)-SLAM2 60.61/44.13/61.18/64.20/52.38；DA3-Long 65.64/50.32/62.52/55.46/56.58；表头 'chunk length = 10 m, threshold = 3 cm, conf. percentile = 25%' 与 'Ours w/o Ext.: pose inputs disabled for GFM prediction' 逐字核对。统一 3Hz/批次 6 的设定句逐字见于 page 6。claim 范围限于 Table III 的室内设定，未外推到户外。"
+   }
+  },
+  {
+   "card_id": "2606.00307-C06",
+   "claim": "批次大小敏感性消融（真值位姿、全局评估）：输入批次从 11 降到 6 时，本建图框架精确度仅降 1.60%，而直接聚合 DA3 预测降 8.03%——锚定 SLAM 位姿的尺度优化使建图对 GFM 在小批次（低视角多样性）下的退化鲁棒。作者指出该特性对 GPU 内存受限的设备、以及需要'反应式建图'（系统不能等待大量图像累积）的应用尤为重要，并明言'这在机器人领域很常见'。",
+   "stance": "support",
+   "relation": "支持'SLAM 位姿是让基础模型几何在资源约束下可用的稳定器'：机器人机载场景的 GPU 内存约束天然迫使小批次 GFM 输入，此时经典 SLAM 提供的位姿锚定是性能不崩塌的关键成分——基础模型进机器人系统需要经典 SLAM 基础设施兜底的具体机制证据，直接对应综述的部署维度。",
+   "summary": "批次 11→6 时锚定 SLAM 位姿的建图仅降 1.60% 精确度 vs 直接用 DA3 降 8.03%；作者自点这对机器人反应式建图与内存受限设备尤为重要",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 7, Tables IV-V, Section V-C.1",
+   "source_context": "Comparing Table V and Table IV, we observe that our mapping framework is much less affected by reduced batch sizes compared to the direct use of DA3 (−1.60% and −8.03% in precision, respectively). This demonstrates the effectiveness of the proposed scale optimization. Notably, this characteristic is particularly important for devices with limited GPU memory or applications that require reactive mapping where the system must operate without waiting for a large number of incoming images, as is common in robotics domain.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "global precision (%) change when batch size reduced from 11 to 6",
+    "value_or_direction": "Ours −1.60% vs direct use of DA3 (DepthAnything3) −8.03% in precision",
+    "comparator": "direct aggregation of DepthAnything3 predictions",
+    "task_or_sample": "ScaRF R01-R05, ground-truth poses, global reconstruction evaluation, batch size 6 (Table IV) vs 11 (Table V)",
+    "locator": "page 7, Tables IV-V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 三句逐字核对 page 7 Section V-C.1（'−1.60%'/'−8.03%' 的 Unicode 减号逐字一致）；Tables IV/V 数值交叉核对（批次 6：Ours 全局精确度 81.81/81.93/81.73/84.88/80.97、DA3 78.91/68.26/72.00/67.44/70.16；批次 11：Ours 85.13/82.64/84.93/85.28/81.36、DA3 83.73/77.56/80.51/79.10/76.02），两点差异与正文 −1.60%/−8.03% 的口径一致（平均值差）；'ground-truth poses as input' 消融设定逐字见于 page 7 V-C 开头。claim 把结论限定在批次 6-11 的实测范围，未外推到任意批次大小。"
+   }
+  },
+  {
+   "card_id": "2606.00307-C07",
+   "claim": "本文全部定量评估限于 SLAM/重建指标（ATE、precision/recall、重建误差）于 SLAM 数据集（EuRoC/ScaRF/KITTI/Oxford Spires）；唯一的机器人实验是 ANYmal-D 四足平台采集数据（含室内外过渡与高约束空间）的定性评估——仅演示多会话、多相机（前后）、多模态（视觉-惯性）稠密 SLAM 的框架灵活性与'实际机器人场景中的可靠运行'，无任何定量指标，也无任何下游具身任务（操作、导航策略、空间推理）消费该地图。",
+   "stance": "gap",
+   "relation": "对综述问题的缺口证据：即便这篇明确面向机器人场景、在四足平台上采集数据、且由机器人研究所（ORI）产出的 SLAM 论文，对'SLAM 服务具身任务'的验证也止于定性演示——SLAM 系统文献的验证惯例停留在 SLAM/重建指标 + 定性机器人演示，任务级闭环证据在系统级 SLAM 研究中同样缺席。综述应区分'SLAM+GFM 混合系统技术有效（C01/C05/C06 支持侧）'与'SLAM 输出被具身任务实际消费（本卡缺口）'两个层面。",
+   "summary": "全部定量结果为 SLAM/重建指标；唯一机器人实验（ANYmal-D 四足）仅定性演示，无具身下游任务消费地图",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 7, Section V-E Robot Experiment",
+   "source_context": "Our final experiment qualitatively evaluates ScaRF-SLAM using data collected by a quadruped robot (ANYmal-D) car- rying an Insta360 camera, including an outdoor-indoor tran- sition and operation in highly confined spaces. It showcases multi-session, multi-camera (front and rear), and multi-modal (visual-inertial) SLAM with our system, highlighting the flexi- bility of the proposed decoupled framework and demonstrating its reliable operation in practical robotic scenarios (Fig. 10).",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 两句逐字核对 page 7 Section V-E（'car- rying'/'tran- sition'/'flexi- bility' 为 PDF 跨行连字符逐字形式）；通读 page 5-7 全部定量实验（V-A 追踪、V-B 重建、V-C 消融、V-D 运行时）确认指标均为 ATE/precision/recall/重建误差/运行时，无任务级度量；V-E 为全文唯一机器人实验且自述 'qualitatively evaluates'。claim 是对论文评测范围的事实性陈述，'无下游任务'由全部实验章节内容直接蕴含，未添加对作者意图的推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Depth Anything 3: Recovering the visual space from any views",
+   "arxiv_id": "",
+   "role": "本文采用的几何基础模型（DA3，ICLR 2025 [2]）：稠密深度+置信度预测，支持内参/位姿辅助输入模式——GFM 在系统中的具体形态"
+  },
+  {
+   "title": "MASt3R-SLAM: Real-time dense SLAM with 3D reconstruction priors",
+   "arxiv_id": "2412.12392",
+   "role": "全 GFM 实时稠密 SLAM 代表与主要追踪对照 [3]（CVPR 2025）；其 pointmap 融合方式与本方法投影式融合的对比亦被讨论"
+  },
+  {
+   "title": "VGGT-SLAM 2.0: Real-time dense feed-forward scene reconstruction",
+   "arxiv_id": "",
+   "role": "子图式全 GFM SLAM 对照 [5]（RSS 2026）；本文构造的 VGGT(D)-SLAM2（换装 DA3）是隔离 GFM 能力与耦合方式的受控中间对照"
+  },
+  {
+   "title": "ORB-SLAM3: An accurate open-source library for visual, visual-inertial, and multimap SLAM",
+   "arxiv_id": "",
+   "role": "经典特征 SLAM 代表 [10]：追踪对照中'经典仍占优'结论的主要载体，也是本方法实际使用的追踪器之一"
+  },
+  {
+   "title": "LASER: Layer-wise scale alignment for training-free streaming 4D reconstruction",
+   "arxiv_id": "",
+   "role": "支撑关键设计假设的被引 [22]（CVPR 2026）：'GFM 预测即使 up to scale 也不完全几何准确'，故 Sim(3) 位姿优化对 GFM 性能高度敏感"
+  }
+ ],
+ "notes": "补充观察：(1) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。(2) 论文为 RA-L 2026 年 8 月接收（2026-05-28 投稿、v3 2026-09-01），作者单位 Oxford Robotics Institute（Fallon 组，Oxford Spires 数据集同组）与 Georgia Tech（Dellaert，GTSAM 作者）；引言首句即引 2026 年 SLAM Handbook（Carlone/Kim/Barfoot/Cremers/Dellaert 编）——本文处于 SLAM 系统研究主流社区核心位置，其对'经典 SLAM vs GFM'的立场（混合集成、不必替换）在该社区有较强代表性。(3) 三篇互证结构：LEGO-SLAM（语言特征进 SLAM、经典组件保留）、GaussLite（位姿外部化给经典里程计、任务条件建图）、ScaRF-SLAM（位姿全归经典 SLAM、GFM 仅建图）——三篇从语义/任务/几何三个方向给出同构信号：基础模型进入建图与语义层，位姿估计仍由经典几何管线承担；'SLAM 被扩展为基础设施底座而非被替代'。(4) C02 的 dataset-bias 论证句起于 page 1 末行、跨页断句，证据卡 source_context 取 page 2 内完整片段（'we attribute this to dataset bias' 起）。(5) 对综述的引用建议：C01/C05/C06 可作为'经典 SLAM 位姿仍不可替代'的 2026 年实验证据，但须随附作者自认的时间边界（GFM-SLAM 是 promising direction、未来模型可能弥合）；C02 提示综述对任何'GFM-SLAM 超越经典'的报告先查初始化与数据集协议；C07 与 LEGO-SLAM C06、GaussLite 的验证局限共同构成'SLAM 文献缺具身任务闭环'的模式性缺口。(6) 潜在审稿风险点已记入 critical_appraisal：ScaRF 追踪对照的鱼眼/针孔输入不对等、GFM 基线被迫批次 6 与卖点部分循环、单次运行无方差、自建数据集自评。"
+}

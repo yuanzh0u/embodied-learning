@@ -1,0 +1,387 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.07973",
+  "title": "How Far Are Large Multimodal Models from Human-Level Spatial Action? A Benchmark for Goal-Oriented Embodied Navigation in Urban Airspace",
+  "published": "2026-04-09",
+  "url": "https://arxiv.org/abs/2604.07973",
+  "authors": [
+   "Baining Zhao",
+   "Ziyou Wang",
+   "Jianjie Fang",
+   "Zile Zhou",
+   "Yanggang Xu",
+   "Yatai Ji",
+   "Jiacheng Xu",
+   "Qian Zhang",
+   "Weichen Zhang",
+   "Chen Gao",
+   "Xinlei Chen"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "EA-MODEL 评测类论文，直接检验'端到端基础模型能否承担具身导航的空间行动职能'：在 5,037 条城市空中目标导向导航轨迹上评测 17 个 LMM/推理 LMM/agent/VLA 模型，平均成功率仅 4.2%-34.0%（人类 92.0%）；VLA 模型甚至劣于随机基线；失败归因于几何感知、跨视角理解、空间想象与长期记忆四类缺失——后两者正是 SLAM/空间记忆基础设施所服务的职能。增强实验显示模块化几何（grounding+确定性控制器）、全景多视角、FOV 稀疏记忆分别带来 9.5/10.3/2.3 pp 提升。全文 'SLAM' 一词零出现、未评测任何 SLAM/定位基线，但作为'端到端模型尚不能替代空间基础设施'的对照证据高度相关，且其 sparse memory 实验正是'隐式空间记忆'路线的样本。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract 与 Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认论文问题：LMM 作为具身大脑能否实现人类级空间行动；城市空中目标导向导航作为评测域的动机（丰富语义、大尺度、垂直动作）与三条贡献"
+   },
+   {
+    "locator": "page 3, Section 2 Related Work 与 Table 1",
+    "role": "relevant-core",
+    "purpose": "定位谱系：具身空间智能（LMM 导航/操作/规划）、VLN（路线导向 vs 目标导向）、城市空中导航基准对照（Table 1：唯一同时支持目标导向+垂直动作+LMM 评测）"
+   },
+   {
+    "locator": "page 3-4, Section 3 Problem Formulation 与 Section 4 Dataset Construction",
+    "role": "method-or-design",
+    "purpose": "理解任务形式化（自位置不可观测、离散动作集、欧氏距离 ε 判成功）、模拟器选择（EmbodiedCity/UE+AirSim）、三阶段人工采集管线（专业飞手 100+ 小时经验、设计与执行分组）与三项指标"
+   },
+   {
+    "locator": "page 4, Section 4.3-4.4；page 11-12, Appendix B（模型设定与实现细节）",
+    "role": "data-or-setting",
+    "purpose": "确认数据统计（5037 条、平均 203.4m、水平/垂直/旋转动作 45.0%/28.2%/26.8%）、17 个模型的三种范式（action-as-language/reasoning/token）、30 帧固定记忆窗与 560×560 输入"
+   },
+   {
+    "locator": "page 5-8, Section 5-6（Table 2 总表、Overall Performance、CDB 现象、成功/失败案例分析、Table 3 四方向增强实验）",
+    "role": "results-or-analysis",
+    "purpose": "核对核心数字：人类 92.0% vs LMM 4.2%-34.0%、VLA 劣于随机（1.0/3.2 vs 2.4）、四增强方向 +9.5/+10.3/+4.3/+2.3 SR、CDB 发散现象与四类缺失机理"
+   },
+   {
+    "locator": "page 8, Section 7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论（四类局限+四方向）并确认无作者自述的基准自身局限"
+   },
+   {
+    "locator": "page 13-14, Appendix C 案例分析与 D 四个增强实验细节",
+    "role": "appendix-or-supplement",
+    "purpose": "读取关键定性证据（Qwen2.5-VL-7B 缺持久空间记忆/类地图表征导致失败、agent 专用记忆架构更有效）与四个增强实验的实现细节（GroundingDINO+确定性控制器、六视角全景、模拟器真值预演、FOV 新颖性稀疏记忆）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-10, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取证据卡不可或缺的核心被引（EmbodiedCity、OpenFly、Uni-NaVid、GroundingDINO），无需逐条精读"
+   },
+   {
+    "locator": "page 15-23, Appendix C 的 Table 5-13（各模型逐步动作过程表）",
+    "role": "appendix-or-supplement",
+    "reason": "逐步 think-process 转写表：结构已抽查（page 15-16 GPT-5.1、page 21-22 Qwen2.5-VL-7B、page 23 OpenFly），正文与 page 13 的分析已覆盖其结论，不再逐表精读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：LMM 能否像人类一样在 3D 空间中执行目标导向的具身导航（城市空中场景）？构建 5,037 条轨迹基准并系统评测 17 个模型，用 CDB 现象解构失败机理，再验证四个改进方向（几何感知、跨视角理解、空间想象、稀疏记忆）。对综述问题的意义：这是'端到端基础模型替代空间基础设施'命题的现状态检验——LMM/VLA 当前远低于人类且缺的正是 SLAM 类职能（几何感知、位置/距离评估、持久空间记忆）；其 sparse memory 增强是'隐式空间记忆'路线的直接样本，而其增强实验全部用非 SLAM 模块实现几何/记忆职能。",
+ "contributions": [
+  "构建城市空中目标导向具身导航基准：5,037 条轨迹（500+ 人时、10 名志愿者、专业飞手执行、设计与执行分组以近似零样本），水平/垂直/旋转动作分布 45.0%/28.2%/26.8%（唯一均衡垂直动作的城市空中基准，Table 1）",
+  "对 17 个代表性模型做三范式系统评测（action-as-language 的非推理/推理 LMM、action-as-reasoning 的 agent 方法、action-as-token 的 VLA），得到 4.2%-34.0% vs 人类 92.0% 的量化差距",
+  "提出 Critical Decision Bifurcation（CDB）现象：导航误差非线性累积而是在关键决策分叉点后单调发散；GPT-5.1 反思推理减缓发散（更小 post-CDB 斜率），Qwen2.5-VL-7B/SayNav 快速发散、OpenFly 局部震荡",
+  "归因四类缺失（几何感知、跨视角理解、动作后果的空间想象、长期记忆）并各做一个增强实验：+9.5/+10.3/+4.3/+2.3 SR（Table 3），为未来 LMM 架构指出方向"
+ ],
+ "method": {
+  "summary": "基准构造：在 EmbodiedCity（UE+AirSim，真实城市）模拟器中，三阶段管线采集目标导向导航数据——(1) 选取语义有意义的起终点，(2) 生成仅描述目标的指令（非路线式），(3) 100+ 小时真机经验的专业飞手按指令飞行得到真值轨迹。评测协议：每步输入当前 RGB（560×560、90° FOV）+ 30 帧均匀采样历史（含观测、动作、理由），模型输出离散动作命令+理由；agent 范式由 LMM 做高层规划（GPT-4o 骨干，SayNav/STMR/PRPSearcher 用 RGB+深度）；VLA 范式直接输出动作 token（OpenFly/Uni-NaVid）。关键设定：智能体真实位置不可自观测（公式2 只用于物理模拟与判分），无任何定位/建图/状态估计模块——被测对象是纯 LMM 闭环。指标 SR/SPL/DTG，按轨迹长度三分组（短/中/长）。增强实验（GPT-4o 骨干 14.7 SR）：(a) 几何感知：LMM 只输出目标名，GroundingDINO 定位 + 确定性控制器居中前进（模块化管线）；(b) 跨视角：每步输入 6 个均匀视角全景图；(c) 空间想象：查询模拟器获得候选动作的真值后继观测再决策（世界模型 Oracle）；(d) 稀疏记忆：仅当 FOV 与已存观测重叠低于阈值才存入记忆（FOV 新颖性筛选）。",
+  "assumptions": [
+   "城市空中目标导向导航是检验 LMM 空间行动能力的有效代理域（语义丰富、尺度大、垂直动作多）",
+   "智能体自身位置不可观测的设定能隔离评测'纯感知-决策'能力（排除状态估计模块的作用）",
+   "30 帧均匀采样历史（含首帧与最近帧）是 LMM 记忆的合理实现",
+   "专家飞手轨迹可作为人类基线与真值参照（设计与执行分组消除泄露）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自建城市空中目标导向导航数据集：5,037 条轨迹（平均 203.4m），含起终点坐标、目标指令、真值轨迹；500+ 人时人工采集",
+   "EmbodiedCity 模拟器（UE+AirSim，基于真实城市）作为评测环境"
+  ],
+  "tasks": [
+   "目标导向城市空中导航：给定自然语言目标（如'飞到前方最高建筑的直升机坪'），从起点导航至目标 ε 范围内",
+   "离散动作集：turn-left/right、move-forth/left/right/back、move-up/down、云台上下调节",
+   "按真值轨迹长度三分组评测（短<118.2m、中 118.2-223.6m、长>223.6m）"
+  ],
+  "embodiments": [
+   "仿真无人机（AirSim 默认动力学），RGB 第一视角 560×560、90° FOV、可调云台角",
+   "被测模型 17 个：非推理 LMM（Qwen2.5-VL-3B/7B、Qwen-VL-Max、GLM-4.6V、Gemini-2.0-Flash、GPT-4o、GPT-4.1）、推理 LMM（Qwen3-VL-Plus、Gemini-2.5-Flash/Pro、o4-mini、GPT-5.1）、agent 方法（SayNav/STMR/PRPSearcher，GPT-4o 骨干）、VLA（OpenFly、Uni-NaVid）",
+   "人类基线：专业飞手遥控操作"
+  ],
+  "sample_or_scale": "5,037 条评测轨迹；商业 API 评测总成本 $13,950.99（Table 4）；每模型评测的 episode 数未在正文单独报告"
+ },
+ "evaluation": {
+  "design": "单基准多范式横评（17 模型×3 范式×人类/随机/动作采样三条基线）+ 轨迹长度三分组 + 导航完成度-步数曲线分析（CDB）+ 成功/失败案例逐步分析（含各模型 think-process 转写）+ 四个单因素增强实验（同骨干 GPT-4o 对照）",
+  "baselines": [
+   "Human（专业飞手，92.0 平均 SR）",
+   "Random（2.4 平均 SR）与 Action Sampling（2.5）",
+   "非推理 LMM 7 个（平均 SR 4.2-14.7）",
+   "推理 LMM 5 个（平均 SR 12.9-34.0，GPT-5.1 最高）",
+   "agent 方法 3 个（RGB+深度，平均 SR 18.0-21.2）",
+   "VLA 2 个（OpenFly 1.0、Uni-NaVid 3.2 平均 SR）"
+  ],
+  "metrics": [
+   "SR（成功率，终点欧氏距离 ≤ ε）",
+   "SPL（路径长度加权成功率）",
+   "DTG（平均终点-目标距离）",
+   "导航完成度-步数曲线与 post-CDB 斜率（定性）"
+  ],
+  "ablations": [
+   "四方向增强实验（Table 3，GPT-4o 骨干 14.7 基线）：+几何感知 24.2（↑9.5）、+跨视角 25.0（↑10.3）、+空间想象 19.0（↑4.3）、+稀疏记忆 17.0（↑2.3）",
+   "轨迹长度分组：长程组上推理 LMM 优势明显（o4-mini/GPT-5.1 中长组领先）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "总体差距：17 个模型平均成功率 4.2%-34.0%，远低于人类 92.0%；GPT-5.1 最高（平均 34.0%，短程组 52.9%），闭源模型显著优于开源，同家族新模型稳定优于旧模型。",
+   "scope": "5,037 条城市空中目标导向导航轨迹（仿真），17 模型",
+   "locator": "page 5, Table 2；page 8, Section 7"
+  },
+  {
+   "finding": "范式对比：agent 方法（RGB+深度，人类先验设计）平均 SR 18.0-21.2，是高效稳定方案；专为导航数据对齐的 VLA 模型（OpenFly 1.0、Uni-NaVid 3.2）表现劣于随机基线（2.4），作者归因于对样本内数据过拟合、泛化甚至低于其骨干 VLM。",
+   "scope": "同一基准上三类范式的横评（Table 2）",
+   "locator": "page 5, Table 2；page 6, Section 5.2"
+  },
+  {
+   "finding": "CDB 现象：导航误差非线性累积，而是在关键决策分叉点后单调发散；四类失败归因：城市几何感知不足（如误判目标在右侧而发出错误转向）、跨视角场景理解有限（目标离开视野后无法用历史观测恢复方位）、缺乏动作后果的空间想象（应转向却前进）、长期记忆与规划不足（忘记初始目标）。",
+   "scope": "多模型失败案例的逐步分析（Fig 3、Fig 5）",
+   "locator": "page 6, Section 5.3；page 7, Section 5.5"
+  },
+  {
+   "finding": "四方向增强实验：几何感知（GroundingDINO 定位+确定性控制器）+9.5 SR 至 24.2；跨视角（六视角全景输入）+10.3 至 25.0；空间想象（模拟器真值预演候选动作后果）+4.3 至 19.0；FOV 新颖性稀疏记忆 +2.3 至 17.0——几何感知与跨视角是最大增益来源。",
+   "scope": "GPT-4o 骨干上的单因素增强实验（Table 3）",
+   "locator": "page 7, Table 3 与 Section 6"
+  },
+  {
+   "finding": "记忆机制证据：Qwen2.5-VL-7B 失败案例中'持久空间记忆或类地图表征的缺失使其无法推理未探索区域或回到有希望的方向'；作者指出带专用记忆架构的 agent 系统在长期记忆管理上仍比 LMM 更有效，是当前 LMM 与模块化具身 agent 之间的重要差距。",
+   "scope": "失败案例分析与 D.4 稀疏记忆实验（GPT-4o 骨干）",
+   "locator": "page 13, Appendix C；page 14, Appendix D.4"
+  },
+  {
+   "finding": "深度信息的价值：作者观察'用深度信息评估位置与距离是提升空间导航能力最直接的途径'，基于人类先验设计的此类方法持续提升性能（尽管泛化有限）——评测中最强的 agent 方法均使用 RGB+深度。",
+   "scope": "agent 方法（SayNav/STMR/PRPSearcher）与 LMM 的对照观察",
+   "locator": "page 6, Section 5.2"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "问题设定刻意剥夺智能体的自位置信息（真实位置不可自观测），评测对象是纯 LMM 闭环——论文测得的是'LMM 单独无法完成'，而非'LMM+定位/建图模块的混合架构'与人类的差距；17 个被测模型中没有任何 SLAM/定位/建图模块，因此它不能直接回答'SLAM 与端到端模型谁做空间职能更好'的比较问题",
+    "basis": "page 3 Section 3 Problem Formulation（'the real position 𝑝𝑡 of the agent, which can not be observed by itself'）与 page 5-6 被测模型清单（全部为 LMM/agent/VLA，无定位管线）"
+   },
+   {
+    "boundary": "空间想象增强实验通过查询模拟器获得候选动作的真值后继观测——这是仿真 Oracle，真实部署不可得；其 +4.3 的增益是世界模型方向的性能上界而非可实现结果",
+    "basis": "page 14 Appendix D.3（'Instead of training such a model, we simulate this functionality by directly querying the simulator to obtain the ground-truth post-action observation'）"
+   },
+   {
+    "boundary": "全部实验在 UE+AirSim 仿真（EmbodiedCity）中进行，无人机动力学为 AirSim 默认；城市语义、光照与真实航拍存在域差距，结论对真机无人机导航的外推未经验证；每模型评测 episode 数与方差/显著性未报告，SR 以百分比粒度呈现",
+    "basis": "page 4 Section 4.1（模拟器选择）与 page 11-12 Appendix B.1-B.2 的设定说明；正文未报告逐模型评测规模与统计检验"
+   },
+   {
+    "boundary": "VLA 基线经接口适配（'match the inputs and outputs ... while striving to preserve model performance'），其劣于随机的结论部分反映适配损耗与训练域失配（OpenFly/Uni-NaVid 训练于低空/室内导航数据），不能读作'VLA 范式本身劣于随机'",
+    "basis": "page 6 Section 5.1.2 最后一段与 page 5 Table 2 的 OpenFly/Uni-NaVid 行；page 8 Section 5.2 的归因措辞（'overfit to in-sample data'）"
+   },
+   {
+    "boundary": "四增强实验只以 GPT-4o 为骨干各做单因素测试（14.7 基线），未做组合消融或跨骨干验证；增强所用的模块（GroundingDINO+确定性控制器、六视角全景）本质是把几何/感知职能外包给模块化管线，与'端到端 LMM 内化空间能力'的目标并不等价",
+    "basis": "page 7 Table 3 的单一 Backbone 行与 page 13-14 Appendix D.1-D.2 的实现描述"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 EmbodiedCity（UE+AirSim）城市空中目标导向导航仿真基准上（5,037 条轨迹、ε 半径判分、离散动作集），当前 17 个代表性 LMM/agent/VLA 模型的平均成功率为 4.2%-34.0%，远低于专业飞手的 92.0%；在该设定下，几何感知（目标 grounding+确定性控制器）、六视角全景输入、动作后果预演（模拟器 Oracle）与 FOV 新颖性稀疏记忆可分别带来 9.5/10.3/4.3/2.3 个百分点的 SR 提升。对真实无人机、室内/地面导航、含定位与建图模块的混合架构，以及非 GPT-4o 骨干模型，以上数字与结论均未被验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "数据工程质量高：500+ 人时、专业飞手执行、设计与执行分组近似零样本、垂直动作分布均衡（28.2%）填补城市空中基准空白（Table 1 对照 7 个已有基准）",
+   "三范式×17 模型的横评加人类/随机/动作采样三条锚定基线，使'远低于人类但优于随机'的量化定位可靠",
+   "CDB 分析给出超越平均分的机理视角（误差发散而非线性累积），失败案例转写到逐步 think-process 级别（附录 Table 5-13）",
+   "四个增强实验把归因假设各自独立验证，且附录给出可复现的实现细节与 API 成本"
+  ],
+  "design_risks": [
+   "无任何 SLAM/定位/建图基线：论文测的是 LMM 裸闭环，无法支撑'空间基础设施 vs 端到端模型'的直接比较（对综述问题只能作间接证据）",
+   "空间想象增强用模拟器真值 Oracle，增益为上界；VLA 基线经接口适配，其'劣于随机'结论混杂适配损耗",
+   "仿真-only；每模型评测 episode 数、方差与显著性均未报告",
+   "四增强实验仅 GPT-4o 单骨干单因素，无组合与跨骨干验证"
+  ],
+  "baseline_fairness": "人类基线（92.0）与随机/动作采样锚点设计得当；agent 方法为适配场景改造（室内 object-navigation agent 与两个空中 VLN 方法迁移）且指定 GPT-4o 骨干以控成本，具有一定适配损耗；VLA 模型输入输出做了匹配处理但作者自述仅'尽力保持性能'——对 VLA 最不利；闭源 API 模型版本固定但推理参数未全部披露。",
+  "metric_validity": "SR/SPL/DTG 为导航社区标准指标；成功判据 ε 半径在正文以符号给出（具体取值需查附录 prompt）；轨迹长度三分组提供了难度分层；CDB 完成度曲线为补充性定性证据，post-CDB 斜率无统计检验。",
+  "reproducibility": "数据与代码承诺开源（github.com/serenditipy-AC/Embodied-Navigation-Bench）；模拟器 EmbodiedCity 开源；附录 B 给出全部 17 模型版本、分辨率、记忆窗设定与 $13,950.99 的 API 成本表；任务划分与判分规则明确——复现条件较好。",
+  "external_validity": "结论限定于城市空中仿真、目标导向离散动作导航；对真实城市无人机（风扰、传感器噪声、法规约束）、连续控制、室内与地面机器人导航未验证；'LMM 远低于人类'的结论依赖该基准的高难度（语义歧义+垂直动作+无自位置信息），在更简单或含状态反馈的设定下差距可能缩小。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.07973-C01",
+   "claim": "在该城市空中目标导向导航基准上，17 个代表性模型（非推理 LMM、推理 LMM、agent 方法、VLA）的平均成功率为 4.2%–34.0%，远低于 92.0% 的人类水平；被测模型中最高者 GPT-5.1 平均 34.0%（Table 2，短程组 52.9%），作者结论为 LMM 呈现涌现的动作能力但离人类级空间行动仍很远。",
+   "stance": "gap",
+   "relation": "揭示'端到端基础模型替代空间基础设施'命题的能力缺口：在导航环节，当前 LMM/VLA 远不能独立完成需要几何感知、位置/距离评估与空间记忆的长程空间任务——这些恰是 SLAM 类基础设施所服务的职能域；但注意该基准刻意不给自位置信息且无任何 SLAM 基线，它证明的是'LMM 裸闭环不行'，不是'SLAM 不可或缺'。",
+   "summary": "17 模型平均 SR 4.2%–34.0% vs 人类 92.0%：端到端模型空间行动能力缺口巨大",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 8, Section 7 Conclusion；page 5, Table 2",
+   "source_context": "We evaluate 17 representative models on this benchmark, achieving success rates of 4.2%–34.0%, far below the 92.0% human level.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均导航成功率 SR（%）",
+    "value_or_direction": "17 模型 4.2%–34.0% vs 人类 92.0%（GPT-5.1 平均 34.0）",
+    "comparator": "human 专业飞手遥控",
+    "task_or_sample": "5,037 条城市空中目标导向导航轨迹（EmbodiedCity 仿真，轨迹长度三分组）",
+    "locator": "page 8, Section 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 8 Conclusion：'achieving success rates of 4.2%–34.0%, far below the 92.0% human level'（含 en-dash）逐字一致；GPT-5.1 平均 34.0 与短程 52.9 另核对 page 5 Table 2（'GPT-5.1 ✓ 52.9 48.6 60.9 30.4 29.0 75.3 18.2 18.0 186.1 34.0 32.0 107.0'）与 Human 平均 92.0 行；'emerging reasoning and action capabilities' 的结论措辞见 page 8 同段。claim 范围限于该仿真基准。"
+   }
+  },
+  {
+   "card_id": "2604.07973-C02",
+   "claim": "同一基准上，专为导航数据对齐动作语义的 VLA 模型（OpenFly 平均 SR 1.0%、Uni-NaVid 3.2%）表现劣于随机基线（平均 2.4%）与动作采样（2.5%）；作者归因于 VLA 对样本内数据过拟合、泛化能力甚至低于其原始骨干 VLM，而基于人类先验、用深度信息评估位置与距离的 agent 方法（SayNav/STMR/PRPSearcher，平均 18.0-21.2%）仍是高效稳定的方案。",
+   "stance": "gap",
+   "relation": "直接削弱'端到端 VLA 正在替代导航中的专门空间模块'这一侧判断：动作 token 端到端模型在该泛化设定下崩塌（劣于随机），反而是显式使用几何信息（深度做位置/距离评估）的模块化 agent 更稳——几何/位姿信息（与 SLAM 输出同族）在泛化导航中的价值得到反向佐证；但 agent 方法用的深度输入来自传感器而非 SLAM 估计，且 VLA 基线经接口适配，结论需按适配损耗打折。",
+   "summary": "VLA 模型劣于随机基线（1.0/3.2 vs 2.4），agent 方法（RGB+深度位置距离评估）更稳",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Table 2；page 6, Section 5.2",
+   "source_context": "Action-as-Token: VLA Models\nOpenFly ✓ 3.0 3.0 63.3 0 0 114.1 0 0 258.7 1.0 1.0 146.5\nUni-NaVid ✓ 6.1 5.2 80.9 3.4 3.0 118.5 0 0 262.0 3.2 2.7 154.9",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均导航成功率 SR（%）",
+    "value_or_direction": "OpenFly 1.0 / Uni-NaVid 3.2 vs Random 2.4 / Action Sampling 2.5（agent 方法 18.0-21.2）",
+    "comparator": "Random 与 Action Sampling 基线、agent 方法",
+    "task_or_sample": "城市空中目标导向导航基准全量轨迹（Table 2 平均列）",
+    "locator": "page 5, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 5 Table 2：OpenFly 平均行 '1.0 1.0 146.5'、Uni-NaVid '3.2 2.7 154.9'、Random '2.4 2.0 149.0'、Action Sampling '2.5 1.8 172.0'、SayNav 18.0/STMR 18.2/PRPSearcher 21.2 均在表内。归因与'劣于随机'措辞逐字核对 page 6 Section 5.2：'VLA methods, which align action semantics specifically for navigation data, perform worse than random. This aligns with current consensus: they overfit to in-sample data, with generalization abilities even inferior to the original backbone VLM.'；agent 方法与深度观察亦见同页。claim 中 VLA 经接口适配的限定未写入 claim 主体而置于 relation，因 page 6 Section 5.1.2 有 'striving to preserve model performance' 的原话。"
+   }
+  },
+  {
+   "card_id": "2604.07973-C03",
+   "claim": "作者观察：在 LMM 导航中'用深度信息评估位置与距离是提升空间导航能力最直接的途径'，这类基于人类先验设计的方法持续提升性能（尽管泛化有限）；agent 方法因此仍是高效稳定的方案——即外部几何/位姿-距离评估对 LMM 导航有直接且稳定的价值。",
+   "stance": "support",
+   "relation": "支持'几何/位姿评估职能（SLAM 的核心输出族：位置、距离、深度）对具身导航仍有不可省略的价值'：当模型缺几何编码时，显式几何输入与基于人类先验的位置/距离评估是最有效的补丁——该职能当前由传感器深度+模块化先验承担，说明'导航环节完全端到端化（不需要几何基础设施）'尚不成立；但需注意论文未测试 SLAM 本身，深度来自传感器而非在线估计。",
+   "summary": "用深度评估位置与距离是提升 LMM 空间导航最直接的途径（agent 方法 RGB+深度更稳）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 6, Section 5.2",
+   "source_context": "Agent-based methods remain the efficient and stable solution. Incorporating depth information to assess position and distance is the most straightforward way to enhance spatial navigation capabilities. This approach, often designed based on human priors, consis- tently improves performance, albeit with limited generalization.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 6 Section 5.2 观察段：'Agent-based methods remain the efficient and stable solution. Incorporating depth information to assess position and distance is the most straightforward way to enhance spatial navigation capabilities. This approach, often designed based on human priors, consis- tently improves performance, albeit with limited generalization.'（含 'consis- tently' 连字符换行）逐字一致；claim 限定为作者对 Table 2 结果的观察性结论，'albeit with limited generalization' 的限定已保留。"
+   }
+  },
+  {
+   "card_id": "2604.07973-C04",
+   "claim": "几何感知增强实验（GPT-4o 骨干）：把 LMM 的职责缩小为'识别当前观测中的导航目标'，由 GroundingDINO 做 2D 定位、确定性控制器负责把目标居中并前进的两阶段模块化管线，使导航成功率提升 9.5%（Table 3：14.7→24.2）；作者据此判断 LMM 缺乏显式几何编码与对齐，建议未来引入几何编码器或几何感知训练目标。",
+   "stance": "support",
+   "relation": "支持'几何职能由专门模块承担仍显著优于端到端 LMM 内化'：把几何执行（定位+伺服控制）外包给模块化管线带来全场第二大的 9.5 个百分点增益——与 SLAM 的分工逻辑（感知语义 vs 几何执行）同构；该实验本身用的是 grounding+确定性控制器而非 SLAM，故支持的是'模块化几何基础设施的价值'，不是 SLAM 特定必要性。",
+   "summary": "模块化几何管线（GroundingDINO+确定性控制器）使 SR 14.7→24.2（+9.5），LMM 缺几何编码",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 7, Section 6 与 Table 3；page 14, Appendix D.1",
+   "source_context": "To address the limita- tions in LMMs’ geometric perception capabilities, we employed grounding models to first mark the targets that LMMs focus on before outputting actions. This approach improved navigation success rates by 9.5%. This indicates that LMMs may lack geo- metric encoding and alignment, suggesting future exploration of additional geometric encoders or strengthening through training loss enhancements.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "导航成功率 SR（%）",
+    "value_or_direction": "+9.5%（Backbone 14.7 → 24.2，Table 3）",
+    "comparator": "Backbone（Table 3 基线，对应 Table 2 的 GPT-4o 行 14.7）",
+    "task_or_sample": "GPT-4o 骨干上的几何感知增强实验（5,037 条轨迹基准）",
+    "locator": "page 7, Section 6 与 Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 7 Section 6 首个 bullet（含 'limita- tions'、'geo- metric' 连字符换行与 LMMs’ 的 U+2019 撇号）：'This approach improved navigation success rates by 9.5%' 逐字一致；Table 3 数值（Backbone 14.7、+ Geometric Perception 24.2 ↑9.5）逐字核对 page 7 表格；两阶段管线细节（GroundingDINO+确定性控制器居中前进）另核对 page 14 Appendix D.1。'LMM 缺几何编码'的作者判断措辞 'LMMs may lack geometric encoding and alignment' 亦在同页逐字出现。"
+   }
+  },
+  {
+   "card_id": "2604.07973-C05",
+   "claim": "失败案例分析（Qwen2.5-VL-7B 案例）指出：持久空间记忆或类地图表征（map-like representation）的缺失，使模型无法推理未探索的区域、也无法回到有希望的方向——模型被局部视觉线索主导，重复访问相似视点、漂移出预期搜索空间（甚至进入室内并意外降落）；跨视角理解与全局朝向的缺失与之并存。",
+   "stance": "support",
+   "relation": "直接支持'持久空间记忆/地图类表征是具身导航的必要基础设施'一侧：当 LMM 没有类地图的持久空间记忆时导航崩溃——这为 SLAM 提供的建图/状态持久化职能（或其隐式替代品）给出了反面证据；同时该论文的补救（FOV 稀疏记忆，C06 相关）走的是'隐式空间记忆'路线而非 SLAM，说明替代竞争发生在记忆机制层面。",
+   "summary": "持久空间记忆/类地图表征缺失使 LMM 无法推理未探索区域并回到有希望方向",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 13, Appendix C",
+   "source_context": "The absence of a persistent spatial memory or map-like representation prevents the model from reasoning about unexplored regions or returning to promising directions.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 13 Appendix C 对 Qwen2.5-VL-7B 案例的分析：'The absence of a persistent spatial memory or map-like representation prevents the model from reasoning about unexplored regions or returning to promising directions.' 逐字一致；claim 中'进入室内并意外降落'核对同页前文（'the model enters indoor environments and even lands unintentionally'）、'被局部视觉线索主导'核对（'The navigation process is dominated by local visual cues'）、'跨视角理解与全局朝向缺失'核对（'Qwen2.5-VL-7B lacks cross-view understanding and global orientation'）。claim 限定于该案例分析范围。"
+   }
+  },
+  {
+   "card_id": "2604.07973-C06",
+   "claim": "FOV 新颖性稀疏记忆实验（仅当新观测与已存观测的视场重叠低于阈值才写入记忆缓冲）减少了 token 消耗并提升导航性能（Table 3：+2.3 SR 至 17.0）；但作者同时指出：带专用记忆架构的 agent 系统在长期记忆管理上仍比当前 LMM 方法更有效，这是 LMM 与模块化具身 agent 之间的重要差距。",
+   "stance": "conditional",
+   "relation": "条件性证据，展示'隐式空间记忆'路线的现实形态：FOV 稀疏记忆是记忆职能的轻量非几何替代（无度量地图、无位姿图，仅按视场新颖性筛选帧），带来小幅增益（+2.3，四方向中最小）且作者承认专用记忆架构的模块化 agent 仍更有效——说明在长时程空间记忆上，隐式记忆当前只能部分替代且增益有限，模块化记忆基础设施仍占优。",
+   "summary": "FOV 稀疏记忆 +2.3 SR（四方向最小增益）；带专用记忆架构的 agent 在长期记忆管理上仍更有效",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 14, Appendix D.4；page 7, Table 3",
+   "source_context": "Nonetheless, agent-based systems with dedicated memory architectures remain more effec- tive at long-term memory management, highlighting an important gap between current LMM-based approaches and modular embod- ied agents.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "导航成功率 SR（%）",
+    "value_or_direction": "+2.3（Sparse Memory 17.0 vs Backbone 14.7，Table 3）",
+    "comparator": "Backbone（GPT-4o）与带专用记忆架构的 agent 系统",
+    "task_or_sample": "GPT-4o 骨干上的 FOV 新颖性稀疏记忆实验（5,037 条轨迹基准）",
+    "locator": "page 14, Appendix D.4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引用句逐字核对 page 14 Appendix D.4 末尾（含 'effec- tive'、'embod- ied' 连字符换行）；Table 3 的 Sparse Memory 17.0 ↑2.3 与 Backbone 14.7 数值逐字核对 page 7；FOV 新颖性筛选规则逐字核对 page 14（'a new observation is added to the memory buffer only if its FOV overlap with recent stored observations is below a predefined threshold'）与 page 8 的对应 bullet（'store only frames where the field of view (FOV) changes beyond a certain threshold'）。+2.3 为四方向最小增益的判断由 Table 3 的 9.5/10.3/4.3/2.3 比较得出。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "EmbodiedCity: A Benchmark Platform for Embodied Agent in Real-world City Environment",
+   "arxiv_id": "2410.09604",
+   "role": "基准所用的模拟器与场景来源（UE+AirSim 真实城市），全部实验的环境基础"
+  },
+  {
+   "title": "OpenFly: A Comprehensive Platform for Aerial Vision-Language Navigation",
+   "arxiv_id": "2502.18041",
+   "role": "C02 中劣于随机的 VLA 基线之一（平均 SR 1.0%）"
+  },
+  {
+   "title": "Uni-NaVid: Learning a Unified Model for Video-based Robot Navigation",
+   "arxiv_id": "2412.06224",
+   "role": "C02 中另一 VLA 基线（平均 SR 3.2%）"
+  },
+  {
+   "title": "Grounding DINO: Marrying DINO with Grounded Pre-training for Open-Set Object Detection",
+   "arxiv_id": "2303.05499",
+   "role": "C04 几何感知增强实验的核心组件（2D 目标定位+确定性控制器的模块化管线）"
+  },
+  {
+   "title": "Towards Autonomous UAV Visual Object Search in City Space: Benchmark and Agentic Methodology",
+   "arxiv_id": "2505.08765",
+   "role": "PRPSearcher：C02/C03 中表现最好的 agent 方法（平均 SR 21.2%，RGB+深度）"
+  }
+ ],
+ "notes": "补充观察：(1) 全文 'SLAM' 一词零出现，也未出现 localization/odometry 等词；该论文对综述问题的价值是'端到端替代命题的现状检验'——LMM/VLA 远低于人类且缺的职能（几何感知、位置距离评估、持久空间记忆、跨视角一致性）恰是 SLAM 服务域，但论文本身从未与 SLAM 比较。(2) 四个增强实验全部用非 SLAM 模块实现几何/记忆职能：grounding+确定性控制器、六视角全景、模拟器 Oracle、FOV 稀疏记忆——'替代 SLAM'在导航环节表现为'替代为轻量非几何模块'，且增益排序（几何+9.5/跨视角+10.3 > 记忆+2.3）说明几何职能比记忆职能更容易被外包补足。(3) 关键设定：智能体自位置不可观测（page 3 公式 2），故该基准测量 LMM 裸闭环而非混合架构——引用其结论时必须保留此限定。(4) extraction.method 按校验器枚举记为 pdf-text。"
+}

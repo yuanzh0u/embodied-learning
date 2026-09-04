@@ -1,0 +1,499 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.00537",
+  "title": "PACE: Phase-Aware Chunk Execution for Robot Policies with Action Chunking",
+  "published": "2026-05-30",
+  "url": "https://arxiv.org/abs/2606.00537",
+  "authors": [
+   "Junnan Nie",
+   "Jiayi Li",
+   "Jiachen Zhang",
+   "Junyi Lao",
+   "Chenghao Liu",
+   "Tianle Zhang",
+   "Liang Lin",
+   "Songfang Huang"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本族'执行层/测试时分块执行'分支核心文献：论文把动作分块策略的执行时域（每次查询执行多少步再重规划）确立为被忽视的部署变量，实证其任务依赖与非单调性（固定时域不可靠），并提出训练无关的 PACE——从预测块速度剖面的低速谷在线选择重规划边界。附 50 任务仿真（每方法 45,000 episodes）与 ALOHA/Franka 真机量化、匹配平均时域诊断与组件消融。对本综述的价值：它不直接优化平滑度指标，而是通过相位感知重规划限制开环执行错误累积，与训练侧平滑正则（SmoothVLA）、隐式分块（DWS）互补。注意其仅验证 π_0.5 单一策略族。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "获取执行时域问题定义与'固定时域非单调/任务依赖'的痛点实证（Click bell 峰谷）及三项贡献"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位 PACE 与 ACT 时序集成、Diffusion Policy 固定动作时域、AutoHorizon 等测试时执行方法的关系"
+   },
+   {
+    "locator": "3.1 Problem Formulation",
+    "role": "method-or-design",
+    "purpose": "理解执行时域 h_i 的形式化与块条件化选择规则 g(A_i) 的设定"
+   },
+   {
+    "locator": "3.2 Kinematic Profile Extraction",
+    "role": "method-or-design",
+    "purpose": "理解臂组速度剖面构建与平滑算子的作用（抑制虚假局部极小）"
+   },
+   {
+    "locator": "3.3 Phase-Aware Execution Horizon Selection",
+    "role": "method-or-design",
+    "purpose": "理解低速谷候选边界、显著度评分、演示校准阈值 δ_T 与最早边界选择规则"
+   },
+   {
+    "locator": "4 Simulation Experiments",
+    "role": "data-or-setting",
+    "purpose": "获取 RoboTwin2.0 协议、π_0.5 checkpoint、L=50、固定时域基线 H∈{5,25,50} 与 900 episodes/task 评测预算"
+   },
+   {
+    "locator": "4.1 Simulation Results",
+    "role": "results-or-analysis",
+    "purpose": "提取 50 任务平均成功率 57.8%→64.2% 主结果（Table 1）"
+   },
+   {
+    "locator": "4.2 Visualizing Adaptive Execution Horizons",
+    "role": "results-or-analysis",
+    "purpose": "获取 rollout 级证据：同一回合内选中时域大幅变化（32/14/37/25/19 步）与后缀丢弃机制"
+   },
+   {
+    "locator": "4.3 Ablation Analysis",
+    "role": "results-or-analysis",
+    "purpose": "提取相位剖面构造消融（关节/笛卡尔×原始/平滑）、训练预测时域消融与超参敏感性（Table 2/3）"
+   },
+   {
+    "locator": "4.4 PACE versus Fixed-Horizon Sweeps",
+    "role": "results-or-analysis",
+    "purpose": "提取匹配平均时域对比（+1.6~+10.6）与 hindsight-best oracle 参照（Table 4/7）"
+   },
+   {
+    "locator": "5 Real-Robot Experiments",
+    "role": "data-or-setting",
+    "purpose": "获取真机设置：RoboChallenge ALOHA 两任务 + Franka place_object_on_plate 五物体族，基线为全块执行 H=50"
+   },
+   {
+    "locator": "5.1 Real-Robot Results",
+    "role": "results-or-analysis",
+    "purpose": "提取真机量化：平均 Score 60.7→77.7、Succ. 50.7%→70.4%、Franka 72.0%→88.0%（Table 5）"
+   },
+   {
+    "locator": "5.2 PACE Horizon Selection in a Successful Rollout",
+    "role": "results-or-analysis",
+    "purpose": "获取真机 rollout 相位自适应证据（搬运 27-31 步、对齐收缩 7 步、再扩展 43 步）"
+   },
+   {
+    "locator": "5.3 Failure Case and Scope of Test-Time Execution Control",
+    "role": "conclusion-or-limitations",
+    "purpose": "获取失败案例分析：PACE 无法补偿基策略缺失的任务完成行为（笔盒案例）"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论：执行时域选择是分块策略可靠部署的核心组件，与训练侧改进互补"
+   },
+   {
+    "locator": "7 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述三条局限：不改动作分布、依赖运动学结构信号、单一策略族"
+   },
+   {
+    "locator": "A PACE Implementation Notes",
+    "role": "appendix-or-supplement",
+    "purpose": "核对实现细节：多臂最早边界合并、演示校准不用评测 rollout/成功标签/时域扫描"
+   },
+   {
+    "locator": "B Simulation Evaluation Details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对评测聚合公式与 50 任务完整逐任务结果（Table 6）"
+   },
+   {
+    "locator": "C Additional Ablation Details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对消融预算与扩展训练时域扫描（+20.7@H_eval=10 等，Figure 7）"
+   },
+   {
+    "locator": "D Fixed-Horizon Sweep Details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对扫描协议（90,000 episodes）与 hindsight-best H* 参照（Table 7）"
+   },
+   {
+    "locator": "E Real-Robot Evaluation Details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对真机基线为全块执行 H=50、演示数（1047/1220/301）、微调配方与逐物体结果（Table 8/9）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "F Additional PACE Rollout Visualizations",
+    "reason": "定性 rollout 截图序列（place_can_basket、hanging_mug、scan_object 等），仅作机制例证，无综述问题所需的量化证据"
+   }
+  ]
+ },
+ "research_question": "论文自问：动作分块策略部署时，每次策略查询后应执行预测块的前多少步（执行时域）再重新观测查询？为什么固定常数时域不可靠，以及能否不重训练、不访问策略内部，仅凭预测块自身在线选择执行时域？",
+ "contributions": [
+  "识别并实证'执行时域'为被忽视的关键测试时变量：H 从 1 扫到 50，成功率对 H 强非单调且最优时域高度任务依赖（Click bell 在 H≈25 附近比峰值掉近 40 个百分点），任何单一固定时域都不是可靠部署默认值",
+  "提出 PACE：训练无关、即插即用的测试时执行方法，把预测动作块的平滑速度剖面中的低速谷（相位转换/减速事件）作为候选重规划边界，执行到最早被接受的边界后丢弃后缀并重新查询；无学习组件、不需策略内部信号或推理引擎改动",
+  "大规模验证：50 个 RoboTwin2.0 任务（每任务-方法 900 episodes、每方法 45,000 episodes）平均成功率 57.8%→64.2%；真机 ALOHA/Franka 三设置平均 Score 60.7→77.7、成功率 50.7%→70.4%",
+  "诊断性分析分离增益来源：匹配平均时域对比（PACE 在六任务全部胜出 +1.6~+10.6）证明增益来自重规划时机的位置而非查询频率；另有相位剖面消融、训练预测时域消融（长 H_train 提供序列级监督，H_eval=10 时增益 +20.7）与超参敏感性分析"
+ ],
+ "method": {
+  "summary": "PACE 是作用于部署侧的执行层：策略每次查询输出长度 L=50 的动作块后，对每个执行臂组把动作块映射为一维速度剖面（默认关节空间），用平滑算子抑制短程波动；在满足最小时间间隔约束 d_min 的前提下检测低速谷并按显著度 Φ 评分，仅接受显著度超过阈值 δ_T 的谷作为候选相位边界（δ_T 由该任务训练演示一次性校准，不用评测 rollout、成功标签或固定时域扫描）；多臂设置合并所有臂的候选取最早者，无有效边界时回退执行到 H_max≤L。随后执行所选前缀、丢弃其余后缀、重新观测并查询策略。机制假设：操作轨迹由局部连贯运动段组成，接触准备/抓取/释放/对齐等相位转换以减速（低速谷）为标志，且该结构被模仿学习策略保留在预测块中——因此低速谷是'安全打断点'，在段内保持长开环执行以维持连续性，在段边界处提前重规划以注入新鲜观测。",
+  "assumptions": [
+   "操作任务轨迹具有相位分段运动学结构，相位转换表现为低速（减速）事件，且模仿学习策略把该结构保留在预测块的速度剖面中",
+   "动作块可映射为一维速度剖面（关节空间直接用动作空间，笛卡尔空间需正向运动学）",
+   "每个任务存在训练演示用于一次性校准谷接受阈值 δ_T（training-free 指不重训练策略，不等于零标定）",
+   "基策略本身能生成完成任务所需的动作分布——PACE 只决定何时重新查询，不修复策略能力缺失"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "RoboTwin2.0（50 个双臂操作任务，demo_clean 设置，每任务训练一个 π_0.5 checkpoint，L=50）",
+   "RoboChallenge 公开真机基准（stack_bowls 1,047 条演示、put_pen_into_pencil_case 1,220 条演示微调）",
+   "Franka place_object_on_plate 任务族（301 条演示，corn/cabbage/green pepper/red pepper/garlic 五物体共享单一 checkpoint）"
+  ],
+  "tasks": [
+   "仿真：50 类双臂操作（抓放、堆叠、倾倒、点击铃铛、挂杯等，覆盖短/中/长时程）",
+   "真机：ALOHA 叠碗（嵌套抓放+精确对齐）、双臂协同放笔进笔盒（强顺序+接触敏感）、Franka 单臂放置五类物体到盘"
+  ],
+  "embodiments": [
+   "RoboTwin2.0 仿真双臂平台",
+   "真机 bimanual ALOHA 与单臂 Franka 桌面操作",
+   "策略骨干统一为 π_0.5 VLA（流式动作分块，预测时域 L=50），真机各任务独立微调"
+  ],
+  "sample_or_scale": "仿真每任务-方法 900 episodes（3 seeds × 3 批 × 100 episodes），每方法共 45,000 episodes；消融与扫描另计（固定时域扫描 6 任务 × 50 时域 × 300 episodes = 90,000 episodes）；真机 RoboChallenge 每方法 30 trials，Franka 每方法 5×20=100 trials"
+ },
+ "evaluation": {
+  "design": "同 checkpoint 对照：同一任务内固定时域基线与 PACE 共享同一 π_0.5 checkpoint、观测与语言指令，仅执行规则不同，把测试时执行的影响与策略训练/容量/数据解耦。三层对比：(1) 部署级主对比——全局常数 H∈{5,25,50} 不逐任务调参；(2) 诊断级——H=1..50 全扫描得 hindsight-best oracle H*（不可部署上界）与按 PACE 平均执行长度匹配的固定调度（控制查询频率）；(3) 机制级——rollout 级可视化、相位剖面/训练时域消融与超参敏感性",
+  "baselines": [
+   "固定执行时域 H=5（短时域，频繁反馈）",
+   "固定执行时域 H=25（最强全局固定基线）",
+   "固定执行时域 H=50（全块执行，真机实验的基线）",
+   "诊断参照：hindsight-best 固定时域 H*（oracle，需测试任务全扫描）与匹配平均时域固定调度"
+  ],
+  "metrics": [
+   "任务成功率（RoboTwin2.0 任务谓词，50 任务等权平均为主指标）",
+   "平均执行时域（PACE 所有查询的 h_i 均值）",
+   "RoboChallenge Score（0-100 部分得分）与全完成率 Succ.",
+   "Franka 二元成功率（完全放入盘内）"
+  ],
+  "ablations": [
+   "相位剖面构造：关节空间 vs 笛卡尔空间 × 原始 vs 平滑（Table 2 左，全 50 任务）",
+   "训练预测时域 H_train × 评测时域 H_eval 网格（Table 2 右 + 附录 C.2 扩展扫描 Figure 7）",
+   "选择超参敏感性：最小谷间距 d_min ∈ {5,10} × 校准分位 ρ ∈ {0,5,10,25}（Table 3，每配置 45,000 episodes）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "执行时域对成功率的影响强非单调且高度任务依赖：Click bell 任务成功率在 H≈6 附近达峰、H≈25 附近下降近 40 个百分点、H≈35 再现第二峰；最优固定时域 H* 跨任务从 7 到 37 不等——单一常数 H 不是可靠部署规则，且离线扫描所得最优时域不迁移到新任务",
+   "scope": "RoboTwin2.0 三任务 H=1..50 扫描（Fig.1）与六任务诊断扫描（Table 7）",
+   "locator": "1 Introduction; 4.4 PACE versus Fixed-Horizon Sweeps"
+  },
+  {
+   "finding": "核心机制：PACE 从预测块自身的平滑速度剖面检测低速谷（相位转换/减速事件标志）作为候选重规划边界，执行到最早接受边界后丢弃后缀重新查询；阈值 δ_T 仅由训练演示校准，训练无关、即插即用、不访问策略内部",
+   "scope": "方法设计（作者主张，π_0.5 上验证）",
+   "locator": "3.3 Phase-Aware Execution Horizon Selection"
+  },
+  {
+   "finding": "仿真主结果：50 任务平均成功率 57.8%（最强全局固定 H=25）→64.2%（PACE，+6.4），六个代表性任务（短/中/长时程）全部超过最强固定基线（+2.3~+9.6）；由于所有方法共享同一 checkpoint，增益可归因于测试时执行规则",
+   "scope": "RoboTwin2.0 50 任务，每任务-方法 900 episodes",
+   "locator": "4.1 Simulation Results, Table 1"
+  },
+  {
+   "finding": "rollout 级机制证据：同一回合内 PACE 选中时域大幅变化（place_shoe 例：32/14/37/25/19 步），连贯运动段用长时域、低速转换附近用短时域；真机 stack_bowls 中搬运段 27-31 步、接触敏感的对齐段收缩到 7 步、对齐完成后又扩展到 43 步——固定时域无法表达回合内变异",
+   "scope": "仿真 place_shoe 与真机 ALOHA stack_bowls 单回合可视化",
+   "locator": "4.2 Visualizing Adaptive Execution Horizons; 5.2"
+  },
+  {
+   "finding": "匹配平均时域诊断：PACE 在全部六个代表任务上超过按其平均执行长度匹配的固定调度（+1.6~+10.6，如 Place A2B Right 54.6 vs 44.0），控制了平均查询频率后剩余差异是重规划边界的位置——增益来自时机选择而非更频繁查询；但 hindsight-best oracle 在个别任务仍更高（Pick Dual Bottles 56.7 vs PACE 48.2），PACE 未达逐任务最优上界",
+   "scope": "六代表任务诊断对比（seed-0 扫描 300 episodes/时域 vs PACE 900 episodes/任务）",
+   "locator": "4.4 PACE versus Fixed-Horizon Sweeps, Table 4 / Table 7"
+  },
+  {
+   "finding": "相位剖面消融：平滑在两个空间均提升成功率并增长平均执行时域（笛卡尔 62.2→64.5、关节 60.4→64.2，vs 固定 H=25 的 57.8），平滑后笛卡尔与关节空间相当，说明 PACE 捕捉的是跨运动学表示共享的相位结构；超参（d_min, ρ）在邻近设置下稳定（62.0~64.3%），过严的 ρ=25 会延迟接触阶段的反馈而降成功率",
+   "scope": "全 50 任务消融与敏感性（每配置 45,000 episodes）",
+   "locator": "4.3 Ablation Analysis, Table 2 / Table 3"
+  },
+  {
+   "finding": "训练预测时域消融：固定评测时域下，更长训练目标 H_train 单调提升成功率（H_eval=10 时 H_train=50 增益 +20.7，H_eval=40 缩至 +3.3）——被丢弃的后缀仍通过与前缀的联合预测提供序列级监督，支撑'长训练块+短执行前缀'的组合",
+   "scope": "六代表任务，seed 0，每设置 300 episodes",
+   "locator": "4.3 Ablation Analysis (training prediction horizon), Table 2 right / Appendix C.2"
+  },
+  {
+   "finding": "真机结果：三设置全部提升——ALOHA stack_bowls 成功率 70.0%→90.0%、put_pen_into_pencil_case 10.0%→33.3%、Franka place_object_on_plate 72.0%→88.0%（五物体全部提升 +10~+25），平均 Score 60.7→77.7、Succ. 50.7%→70.4%；基线为同 checkpoint 全块执行 H=50",
+   "scope": "RoboChallenge ALOHA 两任务（各 30 trials/方法）+ Franka 五物体族（100 trials/方法）",
+   "locator": "5.1 Real-Robot Results, Table 5 / Table 9"
+  },
+  {
+   "finding": "边界案例：put_pen_into_pencil_case 失败回合中 PACE 已在插入阶段选择短时域（7/6 步）多次刷新观测，但笔盒仍只部分打开——当策略分布中不含完成任务所需动作时，更好的重规划时机无法挽回；PACE 是执行层而非策略能力修复机制",
+   "scope": "单失败案例分析",
+   "locator": "5.3 Failure Case and Scope of Test-Time Execution Control"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "PACE 不改变基策略的动作分布：若基策略无法生成完成所需子任务的动作，更好的重规划时机无法恢复回合（笔盒失败案例）；应视为执行层而非修复策略缺失能力的机制",
+    "locator": "7 Limitations; 5.3"
+   },
+   {
+    "limitation": "方法假设有用的重规划边界反映在预测块的关节运动学结构中；关键决策点不表现为低速谷的任务、或运动剖面噪声大的策略只能提供较弱信号",
+    "locator": "7 Limitations"
+   },
+   {
+    "limitation": "全部实验仅用单一 VLA 策略族 π_0.5，未来需在其他分块生成策略（其他 VLA 架构、动作 tokenized 策略、世界-动作模型）上验证通用性",
+    "locator": "7 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "δ_T 阈值需每任务用训练演示校准：'training-free' 指不重训练策略，并非零标定；无演示的新任务/新本体上阈值迁移未评估",
+    "basis": "3.3 节与附录 A：'The threshold δ_T is calibrated once per task using training demonstrations only'"
+   },
+   {
+    "boundary": "全部增益以任务成功率/得分为指标，未报告任何轨迹平滑度或 jerk 类运动学指标：PACE 对末端轨迹精度的直接效应（更长开环段是否引入块内偏差、重规划是否消除边界不连续）未量化，与综述的'轨迹精度'命题只能间接对接",
+    "basis": "4-5 节全部表格只含 Succ./Score/平均时域；无 jerk/AFR/平滑度度量"
+   },
+   {
+    "boundary": "真机基线仅为全块执行 H=50（附录 E.4），未在真机对比 H=25 等中间固定时域：真机 +6.4~+23.3 个百分点的增益中'减少开环执行长度'的平凡贡献未被真机隔离（仿真匹配时域对比部分回答了该问题但未在真机重复）",
+    "basis": "附录 E.4：'The baseline executes the full predicted action chunk at test time, corresponding to H = 50'"
+   },
+   {
+    "boundary": "与最接近的在线时域选择方法 AutoHorizon（依赖 flow VLA 内部动作自注意力）及 ACT temporal ensembling 只做相关工作讨论，无实验对比——执行层方法族内的相对优劣靠叙述而非数据",
+    "basis": "2 Related Work：仅文字对比 AutoHorizon；实验部分无 AutoHorizon/时序集成基线"
+   }
+  ]
+ },
+ "transfer_boundary": "证据边界：π_0.5 单一策略族（流式 VLA，L=50）、RoboTwin2.0 仿真与 ALOHA/Franka 桌面操作、模仿学习策略（保留相位结构）、任务有训练演示可校准 δ_T。不适用于：单步策略或非分块策略、关键决策点不表现为低速谷的任务、运动剖面噪声大的策略；且不能修复基策略能力缺失。平滑度/精度指标上的直接效应无证据，不能据本文主张 PACE 改善末端轨迹平滑度本身。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同 checkpoint 对照设计把执行规则与策略训练、模型容量、演示数据完全解耦，增益归因干净",
+   "匹配平均时域对比控制了平均查询频率，把增益归因到重规划时机位置本身，排除'更频繁反馈自然更好'的平凡解释",
+   "评测规模大且协议公开：仿真每方法 45,000 episodes、真机采用 RoboChallenge 标准化协议（提示/重置/评分统一），逐物体结果全部披露",
+   "消融与敏感性完整（相位剖面、训练时域、d_min/ρ），默认配置非精调；并诚实报告 hindsight-best oracle 高于 PACE 的任务与失败案例",
+   "固定基线禁止逐任务调参而 PACE 允许演示校准的不对称在文中明确声明（校准不用评测 rollout/成功标签/扫描）"
+  ],
+  "design_risks": [
+   "真机仅对比全块执行 H=50，缺真机中间时域固定基线，真机增益的'开环缩短'贡献未隔离",
+   "无统计显著性/置信区间报告（episode 数大但部分任务差距如 +1.6 可能落入噪声）",
+   "未与 AutoHorizon、ACT temporal ensembling 等同族执行方法实验对比，家族内相对位置未确立",
+   "谷检测实现细节（平滑算子形式、显著度 Φ 定义）仅高层描述，复现需猜测实现；代码发布未见声明",
+   "对综述核心的轨迹平滑度/精度指标完全缺席，机制叙事（相位边界减少错误累积）缺运动学侧量化支撑"
+  ],
+  "baseline_fairness": "固定时域基线作为全局常数不逐任务调参，而 PACE 使用每任务演示校准 δ_T——两者可用信息不对称，但文中明确该校准不接触评测数据且匹配时域对比显示同频率下 PACE 仍胜出，公平性总体可控；hindsight-best H* 作为不可部署 oracle 参照被正确标注而非混入主对比。",
+  "metric_validity": "成功率（50 任务等权平均）与平均执行时域是部署相关且可复现的指标；RoboChallenge Score 部分得分制减轻二元成功率信息损失；但缺少任何平滑度/轨迹质量度量，对'末端轨迹精度'综述问题的直接度量效度不足，只能通过成功率与相位重规划机制间接关联。",
+  "reproducibility": "协议披露程度高：附录 B-E 给出聚合公式、评测预算、微调配方（H200×4、AdamW、batch 256、30k 步 checkpoint）与逐任务/逐物体完整数值；基准公开。但 PACE 核心算法（平滑算子、prominence 评分、δ_T 校准流程）只有文字级描述，且未见代码/超参完全披露，独立复现中等难度。",
+  "external_validity": "仿真 50 任务 + 双本体真机（ALOHA 双臂、Franka 单臂）覆盖面在同类测试时方法中较强；但单一策略族 π_0.5、纯桌面操作域、演示校准依赖限制外推；对动作 tokenized 策略、世界-动作模型、移动操作或接触丰富高动态任务无证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.00537-C01",
+   "claim": "对动作分块策略，固定执行时域 H 的选择对成功率影响强非单调且高度任务依赖：在 RoboTwin2.0 的 Click bell 任务上，成功率在 H≈6 附近达峰、H≈25 附近下降近 40 个百分点、H≈35 再现第二峰——任何单一固定时域都可能落入某些任务的性能陡降区，是不合格的部署默认值。",
+   "stance": "limit",
+   "relation": "支撑综述中'动作分块执行层参数（执行时域）是末端轨迹精度/任务可靠性的部署痛点'命题：分块策略预测什么与执行多少是两个解耦的问题，后者无原则选择准则时靠经验设定且不可靠。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "论文 1 节在三个 RoboTwin2.0 任务上把 H 从 1 扫到 50，观察到成功率对 H 强非单调、最优时域高度任务依赖；Click bell 呈峰-谷-第二峰形态，谷底比峰值低近 40 个百分点，据此论证执行时域必须在部署时在线决定而非预先固定。",
+   "locator": "1 Introduction, Figure 1 left panel",
+   "source_context": "The left panel of Fig. 1 shows that such an empirical choice is unreliable. Sweeping H from 1 to 50 on three RoboTwin2.0 tasks, we observe that the success rate is strongly non-monotonic in H and that the preferred horizon is highly task-dependent. On Click bell, for instance, the success rate peaks near H ≈ 6, drops by nearly 40 points around H ≈ 25, and rebounds to a second peak near H ≈ 35.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate under fixed execution horizon H",
+    "value_or_direction": "Click bell peaks near H 6, drops by nearly 40 points around H 25, rebounds to second peak near H 35",
+    "comparator": "fixed-horizon sweep H from 1 to 50",
+    "task_or_sample": "three RoboTwin2.0 tasks (Click bell, Open microwave, Place shoe)",
+    "locator": "1 Introduction, Figure 1 left panel"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 1 节原文：'strongly non-monotonic in H'、'peaks near H ≈ 6, drops by nearly 40 points around H ≈ 25, and rebounds to a second peak near H ≈ 35' 与引言描述一致；附录 D 的六任务 hindsight-best H* 跨 7~37 也佐证任务依赖性。主张限定在 RoboTwin2.0 仿真与 π_0.5 策略，未外推。"
+   }
+  },
+  {
+   "card_id": "2606.00537-C02",
+   "claim": "PACE 是训练无关的测试时执行方法：从预测动作块自身的速度剖面中识别低速转换点作为候选重规划边界来在线选择执行时域，仅使用预测块本身，即插即用，不需重训练、不需访问策略内部信号。",
+   "stance": "support",
+   "relation": "支撑综述中'执行层/测试时分块执行'方案族的核心机制命题：不触碰策略训练，仅通过相位感知的重规划边界选择来限制开环执行误差累积并保持段内运动连续。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要与方法节声明 PACE 利用操作轨迹的相位依赖运动学结构（相位转换处减速），把预测速度剖面的低速谷作为候选重规划边界；因其只用预测动作块，无需重训练或策略内部访问。3.2/3.3 节给出速度剖面构建、平滑、显著度评分与演示校准阈值的具体流程。",
+   "locator": "Abstract; 3.3 Phase-Aware Execution Horizon Selection",
+   "source_context": "We propose PACE (Phase-Aware Chunk Execution), a training-free test-time execution method that selects the execution horizon online from the predicted chunk itself. PACE exploits the phase-dependent kinematic structure of manipulation trajectories by identifying low-speed transition points in the predicted speed profile and using them as candidate replanning boundaries. Because PACE uses only the predicted action chunk, it is plug-and-play and requires no retraining or access to policy internals.",
+   "evidence_type": "method-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "摘要原文逐字核对，与 3.1-3.3 节形式化（h_i=g(A_i)，确定性训练无关过程）及附录 A 实现说明一致；主张是作者对方法属性的声明且实验设计（同 checkpoint、仅执行规则不同）与其相符，无夸大。"
+   }
+  },
+  {
+   "card_id": "2606.00537-C03",
+   "claim": "在 50 个 RoboTwin2.0 任务上（每任务-方法 900 episodes、每方法共 45,000 episodes），PACE 把平均成功率从最强全局固定基线 H=25 的 57.8% 提升到 64.2%（+6.4 个百分点），且六个代表性任务全部超过最强固定基线（+2.3~+9.6）；因所有方法共享同一训练 checkpoint，增益可归因于测试时执行规则。",
+   "stance": "support",
+   "relation": "支撑综述中'执行层方案可量化提升分块策略部署可靠性'的量化效果命题：零训练成本的执行规则改动带来 6.4 个百分点平均成功率增益。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1 节 Table 1 显示固定基线 H=5/25/50 的 50 任务平均分别为 48.8/57.8/53.4，PACE 为 64.2（+6.4 over H=25）；Table 1 六个代表任务上 PACE 分别 +2.9/+2.3/+6.8/+7.9/+9.6/+6.9。正文明确该设计隔离执行规则的影响。",
+   "locator": "4.1 Simulation Results, Table 1",
+   "source_context": "Table 1 shows that PACE achieves the best 50-task average success rate. Among the fixed-horizon baselines, H = 25 is the strongest global choice, reaching 57.8%. PACE improves this average to 64.2%, a gain of 6.4 points, without task-specific horizon sweeps or changes to the underlying policy. Because all methods share the same trained checkpoint within each task, the improvement is attributable to the test-time execution rule.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "50-task average success rate (%)",
+    "value_or_direction": "fixed H = 25: 57.8; PACE: 64.2 (+6.4 points); H = 5: 48.8, H = 50: 53.4",
+    "comparator": "PACE vs. strongest global fixed-horizon baseline H = 25 with the same policy checkpoint",
+    "task_or_sample": "50 RoboTwin2.0 tasks, 900 episodes per task-method pair (45,000 episodes per method)",
+    "locator": "4.1 Simulation Results, Table 1 / Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.1 节正文与 Table 1 及附录 B.3 Table 6：H=5/25/50 平均 48.8/57.8/53.4、PACE 64.2，六任务增益 +2.3~+9.6 与表格逐值一致；评测预算（3 seeds×3 批×100 episodes=900/任务-方法）与表注一致。主张限定 RoboTwin2.0 仿真与 π_0.5。"
+   }
+  },
+  {
+   "card_id": "2606.00537-C04",
+   "claim": "真机实验（RoboChallenge ALOHA 双臂两任务各 30 trials + Franka 单臂放置任务族 100 trials）中，PACE 相对同 checkpoint 全块执行基线（H=50）三设置全部提升：平均任务 Score 从 60.7 升到 77.7、平均全完成率从 50.7% 升到 70.4%，其中 Franka place_object_on_plate 从 72.0% 提升到 88.0%（五物体变体全部 +10~+25 个百分点）。",
+   "stance": "support",
+   "relation": "支撑综述中'执行层方案的真机有效性'命题：相位感知重规划在真实双臂/单臂平台上同样带来大幅成功率增益，不只在仿真成立。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节 Table 5 报告三真机设置的 Score/Succ.：stack_bowls 70.0%→90.0%、put_pen_into_pencil_case 10.0%→33.3%、place_object_on_plate 72.0%→88.0%；附录 E.5 Table 9 显示 Franka 五物体全部提升。基线与 PACE 共享同一微调 checkpoint，仅执行规则不同。",
+   "locator": "5.1 Real-Robot Results, Table 5",
+   "source_context": "Table 5 compares PACE with the corresponding baseline under the same real-robot setup and metric. PACE improves all three evaluated settings. On the two RoboChallenge tasks, it increases both the partial-credit Score and the full-completion rate. On the Franka place_object_on_plate task family, where Score and Succ. are identical, PACE improves performance from 72.0% to 88.0%. Averaged over the three real-robot evaluations, PACE raises the Score from 60.7 to 77.7 and Succ. from 50.7% to 70.4%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average task Score (0-100) and average full-completion success rate (Succ., %)",
+    "value_or_direction": "Score 60.7 to 77.7; Succ. 50.7% to 70.4%; Franka place_object_on_plate 72.0% to 88.0%",
+    "comparator": "PACE vs. baseline full-chunk execution (H = 50) with the same fine-tuned checkpoint",
+    "task_or_sample": "ALOHA stack_bowls and put_pen_into_pencil_case (30 trials each per method); Franka place_object_on_plate (5 objects x 20 trials per method)",
+    "locator": "5.1 Real-Robot Results, Table 5 / Table 9"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 5.1 节正文与 Table 5、附录 E.5 Table 9：三任务 Score/Succ. 数值（73.0→93.5/70.0→90.0、37.2→51.7/10.0→33.3、72.0→88.0）与平均 60.7→77.7、50.7%→70.4% 一致；附录 E.4 确认真机基线为 H=50 全块执行。主张限定这三个真机设置，未外推其他平台。"
+   }
+  },
+  {
+   "card_id": "2606.00537-C05",
+   "claim": "匹配平均时域诊断表明 PACE 的增益来自重规划时机的位置而非查询频率：在全部六个代表任务上，PACE 超过按其平均执行长度匹配的固定调度（+1.6~+10.6 个百分点，如 Place A2B Right 54.6 vs 44.0），说明其收益是把重规划边界放在相位结构更合适的位置（低速转换附近），而非更频繁地查询策略。",
+   "stance": "support",
+   "relation": "支撑综述中'相位感知机制本身（而非反馈频率）是增益来源'的机制归因命题，区分执行层方案与简单提高重规划频率的平凡方案。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.4 节构造匹配时域基线：取 PACE 全评测的平均选中时域四舍五入为常数 H，从 seed-0 扫描读取该 H 的成功率。Table 4 显示六任务 PACE 全部胜出（+1.6/+2.6/+10.6/+4.3/+1.9/+7.2），控制平均查询频率后剩余差异是重规划边界的放置位置。",
+   "locator": "4.4 PACE versus Fixed-Horizon Sweeps, Table 4",
+   "source_context": "Since the matched fixed baseline executes a constant horizon chosen to match PACE’s average executed horizon, this comparison controls for average replanning frequency. The re- maining difference is the placement of replanning boundaries. These gains therefore indicate that PACE does not merely bene- fit from using a shorter or longer average horizon; it improves performance by choosing more appropriate replanning points within the rollout, using the predicted chunk’s phase structure.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate at matched average execution horizon (%)",
+    "value_or_direction": "PACE outperforms matched fixed horizon on all six tasks, gains +1.6 to +10.6 (Place A2B Right 54.6 vs 44.0)",
+    "comparator": "PACE vs. fixed-horizon schedule matched to PACE's mean selected horizon",
+    "task_or_sample": "six representative RoboTwin2.0 tasks; fixed sweep 300 episodes per horizon (seed 0), PACE 900 episodes per task",
+    "locator": "4.4 PACE versus Fixed-Horizon Sweeps, Table 4 / Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.4 节正文与 Table 4 及附录 D.2 Table 7：匹配时域 26/29/24/23/22/20 对应固定基线 46.7/96.0/44.0/88.7/87.0/88.3，PACE 48.2/98.6/54.6/93.0/88.9/95.6，差值 +1.6~+10.6 一致；文中明确这是诊断性对比（PACE 与匹配基线评测预算不同）。主张限定六任务诊断设置。"
+   }
+  },
+  {
+   "card_id": "2606.00537-C06",
+   "claim": "相位剖面消融（全 50 任务）显示平滑是必要成分：平滑在关节与笛卡尔两个空间都提升成功率（笛卡尔 62.2→64.5、关节 60.4→64.2，均相对固定 H=25 基线 57.8），且平滑后两空间表现相当（差 0.3 点内）——PACE 捕捉的是跨运动学表示共享的相位结构，而非依赖特定运动空间；原始未平滑剖面因虚假局部谷导致过于频繁的重规划而损失成功率。",
+   "stance": "conditional",
+   "relation": "支撑综述中'执行层方案的适用条件'命题：低速谷信号需经平滑才能可靠提取，速度剖面噪声大的策略会削弱该方案（对应作者自述局限）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 节 Table 2 左对比关节/笛卡尔 × 原始/平滑四种剖面构造：平滑两空间分别 +6.7/+6.4，原始仅 +4.4/+2.6 且平均执行时域更短（11.3/16.7 vs 19.5/24.3），说明平滑去除了引发过频重规划的噪声谷；默认采用平滑关节空间剖面（免正向运动学计算）。",
+   "locator": "4.3 Ablation Analysis, Table 2 left",
+   "source_context": "Table 2 left shows that smoothing improves success in both spaces and increases the selected execution horizon. This sug- gests that smoothing removes noisy valleys that would otherwise cause overly frequent replanning. After smoothing, Cartesian and joint-space profiles perform comparably, indicating that PACE captures a phase structure shared across kinematic repre- sentations rather than relying on a specific motion space.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "50-task average success rate (%) by phase-profile construction",
+    "value_or_direction": "Cartesian smoothed 64.5 (+6.7), joint smoothed 64.2 (+6.4), Cartesian raw 62.2 (+4.4), joint raw 60.4 (+2.6), vs. fixed H = 25 baseline 57.8",
+    "comparator": "smoothed vs. raw speed profiles; Cartesian vs. joint-space",
+    "task_or_sample": "all 50 RoboTwin2.0 tasks, 900 episodes per task and configuration",
+    "locator": "4.3 Ablation Analysis, Table 2 left"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.3 节 Table 2 左列数值（Baseline 57.8；Cartesian raw 62.2/+4.4/11.3；Cartesian smoothed 64.5/+6.7/19.5；Joint raw 60.4/+2.6/16.7；Joint smoothed 64.2/+6.4/24.3）与正文解读一致；默认配置（平滑关节空间，距最佳 0.3 点）亦与原文相符。主张限定全 50 任务消融协议。"
+   }
+  },
+  {
+   "card_id": "2606.00537-C07",
+   "claim": "PACE 的能力边界：它只改善预测块的执行方式，不改变基策略的动作分布——当基策略无法生成完成所需子任务的动作时（如笔盒未被充分打开即插入笔的失败案例），更好的重规划时机无法挽回回合；PACE 应被定位为执行层而非修复策略能力缺失的机制。",
+   "stance": "limit",
+   "relation": "支撑综述中'执行层方案族未解痛点'命题：测试时执行控制无法补偿策略本身的分布缺陷，轨迹精度问题的根因可能在策略侧而执行层方案触达不到。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "7 节 Limitations 与 5.3 节失败案例一致陈述：PACE 缩短了插入阶段的时域（7/6 步）多次刷新块，但刷新的块仍由同一基策略生成，笔盒仍只部分打开，任务失败——重规划时机不能恢复策略分布中缺失的任务完成行为。",
+   "locator": "7 Limitations; 5.3 Failure Case",
+   "source_context": "PACE improves how predicted action chunks are executed, but it does not change the action distribution of the under- lying policy. If the base policy fails to generate actions that complete a required subtask, better replanning timing alone cannot recover the rollout.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 7 节 Limitations 首段，与 5.3 节失败案例描述（短时域 7/6 步仍失败）及结论章'execution layer'定位一致；主张是作者自述边界，无读者外加推断。"
+   }
+  },
+  {
+   "card_id": "2606.00537-C08",
+   "claim": "PACE 的信号假设构成其适用条件：它假设有用的重规划边界反映在预测块的运动学结构中（接触/抓取/释放/对齐等相位常见）；关键决策点不表现为低速谷的任务、或运动剖面噪声大的策略只能提供较弱信号；此外全部实验仅覆盖 π_0.5 单一 VLA 策略族，跨策略族通用性未验证。",
+   "stance": "limit",
+   "relation": "支撑综述中'执行层方案的适用条件与未解痛点'命题：相位结构信号的存在性与策略预测质量强耦合，且证据集中于单一策略族，外推到其他分块生成机制缺乏数据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "7 节 Limitations 第二、三段：假设段声明边界信号来自运动学结构并列举弱信号情形；通用性段声明实验仅用 π_0.5，未来需在其他 VLA 架构、动作 tokenized 策略与世界-动作模型上验证。两者共同界定 PACE 的适用域。",
+   "locator": "7 Limitations",
+   "source_context": "PACE assumes that useful replanning boundaries are re- flected in the kinematic structure of the predicted chunk, as is common in manipulation phases involving contact, grasping, release, or alignment. However, tasks whose key decision points are not expressed as low-speed valleys, or policies with noisy motion profiles, may provide weaker signals.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 7 节 Limitations 第二段（信号假设与弱信号情形）；单一策略族限定出自第三段'experiments ... use a single VLA policy family, π 0.5'，与 4/5 节实验设置（全部 π_0.5 checkpoint）一致。主张为作者自述边界的忠实转述。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2304.13705",
+  "2303.04137",
+  "2504.16054",
+  "2506.18088",
+  "2510.17950",
+  "2602.21445",
+  "2601.20130"
+ ],
+ "notes": "家族定位：本篇属于'执行层/测试时分块执行'分支——不训练、不修改策略，仅从预测块自身的运动学结构选择执行前缀；与训练侧平滑正则（SmoothVLA，2603.13925）、隐式动作分块（DWS，2605.19592）、掩码动作分块（2601.20130，本文亦引用为相关执行方法）互补。独特贡献：把'执行时域选择'确立为与训练侧改进正交的部署变量，并用匹配平均时域诊断把增益干净归因到重规划时机。引用注意：(1) 全文无任何平滑度/jerk 指标，其对末端轨迹精度的效应只能通过成功率间接关联；(2) 真机基线为 H=50 全块执行，真机增益含'缩短开环执行'的平凡成分；(3) δ_T 需每任务演示校准，'training-free' 不等于零标定；(4) 引用了本综述同族的 2601.20130（masked action chunking）与 2602.21445（AutoHorizon），可在跨论文综合时构建执行层方法对比表。"
+}

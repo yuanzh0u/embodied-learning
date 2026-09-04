@@ -1,0 +1,396 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.12659",
+  "title": "Jetson-PI: Towards Onboard Real-Time Robot Control via Foresight-Aligned Asynchronous Inference",
+  "published": "2026-08-03",
+  "url": "https://arxiv.org/abs/2607.12659",
+  "authors": [
+   "Zebin Yang",
+   "Qi Wang",
+   "Yunhe Wang",
+   "Xiurui Guo",
+   "Bo Yu",
+   "Shaoshan Liu",
+   "Jiafeng Xu",
+   "Hao Dong",
+   "Meng Li"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "'VLA 延迟与异步执行'族中'机载实时化+异步错位校正'分支的核心系统论文：针对 VLA（π0/π0.5）在 Jetson Orin 上约 1.4 s 推理延迟（约 0.7 Hz）的问题，系统量化异步推理的两大痛点（感知-执行错位随 ∆ 增大导致成功率下降、反应时间受 ∆ 界定），提出未来环境表征校正（40M 模块）+置信度调度+llama.cpp 边缘推理引擎，实现 8.66× 控制频率提升并以 LIBERO 全 ∆ 扫描对比 RTC/VLASH。注意：以任务成功率为主要指标，未直接报告末端轨迹误差；真机仅折衣单任务（XR-1 模型）。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "获取机载部署痛点：RTX 4090 续航 6.0× 劣化、π0.5 在 Orin 上 1.4 s 延迟/0.7 Hz、异步推理的错位与长反应时间两大问题"
+   },
+   {
+    "locator": "2 Background",
+    "role": "relevant-core",
+    "purpose": "理解 π 系 VLM+动作专家架构与同步/异步推理模式；SmolVLA 朴素异步、RTC 块间重绘、VLASH 未来机器人状态的机制与局限"
+   },
+   {
+    "locator": "3 When Asynchronous Inference Meets Onboard Computation",
+    "role": "results-or-analysis",
+    "purpose": "获取错位与反应时间的量化分析：成功率随 ∆ 与 L 的退化曲线、反应时间界定为 ∆ 到 ∆+L、VLASH 状态外插在长延迟下不足"
+   },
+   {
+    "locator": "4.1 Foresight-Aligned Asynchronous Correction",
+    "role": "method-or-design",
+    "purpose": "理解未来校正模块设计：压缩 VLM 末层状态+已提交动作→预测 t+∆ 表征，40M 参数（1%），两阶段校正感知训练与随机 ∆ 采样"
+   },
+   {
+    "locator": "4.2 Confidence-based Scheduling Optimization",
+    "role": "method-or-design",
+    "purpose": "理解以预测置信度为调度器的 VLM/动作专家调用平衡，及'为何不并行'的 roofline 分析（边缘设备双带宽受限）"
+   },
+   {
+    "locator": "4.3 System Design",
+    "role": "method-or-design",
+    "purpose": "理解 llama.cpp 引擎三项优化：CUDA 图复用（定长词元）、GPU 常驻中间缓冲、流匹配展开，及其与量化/剪枝的正交性"
+   },
+   {
+    "locator": "5.1 Simulation Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取 LIBERO 四子集、∆=1-9 扫描下对 VLASH/RTC 的成功率优势（平均 +14.8/+3.9 个百分点）与同步基线对比（Table 3）"
+   },
+   {
+    "locator": "5.2 Latency Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "提取 Orin/Thor 上逐项叠加优化的延迟分解：反应时间 1420.8→165.1 ms、频率 0.70→6.06 Hz（8.66×），对 vla.cpp 5.41×（Table 4）"
+   },
+   {
+    "locator": "5.3 Real-world Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取真机折衣任务结果：X2-W+XR-1@Orin 15 Hz，Jetson-PI 10/10、8/10、9/10 vs 4090 基线 10/10、7/10、10/10 vs 朴素异步 6/10、0/10、5/10（Fig. 7）"
+   },
+   {
+    "locator": "5.4 Analysis of Confidence-Based Scheduling",
+    "role": "results-or-analysis",
+    "purpose": "理解置信度在抓取/放置关键步下降并触发 VLM 调用的示例与阈值鲁棒性（Fig. 8/9）"
+   },
+   {
+    "locator": "6 Conclusion; 7 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述局限：机载算力/带宽根本受限，模型与批量继续增大时收益可能无法完全弥合与高端 GPU 的差距"
+   },
+   {
+    "locator": "A Model Architecture of π series Models; B Architecture of Future Correction Module; C Algorithm Details of Confidence-based Scheduling Optimization; D Training Details",
+    "role": "method-or-design",
+    "purpose": "核对 π 系架构参数（SigLIP+gemma2b+300M DiT、10 步去噪）、校正模块结构（Q-Former 压缩、双头输出）、调度伪代码与训练超参（30k+25k 步、batch 32、A100）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "reason": "仅用于核对核心引用（π0/π0.5、VLASH、RTC、SmolVLA、vla.cpp），无综述所需证据"
+   }
+  ]
+ },
+ "research_question": "论文自问：如何在低功耗机载设备（Jetson Orin/Thor）上部署 VLA 模型实现实时机器人控制——即同时解决异步推理下的感知-执行错位（环境在推理期间已相对输入图像变化）与长反应时间（受 VLA 推理延迟 ∆ 界定）两个问题，并把控制频率从约 0.7 Hz 提升到实时水平？",
+ "contributions": [
+  "识别并量化机载异步 VLA 推理的两大挑战：感知-执行错位随推理延迟 ∆ 增大导致成功率显著下降（VLASH 的未来机器人状态外插在长延迟下不足以捕捉环境变化）；反应时间界定在 ∆ 到 ∆+L，增大块执行长度 L 同样降低成功率",
+  "先见对齐异步校正（Foresight-Aligned Asynchronous Correction）：训练 40M（约占 VLA 1%）轻量未来校正模块，以压缩 VLM 末层状态+已提交动作为输入预测 t+∆ 时刻的环境表征，使动作专家直接从未来时间步预测动作；两阶段校正感知训练并在训练中随机采样 ∆ 以适配不同硬件延迟",
+  "置信度调度优化：以校正模块输出的置信度为调度器，高置信时跳过 VLM 仅调动作专家（提高频率），低置信时调用 VLM 刷新环境上下文；并用 roofline 分析论证高端 GPU 上 VLM/动作专家并行的策略在边缘设备失效（两者均带宽受限，并行引发争用）",
+  "基于 llama.cpp 的边缘 VLA 推理引擎：CUDA 计算图复用（VLA 词元长度确定、指令定长填充）、GPU 常驻中间缓冲（免 CPU 回写）、流匹配去噪展开融合，与量化/剪枝正交；Orin 上控制频率较朴素 PyTorch 提升 8.66×、较 vla.cpp 提升 5.41×，LIBERO 平均成功率超 VLASH 14.8%"
+ ],
+ "method": {
+  "summary": "三层解耦方案。(1) 错位校正：不直接预测未来图像、也不逐层修正 KV 缓存，而是把 VLM 末层输出经 Q-Former 压缩后与已提交动作序列（MLP+Transformer 编码）拼接，经两个 Transformer 块后分两头输出：校正头预测 t+∆ 时刻压缩 VLM 末层状态（供动作专家作为未来环境条件直接从 t+∆ 起预测动作），置信度头输出预测可靠性标量；两阶段训练——先用真值未来状态训练压缩器与动作专家（动作损失），再训练校正模块（L_predict=||ĥ_{t+∆}−h_{t+∆}||²，置信度正则 L_total=L_predict+λ||ĉ+L_predict||²），训练中随机采样 ∆。(2) 置信度调度：ĉ>θ 时跳过 VLM，用校正模块预测的未来隐状态+KV 缓冲直接调动作专家（连续出动作）；ĉ<θ 时调用 VLM 观测当前环境并刷新 KV 与隐状态缓冲。(3) 系统层：llama.cpp 引擎上做 CUDA 图复用（首帧建图后复用、指令定长填充）、GPU 常驻定长中间缓冲（ViT→LLM→AE 间免 CPU 往返）、流匹配多步去噪图展开融合（图构建开销仅首次），并经 roofline 分析说明为何不并行 VLM 与动作专家（Orin/Thor 上两者均带宽受限）。",
+  "assumptions": [
+   "VLA 为 π 系'VLM+流匹配动作专家'架构（VLM 末层状态含足够环境信息，动作专家以 KV 缓存为条件）",
+   "推理窗口内的环境变化主要由已提交动作引起（未来表征可由动作条件预测；外部不可预测扰动依赖置信度触发 VLM 兜底）",
+   "VLA 推理词元长度基本确定（相机配置/分辨率固定、指令短且可定长填充），支撑计算图复用",
+   "机载设备带宽受限（VLM 与动作专家均带宽受限），故以调度与图优化而非算子并行提速"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "LIBERO 基准四个子集（SPATIAL/OBJECT/GOAL/LIBERO-10），π0.5 模型，单一模型覆盖全部 ∆",
+   "真机：折衣任务（3 子任务：放布入折叠区、展开并整齐折叠、放入收纳区），XR-1 模型"
+  ],
+  "tasks": [
+   "LIBERO 仿真操作任务（∆=1-9 延迟步数扫描评测）",
+   "真机复杂长程折衣任务（15 Hz 动作执行）"
+  ],
+  "embodiments": [
+   "仿真：LIBERO 环境（π0.5 动作空间）",
+   "真机：PrimeBot Research Institute X2-W 机器人，3 相机（1 头部+2 腕部，224×224），部署于 Jetson Orin"
+  ],
+  "sample_or_scale": "仿真：4 子数据集×9 个 ∆ 档的成功率表（每格为评测成功率）；真机：3 子任务×各 10 次试验；训练：两阶段 30,000+25,000 步、batch 32、A100；延迟评测覆盖 Orin（30W/50W）、Thor、A6000、4090 四设备"
+ },
+ "evaluation": {
+  "design": "三问驱动：(1) 与异步方法（RTC/VLASH）对比——LIBERO 四子集、∆=1-9 扫描、单模型覆盖全部 ∆，另报 +Sched 变体；(2) 机载延迟/频率——Orin/Thor 上朴素 PyTorch→+调度→+图复用→+缓冲/展开逐项叠加的延迟分解；(3) 跨延迟与跨设备泛化（双设备、全 ∆）；另有真机折衣任务（vs RTX 4090 基线与朴素异步）与置信度阈值消融",
+  "baselines": [
+   "Sync.：同步推理（推理延迟设 0，最优上界）",
+   "RTC：冻结已提交动作并对剩余动作重绘的异步方法（块间平滑）",
+   "VLASH：预测未来机器人状态引导下一块预测的异步方法",
+   "朴素 PyTorch 部署（π0.5）与 vla.cpp 推理运行时（延迟对比）",
+   "真机：RTX 4090 部署（精度基线）与 Jetson Orin 朴素异步"
+  ],
+  "metrics": [
+   "任务成功率（LIBERO 四子集、真机 n/10）",
+   "推理延迟分解（ViT/LLM/动作专家/总，ms）",
+   "反应时间（ms）与控制频率（Hz）"
+  ],
+  "ablations": [
+   "∆ 扫描（1-9）下 Ours 与 +Sched vs VLASH/RTC（Table 3）",
+   "延迟优化逐项叠加：+Schedule opt.、+Graph reuse、+Intermediate Buffer & Unroll（Table 4）",
+   "置信度阈值 θ 消融（Fig. 8，LIBERO-Spatial@Orin）与置信度演化案例分析（Fig. 9）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "机载部署痛点量化：π0.5 在 Jetson Orin 上推理延迟约 1.4 s（50W 模式 1420.8 ms，30W 模式 2289.4 ms），对应约 0.7 Hz 控制频率；而 RTX 4090 相对机载设备最多使机器人续航劣化 6.0×，服务器化部署又引入网络延迟并限制活动区域——低功耗机载实时化是 VLA 落地的硬约束",
+   "scope": "引言动机与 Table 1/2 延迟分解",
+   "locator": "1 Introduction; Table 1"
+  },
+  {
+   "finding": "异步推理两大痛点的机制与量化：(1) 感知-执行错位——环境在 VLA 推理期间持续演化，朴素异步与 RTC 的成功率随 ∆ 增大显著下降，VLASH 低 ∆ 下保持高精度但长延迟下仅预测未来机器人状态不足以捕捉环境变化；(2) 长反应时间——异步推理的反应时间介于 ∆ 与 ∆+L，增大每块执行动作数 L 会因平均反应时间变长与块内后段动作质量下降而降低成功率",
+   "scope": "第 3 节分析（Fig. 3 曲线，π0，LIBERO-Spatial/Goal，H=20）",
+   "locator": "3 When Asynchronous Inference Meets Onboard Computation"
+  },
+  {
+   "finding": "LIBERO 主结果（π0.5，单模型覆盖 ∆=1-9）：四子集平均成功率 Jetson-PI（+Sched）为 97.4/98.6/96.8/92.5，较 VLASH（74.4/86.1/84.2/81.3）与 RTC（92.6/96.6/94.1/86.4）分别平均高 14.8 与 3.9 个百分点；∆=9 时优势扩大到 45.6 与 7.0 个百分点（如 SPATIAL ∆=9：VLASH 30.1%、RTC 88.8%、Ours 97.0%），且相对同步推理（97.3/99.6/96.7/93.5）精度损失可忽略——错位校正的收益随延迟增大而增大",
+   "scope": "Table 3，LIBERO 四子集、∆=1-9",
+   "locator": "5.1 Simulation Experiments, Table 3"
+  },
+  {
+   "finding": "机载延迟与频率：Orin 上 π0.5 朴素部署 1420.8 ms/0.70 Hz；+置信度调度使反应时间降至 674.9 ms（2.11×）而总延迟不变；+CUDA 图复用降至 476.1 ms/4.41 Hz（反应时间 2.96×）；+GPU 常驻缓冲与流匹配展开后 412.9 ms/6.06 Hz、反应时间 165.1 ms——总计 8.66× 频率提升；Thor 上 2.18→7.59 Hz（3.48×）；对 vla.cpp（Orin 893.0 ms）提升 5.41×",
+   "scope": "Table 4，LIBERO 负载，Orin/Thor",
+   "locator": "5.2 Latency Evaluation, Table 4"
+  },
+  {
+   "finding": "真机结果：X2-W 机器人 + XR-1 模型 @ Jetson Orin、15 Hz 执行折衣任务，朴素异步在受限算力下崩溃（抓取 6/10、折叠 0/10、放置 5/10），Jetson-PI 达 10/10、8/10、9/10，几乎无相对 RTX 4090 部署（10/10、7/10、10/10）的精度损失——机载实时化不再以任务能力为代价",
+   "scope": "真机折衣 3 子任务×10 次（Fig. 7）",
+   "locator": "5.3 Real-world Experiments, Figure 7"
+  },
+  {
+   "finding": "置信度调度机制验证：单任务执行中置信度大部分时间保持高位（仅用校正模块即可预测环境变化），在难预测的环境变化关键步（抓取、放置）置信度下降并触发 VLM 调用，实现反应时间与环境精度的任务内自适应平衡；阈值 θ 在较大范围内均同时改善成功率与控制频率，方法对 θ 鲁棒",
+   "scope": "LIBERO-Spatial@Orin 阈值消融与单任务置信度轨迹（Fig. 8/9）",
+   "locator": "5.4 Analysis of Confidence-Based Scheduling"
+  },
+  {
+   "finding": "系统设计依据：roofline 分析显示 4090/A6000 上 VLM 计算受限、动作专家带宽受限（可并行充分利用两类资源），而 Orin/Thor 上两者均带宽受限（平衡计算强度 1953-3736 vs 4090 的 618），并行 VLM 与动作专家会引发共享带宽严重争用——边缘部署的提速必须走调度与计算图优化路线",
+   "scope": "Table 2 硬件 roofline 与 4.2 节论证",
+   "locator": "4.2 Confidence-based Scheduling Optimization, Table 2"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "机载平台在算力与带宽上相对 GPU 集群存在根本性受限；随着模型参数量与批量继续增大，Jetson-PI 的性能增益可能无法完全弥合与高端 GPU 部署的差距（但对功耗与便携性敏感的移动机器人应用仍是实用方案）",
+    "locator": "7 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "以任务成功率为主要指标，全文未报告末端轨迹误差/平滑度类指标——对'轨迹精度'的支撑是间接的（错位→成功率），无法换算为毫米级轨迹改善",
+    "basis": "5.1-5.3 节指标体系（成功率、延迟、频率）"
+   },
+   {
+    "boundary": "真机实验仅折衣单任务（3 子任务×10 次）且使用 XR-1 模型而非评测主力 π0.5，跨模型/跨任务一致性未验证；仿真评测亦限于 LIBERO 静态桌面操作分布",
+    "basis": "5.3 实验设置与 Table 3 模型说明"
+   },
+   {
+    "boundary": "未来校正模块在潜空间预测环境表征，隐含'推理窗口内环境变化主要由已提交动作驱动'的假设；对强外部扰动（非机器人引起的环境变化）仅靠置信度下降触发 VLM 兜底，未做扰动实验验证",
+    "basis": "4.1 模块设计与 Fig. 9 单示例"
+   },
+   {
+    "boundary": "8.66×/5.41× 等频率增益绑定 π 系模型（SigLIP+gemma2b+300M DiT、224×224 输入、10 步去噪）与 Orin/Thor 硬件；对非流匹配 VLA 架构或更大模型的增益未验证（作者亦自述规模化风险）",
+    "basis": "附录 A 架构参数、Table 4 设备范围与 7 Limitations"
+   }
+  ]
+ },
+ "transfer_boundary": "证据限定于 π0/π0.5 类'VLM+流匹配动作专家'VLA 在 Jetson Orin/Thor 机载部署、LIBERO 仿真与单一真机折衣任务：'未来环境表征校正+置信度调度+边缘计算图优化'的延迟-错位解耦机制可迁移到同类 VLA 架构的机载部署，但 8.66×/5.41× 频率增益与 14.8 个百分点成功率优势绑定该模型族与硬件，且全文以成功率为指标、未直接度量末端轨迹误差。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "以 ∆（延迟步数）扫描系统量化错位-成功率关系，且单一模型覆盖全部 ∆（避免每档重训的混淆），给出'收益随延迟增大而增大'的清晰剂量-效应曲线",
+   "延迟评测逐项叠加优化（调度→图复用→缓冲/展开）并按 ViT/LLM/动作专家分解，归因清晰可复算（0.70→6.06 Hz 各因子可乘验证）",
+   "与两类 SOTA 异步方法（RTC、VLASH）及理想 Sync 上界（延迟 0）三向对比，结论定位明确",
+   "roofline 分析为'为何不并行'提供第一性依据，系统设计决策有据可依；算法/引擎双开源"
+  ],
+  "design_risks": [
+   "主要指标为任务成功率，缺少轨迹级误差指标（跟踪误差、抖动），对综述'末端轨迹精度'命题的支撑是间接的",
+   "真机仅折衣单任务且模型为 XR-1（与仿真主力 π0.5 不同），跨模型外推受限",
+   "校正模块对非自致环境扰动（他人移动物体等）的鲁棒性未实验验证，置信度机制仅单示例展示",
+   "∆=9 时对 VLASH 的巨大优势部分源于 VLASH 自身崩溃（30.1%），需注意比较基线在长延迟下的失效放大了差距；各基线是否逐 ∆ 调优未说明"
+  ],
+  "baseline_fairness": "RTC/VLASH 为其原方法在相同 ∆ 下的部署，Sync 明确标注为延迟 0 的最优上界，对比设置清晰；但各异步基线是否针对每个 ∆ 档重新调参未说明；vla.cpp 对比仅给单一总延迟数字（893.0 ms），无逐组件分解。",
+  "metric_validity": "成功率、延迟、反应时间与控制频率直接对应机载部署目标，定义清晰（反应时间 ∆ 到 ∆+L 的界定尤佳）；但缺少轨迹误差/平滑度指标，无法回答'末端轨迹精度量化改善多少'，对综述需以'错位→成功率'间接映射。",
+  "reproducibility": "算法伪代码（附录 C）、两阶段训练超参（附录 D：30k/25k 步、batch 32、A100）、π 系架构参数（附录 A）与校正模块结构（附录 B）齐备，且异步算法与 llama.cpp 引擎双库开源（Jetson-PI/Jetson-PI-Edge），在同族论文中可复现性最好。",
+  "external_validity": "结论绑定 π 系 VLM+流匹配动作专家架构、LIBERO 桌面操作分布与 Orin/Thor 硬件；作者自述模型规模继续增大时收益可能不闭合；对非流匹配 VLA、高动态任务（快抛接、接触密集操作）与强外部扰动场景的迁移未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.12659-C01",
+   "claim": "异步 VLA 推理的感知-执行错位痛点：因环境在 VLA 为下一动作块推理期间持续演化，朴素异步与 RTC 的任务成功率随推理延迟 ∆ 增大而显著下降；VLASH 在低 ∆ 下保持高精度，但更长延迟下仅预测未来机器人状态不足以捕捉环境变化——错位随延迟增大而加剧，是机载（长延迟）部署区别于高端 GPU 部署的核心精度痛点。",
+   "stance": "limit",
+   "relation": "支撑综述中'感知-动作错位（推理期间环境演化）损害末端执行精度且随延迟增大而加剧'的核心痛点命题，为未来状态/表征外插方案族（VLASH/Jetson-PI）提供动机。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 3 节用 Fig. 3(a)(b)（π0、LIBERO-Spatial/Goal）量化错位-成功率关系：朴素异步与 RTC 随 ∆ 增大成功率下降，VLASH 低 ∆ 稳定但长延迟不足；机制表述为环境在推理期间相对输入图像已变化。",
+   "locator": "3 When Asynchronous Inference Meets Onboard Computation, Figure 3(a)(b)",
+   "source_context": "Perception-execution misalignment arises because the envi- ronment continues to evolve while the VLA model performs inference for the next action chunk. As shown in Figure 3(a)(b), for naive asynchronous and RTC, with VLA inference latency increases, perception-execution misalignment becomes more severe, leading to task success rate drop.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "task success rate as VLA inference latency ∆ increases (Figure 3(a)(b), LIBERO-Spatial and LIBERO-Goal, π0, action chunk size H = 20)",
+    "value_or_direction": "for naive asynchronous and RTC, perception-execution misalignment becomes more severe, leading to task success rate drop; VLASH maintains high accuracy with low ∆, but for longer latency, predicting future robot state alone is insufficient to capture environmental changes",
+    "comparator": "naive asynchronous and RTC as VLA inference latency increases, relative to VLASH",
+    "task_or_sample": "π0 模型，LIBERO-Spatial/LIBERO-Goal 仿真（Fig. 3a/b；H=20 动作块）",
+    "locator": "3 When Asynchronous Inference Meets Onboard Computation, Figure 3(a)(b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对第 3 节 Perception-execution Misalignment 段：'environment continues to evolve while the VLA model performs inference'、'with VLA inference latency increases…more severe, leading to task success rate drop'均为原话；VLASH 局限句（'predicting future robot state alone is insufficient'）在同段后文；quantitative 块按该节正文的方向性陈述记录（Table 3 逐格数值位于提取文本 4.3 节表面，不构成本卡主张的一部分），未虚构曲线数值。"
+   }
+  },
+  {
+   "card_id": "2607.12659-C02",
+   "claim": "LIBERO（π0.5，单模型覆盖 ∆=1-9）上，Jetson-PI 四子集平均成功率较 VLASH 与 RTC 分别高 14.8 与 3.9 个百分点；随 ∆ 增大与错位加剧，VLASH/RTC 显著退化而 Jetson-PI 保持稳定高精度，∆=9 时优势扩大到 45.6 与 7.0 个百分点，且相对同步推理消除块间停顿而精度损失可忽略。",
+   "stance": "support",
+   "relation": "支撑综述中'未来环境表征校正方案可在大延迟异步执行下保持末端任务成功率'的效果命题，并给出错位校正收益随延迟增大的剂量-效应证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 给出四子集×9 个 ∆ 的完整成功率矩阵：+Sched 平均 97.4/98.6/96.8/92.5 vs VLASH 74.4/86.1/84.2/81.3 与 RTC 92.6/96.6/94.1/86.4；正文总结平均优势 14.8/3.9 个百分点与 ∆=9 时的 45.6/7.0 个百分点，及相对 Sync（97.3/99.6/96.7/93.5）的 negligible loss。",
+   "locator": "5.1 Simulation Experiments, Table 3",
+   "source_context": "Main Results. The simulation results are shown in Table 3. On average over four sub-datasets and different ∆, our method outperforms VLASH and RTC by 14.8% and 3.9%. Notably, as ∆ increases and the perception-execution misalignment problem becomes more severe, both VLASH and RTC exhibit significant performance degradation. In contrast, Jetson-PI maintains consistently high accuracy, as it adaptively provides future environment information for action prediction across varying ∆. For ∆ = 9, Jetson-PI shows 45.6% and 7.0% on success rate over VLASH and RTC, on average across four datasets, showing the effectiveness of our method. Compared to synchronous inference, our method eliminates pauses between action chunks with negligible accuracy loss.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "LIBERO task success rate (average over four sub-datasets and different ∆, π0.5)",
+    "value_or_direction": "outperforms VLASH and RTC by 14.8% and 3.9% on average; for ∆ = 9, 45.6% and 7.0% higher success rate over VLASH and RTC on average across four datasets; eliminates pauses between action chunks with negligible accuracy loss compared to synchronous inference",
+    "comparator": "Jetson-PI vs VLASH, RTC, and synchronous inference",
+    "task_or_sample": "LIBERO 四子集，π0.5 模型，单模型覆盖全部 ∆（Table 3）",
+    "locator": "5.1 Simulation Experiments, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 5.1 Main Results 段全段（'14.8% and 3.9%'、'For ∆ = 9…45.6% and 7.0% on success rate'、'eliminates pauses between action chunks with negligible accuracy loss'均原话，引文覆盖主张中全部四个数值）；Table 3 数据块在提取文本中位于 4.3 节表面（Avg 行 74.4 92.6 97.0 97.4 86.1 96.6 98.0 98.6 84.2 94.1 96.5 96.8 81.3 86.4 92.2 92.5；∆=9 行含 30.1 88.8 97.0 97.3），与总结中的逐值描述一致；百分点差异经表值复算吻合。"
+   }
+  },
+  {
+   "card_id": "2607.12659-C03",
+   "claim": "机载实时化效果：在 Jetson Orin 上以 π0.5 为负载，Jetson-PI 经置信度调度（免每次调 VLM）、CUDA 图复用、GPU 常驻缓冲与流匹配展开，把端到端延迟从 1420.8 ms 降至 412.9 ms、反应时间从 1420.8 ms 降至 165.1 ms、控制频率从 0.70 Hz 提升到 6.06 Hz（较朴素 PyTorch 8.66×，较 vla.cpp 的 893.0 ms 提升 5.41×）；Thor 上从 2.18 Hz 提升到 7.59 Hz（3.48×）。",
+   "stance": "support",
+   "relation": "支撑综述中'机载实时化方案族（调度+计算图优化）可数量级提升 VLA 控制频率'的量化效果命题，给出该方案族的频率上限锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4 逐项叠加给出 Orin/Thor 上的延迟分解与频率：调度使反应时间 2.11×/1.87× 下降、图复用 2.96×（Orin）、缓冲+展开使动作专家 1.50×/1.59× 加速，总频率提升 8.66×/3.48×；正文另给 vla.cpp 对比 5.41×。",
+   "locator": "5.2 Latency Evaluation, Table 4",
+   "source_context": "Overall, we achieve 8.66× and 3.48× improvements in control frequency on two devices, enhancing the robot’s reaction speed and task performance. Compared with vla.cpp, which has a latency of 893.0ms on the Orin platform [31], Jetson-PI achieves a 5.41× improvement in control frequency through scheduling and system opti- mizations.",
+   "evidence_type": "system-result",
+   "quantitative": {
+    "metric": "端到端延迟 / 反应时间 / 控制频率（Jetson Orin，π0.5，LIBERO 负载）",
+    "value_or_direction": "延迟 1420.8→412.9 ms、反应时间 1420.8→165.1 ms、频率 0.70→6.06 Hz（8.66×）；Thor 2.18→7.59 Hz（3.48×）；vs vla.cpp（893.0 ms）5.41×",
+    "comparator": "Jetson-PI 完整优化栈 vs 朴素 PyTorch 部署 vs vla.cpp 运行时",
+    "task_or_sample": "Jetson Orin/Thor，π0.5，LIBERO 评测负载（Table 4）",
+    "locator": "5.2 Latency Evaluation, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 5.2 段（'8.66× and 3.48×'、'893.0ms on the Orin platform'、'5.41×'）与 Table 4 Orin 行（Naive 1420.8/1420.8/0.70 → +Sched 674.9/1.48 → +Graph 476.1/227.0/4.41 → +Buffer&Unroll 412.9/165.1/6.06）与 Thor 行（457.9/2.18→309.5/131.8/7.59）一致；6.06/0.70≈8.66、7.59/2.18≈3.48 复算吻合。"
+   }
+  },
+  {
+   "card_id": "2607.12659-C04",
+   "claim": "错位校正的核心机制与代价条件：未来校正模块不预测未来图像、不逐层修正 KV 缓存，而是以 t 时刻压缩后的 VLM 末层输出与已提交动作为输入，预测 t+∆ 时刻的压缩 VLM 末层状态，供动作专家直接从未来时间步起预测动作；模块仅 40M 参数（约占整个 VLA 的 1%），引入的额外延迟可忽略——错位校正的可行性依赖'在压缩潜空间以轻量模块外插'这一设计约束。",
+   "stance": "support",
+   "relation": "支撑综述中'异步错位校正方案族之未来表征外插机制'命题：校正作用于潜空间表征而非图像/每层 KV，是低开销对齐的可行路线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.1 节明确三项设计要求（动作条件预测、轻量、适配可变 ∆）并给出实现：压缩末层状态+已提交动作→未来压缩状态；参数量 40M、占比 1%、成本可忽略；训练中随机采样 ∆ 使单模型适配不同设备延迟。",
+   "locator": "4.1 Foresight-Aligned Asynchronous Correction",
+   "source_context": "To avoid intro- ducing excessive latency, we do not directly predict future images or correct the KV cache at each layer. Inspired by [48], we take the compressed final-layer output of the VLM at t and the committed actions, then pass them through future correction module that predicts the compressed VLM final- layer output at t + ∆. Then pass this lightweight correction item to action expert, enabling action expert to directly predict actions starting from t+∆. The parameter size of future correction module is just 40M, which is only 1% of the whole VLA and introduces negligible cost.",
+   "evidence_type": "author-judgment",
+   "quantitative": {
+    "metric": "parameter size of the future correction module as a share of the whole VLA",
+    "value_or_direction": "the future correction module is just 40M, only 1% of the whole VLA, and introduces negligible cost",
+    "comparator": "future correction module vs the whole VLA",
+    "task_or_sample": "π0/π0.5 架构上的未来校正模块设计（4.1 节；附录 B 结构）",
+    "locator": "4.1 Foresight-Aligned Asynchronous Correction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 4.1 节设计段：'we do not directly predict future images or correct the KV cache at each layer'、'compressed final-layer output of the VLM at t and the committed actions'（此处 final-layer 无断行，前一处 'final- layer' 断行原样）、'predicts the compressed VLM final- layer output at t + ∆'、'directly predict actions starting from t+∆'、'just 40M, which is only 1% of the whole VLA and introduces negligible cost'均为原话。"
+   }
+  },
+  {
+   "card_id": "2607.12659-C05",
+   "claim": "真机（X2-W 机器人，XR-1 模型 @ Jetson Orin，15 Hz 执行，折衣任务含抓取/折叠/放置三子任务各 10 次）：朴素异步在受限算力下任务能力崩溃（6/10、0/10、5/10），Jetson-PI 达 10/10、8/10、9/10，相对 RTX 4090 部署基线（10/10、7/10、10/10）几乎无精度损失——机载实时化不再以牺牲复杂任务能力为代价。",
+   "stance": "support",
+   "relation": "支撑综述中'机载异步校正方案在真实复杂操作任务上可恢复接近高端 GPU 部署的任务精度'的命题（真机级证据）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.3 节在 Jetson Orin 上部署 XR-1 模型执行折衣任务，Figure 7 给出三种部署的每子任务 10 次成功率；正文总结 Jetson-PI 几乎无相对 4090 的精度损失且显著优于朴素异步。",
+   "locator": "5.3 Real-world Experiments, Figure 7 / 5.1 Simulation Experiments",
+   "source_context": "Method Picking Folding Placing RTX 4090 (Baseline) 10/10 7/10 10/10 Jetson Orin (Naive Async) 6/10 0/10 5/10 Jetson-PI (Ours) 10/10 8/10 9/10 Figure 7: Real-world results on 3 subtasks (pick- ing, folding, placing) on different deployments.",
+   "evidence_type": "system-result",
+   "quantitative": {
+    "metric": "success on the three folding subtasks (picking, folding, placing), 10 trials each",
+    "value_or_direction": "RTX 4090 (Baseline) 10/10, 7/10, 10/10; Jetson Orin (Naive Async) 6/10, 0/10, 5/10; Jetson-PI (Ours) 10/10, 8/10, 9/10",
+    "comparator": "Jetson-PI on Jetson Orin vs RTX 4090 deployment baseline vs naive asynchronous on Jetson Orin",
+    "task_or_sample": "PrimeBot X2-W 机器人，XR-1 模型，Jetson Orin，15 Hz，折衣任务（Figure 7）",
+    "locator": "5.3 Real-world Experiments, Figure 7 / 5.1 Simulation Experiments"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Figure 7 数据块（提取文本中该块位于 5.1 节表面：RTX 4090 10/10、7/10、10/10；Jetson Orin (Naive Async) 6/10、0/10、5/10；Jetson-PI (Ours) 10/10、8/10、9/10）与 5.3 段（X2-W、XR-1、Jetson Orin、15 Hz、三子任务设置；'almost no accuracy loss compared to RTX 4090 deployment'、'clear improvement over naive asynchronous'），数值与设置一致。"
+   }
+  },
+  {
+   "card_id": "2607.12659-C06",
+   "claim": "作者自述局限：机载平台在算力与带宽上相对 GPU 集群存在根本性受限，随着模型参数量与批量规模继续增大，Jetson-PI 的性能增益可能无法完全弥合与高端 GPU 部署的差距——机载实时化方案的适用条件受硬件资源上限与模型规模扩张的制约。",
+   "stance": "gap",
+   "relation": "支撑综述中'机载实时化方案的未解痛点：算力/带宽上限与模型规模增长的剪刀差'命题，界定该方案族的可扩展性边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "论文设有独立 Limitations 小节，明确承认机载平台算力/带宽的根本性约束，并指出模型参数量与批量继续增大时收益可能不足以闭合与高端 GPU 部署的差距，同时给出适用定位（功耗与便携性敏感的移动机器人应用）。",
+   "locator": "7 Limitations",
+   "source_context": "the onboard platform remains fundamentally constrained in compute and bandwidth relative to GPU clusters. As model parameter counts and batch sizes continue to scale, the performance gains of Jetson-PI may not fully close the gap with high-end GPU deployment.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对第 7 节 Limitations：'fundamentally constrained in compute and bandwidth'、'may not fully close the gap with high-end GPU deployment'均为原话；适用定位句（'for mobile robotics applications where power and portability are critical'）在同段后文；无外加推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2410.24164",
+  "2504.16054",
+  "2512.01031",
+  "2506.01844",
+  "2606.08094",
+  "2510.26742"
+ ],
+ "notes": "家族定位：'VLA 延迟与异步执行'族中'机载实时化+异步错位校正'分支的核心系统论文，与 2511.00983（感知-控制协同 62 Hz，专用小模型路线）、2606.25706（低率规划器-高率控制器接口的隐式时间对齐）构成三角互补：本篇同时处理推理延迟（调度+引擎 8.66×）与异步错位（未来环境表征外插），并对 RTC（重绘平滑）与 VLASH（机器人状态外插）做全 ∆ 扫描对比。对本综述的独特价值：(1) 错位随 ∆ 的退化剂量-效应曲线（Table 3 单模型全 ∆）；(2) '未来机器人状态外插不足以反映环境变化'的机制论断；(3) roofline 论证的机载带宽约束适用条件；(4) 作者自述的算力/带宽-模型规模剪刀差未解痛点。注意：以成功率为指标，无轨迹级误差；真机仅折衣单任务且用 XR-1 模型。"
+}

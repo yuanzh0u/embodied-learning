@@ -1,0 +1,369 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.17659",
+  "title": "When Vision Overrides Language: Evaluating and Mitigating Counterfactual Failures in VLAs",
+  "published": "2026-07-15",
+  "url": "https://arxiv.org/abs/2602.17659",
+  "authors": [
+   "Yu Fang",
+   "Yuchun Feng",
+   "Dong Jing",
+   "Jiaqi Liu",
+   "Yue Yang",
+   "Zhenyu Wei",
+   "Daniel Szafir",
+   "Mingyu Ding"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "EA-MODEL 评测+缓解类论文，直接检验'端到端 VLA 能否可靠承接语言/空间指令'：LIBERO-CF 反事实基准上 SOTA VLA（OpenVLA-OFT/π0/π0.5）Faithful 成功率仅 0.4%-13.2% 而 Biased 执行率 60.9%-78.6%；真机空间差异化指令（Middle/Left/Right、Table/Plate/Bowl）grounding 仅 20%-60%——其中 CF-Spatial suite 与真机 Spatial Reasoning 维度正对应综述问题'操作环节的空间推理职能'。模态消融（Table I：vision-only 平均成功率 18.5%-69.1% vs language-only 0.0%-0.9%）证明行为由视觉捷径主导。缓解方案 CAG 为纯推理时双分支重加权，不引入任何显式几何/SLAM/地图模块，全文 'SLAM' 一词零出现——既是'端到端路线在语言/空间 grounding 上存在缺口'的对照证据，也是'该缺口的修复走模型内部路线'的路线样本。范围限定：桌面操作+固定场景布局，不涉及导航、移动操作或度量空间指令。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认论文问题：VLA 在缺乏强场景特定监督的指令下发生反事实失败（视觉捷径压倒语言意图），威胁其作为通用机器人代理的可靠性；根因归于数据集与模态失衡"
+   },
+   {
+    "locator": "page 2, Section II Related Work（VLA 模型与多模态失衡）",
+    "role": "relevant-core",
+    "purpose": "定位谱系：VLA 两流派（VLM 主干+动作模态 vs 世界模型主干）；LIBERO-PLUS/CAST/CounterfactualVLA 等先前工作只做数据增强、缺系统基准与通用解——本文填补两缺口"
+   },
+   {
+    "locator": "page 2-3, Section III Problem Formulation",
+    "role": "method-or-design",
+    "purpose": "理解形式化：VLA 为 π(a|o,l)；贝叶斯分解 P(a|o,l)∝P(a|o)·P(l|a,o)，实践中后验坍缩 p(a|o,l)≈p(a|o)；Lo 中子集 Lin 有充分示教、Lout 欠观测导致视觉捷径"
+   },
+   {
+    "locator": "page 3-4, Section IV LIBERO-CF Benchmark（四 suite、指标定义、Table I 模态消融、Table II 训练物体影响）",
+    "role": "data-or-setting",
+    "purpose": "确认基准设计：CF-Spatial(15)/CF-Object(10)/CF-Long(10)/CF-OOD(15) 四 suite，grounding/success 双指标+Faithful/Biased 双维度；Table I 三模态消融数字（69.1%/18.5%/51.7% vs 0.9%/0.6%/0.0%）"
+   },
+   {
+    "locator": "page 5-7, Section V CAG 方法与 Section VI 仿真实验（Table III 总表、Table IV 训练策略消融、guidance scale 分析）",
+    "role": "results-or-analysis",
+    "purpose": "理解 CAG 双分支推理（π_uncond+ω(π_cond−π_uncond)，等效温度 ω 锐化语言似然）与 TF/VA 两种实现；核对 Table III（OpenVLA-OFT 4.7%/0.4%、π0.5 30.8%/13.2% vs Biased 83.6%/65.6%）与 R1-R5 消融（语言 dropout R2 劣化）"
+   },
+   {
+    "locator": "page 7-8, Section VII 真实世界实验（任务设计、实现细节、四维结果）",
+    "role": "results-or-analysis",
+    "purpose": "核对真机设定（Franka FR3+Robotiq-2F85，DROID 平台，ZED 2i/ZED mini，每指令 10 试次）与四维结果：物体识别/空间推理（20%-60% grounding）/目标执行/OOD 泛化及 CAG 增益（grounding +16.6%、success +13.3%）"
+   },
+   {
+    "locator": "page 8-9, Section VIII Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论（视觉捷径系统性存在、CAG 有效减排反事实失败、即插即用）并确认全文无作者自述局限（结论仅总结贡献）"
+   },
+   {
+    "locator": "page 9-12 与 page 18, Appendix A-C（CAG 推导、X-VLA 补充实验 Table V、实现细节、长程推理扩展 Table VI/VII）",
+    "role": "appendix-or-supplement",
+    "purpose": "补齐证据：X-VLA（0.9B）同样存在反事实失败（Table V）；长程指令中反事实失败随 horizon 复合加剧、顺序颠倒/部分指令退回记忆动作序列；Table VII 逐试次明细核对 Faithful/Biased 口径"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 13-17, Fig. 8-13 定性 rollout 图",
+    "role": "appendix-or-supplement",
+    "reason": "纯定性截图（各维度 with/without CAG 对照）：正文与 Table VII 数字已覆盖其结论，不再逐图精读"
+   },
+   {
+    "locator": "page 19-21, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据卡不可或缺的核心被引（LIBERO、OpenVLA-OFT、π0、π0.5、DROID），无需逐条精读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：VLA 为什么以及如何在指令缺乏强场景特定监督时发生反事实失败——无视给定指令、默认执行场景中训练过的任务或选择训练中高频出现的物体？如何系统评测这一语言跟随缺陷（LIBERO-CF：在 LIBERO 布局上指派视觉上可行但欠观测/未见的替代指令），以及如何在不改架构、不加示教的前提下缓解（CAG：推理时双分支动作混合以锐化语言条件）？对综述问题的意义：这是'端到端 VLA 在操作环节的语言/空间指令 grounding 存在系统性缺口'的直接评测证据，且其修复路线完全在模型内部（推理时重加权），全文 'SLAM' 一词零出现——既不评测也不讨论任何显式几何/空间状态估计基础设施。",
+ "contributions": [
+  "LIBERO-CF：首个面向 VLA 语言跟随的反事实基准，四 suite（CF-Spatial/CF-Object/CF-Long/CF-OOD 共 50 任务），用 grounding 率（夹爪是否接触指令目标）+ success 率与 Faithful/Biased 双维度区分'跟随指令'与'默认执行训练任务'",
+  "Counterfactual Action Guidance（CAG）：推理时双分支动作引导——条件 VLA 与语言无关 Vision-Action（VA）先验按 π_uncond+ω(π_cond−π_uncond) 混合，等效于以温度 ω 锐化语言似然 P(l|a,o)；即插即用，不改架构与预训练权重，有 TF（免训练）与 VA（另训视觉先验）两种实现",
+  "视觉捷径的系统实证：模态消融（Table I）+ 抓取分布热图（Fig. 2a）+ 训练物体移除实验（Table II）三重证据链，把'VLA 行为由视觉先验主导'从现象推进到机制层面",
+  "跨四个 VLA（OpenVLA-OFT 7B、π0 3B、π0.5、X-VLA 0.9B）与仿真+真机（Franka FR3，含物体识别/空间推理/目标执行/OOD/长程五维）的一致验证：反事实失败普遍存在且 CAG 一致减排"
+ ],
+ "method": {
+  "summary": "评测侧：LIBERO-CF 在 LIBERO 场景布局上为同一视觉场景指派'替代可行指令'（原背景物体为目标的新空间指令、替代物体、长程多步、全新 OOD 物体），VLA 用官方 LIBERO 微调权重直接评测，每任务 50 试次；用 grounding/success 与 Faithful/Biased 双指标量化语言跟随。诊断侧：模态消融（视觉+语言/仅视觉/仅语言）、抓取位置热图（50 试次分布）、移除训练任务物体（CF-Focused 变体）验证视觉捷径。缓解侧：CAG 把 VLA 视为条件分布，在推理时以语言无关先验 π_uncond(a|o,∅) 加 ω 倍的条件-无条件差混合动作（classifier-free guidance 的动作版）；TF 变体直接用同一 VLA 丢语言输入近似 π_uncond，VA 变体另训一个语言无关 Vision-Action 模型提供更纯净先验；guidance scale 经验值 ω=1.5（π0/π0.5）、3.0（OpenVLA-OFT）。真机：Franka Research 3+Robotiq-2F85，DROID 平台相机布置（ZED 2i 外部+ZED mini 腕部），域内任务 20 条示教、欠观测任务 1 条、OOD 零样本，每指令 10 试次。全文不涉及任何显式几何估计、建图或 SLAM 组件。",
+  "assumptions": [
+   "语言条件与视觉先验可在动作空间线性分离并在推理时混合（CFG 式假设），语言似然可用温度 ω 锐化而不破坏执行先验",
+   "视觉捷径源于数据侧结构（固定场景下示教只覆盖小任务子集）与架构侧失衡（语言 token 数远少于视觉 token），而非几何信息缺失",
+   "固定视觉场景下可行任务集合 Lo 可枚举，Lin/Lout 的划分能刻画'欠观测'语义",
+   "grounding 率（夹爪接触指令目标）是语言跟随的忠实代理指标"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "LIBERO 仿真基准（官方微调权重的 VLA 直接评测；四 suite 原始任务）",
+   "LIBERO-CF（本文构建：CF-Spatial 15、CF-Object 10、CF-Long 10、CF-OOD 15 任务，共 50 个反事实任务）",
+   "真机自采数据（DROID 平台遥操作）：每个域内任务 20 条示教、每个欠观测任务 1 条最小 warm-up、OOD 任务零样本",
+   "VA 先验模型：在 LIBERO 上按对应 VLA 同配置但丢语言 token 微调（π0.5-VA 30k 步 batch 32）"
+  ],
+  "tasks": [
+   "仿真反事实操作：空间指令（原背景物体为目标）、替代物体指令、长程多步指令、OOD 物体指令",
+   "真机五维：物体识别（Coke/Sprite/Fanta、Tape/Mustard/Pringles）、空间推理（Middle/Left/Right、Table/Plate/Bowl 三相同物体空间区分）、目标执行（Stack/Plate/Basket）、OOD 泛化（Cup/Cube/Basketball）、长程推理（Move and Pour、Apple and Banana）"
+  ],
+  "embodiments": [
+   "仿真：LIBERO Franka 桌面操作平台",
+   "真机：Franka Research 3 + Robotiq-2F85 夹爪，ZED 2i 立体相机（外部）+ ZED mini（腕部），物体位置随机化"
+  ],
+  "sample_or_scale": "仿真：每任务 50 试次，4 个 VLA（OpenVLA-OFT 7B、π0 3B、π0.5、X-VLA 0.9B）+CAG 两变体；真机：每指令 10 试次，π0.5 与 π0.5+CAG(VA) 对照；真机微调 VLA/VA 各 10k 步 batch 32"
+ },
+ "evaluation": {
+  "design": "三层面：(1) 模态消融——同一微调 VLA 在视觉+语言/仅视觉/仅语言三种输入下评测（Table I），配合 50 试次抓取位置热图与移除训练任务物体实验（Table II，CF-Spatial vs CF-Focused）验证视觉捷径；(2) LIBERO-CF 基准评测——官方权重直接评测 + CAG(TF/VA) 对照（Table III），Faithful/Biased 双维度；(3) 训练策略消融（Table IV：R1 基线/R2 语言 dropout/R3 TF/R4 LoRA-VA/R5 全量 VA）与 guidance scale 扫描（Fig. 4）；(4) 真机五维评测（Fig. 5/7，Table VII 逐试次明细）",
+  "baselines": [
+   "OpenVLA-OFT（7B，Prismatic VLM 主干，Open-X-Embodiment 预训练，官方 LIBERO 权重）",
+   "π0（3B diffusion flow，PaliGemma 主干，官方 LIBERO 权重）",
+   "π0.5（混合预训练 SOTA，官方 LIBERO 权重；真机主模型）",
+   "X-VLA（0.9B soft-prompt 跨本体，附录 Table V）"
+  ],
+  "metrics": [
+   "grounding 率：夹爪是否接触指令指定目标物体（不论任务是否完成）",
+   "success 率：任务完整完成",
+   "Faithful（跟随指令执行）/ Biased（执行原训练任务）执行率"
+  ],
+  "ablations": [
+   "训练策略：R2 语言 dropout 严重劣化（CF-Spatial grounding 39.3%→9.5%，与生成模型 CFG 惯例相反）；R5 全量 VA 优于 R4 LoRA-VA 优于 R3 TF",
+   "guidance scale：ω 增大先改善 grounding、过大因过度引导劣化 success；OpenVLA-OFT 需 ω=3.0（与其更强视觉依赖一致），π0/π0.5 用 1.5",
+   "TF vs VA：VA 增益更强（π0.5 平均 grounding 30.8%→40.5%/46.3%，成功率 13.2%→16.8%/21.7%），说明显式建模纯视觉先验优于复用条件 VLA 近似"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "模态消融：三个 SOTA VLA 在仅视觉输入时 LIBERO 平均成功率仍达 69.1%（OpenVLA-OFT）/18.5%（π0）/51.7%（π0.5），仅语言输入时崩溃至 0.9%/0.6%/0.0%——语言在当前 VLA 中只是调制视觉驱动策略的次级条件信号。",
+   "scope": "LIBERO 官方微调权重的推理时模态消融（Table I）",
+   "locator": "page 4, Table I 与正文"
+  },
+  {
+   "finding": "LIBERO-CF 上全部 VLA 严重反事实失败：OpenVLA-OFT 平均 grounding 4.7%/success 0.4%，最好的 π0.5 也仅 30.8%/13.2%；而二者在原训练任务上的偏置执行率达 83.6%/78.6% 与 65.6%/60.9%——几乎完全无法跟随反事实指令。",
+   "scope": "LIBERO-CF 四 suite，每任务 50 试次（Table III）",
+   "locator": "page 6, Table III 与 Section VI-B"
+  },
+  {
+   "finding": "真机空间差异化指令上 VLA 尤其脆弱：三相同物体不同位置、仅靠空间语言区分的设定中，π0.5 欠观测目标 grounding 仅 20%（Left）/30%（Right）/60%（Plate）/40%（Bowl），经常选错物体实例；CAG 改善 grounding 16.6%、任务成功 13.3%。",
+   "scope": "Franka FR3 真机空间推理场景（每指令 10 试次）",
+   "locator": "page 8, Section VII-C"
+  },
+  {
+   "finding": "CAG 一致改进且即插即用：π0.5 平均 grounding 30.8%→40.5%（TF）/46.3%（VA）、success 13.2%→16.8%/21.7%；摘要口径为语言跟随 +9.7%/+15.5%、欠观测任务 success +3.6%/+8.5%；真机平均减少反事实失败 9.4%、success +17.2%，且不损失域内任务性能。",
+   "scope": "LIBERO-CF 仿真 + 真机五维评测（四个 VLA 架构）",
+   "locator": "page 1, Abstract；page 6, Table III"
+  },
+  {
+   "finding": "训练策略消融揭示反直觉结果：语言 dropout（生成模型 CFG 的标准做法）在 VLA 上严重劣化性能（CF-Spatial grounding 39.3%→9.5%），语言 dropout 反而弱化指令条件；显式另训 VA 先验（R4/R5）优于复用条件 VLA（R3）。",
+   "scope": "π0.5 上的 CAG 训练策略消融（Table IV）",
+   "locator": "page 7, Table IV 与 Section VI-C"
+  },
+  {
+   "finding": "长程指令中反事实失败随 horizon 复合加剧：Move and Pour 中 π0.5 频繁倒错饮料（默认训练物体 coke）；顺序颠倒指令常按原训练顺序执行、部分指令常过度执行完整训练序列——失败表现为时间性与组合性错误，模型退回记忆动作序列而非跟随指令。",
+   "scope": "真机长程推理扩展实验（附录 C，两场景）",
+   "locator": "page 11-12, Appendix C"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "评测范围全部为桌面操作+固定场景布局+Franka 单臂（仿真 LIBERO 与真机 DROID 布置），无移动底盘、导航、大场景或动态场景——'空间语言 grounding 缺口'的证据只在桌面操作的空间实例区分切片内成立，不能外推到需要持久空间记忆、跨视角一致性或度量空间推理的场合",
+    "basis": "page 3-4 基准设计（LIBERO 布局上指派替代指令）、page 7-8 真机任务设计（三物体桌面场景）与 page 11 Table VI 任务清单均为固定桌面设定"
+   },
+   {
+    "boundary": "空间语言只覆盖离散相对位置/容器区分（middle/left/right、table/plate/bowl）与目标、顺序区分，未测试度量空间指令、跨视角空间参照或方位角语言——'VLA 空间推理弱'的结论限定在离散实例区分层面，不是对连续空间推理能力的完整测量",
+    "basis": "page 7 Section VII-A 任务设计（'2) Spatial Reasoning: Three identical objects are placed at different spatial locations, requiring the robot to distinguish based on spatial language'）与 page 11 Table VI 的指令清单"
+   },
+   {
+    "boundary": "真机统计强度弱：每指令仅 10 试次（成功率粒度 10%）、无方差/显著性报告；摘要的 9.4%/17.2% 等真机增益的绝对量级小且波动敏感，CAG 的相对增益（+9.7% 语言跟随）建立在低基数（30.8%→40.5%）上，修复后绝对成功率仍低（π0.5 平均 21.7%）",
+    "basis": "page 7（'We perform 10 trials per instruction for evaluation'）、page 1 Abstract 的相对百分比口径与 page 6 Table III 的绝对值"
+   },
+   {
+    "boundary": "'数据子集化→视觉捷径'的机制论证依赖贝叶斯后验坍缩假设与间接证据（模态消融、热图、单一 CF-Focused 变体的移除物体实验），未做受控数据干预（如按 Lout 补采示教再测）；且移除训练物体的对照只在 CF-Spatial 的 focused 变体上验证，未覆盖 CF-Long/CF-OOD",
+    "basis": "page 2-3 Section III-B 的形式化假设、page 4-5 Table II 与 Fig. 2 的证据范围"
+   },
+   {
+    "boundary": "未评测任何显式几何/空间状态估计基线（无 SLAM、定位、地图或模块化管线对照）——论文证明了端到端 VLA 的语言/空间 grounding 缺口并给出模型内部修复，但无法回答'外部空间模块能否更好修复该缺口'，对综述问题只提供缺口证据而非替代方案比较",
+    "basis": "page 5-6 方法与评测章节（CAG 双分支仅由 VLA+VA 组成）及全文无几何基线"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 LIBERO 仿真布局与 Franka FR3 桌面真机、固定场景、以自然语言指令区分少量同类/异类目标的抓放操作设定下，SOTA VLA（OpenVLA-OFT/π0/π0.5/X-VLA）的语言跟随被视觉捷径主导——反事实指令 Faithful 成功率 0.4%-13.2%（Biased 执行率 60.9%-78.6%），真机空间区分目标 grounding 20%-60%；推理时双分支动作引导（CAG，TF 或 VA 变体）可在不改架构与权重的前提下部分恢复语言条件化（语言跟随 +9.7%/+15.5%，真机 success +17.2%）。对导航、移动操作、度量空间指令、跨视角空间参照、大场景持久记忆的任务，以及'外部几何/空间基础设施能否修复该缺口'的问题，本文无任何证据。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三重证据链把视觉捷径从现象推进到机制：模态消融（Table I 定量）+ 50 试次抓取分布热图（Fig. 2a 空间可视化）+ 移除训练物体对照（Table II 因果方向）",
+   "Faithful/Biased 双指标设计直接量化'默认执行训练任务'行为，比单一成功率更能揭示指令跟随本质；grounding（接触目标）与 success（完成任务）分离允许区分'选对物体但执行失败'与'根本没跟指令'",
+   "反事实指令在视觉上保持同一布局、只更换语言，控制了视觉混淆变量——语言跟随能力的干净测量",
+   "消融设计有信息量：语言 dropout 劣化（R2）与生成模型 CFG 惯例相反的发现、TF vs VA 的先验纯度对比、guidance scale 的过度引导拐点，均给出机理解释"
+  ],
+  "design_risks": [
+   "反事实指令是研究者人为指派的'替代可行任务'，与真实用户指令分布的差异未讨论——'counterfactual failure'的生态效度依赖该构造的代表性",
+   "真机每指令 10 试次、粒度 10%、无方差/显著性；摘要 headline 数字（9.4%/17.2%）为真机平均值，个体场景波动大",
+   "CAG 的相对增益建立在低基数上（30.8%→46.3% grounding、13.2%→21.7% success），修复后绝对能力仍远不可部署；'improves by 9.7%' 的表述可能高估实际可用性",
+   "VA 变体需要额外训练一个 Vision-Action 模型（30k 步），摘要的'training-free'宣称只对 TF 变体成立，两变体的成本口径在 headline 中未区分"
+  ],
+  "baseline_fairness": "使用各 VLA 官方发布的 LIBERO 微调权重在同一基准上评测，条件一致且不偏袒本文方法；CAG 对照在同一权重同一数据上进行，TF 变体严格零额外训练；X-VLA 由作者自行微调（附录披露超参）；缺陷是没有任何非 VLA 基线（模块化管线、显式空间/几何模块）参与对照，无法横向定位'模型内部修复 vs 外部模块'的价值。",
+  "metric_validity": "grounding 率（夹爪接触指令目标）与 success 率语义清晰且互补；Faithful/Biased 维度直接对应论文核心主张，判据明确；Table VII 逐试次透明。弱点：摘要用 'language following accuracy' 而正文用 grounding rate，两口径未显式对齐；真机粒度 10%（10 试次）使 16.6%/13.3% 级别的改进接近测量噪声；热图证据为定性。",
+  "reproducibility": "附录披露充分：各 VLA/VA 的微调超参（LoRA/全量、步数、batch、学习率、EMA）、guidance scale 取值（π0/π0.5=1.5、OpenVLA-OFT=3.0）、真机硬件与相机布置（Franka FR3、Robotiq-2F85、ZED 2i/ZED mini、DROID 遥操作）、每任务试次数；项目页 vla-cf.github.io 存在；LIBERO-CF 任务定义在 Table VI 列出；代码/权重是否开源未在正文明确承诺。",
+  "external_validity": "结论限于 LIBERO 分布与 Franka 桌面抓放类任务；真机场景单一（固定桌面、少量物体、外部+腕部双相机）；空间语言限于离散相对位置与容器区分；四个受评 VLA 均为近一两年发布的主流架构（覆盖离散 token、diffusion/flow、soft-prompt 三种动作表示），反事实失败的普遍性有架构广度支撑；对导航域、移动操作、双臂、动态场景、非英语指令不可外推。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.17659-C01",
+   "claim": "LIBERO 官方微调权重上的模态消融显示：OpenVLA-OFT、π0、π0.5 三个 SOTA VLA 在仅视觉输入时平均成功率仍达 69.1%/18.5%/51.7%，仅语言输入时全部崩溃至 0.9%/0.6%/0.0%（视觉+语言时为 97.1%/94.2%/96.9%）——动作预测主要由视觉先验驱动，语言在当前 VLA 中只是调制视觉驱动策略的次级条件信号。",
+   "stance": "gap",
+   "relation": "限制'端到端 VLA 已可靠承接指令→行为映射'的判断：语言（含空间指令）近乎不参与动作选择、视觉捷径主导行为，说明操作环节端到端路线的语义-行为绑定存在系统性缺口。该缺口位于语言条件化维度而非几何状态估计维度——论文未评测任何显式几何/SLAM 对照，不能用来论证 SLAM 的必要性，但与 2604.07973 的空间能力缺口证据互为印证：端到端路线在'语言/空间 grounding'职能上尚未达到可替代成熟基础设施的可靠度。",
+   "summary": "模态消融：vision-only 平均成功率 18.5%-69.1% 而 language-only 崩溃至 0.0%-0.9%，语言只是次级条件信号",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 4, Table I 与正文",
+   "source_context": "All evaluated VLAs preserve high performance even when only vision is provided, while performance collapses to near zero when only language is given. This indicates that VLAs primarily rely on visual cues for action prediction.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "LIBERO 平均成功率（推理时模态消融）",
+    "value_or_direction": "vision-only 69.1%/18.5%/51.7%（OpenVLA-OFT/π0/π0.5）vs language-only 0.9%/0.6%/0.0%；视觉+语言 97.1%/94.2%/96.9%",
+    "comparator": "仅视觉输入 vs 仅语言输入 vs 视觉+语言输入（同一微调权重）",
+    "task_or_sample": "LIBERO 四 suite 官方微调权重的模态消融（Table I：每模型三行，Spatial/Object/Goal/Long/Avg 五列）",
+    "locator": "page 4, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 4 原文连续两句（'All evaluated VLAs preserve high performance even when only vision is provided, while performance collapses to near zero when only language is given. This indicates that VLAs primarily rely on visual cues for action prediction.'）为原文措辞；claim 中 9 个数字全部来自同页 Table I（OpenVLA-OFT 行：97.1/69.1/0.9，π0 行：94.2/18.5/0.6，π0.5 行：96.9/51.7/0.0，均已逐行核对），无外推；claim 末句'次级条件信号'为同页后文原文（'This suggests that language in current VLAs primarily functions as a secondary conditioning signal that modulates vision-driven policies.'）的直接转述。"
+   }
+  },
+  {
+   "card_id": "2602.17659-C02",
+   "claim": "LIBERO-CF 反事实基准上全部评测 VLA 严重失败：OpenVLA-OFT 平均 grounding 率仅 4.7%、成功率 0.4%；表现最好的 π0.5 也仅 30.8% grounding、13.2% 成功率——而同一模型在原训练任务上的偏置执行率高达 83.6%/78.6%（OpenVLA-OFT）与 65.6%/60.9%（π0.5），SOTA VLA 在反事实指令下几乎完全无法跟随语言，默认执行场景中训练过的任务。",
+   "stance": "gap",
+   "relation": "端到端 VLA 替代路线的能力缺口证据：在受控反事实设定（同布局、只换指令）下语言跟随近乎缺失，Faithful 与 Biased 的巨大反差说明'大规模预训练+场景微调'范式对指令语义的响应脆弱。论文将根因归于数据/模态失衡并在模型内部修复（CAG），全文 'SLAM' 零出现、无任何几何基线——该证据揭示端到端操作路线的 grounding 缺口，但不指明空间基础设施是否为对症解。",
+   "summary": "LIBERO-CF：SOTA VLA 反事实指令 Faithful 成功率 0.4%-13.2% vs Biased 偏置执行 60.9%-78.6%",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Section VI-B 与 Table III",
+   "source_context": "OpenVLA- OFT exhibits the most severe vision shortcuts, achieving only a 4.7% grounding rate and 0.4% success rate. Even π 0.5 , which reaches the best overall performance among the baselines, achieves only a 30.8% grounding rate and 13.2% success rate.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "LIBERO-CF 平均 grounding 率/成功率（Faithful vs Biased）",
+    "value_or_direction": "Faithful：OpenVLA-OFT 4.7%/0.4%、π0.5 30.8%/13.2%；Biased：OpenVLA-OFT 83.6%/78.6%、π0.5 65.6%/60.9%",
+    "comparator": "Faithful（跟随反事实指令）vs Biased（默认执行原训练任务）",
+    "task_or_sample": "LIBERO-CF 四 suite（CF-Spatial/CF-Object/CF-Long/CF-OOD，每任务 50 试次，Table III）",
+    "locator": "page 6, Table III 与 Section VI-B"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 6 原文（'OpenVLA- OFT exhibits the most severe vision shortcuts, achieving only a 4.7% grounding rate and 0.4% success rate.' 与 'Even π 0.5 , which reaches the best overall performance among the baselines, achieves only a 30.8% grounding rate and 13.2% success rate.'，含连字符换行 'OpenVLA- OFT' 与 'π 0.5 ,' 的原始空格）；claim 中 Biased 数字 83.6%/78.6%/65.6%/60.9% 另在同页 Table III（OpenVLA-OFT 行 '4.7% 83.6%'、'0.4% 78.6%'；π0.5 行 '30.8% 65.6%'、'13.2% 60.9%'）逐项核对一致，无外推。"
+   }
+  },
+  {
+   "card_id": "2602.17659-C03",
+   "claim": "真实世界空间推理设定（三个相同物体放在不同位置、仅靠空间语言区分目标：Middle/Left/Right 与 Table/Plate/Bowl）中，π0.5 在欠观测空间目标上的 grounding 率仅 20%（Left）、30%（Right）、60%（Plate）、40%（Bowl）；作者结论：VLA 在空间差异化任务上尤其容易陷入视觉捷径，经常选错物体实例；CAG 将该维度的 grounding 改善 16.6%、任务成功改善 13.3%。",
+   "stance": "gap",
+   "relation": "直接对应综述问题'操作环节的空间推理职能'：最基础的离散相对空间语言区分（左/中/右、桌面/盘子/碗）上 SOTA 端到端 VLA 真机 grounding 仅 20%-60%——显式空间语言理解尚未被端到端路线可靠吸收。注意该缺口是'语义-空间实例绑定'层面的（选错物体），而非几何状态估计层面；论文的修复（CAG 双分支重加权）也不引入任何显式空间表征或几何模块，与 2510.17439 的前馈空间基础模型路线构成两种不同的'模型内部'应对。",
+   "summary": "真机空间语言区分：π0.5 欠观测空间目标 grounding 仅 20%-60%，VLA 在空间差异化任务上尤其易陷入视觉捷径",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 8, Section VII-C Results（Spatial Reasoning）",
+   "source_context": "However, π 0.5 achieves only 20% and 30% grounding rates on under-observed targets (i.e., left, right) in Middle/Left/Right, and 60% for Plate and 40% for Bowl in Table/Plate/Bowl. These results show that VLAs are particularly prone to vision shortcuts in spatially differentiated tasks, often failing to select the correct object instance.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "真机空间推理任务的 grounding 率（欠观测空间目标）",
+    "value_or_direction": "Left 20%、Right 30%（Middle/Left/Right 场景）；Plate 60%、Bowl 40%（Table/Plate/Bowl 场景）",
+    "comparator": "欠观测空间目标 vs 域内训练目标（Middle 等域内目标 grounding 高）",
+    "task_or_sample": "Franka FR3 真机，三相同物体（白杯/玉米罐）空间区分场景，每指令 10 试次；CAG 增益 grounding +16.6%、success +13.3%（同页）",
+    "locator": "page 8, Section VII-C"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 8 原文两长句（'However, π 0.5 achieves only 20% and 30% grounding rates on under-observed targets...' 至 'often failing to select the correct object instance.'，含 'π 0.5' 的原始空格）：20%/30%/60%/40% 四个数字、场景名 Middle/Left/Right 与 Table/Plate/Bowl、'under-observed' 措辞均与原文一致；claim 末句 CAG 增益 16.6%/13.3% 出自同页紧随其后原文（'In contrast, CAG mitigates this failure mode, improving ground- ing by 16.6% and task success by 13.3%'）；空间任务设计（三相同物体、仅空间语言区分）另核对 page 7 Section VII-A 与 page 11 Table VI。"
+   }
+  },
+  {
+   "card_id": "2602.17659-C04",
+   "claim": "论文提出的缓解方案 CAG 是纯推理时双分支方案（条件 VLA 与语言无关 Vision-Action 先验按引导尺度混合动作，等效于锐化语言似然），不需要额外示教、不改架构与预训练权重：摘要报告在 LIBERO-CF 上使 π0.5 语言跟随准确率提升 9.7%（training-free）或 15.5%（配 VA 模型）、欠观测任务成功率提升 3.6%/8.5%；真实世界平均减少反事实失败 9.4%、提升任务成功率 17.2%。",
+   "stance": "conditional",
+   "relation": "条件性证据：该修复完全在端到端模型内部完成（推理时语言条件重加权+显式建模视觉先验），不引入任何显式几何/SLAM/地图模块——说明'语言/空间 grounding 失败'的主流修复不必依赖空间基础设施，限制'操作环节必须依赖 SLAM'的强主张。但其有效性是条件性的：修复后绝对成功率仍低（π0.5 平均成功率 13.2%→21.7%，page 6 Table III），更强增益需另训 VA 分支，且该方案只针对语言条件化、不提供空间状态估计能力。",
+   "summary": "CAG 推理时双分支修复：语言跟随 +9.7%/+15.5%、真机 success +17.2%，全程无几何/SLAM 模块",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 1, Abstract",
+   "source_context": "For example, on LIBERO-CF, CAG improves π 0.5 by 9.7% in language following accuracy and 3.6% in task success on under- observed tasks using a training-free strategy, with further gains of 15.5% and 8.5%, respectively, when paired with a VA model. In real-world evaluations, CAG reduces counterfactual failures of 9.4% and improves task success by 17.2% on average.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "语言跟随准确率/任务成功率提升与真机反事实失败减少",
+    "value_or_direction": "+9.7%（TF 语言跟随）、+15.5%（VA 语言跟随）、+3.6%/+8.5%（欠观测任务 success）、真机 -9.4% 反事实失败、+17.2% success",
+    "comparator": "π0.5+CAG vs π0.5 基线（TF 与 VA 两变体；真机为 VA 变体）",
+    "task_or_sample": "LIBERO-CF 欠观测任务与真机五维评测（Franka FR3，每指令 10 试次）",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 Abstract 原文两长句（含 'π 0.5' 原始空格与连字符换行 'under- observed'）：9.7/3.6/15.5/8.5/9.4/17.2 六个数字与 'training-free strategy'、'paired with a VA model'、'on average' 措辞均与原文一致；'双分支推理、不需额外示教、不改架构与预训练权重'的方案描述核对同页 Abstract 前文（'requires neither additional demonstrations nor modifications to existing architectures or pretrained models'）。relation 中修复后绝对成功率 13.2%→21.7% 为 page 6 Table III 数字（C04 claim 本身未使用该页外数字）。"
+   }
+  },
+  {
+   "card_id": "2602.17659-C05",
+   "claim": "作者把反事实失败的根因归于数据采集方式与模态失衡：在固定场景下，示教往往只为少数任务子集采集，促使 VLA 依赖视觉捷径而非忠实 grounding 语言——即当前具身操作数据集'任务子集化+语言多样性远低于视觉/动作模态'的结构性偏差是端到端路线失败行为的源头。",
+   "stance": "gap",
+   "relation": "对应综述问题'具身数据采集'维度：端到端路线的失败根因被定位在采集范式（固定场景、小任务子集、语言欠采样）而非几何状态估计缺失——该环节当前的核心矛盾是数据多样性与语言覆盖，不是 SLAM 缺位；论文的对策（CAG/VA 先验）也不涉及采集端几何基础设施。这为'数据采集环节的瓶颈诊断不需要诉诸 SLAM'提供了样本，但论文未比较不同采集范式（如带位姿真值的 SLAM 辅助采集）对 grounding 质量的影响。",
+   "summary": "根因诊断：固定场景下示教只覆盖小任务子集，数据偏差催生视觉捷径（采集环节缺口在数据多样性，非几何）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Section I Introduction",
+   "source_context": "Under a fixed scene, demon- strations are often collected for only a small subset of tasks, encouraging VLAs to rely on vision shortcuts rather than faithfully grounding language.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 2 原文（含连字符换行 'demon- strations'）一句：'small subset of tasks'、'vision shortcuts'、'faithfully grounding language' 均为原文措辞；claim 中'语言多样性低于视觉/动作模态'的补充出自同页后文与 page 3 Preliminaries（'the diversity of textual data is significantly lower than that of visual and action modalities'），作为作者归因的完整陈述未添加原文之外的结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "LIBERO: Benchmarking Knowledge Transfer for Lifestream Robot Learning",
+   "arxiv_id": "2306.03362",
+   "role": "LIBERO-CF 的底座基准：四 suite 布局、官方微调权重评测协议均基于它（参考文献 [33]，NeurIPS 2023，Bo Liu et al.）"
+  },
+  {
+   "title": "Fine-tuning vision-language-action models: Optimizing speed and success (OpenVLA-OFT)",
+   "arxiv_id": "2502.19645",
+   "role": "C01/C02 的主要基线（7B，视觉捷径最严重的样本：Faithful 4.7%/0.4% vs Biased 83.6%/78.6%，参考文献 [27]）"
+  },
+  {
+   "title": "π0: A Vision-Language-Action Flow Model for General Robot Control",
+   "arxiv_id": "2410.24164",
+   "role": "基线 VLA（3B diffusion flow，PaliGemma 主干，参考文献 [4]）"
+  },
+  {
+   "title": "π0.5: a vision-language-action model with open-world generalization",
+   "arxiv_id": "2504.16054",
+   "role": "表现最好的基线与真机主模型（混合预训练 SOTA；grounding 缺口与 CAG 增益的主要载体，参考文献 [20]）"
+  },
+  {
+   "title": "DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset",
+   "arxiv_id": "2403.12945",
+   "role": "真机数据采集平台与相机布置参照（Franka+ZED 双相机设定，遥操作示教来源，参考文献 [25]）"
+  }
+ ],
+ "notes": "补充观察：(1) 全文 'SLAM'、localization、建图类词零出现——论文代表'端到端 VLA 失败诊断+模型内部修复'路线，与空间基础设施讨论正交，但为'端到端路线尚未可靠承接语言/空间指令职能'提供操作环节的缺口证据。(2) 与综述问题最相关的三块：模态消融（C01，语言条件近乎失效）、真机空间语言区分失败（C03，20%-60% grounding）、CAG 修复不含几何模块（C04，conditional）——与 2604.07973 的'空间想象/几何感知/跨视角/记忆'四缺口互为印证，但本文缺口在语义-实例绑定层面而非几何估计层面。(3) 空间维度的覆盖浅：只有离散相对位置/容器区分，无度量空间、无跨视角、无建图类任务，transfer_boundary 已限定。(4) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv full-text API）。(5) 该论文 2026-07-15 v2，属'近一年'窗口内。"
+}

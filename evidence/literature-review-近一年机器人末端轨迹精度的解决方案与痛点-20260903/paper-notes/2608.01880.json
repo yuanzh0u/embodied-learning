@@ -1,0 +1,358 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.01880",
+  "title": "World Action Models in Real Time: An Empirical Study of Smooth Execution via Asynchronous Deployment",
+  "published": "2026-08-11",
+  "url": "https://arxiv.org/abs/2608.01880",
+  "authors": [
+   "Motubrain Team"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "empirical",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接命中综述问题的『异步执行与时间对齐』方案族：在世界动作模型秒级端到端延迟的现实约束下，对六种部署/混合策略做离线轨迹误差与在线任务得分/时间/jerk 的统一实证比较，并给出时间对齐这一被低估的工程前提与 prefix 约束在环境突变时失效的痛点。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "定位问题：秒级端到端延迟导致块边界不连续与闭环频率受限；四类异步策略分类与三条贡献"
+   },
+   {
+    "locator": "2.2 Asynchronous Deployment Strategies",
+    "role": "relevant-core",
+    "purpose": "四族方法（纯切换/引导扩散/prefix 条件/直接动作加权）的机制定义与代表工作（RTC、Training-Time RTC、Legato）"
+   },
+   {
+    "locator": "3 Problem Formulation",
+    "role": "method-or-design",
+    "purpose": "H/s/d/d_est 四个量与 delay region/remaining overlap/non-overlap 的定义；d>d_est 导致硬跳变"
+   },
+   {
+    "locator": "4 Methods",
+    "role": "method-or-design",
+    "purpose": "六种策略（sync/async/async+blend/simple/infer/train）的具体实现与权重调度"
+   },
+   {
+    "locator": "5.1 Setup",
+    "role": "data-or-setting",
+    "purpose": "双臂 10 Hz 平台、H=24、d_est=8、s=4 的部署参数"
+   },
+   {
+    "locator": "5.2 Offline Trajectory Analysis",
+    "role": "results-or-analysis",
+    "purpose": "离线重叠区 MAE/max 误差对比：infer 无法约束 delay region，async 最差"
+   },
+   {
+    "locator": "5.3 Online Robot Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "三个任务（动态/精细/长时程）×六方法的得分、时间与 jerk 结果及任务级解释"
+   },
+   {
+    "locator": "6 Discussion and Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "时间对齐是前提、train 最优权衡、环境突变时 prefix 约束有害的开放问题"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1 Action Chunk Policies and World Action Models",
+    "reason": "背景介绍，无增量信息"
+   }
+  ]
+ },
+ "research_question": "在端到端管线延迟达秒级的世界动作模型部署中，同步/异步两种执行调度与四类块间混合策略（纯切换、去噪中加权、推理期速度引导、训练期 prefix 条件）对末端轨迹平滑性、任务精度与完成时间的影响如何？时间对齐在其中扮演什么角色？",
+ "contributions": [
+  "指出时间对齐（把每帧命令关联到正确观测时间戳）是被低估的关键工程前提：对齐不良造成的持续抖动无法被任何混合算法补偿",
+  "在同一双臂平台（10 Hz、H=24、d_est=8、s=4）上统一实现并比较六种部署策略（sync/async/async+blend/simple/infer/train），同时用离线重叠区误差（MAE/max，区分 delay region 与 remaining overlap）与在线任务得分/时间/RMS jerk 评估",
+  "实证结论：prefix 条件式训练方法（train）取得最佳整体精度-平滑权衡；直接动作加权（simple）平滑但精度受限；推理期速度引导（infer）无法约束 delay region，在该平台上不能保证块边界动作连续性"
+ ],
+ "method": {
+  "summary": "把异步分块执行形式化为 H（预测视界）、s（执行视界）、d（真实端到端延迟）、d_est（控制器估计延迟）四个量：执行 s 帧后触发新推理，两块重叠 H−s 帧，其中前 d_est 帧为 delay region（应与已提交动作一致）、其余为 remaining overlap（分歧随预测视界增大）。六种策略在同一 WAM 上实现：sync（等待推理后硬切换）；async（在 d_est 帧处硬切换不混合）；async+blend（对相邻块输出做事后加权平均）；simple（去噪每步把重叠区预测与旧块加权混合，w(t) 从 1 线性降到 0）；infer（推理期 RTC，只调整去噪速度场）；train（训练期 RTC，把旧块 delay region 作为干净条件前缀，w 为阶跃函数，需重训）。离线用演示轨迹模拟相邻两次推理的块间误差；在线用里程碑计分制评测三任务。",
+  "assumptions": [
+   "d_est 取测得的端到端延迟中位数，且真实延迟 d 围绕其波动；d>d_est 时发生无法恢复的硬位置跳变，d<d_est 影响轻微",
+   "相邻块的前缀（delay region）对生成是有用的引导信息——该假设在环境突变时不成立（作者讨论）",
+   "离线分析用训练集演示轨迹回放来模拟相邻推理调用，可近似真实异步部署的块间分歧"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "训练集演示轨迹（用于离线开环评测：相隔 s 帧采两次观测分别推理，模拟连续异步调用）",
+   "无公开基准依赖；自建双臂平台任务"
+  ],
+  "tasks": [
+   "Pick Up Conveyor（动态任务：传送带移动目标，5 物体，里程碑计分满分 100）",
+   "Block Into Slot（精细操作：定位/抓取/移动/插槽各 25 分）",
+   "Food Into Microwave（长时程：按开关/开门/抓碗/放入/关门各 20 分）"
+  ],
+  "embodiments": [
+   "双臂末端控制机器人，10 Hz 控制频率（bimanual end-effector robot）"
+  ],
+  "sample_or_scale": "在线每方法-任务组合 5 次试验；WAM 预测 H=24 帧的块；d_est=8 帧（≈0.8 s 秒级管线延迟的中位数）、s=4 帧，重叠 20 帧（8 delay + 12 remaining overlap）；离线分析覆盖训练集演示轨迹的全部关节（臂/躯干/头/夹爪）"
+ },
+ "evaluation": {
+  "design": "两阶段：先离线开环（演示轨迹回放，测相邻块重叠区的每关节 MAE 与最大绝对误差，按 delay region/remaining overlap 分解），再在线闭环（3 任务 × 6 方法 × 5 试验，报平均完成得分、完成时间与平移 RMS jerk）",
+  "baselines": [
+   "sync（同步等待+硬切换，非异步基线）",
+   "async（纯异步切换）",
+   "async+blend（事后动作加权）",
+   "simple（去噪中加权混合）",
+   "infer（推理期 RTC）",
+   "train（训练期 Training-Time RTC，需重训）"
+  ],
+  "metrics": [
+   "离线：重叠区每关节 MAE 与 max 绝对误差（臂/躯干 m，头 rad，夹爪命令），delay region 与 remaining overlap 分解",
+   "在线：里程碑完成得分（0–100）、完成时间（s）、平移 RMS jerk（m/s³）"
+  ],
+  "ablations": [
+   "无超参消融；六策略对比本身构成机制消融（是否混合、混合对象是动作还是去噪速度、注入时机是推理期还是训练期）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "prefix 条件式训练（train）整体取得最佳精度-平滑权衡：动态任务 96 分（61.24 s）、精细任务 70 分且比 sync 快（12.13 s vs 19.4 s）、长时程 96 分（68.9 s）",
+   "scope": "10 Hz 双臂 WAM 平台，三任务各 5 次试验",
+   "locator": "5.3 Online Robot Evaluation / 6 Discussion and Conclusion"
+  },
+  {
+   "finding": "同步执行在动态任务上只得 20 分（推理窗口内完全无响应，无法跟踪移动目标），但在非动态任务上仍具竞争力（精细 72.5、长时程 96 分）",
+   "scope": "Pick Up Conveyor / Block Into Slot / Food Into Microwave",
+   "locator": "5.3 Online Robot Evaluation"
+  },
+  {
+   "finding": "纯异步切换（async）两任务上都是最高 jerk（8.427 与 3.864 m/s³）且得分垫底（20/40/44），未混合的异步切换不可用；async+blend 把得分提升到 40/37.5/80，说明准确时间对齐+最简单插值是可用下限",
+   "scope": "三任务在线评测",
+   "locator": "5.3 Online Robot Evaluation (Figure 5)"
+  },
+  {
+   "finding": "去噪中加权混合（simple）平滑但精度受限：精细任务得分跌至 27.5（对比 sync 72.5），验证了精度-平滑权衡；在低精度任务上则快且平滑（长时程 60.24 s、最低 jerk）",
+   "scope": "Block Into Slot 等接触关键任务",
+   "locator": "5.3 Online Robot Evaluation"
+  },
+  {
+   "finding": "推理期速度引导（infer）离线无法约束 delay region（MAE/max 显著高于 simple/train），在线动态任务仅 30 分，且其额外推理开销扩大了有效 d_est；速度级引导不保证输出动作连续",
+   "scope": "离线重叠区分析 + 在线三任务",
+   "locator": "5.2 Offline Trajectory Analysis / 5.3 Online Robot Evaluation"
+  },
+  {
+   "finding": "sync 的块边界停顿在长时程任务上累积为 85.18 s 完成时间，显著长于 train（68.9 s）与所有异步方法（约 60–66 s）——异步化本身带来实际吞吐收益",
+   "scope": "Food Into Microwave",
+   "locator": "5.3 Online Robot Evaluation"
+  },
+  {
+   "finding": "时间对齐是任何混合策略的前提：d>d_est 时控制器在错误帧索引切换，产生任何混合策略都无法恢复的硬位置跳变；离线上 delay region 边界是误差拐点",
+   "scope": "异步分块部署的一般性质",
+   "locator": "3 Problem Formulation / 5.2 Offline Trajectory Analysis"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "所有方法都假设旧块前缀提供有用引导；环境突变（如突然出现障碍物）时 prefix 约束反而有害，如何生成平滑且具反应性的轨迹是作者明确列出的开放问题",
+    "locator": "6 Discussion and Conclusion (Figure 6)"
+   },
+   {
+    "limitation": "推理期速度引导（infer）虽具理论吸引力，但在其平台上无法充分约束 delay region，不能保证块边界动作连续性",
+    "locator": "6 Discussion and Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "统计功效薄弱：每方法-任务仅 5 次试验且无置信区间或显著性检验，得分差异（如 train 70 vs sync 72.5）可能在噪声范围内",
+    "basis": "5.3 节明示 'Each method–task combination is evaluated over 5 trials; reported ... are averaged across trials'，未报告方差"
+   },
+   {
+    "boundary": "结论绑定单一平台与延迟量级：10 Hz 双臂、H=24、d_est=8 帧（秒级 WAM 推理）；对亚百毫秒延迟的轻量 VLA 或更高控制频率（如 30–50 Hz）平台，delay region 结构与结论不能直接外推",
+    "basis": "5.1 Setup 仅给出该平台参数；全文未做延迟量级或控制频率的敏感性实验"
+   },
+   {
+    "boundary": "未考察执行视界 s 与 d_est 误设的敏感性，也未比较不同 s 下的权衡；d_est 取中位数意味着约半数时间 d>d_est 落入高误差 remaining overlap，其代价未被量化",
+    "basis": "3/5.1 节只给出 d>d_est 定性后果，无扫描实验"
+   },
+   {
+    "boundary": "train 族需要重训练，与免训练方法的比较未计入训练成本与工程复杂度；评测模型为自研 WAM（Motubrain），未见开源权重细节，复现依赖该模型",
+    "basis": "Table 1 标注 train 需 Retraining；正文未提供模型开源信息"
+   }
+  ]
+ },
+ "transfer_boundary": "该实证结论限定于 10 Hz 双臂末端控制、秒级端到端延迟（d_est=8 帧）的世界动作模型部署与三个自建桌面任务、每格 5 次试验；prefix 约束在环境突变时失效（作者自述），且未验证对更快推理管线或其它控制频率的迁移。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "四族混合策略+两种执行调度的统一分类学，在同一平台、同一模型上受控实现，机制差异（混合对象/注入时机）被清晰隔离",
+   "离线（可控、可复现的块间误差分解）与在线（生态效度）两阶段评测互补，delay region/remaining overlap 的分解直指异步执行的核心结构",
+   "任务覆盖动态/精细/长时程三个正交难度轴，且里程碑计分规则显式给出，jerk 与完成时间同时报告"
+  ],
+  "design_risks": [
+   "每格 5 次试验、无统计检验与方差报告，小样本下的得分排序可能不稳定",
+   "infer（推理期 RTC）与其原文报告的表现相悖，可能是平台/模型类别（WAM 视频-动作联合去噪 vs 扩散策略）迁移导致的实现差异，而非方法本身缺陷",
+   "单一平台、单一模型、自建任务与计分权重，缺少公开基准锚点，跨研究可比性弱",
+   "d_est 的测量方法（中位数）与抖动分布未给出，时间对齐这一『关键前提』本身缺乏定量刻画"
+  ],
+  "baseline_fairness": "六策略在同一 WAM 与平台上实现，机制对比公平；但 train 需要重训而其它不需要，工程成本不对等，且 infer 的负面结果与其原始论文结论冲突，实现保真度存疑。",
+  "metric_validity": "在线指标（里程碑得分/时间/RMS jerk）与离线块间误差直接对应研究问题；但缺少绝对末端跟踪误差（如对演示轨迹的 mm 级偏差），且计分权重为自定义，jerk 仅平移分量。",
+  "reproducibility": "平台参数（H/s/d_est/控制频率）、六策略实现细节与计分规则披露完整，项目页与 GitHub 链接给出；但底座 WAM 为自研模型、任务与演示数据未公开，端到端复现困难。",
+  "external_validity": "结论方向（时间对齐前提、训练期 prefix 条件最优、直接加权精度受限）与该领域其它工作一致，具有机制层面的可迁移性；但量化数值高度绑定 10 Hz/秒级延迟设置，外推到低延迟或高频控制场景需重新标定 delay region 结构。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.01880-C01",
+   "claim": "在该 10 Hz 双臂世界动作模型平台上，六策略统一比较的总结论：prefix 条件式训练方法取得最佳整体精度-平滑权衡；直接动作加权平滑但精度受限；推理期速度引导无法约束 delay region。",
+   "stance": "support",
+   "relation": "为综述的『异步部署时间对齐』方案族给出机制排序结论：训练期 prefix 条件 > 推理期动作约束 > 推理期速度引导，直接影响方案选择。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言第三条贡献即此总结论，与 5.3 在线结果（train 三任务 96/70/96）和 5.2 离线结果（train 与 simple 的 delay region 近零误差、infer 显著更高）相互印证。",
+   "locator": "1 Introduction",
+   "source_context": "We find that prefix-conditioned methods achieve the best overall precision–smoothness balance, while direct action weighting provides a smooth but precision-limited baseline, and velocity-guided inference fails to constrain the delay region on our platform.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "precision–smoothness balance, from a unified comparison using offline trajectory metrics and online task completion score, time, and smoothness",
+    "value_or_direction": "prefix-conditioned methods achieve the best overall precision–smoothness balance; direct action weighting provides a smooth but precision-limited baseline; velocity-guided inference fails to constrain the delay region on our platform",
+    "comparator": "prefix-conditioned (train) vs direct action weighting (async+blend, simple) vs velocity-guided inference (infer); evaluated families instantiated as sync, async, async+blend, simple, infer, train",
+    "task_or_sample": "双臂 10 Hz 平台三任务（每方法-任务 5 次试验），H=24、d_est=8、s=4",
+    "locator": "1 Introduction, Contribution 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "该句逐字摘自引言贡献 3（'prefix-conditioned methods achieve the best overall precision–smoothness balance…fails to constrain the delay region on our platform'）；quantitative 块按引言的方向性结论与 Table 1 方法清单（sync/async/async+blend/simple/infer/train）记录；与 5.3 在线结果（train 三任务 96/70/96 分）和 5.2 离线结果（train 与 simple 的 delay region 近零误差、infer 显著更高）相互印证，claim 限定『on our platform』，未超出该实验设置。"
+   }
+  },
+  {
+   "card_id": "2608.01880-C02",
+   "claim": "在动态任务（传送带移动目标）上，sync 与纯 async 都只得 20 分：sync 因推理窗口内完全无响应无法跟踪目标，async 因无混合的硬切换产生全场最高 jerk（8.427 m/s³）而无法完成抓取；async+blend 也仅 40 分。",
+   "stance": "support",
+   "relation": "支撑综述命题『延迟/异步处理方式直接决定末端轨迹精度』：秒级延迟下同步执行在动态任务上不可用，异步化+对齐+混合是必要条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.3 节动态任务段落原文给出 sync/async 各 20 分的原因机制与 async 最高 jerk 的定量描述，async+blend 40 分说明对齐+最简插值只是最低前提。",
+   "locator": "5.3 Online Robot Evaluation",
+   "source_context": "sync achieves a completion score of only 20, failing to track the moving target because the robot is completely unresponsive during the inference window. async also scores 20 despite being responsive—the hard chunk-switch without any blending produces the highest jerk among all methods, severe enough to prevent successful picking.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "完成得分与平移 RMS jerk",
+    "value_or_direction": "sync=20 分、async=20 分（jerk 8.427 m/s³ 为六方法最高）、async+blend=40 分、train=96 分",
+    "comparator": "六种部署策略互比",
+    "task_or_sample": "Pick Up Conveyor（动态任务，5 物体，每方法 5 次试验）",
+    "locator": "5.3 Online Robot Evaluation (Figure 5)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 5.3 节动态任务段落与 Figure 5 数值（20/20/40/96，async jerk 8.427）；claim 的因果解释（无响应/无混合硬切换）均为原文措辞。"
+   }
+  },
+  {
+   "card_id": "2608.01880-C03",
+   "claim": "在精细操作任务（块入槽）上，去噪中加权混合（simple）的激进插值使放置精度退化到 27.5 分（sync 72.5、train 70），证实混合引入精度-平滑权衡；train 比 sync 更快（12.13 s vs 19.4 s）且 jerk 更低。",
+   "stance": "support",
+   "relation": "为综述提供『异步混合机制的量化代价』证据：对相邻块输出做平均会同时损害两个预测的精度，在接触关键任务上不可接受，界定了直接动作加权方案的适用边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.3 节精细任务段落原文明确把 27.5 分归因于精度-平滑权衡，并给出 train 的速度与 jerk 优势数字，直接支撑该主张。",
+   "locator": "5.3 Online Robot Evaluation",
+   "source_context": "simple’s aggressive action interpolation degrades placement precision (score 27.5), confirming that blending during denoising introduces a precision–smoothness trade-off on contact-critical tasks. sync (score 72.5) and train (score 70) both achieve high completion scores; train additionally completes the task faster (12.13 s vs. 19.4 s for sync) and with lower jerk",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "完成得分与完成时间",
+    "value_or_direction": "simple 27.5 分 vs sync 72.5 / train 70；train 12.13 s vs sync 19.4 s（jerk 0.9444 vs 1.522 m/s³）",
+    "comparator": "sync 与 train",
+    "task_or_sample": "Block Into Slot（精细操作，每方法 5 次试验）",
+    "locator": "5.3 Online Robot Evaluation (Figure 5)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 5.3 节精细任务段落（含弯引号 simple’s）与 Figure 5 数字；27.5/72.5/70/12.13/19.4 均一致，jerk 数字与 Figure 5 第三行相符。"
+   }
+  },
+  {
+   "card_id": "2608.01880-C04",
+   "claim": "作者主张：时间对齐（把每帧命令关联到正确观测时间戳）是关键且常被低估的工程前提，对齐不良造成的持续抖动无法被任何混合算法补偿。",
+   "stance": "gap",
+   "relation": "为综述识别『异步执行族』的隐藏前提/痛点：许多混合算法研究默认对齐良好，而该工程环节本身是精度的先决条件。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言贡献 1 与讨论的『Reliable async execution—accurate temporal alignment—is the prerequisite』相互印证，构成作者对该领域痛点的一手判断。",
+   "locator": "1 Introduction",
+   "source_context": "We show that temporal alignment—accurately associating each command frame with the correct obser- vation timestamp—is a critical and often underappreciated engineering requirement; poor alignment causes persistent jitter that no blending algorithm can compensate for.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字复制引言贡献 1（含 obser- vation 连字符换行归一化）；与 3 节 d>d_est 硬跳变、6 节 prerequisite 表述一致，属作者原判断而非实验数值。"
+   }
+  },
+  {
+   "card_id": "2608.01880-C05",
+   "claim": "作者自述开放问题：所有被比较方法都假设旧块前缀提供有用引导；环境突变（如突然出现的障碍物使 chunk n+1 大幅偏离旧轨迹）时 prefix 约束变得有害，平滑且具反应性的轨迹生成无解。",
+   "stance": "gap",
+   "relation": "为综述的『未解痛点』清单提供直接证据：prefix 条件/混合类平滑机制与快速反应性存在结构性冲突，是异步执行族的开放问题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "讨论节明确把该情形列为作者计划探索的开放问题，并配 Figure 6 图示障碍物场景，属于作者一手承认的边界。",
+   "locator": "6 Discussion and Conclusion",
+   "source_context": "all methods here assume the prior chunk provides useful guidance; this breaks down when the environment changes abruptly. As illustrated in Figure 6, a suddenly appearing obstacle drives chunk n+1 away from the prior trajectory, making the prefix constraint harmful rather than helpful. How to generate smooth yet reactive trajectories under such conditions is an open problem we plan to explore.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字摘自讨论节末段；『open problem we plan to explore』为原文措辞，claim 与作者表述完全对齐且不超出其范围。"
+   }
+  },
+  {
+   "card_id": "2608.01880-C06",
+   "claim": "离线重叠区分析显示：推理期速度引导（infer）在所有关节的 delay region 上 MAE 与 max 误差都显著高于动作约束类方法（simple/train）；速度级引导只改变去噪方向而不对输出动作施加硬约束，因此不能保证块边界动作连续，位置跳变不可避免。",
+   "stance": "limit",
+   "relation": "为综述提供方案局限证据：RTC 式推理期速度引导这一流行机制在该平台上无法保证 delay region 一致性，限制其作为末端轨迹精度方案的可靠性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节关键观察 1 给出该结论及其机制解释（速度引导 vs 动作约束的区别），与在线动态任务 infer 仅 30 分的结果一致。",
+   "locator": "5.2 Offline Trajectory Analysis",
+   "source_context": "infer fails to constrain the delay region. Across all joints, infer shows substantially higher MAE and max error in the delay region compared to simple and train. Unlike action-constraining methods, velocity-level guidance steers the denoising trajectory without enforcing hard constraints on the output actions, and therefore cannot guarantee action continuity at chunk boundaries—position jumps remain unavoidable.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "重叠区 delay region（步 1–8）每关节 MAE 与最大绝对误差",
+    "value_or_direction": "infer 显著高于 simple 与 train（动作约束类在 delay region 近零误差）；在线动态任务得分 infer=30",
+    "comparator": "simple 与 train（动作约束类方法）",
+    "task_or_sample": "训练集演示轨迹的离线开环重放（臂/躯干/头/夹爪全关节）",
+    "locator": "5.2 Offline Trajectory Analysis (Figure 3/Figure 4)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字摘自 5.2 节 Key observations 第 1 条；『substantially higher』与 Figure 3/4 中 infer 曲线在黄色区域抬升一致；机制解释为原文措辞，claim 限定于其平台（on our platform）。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2602.12978",
+  "2512.05964",
+  "2506.01844"
+ ],
+ "notes": "作者为 Motubrain Team（署名团队，正文 Author Contributions 列出 Mengchen Cai、Jiangfeng Liu、Yinze Rong）。对综述的价值：(1) 提供异步部署四族混合策略的统一分类学与同平台受控排序（train>simple>infer 的一致性排序）；(2) 明确时间对齐这一工程前提与 d>d_est 硬跳变机制；(3) 三任务覆盖动态/精细/长时程，可与其他延迟补偿工作的任务类型对齐比较。风险：5 试验小样本、自研模型与任务不可复现、infer 与 RTC 原文结论相悖需谨慎引用。"
+}

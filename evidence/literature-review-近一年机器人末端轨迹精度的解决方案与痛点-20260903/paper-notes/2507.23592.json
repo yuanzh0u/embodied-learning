@@ -1,0 +1,412 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2507.23592",
+  "title": "Human-Exoskeleton Kinematic Calibration to Improve Hand Tracking for Dexterous Teleoperation",
+  "published": "2026-03-02",
+  "url": "https://arxiv.org/abs/2507.23592",
+  "authors": [
+   "Haiyun Zhang",
+   "Stefano Dalla Gasperina",
+   "Saad N. Yousaf",
+   "Job D. Ramirez",
+   "Toshimitsu Tsuboi",
+   "Tetsuya Narita",
+   "Ashish D. Deshpande"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "运动学标定方案族的直接证据：量化了虚拟连杆参数失准对指尖跟踪精度的影响（±10%参数扰动→高达30mm指尖偏差）与受试者特定标定的收益（指尖MAE食指降71.5%至10.1mm、拇指降34.8%至10.3mm，关节MAE 12.0-25.5°→3.8-12.0°），并暴露'只评相对降幅无外部对标、统一精度标准缺失、约10°关节残差沿链在指尖累积、真值依赖的离线权重搜索'等评测与标定痛点，直接服务综述'精度评测/标定'族。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "视觉vs穿戴式手部跟踪痛点（遮挡/光照/无触觉 vs 解剖差异/穿戴滑动）、商用设备90分钟手动标定、标定策略相关工作（Heinrich/Li/Gosala/Kim）"
+   },
+   {
+    "locator": "II. METHODS / A. Hardware Platform",
+    "role": "method-or-design",
+    "purpose": "MAESTRO平台：拇指/食指/中指绳驱、16关节旋转电位计、自对准闭式四连杆"
+   },
+   {
+    "locator": "B. Kinematic Model",
+    "role": "method-or-design",
+    "purpose": "每指独立闭链模型（RRPR+RRRR环）、冗余关节传感器（式1-3估计）、外骨骼角→解剖角闭式解（式4-6、Tab. I）"
+   },
+   {
+    "locator": "C. Kinematic Parameters Sensitivity Analysis",
+    "role": "method-or-design",
+    "purpose": "虚拟连杆6个XY参数±10%独立扰动的指尖灵敏度仿真（近端30mm vs 远端3-5mm、水平更敏感）"
+   },
+   {
+    "locator": "D. Human-Exoskeleton Calibration Framework",
+    "role": "method-or-design",
+    "purpose": "两阶段标定协议（平板手0°参考+隔离MCP屈伸）、加权残差代价函数（式7-11）、适定性条件（误差项数=参数数）、fminunc求解、跨设备推广条件"
+   },
+   {
+    "locator": "III. HUMAN-SUBJECT EXPERIMENTS",
+    "role": "data-or-setting",
+    "purpose": "7名受试者（IRB）、动捕标记放置、3种代表性手指运动×6次、遮挡导致的关节分析范围限制"
+   },
+   {
+    "locator": "III.A. Quantitative Analysis",
+    "role": "method-or-design",
+    "purpose": "数据驱动权重搜索协议（每受试者500组随机权重、动捕真值、跨受试者平均）与性能验证协议"
+   },
+   {
+    "locator": "III.B. Qualitative Analysis",
+    "role": "method-or-design",
+    "purpose": "Unity虚拟手定性评估设计（直接关节映射+DIP耦合推断+固定骨长以隔离标定效应）"
+   },
+   {
+    "locator": "IV.A. Quantitative Results",
+    "role": "results-or-analysis",
+    "purpose": "最优权重分布（拇指w2/w8、食指w3/w4敏感）、三条件MAE结果（Fig.7/8、Table II逐受试者降幅）、Subject 6轨迹对比"
+   },
+   {
+    "locator": "IV.B. Qualitative Results",
+    "role": "results-or-analysis",
+    "purpose": "标定后（绿色）与未标定（红色）虚拟手对齐改善、捏合姿势可视化"
+   },
+   {
+    "locator": "V. DISCUSSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "~10mm指尖精度与视觉系统对比及遥操作可容忍范围、推广条件、残留误差来源与三项局限、未来方向"
+   },
+   {
+    "locator": "VI. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "总结：标定显著降低跟踪误差但约10°关节残差仍在、可适配其他手-外骨骼设计"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "reason": "仅提取arXiv可溯源引用（2502.07730 Doglove、2509.21242 Fsglove）"
+   },
+   {
+    "locator": "supplementary video",
+    "reason": "实时虚拟手跟踪演示视频不在全文缓存中，不作证据"
+   }
+  ]
+ },
+ "research_question": "如何通过受试者特定（subject-specific）的运动学标定补偿手部外骨骼的解剖差异与穿戴不一致（虚拟连杆参数失准），以提升灵巧遥操作的手部跟踪精度？其收益、绝对精度水平与残留边界如何量化？",
+ "contributions": [
+  "受试者特定标定框架：以两阶段协议（平板手姿势作全关节0°/拇指CMC 70°静态参考 + 隔离MCP屈伸作动态一致性约束）从运动数据估计穿戴特定的虚拟连杆参数，最小化解剖关节+冗余关节的加权残差平方误差，无需外部相机、传感器或真值参考",
+  "数据驱动权重调优：每受试者以动捕真值对500组随机权重组合（wk∈[0,10]）搜索最小化关节MAE的代价函数权重，跨7名受试者平均后统一使用——把一阶灵敏度分析覆盖不到的模型失配与个体差异编码进权重",
+  "仿真灵敏度分析给出标定必要性的机理证据：虚拟连杆参数±10%扰动下近端参数（x1,y1）致高达30mm指尖偏差（远端<3-5mm），且对水平扰动更敏感（对应设备在手背的水平滑动）",
+  "7名不同手型受试者验证：关节与指尖MAE显著下降（食指指尖降幅71.5%至约10.1mm、拇指指尖34.8%至约10.3mm），平均指尖误差约10mm与无标记视觉系统（常超10-20mm）相当或更好，且在文献报道的遥操作可容忍范围（10-15mm）内"
+ ],
+ "method": {
+  "summary": "三步。(1)运动学建模：MAESTRO每指独立建模为闭式四连杆链（首环RRPR，食指/中指再1个RRRR环、拇指再2个），由外骨骼传感器角经闭式三角解（式4-6）计算解剖关节角；冗余关节角（δ̂1、δ̂2/δ̂2′）由环几何估计（式1-3）作为额外观测。(2)两阶段标定：φ1平板手姿势（全指关节视为0°、拇指CMC屈伸固定70°作跨受试者一致参考，非解剖精确但保证适定）提供全局对准；φ2隔离MCP屈伸（IP/PIP保持0°、MCP参考角为优化目标）提供动态一致性；以加权残差平方和（式9：食指6参数(x1,y1,x2,y2,x3,y3)配6个误差项；式10：拇指8参数含x4,y4配8个误差项；适定性要求误差项数=可辨识参数数）用MATLAB fminunc优化XY坐标形式的虚拟连杆参数，长度-角度形式用于闭式角计算、XY形式保证优化中的量纲一致性。(3)数据驱动权重：每受试者动态运动中随机采样500组权重（wk∈[0,10]），各组独立完成标定并计算关节角/指尖位置，以动捕轨迹为真值选出最小化关节MAE的权重分布，最终取7名受试者平均权重统一用于后续分析。",
+  "assumptions": [
+   "平板手姿势下全指关节为0°、拇指CMC屈伸为70°（跨受试者固定参考，作者承认非解剖精确）",
+   "隔离MCP屈伸阶段IP/PIP关节保持0°",
+   "虚拟连杆参数在标定会话内恒定（无穿戴变化与传感器漂移；在线自适应标定列为未来工作）",
+   "适定性：误差项数=可辨识参数数，且冗余传感/环闭合/参考姿势提供足够独立约束",
+   "食指与中指机械/运动学设计相同，食指标定与分析可代表两者",
+   "DIP关节由PIP经生物力学耦合推断（仅用于Unity可视化）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "无公开数据集；自采数据：7名受试者的两阶段标定数据 + 3种手指运动×6次的MAESTRO传感器与动捕同步轨迹"
+  ],
+  "tasks": [
+   "两阶段标定协议：平板手静态姿势（数秒）+ 拇指/食指/中指隔离MCP屈伸",
+   "跟踪评测任务：3种代表性手指运动（拇指MCP+IP联合屈伸、食指MCP屈伸PIP伸直、食指MCP+PIP联合屈伸）各重复6次",
+   "定性任务：代表性静态/动态手势（如捏合）在标定/未标定条件下的Unity虚拟手对比"
+  ],
+  "embodiments": [
+   "MAESTRO手部外骨骼：拇指/食指/中指绳驱、16关节旋转电位计（每指含2个冗余测量）、自对准闭式四连杆构型",
+   "动捕：拇指与食指解剖标志反射标记（真值）；Unity虚拟手（直接关节-关节映射）"
+  ],
+  "sample_or_scale": "7名健康受试者（手长17.0-19.2cm、宽6.5-9.8cm，作者承认略低于人群均值）；每受试者500组随机权重；因穿戴遮挡，定量分析限于拇指MCP/IP与食指MCP/PIP共4关节及两指指尖"
+ },
+ "evaluation": {
+  "design": "受试者内三条件对照：未标定（名义参数）vs 均匀权重标定 vs 最优权重标定，比较关节角MAE（°）与指尖位置MAE（mm）及相对未标定基线的降幅%（Table II逐受试者、Fig.7跨受试者平均、Fig.8逐受试者）；附Subject 6的轨迹级对比（Fig.9）与Unity虚拟手定性对比（Fig.10）",
+  "baselines": [
+   "未标定模型（名义/出厂虚拟连杆参数）",
+   "均匀权重标定（消融对照：隔离数据驱动权重的贡献）"
+  ],
+  "metrics": [
+   "关节角MAE（°，逐关节：拇指MCP/IP、食指MCP/PIP）",
+   "指尖位置MAE（mm，拇指/食指）",
+   "相对未标定基线的误差降幅（%）"
+  ],
+  "ablations": [
+   "权重消融：最优权重 vs 均匀权重 vs 未标定",
+   "仿真参数扰动灵敏度分析（±10%独立扰动6个虚拟连杆XY参数）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "灵敏度机理：虚拟连杆参数±10%独立扰动下，近端参数（x1,y1）对指尖位置影响最强（高达30mm偏差），远端参数（x3,y3）影响通常<3-5mm；指尖跟踪对水平(x)扰动更敏感，与设备在手背的水平滑动一致——运动学失准是指尖误差的主要来源",
+   "scope": "食指运动学模型的仿真扰动分析",
+   "locator": "II.C. Kinematic Parameters Sensitivity Analysis / Fig. 3"
+  },
+  {
+   "finding": "标定收益：最优权重标定使关节MAE从未标定的12.0-25.5°降至3.8-12.0°（四关节降幅37.1%-68.3%）；指尖MAE从拇指15.8mm/食指35.5mm降至10.3mm（降34.8%）/10.1mm（降71.5%），食指指尖取得最大平均降幅",
+   "scope": "7名受试者×3种手指运动×6次重复，动捕真值",
+   "locator": "IV.A. Quantitative Results / Table II, Fig. 7"
+  },
+  {
+   "finding": "权重排序稳定：最优权重一致取得最低MAE、均匀权重次之、未标定最高（全部受试关节）；平均最优权重对拇指强调w2/w8（拇指MCP相关θ2与δ2）、对食指强调w3/w4（PIP相关δ1与δ2）——第二运动环参数是跟踪精度的关键贡献者",
+   "scope": "7名受试者的权重分布与MAE对比",
+   "locator": "IV.A / Fig. 6"
+  },
+  {
+   "finding": "绝对精度水平：最优权重下平均指尖误差约10mm，与常超10-20mm的无标记视觉系统相当或更好；先前研究报道10-15mm指尖误差内不会感知性损失控制保真度——支撑该框架用于遥操作的可行性",
+   "scope": "与文献[24][11][25]的对比陈述",
+   "locator": "V. DISCUSSION"
+  },
+  {
+   "finding": "个体差异与负降幅个例：误差降低跨不同手型受试者总体一致，但个别受试者/关节出现负降幅（如Sub1拇指MCP最优权重-9.3%、Sub4食指MCP均匀权重-87.8%），作者归因于残留对准误差或未建模机械耦合",
+   "scope": "Table II逐受试者逐关节降幅",
+   "locator": "IV.A / Table II"
+  },
+  {
+   "finding": "商用设备标定痛点（作者引述背景）：现有商用设备依赖手动、基于姿势的标定流程，费时费力、依赖用户，每只手套可达90分钟，限制实用性",
+   "scope": "对商业数据手套现状的引述",
+   "locator": "I. INTRODUCTION"
+  },
+  {
+   "finding": "残留误差：标定后模型仍有约10°关节角残差与指尖误差（模型失配、传感噪声、未建模柔性），在指尖最明显（小关节偏差沿运动链累积）；作者建议补充指尖级/任务级标定以细化高精度灵巧任务的对准",
+   "scope": "7受试者残差与结论",
+   "locator": "V. DISCUSSION / VI. CONCLUSION"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "locator": "V. DISCUSSION",
+    "limitation": "标定后仍残留关节角与指尖误差（模型失配、传感噪声、未建模柔性），指尖处最明显（沿运动链累积）；需补充指尖级/任务级标定"
+   },
+   {
+    "locator": "V. DISCUSSION",
+    "limitation": "评估主要为短、孤立运动段而非长时程或多指协调动作，对复杂操作行为的洞察有限"
+   },
+   {
+    "locator": "V. DISCUSSION",
+    "limitation": "受试者手寸略低于人群均值，需更广泛多样用户群验证"
+   },
+   {
+    "locator": "V. DISCUSSION",
+    "limitation": "评估只考察相对误差降低，未与其他设备或标定方法对标；建立统一精度标准是重要未来方向"
+   },
+   {
+    "locator": "II.D / V. DISCUSSION",
+    "limitation": "推广条件：可推广至提供可比独立运动学约束的可穿戴系统，但每个设备仍需自己的代价函数构造与参数调优（优化适定要求可辨识参数数不超过独立约束数）"
+   },
+   {
+    "locator": "V. DISCUSSION",
+    "limitation": "未来工作：在线/自适应标定以应对穿戴变化与传感器漂移；多指同时标定"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "basis": "Fig.7/Table II残差数值与VI. CONCLUSION措辞'Although residual joint-angle errors of about 10° remain, the calibration enables precise tracking'",
+    "boundary": "标定收益以相对降幅为主、绝对残差仍大（最优权重后食指PIP仍约12.0°、食指指尖仍10.1mm）；结论'约10°残差下仍支持精密跟踪'的措辞与毫米级精密遥操作需求之间存在张力，任务级充分性未验证"
+   },
+   {
+    "basis": "III.A权重搜索协议与V. DISCUSSION'averaged profile is a reasonable initialization, though device- and user-specific refinement remains necessary'",
+    "boundary": "两阶段标定的时长与计算成本未报告：协议（各数秒姿势）暗示远快于商用90分钟流程，但无量化对比；500组权重×7受试者的搜索依赖动捕真值，部署时不可得——平均权重仅作初始化，个体化精调仍必要"
+   },
+   {
+    "basis": "Table II扁平化文本的列序与Fig.7数值的反推校验",
+    "boundary": "关节级MAE的食指MCP/PIP列映射存在PDF表格排版歧义（本文以Fig.7绝对值与Table II降幅百分比的内部一致性交叉校验解读），逐关节精确数值的引用需谨慎"
+   },
+   {
+    "basis": "实验设计（无任务级/遥操作绩效评估）",
+    "boundary": "单设备（MAESTRO）、无遥操作闭环任务：只验证了操作侧手部跟踪精度，标定收益向遥操作机器人末端执行精度的传导链未打通"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于提供冗余传感、环闭合或参考姿势等独立约束的传感器化手外骨骼（每个设备需重构代价函数与调参）；依赖平板手与隔离MCP屈伸的参考姿势假设（关节0°/拇指CMC 70°）及标定会话内参数恒定；对缺少独立约束的设备或需亚10mm指尖精度的任务不适用，且未验证对实际遥操作任务绩效的传导。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "受试者内三条件对照（未标定/均匀/最优）干净隔离了标定与数据驱动权重两层贡献",
+   "双粒度指标（逐关节°MAE+指尖mm MAE）+7受试者×3任务×6重复的统计，且逐受试者结果全部公开（Table II/Fig.8）",
+   "数据驱动权重以动捕真值为锚避免手工调参；权重分布跨受试者轮廓一致，支持平均权重的稳健性",
+   "如实报告负降幅个例与残留误差来源，不掩盖失败案例"
+  ],
+  "design_risks": [
+   "无外部设备/方法基线对比（作者自认），71.5%/34.8%相对降幅缺少与SOTA的绝对锚定（仅与文献的10-20mm视觉系统口头比较）",
+   "关节级MAE的MCP/PIP列映射依赖图表交叉验证，存在误读风险",
+   "权重搜索为离线且真值依赖，平均权重的在线可行性与两阶段标定时长均未量化",
+   "定量分析限于4关节+2指尖（穿戴遮挡），中指、多指协调与真实遥操作任务未覆盖"
+  ],
+  "baseline_fairness": "均匀权重标定是干净的消融对照；但缺少与FSglove[19]、视觉融合[20]等其他手部跟踪/标定方法的横向对比，相对降幅无法定位方法的绝对水平——作者自认并以统一精度标准为未来方向。",
+  "metric_validity": "MAE（关节°/指尖mm）与相对降幅契合跟踪精度目标且可复现；但'end-effector representation'提升以指尖位置为代理，未连接到遥操作任务绩效；负降幅个例无统计显著性检验。",
+  "reproducibility": "运动学闭式方程（Tab. I）、代价函数（式9-10）、两阶段协议与权重搜索（500组、wk∈[0,10]）描述完整；但无代码/数据发布声明，动捕标定与Unity模型细节有限，独立复现中等偏难。",
+  "external_validity": "单设备（MAESTRO四连杆构型）、7名健康受试者（手寸略低于人群均值）、短时孤立动作；向其他外骨骼构型、临床人群、长时程漂移场景的推广均未验证（作者明示每设备需重构代价函数）。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2507.23592-C01",
+   "claim": "在7名不同手型受试者、3种手指运动×6次重复的手部跟踪评测中，最优权重标定使指尖位置MAE显著下降：食指指尖取得最大平均降幅71.5%（约35.5→10.1mm）、拇指指尖降34.8%（约15.8→10.3mm）；作者认为该收益支撑标定对外骨骼末端（指尖）表征精度的提升，对精密操作任务尤其相关。",
+   "stance": "support",
+   "relation": "支撑'运动学标定方案族：受试者特定虚拟连杆标定可大幅降低遥操作输入侧（指尖）跟踪误差'的方案效果命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.A节明确报告食指指尖取得最高平均误差降幅71.5%、拇指指尖较温和的34.8%，并把这归为对外骨骼末端表征（end-effector representation）的提升；Fig.7给出对应的绝对MAE（未标定拇指15.8mm/食指35.5mm→最优权重10.3/10.1mm），Table II给出逐受试者降幅。",
+   "locator": "IV.A. Quantitative Results / Table II, Fig. 7",
+   "source_context": "Fingertip\nposition accuracy improved similarly, with the index fingertip\nachieving the highest average error reduction (71.5%), while\nthe thumb fingertip showed a more moderate improvement\n(34.8%). These gains support the calibration’s effectiveness\nin enhancing end-effector representation, which is especially\nrelevant for precision manipulation tasks.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "指尖位置MAE相对未标定基线的降幅",
+    "value_or_direction": "食指指尖71.5%（约35.5→10.1mm）、拇指指尖34.8%（约15.8→10.3mm）",
+    "comparator": "未标定基线；均匀权重标定为食指指尖58.6%、拇指指尖12.7%",
+    "task_or_sample": "7名受试者×3种手指运动×6次重复，动捕真值，最优权重标定",
+    "locator": "Table II / Fig. 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对IV.A正文71.5%/34.8%原句；Fig.7指尖MAE数值（未标定15.8/35.5mm、最优10.3/10.1mm）与降幅百分比内部一致（(15.8-10.3)/15.8=34.8%、(35.5-10.1)/35.5=71.5%），并与Table II平均行（12.7/34.8、58.6/71.5）吻合；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2507.23592-C02",
+   "claim": "仿真灵敏度分析：虚拟连杆参数±10%独立扰动下，近端参数（x1、y1）对指尖位置影响最强（造成高达30mm偏差），而远端参数（x3、y3）影响通常低于3-5mm——外骨骼-人体运动学失准（尤其近端虚拟连杆）是指尖跟踪误差的主要机理来源，构成标定必要性的一阶证据。",
+   "stance": "support",
+   "relation": "支撑'标定方案族的核心机制命题：穿戴/解剖差异导致的虚拟连杆参数失准沿运动学链放大为指尖级误差，需受试者特定标定补偿'",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "II.C节对食指运动学模型的6个2D虚拟连杆坐标各做±10%独立扰动仿真：近端参数致高达30mm指尖偏差、远端参数<3-5mm；后续段落补充指尖跟踪对水平(x)扰动更敏感，与设备在手背的水平滑动一致——为优先标定近端参数与数据驱动权重提供机理依据。",
+   "locator": "II.C. Kinematic Parameters Sensitivity Analysis / Fig. 3",
+   "source_context": "The results, shown in Fig. 3, indicate that proximal param-\neters, particularly x\n1 \nand y\n1\n, exert the strongest influence on\nfingertip position, with 10% perturbations causing deviations\nof up to 30 mm. In contrast, distal parameters such as x\n3 \nand\ny\n3 \nhad only minor effects, typically below 3–5 mm.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "fingertip position deviation from perturbations in the virtual link parameters",
+    "value_or_direction": "10% perturbations of proximal parameters causing deviations of up to 30 mm; distal parameters had only minor effects, typically below 3–5 mm",
+    "comparator": "proximal vs distal virtual link parameters",
+    "task_or_sample": "食指运动学模型的仿真扰动分析（6个XY参数独立±10%）",
+    "locator": "II.C / Fig. 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对II.C节'deviations of up to 30 mm'与'below 3–5 mm'原句及紧随其后的水平敏感性句（'Fingertip tracking was more sensitive to horizontal (x) perturbations, consistent with common horizontal sliding'）；source_context经脚本验证为md文件原始子串（含下标排版断行）。"
+   }
+  },
+  {
+   "card_id": "2507.23592-C03",
+   "claim": "数据驱动的最优权重标定在全部受试关节上一致取得最低MAE，均匀权重标定次之，未标定模型误差最高；平均而言最优权重带来更大误差降低（尤其在指尖层面，食指改善最一致）——每受试者500组随机权重以动捕真值搜索的权重调优是标定框架的关键组件。",
+   "stance": "support",
+   "relation": "支撑'代价函数权重的数据驱动调优（而非手工/均匀权重）能进一步提升标定后跟踪精度'的方法设计命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.A节明确给出三条件排序（最优<均匀<未标定的MAE）；III.A规定每受试者随机采样500组权重（wk∈[0,10]）、以动捕真值选出最小化关节MAE的权重分布并跨受试者平均；Fig.6显示平均权重强调拇指MCP（w2/w8）与食指PIP（w3/w4）相关的第二运动环参数。",
+   "locator": "IV.A. Quantitative Results / Fig. 6, Table II",
+   "source_context": "The optimal-weighted calibration consistently yielded the\nlowest MAE, followed by the even-weighted calibration, while\nthe uncalibrated model exhibited the highest errors across\nall tested joints. On average, the optimal-weighted approach\nproduced greater error reductions, particularly at the fingertip\nlevel, with the index finger showing the most consistent im-\nprovements.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "关节/指尖MAE的三条件排序与降幅",
+    "value_or_direction": "最优权重一致最低MAE；四关节最优降幅37.1%-68.3%（均匀权重26.9%-44.2%）、食指指尖71.5%（均匀58.6%）",
+    "comparator": "最优权重 vs 均匀权重 vs 未标定",
+    "task_or_sample": "7名受试者，每受试者500组随机权重（wk∈[0,10]）以动捕真值搜索",
+    "locator": "IV.A / Fig. 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对IV.A三条件排序原句与III.A权重搜索协议原句（已另段逐字核验'For each subject, 500 candidate weight combinations (wk ∈ [0, 10]) were randomly sampled... minimize the mean absolute error (MAE)'）；Table II平均行降幅与Fig.7绝对值内部一致；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2507.23592-C04",
+   "claim": "作者承认本研究的评估只考察相对误差降低，未与其他设备或标定方法做基准对比，建立统一的精度标准是重要未来方向；且受试者手寸略低于人群均值，需要更广泛用户群验证。",
+   "stance": "gap",
+   "relation": "支撑'标定/评测痛点：手部跟踪标定研究普遍缺乏统一精度标准与跨设备/跨方法对标，相对降幅无外部锚定'的评测痛点命题",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V. DISCUSSION的局限清单明确列出：评估为相对误差降低而非对标其他设备或标定方法，统一精度标准是未来方向；受试者代表性（手寸低于人群均值）也需扩展——该卡的71.5%/34.8%等相对降幅因此缺少绝对水平的外部锚点。",
+   "locator": "V. DISCUSSION",
+   "source_context": "Second,\nwe acknowledge that the participants represent hand sizes\nslightly below the population mean, highlighting the need\nfor validation across a broader and more diverse range of\nusers. Third, the evaluation assessed relative error reduction\nrather than benchmarking against other devices or calibration\nmethods; establishing unified accuracy standards will be an\nimportant direction for future work.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对V. DISCUSSION局限段第二、三条原句（相对误差降低/未对标/统一标准、手寸低于人群均值）；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2507.23592-C05",
+   "claim": "标定并未消除全部偏差：残留的关节角（结论处约10°）与指尖误差因模型失配、传感噪声与未建模柔性而持续存在，且在指尖处最明显（小关节偏差沿运动学链累积放大）；对更高精度灵巧任务需补充指尖级或任务级标定。",
+   "stance": "limit",
+   "relation": "限制'运动学标定可解决遥操作输入侧跟踪精度'的边界：标定收益有残余误差下限，误差沿链在指尖累积是未解痛点",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V. DISCUSSION明确说明残留误差的三个来源（模型失配、传感噪声、未建模柔性）及其在指尖的累积放大效应，并建议指尖级/任务级标定作为补充；VI. CONCLUSION进一步量化'约10°关节角残差仍在'，同时声称仍可支持精密跟踪——残差与精密任务需求的张力构成本方案族的未解痛点。",
+   "locator": "V. DISCUSSION / VI. CONCLUSION",
+   "source_context": "Despite the promising results, the calibrated model does\nnot remove all discrepancies: residual joint-angle and fin-\ngertip errors persist due to model mismatch, sensing noise,\n\n8 IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED FEBRUARY, 2026\nand unmodeled compliance, and are most noticeable at the\nfingertips, where small joint deviations accumulate along the\nkinematic chain. A complementary fingertip-based or task-\nlevel calibration can therefore be used to further refine fingertip\nalignment for dexterous tasks that demand higher accuracy.",
+   "evidence_type": "author-judgment",
+   "quantitative": {
+    "metric": "residual joint-angle and fingertip errors",
+    "value_or_direction": "about 10° joint-angle residual errors remain; residual errors most noticeable at the fingertips, where small joint deviations accumulate along the kinematic chain",
+    "comparator": "calibrated model does not remove all discrepancies (model mismatch, sensing noise, unmodeled compliance)",
+    "task_or_sample": "7名受试者，3种手指运动",
+    "locator": "VI. CONCLUSION / Fig. 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对V. DISCUSSION残留误差段原句与VI. CONCLUSION'Although residual joint-angle errors of about 10° remain'（已grep核验原文行）；Fig.7最优权重各关节MAE（10.5/6.1/3.8/12.0°）与'约10°'一致；source_context经脚本验证为md文件原始子串（含页眉排版断行）。"
+   }
+  },
+  {
+   "card_id": "2507.23592-C06",
+   "claim": "绝对精度水平与适用条件：最优权重标定后平均指尖误差约10mm，与常超10-20mm的无标记视觉系统相当或更好；先前研究报道10-15mm指尖误差内不会感知性损失控制保真度——该精度水平对遥操作任务可行，但处于可容忍范围的下沿。",
+   "stance": "conditional",
+   "relation": "限定'外骨骼手部跟踪+标定'方案的适用条件：约10mm指尖精度可支撑一般遥操作，但不足以支撑亚10mm精密任务的末端精度需求",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V. DISCUSSION把本方法约10mm的平均指尖误差与文献中无标记视觉系统（常超10-20mm）对比，并援引先前研究'10-15mm内不损失控制保真度'的容忍度作为遥操作可行性依据——这为标定收益的绝对水平提供了外部参照，同时划出精度边界。",
+   "locator": "V. DISCUSSION",
+   "source_context": "In terms of performance, the proposed method achieves\na mean absolute fingertip error of approximately 10 mm,\ncomparable to or better than markerless vision-based systems\nthat often exceed 10–20 mm [24]. Prior studies have reported\ntolerable fingertip errors up to 10-15 mm without perceptible\nloss of control fidelity [11], [25], supporting the feasibility of\nthe proposed framework for teleoperation tasks.",
+   "evidence_type": "author-judgment",
+   "quantitative": {
+    "metric": "mean absolute fingertip error",
+    "value_or_direction": "approximately 10 mm (thumb 10.3 mm, index 10.1 mm)",
+    "comparator": "markerless vision-based systems that often exceed 10–20 mm; tolerable fingertip errors up to 10-15 mm without perceptible loss of control fidelity",
+    "task_or_sample": "7名受试者，最优权重标定后",
+    "locator": "V. DISCUSSION / Fig. 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对V. DISCUSSION'approximately 10 mm'与'10–20 mm [24]'、'10-15 mm [11], [25]'原句；Fig.7最优权重指尖MAE 10.3/10.1mm与之吻合；source_context经脚本验证为md文件原始子串。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2502.07730",
+  "2509.21242"
+ ],
+ "notes": "arXiv v3时间戳2026-02-23（RA-L 2026年2月录用）。引用[16]Doglove（2502.07730）为低成本触觉手套、[19]Fsglove（2509.21242）为形状感知标定的惯性手部跟踪——后者是标定方案族的相关对标工作。Table II/Fig.7的食指MCP与PIP列映射存在PDF排版歧义，本注按'Fig.7绝对值反推降幅百分比与Table II完全吻合'的内部一致性解读（未标定12.0-25.5°→最优3.8-12.0°），逐关节精确数值引用需谨慎。补充视频不在缓存中。"
+}

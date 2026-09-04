@@ -1,0 +1,386 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.05945",
+  "title": "MobileEgo Anywhere: Open Infrastructure for long horizon egocentric data on commodity hardware",
+  "published": "2026-07-08",
+  "url": "https://arxiv.org/abs/2605.05945",
+  "authors": [
+   "Senthil Palanisamy",
+   "Abhishek Anand",
+   "Satpal Singh Rathore",
+   "Pratyush Patnaik",
+   "Shubhanshu Khatana",
+   "Ekaksh Janweja"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "EA-HARDWARE 维度核心样本：用商品化手机（LiDAR iPhone Pro）内置 VIO（ARKit）采集小时级 egocentric 数据的开放基础设施 + 200 小时数据集。全文的空间一致性（相机位姿 + 手部轨迹世界系锚定）完全委托给智能手机 VIO，并专设 II-C 'Long-Term Egocentric SLAM and State Estimation' 一节论证 SLAM 技术选型（COLMAP 计算不可行、ORB-SLAM3 动态/弱纹理漂移、移动 AR 框架可用），再以 30 相机 Vicon 与 ArUco 重访量化其精度与长时程漂移——是'SLAM（以嵌入式 VIO 形态）作为具身数据采集商品化基础设施'的直接证据，同时记录了 SLAM 家族内部的形态迁移：经典特征 SLAM 在该场景被消费级 VIO 取代部署位。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认动机：EgoScale 的 log-linear 缩放律（L=0.024-0.003×ln(D)）驱动对更多小时级 egocentric 人类数据的需求；现有数据集两大限制（episode 短、采集硬件门槛高）；用智能手机内置 VIO 的定位（C01 出处）"
+   },
+   {
+    "locator": "page 1-2, Section II Related Work（II-A 数据集、II-B 采集接口、II-C 长时程 egocentric SLAM 与状态估计）",
+    "role": "relevant-core",
+    "purpose": "数据集对比（Table I：Ego4D/EPIC-KITCHENS/EgoExo4D/HOI4D/HOT3D/ARCTIC/Aria Everyday/EgoDex 的时长-位姿-深度-硬件矩阵）；UMI/遥操作接口对比；SLAM 技术选型论证——COLMAP 小时级不可行、ORB-SLAM3 漂移、ARKit/ARCore 靠 IMU+视觉关键帧实现边缘设备长时追踪（C02 出处）"
+   },
+   {
+    "locator": "page 2, Section III System Overview、III-A Capture Methodology、III-B 3D Hand Trajectory Estimation 与 Fig 1/Fig 2",
+    "role": "method-or-design",
+    "purpose": "LiDAR iPhone Pro 头戴采集、语音命令免手操作、ARKit 实时视觉-惯性融合输出 6-DoF 位姿、RGBD/IMU 注册到共同高分辨率时间戳并以 MCAP 落盘；WiLoR+MANO 手部估计、相对坐标经 ARKit 深度采样+外参变换进入全局世界系（C05 出处）"
+   },
+   {
+    "locator": "page 3, Section III-C Atomic Action Labels 与 III-D Hierarchical Task Instructions",
+    "role": "method-or-design",
+    "purpose": "VLM 原子动作标注（对象修饰词+空间介词，vs 50 个人类标注会话）与三层指令树（会话目标/子目标/episode）的结构不变量与七个 LLM 的有效性"
+   },
+   {
+    "locator": "page 3, Section IV-A ARKit Pose Accuracy（IV-A1 Vicon 对照、IV-A2 长时程漂移）与 page 4 Table II/Table III",
+    "role": "results-or-analysis",
+    "purpose": "核对 ARKit VIO 精度：10 段序列 vs 30 相机 Vicon 的 ATE RMSE/相对 ATE/RPE；ArUco 重访的六环境长时程漂移（C03、C04 出处）"
+   },
+   {
+    "locator": "page 3, Section V Training Signal Validation 与 page 4 Fig 3",
+    "role": "results-or-analysis",
+    "purpose": "VITRA-VLA-3B mid-training：held-out 损失 0.265→0.214（-19%）、手指 -24%/手 vs 腕根 -14%、best-of-10 腕误差 554→70 mm；作者明确 open-loop 可训练性而非策略级精度"
+   },
+   {
+    "locator": "page 3-4, Section VI Limitations 与 Section VII Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：平台依赖（iPhone Pro/ARKit VIO+LiDAR；ARCore 精度更低且无 LiDAR）、超广角镜头在 ARKit 会话中不可用、约两小时热节流、下游验证 open-loop；结论重申商品化定位"
+   },
+   {
+    "locator": "page 6-9, Appendix VIII-XI（手部位姿一致性、层级指令质量、mocap 轨迹、伦理）",
+    "role": "appendix-or-supplement",
+    "purpose": "无真值手部质量指标（骨长 CV 1.27%/1.43%、>99.99% 关节角在生物力学界内、腕速度中位数 0.34/0.27 m/s、检测成功率 86.2%）；层级结构统计（75,857 spans/9,922 episodes/2,212 sub-goals、4-8× 尺度分离）；Vicon 会话 1-10 描述"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 4-5, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（EgoScale、UMI、EgoExo4D、EgoDex、WiLoR、VITRA、COLMAP、ORB-SLAM3、Sturm RGB-D SLAM benchmark）；page 7-9 的图版（Fig 4-8）已浏览用于核对层级结构与动作分布数字"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何用商品化移动硬件（LiDAR iPhone Pro + ARKit VIO）采集小时级长时程 egocentric 轨迹（RGBD + 6-DoF 位姿 + 世界系 3D 手部轨迹 + 三层语言标注），并验证该数据对 VLA 模型是可用的训练信号。对综述问题的意义：论文把长时程状态追踪——SLAM 的核心难题，作者设 II-C 节专门论证——委托给智能手机内置 VIO，并以 Vicon/ArUco 量化证明其'足以支撑世界系手部位姿锚定'：这是'SLAM 以商品化基础设施形态支撑具身数据采集'的清晰判例；经典 SLAM 形态（COLMAP/ORB-SLAM3）在该场景被评估为不适用，但 SLAM 职能本身不仅未被端到端模型替代，反而是数据产品的空间骨架。",
+ "contributions": [
+  "商品化硬件的 egocentric 采集基础设施：智能手机内置 VIO（ARKit）提供 6-DoF 位姿追踪，零专用追踪外设；免费采集 App + 开源 STERA 处理管线 + 200 小时数据集三件套全部开放（page 1-2）",
+  "长时程数据：连续 episode 最长 108 分钟、584 会话跨小时保持世界系一致——直指现有 egocentric 数据集'episode 只有几分钟'的短板（page 1-2, Table I）",
+  "世界系锚定的 3D 手部轨迹（WiLoR+MANO + ARKit 深度/外参）+ 三层级语言标注（会话目标/子目标/episode，75,857 原子 span）（page 2-3, page 6）",
+  "ARKit VIO 精度的系统量化：30 相机 Vicon 真值对照（ATE/RPE）+ ArUco 重访长时程漂移评估，并给出 VLA mid-training 的 open-loop 下游验证（held-out 损失 -19%）（page 3-4）"
+ ],
+ "method": {
+  "summary": "MobileEgo Anywhere 是三件套基础设施。(1) 采集：LiDAR iPhone Pro 头戴（头盔支架，任何提供足够高度的支架兼容），语音命令（start/stop）免手操作；ARKit 实时视觉-惯性融合生成 6-DoF 相机位姿并输出同步 RGBD 流，RGB 帧、深度图与 IMU 元数据注册到共同高分辨率时间戳、以 MCAP 格式落盘——时间对齐由统一时间戳保证，空间一致性由 ARKit VIO 的世界系保证。(2) STERA 离线管线：WiLoR+MANO 估计手部关节（处理第一人称遮挡优于 MediaPipe），其相对 3D 坐标在检测关节处采样 ARKit 深度图并施加外参相机变换进入全局世界系，产出用于模仿学习（经 IK 映射到机器人末端帧）的世界锚定手部轨迹；VLM 生成带对象修饰词与空间介词的原子动作标签，语言模型把相邻 span 组成 episode、聚成子目标、合成会话目标，形成三层指令树。(3) 数据集：200 小时/584 会话/20 贡献者，平均 20.5 分钟、最长 108 分钟。关键架构事实：全部空间一致性委托给手机内置 VIO（ARKit，闭源黑盒），论文无 SLAM 算法贡献；下游以 VITRA-VLA-3B mid-training 验证训练信号（MANO 手部参数空间监督）。",
+  "assumptions": [
+   "消费级 iPhone Pro 的 ARKit VIO 精度与稳定性足以支撑小时级世界系手部锚定（IV-A 用 Vicon+ArUco 验证）",
+   "WiLoR+MANO 在第一人称局部遮挡下可产出可用手部关节（Appendix VIII 用无真值指标佐证）",
+   "VLM 标注与视频证据一致（III-C 对照 50 个人类标注会话验证）",
+   "深度采样 + 外参变换足以把手部相对坐标重建为绝对 3D 位置（未用手部真值直接验证）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "MobileEgo Anywhere（stera-10m，HuggingFace 发布）：200 小时/584 会话/20 贡献者，最长 108 分钟；75,857 原子 span/9,922 episode/2,212 子目标",
+   "Table I 对比数据集：Ego4D（3,670 h）、EPIC-KITCHENS-100（100 h）、EgoExo4D（1,286 h，Aria+exo 相机，硬件非商用可得）、HOI4D、HOT3D、ARCTIC、Aria Everyday、EgoDex（829 h，Vision Pro，~9 s/演示）"
+  ],
+  "tasks": [
+   "家庭活动 egocentric 采集（烹饪、清洁、整理、缝纫、叠衣、美甲等九大类动作域）",
+   "ARKit 位姿精度评估（vs 30 相机 Vicon，10 段序列）与长时程漂移评估（ArUco 重访，6 环境）",
+   "VLA mid-training：VITRA-VLA-3B 在 egocentric 轨迹上以 MANO 手部参数空间监督 10,000 步，27 个不相交 held-out 会话评估"
+  ],
+  "embodiments": [
+   "采集侧：人类穿戴者（头戴 LiDAR iPhone Pro）",
+   "应用侧：数据面向 VLA/人形手（anthropomorphic hand）预训练——预测 MANO 手部参数以回避人-机器重定向；论文无物理机器人部署"
+  ],
+  "sample_or_scale": "584 会话/200 小时/20 贡献者；Vicon 评估 10 段序列（47.1-163.7 s，含两段静止）；ArUco 漂移评估 6 环境；手部一致性 98 会话（1.19M 帧/25.2 小时）；标注质量对照 50 个人类标注会话（5,249 标签）；下游 27 个 held-out 会话/100 个 held-out 片段"
+ },
+ "evaluation": {
+  "design": "四轴验证：(1) ARKit 位姿绝对精度 vs 30 相机 Vicon 真值（ATE RMSE/相对 ATE/RPE）；(2) 长时程漂移的 ArUco 重访表征（因 ARKit 闭源）；(3) 无真值手部一致性指标（骨长 CV/关节角界限/腕动力学）；(4) 自动标注 vs 人类标注质量对照；(5) 下游 VLA mid-training（open-loop，untrained 对照）",
+  "baselines": [
+   "数据集对比（Table I，未实测）：Ego4D、EPIC-KITCHENS-100、EgoExo4D、HOI4D、HOT3D、ARCTIC、Aria Everyday、EgoDex",
+   "VLA 验证：untrained VITRA-VLA-3B vs mid-trained（best-of-10 腕误差 554 vs 70 mm）",
+   "标注对照：自动 VLM 标注 vs 50 个人类标注会话（7.95 vs 2.94 词/标签，1.09 vs 0.09 修饰词，0 vs 63+877 时序缺陷）",
+   "注意：无 SLAM 算法级基线——COLMAP/ORB-SLAM3/ARCore 仅出现在定性论证，未实测对比"
+  ],
+  "metrics": [
+   "ATE RMSE（cm）、相对 ATE（%）、平移/旋转 RPE（cm/度）——Sturm 等 RGB-D SLAM benchmark 指标体系",
+   "ArUco 重访漂移（cm，占轨迹长度百分比）",
+   "手部无真值指标：骨长 CV、关节角在生物力学界限内比例、腕速度/加速度分布",
+   "Held-out 动作预测损失、best-of-10 腕 MPJPE（mm）、逐组件损失（手指 vs 腕根）",
+   "标注质量：平均词数、修饰词数、时序缺陷计数；层级结构：尺度分离、随会话长度的线性扩展"
+  ],
+  "ablations": [
+   "逐组件损失分析：手指关节（-24%/手）vs 腕根（-14%）——mid-training 收益集中于手指铰接",
+   "七个语言模型中六个产出完全有效的层级分解",
+   "无 SLAM 算法消融（ARKit 为唯一追踪来源）；无深度模态消融（LiDAR 依赖在 limitation 中讨论）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "定位与规模：以智能手机内置 VIO 为追踪基座采集 200 小时/584 会话（20 贡献者，平均 20.5 分钟，最长 108 分钟）；Table I 称其为唯一同时具备消费级硬件、连续 6-DoF 位姿、LiDAR 深度、MANO 标注与超小时会话的数据集（EgoExo4D 模态相近但硬件非商用可得）。",
+   "scope": "数据集定位与 Table I 对比（page 3-4）",
+   "locator": "page 3, Section IV；page 4, Table I"
+  },
+  {
+   "finding": "SLAM 技术选型论证（II-C 节）：长会话稳定状态追踪是 SLAM 在该场景的中心难题；COLMAP 等 SfM 管线在小时级轨迹上计算不可行，ORB-SLAM3 等特征 SLAM 在动态/弱纹理室内场景累积漂移；ARKit/ARCore 等移动 AR 框架以高频 IMU 与视觉关键帧融合，在边缘设备上实现鲁棒长时追踪。",
+   "scope": "作者对 SLAM 技术形态的评估（定性论证，无实测对比）",
+   "locator": "page 2, Section II-C"
+  },
+  {
+   "finding": "ARKit 精度（vs 30 相机 Vicon，10 段序列）：运动序列 ATE RMSE 9.1-15.0 cm（静止序列 0.01-0.04 cm）；相对 ATE 十段中九段 <1%（例外为快速旋转序列 1.47%）；平移 RPE 全程 <5 cm；旋转 RPE 低于 4 度（例外同上）；作者结论：消费级 iPhone Pro 的 ARKit VIO 提供了足以支撑世界系手部位姿锚定的轨迹精度。",
+   "scope": "10 段 47.1-163.7 s 序列（Vicon 真值）",
+   "locator": "page 3, Section IV-A；page 4, Table II"
+  },
+  {
+   "finding": "长时程漂移（ArUco 重访，6 环境）：除全屋活动终点 1.5 cm 外，中点/终点漂移均 <1 cm，且全部低于轨迹长度的 0.1%——支撑小时级会话的世界系一致性。",
+   "scope": "厨房/客厅/全屋/叠衣/美甲等 6 个环境",
+   "locator": "page 3, Section IV-A2；page 4, Table III"
+  },
+  {
+   "finding": "手部轨迹管线：WiLoR+MANO 估计手部关节，相对 3D 坐标在检测关节处采样 ARKit 深度图并施加外参相机变换进入全局系，产出模仿学习用的世界锚定轨迹（经 IK 映射到机器人末端帧）；手部检测成功率 86.2%（平均 WiLoR 置信 0.73）、骨长 CV 中位数 1.27%/1.43%、>99.99% 关节角在生物力学界限内。",
+   "scope": "98 会话/1.19M 帧/25.2 小时的无真值手部一致性评估",
+   "locator": "page 2, Section III-B 与 Fig 1；page 6, Appendix VIII"
+  },
+  {
+   "finding": "多传感器时空对齐：RGB 帧、深度图与 IMU 元数据注册到共同高分辨率时间戳（MCAP 落盘）；ARKit 实时同步 IMU 与 RGBD 流生成 6-DoF 位姿——时间一致性与空间一致性分别由统一时间戳与 VIO 世界系保证。",
+   "scope": "系统设计（page 2 Section III/III-A）",
+   "locator": "page 2, Section III 与 III-A"
+  },
+  {
+   "finding": "VLA 训练信号（open-loop）：VITRA-VLA-3B mid-training 后 held-out 动作预测损失从 0.265 单调降至 0.214（-19%），逐组件集中于手指铰接（-24%/手）而非腕根（-14%）；untrained 模型 wrist best-of-10 误差 554 mm，mid-trained 校准到 70 mm；作者明确这只是 open-loop 可训练性，无闭环机器人 rollout。",
+   "scope": "27 个不相交 held-out 会话 / 100 个 held-out 片段（VITRA 框架）",
+   "locator": "page 3, Section V；page 4, Fig 3"
+  },
+  {
+   "finding": "标注质量：自动 VLM 标签平均 7.95 词（人类 2.94）、1.09 个描述性修饰词（人类 0.09），5,249 标签零时序缺陷（人类标注 63 段 ≤0s 与 877 对重叠）；层级分解在全部 584 会话上产出 4-8× 尺度分离的三层结构（5 s span/39 s episode/3.9 min 子目标/16.8 min 会话）。",
+   "scope": "50 个人类标注会话对照 + 全数据集层级分解",
+   "locator": "page 3, Section III-C/III-D；page 6, Appendix IX"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "平台依赖：采集管线当前要求 iPhone Pro，因为 STERA 依赖 ARKit 的视觉-惯性里程计与 LiDAR 深度；Android/ARCore 的 VIO 精度更低且没有 LiDAR 深度，支持无深度回退模式才能显著扩大贡献者覆盖面；另外 ARKit 会话激活时超广角镜头不可用，限制宽工作空间视野",
+    "locator": "page 4, Section VI Limitations（起始句在 page 3 末）"
+   },
+   {
+    "limitation": "热约束：在 iPhone Pro 上连续录制超过约两小时会触发热节流；散热附件可缓解但在温暖环境增加部署摩擦",
+    "locator": "page 4, Section VI Limitations"
+   },
+   {
+    "limitation": "下游验证仅为初步：训练信号实验是 open-loop（只评估 held-out 手部动作预测、无闭环机器人 rollout），证明的是可训练性而非策略级任务成功率",
+    "locator": "page 4, Section VI Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "ARKit 是闭源黑盒：作者只能用外部手段（Vicon 对照、ArUco 重访）表征其精度与漂移，无法内部校验或修正；追踪质量完全托付给平台厂商，iOS 版本演进可能改变 VIO 行为而使已发布数据与新采集不可比",
+    "basis": "page 3, Section IV-A2（'Because ARKit is closed-source, we assess long-term drift by placing an ArUco marker'）"
+   },
+   {
+    "boundary": "Vicon 真值对照只覆盖 10 段短序列（47.1-163.7 s，含两段静止序列），与小时级使用场景的时程不匹配——小时级 ATE 未被直接测量，长时程结论依赖 ArUco 重访的稀疏采样（每会话仅中点与终点两次重访）",
+    "basis": "page 4, Table II 的序列时长与 page 3, Section IV-A2 的重访设置"
+   },
+   {
+    "boundary": "手部真值缺失：MANO 手部位姿无 ground truth，手部质量全部为无真值代理指标（骨长 CV/关节角界限/腕动力学），世界系锚定的手部绝对误差及其随 VIO 漂移的传导未被量化",
+    "basis": "page 6, Appendix VIII（'As ground-truth MANO poses are unavailable at our scale'）"
+   },
+   {
+    "boundary": "训练信号验证未隔离 VIO 贡献：mid-training 收益（-19% 损失）来自整个数据包（视频/层级语言标签/手部轨迹），不能归因于 ARKit 位姿锚定本身；且仅在 VITRA-VLA-3B 一个框架上 open-loop 验证",
+    "basis": "page 3, Section V 的实验设计（无模态消融）"
+   },
+   {
+    "boundary": "SLAM 选型停留在定性论证：COLMAP'不可行'与 ORB-SLAM3'漂移'未做实测对照（无同数据上的 SLAM 算法对比），ARCore'精度更低'亦为声明；'commodity hardware'表述与实际要求（iPhone Pro + LiDAR）存在落差",
+    "basis": "page 2, Section II-C 与 page 1 Abstract vs page 3-4 Section VI 的交叉核对"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在室内家用环境（厨房/客厅/全屋/叠衣/美甲等）中，头戴 LiDAR iPhone Pro 的 ARKit VIO 可在小时级连续会话内维持 <1 cm 的重访漂移（全屋活动 1.5 cm、<轨迹长度 0.1%）与 <5 cm 平移 RPE 的局部一致性（Vicon 真值仅验证了 47-164 s 的短序列），足以把 WiLoR 手部相对坐标锚定为世界系一致的 3D 手部轨迹并支撑 VLA open-loop mid-training（held-out 损失 -19%）。主张不延伸到：户外/动态人群/弱纹理场景的 VIO 稳定性、非 iPhone Pro 平台（ARCore 未实测）、闭环策略成功率、手部绝对精度真值、以及经典 SLAM（COLMAP/ORB-SLAM3）在同一数据上的实测对比。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "对闭源 ARKit 的黑盒属性设计了双轴外部表征：绝对精度（30 相机 Vicon）+ 长时程漂移（ArUco 重访），指标采用 SLAM 社区标准（Sturm benchmark 的 ATE/RPE）",
+   "自动标注与人类标注的量化对照（词数/修饰词/时序缺陷）罕见地诚实：报告了人类标注自身的 877 对重叠缺陷",
+   "全栈开放（App Store 应用、GitHub SDK、HuggingFace 数据集、可视化平台），MCAP 标准格式，端到端可复现",
+   "下游验证声明克制：明确区分 open-loop 可训练性与策略级成功率"
+  ],
+  "design_risks": [
+   "Vicon 对照序列短（≤163.7 s）且含两段静止序列，与小时级主张的时程错配；小时级 ATE 无真值",
+   "手部质量全部为无真值代理指标，世界系手部误差不可知",
+   "训练验证不隔离各模态贡献（视频/标签/位姿/深度）",
+   "SLAM 选型（vs COLMAP/ORB-SLAM3/ARCore）为定性论证无实测；20 名贡献者的多样性信息有限（未报告人口学/地域分布）"
+  ],
+  "baseline_fairness": "Table I 数据集对比口径透明（取自原文献或由报告总量计算），但为静态对比非实测；VLA 验证以 untrained 模型为对照合理但单薄（无其他预训练数据源的对照 mid-training）；SLAM 维度完全没有算法级基线——ARKit 是唯一追踪来源，其相对于 ORB-SLAM3 等开源方案的优势未经实测。",
+  "metric_validity": "ATE/RPE 为 SLAM 社区标准指标且注明来源；ArUco 重访测漂移方法合理但采样稀疏（每会话中点+终点两次）；手部指标为代理指标，与机器人可用的末端轨迹精度无直接换算；held-out 损失是 open-loop 代理，与任务成功率的关系未建立。",
+  "reproducibility": "App/SDK/数据集/可视化四件套全部公开（page 2 脚注给出链接）；数据流格式（MCAP）与评估指标定义清楚；但核心追踪依赖闭源 ARKit，复现受 iOS 版本演进约束；层级标注所用 DeepSeek V4 Flash 的提示与超参未完整给出（附录给了结构不变量与统计）。",
+  "external_validity": "结论基于室内家用环境与 20 名贡献者；户外、动态人群、弱纹理场景未验证；ARCore/Android 仅被声明精度更低而未实测；VLA 收益仅在 VITRA-VLA-3B 单框架上验证；数据对非拟人手本体的适用性未讨论。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.05945-C01",
+   "claim": "MobileEgo Anywhere 把现有 egocentric 数据集的两大限制（episode 短、采集硬件门槛高）定位为'用现代智能手机已内置的视觉-惯性里程计（VIO），具体为 iPhone Pro 上的 ARKit，做 6-DoF 位姿追踪、无需任何专用外设'来解决，并据此发布小时级（最长 108 分钟）的 200 小时/584 会话 egocentric 数据集。",
+   "stance": "support",
+   "relation": "'SLAM/VIO 作为具身数据采集基础设施'的商品化判例：该基础设施的核心追踪职能不来自任何机器人专用硬件或外置动捕，而是手机内置 VIO（ARKit）——追踪能力零边际硬件成本。这直接支持'SLAM 是长时程具身数据采集的使能基础设施'，且其形态是消费级嵌入式 VIO 而非实验室 SLAM 栈。",
+   "summary": "定位：智能手机内置 VIO（ARKit）零专用外设做 6-DoF 追踪，支撑 200 小时小时级数据集",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 1, Section I Introduction",
+   "source_context": "MobileEgo Anywhere addresses both by using the visual-inertial odometry (VIO) already built into modern smartphones, specifically ARKit on the iPhone Pro, for 6 DoF pose tracking with no specialized peripherals.",
+   "evidence_type": "system",
+   "quantitative": {
+    "metric": "数据集规模（hours / sessions / 最长 episode）",
+    "value_or_direction": "200-hour dataset, 584 sessions, hour-plus egocentric trajectories, continuous episodes up to 108 minutes",
+    "comparator": "existing egocentric datasets (episodes only a few minutes long)",
+    "task_or_sample": "摘要与 Introduction 报告的数据集规模（page 1）",
+    "locator": "page 1, Abstract 与 Section I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 原文：'addresses both by using the visual-inertial odometry (VIO) already built into modern smartphones, specifically ARKit on the iPhone Pro, for 6 DoF pose tracking with no specialized peripherals' 为 Introduction 逐字；'two limits'（short episodes / high collection-hardware barriers）见前句；200 小时/584 会话（摘要 'a 200-hour dataset ... across 584 sessions'）与 108 分钟（Introduction 'continuous episodes up to 108 minutes'）均为 page 1 逐字数字。claim 的'零专用外设'对应原文 'no specialized peripherals'，未夸大。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C02",
+   "claim": "作者在 'Long-Term Egocentric SLAM and State Estimation' 一节评估 SLAM 技术形态：长会话的稳定状态追踪是 SLAM 在该场景的中心难题；COLMAP 等 SfM 管线在小时级轨迹上计算不可行，ORB-SLAM3 等特征 SLAM 在动态或弱纹理室内场景累积漂移；ARKit/ARCore 等移动 AR 框架通过融合高频 IMU 与视觉关键帧，在边缘设备上实现鲁棒的长时追踪——这是本文采用 ARKit 的显式技术选型依据。",
+   "stance": "support",
+   "relation": "对综述问题的双重证据：(a) SLAM 的中心难题（长时程状态稳定性）被认定为该数据采集任务的定义性困难——SLAM 问题是任务本身的核心；(b) 实际部署形态发生家族内迁移——经典特征 SLAM/离线 SfM 被评估为不适配，取而代之的是消费级嵌入式 VIO，但承接的仍是 SLAM 职能（视觉-惯性全局状态估计）。'SLAM 被替代'的叙述在此不成立：被替代的是 SLAM 的旧形态，不是 SLAM 的职能。",
+   "summary": "II-C 节：COLMAP 小时级不可行、ORB-SLAM3 动态/弱纹理漂移；移动 AR 框架（ARKit/ARCore）以 IMU+视觉关键帧解决长时追踪",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Section II-C Long-Term Egocentric SLAM and State Estimation",
+   "source_context": "Maintaining stable state tracking over long sessions is the central difficulty for SLAM in this setting. Structure-from- Motion pipelines such as COLMAP [22] become computa- tionally intractable on hour-long trajectories, while feature- based SLAM such as ORB-SLAM3 [23] accumulates drift in dynamic or texture-poor indoor scenes. Recent mobile AR frameworks, notably ARKit and ARCore, address this by integrating high-frequency IMU data with visual keyframes, enabling robust long-term tracking on edge devices.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 2 Section II-C 原文：三句话（中心难题 / COLMAP 不可行 + ORB-SLAM3 漂移 / ARKit-ARCore 以 IMU+视觉关键帧解决）均为原文逐字，其中跨行连字符按提取文本保留（'Structure-from- Motion'、'computa- tionally'、'feature- based'）。claim 明确这是作者的技术选型论证（定性评估）而非实测对比——论文中无 COLMAP/ORB-SLAM3 的实验对照，故 claim_basis 记 author-claim。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C03",
+   "claim": "以 30 相机 Vicon 动捕为真值评估 ARKit VIO（10 段序列）：相对 ATE 十段中九段低于 1%（唯一例外是快速旋转的短序列）、旋转 RPE 低于 4 度、平移 RPE 全程低于 5 cm——作者结论是消费级 iPhone Pro 上的 ARKit 视觉-惯性里程计提供了足以支撑世界系手部位姿锚定的轨迹精度。",
+   "stance": "support",
+   "relation": "为'SLAM/VIO 作为数据采集基础设施'提供精度证据：商品级 VIO 的误差量级（平移 RPE <5 cm、相对 ATE <1%）足以承担具身数据采集中手部轨迹的世界系锚定——即基础设施级'够用'标准的量化确认；同时该验证本身使用 SLAM 社区标准指标（ATE/RPE，引 Sturm RGB-D SLAM benchmark）。",
+   "summary": "vs Vicon：相对 ATE 9/10 序列 <1%、平移 RPE <5 cm——ARKit VIO 精度足以支撑世界系手部锚定",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 3, Section IV-A1",
+   "source_context": "Translational RPE remains below 5 cm throughout, so local pose consistency holds even where global drift is marginally elevated. ARKit visual-inertial odometry on a consumer iPhone Pro thus provides trajectory accuracy sufficient for the world-frame hand-pose anchoring of Section III-B.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "相对 ATE 与平移/旋转 RPE（vs 30 相机 Vicon 真值）",
+    "value_or_direction": "Relative ATE below 1% for nine of ten sequences; translational RPE below 5 cm throughout; rotational RPE below 4 degrees except the spinning sequence",
+    "comparator": "30-camera Vicon motion capture ground truth",
+    "task_or_sample": "10 段运动序列（47.1-163.7 s，含两段静止、两段家庭任务、慢走、闭环遍历与旋转序列）",
+    "locator": "page 3, Section IV-A1 与 page 4, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 原文：source_context 两句为 IV-A1 段落逐字；'Relative ATE stays below 1% for nine of the ten sequences and rotational RPE below 4◦; the lone exception is the short spinning sequence' 与 '30-camera Vicon motion capture system' 亦在同页。逐段数值（ATE RMSE 9.1-15.0 cm 等）见 page 4 Table II，claim 只引用了 page 3 的汇总结论（<1%、<5 cm、4 度、唯一例外为旋转序列）以与 locator 页一致，未引入该页不存在的数字。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C04",
+   "claim": "长时程漂移评估（因 ARKit 闭源而采用 ArUco 标记重访法，会话开始放置标记并在时间中点与终点重访，跨 6 个环境）：漂移除全屋遍历（终点 1.5 cm）外均低于 1 cm，且在所有情形下低于轨迹长度的 0.1%——作者据此论证 ARKit 追踪对下游 VLA 应用的有效性。",
+   "stance": "support",
+   "relation": "'SLAM 职能在长时程下仍成立'的量化证据：小时级会话的厘米级重访漂移直接支撑了'跨小时的世界系一致性'这一数据产品卖点——SLAM/VIO 的长时程稳定性（经典 SLAM 的中心弱点，见 C02）在消费级 VIO 上达到可用水平，是长时程具身数据得以存在的前提。",
+   "summary": "ArUco 重访：6 环境漂移 <1 cm（全屋 1.5 cm）、<轨迹长度 0.1%——小时级世界系一致性成立",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 3, Section IV-A2",
+   "source_context": "We repeat this across six environments (Table III); drift is below 1 cm in all but the whole-house traversal (1.5 cm end-of-session) and below 0.1% of trajectory length in all cases, demonstrating the efficacy of ARKit tracking for downstream VLA applications.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "长时程漂移（ArUco 重访，cm 与占轨迹长度百分比）",
+    "value_or_direction": "drift below 1 cm in all but the whole-house traversal (1.5 cm end-of-session); below 0.1% of trajectory length in all cases",
+    "comparator": "six environments (Table III)",
+    "task_or_sample": "会话开始放置 ArUco 标记并于中点/终点重访，覆盖厨房/客厅/全屋/叠衣/美甲等 6 环境（page 4 Table III）",
+    "locator": "page 3, Section IV-A2 与 page 4, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 原文：source_context 为 IV-A2 段落逐字；'Because ARKit is closed-source' 与 ArUco 标记重访设置（会话开始放置、中点与终点重访）见同页前两句。数值（<1 cm、全屋 1.5 cm、<0.1%）与逐环境数值（0.1-1.5 cm）分别见于 page 3 正文与 page 4 Table III，claim 与两处一致且未外推到未测环境。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C05",
+   "claim": "数据产品的空间骨架由 ARKit VIO 提供：ARKit 视觉-惯性融合产出跨全会话连续的 6-DoF 位姿，用于在一致世界系中生成 3D 手部轨迹；具体管线是 WiLoR+MANO 估计的手部相对 3D 坐标经 ARKit 深度采样与外参相机变换进入全局系，产出用于模仿学习（IK 映射到机器人末端帧）的世界锚定轨迹。",
+   "stance": "support",
+   "relation": "把 SLAM 输出定位为具身数据的核心结构：VLA/模仿学习直接消费的监督信号（世界系手部轨迹/末端等效轨迹）以 VIO 位姿为空间骨架——没有 VIO 的世界系，手部估计只停留在相机系相对坐标，无法形成跨小时可用的操作轨迹数据。这支持'SLAM 是具身数据采集的空间基础设施'而非可选组件。",
+   "summary": "ARKit VIO 连续 6-DoF 位姿用于生成一致世界系的 3D 手部轨迹（模仿学习监督信号）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Fig. 1 caption 与 Section III-B",
+   "source_context": "ARKit-based visual-inertial fusion yields continuous 6 DoF pose, used to generate 3D hand trajectories in a consistent world frame across the full session.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 2 原文：source_context 为 Fig. 1 caption (c) 逐字；管线细节（'WiLoR's relative 3D coordinates are localized into a global frame by sampling ARKit depth maps at detected joint locations and' 跨页接 'applying the extrinsic camera transformation, yielding world-anchored trajectories for imitation learning'）逐字见于 page 2 末与 page 3 首，'map human motion to robot end-effector frames via IK for VLA training' 见 page 2 Section III-B。claim 未添加原文之外的量化主张。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data",
+   "arxiv_id": "2602.16710",
+   "role": "log-linear 缩放律（L=0.024-0.003×ln(D)）来源：驱动 200 小时数据集的动机（C01 的需求侧前提）"
+  },
+  {
+   "title": "ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial and Multi-Map SLAM",
+   "role": "C02 中被评估为在动态/弱纹理室内场景累积漂移的特征 SLAM 代表（论文仅定性论证、未实测对照）"
+  },
+  {
+   "title": "Structure-from-Motion Revisited (COLMAP)",
+   "role": "C02 中被评估为小时级轨迹上计算不可行的离线 SfM 代表"
+  },
+  {
+   "title": "Universal Manipulation Interface: In-The-Wild Robot Teaching Without In-The-Wild Robots (UMI)",
+   "role": "低硬件门槛采集接口的对照路线（手持夹爪 + GoPro）；本文以'零专用外设'进一步压低门槛"
+  },
+  {
+   "title": "WiLoR: End-to-end 3D Hand Localization and Reconstruction in-the-wild",
+   "arxiv_id": "2409.12259",
+   "role": "手部估计器：其相对 3D 坐标是被 ARKit 深度/外参锚定进世界系的输入（C05）"
+  },
+  {
+   "title": "Scalable vision-language-action model pretraining for robotic manipulation with real-life human activity videos (VITRA)",
+   "arxiv_id": "2510.21571",
+   "role": "下游 mid-training 的 VLA 框架（训练信号验证载体）"
+  },
+  {
+   "title": "A Benchmark for the Evaluation of RGB-D SLAM Systems (Sturm et al., IROS 2012)",
+   "role": "ATE/RPE 指标体系来源——本文用 SLAM 社区标准指标评估 VIO 基础设施"
+  }
+ ],
+ "notes": "补充观察：(1) 全文 'SLAM' 显式出现集中在 II-C 节（节标题 'Long-Term Egocentric SLAM and State Estimation' 与 C02 引文），其余处以 VIO/ARKit/pose tracking 指称同一职能——术语上'SLAM'让位于'VIO'，职能上完全连续。(2) 对综述最关键的三点：长会话稳定状态追踪被认定为该数据采集任务对 SLAM 的中心难题（问题即 SLAM 问题）；经典 SLAM 形态（COLMAP/ORB-SLAM3）被定性评估为不适配、实际部署消费级嵌入式 VIO——家族内形态迁移而非被端到端模型替代；VIO 输出（世界系位姿）是数据产品（手部轨迹）的空间骨架并被量化验证'足以支撑'（C03/C04）。(3) 与 RoSHI (2604.07331) 构成同维度对照样本：两者都把全局锚定委托给消费级设备的 SLAM/VIO（Project Aria 眼镜 vs LiDAR iPhone 的 ARKit），都用量子级精度论证（RoSHI MPJPE ~10 cm vs OptiTrack；本文相对 ATE<1%/平移 RPE<5 cm/重访漂移 <1 cm vs Vicon），且都把 SLAM 作为黑盒商品消费、自身创新在融合与下游侧——'SLAM 作为商品化基础设施'在具身数据采集环节的两个独立判例。(4) 弱点：ARKit 闭源（只能外部表征精度）、Vicon 对照仅 47-164 s 短序列、手部无真值、训练验证不隔离 VIO 贡献、SLAM 选型无实测对比——这些不推翻'SLAM 基础设施'结论但限制其外推。(5) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。"
+}

@@ -1,0 +1,371 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.12275",
+  "title": "Flatness-Preserving Residual Learning for Real-Time Tight Quadrotor Formation Flight",
+  "published": "2026-07",
+  "url": "https://arxiv.org/abs/2607.12275",
+  "authors": [
+   "Pei-An Hsieh",
+   "Fengjun Yang",
+   "Nikolai Matni",
+   "M. Ani Hsieh"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文是'残差动力学学习+保结构约束+低算力模型基控制'方案族在轨迹精度上的代表性工作：机制清晰（保平坦性残差参数化+反馈线性化）、效果量化充分（硬件31%平均误差降低、对NMPC 20×算力降低）、且明示数据效率与OOD泛化边界，直接回答综述问题中'核心机制/量化效果/适用条件'。注意本体为四旋翼编队（无接触、非机械臂），属轨迹精度谱系中的飞行器分支，纳入时需在综述中标注本体差异。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "定位问题：紧编队下洗等湍流气动干扰未被建模会导致跟踪退化甚至碰撞；现有残差学习框架依赖NMPC、算力负担重。"
+   },
+   {
+    "locator": "1.2 Contributions",
+    "role": "relevant-core",
+    "purpose": "提取四点贡献：平坦性保持证明、样本高效残差学习框架、计算高效控制器、与NMPC同精度低一个数量级算力的验证。"
+   },
+   {
+    "locator": "2 Problem Formulation",
+    "role": "method-or-design",
+    "purpose": "理解残差动力学增广形式与'残差仅依赖联合位置/速度'参数化如何兼顾表达力与控制效率。"
+   },
+   {
+    "locator": "3.2 Flatness under Augmented Dynamics",
+    "role": "method-or-design",
+    "purpose": "核心机制：证明残差只依赖位置与速度时增广动力学保持微分平坦性，状态与输入仍可由平坦输出及其导数代数重构。"
+   },
+   {
+    "locator": "3.3 Flatness-based Controller Design",
+    "role": "method-or-design",
+    "purpose": "控制器结构：位置PID生成加速度指令→平坦性映射推力/期望角速度→高增益角速度环，残差作为显式前馈补偿。"
+   },
+   {
+    "locator": "4 Physics-Informed Residual Learning",
+    "role": "method-or-design",
+    "purpose": "残差=下洗ROM（湍流射流理论）+旋转等变小神经网络，KNODE训练避免IMU差分噪声。"
+   },
+   {
+    "locator": "5.1 Simulation Experiments",
+    "role": "results-or-analysis",
+    "purpose": "残差预测误差（RMSE表1）、闭环跟踪扫掠（表2/3、图2）、与NMPC头对头对比（表4，20×求解时间降低）。"
+   },
+   {
+    "locator": "5.2 Physical Experiments",
+    "role": "results-or-analysis",
+    "purpose": "硬件设置（2架Crazyflie 2.1、Vicon 120Hz、28秒训练数据）与60次运行统计结果：分层误差降低、平均RMSE 5cm。"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与作者自述局限：未来需放宽平坦性保持残差的结构假设并扩大实验规模。"
+   },
+   {
+    "locator": "A Details on the Physics Prior",
+    "role": "appendix-or-supplement",
+    "purpose": "核对ROM下洗模型的湍流射流速度公式与阻力积分形式，确认物理先验的具体内容。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "3.1 Background on Quadrotor Flatness",
+    "role": "method-or-design",
+    "reason": "标准Mellinger-Kumar平坦性推导的背景复习，仅快速浏览公式(3)-(11)，未逐式核对，不影响综述结论。"
+   }
+  ]
+ },
+ "research_question": "如何在保持多旋翼系统微分平坦性（从而保留高效平坦性控制器与线性控制设计）的前提下，从少量飞行数据学习紧编队中的气动残差动力学，使轨迹跟踪精度达到NMPC水平而计算代价低一个数量级？",
+ "contributions": [
+  "证明当学习残差被参数化为仅依赖编队联合位置与速度时，多四旋翼系统的联合微分平坦性得以保持，并显式推导平坦输出到状态/输入的重构映射（Sec. 3.2）",
+  "基于平坦性保持结构的物理信息残差学习框架：残差=下洗降阶模型（ROM）+旋转等变前馈小神经网络，用KNODE在轨迹数据上训练（Sec. 4）",
+  "利用学习残差的计算高效级联反馈线性化控制器，以前馈方式抵消预测的气动扰动（Sec. 3.3）",
+  "仿真+硬件验证：跟踪性能与SOTA学习残差NMPC（KNODE-MPC）相当，求解时间降低约20倍；硬件平均跟踪误差较名义基线降低31%（Sec. 5）"
+ ],
+ "method": {
+  "summary": "把学习残差限制为只依赖编队各机位置与速度（不含姿态/推力），使增广后的联合四旋翼动力学保持微分平坦性；在此约束下残差被参数化为物理ROM（基于湍流射流理论的成对下洗模型）与一个小前馈神经网络之和，网络在旋转等变局部流场系下用KNODE（神经ODE式积分损失）训练；控制器为级联反馈线性化：位置PID生成指令加速度→经平坦性映射（含残差修正）得推力与期望角速度→高增益角速度比例环+前馈力矩残差补偿。整个管线无需在线优化。",
+  "assumptions": [
+   "残差力/力矩可由编队联合位置与速度（运动学状态）充分预测，不依赖姿态、推力等非平坦变量",
+   "上机近悬停（机体z轴近似竖直）以构造局部流场系与旋转等变特征",
+   "名义刚体动力学（质量、惯量）已知；动捕提供位姿测量",
+   "下洗等气动交互可用ROM+小网络残差近似（近悬停、低速、双机垂直编队场景）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采仿真数据：18秒飞行数据（静顶+堆叠编队、0.3/0.4m间距4场景），用ROM增强的FBL控制器采集",
+   "自采硬件数据：28秒（6,720点）轨迹段（静顶与堆叠编队、0.4m间距、0.4m/s），用未加学习残差的FBL控制器采集"
+  ],
+  "tasks": [
+   "双四旋翼堆叠编队直线最小snap轨迹跟踪（下机持续处于上机尾流中）",
+   "OOD泛化评估：0.2-0.6m垂直间距×0.2-0.5m/s参考速度扫掠",
+   "机动演示：从1.1m堆叠编队收敛到0.1m紧密间距穿越0.4m高窗口"
+  ],
+  "embodiments": [
+   "两架Crazyflie 2.1（带推力升级包，36g，机身10cm）",
+   "Vicon动捕120Hz位姿流，笔记本(i5)计算，400Hz Crazyradio PA下发指令"
+  ],
+  "sample_or_scale": "硬件60次运行（每测试案例重复5次，6种控制器配置×2种指令间距）；仿真多间距×速度网格扫掠；训练网络为单隐层9神经元（仿真）/2层4神经元（硬件）"
+ },
+ "evaluation": {
+  "design": "两阶段：仿真（残差预测RMSE + 全噪声-free状态闭环跟踪扫掠 + 与NMPC头对头对比）与硬件（60次运行统计，含分布内0.4m与OOD 0.3m指令间距）；四档模型保真度消融（Nominal/ROM/Learned w/o ROM/Learned+ROM）贯穿全部实验。",
+  "baselines": [
+   "Nominal（无残差刚体动力学）",
+   "ROM-only（仅下洗降阶模型）",
+   "Learned w/o ROM（仅神经网络残差）",
+   "KNODE-MPC/KNODE-DW MPC（学习残差+NMPC，Chee et al. 2024，仿真中Acados C代码+实时迭代实现）",
+   "SE(3)几何控制器（Lee et al. 2010）作为残差可迁移性的第二控制器架构"
+  ],
+  "metrics": [
+   "残差预测误差：加速度/角加速度RMSE（表1）",
+   "3D位置RMSE与最大垂直跟踪误差z_max（下洗主要扰动垂直轴）",
+   "平均求解时间（ms）"
+  ],
+  "ablations": [
+   "ROM与学习项各自贡献（四档保真度，表1/2/3与图2/3）",
+   "分布外间距泛化（0.2/0.5m为OOD，表1/2）",
+   "控制器架构迁移：同一学习残差分别嵌入FBL与SE(3)控制器（表3及硬件实验，无需重新采集或训练）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "核心机制：残差仅依赖联合位置/速度的参数化保持增广系统微分平坦性，状态与输入仍可由平坦输出代数重构（含残差修正的推力/姿态/角速度映射），从而用可线性整定的反馈线性化替代在线非线性优化。",
+   "scope": "多旋翼编队动力学（推导以双机为主，作者称可扩至更大编队）",
+   "locator": "3.2 Flatness under Augmented Dynamics"
+  },
+  {
+   "finding": "硬件效果分层量化：ROM-FBL较Nominal-FBL平均降RMSE 24%、z_max 30%；Learned-FBL在ROM-FBL之上再降RMSE 29%、z_max 43%；整体平均RMSE 5cm、z_max 10cm，与KNODE-DW MPC报告的性能相当。",
+   "scope": "两架Crazyflie 2.1紧编队硬件实验，60次运行",
+   "locator": "5.2 Physical Experiments, Figure 3"
+  },
+  {
+   "finding": "算力对比：同一学习残差下，平坦性FBL控制器与Acados（C代码+实时迭代）NMPC跟踪性能相当，平均求解时间0.99-1.3ms对26.2-27.6ms，约20×降低；抽象宣称'比NMPC低一个数量级计算'。",
+   "scope": "双机堆叠编队仿真（表4），硬件上为与已报告KNODE-DW MPC数值的对比",
+   "locator": "5.1 Simulation Experiments, Table 4"
+  },
+  {
+   "finding": "数据效率：硬件残差网络（2层4神经元）仅用28秒（6,720点）飞行数据训练即可补偿下洗；摘要宣称'30秒内训练数据+5ms回路速率即可实现稳定紧编队飞行'。",
+   "scope": "Crazyflie硬件，0.4m间距0.4m/s采集条件",
+   "locator": "5.2 Physical Experiments"
+  },
+  {
+   "finding": "OOD局限：0.5m间距（分布外）上学习模型的角加速度预测误差略高于纯ROM，作者归因于网络对近距离强湍流数据的轻微过拟合；平移加速度预测在OOD上仍保持低误差。",
+   "scope": "仿真残差预测评估（表1）",
+   "locator": "5.1 Simulation Experiments, Table 1"
+  },
+  {
+   "finding": "残差可迁移性：同一学习残差作为前馈嵌入SE(3)几何控制器也带来大幅提升（硬件上Learned-SE(3)较名义SE(3)降RMSE 43.7%），无需额外数据采集或再训练。",
+   "scope": "仿真（表3）与硬件实验（5.2）",
+   "locator": "5.2 Physical Experiments"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "平坦性保持残差的结构假设（仅依赖位置/速度）需要在未来工作中放宽",
+    "locator": "6 Conclusion"
+   },
+   {
+    "limitation": "实验规模需扩大（当前为双机编队）",
+    "locator": "6 Conclusion"
+   },
+   {
+    "limitation": "学习网络可能对近距离强湍流数据轻微过拟合，在更大、扰动更弱的间距上角动力学泛化变弱（0.5m OOD上ROM略优）",
+    "locator": "5.1 Simulation Experiments"
+   },
+   {
+    "limitation": "在线估计与拒绝未建模动力学（区别于离线残差学习）的整合留作未来工作",
+    "locator": "1.1.2 Addressing Unmodeled Dynamics in Flatness-Based Control"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "残差可由运动学状态充分预测的假设在真实下洗依赖载体姿态时表达力受限（仿真真值模型即依赖姿态），高动态机动或非近悬停场景未验证，方法不能直接外推到机械臂末端或接触式装配任务",
+    "basis": "Sec. 4的ROM假设上机近悬停（z1≈e3）；5.1明言仿真下洗模型依赖参数化外的变量（如姿态）只是'在给定场景下'被近似；全文本体为四旋翼、任务为无接触轨迹跟踪"
+   },
+   {
+    "boundary": "硬件训练数据与评估分布高度匹配（0.4m采集，0.3/0.4m评估、直线轨迹、低速），对机动轨迹、风扰、更大编队的外推未经检验",
+    "basis": "5.2硬件训练集仅0.4m间距0.4m/s的静顶/堆叠两类直线段；指令间距仅0.4m（分布内）与0.3m（OOD）；作者自述需scale up"
+   }
+  ]
+ },
+ "transfer_boundary": "仅在近悬停、双机垂直编队、低速直线轨迹、约30秒训练数据条件下验证的四旋翼无接触轨迹跟踪方法，其'保平坦性残差学习+反馈线性化'机制可迁移到其他已知名义平坦系统，但未在机械臂末端执行器或接触任务上验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "四档模型保真度消融（Nominal/ROM/Learned w/o ROM/Learned+ROM）系统隔离物理先验与学习项贡献",
+   "仿真与硬件双阶段验证，硬件含60次运行、每案例5次重复并报告均值与标准差（图3）",
+   "与SOTA学习残差NMPC在同一设置下头对头对比，且NMPC用Acados C代码+实时迭代充分优化，算力对比并非稻草人",
+   "含OOD间距评估与第二控制器架构（SE(3)）迁移实验，部分检验了泛化与架构无关性"
+  ],
+  "design_risks": [
+   "硬件任务分布窄：仅直线最小snap轨迹、两种指令间距、双机；31%为平均值，未报告统计显著性检验",
+   "硬件上与NMPC的对比是引用其已报告数值（KNODE-DW MPC）而非同硬件同时运行；20×求解时间对比在仿真完成且两控制器部署栈不同（JIT PyTorch vs C代码）",
+   "残差网络极小（硬件2层4神经元），对更复杂多机交互的表达力未知",
+   "硬件FBL输出为推力+角速度指令（受固件限制），力矩残差实际靠机载PID处理，与仿真设置不完全一致"
+  ],
+  "baseline_fairness": "总体公平：NMPC加载同一学习残差、用Acados编译C代码并实时迭代优化；但求解时间对比跨不同软件栈（JIT PyTorch vs C），且硬件端NMPC对比为引用式而非同硬件复现。",
+  "metric_validity": "3D位置RMSE与最大垂直误差z_max与下洗扰动的物理方向（垂直轴主导）一致，指标选择合理；未报告误差分布的显著性检验，31%等百分比为多次运行平均。",
+  "reproducibility": "硬件参数披露充分（Crazyflie 2.1、Vicon 120Hz、CD=0.236、网络规模、28秒训练数据、60次运行设计），附实验视频；未提及代码开源，仿真下洗模型参数（CD=0.7 vs 0.3）已给出。",
+  "external_validity": "结论限定于近悬停双机垂直编队、低速直线轨迹与Crazyflie尺度飞行器；对机械臂末端执行器轨迹精度仅有机制层面的启发（保结构残差学习降低控制算力），本体与任务外推未经验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.12275-C01",
+   "claim": "在两架Crazyflie 2.1紧编队硬件实验（60次运行、每案例重复5次、指令间距0.3/0.4m）中，仅含下洗ROM的反馈线性化控制器（ROM-FBL）相对名义动力学基线平均降低RMSE 24%、最大垂直误差30%；叠加学习残差后（Learned-FBL）在ROM-FBL之上再降RMSE 29%、z_max 43%。",
+   "stance": "support",
+   "relation": "支撑综述命题'残差动力学学习叠加在物理模型上可显著降低末端轨迹跟踪误差'，并为'物理先验+学习残差'方案族提供硬件级量化效果锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2节硬件结果原文给出分层百分比：ROM-FBL较Nominal-FBL平均降RMSE 24%与z_max 30%，Learned-FBL在ROM-FBL之上再降29%与43%，并称Learned-FBL整体最优（平均RMSE 5cm、z_max 10cm），与摘要宣称的'相对名义基线平均降低31%跟踪误差'同源。",
+   "locator": "5.2 Physical Experiments",
+   "source_context": "The ROM-FBL controller outperformed the Nominal-FBL baseline by an average of 24% in RMSE and 30% in maximum vertical error (z max ). By leveraging the combined physics-informed and learned frame- work, the Learned-FBL controller achieved additional improvements of 29% in RMSE and 43% in z max relative to ROM-FBL.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMSE and maximum vertical error (z_max) reduction",
+    "value_or_direction": "24% RMSE / 30% z_max over Nominal-FBL; additional 29% RMSE / 43% z_max over ROM-FBL",
+    "comparator": "Nominal-FBL and ROM-FBL baselines",
+    "task_or_sample": "two Crazyflie 2.1 stacked-formation hardware runs, 60 runs, commanded separations 0.3/0.4 m",
+    "locator": "Figure 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "在5.2 Physical Experiments一节逐字核对：24%/30%（ROM-FBL对Nominal-FBL）与29%/43%（Learned-FBL对ROM-FBL）两组数字及其比较对象与原文完全一致，引用片段含跨行连字符frame- work与下标z max的原始排布；主张限定于两机Crazyflie硬件实验，未外推。"
+   }
+  },
+  {
+   "card_id": "2607.12275-C02",
+   "claim": "在双四旋翼堆叠编队仿真中，所提平坦性反馈线性化控制器（加载同一学习残差模型）的跟踪性能与Acados实现（编译为C代码、实时迭代）的NMPC相当，而平均求解时间降低20倍（0.99-1.3ms对26.2-27.6ms）。",
+   "stance": "support",
+   "relation": "支撑综述命题'结构化残差学习可用低算力显式控制器替代NMPC达到同等轨迹精度'，直接回应算力这一部署痛点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1节末尾原文：平坦性控制器跟踪性能与NMPC持平；NMPC虽用Acados编译C代码并采用实时迭代，所提JIT编译PyTorch控制器仍实现20×求解时间降低；表4给出z=0.3/0.5m下Ours 0.99/1.3ms对NMPC 27.6/26.2ms。",
+   "locator": "5.1 Simulation Experiments, Table 4 / 5.2 Physical Experiments",
+   "source_context": "Our flatness-based controller achieves tracking performance on par with the NMPC. Moreover, while the NMPC was implemented in Acados (Verschueren et al., 2022), compiled into C code, and utilized real-time iteration, our JIT-compiled PyTorch-based controller still achieved a 20× reduction in solve time. This efficiency suggests broader applicability for computationally constrained hardware.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average solve time and tracking error (RMSE / z_max)",
+    "value_or_direction": "20× reduction; 0.99-1.3 ms vs 26.2-27.6 ms, with comparable tracking (e.g. 0.016/0.042 m vs 0.020/0.032 m at z=0.3 m)",
+    "comparator": "NMPC with the same learned residual (Acados, C code, real-time iteration)",
+    "task_or_sample": "two-quadrotor stacked formation simulation, z = 0.3 m and 0.5 m",
+    "locator": "5.1 Simulation Experiments, Table 4 / 5.2 Physical Experiments"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对5.1节末尾NMPC对比段（'on par with the NMPC'、'Acados…compiled into C code, and utilized real-time iteration'、'20× reduction in solve time'均原话，该段位于提取文本 5.1 Simulation Experiments 节内）；表4数据块（Ours 0.016/0.042、0.99 ms；NMPC 0.020/0.032、27.6 ms；z=0.5：1.3 对 26.2 ms）位于提取文本 5.2 Physical Experiments 节内，数值与主张一致；主张限定于仿真对比，硬件上仅为对KNODE-DW MPC已报告数值的引用式对比。"
+   }
+  },
+  {
+   "card_id": "2607.12275-C03",
+   "claim": "硬件实验中的残差模型仅用28秒（6,720个数据点）飞行数据训练（2层4神经元神经网络叠加在下洗ROM上，采集时用未加学习残差的FBL控制器），即在双Crazyflie紧编队中实现有效的气动补偿跟踪。",
+   "stance": "support",
+   "relation": "支撑综述命题'物理先验（ROM）使残差动力学学习样本高效、适合少数据真实机器人部署'，回应数据采集成本痛点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2节设置原文明确：硬件训练集D为28秒（6,720点），采自静顶与堆叠编队0.4m间距、0.4m速度、未增广FBL控制器的轨迹段；摘要进一步宣称30秒内训练数据即可实现稳定紧编队飞行。",
+   "locator": "5.2 Physical Experiments",
+   "source_context": "The training dataset D spans 28 seconds (6,720 points) collected from trajectory segments where the quadrotors fly in static and stacked formations at a 0.4 m separation and 0.4 m/s velocity under an FBL controller unaugmented by learned residual dynamics.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "training dataset size for the hardware residual model",
+    "value_or_direction": "28 seconds of flight data (6,720 points)",
+    "comparator": "none (absolute data requirement)",
+    "task_or_sample": "hardware residual training on two Crazyflie 2.1, static and stacked formations at 0.4 m separation, 0.4 m/s",
+    "locator": "5.2 Physical Experiments"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对5.2节Setup段：训练集28秒、6,720点、采集条件（静顶/堆叠、0.4m、0.4m/s、未增广FBL控制器）与原文一致；网络规模2层4神经元亦在同节Setup中逐字核对；主张限定于硬件残差训练设置，未外推到其他任务。"
+   }
+  },
+  {
+   "card_id": "2607.12275-C04",
+   "claim": "该文的核心机制是：将学习残差参数化为仅依赖编队各机位置与速度，使增广联合动力学保持微分平坦性，从而可用计算高效且能用标准线性技术整定的平坦性控制器替代计算昂贵的NMPC。",
+   "stance": "support",
+   "relation": "支撑综述命题'保结构/物理信息参数化是兼顾模型保真度与控制效率（轨迹精度方案的适用条件）的核心机制'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 2原文：为捕获并拒绝未建模气动效应同时最小化计算负担，将残差参数化为只依赖各机位置与速度；该参数化使增广的编队联合动力学保持微分平坦，从而平坦性控制器既享计算优势又可用标准线性技术整定。",
+   "locator": "2 Problem Formulation",
+   "source_context": "To capture and reject unmodeled aerodynamic effects while minimizing the computational burden, we parameterize ξ to depend only on the vehicles’ positions and velocities. Crucially, this parameterization renders the joint aug- mented dynamics of the quadrotor team differentially flat. This enables the use of flatness-based controllers that not only enjoy computational benefits but are also tunable with standard linear techniques (Sec. 3).",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对Sec. 2 Problem Formulation中该机制段：'parameterize ξ to depend only on the vehicles' positions and velocities'、'renders the joint augmented dynamics ... differentially flat'、'tunable with standard linear techniques'均为原文措辞（含aug- mented跨行连字符原样保留）；主张为作者对机制的陈述，限定于多旋翼编队动力学。"
+   }
+  },
+  {
+   "card_id": "2607.12275-C05",
+   "claim": "在0.5m分布外垂直间距上，学习模型对角加速度的残差预测误差略高于仅用ROM的模型，作者将此归因于神经网络对近距离强湍流数据的轻微过拟合，即学习残差在低扰动大间距工况下的角动力学泛化受限。",
+   "stance": "limit",
+   "relation": "限制综述命题'学习残差模型可泛化到分布外工况'，为该方案族提供OOD泛化痛点证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1节表1讨论原文：学习模型在分布内与更近距离（0.2m）表现良好，但在更大的0.5m间距上仅用ROM略优；作者推断网络可能对高湍流近距离数据轻微过拟合，弱化了对更大、扰动更小间距下角动力学的泛化。",
+   "locator": "5.1 Simulation Experiments",
+   "source_context": "however, at the larger 0.5m separation, just using the ROM slightly outperforms it. This suggests that the neural network may mildly overfit to the highly turbulent close-proximity data, thereby marginally weakening its generalization to angular dynamics at larger, less perturbed distances.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "angular acceleration residual prediction RMSE (e_tau) at OOD separation",
+    "value_or_direction": "Learned + ROM (6.36) slightly worse than ROM-only (6.05) at 0.5 m",
+    "comparator": "ROM-only model",
+    "task_or_sample": "simulation residual prediction, two-quadrotor stacked formation at 0.5 m vertical separation (OOD)",
+    "locator": "Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对5.1节Results段对表1的讨论：'at the larger 0.5m separation, just using the ROM slightly outperforms it'与过拟合归因句与原文一致；表1中0.5m OOD行e_tau为ROM 6.05对Learned+ROM 6.36，数值方向与主张一致；主张限定于仿真角加速度预测。"
+   }
+  },
+  {
+   "card_id": "2607.12275-C06",
+   "claim": "作者自述的适用边界：平坦性保持残差的结构假设需要在未来放宽，且实验规模（双机）需要扩大，即当前结构化参数化与实验规模是该方法已知的未解限制。",
+   "stance": "gap",
+   "relation": "为综述'未解痛点'提供作者自述证据：保结构残差学习的表达力约束与实验规模不足是该方案族的开放问题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节原文：未来工作包括放宽平坦性保持残差的结构假设与扩大实验规模；结合全文以双机Crazyflie为对象的事实，表明结构约束（残差仅依赖位置/速度）与规模（两机）是作者明确承认的边界。",
+   "locator": "6 Conclusion",
+   "source_context": "we demonstrated that our method effectively handles complex multi- quadrotor proximity flight scenarios with significant performance gains over baseline controllers. Future work includes relaxing the structural assumptions of the flatness-preserving residuals and scaling up the experiments.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对6 Conclusion末句：'Future work includes relaxing the structural assumptions of the flatness-preserving residuals and scaling up the experiments'与原文一致；'多四旋翼近距离飞行场景'的定性结论句亦核对无误；主张限定为作者自述边界，不含读者推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2410.09727",
+  "2506.17488",
+  "2512.02138"
+ ],
+ "notes": "本族定位：残差动力学学习+模型基控制（非学习控制直接出力）。对综述的映射：方案族='保结构残差学习+平坦性/反馈线性化'；量化效果=硬件RMSE降31%（分层24%/29%）、对NMPC 20×算力降低；适用条件=已知名义平坦动力学+近悬停+少数据；痛点=残差表达力与平坦性保持的折衷、OOD角动力学过拟合、双机规模。注意本体为四旋翼（EA-TRAJ），非机械臂末端执行器，综述引用时需标注。"
+}

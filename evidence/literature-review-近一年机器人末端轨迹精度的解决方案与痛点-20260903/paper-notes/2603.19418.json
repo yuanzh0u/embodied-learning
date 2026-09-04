@@ -1,0 +1,392 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.19418",
+  "title": "Speculative Policy Orchestration: A Latency-Resilient Framework for Cloud-Robotic Manipulation",
+  "published": "2026-03-19",
+  "url": "https://arxiv.org/abs/2603.19418",
+  "authors": [
+   "Chanh Nguyen",
+   "Shutong Jin",
+   "Florian T. Pokorny",
+   "Erik Elmroth"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接命中综述问题的『延迟/异步/预测补偿』方案族：把 150±30 ms 网络时延对 50 Hz 连续运动学控制的影响形式化为命令饥饿与部分开环执行，提出云-边投机执行 + ϵ-tube 误差有界验证 + 自适应投机深度的系统方案，并给出仿真与物理分布式部署的量化效果；同时暴露真机安全停止映射与长时程任务 0% 成功率等痛点。"
+  },
+  "sections_read": [
+   {
+    "locator": "I INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题：云上重策略网络无法本地实时运行，10–50 Hz 运动学路径点更新遭遇网络 RTT 即目标饥饿、运动不连续与跟踪误差累积；四条贡献"
+   },
+   {
+    "locator": "II RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "与云机器人平台（DAvinCi/FogROS2/tinyKube）、动作分块（ACT/MT-ACT 的 H=40 静态块退化）、MPC/tube-MPC、策略蒸馏路线的定位差异：SPO 是模型无关编排层"
+   },
+   {
+    "locator": "III PROBLEM FORMULATION",
+    "role": "method-or-design",
+    "purpose": "连续 MDP 形式化；τ_net≫Δt 时延迟反馈 a_t=π(s_{t-δ})；分块执行=部分开环控制器；固定投机深度 K 的根本权衡"
+   },
+   {
+    "locator": "IV SPECULATIVE POLICY ORCHESTRATION",
+    "role": "method-or-design",
+    "purpose": "云端自回归投机滚动（π_θ+M_ϕ 生成 K 步状态-动作对入缓存）、AHS 的 AIMD 视界调节、ϵ-tube 连续状态验证与零速保持反射"
+   },
+   {
+    "locator": "Algorithm 1 Speculative Policy Orchestration (SPO)",
+    "role": "method-or-design",
+    "purpose": "系统级执行流伪代码：边缘验证（行 5–19）与云端 AHS+投机生成（行 20–32）在物理上分离"
+   },
+   {
+    "locator": "V-A Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "RLBench 三任务（ds=141–295）、oracle/learned 双模型、双机 TCP/IP+ZeroMQ 部署、150±30 ms WAN 仿真、三基线（Blocking/T1-SC/NFTC）与四指标、Table I 参数"
+   },
+   {
+    "locator": "V-B.1 Experiment Evaluation with Oracle Models",
+    "role": "results-or-analysis",
+    "purpose": "Table II：SPO/NFTC 100% vs Blocking/T1-SC 0%；K=10@50Hz=200ms 自主性；NFTC 接触期误差尖峰 vs SPO 有界误差（Fig. 6）"
+   },
+   {
+    "locator": "V-B.2 Experimental Evaluation with Learned Models",
+    "role": "results-or-analysis",
+    "purpose": "Fig. 7：learned MLP 下空闲时间 -60%+、丢弃预测 -60%；模型精度有限时框架仍稳健"
+   },
+   {
+    "locator": "V-B.3 Deployment Guidelines / Remark on Hardware Deployment",
+    "role": "conclusion-or-limitations",
+    "purpose": "K_max·Δt≥τ_net 等三参数部署准则；零速保持必须映射为 Tier-3 硬件安全停止的局限"
+   },
+   {
+    "locator": "VI CONCLUSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "总结与未来工作：真机部署验证传感器噪声与 sim-to-real、集成更大规模 VLA 模型"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "reason": "参考文献列表，仅抽取核心引用，不逐条精读"
+   }
+  ]
+ },
+ "research_question": "当重策略/世界模型被卸载到云端、而末端轨迹需要 10–50 Hz 连续运动学路径点更新时，如何用投机执行屏蔽 150±30 ms 量级的网络往返时延，同时保证投机轨迹与真实状态的偏差有界、不因预测漂移或接触事件造成不安全执行？",
+ "contributions": [
+  "提出 SPO（Speculative Policy Orchestration）：模型无关的云-边编排层——云端用学习世界模型 M_ϕ 与策略 π_θ 自回归投机生成未来 K 步运动学路径点并流式缓存到边缘，把运动学规划频率与网络 RTT 解耦，而 500–1000 Hz 力矩伺服始终留在机器人嵌入式控制器本地",
+  "边缘 ϵ-tube 验证器：每控制步用逆方差加权距离度量比对实际状态与缓存预测状态，偏差超出 ϵ_base 即缓存失效、零速保持并请求云端同步重规划——不依赖神经策略可能失准的概率置信度，在单控制周期内检出偏差",
+  "自适应视界缩放 AHS：AIMD 规则（命中时 K←min(K_max, K+β) 加性扩张；失配时按危险比 ρ=e_miss/ϵ_base 乘性收缩 K←max(K_min, ⌊K/ρ⌋)）使带宽与缓存随不确定度线性 O(K) 增长而非指数",
+  "RLBench 仿真 + 双机物理分布式部署（TCP/IP、150±30 ms 仿真 WAN）实证：oracle 预测器上 SPO 100% 成功率 vs 同步阻塞 0%；learned MLP 上网络空闲时间较 Blocking 降 60% 以上、较静态缓存少丢弃约 60% 云端预测"
+ ],
+ "method": {
+  "summary": "三层架构（云-边缘-机器人）。云端不等待物理状态回传，而是用世界模型 M_ϕ 为策略 π_θ 提供状态反馈，自回归滚动生成投机轨迹：â_k=π_θ(ŝ_k)、ŝ_{k+1}=M_ϕ(ŝ_k,â_k)，k=1..K，每个 (ŝ_{k+1}, â_k) 追加进边缘缓存 C。边缘节点 50 Hz 每步弹出缓存头，计算加权误差 e_t=√((s_t−ŝ_t)ᵀW(s_t−ŝ_t))（W 为离线标定的逆方差对角阵）：e_t≤ϵ_base 判缓存命中、直接执行缓存动作；否则缓存清空、SafeStop（仿真中零速保持，真机须映射为 Tier-3 急停）并触发云端同步重规划。云端 AHS 按 AIMD 调节投机深度：命中时 K←min(K_max,K+β)，失配时 K←max(K_min,⌊K/ρ⌋)（ρ=e_miss/ϵ_base）。实验中策略/世界模型取两种形态：RLBench 专家演示导出的 Oracle（完美预测器，隔离系统级效应定上界）与演示训练的 3 层 MLP（512 隐单元，测预测漂移下的鲁棒性）；基线为 Blocking（K=0 同步阻塞）、T1-SC（K=1）、NFTC（K=10 静态满树缓存）。",
+  "assumptions": [
+   "世界模型在 K_max=10 步（200 ms）内的短程预测漂移可被 ϵ-tube 以逆方差加权度量检出，即偏差在爆发成危险前会越过阈值",
+   "ϵ-tube 容差与权重矩阵 W 可由离线标定数据估计，且对任务/阶段稳定（文中按任务给出固定 ϵ_base=20.0）",
+   "投机执行的安全语义是『运动学误差有界』而非力/接触安全：接触中的力累积风险仅通过几何偏差阈值间接约束",
+   "网络可用带宽足以持续流式传输 4·K·(ds+da) 字节的投机轨迹（StackBlocks 下每步 624 字节）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "RLBench 专家演示（构建 Oracle 策略/世界模型，以及训练 InsertOntoSquarePeg 的 learned MLP 策略与世界模型）"
+  ],
+  "tasks": [
+   "StackBlocks（低复杂度，ds=148：抓方块放到基块上，以自由空间运动为主）",
+   "Insert Onto Square Peg（中等复杂度，ds=141：方环插入方柱，紧几何公差，检验 ϵ-tube 检出小对齐误差的能力）",
+   "Put All Groceries In Cupboard（高复杂度，ds=295：多阶段多物体抓放，考察 AHS 在复杂交互下的调节）"
+  ],
+  "embodiments": [
+   "RLBench 仿真 7-DOF 机械臂，动作空间 8D（7 关节速度 + 离散夹爪命令）",
+   "边缘节点=笔记本（运行 RLBench 与本地验证器，到机器人 <1 ms），云端节点=台式机（承载世界模型与策略），TCP/IP + ZeroMQ 未压缩字节数组，WAN 仿真注入 150 ms 基准 RTT ±30 ms 抖动"
+  ],
+  "sample_or_scale": "3 任务 × 4 方法（Blocking/T1-SC/NFTC/SPO）；控制频率 50 Hz（Δt=20 ms），K∈[2,10]（K_min=2, K_max=10, β=1），ϵ_base=20.0；oracle 实验 + learned 实验（仅 InsertOntoSquarePeg）；Table II 报均值±std（steps/wall-time/idle），未见试验次数与置信区间"
+ },
+ "evaluation": {
+  "design": "双阶段：先用 Oracle 预测器（完美 rollout）隔离网络时延/缓存/验证等系统级效应、确立性能上界；再用演示训练的 3 层 MLP 引入预测漂移，考察验证器对幻觉 rollout 的检出与框架鲁棒性。部署为物理分布式双机（边缘+云）+ 仿真 WAN（150±30 ms），而非纯软件延迟注入",
+  "baselines": [
+   "Blocking（K=0：同步远程推理，每步承担完整 RTT）",
+   "T1-SC（K=1：最小投机，预取一步状态-动作对）",
+   "NFTC（K=10：静态固定深度满树缓存，开环执行整段预测）"
+  ],
+  "metrics": [
+   "任务成功率 SR（%）（在最大控制步数内完成的比例）",
+   "累计空闲时间（s）：等待网络/云端推理期间机器人静止的总时长",
+   "缓存命中率 η 与平均投机视界深度 K̄（反映 AHS 的适应）",
+   "加权跟踪误差曲线（图示定性对比，无阈值穿越统计）",
+   "丢弃的云端预测数（浪费的算力）"
+  ],
+  "ablations": [
+   "投机深度策略消融：AHS 自适应 vs NFTC 静态 K=10（对比空闲时间与丢弃预测）",
+   "模型精度消融：Oracle vs learned MLP（同框架下分离模型误差与系统效应）",
+   "未做 ϵ_base、K_min/K_max、β 的超参敏感性扫描"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Oracle 预测器上 SPO 在 StackBlocks 与 InsertSquarePeg 均达 100% 成功率（Steps 518.8/291.4、墙钟 15.7s/11.0s、空闲 4.8s/2.7s），而 Blocking 与 T1-SC 因持续网络停顿均为 0%；SPO 与 NFTC 墙钟时间几乎相同，K=10@50Hz 提供 200 ms 时间自主性恰好桥接 150 ms RTT",
+   "scope": "RLBench 两任务，Oracle 模型，150±30 ms 仿真 WAN",
+   "locator": "V-B.1 Experiment Evaluation with Oracle Models / Table II"
+  },
+  {
+   "finding": "learned MLP（精度有限）下 SPO 相对 Blocking 把网络空闲时间降低 60% 以上，同时比 NFTC(K=10) 少丢弃约 60% 云端预测，是唯一同时最小化空闲时间与计算浪费的方法；框架在模型精度有限时保持稳健",
+   "scope": "RLBench InsertOntoSquarePeg，3 层 MLP 策略+世界模型",
+   "locator": "V-B.2 Experimental Evaluation with Learned Models / Figure 7"
+  },
+  {
+   "finding": "固定投机深度的根本权衡：更大 K 改善时延掩蔽但放大模型误差，更小 K 减少开环暴露但重新引入网络阻塞；AHS 用 AIMD 规则随实时跟踪误差自适应调节 K∈[K_min,K_max]，使带宽/缓存 O(K) 线性增长",
+   "scope": "投机缓存式云-边控制的通用机制",
+   "locator": "III-B / IV-B Adaptive Horizon Scaling (AHS)"
+  },
+  {
+   "finding": "接触丰富阶段 NFTC 出现显著加权误差尖峰（静态开环执行无法吸收物理漂移），SPO 用加权验证器把误差钳制在 ϵ_base 阈值内并以安全冲刷维持物理保真度；Blocking/T1-SC 长期停滞在高残差",
+   "scope": "PutAllGroceriesInCupboard 接触阶段（Fig. 6 定性曲线）",
+   "locator": "V-B.1 Experiment Evaluation with Oracle Models / Figure 6"
+  },
+  {
+   "finding": "最复杂的 PutAllGroceries 全局成功率为 0%（固定路径脆弱性），但 SPO 与 NFTC 均达 6/7 子目标完成，远超同步方法——长时程多物体任务中该框架仍不足以完成任务级闭环",
+   "scope": "RLBench PutAllGroceriesInCupboard，Oracle 模型",
+   "locator": "V-B.1 Experiment Evaluation with Oracle Models / Table II"
+  },
+  {
+   "finding": "部署仅需配三参数：K_max 按 K_max·Δt≥τ_net 选取（保证缓冲覆盖时延）、K_min 取 1–2 步（扰动/接触期保留最小本地缓冲）、ϵ_base 按任务几何公差选取（紧公差用小容差，自由空间可用大容差提高缓存利用率）",
+   "scope": "SPO 框架的部署准则",
+   "locator": "V-B.3 Deployment Guidelines"
+  },
+  {
+   "finding": "仿真中的严格零速保持（a_t=0）在物理机器人上会造成严重机械应力与接触中的 stick-slip 伪影，真机部署必须把该反射映射为 Tier-3 硬件安全停止（如带阻抗控制的 jerk 受限减速）以安全耗散动能",
+   "scope": "SafeStop 反射的 sim-to-real 边界",
+   "locator": "V-B.3 Remark on Hardware Deployment"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "未来工作需在物理机器人平台上部署以评估传感器噪声与 sim-to-real 动态差距下的鲁棒性——当前全部证据来自 RLBench 仿真",
+    "locator": "VI CONCLUSIONS"
+   },
+   {
+    "limitation": "计划集成更大规模视觉-语言-动作模型以研究其对基础模型驱动操作系统的适用性——当前实验的策略/世界模型仅为 3 层 MLP（512 隐单元），对大模型投机滚动的开销与精度未验证",
+    "locator": "VI CONCLUSIONS / V-A.2(b) Learned Model Validation"
+   },
+   {
+    "limitation": "算法的零速保持反射在真机会造成严重机械应力与 stick-slip 伪影，必须映射为 Tier-3 硬件安全停止（jerk 受限减速+阻抗控制）",
+    "locator": "V-B.3 Remark on Hardware Deployment"
+   },
+   {
+    "limitation": "PutAllGroceries 任务全局成功率为 0%，作者归因于固定路径脆弱性（fixed-path fragility），框架只能达成 6/7 子目标完成",
+    "locator": "V-B.1 Experiment Evaluation with Oracle Models"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "任务精度维度上 SPO 与 NFTC 在 oracle 下完全打平（100/100），learned 场景也未报成功率差异——SPO 的差异化证据集中在资源效率（空闲时间、丢弃预测）而非任务成功率或末端轨迹精度本身；『对末端轨迹精度的直接贡献』只有 Fig. 6 的加权误差有界性定性曲线，无绝对误差/jerk 量化",
+    "basis": "Table II 中 SPO 与 NFTC 各任务 SR/steps/wall-time/idle 几乎一致（518.8 vs 506.0、15.7 vs 15.4、4.8 vs 4.5）；V-B.2 只报告空闲与丢弃预测指标"
+   },
+   {
+    "boundary": "实验时延窗口窄：150±30 ms 恰好落在 K_max·Δt=200 ms 缓冲能力之内；对 RTT 波动超过 200 ms、丢包、断连或 5G 换手等真实网络病理未测试，K_min=2 意味着收缩到底仍只有 40 ms 本地自主性",
+    "basis": "Table I（K_max=10, 50 Hz）与 V-B.1『K=10 提供 200 ms 自主性桥接 150 ms RTT』；文中无更高时延扫描"
+   },
+   {
+    "boundary": "ϵ-tube 的安全语义是状态空间几何偏差有界，不覆盖力/接触安全：接触中力累积风险仅靠几何偏差越界间接拦截，且 ϵ_base=20.0 依赖 W 的离线标定，其跨任务/跨本体迁移性未讨论",
+    "basis": "IV-C 定义 e_t 为逆方差加权状态距离；III-B 自述『盲目执行过时轨迹可能导致危险的力累积』，但验证维度仍是运动学"
+   },
+   {
+    "boundary": "无统计功效与显著性：Table II/Fig. 7 未报试验次数、置信区间或显著性检验，60%+ 的相对改进方向可信但精确量级在噪声中的稳健性未知",
+    "basis": "Table II 仅报均值±std（std 极小，如 15.7±0.1），未说明试验数；Fig. 7 为条形/散点无误差棒描述"
+   },
+   {
+    "boundary": "学习模型仅在单一任务（InsertOntoSquarePeg）上训练评测，且状态为低维本体感受+物体位姿（ds=141–295）——对需要视觉高维状态的策略，投机滚动的状态估计与验证度量设计未验证",
+    "basis": "V-B.2 开头明确『train both the policy and world models ... for the InsertOntoSquarePeg task』；V-A.1 状态空间定义"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限定于：RLBench 仿真三任务、50 Hz 关节速度级控制（Δt=20 ms）、150±30 ms 仿真 WAN（恰在 K_max·Δt=200 ms 缓冲能力内）、3 层 MLP 或 oracle 预测器、逆方差加权状态距离验证。未验证：真机（传感器噪声、sim-to-real、Tier-3 急停映射）、视觉高维状态、大规模 VLA 策略的投机滚动开销、更高时延/丢包/断连网络、以及任务成功率维度的差异化收益（oracle 下与静态 NFTC 打平）。可迁移的核心原则是：任何投机/异步执行都必须配边缘侧误差界验证，且缓冲自主时间须覆盖 RTT。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "Oracle/learned 双模型设计干净地分离了系统级效应（时延、缓存、验证）与模型误差，使 60% 级改进可归因于编排层本身",
+   "物理分布式双机 + TCP/IP WAN 仿真（而非纯软件延迟注入），边缘-云网络路径真实",
+   "AIMD 视界控制有明确的界分析（至多 (K_max−K_min)/β 个周期达 K_max，失配按 ρ 乘性收缩），参数-语义对应清楚（K_max·Δt≥τ_net）"
+  ],
+  "design_risks": [
+   "全部证据来自仿真；真机安全停止、传感器噪声、接触动力学均未验证，而论文卖点恰是『bounded physical safety』",
+   "策略/世界模型容量极小（3 层 MLP），对『云托管大 VLA』这一动机场景的支持是间接的（推理负载、视觉状态下的 ϵ-tube 设计均未测）",
+   "任务成功率维度缺乏差异化证据（与 NFTC 打平），核心量化收益集中在资源效率指标，对综述问题关心的末端轨迹精度只有定性曲线支撑"
+  ],
+  "baseline_fairness": "基线覆盖同步（K=0）、最小投机（K=1）、静态满深度（K=10）三点谱系，谱系两端设置合理；但缺少静态中间深度（如 K=5）对照，『自适应优于静态』的归因主要依赖丢弃预测指标；T1-SC 在 150 ms RTT 下成功率 0% 近乎结构性必然（20 ms 缓冲 ≪ 150 ms），属动机性设置而非公平竞争",
+  "metric_validity": "空闲时间/缓存命中率/丢弃预测是有效的系统效率度量，且口径清楚；但缺少末端轨迹精度的直接量化（无绝对位姿误差、无 jerk、无平滑性统计），加权跟踪误差仅以 Fig. 6 定性呈现，『有界』声明缺少阈值穿越率等统计支撑",
+  "reproducibility": "Algorithm 1 伪代码完整，Table I 给出全部系统参数（K_min/K_max/β/ϵ_base/频率），网络协议（ZeroMQ、未压缩字节、每步 4(ds+da) 字节）与任务维度披露充分；但未见代码开源声明，oracle 演示的构建细节与 learned MLP 训练超参需自行推导",
+  "external_validity": "对『重策略上云 + 高频连续控制』场景（云-边连续控制、网络抖动 150 ms 量级、低维状态）有直接参考价值；『投机执行必须配边缘误差界验证』的原则可迁移到其他异步/预测补偿方案族；对视觉驱动 VLA、真机接触任务与更恶劣网络的迁移未建立证据"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.19418-C01",
+   "claim": "在 150±30 ms 模拟广域网时延下，Oracle 预测器上的 SPO 在 StackBlocks 与 InsertSquarePeg 均达 100% 任务成功率（Steps 518.8/291.4，墙钟 15.7s/11.0s，累计空闲 4.8s/2.7s），而同步阻塞 Blocking 与 K=1 投机缓存 T1-SC 因持续网络停顿成功率均为 0%；SPO 与静态满树缓存 NFTC(K=10) 墙钟时间几乎相同，K=10@50 Hz 提供 200 ms 时间自主性足以桥接 150 ms RTT。",
+   "stance": "support",
+   "relation": "支撑综述命题『云-边投机执行可把高频连续轨迹控制与网络时延解耦，恢复被时延破坏的执行连续性』，并给出成立条件：投机缓冲自主时间（K_max·Δt）必须覆盖网络 RTT。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B.1 报告 Oracle 模型下 Table II 结果：两个简单任务上 SPO/NFTC 成功率 100%、Blocking/T1-SC 为 0%；两个投机方法都把视界饱和在 K=10，墙钟时间几乎一致。",
+   "locator": "V-B. Results and Discussion, 1) Experiment Evaluation with Oracle Models / Table II",
+   "source_context": "Both SPO and NFTC saturate the speculative horizon at K = 10 (200 ms of temporal autonomy), achieving near- identical wall-clock times ( 15.7s for StackBlocks).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "任务成功率 SR（%）/ 累计空闲时间（s）",
+    "value_or_direction": "SPO 100%（Stack/Insert），Blocking 与 T1-SC 均 0%；空闲 4.8s/2.7s（SPO）vs 10.7s（Blocking，Stack）",
+    "comparator": "同步阻塞 Blocking（K=0）与 T1-SC（K=1）基线；与 NFTC（K=10 静态缓存）打平",
+    "task_or_sample": "RLBench StackBlocks（ds=148）与 InsertOntoSquarePeg（ds=141），Oracle 预测器，150±30 ms 仿真 WAN",
+    "locator": "Table II / V-B.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 V-B.1 正文句（含 200 ms 自主性与 15.7s 墙钟）与 Table II 数字：SPO 行 100/518.8±3.7/15.7±0.1/4.8±0.1 与 100/291.4±5.2/11.0±0.1/2.7±0.1，Blocking/T1-SC 行 SR 均为 0；『几乎相同』指与 NFTC（506.0/15.4/4.5）对比。范围限定在 Oracle 预测器与该两个任务，PutAllGroceries 上 SR 为 0%（见 C 卡与 limitations）。"
+   }
+  },
+  {
+   "card_id": "2603.19418-C02",
+   "claim": "ϵ-tube 验证机制：边缘节点在每个控制步用逆方差加权距离度量 e_t=√((s_t−ŝ_t)ᵀW(s_t−ŝ_t)) 比对实际状态与缓存预测状态，偏差在一个控制周期内被检出；e_t≤ϵ_base 时缓存命中并执行缓存动作，否则缓存失效、发出零速保持命令安全停止机器人并请求云端同步重规划——该机制不依赖神经策略的概率置信度，规避了校准失准风险。",
+   "stance": "support",
+   "relation": "回答综述问题中『预测补偿方案如何保证末端轨迹精度/安全』：把投机轨迹的误差显式有界化（ϵ-tube），是异步/投机执行族的核心安全机制之一。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-C 说明精确状态匹配在连续环境中因摩擦/驱动噪声/传感器方差不可用，故采用连续状态验证器：确定性 ϵ-tube 包住预测轨迹，每步验证、越界即失效+零速保持+同步重规划。",
+   "locator": "IV-C Continuous-State ϵ-Tube Verification",
+   "source_context": "Safety is enforced via a deterministic ϵ-tube around the predicted trajectory in this normalized state space. Because verification occurs at every control step, deviations are de- tected within a single control cycle. If e t ≤ ϵ base (line 9–11), a Cache Hit is registered and the cached action a t is executed immediately. Otherwise, a Cache Miss occurs, the edge node invalidates the cached trajectory, issues a zero-velocity hold command to safely stop the robot, and requests synchronous replanning from the cloud (line 12–16).",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 IV-C 全文逐字一致（含行号引用 line 9–11/12–16 与 Algorithm 1 对应行为：Flush Cache、SafeStop、同步重规划）；『不依赖概率置信度』出自 I 节『does not rely on potentially miscalibrated probabilistic confidence estimates』与 IV 贡献列表，主张表述未超出原文范围。"
+   }
+  },
+  {
+   "card_id": "2603.19418-C03",
+   "claim": "固定投机深度存在根本权衡：更大 K 改善时延掩蔽但放大模型误差，更小 K 减少开环暴露但重新引入网络阻塞；SPO 的 AHS 以 AIMD 规则自适应调节——缓存命中时加性扩张 K←min(K_max,K+β)，失配时按危险比 ρ=e_miss/ϵ_base 乘性收缩 K←max(K_min,⌊K/ρ⌋)——使带宽与缓存容量随物理不确定度线性 O(K) 增长而非指数。",
+   "stance": "support",
+   "relation": "直接回应综述问题中『延迟/预测补偿方案的核心机制』：投机深度（预取长度）的自适应调节是平衡时延掩蔽与轨迹误差的关键旋钮，也是该方案族与静态分块的机制分界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-B 指出静态深度的两难（深缓存无高频验证会在接触时灾难性不稳定；浅缓存无法掩蔽时延导致控制饥饿）；IV-B 给出 AIMD 规则定义与界：命中时线性增长至多 (K_max−K_min)/β 个周期达 K_max，失配时按误差严重度 ρ 乘性收缩。",
+   "locator": "IV-B Adaptive Horizon Scaling (AHS) / III-B Cloud-Induced Delay and Open-Loop Vulnerability",
+   "source_context": "A critical challenge in speculative orchestration is deter- mining the optimal pre-fetch horizon (K). Static pre-fetching methods that cache deep, multi-second velocity plans without high-frequency validation risk catastrophic instability upon physical contact. Conversely, caching too few steps fails to mask network latency, leading to control starvation.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 IV-B 开头逐字一致；AIMD 规则的收缩/扩张公式逐字出自 IV-B（Free-Space Expansion: K ← min(K_max, K+β)；Contact-Induced Contraction: K ← max(K_min, ⌊K/ρ⌋)，ρ=e_miss/ϵ_base）与 Algorithm 1 行 20–25；O(K) 线性增长出自 I 节贡献列表。主张为原文机制的忠实转述，无外推。"
+   }
+  },
+  {
+   "card_id": "2603.19418-C04",
+   "claim": "学习模型（3 层 MLP，精度有限）下，SPO 相对同步 Blocking 基线把网络空闲时间降低 60% 以上，同时比静态 NFTC(K=10) 基线少丢弃约 60% 的云端预测，是唯一同时最小化空闲时间与计算浪费的方法；即使学习策略与世界模型精度有限，SPO 框架仍保持稳健。",
+   "stance": "support",
+   "relation": "量化『云-边异步/投机执行』方案族的资源效率收益，证明自适应投机在模型精度不足时仍是资源高效的必要手段——对应综述问题中该方案族的量化效果维度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B.2 报告 InsertOntoSquarePeg（learned MLP）的 Figure 7 结果：空闲时间较 Blocking 降 60%+（Fig. 7a）、丢弃预测较 NFTC 少约 60%（Fig. 7b）、效率权衡图（Fig. 7c）中 SPO 是唯一同时最小化两者的方法。",
+   "locator": "V-B. Results and Discussion, 2) Experimental Evaluation with Learned Models / Figure 7",
+   "source_context": "As shown in Figure 7 for the InsertOntoSquarePeg task, SPO achieves near-optimal latency masking, reducing net- work idle time by over 60% compared to the Blocking baseline (Fig. 7a). Crucially, SPO achieves this efficiency while discarding approximately 60% fewer cloud predictions than the NFTC (K = 10) baseline (Fig. 7b).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "network idle time (s) / discarded cloud predictions",
+    "value_or_direction": "reducing network idle time by over 60% compared to the Blocking baseline (Fig. 7a); discarding approximately 60% fewer cloud predictions than the NFTC (K = 10) baseline (Fig. 7b); SPO is the only method that minimizes both idle time and computational waste",
+    "comparator": "SPO vs Blocking baseline and NFTC (K = 10) baseline",
+    "task_or_sample": "RLBench InsertOntoSquarePeg，演示训练的 3 层 MLP 策略与世界模型",
+    "locator": "Figure 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 V-B.2 全文逐字一致（60%/60% 两个数字与比较对象 Blocking/NFTC 均在引文内）；『模型精度有限仍稳健』出自同节后文『while our learned policy and world models achieve only modest accuracy, the SPO framework remains robust』（因图表文本插入在提取中断开，未并入引文，但已逐字核对存在）。范围限定单任务 learned MLP 实验。"
+   }
+  },
+  {
+   "card_id": "2603.19418-C05",
+   "claim": "痛点定位：动作分块虽然缓解命令饥饿，但把系统变成 chunk 播放期间的部分开环控制器；chunk 中途发生未建模扰动或接触事件时，本地缓存轨迹可能不再与真实状态演化物理一致，盲目执行过时轨迹穿过未预期碰撞会导致危险的力累积与任务失败。",
+   "stance": "limit",
+   "relation": "界定综述问题中『大动作块开环执行』这一核心痛点的机理表述：延迟/异步维度上末端轨迹精度问题的根因不是单步精度而是 chunk 内开环性与陈旧轨迹的物理不一致。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-B 形式化延迟反馈 a_t=π(s_{t−δ}) 后指出：分块执行（transmit action chunks for local buffered execution）在 chunk 播放期间构成部分开环控制器，引用 MT-ACT 的大静态块（H=40）性能退化作为佐证。",
+   "locator": "III-B Cloud-Induced Delay and Open-Loop Vulnerability",
+   "source_context": "While chunking alle- viates command starvation, it transforms the system into a partially open-loop controller during chunk playback [38]. If unmodeled disturbances or contact events occur mid-chunk, the locally buffered trajectory may no longer be physically consistent with the true state evolution. Blindly executing this stale trajectory through unanticipated collisions can lead to dangerous force accumulations and task failure.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 III-B 全文逐字一致（含 [38]=MT-ACT 引用标记）；『部分开环』『物理不一致』『力累积』均为原文措辞，未加演绎；该卡把痛点作为综述证据登记，stance=limit 表示其揭示的是问题面而非解决方案效果。"
+   }
+  },
+  {
+   "card_id": "2603.19418-C06",
+   "claim": "真机部署局限：仿真中用于干净隔离空闲时间的严格零速保持（a_t=0）在物理机器人上会造成严重机械应力与接触中的 stick-slip 伪影，真实部署必须把该算法反射映射为 Tier-3 硬件安全停止（如带阻抗控制的 jerk 受限减速）以安全耗散动能；且全部实验仅在 RLBench 仿真完成，真机传感器噪声与 sim-to-real 差距明确留作未来工作。",
+   "stance": "limit",
+   "relation": "划定该方案族从仿真到真机的迁移边界：安全停止的硬件映射是未经验证的必要条件，直接制约该类投机执行方案在真实接触场景（末端轨迹精度最关心的场景）的可用性。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V-B.3 的 Remark on Hardware Deployment 明确区分仿真反射与真机安全语义；VI 节未来工作第一条即为物理平台部署与传感器噪声/sim-to-real 鲁棒性评估。",
+   "locator": "V-B. Results and Discussion, 3) Deployment Guidelines, Remark on Hardware Deployment / VI. CONCLUSIONS",
+   "source_context": "However, commanding instantaneous zero velocity on physical robots causes severe mechanical stress and stick-slip artifacts during contact. In real-world deployments, this algorithmic reflex must map to a Tier-3 hardware safe stop (e.g., jerk-limited deceleration with impedance control) to safely dissipate kinetic energy.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 V-B.3 Remark 逐字一致；『未来工作=真机部署+传感器噪声+sim-to-real』逐字出自 VI 节『Future work will investigate deployment on physical robotic platforms to evaluate robustness under sensor noise and sim-to-real dynamics gaps』；主张把两处原文合并陈述，未引入超出原文的判断。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": "2506.07339",
+   "reason": "RTC：实时动作分块流策略执行（Black/Galliker/Levine），SPO 相关工作引用的延迟掩蔽近邻",
+   "source": "References [14]"
+  },
+  {
+   "arxiv_id": "2304.13705",
+   "reason": "ACT（Zhao et al.）：动作分块与低频查询的开创工作，SPO 问题形式化的对话对象",
+   "source": "References [4]"
+  },
+  {
+   "arxiv_id": "2401.12963",
+   "reason": "AutoRT：宏目标级云机器人 VLA 部署，SPO 定位的传统云范式（离散宏目标，时延不敏感）",
+   "source": "References [10]"
+  },
+  {
+   "arxiv_id": "2410.21617",
+   "reason": "MT-ACT：大静态动作块开环执行退化的实证来源，SPO 引其 H=40 退化证据",
+   "source": "References [38]"
+  },
+  {
+   "arxiv_id": "1911.05589",
+   "reason": "RLBench 评测基准（James et al.），本文全部任务的载体",
+   "source": "References [23]"
+  }
+ ],
+ "notes": "系统性提取格式说明：本 run 的全文来自 alphaxiv.org markdown 镜像（html-flat），无页码且分节标题未以 ## 标记，故 audit 脚本的 locator 解析在本 run 所有论文上系统性失败（section 标签被算法行/表格污染）；source_context 已按空白规范化逐字核对全文通过。定位器采用论文自身的节编号（I–VI、Table I/II、Fig. 5–7）。"
+}

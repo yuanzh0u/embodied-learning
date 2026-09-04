@@ -1,0 +1,493 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.25985",
+  "title": "Action ControlNet: A Lightweight Delay-Aware Adapter for Smooth Asynchronous Control in Vision-Language-Action Models",
+  "published": "2026-06-24",
+  "url": "https://arxiv.org/abs/2606.25985",
+  "authors": [
+   "Tiecheng Guo",
+   "Meng Guo"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接回应综述问题中'VLA 轨迹平滑执行'方案族的轻量适配器分支：把异步分块执行的延迟误差形式化为块交接处的边界条件化问题，用已执行运动后缀作为残差条件注入冻结动作头，含 Kinetix/Meta-World MT50 成功率、可训练参数比例（约20% vs 100%）、推理延迟/控制频率与真机 SO-ARM101 结果。其痛点定位（过期观测+直接拼接导致交接不连续）与 RTC/Training-RTC 基线对比为方案族谱系提供了关键锚点；但需注意其跨骨干对比（Evo-1 vs π0）与仅定性的 jerk 证据两个限制。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. Introduction",
+    "role": "problem",
+    "purpose": "确认异步执行下过期观测+直接块拼接导致交接不连续、抖动与接触丰富任务失败的问题定义，及'局部交接问题而非全局任务理解失败'的核心假设与三项贡献"
+   },
+   {
+    "locator": "II. Related Work",
+    "role": "relevant-core",
+    "purpose": "定位方案族坐标：Naïve Async（SmolVLA）、RTC（action inpainting）、轻量修正头、VLASH（未来状态预测）、Training-RTC（训练时延迟模拟）"
+   },
+   {
+    "locator": "III. Problem Formulation",
+    "role": "method-or-design",
+    "purpose": "理解 H=d+e+r 的 horizon 分解、delay action 定义（已执行后缀）与边界条件化目标函数（延迟控制风险最小化）"
+   },
+   {
+    "locator": "IV. Action ControlNet（A. Delay-Action Encoding / B. Residual Injection / C. Training Objective）",
+    "role": "method-or-design",
+    "purpose": "提取核心机制：可学习 token 填充的 delay action 编码、动作专家最后块的残差注入（雅可比一阶论证）、缓存骨干潜变量的流匹配训练"
+   },
+   {
+    "locator": "V-A. Evaluation Protocol / V-B. Metrics",
+    "role": "data-or-setting",
+    "purpose": "获取实验设置：四方案同一异步协议、基线骨干差异（π0 vs Evo-1）、epoch 对齐、延迟档、指标定义（成功率/参数比例/延迟/频率/jerk）"
+   },
+   {
+    "locator": "V-C. Quantitative Results",
+    "role": "results-or-analysis",
+    "purpose": "提取 Kinetix 与 Meta-World MT50 的成功率、参数比例、延迟/频率数值，以及作者对延迟优势归因于骨干选择的自我声明"
+   },
+   {
+    "locator": "V-D. Real-World Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取 SO-ARM101 真机两任务各 10 次试验的量化结果（20/20 vs 17/20）与定性描述"
+   },
+   {
+    "locator": "V-E. Trajectory Smoothness Analysis",
+    "role": "results-or-analysis",
+    "purpose": "核对 jerk 平滑度分析的证据形态（仅两任务代表性 rollout 曲线，无聚合数值）"
+   },
+   {
+    "locator": "V-F. Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "提取注入位置（最后块 vs 早期层）与填充策略（可学习 vs 零/噪声）消融结论及层活动度分析"
+   },
+   {
+    "locator": "VI. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述未来工作（更丰富延迟信号、更大与时变延迟、更广实时控制策略类）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "reason": "仅用于核对核心引用的 arXiv 编号（SmolVLA/VLASH/Training-RTC 等），无综述问题所需证据"
+   }
+  ]
+ },
+ "research_question": "论文自问：如何在不重训大预训练 VLA 骨干、不引入架构特定运行时逻辑的前提下，让分块 VLA 策略在异步执行（推理延迟使新块基于过期观测生成）下保持块交接处的连续性，以低适配成本获得平滑且延迟鲁棒的控制？",
+ "contributions": [
+  "把异步分块 VLA 控制中的延迟退化形式化为块交接处的边界条件化问题（boundary conditioning），识别出推理延迟期间已执行的运动后缀（delay action）为关键条件信号，并论证主导误差是局部交接不连续而非全局任务理解失败",
+  "提出 ACNet：动作头级轻量残差适配器——可学习 token 填充的 delay action 经轻量 transformer 编码后，以残差形式仅注入动作专家最后一块；骨干冻结、可即插即用于扩散/流匹配等生成式动作头",
+  "参数高效的训练方案：骨干视觉-语言潜变量对采样延迟不变，缓存一次跨多延迟复用；Kinetix 上仅训练约 20% 参数即达到与全量延迟条件化重训练（Training-RTC，100% 参数）相当的延迟鲁棒性",
+  "仿真（Kinetix、Meta-World MT50）+ 真机（SO-ARM101）验证：延迟下平均成功率 0.79/0.74 匹配 Training-RTC，真机 20/20 vs Naïve Async 17/20，且交接处 jerk 轨迹更平坦"
+ ],
+ "method": {
+  "summary": "ACNet 在冻结的感知-语言骨干之上仅改造动作头：(1) 取推理延迟 d 步期间已执行的上一 chunk 后缀（delay action），未观测的未来位用可学习 token 填充至 horizon H，经轻量 transformer 编码器编码，并用与动作专家相同的终端时序池化得到条件向量 c_t；(2) c_t 经投影层以残差形式注入动作专家——在 Evo-1 的 8 层 DiT 动作专家中只注入最后一块（S={L}），一阶泰勒（雅可比）论证表明只需产出下游效应匹配期望边界修正的残差方向，而非重建整个 chunk；(3) 训练时对固定观测-指令对缓存骨干潜变量并在多个采样延迟间复用，用流匹配目标（τ∼Beta(2,2)）训练延迟条件化的速度预测器。Evo-1 骨干经 stage1 1 epoch + stage2 24 epochs 后冻结，ACNet 与终端池化层仅再训 8 epochs。",
+  "assumptions": [
+   "存在已预训练的分块 VLA 策略且其动作头为生成式（扩散/流匹配），ACNet 是其后置适配器而非从零训练",
+   "部署时可获取推理延迟期间实际执行的动作后缀（执行栈可回报已执行动作）",
+   "主导误差为块交接处的局部不连续，视觉-语言输入在延迟下仍能正确指定任务语义与粗规划（作者核心假设）",
+   "部署时的延迟模式落在训练时采样延迟分布的覆盖范围内（论文仅验证固定离散延迟档 d∈{0..4} 与 {0,5,10,15}）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Kinetix（沿用 RTC 评测协议，Kinetix 模拟器）",
+   "Meta-World MT50 全 50 任务",
+   "真机自采数据集：SO-ARM101 平台 50 条训练 rollout"
+  ],
+  "tasks": [
+   "Kinetix 物理操作任务（延迟 d∈{0,1,2,3,4}）",
+   "Meta-World MT50 全部 50 任务（H=50，e=25，d∈{0,5,10,15}）",
+   "真机：put the blue cube into the box、clean the table（各 10 trials）",
+   "平滑度分析：nut-assembly-v3、plate-slide-back-v3（H=50，d=10）"
+  ],
+  "embodiments": [
+   "仿真机械臂操作：基线（Naïve Async/RTC/Training-RTC）基于 π0，ACNet 基于 Evo-1 轻量骨干（注意骨干不同）",
+   "真机 SO-ARM101 低成本机械臂 + 目标盒/彩色方块/桌面吸尘器",
+   "硬件：Meta-World 实验单张 RTX 4080 SUPER"
+  ],
+  "sample_or_scale": "Kinetix 与 MT50 为标准基准评测；真机仅 2 任务×10 trials、50 条训练 rollout、10 epochs 微调；消融在 MT50 上进行；层活动度分析 K=1000 流匹配积分步"
+ },
+ "evaluation": {
+  "design": "同一异步执行协议下对比四种部署方案：Naïve Async（直接拼接连续块）、RTC（冻结已提交动作+inpaint 余下后缀）、Training-RTC（延迟条件化训练）、ACNet；两个仿真基准（Kinetix、MT50）+ 真机平台；附加代表性 rollout 的 jerk 轨迹分析（Eq. 17）与两项消融（注入位置、填充策略）",
+  "baselines": [
+   "Naïve Async（直接块拼接，SmolVLA 式）",
+   "RTC（action inpainting，基于 π0）",
+   "Training-RTC（训练时延迟条件化，基于 π0）"
+  ],
+  "metrics": [
+   "任务成功率（主指标，分延迟档报告）",
+   "可训练参数比例（占全模型参数的百分比，Kinetix）",
+   "端到端推理延迟（ms）与达到的控制频率（Hz，Meta-World）",
+   "平移 jerk（Eq. 17：三轴二阶差分均值，仅代表性 rollout 定性呈现）"
+  ],
+  "ablations": [
+   "注入位置：最后块 vs 早期层（层 0 最差），附 8 层动作专家的层更新幅度分析（K=1000 流匹配步，最后块活动度最大）",
+   "未观测未来位填充：可学习 token vs 零填充 vs 随机噪声填充（可学习在每个测试延迟上最优）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Kinetix 上延迟档（d>0）平均成功率：ACNet 0.79，接近 Training-RTC 0.80，高于 RTC 0.72 与 Naïve Async 0.61；可训练参数仅约 20%（Training-RTC 需 100%），即以约 80% 更少的可训练参数比例获得相当鲁棒性",
+   "scope": "Kinetix 基准、Evo-1 骨干（ACNet）vs π0 骨干（RTC/Training-RTC）",
+   "locator": "V-C. Quantitative Results, Table I"
+  },
+  {
+   "finding": "Meta-World MT50 上 ACNet 平均成功率 0.74，超过 Naïve Async（0.70）与 RTC（0.71）并匹配 Training-RTC（0.74）；端到端延迟 91 ms、控制频率 11.0 Hz（RTC 159 ms/6.28 Hz，Training-RTC 134 ms/7.46 Hz）——但作者明确承认该延迟优势主要来自 Evo-1 骨干更轻而非 ACNet 分支本身",
+   "scope": "Meta-World MT50、H=50、e=25、d∈{0,5,10,15}；跨骨干对比（Evo-1 vs π0）",
+   "locator": "V-C. Quantitative Results, Table II"
+  },
+  {
+   "finding": "真机 SO-ARM101（2 任务×10 trials）：ACNet 总成功率 20/20（put cube 10/10、clean table 10/10），Naïve Async 17/20（9/10、8/10）；定性上 Naïve Async 在块转换附近振荡更大，ACNet 交接更平滑、清洁任务接触更稳",
+   "scope": "SO-ARM101 真机、50 条训练 rollout、10 epochs、同一异步协议",
+   "locator": "V-D. Real-World Experiments, Table III"
+  },
+  {
+   "finding": "核心机制成立的前提假设被显式论证：异步分块控制的主导误差是局部交接问题而非全局任务理解丢失；一阶雅可比论证支持 ACNet 只需产出匹配期望边界修正的残差方向，而非从头重建整个 chunk",
+   "scope": "方法设计与理论论证（IV-B 节，Eq. 12），非实验验证",
+   "locator": "IV-B. Residual Injection as Local Boundary Correction"
+  },
+  {
+   "finding": "消融支持两个设计选择：仅最后块注入跨延迟鲁棒性最好（层 0 注入最差，且层活动度分析显示最后块更新幅度最大）；可学习填充 token 在每个测试延迟上均优于零填充与随机噪声填充",
+   "scope": "Meta-World MT50、Evo-1 骨干的消融（Fig. 6/7，图中曲线结论，正文无具体数值）",
+   "locator": "V-F. Ablation Study"
+  },
+  {
+   "finding": "平滑度证据为定性形态：两任务（nut-assembly-v3、plate-slide-back-v3，H=50、d=10）代表性 rollout 的 jerk 轨迹显示 ACNet 在延迟区间与块替换事件处更平坦，但未报告跨任务聚合的 jerk 数值或统计检验",
+   "scope": "两个 Meta-World 任务的代表性 rollout（Fig. 4），非聚合统计",
+   "locator": "V-E. Trajectory Smoothness Analysis"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "延迟优势（91 ms vs 134/159 ms）主要来自底层模型选择（轻量 Evo-1 vs π0）而非 ACNet 侧分支本身更快；同骨干下 ACNet 反而会增加小编码器与投影开销",
+    "locator": "V-C. Quantitative Results"
+   },
+   {
+    "limitation": "边界条件化框架尚未扩展到更丰富的延迟信号、更大的时变延迟与更广的实时控制策略类，均列为未来工作（即当前只验证固定离散延迟档）",
+    "locator": "VI. Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "跨骨干对比混淆适配器效果：ACNet 用 Evo-1 而 RTC/Training-RTC 用 π0，成功率与延迟对比混入骨干能力差异，适配器本身的净贡献未被同骨干对照隔离",
+    "basis": "V-A 节明确 RTC/Training-RTC 基于 π0、ACNet 基于 Evo-1；全文无同骨干的 ACNet vs Training-RTC 对照实验"
+   },
+   {
+    "boundary": "平滑度主张只有定性证据：jerk 分析仅给两个任务的代表性 rollout 曲线（Fig. 4），无跨任务聚合数值、无与基线的量化差值或显著性检验，平滑结论的证据强度弱于成功率结论",
+    "basis": "V-E 节与 V-B 节：jerk 指标有定义（Eq. 17）但结果仅以曲线形态描述"
+   },
+   {
+    "boundary": "真机验证规模极小：2 任务×10 trials、50 条训练 rollout，20/20 vs 17/20 的差异在 20 次试验下统计意义有限，且未测试真机时变延迟与更高延迟档",
+    "basis": "V-D 节实验设置与 Table III；真机延迟协议仅声明'与仿真相同'"
+   },
+   {
+    "boundary": "比较范围限于 RTC 系异步方案：未与执行层平滑方案（测试时执行策略/采样调整类）或训练侧正则类方案对比，方案族内相对优劣无从判断",
+    "basis": "V-A 节基线列表仅有 Naïve Async/RTC/Training-RTC 三者"
+   }
+  ]
+ },
+ "transfer_boundary": "该方案证据仅在以下场景内成立：已有预训练分块 VLA（生成式动作头）+ 异步执行 + 推理延迟可按训练时采样分布覆盖的固定离散档 + 执行栈可回报已执行动作后缀 + 主导误差确为块交接局部不连续。不能外推到时变/超出训练分布的延迟、非生成式动作头、无法获取执行反馈的执行栈，或误差源于全局任务理解失败的场景；跨骨干的成功率/延迟数字引用时必须注明 π0 vs Evo-1 混杂。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "问题重构清晰：把延迟误差定位为块交接处的边界条件化问题而非全局任务失败，机制假设有一阶雅可比论证支撑，且层活动度分析（最后块更新幅度最大）与注入位置消融互相印证",
+   "参数效率论证完整：不只报成功率，还量化可训练参数比例（约20% vs 100%）并给出缓存潜变量的训练效率机制",
+   "消融直接检验两个核心设计选择（注入位置、填充策略），且设计了'可学习 vs 零 vs 噪声'三向对照排除替代解释",
+   "作者对延迟优势归因诚实：明确承认 91 ms 优势来自 Evo-1 骨干而非适配器，避免过度声明",
+   "仿真+真机双验证，四方案共用同一异步执行协议，epoch 安排做了训练暴露对齐说明"
+  ],
+  "design_risks": [
+   "跨骨干比较（Evo-1 vs π0）是最大混杂：所有成功率与延迟对比都不能干净归因于 ACNet 适配器，缺同骨干对照",
+   "平滑度（本综述核心关切）仅有两任务定性 jerk 曲线，无聚合数值或统计检验——'更平滑'主张证据薄弱",
+   "真机规模小（2 任务×10 trials），20/20 vs 17/20 差异统计意义有限；全部结果无多次运行方差/置信区间",
+   "消融结论来自图中曲线，正文未给出具体数值，文本层面不可复核"
+  ],
+  "baseline_fairness": "RTC 与 Training-RTC 基于 π0 而 ACNet 基于 Evo-1，骨干不同使成功率与延迟对比均混入骨干差异，作者已承认延迟对比不可归因于 ACNet；训练暴露做了部分对齐（Naïve Async/RTC 共享 32 epochs 骨干，Training-RTC 24+8 epochs，ACNet 的 Evo-1 1+24 epochs 后冻结再训 8 epochs），但骨干本身的能力差距未被消除或量化。",
+  "metric_validity": "成功率为主指标有效且分延迟档报告；可训练参数比例是合理的适配成本代理（冻结参数不计入）；jerk（Eq. 17 三轴二阶差分）是合理的平滑度代理但仅以两任务代表性曲线呈现，无跨任务聚合或统计检验；延迟/频率报告诚实标注了骨干混淆。",
+  "reproducibility": "基准（Kinetix/MT50）、延迟档、H=50/e=25、训练 epoch 划分、流匹配采样分布（τ∼Beta(2,2)）与硬件（单张 RTX 4080 SUPER）均已给出；但基线依赖外部实现（π0 系 RTC/Training-RTC）、Evo-1 为外部引用骨干，代码未声明发布；消融与 jerk 数值均以图呈现、文本无具体数字，文本层面复现难度中等偏高。",
+  "external_validity": "两个仿真基准 + 一个低成本真机平台（SO-ARM101，2 任务）；延迟为固定离散档（0-4 与 0-15 步）；对时变延迟、更大延迟、高速动态任务与接触丰富工业场景无证据（作者自列为未来工作）；对本综述的平滑执行结论，其真机证据限于低速桌面操作。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.25985-C01",
+   "claim": "异步执行下，新动作块仍基于过期观测生成，直接拼接连续块会在交接边界破坏连续性，表现为突发动作变化、振荡修正与轨迹抖动，在接触丰富或精度敏感操作中可累积为任务失败；现有补救（运行时 inpainting/插值）多为启发式且依赖架构。",
+   "stance": "limit",
+   "relation": "支撑综述中'动作分块+异步执行产生交接不连续与抖动'的痛点命题，并界定本方案所对标的现有方案族（运行时修补类）的缺陷。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言将异步分块执行的失效模式定性为 handoff 边界的不连续（突发动作变化、振荡修正、轨迹抖动），并指出运行时 inpainting/插值类补救是启发式且架构相关的。",
+   "locator": "I. Introduction",
+   "source_context": "and direct stitching of consecutive chunks can break conti- nuity at the handoff boundary. The resulting discontinuities often appear as abrupt action changes, oscillatory correc- tions, and trajectory jitter, and in contact-rich or precision- sensitive manipulation they can accumulate into outright task failure. Existing remedies alleviate this issue only partially. Runtime inpainting or interpolation can smooth local discontinuities, but such methods are often heuristic and architecture-dependent.",
+   "evidence_type": "problem-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对引言第一栏末段：直接拼接破坏交接连续性、抖动表现与现有补救缺陷的表述与原文一致；主张限定为作者对问题与现有方案族缺陷的定性判断，无外加数值。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C02",
+   "claim": "论文的核心立论：异步分块控制的主导误差是局部交接问题而非全局任务理解丢失——延迟下视觉与语言输入通常仍正确指定任务与粗规划，不可靠的只是从已执行运动的延续；这把延迟控制重新表述为块交接处的边界条件化问题。",
+   "stance": "support",
+   "relation": "支撑综述中'交接处局部修正即可解决大部分延迟误差'的机制命题，是轻量适配器方案族（区别于全量重训练）的立论基础。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言显式陈述主导误差为局部 handoff 问题的判断，并由此推出边界条件化的问题表述；这是 ACNet 只改动作头、冻结骨干的设计依据。",
+   "locator": "I. Introduction",
+   "source_context": "The dominant error in asynchronous chunked control is treated here as a local handoff problem rather than a global loss of task understanding. Under inference delay, the visual and language inputs can often still specify the task and coarse plan correctly, while the unreliable component is the continuation from the motion already being executed.",
+   "evidence_type": "mechanism",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对引言第二栏开头的核心论断段：局部交接问题、视觉语言输入仍正确、不可靠成分为已执行运动的延续三点均与原文一致；为作者机制假设的忠实转述。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C03",
+   "claim": "delay action 编码机制：已执行后缀保留、未观测未来位用可学习 token 填充（显式标记不可用槽位，避免零动作的歧义与噪声填充的人为变异），再经轻量 transformer 编码器与动作专家相同的终端时序池化得到条件向量。",
+   "stance": "support",
+   "relation": "支撑综述中'以已执行运动后缀为条件信号'的机制族证据，并与零填充/噪声填充形成设计对照（消融见 C12）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-A 节给出 delay action 的填充与编码设计：可学习 padding token 显式标记不可用槽位，编码后复用动作专家的终端池化以对齐其时序抽象。",
+   "locator": "IV-A. Delay-Action Encoding",
+   "source_context": "where p j ∈ R d a denotes the padding token at future position j. Learnable padding explicitly marks unavailable slots, avoiding the ambiguity of zero actions and the artificial variation of noise padding. ACNet then applies a lightweight transformer encoder E ϕ to e a delay t , followed by the same terminal temporal pooling operator used in the action expert, yielding",
+   "evidence_type": "mechanism",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 IV-A 节式(9)后的说明与编码流程句：可学习填充的动机（避免零动作歧义与噪声人为变异）与轻量编码器加终端池化的流程与原文一致；公式符号按提取文本原样保留。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C04",
+   "claim": "残差注入机制：因预训练骨干已编码任务上下文，ACNet 仅把延迟上下文注入动作头，且注入为残差形式使原预测器保持默认模式——延迟线索无信息时侧分支可塌缩为零。",
+   "stance": "support",
+   "relation": "支撑综述中'最小干预式适配'机制命题：冻结骨干+残差修正保证了任务语义保留与平滑适配的可叠加性。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-B 节开头说明注入设计原则：只注入动作头、残差形式保持原预测器为默认模式；式(11)后的说明指出该紧凑侧分支在延迟线索无信息时可塌缩为零。",
+   "locator": "IV-B. Residual Injection as Local Boundary Correction",
+   "source_context": "Because the pretrained backbone already encodes the task context, ACNet injects the delay context only into the action head. The injection is residual so that the original predictor remains the default mode.",
+   "evidence_type": "mechanism",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 IV-B 节开头的两句设计原则；'侧分支可塌缩为零'的补充出自同节式(11)后的说明句，属于同一机制描述，未超出原文主张范围。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C05",
+   "claim": "一阶雅可比论证（式 12）：ACNet 只需产出一个残差方向，使其下游效应匹配期望的边界修正，而非从头重建整个动作块——支持把异步延迟当作局部边界条件化而非完整视觉运动重映射，也解释了为何只需在动作头层面做轻量修正。",
+   "stance": "support",
+   "relation": "支撑综述中'局部边界修正足够'的机制合理性论证，为轻量适配器路线（vs 全量延迟条件化重训练）提供理论依据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-B 节对式(12)的解读：对小块内下游映射 g_l 做一阶展开，残差 u_l 的下游效应近似为雅可比左乘，故只需匹配期望边界修正的残差方向即可。",
+   "locator": "IV-B. Residual Injection as Local Boundary Correction",
+   "source_context": "Equation (12) provides a local intuition: to first order, ACNet only needs to produce a residual direction whose downstream effect matches the desired boundary correction, rather than reconstructing the entire chunk from scratch. This supports treating asyn- chronous delay as local boundary conditioning rather than full visuomotor remapping.",
+   "evidence_type": "mechanism",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对式(12)后的解读段：一阶近似下只需产出匹配边界修正的残差方向、支持局部边界条件化而非完整重映射的表述与原文一致；该论证为理论直觉（local intuition），引用时不应表述为实验证明。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C06",
+   "claim": "训练效率机制：由于 ACNet 只挂在动作头，固定观测-指令对的视觉-语言潜变量对采样延迟不变，故缓存一次即可跨多个延迟条件复用，无需为每个采样延迟重复前向全骨干——这是 20% 参数适配成本低于全量延迟条件化重训练的关键。",
+   "stance": "support",
+   "relation": "支撑综述中'方案适配成本'维度：训练侧缓存机制使延迟鲁棒性学习摊销了主导的视觉-语言计算。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-C 节说明训练目标的效率设计：潜变量缓存与跨延迟复用增加延迟覆盖同时摊销骨干计算。",
+   "locator": "IV-C. Training Objective",
+   "source_context": "Because ACNet is attached only to the action head, delay robustness can be learned without repeatedly forwarding the full backbone for every sampled delay. For a fixed observation-instruction pair, the visual-language latent pro- duced by B ω (o t , l) is invariant to the sampled delay. This latent is therefore cached once and reused across multiple delay conditions.",
+   "evidence_type": "mechanism",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 IV-C 节开头三句：只挂动作头故无需逐延迟前向全骨干、潜变量对采样延迟不变、缓存一次跨延迟复用均与原文一致；20% 参数数字出自 V-C 节 Table I 及其解读，本卡主张未外加数值。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C07",
+   "claim": "Kinetix 上延迟档（d>0）平均成功率 ACNet 0.79，接近 Training-RTC 的 0.80，高于 RTC 0.72 与 Naïve Async 0.61；该鲁棒性仅训练约 20% 的模型参数获得，而 Training-RTC 更新 100%——即以约 80% 更低的可训练参数比例获得相当鲁棒性。",
+   "stance": "support",
+   "relation": "支撑综述中'轻量适配器可匹配全量重训练的延迟鲁棒性'的量化命题，是该方案族的核心效果证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 节报告 Table I：ACNet 平均 0.79 vs Training-RTC 0.80/RTC 0.72/Naïve Async 0.61，可训练参数约 20% vs 100%；正文明确总结为约 80% 更低的可训练参数比例。",
+   "locator": "V-C. Quantitative Results, Table I",
+   "source_context": "Table I reports Kinetix results. Averaged over delayed settings, ACNet reaches 0.79 success, compared with 0.72 for RTC and 0.61 for Naïve Async , while remaining close to Training-RTC at 0.80. This robustness is obtained while training only around 20% of all model parameters, whereas Training-RTC updates 100%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate under delay d > 0; trainable parameters as percentage of total model parameters",
+    "value_or_direction": "ACNet 0.79 with around 20% params; Training-RTC 0.80 with 100%; RTC 0.72; Naïve Async 0.61",
+    "comparator": "ACNet compared with Naïve Async, RTC, and Training-RTC on Kinetix",
+    "task_or_sample": "Kinetix 基准，延迟 d∈{0,1,2,3,4}；ACNet 用 Evo-1 骨干、基线用 π0（跨骨干对比）",
+    "locator": "V-C. Quantitative Results, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 V-C 节 Table I 解读段与表值：0.79/0.80/0.72/0.61、20% vs 100% 参数、约 80% 更低可训练参数比例均与正文及 Table I（ACNet 行 0.90/0.87/0.84/0.76/0.68/0.79/∼20）一致；主张限定在 Kinetix 与跨骨干设置。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C08",
+   "claim": "Meta-World MT50 上 ACNet 平均成功率 0.74，超过 Naïve Async（0.70）与 RTC（0.71）并匹配 Training-RTC（0.74）；端到端延迟 91 ms、控制频率 11.0 Hz，优于 RTC（159 ms/6.28 Hz）与 Training-RTC（134 ms/7.46 Hz）。",
+   "stance": "support",
+   "relation": "支撑综述中'方案在多任务基准上的量化效果与效率-鲁棒性权衡'维度；延迟数字引用需结合 C09 的归因限制。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 节报告 Table II：ACNet 0.74 平均成功率、91 ms 延迟、11.0 Hz 频率，均优于或匹配三个基线；H=50、e=25、d∈{0,5,10,15}。",
+   "locator": "V-C. Quantitative Results, Table II",
+   "source_context": "Table II shows the same trend on Meta- World MT50. ACNet achieves 0.74 average success, ex- ceeding Naïve Async and RTC and matching Training- RTC, while reducing latency to 91 ms versus 159 ms for RTC and 134 ms for Training-RTC. Its achieved control frequency is 11.0 Hz, compared with 6.28 Hz and 7.46 Hz",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate; end-to-end inference latency; achieved control frequency",
+    "value_or_direction": "ACNet 0.74 average success, 91 ms latency, 11.0 Hz; Training-RTC 0.74 at 134 ms, 7.46 Hz; RTC 0.71 at 159 ms, 6.28 Hz",
+    "comparator": "ACNet compared with Naïve Async, RTC, and Training-RTC on Meta-World MT50",
+    "task_or_sample": "Meta-World MT50 全 50 任务，H=50、e=25、d∈{0,5,10,15}；ACNet 用 Evo-1、基线用 π0（跨骨干对比）",
+    "locator": "V-C. Quantitative Results, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 V-C 节 Table II 解读段与表值（Naïve Async 0.80/0.71/0.70/0.70/0.70/73ms/13.6Hz；RTC 0.79/0.72/0.72/0.71/0.71/159ms/6.28Hz；Training-RTC 0.80/0.77/0.74/0.73/0.74/134ms/7.46Hz；ACNet 0.81/0.76/0.74/0.73/0.74/91ms/11.0Hz），0.74 匹配 Training-RTC 与 91ms/11.0Hz 均一致；主张限定在 MT50 与跨骨干设置。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C09",
+   "claim": "作者自我声明的关键限制：ACNet 的延迟优势（91 ms vs 134/159 ms）主要来自底层模型选择（轻量 Evo-1 骨干）而非 ACNet 侧分支本身更快——同骨干下 ACNet 反而会给标准前向增加小编码器与投影开销，只是该开销被 Evo-1 更低的端到端运行时抵消。",
+   "stance": "limit",
+   "relation": "限制综述对该方案'低延迟'量化结果的解读：延迟对比不能归因于适配器机制本身，引用 C08 的延迟数字时必须附带此归因说明。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V-C 节在报告 MT50 延迟结果后立即声明该优势源于模型选择而非 ACNet 分支，并说明同骨干下的额外开销与抵消逻辑。",
+   "locator": "V-C. Quantitative Results",
+   "source_context": "This latency advantage is mainly due to the underlying model choice rather than the ACNet side branch being intrinsically faster than delay-conditioned training: RTC and Training-RTC are based on π 0 , whereas ACNet is built on the lightweight Evo-1 backbone. On the same backbone, the proposed ACNet would add a small encoder and projection overhead to a standard forward pass.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 V-C 节 Table II 结果后的归因声明段：延迟优势源于模型选择、π0 vs Evo-1、同骨干下 ACNet 增加开销三点均与原文一致；这是作者对自身结果边界的关键披露，转述无外加推断。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C10",
+   "claim": "真机 SO-ARM101（50 条训练 rollout、10 epochs、2 任务各 10 trials、与仿真相同异步协议）：ACNet 总成功率 20/20（put cube into box 10/10、clean table 10/10），Naïve Async 17/20（9/10、8/10）。",
+   "stance": "support",
+   "relation": "支撑综述中'方案族真机有效性'维度：轻量适配器在低成本真机上的延迟鲁棒证据（但规模小，统计意义有限）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-D 节报告 Table III 真机结果：ACNet 两任务全成功 20/20，Naïve Async 17/20；定性 rollout 显示 Naïve Async 块转换附近振荡更大、ACNet 交接更平滑且接触更稳。",
+   "locator": "V-D. Real-World Experiments, Table III",
+   "source_context": "The real-world dataset contains 50 training rollouts. The model is optimized for 10 epochs and evaluated on put the blue cube into the box and clean the table over 10 trials per task under the same asynchronous protocol as simulation. The quantitative results are summarized in Table III. ACNet achieves 20/20 total successes across the two tasks, whereas Naïve Async achieves 17/20.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "total successes across two real-world tasks over 10 trials per task",
+    "value_or_direction": "ACNet 20/20 (100%), Naïve Async 17/20 (85%)",
+    "comparator": "ACNet compared with Naïve Async on the SO-ARM101 platform",
+    "task_or_sample": "SO-ARM101 真机：put the blue cube into the box 与 clean the table，各 10 trials；50 条训练 rollout、10 epochs",
+    "locator": "V-D. Real-World Experiments, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 V-D 节实验设置与结果句，并与 Table III 行值（Naïve Async 9/10 90%、8/10 80%、17/20 85%；ACNet 10/10、10/10、20/20 100%）一致；主张限定在 2 任务×10 trials 的小规模真机设置。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C11",
+   "claim": "平滑度分析（nut-assembly-v3 与 plate-slide-back-v3，H=50、d=10 的代表性 rollout）：ACNet 的 jerk 轨迹在延迟区间与块替换事件处保持更平坦的分布，Naïve Async 表现出更强的转换诱发抖动——但证据形态仅为两任务的定性曲线，无跨任务聚合数值或统计检验。",
+   "stance": "conditional",
+   "relation": "支撑综述中'平滑效果量化'维度时须注明证据强度：本方案的平滑度主张只有定性曲线支撑，不能作为量化平滑提升引用。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-E 节用 Eq. 17 定义的平移 jerk 分析两个任务的代表性 rollout，结论为 ACNet 在延迟区间与块替换事件处 jerk 更平坦、跨块延续更平滑，与 Table II 成功率增益一致。",
+   "locator": "V-E. Trajectory Smoothness Analysis",
+   "source_context": "To examine motion quality beyond success rate, represen- tative rollouts from nut-assembly-v3 and plate-slide-back-v3 with H = 50 and d = 10 are analyzed. The jerk traces in Fig. 4 show that ACNet maintains a flatter profile around delayed intervals and chunk replacement events. In both tasks, Naïve Async exhibits stronger transition-induced jitter, whereas ACNet produces smoother cross-chunk continua- tion, consistent with the success gains in Table II.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 V-E 节全段：分析对象（两任务、H=50、d=10）、jerk 更平坦的结论与'与 Table II 成功率增益一致'的表述均与原文一致；'仅定性曲线、无聚合数值'的限定来自该节仅引用 Fig. 4 曲线而正文无数值，属证据形态的忠实描述。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C12",
+   "claim": "消融（Meta-World MT50、Evo-1 骨干）支持两个核心设计选择：仅最后块注入的跨延迟鲁棒性最好，早期层注入（尤其层 0）损害鲁棒性；可学习填充 token 在每个测试延迟上均优于零填充与随机噪声填充。",
+   "stance": "support",
+   "relation": "支撑综述中'机制成分有效性'维度：注入位置（近输出端的局部边界修正）与填充策略（明确标记不可用槽位）两处设计选择均被消融验证。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-F 节消融：层活动度分析（K=1000 流匹配步）显示最后块活动度最大；Fig. 7(a) 确认最后块条件化跨延迟最优；Fig. 7(b) 确认可学习填充优于零/噪声填充。",
+   "locator": "V-F. Ablation Study",
+   "source_context": "The injection ablation in Fig. 7(a) confirms this choice: final-block conditioning is best across delays, while early-layer injection, especially at layer 0, degrades robustness. This supports using the delay action as a local boundary cue rather than an early perturbation to the task representation. Fig. 7(b) shows that learnable padding tokens outperform zero and random-noise padding at every tested delay.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 V-F 节消融结论段：最后块条件化最优、层 0 注入最差、可学习填充全面优于零/噪声填充均与原文一致；消融数值仅存在于 Fig. 7 曲线中、正文无具体数字，故本卡不声明数值。"
+   }
+  },
+  {
+   "card_id": "2606.25985-C13",
+   "claim": "作者将三项扩展列为未来工作：更丰富的延迟信号、更大与时变的延迟、更广类别的实时控制策略——即当前框架只验证了固定离散延迟档，时变延迟鲁棒性未解决；同时作者总结 ACNet 以显著低于全量延迟条件化重训练的适配成本改善延迟控制鲁棒性与轨迹平滑度。",
+   "stance": "gap",
+   "relation": "支撑综述中'未解痛点'维度：固定延迟档假设与时变延迟缺验证是该轻量适配器路线的明确边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论段总结贡献（更低适配成本下的鲁棒性与平滑度改善）并列出三项未来工作，其中'larger and time-varying delays'直接界定了当前验证范围。",
+   "locator": "VI. Conclusion",
+   "source_context": "Experiments on Kinetix, Meta-World MT50, and a real SO-ARM101 platform show that ACNet improves delayed-control robustness and trajectory smooth- ness with substantially lower adaptation cost than full delay-conditioned retraining. Future work will extend this boundary-conditioning framework to richer delay signals, larger and time-varying delays, and broader classes of real- time control policies.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对结论段：实验总结句与三项未来工作（更丰富延迟信号、更大与时变延迟、更广实时控制策略类）均与原文一致；'当前只验证固定离散延迟档'的推论与 V-A 节延迟设置（d∈{0..4} 与 {0,5,10,15}）相符。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2506.01844",
+  "2509.23224",
+  "2512.01031",
+  "2512.05964"
+ ],
+ "notes": "家族定位：本篇属于'VLA 平滑执行'族中的训练侧轻量适配器分支（延迟感知残差适配器），与执行层方案（PACE 测试时执行窗口选择、REMAC 掩码动作分块、SEAM 速度引导损失转向）和训练侧正则方案（SmoothVLA 内在 jerk 奖励）互补；其对标的 Training-RTC（2512.05964）是全量延迟条件化重训练代表，二者构成'轻量 vs 全量'的效率-鲁棒性权衡证据对。引用时两个必须注明的限制：(1) 全部基线对比为跨骨干（ACNet 用 Evo-1、RTC/Training-RTC 用 π0），成功率和延迟数字均混入骨干差异，作者已自认延迟优势来自骨干；(2) 平滑度证据仅两任务定性 jerk 曲线，本族六篇中其平滑量化证据最弱，强项在参数效率（约20% 参数匹配 100% 重训练）。"
+}

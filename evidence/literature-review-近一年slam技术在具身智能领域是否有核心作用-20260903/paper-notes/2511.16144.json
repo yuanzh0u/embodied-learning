@@ -1,0 +1,358 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.16144",
+  "title": "LEGO-SLAM: Language-Embedded Gaussian Optimization SLAM",
+  "published": "2026-07-14",
+  "url": "https://arxiv.org/abs/2511.16144",
+  "authors": [
+   "Sibaek Lee",
+   "Seongbo Ha",
+   "Kyeongsu Kang",
+   "Joonyeol Choi",
+   "Seungjun Tak",
+   "Hyeonwoo Yu"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接相关的 SLAM 前沿方法论文（EA-VLOC）：明确以'服务 embodied AI/机器人交互'为动机，把开放词汇语言特征引入实时 3DGS-SLAM。为综述问题提供三方面证据：(a) SLAM 社区自陈纯几何/光度地图不满足具身任务的语义需求（语义缺口）；(b) 其响应方式是在 SLAM 框架内吸收并复用语言特征（剪枝、回环检测都被语言化），经典 SLAM 组件（G-ICP 追踪、GTSAM 位姿图）保留不动——是'SLAM 被扩展而非被替代'的代表性样本；(c) 全部验证停留在 SLAM 基准（Replica/TUM-RGBD/ScanNet），无任何机器人或具身下游任务实验——具身收益是未验证假设。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认研究动机：3DGS-SLAM 的光度真实感地图缺乏 embodied AI 下游任务所需的开放词汇语义理解；高维语言特征的内存/渲染开销与静态预训练模型的适应性不足使实时开放词汇 SLAM 成为开放问题"
+   },
+   {
+    "locator": "page 2, Section II Related Work（A. Neural Rendering SLAM / B. Open-Vocabulary Scene Representation）与贡献列表",
+    "role": "relevant-core",
+    "purpose": "定位谱系：NeRF-SLAM→3DGS-SLAM（SplaTAM/MonoGS/LoopSplat 等）与开放词汇 3D 重建（LeRF/LangSplat/Feature 3DGS/OLS）两条线，以及本文'在实时 SLAM 内学习紧致场景自适应语言表征'的差异化定位"
+   },
+   {
+    "locator": "page 2-4, Section III Method（III-A Tracking / III-B Mapping / III-C Language-Guided Pruning / III-D Language-Based Loop Closure）",
+    "role": "method-or-design",
+    "purpose": "理解架构：G-ICP 追踪直接对统一 3DGS 地图进行；语言嵌入 3DGS（16 维特征 + 特征蒸馏损失 + 解耦的场景自适应编码器优化）；语言引导剪枝（空间邻近 + 语义相似的冗余判定）；语言回环（k-means codebook 直方图 + G-ICP 几何验证 + GTSAM 位姿图）"
+   },
+   {
+    "locator": "page 4, Section IV-A Experimental Setup（数据集/指标/实现/基线）",
+    "role": "data-or-setting",
+    "purpose": "确认评测范围与协议：三个 SLAM 基准、ATE/PSNR/SSIM/LPIPS/mIoU 指标、RTX 4090 桌面平台、FPS 口径含在线语言特征提取、在线最终地图无 post-run 优化、OLS 用论文自报值"
+   },
+   {
+    "locator": "page 5-6, Section IV-B Quantitative Evaluation（Tables I-VI）",
+    "role": "results-or-analysis",
+    "purpose": "核对三类结果：vs OLS 的实时开放词汇对比、开放词汇分割（含 Feature 3DGS 内存失败场景）、追踪/渲染性能（15 FPS vs 无基线超过 3 FPS）"
+   },
+   {
+    "locator": "page 6-7, Section IV-C Ablation Study（Tables VII-X, Figs. 4-5）",
+    "role": "results-or-analysis",
+    "purpose": "核对四组消融：预训练初始化、特征维度 d=8..128、语言 vs 几何剪枝、语言 vs 位置回环；以及冻结 vs 自适应编码器的定性对比"
+   },
+   {
+    "locator": "page 7, Section V Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论主张（15 FPS 实时开放词汇 3DGS-SLAM，紧致语言表征反哺剪枝与回环）；确认论文无显式局限讨论章节"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 7-8, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的被引（OLS、LIO-SAM，及背景引用 NetVLAD/ORB-SLAM2），无需逐条精读；8 页正文无附录"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在 3DGS-SLAM 的实时约束内集成开放词汇语言特征——(a) 高维语言特征的内存/渲染开销如何压缩（16 维场景自适应自编码器 + 预训练先验）；(b) 新场景下特征如何在线适应（解耦的编码器/地图交替优化）；(c) 压缩后的语言特征能否反哺 SLAM 组件（语义冗余剪枝、免单独模型的语言回环检测）。对综述问题的意义：检验 SLAM 社区对'具身智能需要什么样的地图'的回应方式——是放弃 SLAM 转向基础模型/世界模型，还是在 SLAM 框架内吸收语言特征；本文是后一路线的直接样本。",
+ "contributions": [
+  "实时开放词汇 3DGS-SLAM 框架 LEGO-SLAM：在高保真建图与追踪的同时在线构建开放词汇语言地图，15 FPS 运行（FPS 口径含在线语言特征提取）",
+  "轻量场景自适应自编码器：把高维语言嵌入在线蒸馏为 16 维紧致特征（预训练先验保证快速收敛、解耦优化保证稳定），文本查询投影到紧致空间做快速比较",
+  "语言引导高斯剪枝：以'空间邻近 + 语义相似'判定冗余高斯，复用已存语言特征、零额外提取开销，最多减 58% 高斯数而保持渲染质量",
+  "语言回环检测：复用建图已提取的语言特征做地点识别（离线 k-means 语言 codebook 直方图 + G-ICP 几何验证 + GTSAM 位姿图优化），避免单独检测模型"
+ ],
+ "method": {
+  "summary": "LEGO-SLAM 是把语言特征纳入 3DGS-SLAM 全管线的系统。(1) 追踪：G-ICP 对统一 3DGS 地图直接配准（从上一帧位姿初始化），复用源协方差初始化新高斯；关键帧按内点比例阈值选取；关键帧插入前用渲染损失（RGB+深度，高置信像素）短暂精化位姿并回传追踪器。(2) 建图：每个高斯增加可优化 16 维语言特征 f；随机选活跃窗口内关键帧渲染，最小化 L_rgb + w_depth·L_depth + w_feat·L_feat，其中特征蒸馏损失把渲染特征图经轻量卷积解码器升维到冻结提取器（CLIP 对齐，如 SED）的特征做 L1 比较；编码器先冻结等 f 收敛、再周期性单独适应（解耦策略避免联合优化不稳定）。(3) 剪枝：几何准则之外，用 K 近邻内'欧氏距离 < τ_dist 且语言特征余弦相似 > τ_sim'判定语义冗余，每 200 次迭代执行。(4) 回环：语言 codebook（外部数据集离线 k-means）给每个关键帧生成归一化语义直方图，与空间邻近历史关键帧比余弦相似度取 top-2 候选，G-ICP 对局部子图几何验证后加入 GTSAM 位姿图做全局优化并回传高斯地图。架构上值得综述注意的是：经典 SLAM 组件（ICP 配准、位姿图优化、回环验证）全部保留，语言特征是叠加其上并反哺各组件的资源，而非替代任何 SLAM 模块。",
+  "assumptions": [
+   "RGB-D 输入可用（深度用于 G-ICP 与高斯初始化）",
+   "存在可在线运行的 CLIP 对齐视觉-语言提取器，其特征可作为蒸馏目标（框架对提取器可替换，但依赖其在线可用性）",
+   "16 维紧致空间在所测基准内足以保留开放词汇判别性（d≥64 在 ScanNet 不可行、d=128 在 TUM 失败的消融表明该假设有边界）",
+   "外部图像数据集（ADE20K/COCO）上离线构建的语言 codebook 对新场景语义分布有覆盖性",
+   "环境基本静态、以室内场景为主"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Replica（合成室内，8 场景：R0-R2/O0-O4）",
+   "TUM-RGBD（真实室内，fr1-desk/fr2-xyz/fr3-office）",
+   "ScanNet（真实室内大规模，场景 00/59/106/169/181/207）",
+   "语言 codebook 离线构建用外部图像数据集 ADE20K 与 COCO",
+   "Fig. 1 左侧另含一个自采集真实室外场景，仅定性展示"
+  ],
+  "tasks": [
+   "RGB-D SLAM（追踪 + 稠密建图）",
+   "开放词汇 3D 语义分割/查询（Table II 用 Feature 3DGS 协议 + LSeg GT 特征；Table I 用 OLS 采用的 LangSplat 式文本查询协议）",
+   "3D 物体定位（文本查询 → 3D 位置，Fig. 1/Fig. 4 定性展示）",
+   "回环检测与位姿图全局优化"
+  ],
+  "embodiments": [
+   "无机器人本体：桌面级 SLAM 系统（Ryzen 7 7800X3D CPU、32GB RAM、NVIDIA RTX 4090 GPU），输入为 RGB-D 视频流，tracking 与 mapping 双进程经共享内存并行"
+  ],
+  "sample_or_scale": "每数据集的固定场景子集（Replica 8 场景、TUM-RGBD 3 序列、ScanNet 6 场景）；单次运行结果，无方差/显著性报告；所有 SLAM 评测在运行时最终在线地图上进行（无 post-run 优化）"
+ },
+ "evaluation": {
+  "design": "在三个标准 RGB-D SLAM 基准上与三类基线对比：(a) 实时开放词汇高斯建图（OLS，论文自报值 + LangSplat 式文本查询协议）；(b) 离线开放词汇 3D 重建（LeRF/LangSplat/Feature 3DGS，按本文 mapping 的 3000 iterations 对齐重训，LSeg GT 特征协议）；(c) NeRF-SLAM 与 3DGS-SLAM 系统（NICE-SLAM/Point-SLAM/Loopy-SLAM/MonoGS/SplaTAM/LoopSplat，同硬件在线评测）。另有四组消融（初始化、特征维度、剪枝策略、回环检测）与一组定性编码器对比。评测协议强调在线真实状态：所有 SLAM 系统在运行时最终地图上评估、无 post-run 优化。",
+  "baselines": [
+   "OLS [17]（Online Language Splatting，实时开放词汇建图最近邻，paper-reported）",
+   "LeRF / LangSplat / Feature 3DGS（离线开放词汇重建）",
+   "NICE-SLAM / Point-SLAM / Loopy-SLAM（NeRF-SLAM）",
+   "MonoGS / SplaTAM / LoopSplat（3DGS-SLAM，含回环系统）",
+   "位置式回环基线 [47]（LIO-SAM 式）与几何剪枝基线 [18][21]（消融内）"
+  ],
+  "metrics": [
+   "ATE RMSE [cm]（追踪精度）",
+   "PSNR / SSIM / LPIPS（渲染质量）",
+   "mIoU 与 pixel-wise Accuracy（开放词汇分割，Feature 3DGS 协议）",
+   "FPS（口径含在线语言特征提取）",
+   "内存 [MB] 与高斯数量（维度与剪枝消融）"
+  ],
+  "ablations": [
+   "预训练初始化 vs 从头训练（收敛步数，Table VII）",
+   "特征维度 d ∈ {8,16,32,64,128}（精度-内存-速度权衡，Table VIII）",
+   "语言引导剪枝 vs 几何剪枝 vs 不剪枝（Table IX、Fig. 5）",
+   "语言回环 vs 位置回环（ATE，Table X）",
+   "场景自适应 vs 冻结预训练编码器（Fig. 4，定性）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "与 OLS 的实时开放词汇对比（Replica 8 场景平均）：LEGO-SLAM PSNR 36.99 vs 35.81、mIoU 0.543 vs 0.487、Acc 0.827 vs 0.826、FPS 15.0 vs 1.25——渲染质量与语义精度同时更优且快约 12 倍；OLS 为论文自报值。",
+   "scope": "Replica 8 场景平均，Table I；OLS 数值 paper-reported",
+   "locator": "page 5, Table I"
+  },
+  {
+   "finding": "开放词汇分割（Feature 3DGS 协议，LSeg GT 特征，基线按 3000 iterations 重训）：LEGO-SLAM 在 Replica 上接近 Feature 3DGS（Acc 0.882 vs 0.902、mIoU 0.674 vs 0.691），TUM 上 mIoU 反超（0.650 vs 0.633、Acc 0.834 vs 0.835 持平），并在 Feature 3DGS 因内存约束失败的 ScanNet 上完成全部场景（Acc 0.791、mIoU 0.519）；这些结果是在估计相机位姿（基线均用 GT 位姿）下在线取得的。",
+   "scope": "三个数据集的开放词汇分割，Table II",
+   "locator": "page 5, Table II"
+  },
+  {
+   "finding": "追踪与渲染：Replica 平均 ATE 0.22 cm 为全部对比系统最低；TUM-RGBD 2.23 cm（MonoGS 1.51 更优）、ScanNet 8.84 cm（LoopSplat 7.28、Loopy-SLAM 7.87 更优）——作者表述为'保持竞争力'并称以超过 30 倍速度接近专门回环系统。渲染指标全面领先（Replica PSNR 36.99、ScanNet 21.15），全部结果 15 FPS 取得而无竞争系统超过 3 FPS，且本文在同时构建开放词汇地图、基线只做几何/RGB 建图。",
+   "scope": "Tables III-VI 与 Fig. 3，在线最终地图评测",
+   "locator": "page 5-6, Tables III-VI"
+  },
+  {
+   "finding": "消融：(a) 预训练初始化把特征损失收敛步数从 229 降到 79（Replica，Table VII）；(b) d=16 为精度-内存权衡点（Replica Acc 0.822/内存 81.8 MB；d=64 在 ScanNet 内存不可行、d=128 在 TUM 失败，Table VIII）；(c) 激进剪枝设定下语言引导剪枝保住 PSNR 36.34 vs 几何剪枝 25.32（Replica），高斯数较未剪枝地图最多减 58%（Table IX）；(d) 语言回环 ATE 在三个数据集均低于位置回环（Table X）；(e) 冻结预训练编码器无法产生有效定位，作者称持续在线学习对开放词汇能力至关重要（Fig. 4，定性）。",
+   "scope": "Tables VII-X、Figs. 4-5",
+   "locator": "page 6-7, Tables VII-X"
+  },
+  {
+   "finding": "结论重申：轻量场景自适应自编码器把语言特征蒸馏到 16 维显著降低内存与渲染开销，语言特征反哺剪枝与回环，系统以 15 FPS 在线运行（含语言特征提取）。论文未设局限讨论章节，也未在机器人或任何具身下游任务上验证地图价值。",
+   "scope": "全文实验范围（Replica/TUM-RGBD/ScanNet）",
+   "locator": "page 7, Section V"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "无机器人或具身下游任务验证：全部实验为 SLAM 基准指标（ATE/渲染/开放词汇分割/FPS），'服务 embodied AI 与机器人交互'的动机仅由引用机器人导航工作（Clip-Fields/LAMP/LM-NAV）支撑，开放词汇 mIoU 是分割代理指标，不等于操作/导航任务收益",
+    "basis": "page 4 Section IV-A 评测范围定义与 page 4-7 全部实验内容；page 1 引言动机段引用 [5][6][7]"
+   },
+   {
+    "boundary": "硬件门槛未讨论机载可行性：15 FPS 是桌面级配置（RTX 4090 + Ryzen 7 7800X3D + 32GB RAM、双进程共享内存）的结果，功耗、嵌入式部署与机器人 onboard 计算约束未评估",
+    "basis": "page 4 Section IV-A.2 Implementation Details"
+   },
+   {
+    "boundary": "室内静态场景为主：三个基准均为室内（含合成 Replica），动态物体、光照剧变未涉及；Fig. 1 左侧的自采集室外场景仅作定性重建展示、无定量评估",
+    "basis": "page 1 Fig. 1 caption 与 page 4-5 数据集描述"
+   },
+   {
+    "boundary": "开放词汇对比协议不可横向互通且部分有利于本文：Table I（vs OLS）用 LangSplat 式文本查询协议且 OLS 为 paper-reported 未在同硬件复现；Table II（vs 离线方法）用 LSeg GT 特征 + 基线仅训 3000 iterations 对齐本文优化步数（离线方法原设定不受此约束）；两组开放词汇数字互不可比",
+    "basis": "page 4 Section IV-B.1 开头与 page 5 Table I/II 协议说明"
+   },
+   {
+    "boundary": "追踪优势数据集依赖且无方差报告：最优结果集中于合成 Replica（0.22 cm）；真实 TUM（2.23 cm，MonoGS 1.51）与 ScanNet（8.84 cm，LoopSplat 7.28/Loopy-SLAM 7.87）上均有系统更低；'以 30 倍速度接近专门回环系统'的表述宜按数据集分列采信",
+    "basis": "page 5 Tables III-V 数值交叉核对"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在室内 RGB-D SLAM 基准（Replica/TUM-RGBD/ScanNet 的既定场景子集）上、配备桌面级 RTX 4090 时，LEGO-SLAM 能以 15 FPS（含在线语言特征提取）构建带 16 维语言特征的 3DGS 开放词汇地图：Replica 平均 ATE 0.22 cm 为对比系统最低，TUM 2.23 cm / ScanNet 8.84 cm 与主流系统同梯队（非最优），开放词汇分割与 Feature 3DGS 相当并覆盖其内存失败的 ScanNet 全场景，语言特征可反哺剪枝与回环检测。'该地图能提升机器人操作/导航等具身任务表现'超出本文证据范围（无机器人实验）；室外、动态场景、机载嵌入式部署的效果未量化。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "在线评测协议诚实且对 SLAM 公平：所有系统在运行时最终地图上评估、无 post-run 优化，基线分数反映在线状态而非离线精修结果",
+   "FPS 口径含在线语言特征提取，实时性主张的计量方式可信",
+   "消融覆盖四个设计轴（初始化/维度/剪枝/回环）并给出失败边界（d=64 在 ScanNet 不可行、d=128 在 TUM 失败），而非只报有利设定",
+   "开放词汇结果在估计位姿（非 GT 位姿）下取得，比基线设定更难更贴近 SLAM 真实条件，属于公平性加分项"
+  ],
+  "design_risks": [
+   "OLS 对比为 paper-reported 数值且切换到 LangSplat 式协议，与 Table II 的 Feature 3DGS 协议不可互通，开放词汇结论依赖两套不同设定",
+   "离线开放词汇基线按本文优化步数（3000 iterations）重训，可能系统性地不利于原为离线长训练设计的方法",
+   "单次运行无方差/显著性报告；ScanNet 仅 6 场景子集",
+   "追踪优势集中于合成 Replica，真实数据集上非最优，但摘要与正文多处使用全局性'competitive'表述",
+   "冻结 vs 自适应编码器的关键结论（在线学习必不可少）仅为定性图示（Fig. 4），无定量支撑"
+  ],
+  "baseline_fairness": "SLAM 基线同硬件在线评测、协议声明清晰，公平性整体较好；且本文在更难的估计位姿条件下取得开放词汇结果。但 OLS 用 paper-reported 值、开放词汇两套协议切换、离线基线按本文步数重训，这三处使跨表比较的严格性受限；消融中的位置回环基线（LIO-SAM 式）被作者称为'similarly lightweight'，与专门地点识别模型（NetVLAD 等）的对比缺席。",
+  "metric_validity": "ATE RMSE、PSNR/SSIM/LPIPS、mIoU/Accuracy 均为标准度量且协议注明来源（Feature 3DGS / LangSplat 式）；FPS 口径包含语言提取、诚实。但全部为 SLAM/重建代理指标：论文动机指向的'机器人交互/具身任务'没有任何任务级度量，mIoU 不能度量操作或导航收益。",
+  "reproducibility": "硬件与模块构成描述具体（RTX 4090、SED 提取器可替换、1×1 卷积自编码器、codebook 离线 k-means 于 ADE20K/COCO、每 200 迭代剪枝、top-2 回环候选、双进程共享内存），有项目页（lab-of-ai-and-robotics.github.io/LEGO-SLAM/）；损失权重与阈值（τ_dist/τ_sim/τ_hist）的具体取值未在正文给出，代码发布声明未见，复现需联系作者。",
+  "external_validity": "结论限于室内 RGB-D 基准与桌面 GPU；室外仅定性展示；动态环境、机器人平台、真实具身任务上的有效性未验证；16 维紧致表征的判别力边界在基准类别分布内成立，对开放世界长尾语义的保持能力未知。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.16144-C01",
+   "claim": "作者在引言中断言：3DGS-SLAM 产出的光度真实感地图'缺乏使 embodied AI 执行多样下游任务所需的语义理解'（所引 [5][6][7] 为 Clip-Fields、LAMP、LM-NAV 等机器人工作）；摘要中的平行表述为'缺乏机器人交互所需的开放词汇语义理解'。即论文以'SLAM 地图与具身任务需求之间的语义缺口'作为全部研究的出发点。",
+   "stance": "limit",
+   "relation": "对综述问题的限制侧证据：SLAM 社区自己承认纯几何/光度 SLAM 输出不直接满足具身智能的操作/导航/空间推理需求——'SLAM 输出即具身基础设施'的强主张必须打折扣。但须同时注意：作者的回应不是用 VLA/世界模型替代 SLAM，而是在 SLAM 内部吸收语言特征（见 C02-C05），缺口被用来论证扩展而非替代。",
+   "summary": "作者自陈：光度真实感 SLAM 地图缺乏 embodied AI 下游任务所需的语义理解",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 1, Section I Introduction",
+   "source_context": "However, such photorealistic maps lack the semantic understanding required for enabling embodied AI to perform diverse down- stream tasks [5], [6], [7].",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 引言段（'down- stream' 为 PDF 跨行连字符 'down-\nstream' 的逐字形式）；claim 忠实转述作者对语义缺口的断言，引用编号 [5][6][7] 与 page 7-8 参考文献列表核对一致（Clip-Fields/LAMP/LM-NAV），摘要平行表述 'lack the open-vocabulary semantic understanding required for robotic interaction' 亦在同页逐字核对。claim 未添加原文没有的量化或因果承诺。"
+   }
+  },
+  {
+   "card_id": "2511.16144-C02",
+   "claim": "与最接近的实时开放词汇高斯建图系统 OLS（Online Language Splatting）在 Replica（8 场景平均）上的对比（Table I）：LEGO-SLAM 渲染质量 PSNR 36.99（OLS 35.81）、语义精度 mIoU 0.543（OLS 0.487），同时快约 12 倍（15.0 vs 1.25 FPS）；OLS 数值为论文自报值，对比采用 OLS 所用的 LangSplat 式文本查询协议。",
+   "stance": "support",
+   "relation": "支持'SLAM 作为底座被扩展以承载具身语义需求'：此前唯一的在线开放词汇高斯建图方案 OLS 无法实时运行（1.25 FPS），本文证明 15 FPS 的实时开放词汇 SLAM 可行——开放词汇能力被纳入 SLAM 系统内部而非交给离线重建或独立的隐式记忆系统；'把语义交给 SLAM'路线在工程上成立。",
+   "summary": "较此前唯一在线开放词汇方案 OLS 快约 12 倍（15.0 vs 1.25 FPS）且渲染/语义精度更优（Replica）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Table I",
+   "source_context": "As shown in Table I, LEGO-SLAM outperforms OLS in rendering quality (PSNR +1.2 dB) and semantic accuracy (mIoU +0.056) while running about 12× faster.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PSNR / mIoU / FPS on Replica (8-scene average)",
+    "value_or_direction": "LEGO-SLAM PSNR 36.99, mIoU 0.543, 15.0 FPS; OLS PSNR 35.81, mIoU 0.487, 1.25 FPS; about 12× faster",
+    "comparator": "OLS [17] (paper-reported)",
+    "task_or_sample": "Replica 8-scene average (Table I)",
+    "locator": "page 5, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 5 Table I（OLS 行 35.81/0.950/0.072/0.487/0.826/1.25；LEGO-SLAM 行 36.99/0.965/0.063/0.543/0.827/15.0）与正文句 'outperforms OLS ... (PSNR +1.2 dB) and semantic accuracy (mIoU +0.056) while running about 12× faster'；'OLS values are paper-reported' 逐字见于 Table I 标题，'we evaluate under the LangSplat-style text-query protocol that OLS adopts' 逐字见于 page 4 末至 page 5 初的跨页句。claim 范围限于 Replica 8 场景平均，未外推到其他数据集。"
+   }
+  },
+  {
+   "card_id": "2511.16144-C03",
+   "claim": "追踪精度（ATE RMSE）：LEGO-SLAM 在 Replica 上取得全部对比 NeRF-SLAM/3DGS-SLAM 系统中的最低平均 ATE（0.22 cm）；在真实 TUM-RGBD 上 2.23 cm、大规模 ScanNet 上 8.84 cm，作者表述为'保持竞争力'（remains competitive）——但同页表格显示真实数据集上并非最优：TUM 上 MonoGS 平均 1.51 cm、ScanNet 上 LoopSplat 7.28 cm 与 Loopy-SLAM 7.87 cm 均更低。",
+   "stance": "support",
+   "relation": "支持'语义扩展不牺牲 SLAM 核心功能'：在把语言特征纳入实时建图管线的同时，追踪精度仍与主流 3DGS/NeRF-SLAM 系统处于同一梯队——SLAM 的经典能力（追踪、漂移校正）在语义化扩展后仍可用。但优势集中于合成 Replica、真实数据集上为跟随者，综述引用时应按数据集分列。",
+   "summary": "Replica 平均 ATE 0.22 cm 为对比系统最低；TUM 2.23 / ScanNet 8.84 cm 有竞争力但非最优",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Tables III-V",
+   "source_context": "On the Replica dataset, LEGO-SLAM achieves the lowest average ATE (0.22 cm). It remains competitive on the challenging real-world TUM-RGBD sequences (2.23 cm) and large-scale ScanNet (8.84 cm).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE [cm] (dataset average)",
+    "value_or_direction": "LEGO-SLAM Replica 0.22 cm (lowest), TUM-RGBD 2.23 cm, ScanNet 8.84 cm; MonoGS TUM-RGBD 1.51 cm; LoopSplat ScanNet 7.28 cm, Loopy-SLAM ScanNet 7.87 cm",
+    "comparator": "NICE-SLAM, Point-SLAM, Loopy-SLAM, MonoGS, SplaTAM, LoopSplat",
+    "task_or_sample": "Replica 8 scenes / TUM-RGBD 3 sequences / ScanNet 6 scenes (Tables III-V)",
+    "locator": "page 5, Tables III-V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 正文句与 Tables III-V 平均列数值：Replica 行 LEGO-SLAM 0.22（次优 LoopSplat 0.25、MonoGS 0.31）；TUM 平均行 LEGO-SLAM 2.23、MonoGS 1.51；ScanNet 平均行 LEGO-SLAM 8.84、LoopSplat 7.28、Loopy-SLAM 7.87。claim 中'最低/竞争力/非最优'的限定分别与正文措辞及表格一致，未把 Replica 最优外推到真实数据集。"
+   }
+  },
+  {
+   "card_id": "2511.16144-C04",
+   "claim": "编码器适应消融（Fig. 4，定性）：冻结的预训练编码器无法产生有意义的目标定位结果——其静态特征不能适应特定场景；场景自适应编码器成功定位目标。作者由此得出'持续在线学习对我们的开放词汇能力至关重要'。该结论基于定性图示对比，未报告定量指标。",
+   "stance": "conditional",
+   "relation": "对'SLAM 被基础模型/隐式记忆替代'论的限制性证据：直接使用冻结的预训练视觉-语言特征（基础模型路线的最简形态）在 SLAM 在线场景中失效；开放词汇语义要可用必须具备 SLAM 式的持续在线适应机制——基础模型特征与 SLAM 在线学习在此呈互补而非替代关系。但该结论仅在其 16 维自编码器设计与三个室内基准内、以定性形式验证，条件性成立。",
+   "summary": "冻结预训练编码器无法定位目标；作者称持续在线学习对开放词汇能力至关重要（定性消融）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 6, Section IV-C.1, Fig. 4",
+   "source_context": "As visualized in Fig. 4, the frozen encoder fails to produce meaningful localization results, as its static features cannot adapt to the specific scene, whereas our scene-adaptive encoder successfully localizes the object. This shows that continuous online learning is essential for our open-vocabulary capability.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 6 IV-C.1 段两句：覆盖'冻结失败/自适应成功/在线学习至关重要'的完整作者陈述。claim 明确标注该消融为定性（Fig. 4）且无定量指标，与原文一致——Table VII 的定量收敛步数属于另一组初始化消融，不含冻结 vs 自适应的定量对比。stance 取 conditional 而非 support，因为结论仅在本文设计与基准内以定性证据成立。"
+   }
+  },
+  {
+   "card_id": "2511.16144-C05",
+   "claim": "语言回环检测消融（Table X）：复用建图阶段已计算的语言特征做地点识别，在三个数据集上的 ATE 均低于轻量位置基线 [47]（LIO-SAM 式位置回环）：Replica 0.22 vs 0.28 cm、TUM-RGBD 2.23 vs 3.13 cm、ScanNet 8.84 vs 10.19 cm。语言特征在此承担了经典 SLAM 回环检测（通常需 NetVLAD/ORB-SLAM2 词袋等单独地点识别模型）的职能。",
+   "stance": "support",
+   "relation": "支持'SLAM 组件正在吸收语言特征而非被替代'的分工演化判断：回环检测是经典 SLAM 基础设施；本文用建图已提取的语言特征替代单独检测模型并取得更低漂移——语言特征被'SLAM 化'（复用、在线、轻量），而 SLAM 框架本身（G-ICP 几何验证、GTSAM 位姿图优化）保持不变。",
+   "summary": "语言回环检测复用建图特征，三个数据集 ATE 均低于位置基线（0.22/2.23/8.84 vs 0.28/3.13/10.19 cm）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 7, Table X",
+   "source_context": "TABLE X: Loop Detection Comparison. Our language-based method achieves lower tracking error (ATE RMSE [cm] ↓) than the position-based approach. Method Replica TUM-RGBD ScanNet Position-based [47] 0.28 3.13 10.19 Language-based 0.22 2.23 8.84",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE [cm]",
+    "value_or_direction": "Language-based 0.22, 2.23, 8.84 cm; Position-based 0.28, 3.13, 10.19 cm (Replica, TUM-RGBD, ScanNet)",
+    "comparator": "position-based loop detection baseline [47]",
+    "task_or_sample": "loop-detection ablation on Replica, TUM-RGBD, ScanNet (Table X)",
+    "locator": "page 7, Table X"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 7 Table X（表题、表头与两行数值）及正文 'our method consistently achieves lower tracking error across all datasets, indicating more robust place recognition'；'reuses the language features already computed during mapping' 与 'avoids the overhead of separate detection models [23], [22]' 逐字见于同页 IV-C.4 段；[47]=LIO-SAM、[22]=NetVLAD、[23]=ORB-SLAM2 与 page 8 参考文献列表核对一致。数值与比较方向均与表格一致，claim 未添加'优于所有回环方法'的泛化。"
+   }
+  },
+  {
+   "card_id": "2511.16144-C06",
+   "claim": "本文全部定量评估限于三个标准 SLAM/重建基准（合成 Replica、真实 TUM-RGBD、ScanNet）上的 SLAM 指标（ATE、PSNR/SSIM/LPIPS、开放词汇 mIoU/Accuracy、FPS）与消融；论文不含任何机器人平台实验或下游具身任务（操作、导航、数据采集）评估——摘要与引言中'服务 embodied AI/机器人交互'的定位没有任务级验证，仅由引用机器人导航工作（Clip-Fields/LAMP/LM-NAV）支撑。",
+   "stance": "gap",
+   "relation": "对综述问题的缺口证据：即便在明确以 embodied AI 为动机的 SLAM 论文里，'语义化 SLAM 服务具身任务'仍是未经验证的假设——SLAM 研究的验证惯例停留在 SLAM 基准指标，SLAM 与具身任务的实际对接（机器人是否因此更能操作/导航）在此缺席。综述引用此类工作时应区分'SLAM 具备具身相关能力（开放词汇查询）的证据'与'SLAM 在具身任务中有效的证据'。",
+   "summary": "全部实验限于 SLAM 基准（Replica/TUM-RGBD/ScanNet），无机器人或具身下游任务验证",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 4, Section IV-A.1 Datasets and Metrics",
+   "source_context": "We evaluate our framework on the synthetic Replica dataset [25] and the real-world TUM-RGBD [26] and ScanNet [1] datasets.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 4 IV-A.1 首句（评测数据集范围）；并通读 page 4-7 全部实验（IV-A 设置、IV-B 定量、IV-C 消融、V 结论）确认除三个基准的 SLAM 指标与消融外无任何机器人或下游任务实验；Fig. 1 左侧自采集室外场景仅为定性重建展示。引用 [5][6][7] 的机器人导航属性与 page 7-8 参考文献列表核对一致。claim 为对论文评测范围的事实性陈述，未添加对作者意图的推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Online Language Splatting",
+   "arxiv_id": "2503.09447",
+   "role": "最直接对比对象（Table I）：此前唯一的在线开放词汇高斯建图系统（1.25 FPS），本文 12× 加速与质量优势的参照系"
+  },
+  {
+   "title": "LIO-SAM: Tightly-coupled Lidar Inertial Odometry via Smoothing and Mapping",
+   "arxiv_id": "2007.00258",
+   "role": "语言回环消融（Table X）中的位置式回环基线 [47]，代表经典非学习地点识别路线"
+  }
+ ],
+ "notes": "补充观察：(1) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。(2) 论文两处定位句（引言 'lack the semantic understanding required for enabling embodied AI'、摘要 'lack the open-vocabulary semantic understanding required for robotic interaction'）共同构成 SLAM-具身语义缺口的核心论证；被引 [5][6][7] 均为机器人导航/记忆工作，说明'地图需语义化以服务具身任务'在 SLAM 社区内部已是共识性动机。(3) SLAM 在本文中的形态是'被扩展的底座'：G-ICP 追踪、渲染位姿精化、GTSAM 位姿图、G-ICP 回环验证等经典组件全部保留，语言特征叠加其上并被复用到剪枝与回环——没有出现用基础模型替代 SLAM 模块的取向，反而是语言特征被 SLAM 化（在线适应、复用、紧致化）；这与'VLA/世界模型替代 SLAM'叙事形成对照样本。(4) 15 FPS 口径含在线语言提取（page 4）；对比系统不超过 3 FPS（page 6）——实时优势同时来自 16 维压缩与双进程工程并行。(5) 冻结 vs 自适应消融（C04）是全文对'静态基础模型特征是否够用'最直接的回答，惜为定性证据。(6) 潜在审稿风险点已记入 critical_appraisal：OLS paper-reported + 协议切换、离线基线 3000 iterations 重训、真实数据集追踪非最优。"
+}

@@ -1,0 +1,350 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.06840",
+  "title": "PanoNav: Mapless Zero-Shot Object Navigation with Panoramic Scene Parsing and Dynamic Memory",
+  "published": "2025-11-10",
+  "url": "https://arxiv.org/abs/2511.06840",
+  "authors": [
+   "Qunchao Jin",
+   "Yilin Wu",
+   "Changhao Chen"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文是'隐式空间记忆替代 SLAM 度量地图'路线的代表论文：纯 RGB、无度量地图、无深度/GPS 的零样本开放词汇 ObjectNav 框架，用 MLLM 全景场景解析 + 动态有界记忆队列承担地图的语义理解与防重访功能。其对比表（无图 vs 建图基线）、死锁规避测试与消融直接给出替代路线的能力边界，是综述问题'导航环节 SLAM 是否正被隐式空间记忆替代'的核心证据源。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract + Introduction",
+    "role": "problem",
+    "purpose": "确认论文动机：建图/深度方法依赖昂贵深度传感器与精确机器人定位、既有无图方法仅基于当前观测决策导致局部死锁；分诊综述相关性（无图替代路线核心论文）"
+   },
+   {
+    "locator": "page 2-3, Related Work（Open-Vocabulary ObjectNav / LLMs for Embodied Navigation / Mapless Object Navigation）",
+    "role": "relevant-core",
+    "purpose": "定位技术谱系：map-based（VLFM/SG-Nav/VoroNav/InstructNav 等）与 mapless（ZSON/ImagineNav/PixNav）两条路线，确认本文属'无图 + 隐式记忆'替代路线"
+   },
+   {
+    "locator": "page 3, Problem Formulation + PanoNav Framework",
+    "role": "data-or-setting",
+    "purpose": "确认任务设定：episode 开始无先验地图或空间知识、仅 6 向 RGB 全景观测、无深度/GPS 附加传感器，Habitat 离散动作空间（MoveAhead 0.25 m、转向 30°）"
+   },
+   {
+    "locator": "page 3-5, Panoramic Scene Parsing + Navigation Decision-Making with Dynamic Memory（含公式 3/4 与 Fig. 2-3）",
+    "role": "method-or-design",
+    "purpose": "理解替代机制：MLLM 全景解析输出局部方向描述与全局摘要（隐式自定位线索），动态有界记忆队列（容量 n、FIFO、waypoint 索引）如何替代度量地图的历史记忆功能；确认运动控制外包给 PixNav"
+   },
+   {
+    "locator": "page 5-6, Experiment（Benchmark and Evaluation Metrics + Performance on Mapless Zero-Shot ObjectNav, Table 1）",
+    "role": "results-or-analysis",
+    "purpose": "核对主结果与 11 个基线的三维度分类（模态/开放集/是否建图），确认无图 vs 建图的量化对比"
+   },
+   {
+    "locator": "page 6-7, Deadlock Avoidance Test + Fig. 4-5（Table 2）",
+    "role": "results-or-analysis",
+    "purpose": "核对死锁规避测试：记忆队列对欺骗性场景下 SR/SPL/DTS(f)/ER 的因果贡献"
+   },
+   {
+    "locator": "page 7, Ablation Study（Table 3）",
+    "role": "results-or-analysis",
+    "purpose": "核对组件消融：6 视角 vs 3 视角、解析-决策解耦 vs 单步决策、记忆引导 vs 无记忆"
+   },
+   {
+    "locator": "page 7, Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述局限（未来用多模态信息构造记忆队列，自认当前纯文本记忆不够鲁棒）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8-9, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引工作（PixNav、ZSON、VLFM、ImagineNav、L3MVN、HM3D、SCA、Qwen-2.5-VL、DeepSeek-V3），无需逐条精读；本文无附录"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：在无度量地图、无深度、无 GPS 的纯 RGB 条件下，零样本开放词汇 ObjectNav 如何避免仅基于当前观测的短视决策导致的局部死锁？方案是用 MLLM 全景场景解析（含隐式自定位的全局摘要）+ 动态有界记忆队列来替代显式地图的语义理解与历史记忆功能。对综述问题的意义：该文是'隐式空间记忆替代 SLAM 度量地图'路线的直接证据源——其对比表、死锁测试与消融同时给出替代的可行域（HM3D 仿真 SR 43.5）与边界（死锁失败模式、与 RGB-D 建图方法的差距）。",
+ "contributions": [
+  "提出 RGB-only、无度量地图的开放词汇 ObjectNav 框架 PanoNav：6 向全景 RGB + 点阵图输入 MLLM（Qwen-2.5-VL）做全景场景解析，输出局部方向描述与全局场景摘要，无需深度传感器或度量地图",
+  "提出动态记忆引导决策机制：动态有界记忆队列存储近期全局摘要（容量 n、FIFO），将历史探索信息引入决策 LLM（DeepSeek-V3），缓解无图方法的局部死锁问题",
+  "设计死锁规避测试（欺骗性 episode 上的 SR/SPL/DTS/ER 四指标）与组件消融，验证记忆队列的因果贡献；在 HM3D 上超过同设定 RGB-only 基线"
+ ],
+ "method": {
+  "summary": "PanoNav 是完全无图、纯 RGB 的零样本开放词汇 ObjectNav 框架。每个 timestep 采集 6 个 60° 间隔的 RGB 视图并经 SCA 生成点阵图，共同输入 Qwen-2.5-VL 做全景场景解析：(1) 局部方向解析提取每方向的物体清单、房间类型、物体间空间关系、信息丰度与目标似然；(2) 全局场景摘要描述当前周边环境与房间类型，作者将其定位为隐式自定位线索。全局摘要序列构成容量 n 的动态有界记忆队列（新 waypoint 摘要入队、最旧摘要出队），队列满后连同当前局部/全局信息一起输入 DeepSeek-V3 决策 LLM 选择探索方向；动作由 PixNav 作为运动控制器在 Habitat 中执行（MoveAhead 0.25 m、转向 30° 等离散指令）。全程无度量地图、无深度、无 GPS。",
+  "assumptions": [
+   "MLLM 能从 RGB + 点阵图中可靠解析物体间几何距离与平面位置关系（Fig. 2 的示例为理想输出）",
+   "房间级语义摘要（kitchen/hallway 等）足以提供自定位线索",
+   "容量 n 的近期历史足以避免重访——更早的全局摘要被 FIFO 丢弃",
+   "Habitat 离散动作被理想执行：无执行噪声、无定位误差（真实平台需低层运动控制支撑）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HM3D（Habitat-Matterport 3D，验证集随机抽取 200 episodes，Habitat 仿真器）",
+   "死锁规避测试：自选 5 个高欺骗性 episode（起点为目标最可能出现处或空间边界处）× 10 次重复"
+  ],
+  "tasks": [
+   "ObjectNav / 零样本开放词汇目标物体导航（仅语言指令指定目标类别）",
+   "死锁规避子测试（欺骗性起点下的逃逸与搜索）"
+  ],
+  "embodiments": [
+   "Habitat 仿真器中的理想化离散指令智能体（Stop/MoveAhead/TurnLeft/TurnRight/LookUp/LookDown），无真实机器人平台"
+  ],
+  "sample_or_scale": "主实验 200 episodes + 死锁测试 5 episodes × 10 重复；感知骨干 Qwen-2.5-VL（MLLM），决策骨干 DeepSeek-V3（LLM），运动控制器 PixNav"
+ },
+ "evaluation": {
+  "design": "在 HM3D 验证集随机抽取的 200 episodes 上与 11 个基线对比，基线按模态（RGB-D vs RGB-only）、开放集（close-set vs open-set）、是否建图（map-based vs mapless）三维度显式分类；另设死锁规避测试（5 个高欺骗性 episode × 10 重复，SR/SPL/DTS(f)/ER 四指标）与三组件消融（视角数、解析-决策解耦、记忆引导）",
+  "baselines": [
+   "close-set map-based（RGB-D+GPS+Compass）：FBE、SemExp",
+   "close-set mapless（RGB-D+GPS+Compass）：Habitat-Web、OVRL",
+   "open-set map-based（RGB-D+GPS+Compass）：VLFM、ESC、VoroNav、L3MVN",
+   "open-set mapless：ImagineNav（RGB-D，训练想象模型时用深度）、ZSON（RGB-only）、PixNav（RGB-only，同设定直接基线）"
+  ],
+  "metrics": [
+   "SR（成功率）",
+   "SPL（路径加权成功率）",
+   "死锁测试附加：DTS(f)（失败案例停止点距目标距离）、ER（逃逸率）"
+  ],
+  "ablations": [
+   "6 视角全景 vs 3 视角前向：SR 43.5/23.73 vs 19.5/9.97",
+   "解析-决策解耦 vs MLLM 单步决策：43.5/23.73 vs 35.0/20.47",
+   "记忆引导 vs 无记忆：43.5/23.73 vs 38.5/22.57"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "主结果：HM3D 验证集随机 200 episodes 上，PanoNav 取得 SR 43.5 / SPL 23.7，超过同设定（RGB-only、mapless）基线 ZSON（25.5/12.6）与 PixNav（37.9/20.5），相对 PixNav 提升 14.76%（SR）与 15.61%（SPL）；作者称 SR 甚至超过若干 close-set 方法（FBE、SemExp、Habitat-Web）与 map-based 方法（FBE、SemExp、ESC、VoroNav）。",
+   "scope": "HM3D 200 episodes 仿真对比，跨设定比较",
+   "locator": "page 5, Table 1; page 6"
+  },
+  {
+   "finding": "替代边界（与建图路线对比）：同一张表中 RGB-D 输入的 open-set 方法 SR 仍系统性更高——VLFM 52.2/30.4（map-based）、ImagineNav 53.0/23.8（mapless）、L3MVN 50.4/23.1（map-based），比 PanoNav 高 6.9–9.5 个 SR 百分点；SPL 低于 VLFM 6.7 点但略高于 L3MVN。",
+   "scope": "Table 1 数值对比（读者按表格数值整理）",
+   "locator": "page 5, Table 1"
+  },
+  {
+   "finding": "死锁规避测试：带动态有界记忆队列时 SR 48.0、SPL 19.2、DTS(f) 4.7、ER 82.0；无记忆时 SR 12.0、SPL 4.9、DTS(f) 6.7、ER 32.0——记忆使欺骗性场景成功率提高 4 倍、逃逸率翻倍以上，但带记忆 SR 也仅 48%、死锁未完全消除。",
+   "scope": "5 个高欺骗性 episode × 10 次重复",
+   "locator": "page 5, Table 2; page 6-7"
+  },
+  {
+   "finding": "消融：完整框架 43.5/23.73 > 无记忆 38.5/22.57 > MLLM 单步决策 35.0/20.47 > 3 视角 19.5/9.97——全景视角与解析-决策解耦的贡献大于记忆队列在主设定下的贡献（记忆的主要价值体现在欺骗性场景）。",
+   "scope": "HM3D 200 episodes 组件消融",
+   "locator": "page 7, Table 3"
+  },
+  {
+   "finding": "替代机制定位：全局场景摘要被作者定位为隐式自定位线索（房间级语义位置），并以 waypoint 全局摘要为记忆元素构建动态有界队列；框架层面无 SLAM/里程计/度量地图组件，运动控制整体外包给 PixNav。",
+   "scope": "方法设计叙述（非实验验证）",
+   "locator": "page 3-5"
+  },
+  {
+   "finding": "基线差异注意：ImagineNav 虽为 mapless，但其想象模型训练时使用了深度信息；论文未说明 11 个基线数字是否在相同 200-episode 子集与相同协议下复跑。",
+   "scope": "基线描述与实验设定",
+   "locator": "page 6; page 5"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "作者在结论中将'利用多模态信息构造记忆队列以实现更鲁棒的无图目标导航'列为未来工作——自认当前仅基于文本全局摘要的记忆队列鲁棒性不足",
+    "locator": "page 7, Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "时域/容量上限：动态有界记忆队列是容量 n 的 FIFO 队列，新 waypoint 摘要入队时最旧摘要被永久丢弃——超出窗口的探索历史不可用，无长时程全局一致性保证，这是'记忆替代地图'在时间维度上的结构性上限",
+    "basis": "page 4 公式(3)及队列机制描述（'the oldest waypoint description is dequeued while the newest one is added, maintaining a constant queue length'）"
+   },
+   {
+    "boundary": "场景/规模上限：主实验仅 200 episodes、死锁测试仅 5 个 episode × 10 次重复，全部在 Habitat 仿真中完成；欺骗性场景下带记忆 SR 也仅 48%，无真实机器人、感知噪声与执行噪声验证",
+    "basis": "page 5 实验设定（'we randomly selected 200 episodes from its validation set'）与 page 5 Table 2、page 6-7 死锁测试描述"
+   },
+   {
+    "boundary": "隐性度量依赖：动作空间本身是度量标定的（MoveAhead 恒定 0.25 m、转向恒定 30°）且由仿真器理想执行；低层运动控制整体外包给 PixNav，其内部依赖本文未说明——真实平台上该接口需要某种里程/控制基础设施，'纯 RGB 无度量信息'的声明仅在仿真闭环内成立",
+    "basis": "page 3 问题设定的动作空间定义与 page 4-5 对 PixNav 的一句话说明（'we employ PixNav (Cai et al. 2024) as the motion controller'）"
+   },
+   {
+    "boundary": "对比协议风险：论文未说明基线数字是否在相同 200-episode 子集上复跑；若引自原论文（通常为全量 HM3D val 协议），跨行对比存在协议偏差，'超过 map-based 方法'的表述需谨慎采信",
+    "basis": "page 5-6 实验节未报告基线复跑或协议对齐方式"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 Habitat 仿真器、HM3D 验证集随机抽取的 200 个 episode、理想离散动作执行（无执行与定位噪声）条件下，纯 RGB 六向全景输入、无度量地图/深度/GPS 的开放词汇 ObjectNav 达到 SR 43.5 / SPL 23.7——超过同设定 RGB-only 基线，但低于最强 RGB-D 方法 6.9–9.5 个 SR 百分点。对真实机器人部署（低层控制与里程误差）、超出记忆队列容量 n 的长时程全局一致性、欺骗性场景（带记忆 SR 仅 48%）、其他数据集与域差距均未证明。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "将 11 个基线按模态/开放集/是否建图三维度显式分类，使'无图 vs 建图'的替代对比在同一张表中可见、可核查",
+   "专门设计死锁规避测试（欺骗性 episode、SR/SPL/DTS(f)/ER 四指标）分离记忆机制的因果贡献，消融覆盖视角数、解析-决策解耦、记忆三组件",
+   "诚实指出 ImagineNav 训练想象模型时使用了深度信息，对最接近的 mapless 基线的差异有所交代"
+  ],
+  "design_risks": [
+   "200 episodes 小样本且无方差/显著性报告；基线数字来源未说明（可能引自原论文的不同评测协议），跨设定对比存在协议偏差风险",
+   "死锁规避测试仅 5 个 episode × 10 次重复，'4 倍 SR 提升'的外推性有限",
+   "RGB-only 与 RGB-D+GPS+Compass 的对比本质不对等，'surpasses methods with stronger assumptions' 的表述易被误读为全面领先（实际 SR 低于 VLFM/L3MVN/ImagineNav）"
+  ],
+  "baseline_fairness": "与同设定 RGB-only mapless 基线（ZSON、PixNav）的对比最公平且构成论文核心主张；与 map-based 方法的对比是跨模态跨设定比较，作者以'stronger assumptions'如实标注，但正文未强调与 VLFM（52.2/30.4）等的正向差距；未报告基线是否在相同 200-episode 子集上复跑。",
+  "metric_validity": "SR/SPL 为 ObjectNav 标准指标；死锁测试补充的 DTS(f)/ER 直接针对论文声称解决的失败模式，指标-主张对齐较好；但 ER 的逃逸定义（未停在起点附近）较宽松，且全部结果无统计不确定性报告。",
+  "reproducibility": "报告了骨干模型选型（Qwen-2.5-VL、DeepSeek-V3）、评测规模（HM3D val 200 episodes）与动作空间参数；未报告记忆队列长度 n 的数值、点阵图生成参数（引用 SCA 但无配置）、提示词设计、随机种子与每 episode 的 MLLM/LLM 调用成本，无代码发布声明。",
+  "external_validity": "结论限于 Habitat+HM3D 仿真与理想动作执行：无真实机器人、无传感器/执行噪声/定位误差；每个 timestep 采集 6 向 RGB 在真实平台上的时间与运动代价未讨论；未在其他数据集（Gibson/MP3D）上验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.06840-C01",
+   "claim": "在 HM3D 验证集随机抽取的 200 个 episode 上，纯 RGB、无度量地图、无深度/GPS 的开放词汇 ObjectNav 方法 PanoNav 取得 SR 43.5 / SPL 23.7，超过同设定（RGB-only、mapless）基线 ZSON（SR 25.5 / SPL 12.6）与 PixNav（SR 37.9 / SPL 20.5）；相对 PixNav 提升 14.76%（SR）与 15.61%（SPL）。",
+   "stance": "support",
+   "relation": "支持'隐式空间记忆 + MLLM 场景解析可替代 SLAM 度量地图完成具身导航'的替代路线判断：完全不构建度量地图、不依赖深度与定位传感器的框架在仿真基准上超过同设定基线（论文另自述超过若干建图方法），对'导航必须以 SLAM 建图为前提'构成此基准内的反例。",
+   "summary": "无图纯 RGB 路线在 HM3D 200 episodes 上 SR 43.5 / SPL 23.7，超过同设定基线 ZSON 与 PixNav",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Table 1",
+   "source_context": "ZSON RGB Only Open-Set mapless 25.5 12.6\nPixNav RGB Only Open-Set mapless 37.9 20.5\nPanoNav (Ours) RGB Only Open-Set mapless 43.5 23.7",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL",
+    "value_or_direction": "PanoNav 43.5 / 23.7；ZSON 25.5 / 12.6；PixNav 37.9 / 20.5（相对 PixNav SR +14.76%、SPL +15.61%）",
+    "comparator": "RGB-only mapless 基线 ZSON 与 PixNav",
+    "task_or_sample": "HM3D 验证集随机抽取 200 episodes 的 ObjectNav",
+    "locator": "page 5, Table 1（相对提升数字见 page 6 正文）"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 Table 1 末三行：'ZSON RGB Only Open-Set mapless 25.5 12.6'、'PixNav RGB Only Open-Set mapless 37.9 20.5'、'PanoNav (Ours) RGB Only Open-Set mapless 43.5 23.7'。相对提升 14.76%/15.61% 逐字见 page 6（'PanoNav demonstrates a 14.76% improvement in SR and a 15.61% improvement in SPL'），200 episodes 抽样见 page 5（'we randomly selected 200 episodes from its validation set'）。claim 忠实于表格数值与作者叙述，限定在 HM3D 该子集，未外推。"
+   }
+  },
+  {
+   "card_id": "2511.06840-C02",
+   "claim": "在 5 个高欺骗性 episode × 10 次重复的死锁规避测试中，去掉记忆队列的无图导航 SR 仅 12.0、逃逸率（ER）32.0%；加入动态有界记忆队列后 SR 升至 48.0（4 倍）、ER 升至 82.0%，失败案例距目标距离 DTS(f) 从 6.7 降至 4.7——隐式文本记忆显著补偿了缺失度量地图的防重访功能，但欺骗性场景下成功率仍不足一半、死锁未完全消除。",
+   "stance": "conditional",
+   "relation": "说明'隐式记忆替代显式地图'是功能性、有条件的替代：有界记忆队列能大幅缓解无图路线的死锁失败模式（地图的防重访/历史记忆功能被近似补偿），但补偿不完整（ER 82% 而非 100%、欺骗场景 SR 仅 48%），且队列容量有界会丢弃更早历史——替代的边界由记忆机制自身的容量与语义粒度决定。",
+   "summary": "死锁测试：记忆队列使欺骗场景 SR 12.0→48.0、逃逸率 32.0%→82.0%，但 SR 仍仅 48%、死锁未根除",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Table 2",
+   "source_context": "SR↑ SPL↑ DTS (f)↓ ER↑\nwithout Memory 12.0 4.9 6.7 32.0\nwith Memory 48.0 19.2 4.7 82.0",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL / DTS(f) / ER",
+    "value_or_direction": "with Memory：SR 48.0、SPL 19.2、DTS(f) 4.7、ER 82.0；without Memory：SR 12.0、SPL 4.9、DTS(f) 6.7、ER 32.0",
+    "comparator": "带 vs 不带动态有界记忆队列（同一无图框架）",
+    "task_or_sample": "5 个高欺骗性 episode × 10 次重复的死锁规避测试",
+    "locator": "page 5, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 Table 2：'without Memory 12.0 4.9 6.7 32.0' 与 'with Memory 48.0 19.2 4.7 82.0'，表头 'SR↑ SPL↑ DTS (f)↓ ER↑' 无误；4 倍关系与 page 7 原文 'success rate up to four times greater than the memory-less variant' 一致（48.0/12.0=4 为直接算术）；测试设定（5 episodes、10 次重复、欺骗性起点）逐字见 page 6-7。claim 限定于该测试范围。"
+   }
+  },
+  {
+   "card_id": "2511.06840-C03",
+   "claim": "尽管 PanoNav（SR 43.5 / SPL 23.7）的 SR 超过若干 map-based 方法（ESC 39.2、VoroNav 42.0），但仍低于表中所有 RGB-D 输入的 open-set 方法：map-based 的 VLFM（52.2 / 30.4）、L3MVN（50.4 / 23.1）与 mapless 的 ImagineNav（53.0 / 23.8），SR 差距 6.9–9.5 个百分点；SPL 低于 VLFM 6.7 个百分点（略高于 L3MVN 的 23.1）。",
+   "stance": "limit",
+   "relation": "限制'无图隐式记忆路线已全面达到建图方法水平'的替代主张：同一对比表中，最强的 RGB-D 建图/想象式方法在成功率上仍系统性领先纯 RGB 无图方法——深度与度量建图带来的优势尚未被隐式记忆完全替代，替代主张只能限定在部分（较弱的）建图基线之内。",
+   "summary": "PanoNav SR 43.5 仍低于 RGB-D 方法 VLFM 52.2、L3MVN 50.4、ImagineNav 53.0（差 6.9–9.5 个百分点）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 5, Table 1",
+   "source_context": "VLFM RGB-D, GPS+Compass Open-Set map-based 52.2 30.4\nESC RGB-D, GPS+Compass Open-Set map-based 39.2 22.3\nVoroNav RGB-D, GPS+Compass Open-Set map-based 42.0 26.0\nL3MVN RGB-D, GPS+Compass Open-Set map-based 50.4 23.1\nImagineNav RGB-D Open-Set mapless 53.0 23.8\nZSON RGB Only Open-Set mapless 25.5 12.6\nPixNav RGB Only Open-Set mapless 37.9 20.5\nPanoNav (Ours) RGB Only Open-Set mapless 43.5 23.7",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL",
+    "value_or_direction": "PanoNav 43.5 / 23.7 vs VLFM 52.2 / 30.4、L3MVN 50.4 / 23.1、ImagineNav 53.0 / 23.8、ESC 39.2 / 22.3、VoroNav 42.0 / 26.0（SR 差距 6.9–9.5 个百分点）",
+    "comparator": "RGB-D open-set 方法（VLFM、L3MVN、ImagineNav）与 map-based 方法（ESC、VoroNav）",
+    "task_or_sample": "HM3D 200 episodes ObjectNav 对比",
+    "locator": "page 5, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 Table 1 各行：VLFM 52.2/30.4、ESC 39.2/22.3、VoroNav 42.0/26.0、L3MVN 50.4/23.1、ImagineNav 53.0/23.8、PanoNav 43.5/23.7。SR 差距（8.7/6.9/9.5）为表格数值的直接算术；'超过 ESC/VoroNav 等 map-based 方法'与 page 6 原文 'even surpasses ... map-based methods (FBE, Sem-Exp, ESC, VoroNav)' 一致。claim 未添加论文未报告的排序结论。"
+   }
+  },
+  {
+   "card_id": "2511.06840-C04",
+   "claim": "作者将全局场景解析定位为提供'隐式自定位意识'（implicit self-location awareness）的机制：其全局摘要以房间/场景类型等语义线索（如 kitchen、hallway）提示智能体在更广环境中的位置，并作为决策模块构造动态记忆状态的基础输入——无图条件下的自定位由语义级线索承担，而非度量位姿。",
+   "stance": "support",
+   "relation": "支持'以隐式语义空间记忆替代显式地图'的替代路线判断，并刻画替代的具体形态：PanoNav 替代的是地图的语义-拓扑功能（在哪个房间、周边有什么），而非度量功能（精确位姿、度量路径规划）——该路线的替代发生在语义层面，这与 SLAM 提供度量定位/建图形成功能性分工而非全面置换。",
+   "summary": "全局场景摘要提供房间级语义位置线索，作为隐式自定位替代度量定位",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 3",
+   "source_context": "offering cues about the agent’s position within the broader environment (e.g., kitchen, hallway).",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3：所选片段 'offering cues about the agent's position within the broader environment (e.g., kitchen, hallway).' 无误；其前一句 'This global parsing provides a form of implicit self-location awareness'（原文因跨行连字符断为 self- location，故未整句引用）与后文 'foundational input to our decision-making module, particularly in the construction of the dynamic memory state' 均在同页，支撑 claim 中'隐式自定位'与'记忆状态基础输入'的表述。claim 为作者定位的忠实转述，未加入实验结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Bridging Zero-shot Object Navigation and Foundation Models through Pixel-Guided Navigation Skill",
+   "arxiv_id": "",
+   "role": "PixNav（Cai et al. 2024, ICRA）：PanoNav 的运动控制器与同设定直接基线（C01 的主要 comparator）"
+  },
+  {
+   "title": "ZSON: Zero-Shot Object-Goal Navigation using Multimodal Goal Embeddings",
+   "arxiv_id": "2206.12403",
+   "role": "RGB-only mapless 基线（C01/C03 comparator）"
+  },
+  {
+   "title": "VLFM: Vision-Language Frontier Maps for Zero-shot Semantic Navigation",
+   "arxiv_id": "2312.03275",
+   "role": "最强 open-set map-based（RGB-D）基线，替代边界的关键参照（C03）"
+  },
+  {
+   "title": "L3MVN: Leveraging Large Language Models for Visual Target Navigation",
+   "arxiv_id": "",
+   "role": "map-based（RGB-D）open-set 基线（C03 comparator）"
+  },
+  {
+   "title": "ImagineNav: Prompting Vision-Language Models as Embodied Navigator through Scene Imagination",
+   "arxiv_id": "",
+   "role": "RGB-D mapless 对比方法，训练想象模型时使用深度（C03 comparator 与基线差异注记）"
+  },
+  {
+   "title": "Habitat-Matterport 3D Dataset (HM3D): 1000 Large-scale 3D Environments for Embodied AI",
+   "arxiv_id": "2109.08238",
+   "role": "评测基准数据集"
+  },
+  {
+   "title": "Scaffolding Coordinates to Promote Vision-Language Coordination in Large Multi-Modal Models",
+   "arxiv_id": "",
+   "role": "SCA 点阵图生成方法（全景解析的输入预处理）"
+  },
+  {
+   "title": "Qwen2.5-VL Technical Report",
+   "arxiv_id": "2502.13923",
+   "role": "全景场景解析的 MLLM 骨干"
+  },
+  {
+   "title": "DeepSeek-V3 Technical Report",
+   "arxiv_id": "2412.19437",
+   "role": "记忆引导决策的 LLM 骨干"
+  }
+ ],
+ "notes": "补充观察：(1) 提取管道为 alphaxiv-fulltext-api（PDF 文本），note 中 extraction.method 按校验器枚举记为 pdf-text。(2) 对综述问题的关键含义：PanoNav 是'隐式空间记忆替代 SLAM 度量地图'路线的代表性证据——无图、无深度、无 GPS 条件下 SR 43.5 超过同设定基线与部分建图方法，说明地图的语义/拓扑功能可被 MLLM 解析 + 有界文本记忆近似替代；但同一张表显示最强 RGB-D 建图方法（VLFM 52.2）仍领先 8.7 个 SR 点，死锁测试显示替代是部分的（欺骗场景 SR 48%、ER 82%），且'无度量信息'声明依赖仿真器理想动作执行与外包的运动控制器（PixNav）。替代主张的适用域是仿真室内 ObjectNav 的语义层功能，不覆盖度量层（精确位姿、度量路径效率由 SPL 差距体现）。(3) 该文将 WMNav（Nie et al. 2025，世界模型导航）归类为'需要预建度量地图'的方法（page 1），可作综述中'世界模型路线与建图关系'的交叉参照。(4) 主设定消融中记忆队列贡献有限（43.5 vs 38.5），其价值集中在欺骗性场景——替代路线的'记忆'组件是场景条件性的。"
+}

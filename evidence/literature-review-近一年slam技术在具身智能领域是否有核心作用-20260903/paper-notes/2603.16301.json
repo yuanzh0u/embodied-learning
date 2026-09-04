@@ -1,0 +1,374 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.16301",
+  "title": "OGScene3D: Incremental Open-Vocabulary 3D Gaussian Scene Graph Mapping for Scene Understanding",
+  "published": "2026-03-18",
+  "url": "https://arxiv.org/abs/2603.16301",
+  "authors": [
+   "Siting Zhu",
+   "Ziyun Lu",
+   "Guangming Wang",
+   "Chenguang Huang",
+   "Yongbo Chen",
+   "I-Ming Chen",
+   "Wolfram Burgard",
+   "Hesheng Wang"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-4D"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接证据样本：2026 年的开放词汇场景理解系统把在线位姿估计整体外包给 DROID-SLAM，同时把语义建图/场景图做成 SLAM 式的增量在线形态——一手展示『语义建图作为 SLAM 演化形态』与『SLAM 定位作为输入基础设施』两层关系；其评测协议（3D 主结果用真值位姿、无位姿精度指标）还揭示了语义建图对位姿质量的隐性依赖。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1",
+    "role": "problem",
+    "purpose": "摘要+引言：开放词汇场景理解对导航/操作等机器人下游任务的关键性；现有方法需预建完整 3D 语义地图、无法增量探索的局限"
+   },
+   {
+    "locator": "pages 1-3",
+    "role": "relevant-core",
+    "purpose": "相关工作：传统/NeRF/3DGS 语义建图与语义 SLAM 谱系（SNI-SLAM、SemGauss-SLAM、OpenGS-SLAM 等）、开放集语义建图、3D 场景图（Kimera 谱系→ConceptGraphs）；三条局限：表示权衡、帧级语义更新缺全局优化、离线构图不可用于机器人"
+   },
+   {
+    "locator": "pages 3-5",
+    "role": "method-or-design",
+    "purpose": "方法总览与置信度场景表示：语义 3D 高斯（标签+置信度）、场景图结构、双重加权语义渲染；page 5 位姿估计一节——DROID-SLAM 在线位姿 + 同步语义建图/构图"
+   },
+   {
+    "locator": "pages 5-7",
+    "role": "method-or-design",
+    "purpose": "分层 3D 语义优化：开放集分割（SAM+YOLO-World 融合）、KNN 段级空间-语义关联与三情形标签指派、置信度初始化/更新、全局 3D 精化（簇级+单高斯级，Algorithm 1）"
+   },
+   {
+    "locator": "pages 7-9",
+    "role": "method-or-design",
+    "purpose": "损失函数；长期全局优化：记忆缓冲（视锥+几何重叠双准则）、2D-3D 语义一致性、梯度式高斯渲染贡献、置信度更新公式"
+   },
+   {
+    "locator": "pages 9-11",
+    "role": "method-or-design",
+    "purpose": "渐进式场景图构建：前 12 关键帧初始化（GPT-4o caption、CLIP 节点置信度、LLM 边关系）、此后按低置信度选择性更新节点与边"
+   },
+   {
+    "locator": "pages 11-12",
+    "role": "data-or-setting",
+    "purpose": "实验设置：Replica 8 场景 / ScanNet 5 场景 / 3RScan 4 场景 + 真机；指标 mIoU/F-mIoU/mAcc/Recall；基线；阈值与超参、RTX 4090"
+   },
+   {
+    "locator": "pages 12-14",
+    "role": "results-or-analysis",
+    "purpose": "2D 新视角语义分割（Table I）；3D 语义分割协议（真值位姿说明，page 13）与 Table II/III；场景图 Recall（Table IV）；真机 Unitree Go2 实验（Fig 8-9）"
+   },
+   {
+    "locator": "page 15",
+    "role": "results-or-analysis",
+    "purpose": "运行时间分析（Table V-VI，排除 SAM 的说明）"
+   },
+   {
+    "locator": "page 16",
+    "role": "results-or-analysis",
+    "purpose": "消融（Table VII：local-only→+global refinement→+long-term）"
+   },
+   {
+    "locator": "page 16",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论（语义地图/场景图支撑任务规划、空间推理）与作者自述局限（仅空间关系）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "pages 16-18",
+    "reason": "references-only: 结论/局限之后的参考文献页（含 DROID-SLAM 等 ref 条目，已按需单独核对）"
+   }
+  ]
+ },
+ "research_question": "如何在环境被增量探索的过程中（不依赖预建完整 3D 语义地图）实现准确的开放词汇 3D 语义建图与场景图构建，并在开放词汇场景理解精度与效率上超越离线管线与帧级更新方法？",
+ "contributions": [
+  "置信度驱动的 3DGS 语义表示：每个高斯只存语义标签与置信度（而非高维特征向量），显式建模分割歧义与几何误差带来的语义不确定性",
+  "分层 3D 语义优化：局部帧-场景空间-语义关联 + 全局语义精化（簇级与单高斯级），实现跨视角全局一致的语义地图",
+  "长期全局优化：记忆缓冲区保存历史观测，通过 2D-3D 语义一致性与高斯渲染贡献持续更新置信度，改善稀疏观测区域并缓解灾难性遗忘",
+  "渐进式场景图构建：随探索动态创建/更新节点与语义关系，实现持续演化的开放词汇 3D 场景图"
+ ],
+ "method": {
+  "summary": "输入顺序 RGB-D 帧：DROID-SLAM 在线估计相机位姿；SAM（网格点提示）与 YOLO-World（检测提示）融合得到开放集 2D 分割；新关键帧按分割区域+深度初始化 3D 高斯（语义标签+置信度）。局部 3D 优化用 KNN 建立段级空间-语义关联，按歧义比 r(m) 与空间-语义一致性 p(m) 三情形指派标签（过滤歧义段/关联既有标签/生成新类），并按空间一致性与语义一致性更新置信度；段级关联被明确设计为对位姿估计与重建误差鲁棒。每 6 关键帧做全局 3D 精化：低平均置信度簇与低置信度高斯由高置信度空间近邻纠正标签。长期优化以视锥差异+几何重叠双准则选帧入记忆缓冲，用 2D-3D 语义一致性（IoU 类级置信度）与梯度推导的高斯渲染贡献联合更新置信度（只改置信度不改标签）。几何/外观用颜色+深度+SSIM 损失优化。场景图：前 12 关键帧初始化（GPT-4o 多视角 caption、CLIP 节点置信度、空间邻近对由 GPT-4o 从常用空间关系词表中判关系），此后每 12 关键帧对低置信度节点与新实体做选择性更新。",
+  "assumptions": [
+   "环境静态：增量融合的语义高斯地图不处理动态物体与场景变化",
+   "相机位姿由 DROID-SLAM 在线提供（3D 评测中改用数据集真值位姿以保证与基线一致）",
+   "SAM、YOLO-World、CLIP、GPT-4o、Gemma 等基础模型可用（含云端 LLM/VLM 调用）",
+   "实体间关系以常用空间关系词表为主（适度开放集），以保证机器人任务查询匹配的可靠性"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Replica（8 场景：office0-4, room0-2，语义分割 GT）",
+   "ScanNet（5 场景：scene0011_00 等）",
+   "3RScan（4 场景：137a8158, 10b17940, bf9a3dd3, 0988ea72，关系 GT）",
+   "真实室内场景（Unitree Go2 四足机器人 + Gemini 336 RGB-D 相机）"
+  ],
+  "tasks": [
+   "零样本新视角 2D 语义分割（渲染语义 vs GT）",
+   "开放词汇 3D 语义分割（Replica/ScanNet）",
+   "开放词汇 3D 场景图构建（3RScan 关系 Recall）",
+   "真机移动中增量语义建图与场景理解（定性）"
+  ],
+  "embodiments": [
+   "Unitree Go2 四足机器人（Gemini 336 RGB-D，笔记本 RTX 3080）真机演示",
+   "其余为公开数据集离线评测（RTX 4090）"
+  ],
+  "sample_or_scale": "Replica 8 + ScanNet 5 + 3RScan 4 共 17 个室内场景 + 真机室内场景；ScanNet 单场景处理 10m13s；语义建图三模块 per-frame 0.323s（RTX 4090，不含 SAM）"
+ },
+ "evaluation": {
+  "design": "2D 新视角语义分割（渲染 vs GT，与 3DGS 系基线比）；3D 语义分割（Replica/ScanNet，与 ConceptGraphs/HOV-SG 比，用真值位姿）；场景图关系 Recall（3RScan，仅 ConceptGraphs 一个基线且被作者扩展关系词表）；真机定性实验；运行时间对比与逐模块消融",
+  "baselines": [
+   "Feature 3DGS、GS-Grouping、OpenGS-SLAM（2D 新视角分割）",
+   "ConceptGraphs、HOV-SG（3D 语义分割，部分数值直接取自 HOV-SG 论文）",
+   "ConceptGraphs（场景图，作者为其扩展关系词表覆盖 3RScan 全部关系）"
+  ],
+  "metrics": [
+   "mIoU (%)",
+   "F-mIoU (%)",
+   "mAcc (%)",
+   "场景图关系 Recall (%)",
+   "运行时间（分钟/秒，per-frame 秒）"
+  ],
+  "ablations": [
+   "全局 3D 精化移除（Replica mIoU 36.07→25.35）",
+   "长期全局优化移除（25.35→22.98，仅局部优化）",
+   "模块运行时间分解（局部 0.248s/全局 0.055s/长期 0.020s，per-frame 0.323s）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Replica 8 场景零样本新视角语义分割：OGScene3D 平均 mIoU 71.77 / mAcc 89.15，优于 3DGS 语义 SLAM 基线 OpenGS-SLAM（61.91/73.11）、GS-Grouping（59.15/69.94）、Feature 3DGS（48.89/57.51）；论文称平均提升 16% mIoU、22% mAcc",
+   "scope": "Replica 8 场景，零样本新视角 2D 语义分割",
+   "locator": "page 12, Table I"
+  },
+  {
+   "finding": "3D 开放词汇语义分割：Replica 平均 mIoU 30.16 vs HOV-SG 23.05 / ConceptGraphs 14.95；ScanNet 29.44 vs 22.20/16.00（论文称 Replica 最高提升 36%、ScanNet 28%）——注意该评测使用真值位姿",
+   "scope": "Replica/ScanNet，3D 语义分割（真值位姿条件）",
+   "locator": "pages 13-14, Tables II-III"
+  },
+  {
+   "finding": "增量场景图构建 vs 离线管线：3RScan 4 场景关系 Recall 为 28.7/25.6/22.8/18.3，离线基线 ConceptGraphs 仅 2.5/fail/3.5/0.9（其中一场景完全失败）",
+   "scope": "3RScan 4 场景，开放集关系估计",
+   "locator": "page 14, Table IV"
+  },
+  {
+   "finding": "效率：ScanNet 单场景 10m13s（同时建语义地图+场景图）vs HOV-SG 31m56s、ConceptGraphs 122m5s，且精度更高（mIoU 29.44 vs 22.20/16.00）；语义建图三模块 per-frame 0.323s（RTX 4090，不含 SAM）",
+   "scope": "ScanNet，运行时间对比（SAM 运行时被排除）",
+   "locator": "page 15, Tables V-VI"
+  },
+  {
+   "finding": "消融（Replica mIoU）：仅局部优化 22.98 → +全局 3D 精化 25.35 → +长期全局优化 36.07；长期优化解决稀疏观测实体（如远距观察的墙上开关）的分割",
+   "scope": "Replica 消融",
+   "locator": "page 16, Table VII"
+  },
+  {
+   "finding": "真机：Unitree Go2 四足机器人搭载 Gemini 336 RGB-D 在笔记本 RTX 3080 上移动中同时完成稠密 RGB 建图与开放集语义建图（定性结果，详细结果在视频）",
+   "scope": "真实室内场景，四足机器人",
+   "locator": "page 14, Sec IV-D & Figs 8-9"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "只能建模空间关系，缺少功能关联等复杂实体间关系的探索；未来目标是面向实时机器人部署的多关系场景理解",
+    "locator": "page 16"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "定位职能完全外包给 DROID-SLAM，且 3D 语义分割主评测使用真值位姿：全文无位姿估计精度指标（无 ATE/轨迹误差），SLAM 位姿漂移对语义质量的影响既未评测也未报告——语义建图性能对位姿质量的依赖是隐性的",
+    "basis": "page 5 Sec III-A 'Pose Estimation'（DROID-SLAM 外包）；page 13 'we utilize ground truth poses for 3D semantic mapping during 3D segmentation evaluation'；全文检索无 pose accuracy/trajectory/ATE 指标"
+   },
+   {
+    "boundary": "'fully online' 的实际系统帧率未报告：运行时间排除了 SAM（被论证可替换），也未计入 DROID-SLAM、YOLO-World 与 GPT-4o/CLIP/Gemma 调用；场景图更新以 12 关键帧为粒度",
+    "basis": "page 15 Sec IV-E 排除 SAM 的说明与 Table VI 仅含三个语义优化模块；page 9-10 VLM/LLM 调用流程"
+   },
+   {
+    "boundary": "导航/操作等下游任务仅是动机陈述，实验全部为建图/构图指标，无任何下游任务（导航、操作、空间问答）的定量验证",
+    "basis": "page 1 摘要动机 vs Sec IV 实验内容（仅分割/图 Recall/运行时间）"
+   },
+   {
+    "boundary": "静态环境假设：方法为静态场景的增量融合，无动态物体/长期场景变化处理机制；真机实验仅为室内定性演示且规模未量化",
+    "basis": "方法全文（增量融合语义高斯地图）无动态模块；page 14 真机实验无定量指标、'Detailed experimental results are presented in the video demo'"
+   },
+   {
+    "boundary": "标签对应协议不对称：本方法输出需 Gemma 建立与场景标签的对应，基线用特征-文本相似度；Recall 单指标（无 precision）可能偏向多预测边的方法",
+    "basis": "page 13 'we employ Gemma [85] to establish correspondence between our outputs and scene labels'；page 11 指标定义"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：静态室内场景、RGB-D 输入、以可靠位姿（DROID-SLAM 或真值）为前提的开放词汇语义建图与场景图构建；定量性能数字主要在真值位姿条件下取得。不适用于：动态/变化环境、位姿不可靠（无 SLAM 支撑）的部署、室外大规模场景，以及需要功能/物理关系推理或已验证的导航/操作下游收益的场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "所有方法使用相同 SAM 分割输入（page 14 明示），隔离了 2D 分割误差来源，使 3D 优化策略的对比更干净",
+   "三个公开数据集（含关系 GT 的 3RScan）+ 四足真机平台，覆盖 2D/3D/图三层评测",
+   "逐模块消融（局部/全局/长期）与模块级运行时间分解完整",
+   "与离线管线 ConceptGraphs 的精度-效率双重对比直接支撑增量在线路线的优势主张"
+  ],
+  "design_risks": [
+   "3D 主结果用真值位姿取得，部署条件下 SLAM 位姿误差的传导未被量化——'在线系统能力'的关键一环没有定量证据",
+   "运行时间排除 SAM 且未计 DROID-SLAM 与 LLM/VLM 调用，效率结论只覆盖语义优化模块",
+   "场景图评测仅一个基线（ConceptGraphs），且该基线被作者修改（扩展关系词表）、ScanNet 上其数值直接取自 HOV-SG 论文未重跑",
+   "真机实验仅定性展示（视频），无定量指标与统计信息"
+  ],
+  "baseline_fairness": "2D 只与 3DGS 系方法比较（作者论证传统表示法 2D 输出稀疏、不适合作为该任务基准）；ConceptGraphs 的关系词表被作者扩展以覆盖 3RScan 全部关系（作者称为了公平比较）；部分基线数值取自 HOV-SG 论文。总体上基线选择有据可依，但场景图维度的基线覆盖过窄。",
+  "metric_validity": "mIoU/F-mIoU/mAcc 与 Recall 均为领域标准指标；但本方法输出经 Gemma 对应标签而基线经特征相似度对应，协议存在不对称；Recall 无配套 precision，无法排除多预测边的宽松策略获益。",
+  "reproducibility": "代码承诺开源（GitHub IRMVLab/OGScene3D）；全部阈值（τ_high=0.7、τ_low=0.3、τ_m=0.7、τ_valid=0.25、τ_p=0.15、τ_long=0.5、θ_e=0.1、τ_e=0.2 等）与优化器超参完整披露；GPT-4o 三类提示词给出（Fig 4）；但真机实验协议与 LLM 调用成本未详细报告。",
+  "external_validity": "室内静态场景（Replica/ScanNet/3RScan 合成或扫描数据）+ 单个四足真机室内演示；无动态环境、室外或跨域验证；对具身智能下游任务的适用性停留在动机层面。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.16301-C01",
+   "claim": "OGScene3D 的在线相机位姿估计完全由 DROID-SLAM 提供：位姿被增量计算的同时系统同步进行语义建图与场景图构建，从而构成一个完全在线的系统——在该 2026 年的具身场景理解系统中，SLAM 定位层是被组合消费的输入基础设施，而非被替代的组件",
+   "stance": "support",
+   "relation": "支持『SLAM 仍是具身系统的基础设施』：开放词汇语义建图这条最新路线不自行估计位姿、也不依赖端到端模型隐式定位，而是显式接入视觉 SLAM（DROID-SLAM）作为位姿流来源——定位与建图的分工（SLAM 出位姿、上层出语义）在 2026 年的系统中依然成立",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec III-A 'Pose Estimation' 一节：RGB-D 流 → DROID-SLAM 在线位姿 → 位姿增量计算的同时做语义建图与场景图构建 → 'fully online system'。ref [84]（Teed & Deng, NeurIPS）见 page 18。",
+   "locator": "page 5",
+   "source_context": "We utilize DROID-SLAM [84] for online pose estimation from the RGB-D stream. As camera poses are incrementally computed, we simultaneously perform semantic mapping and scene graph construction, which enables our OGScene3D to be a fully online system.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 'Pose Estimation' 段原句逐字出现（DROID-SLAM、online pose estimation、fully online system 均在原文）；claim 限定为该系统的设计陈述，未扩展为领域普遍结论；'被组合消费的输入基础设施'是 relation 的解读性表述，依据是全文位姿来源仅此一处且无自研定位模块。"
+   }
+  },
+  {
+   "card_id": "2603.16301-C02",
+   "claim": "论文的核心问题定位：已有开放词汇场景理解工作只能基于预建完整 3D 语义地图离线构图，这在环境被增量探索、任务需在渐进探索过程中执行的机器人应用中不可行——语义建图与场景图正在被重新设计为 SLAM 式的增量在线形态，且这一需求的驱动因素正是机器人任务",
+   "stance": "support",
+   "relation": "支持『建图基础设施正向 SLAM 工作方式演化而非被淘汰』：机器人场景的增量性使离线预建地图路线被否定，增量位姿流驱动的在线语义建图成为开放词汇场景理解的前沿形态——显式语义地图+场景图仍是载体，变化的是其在线化/增量化的运行方式",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec I 第三条局限（page 2）：离线构图基于预建 3D 语义地图，对渐进探索中执行任务的机器人应用不切实际；摘要（page 1）同义表述为预建完整语义地图限制增量探索场景的适用性；page 1 将开放词汇场景理解定位为支撑导航与操作等下游任务的能力。",
+   "locator": "page 2",
+   "source_context": "Third, existing works can only perform offline graph construction based on prebuilt 3D semantic maps. Such offline approach is impractical for robotic applications where environments are explored incrementally and tasks need to be performed during progressive scene exploration based on scene understanding.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 该段原句逐字出现（offline graph construction / prebuilt 3D semantic maps / explored incrementally / progressive scene exploration 均在原文）；page 1 摘要另有对应问题陈述 'existing methods require pre-built complete 3D semantic maps...which limits their applicability in robotic scenarios where environments are explored incre- mentally'；claim 措辞限定为该论文的问题定位与动机，'SLAM 式'是 relation 对增量位姿流驱动建图这一技术形态的类比描述。"
+   }
+  },
+  {
+   "card_id": "2603.16301-C03",
+   "claim": "在 Replica 8 个场景的零样本新视角语义分割上，OGScene3D 平均 mIoU 71.77 / mAcc 89.15，优于 3DGS 语义 SLAM 基线 OpenGS-SLAM（61.91/73.11）及 GS-Grouping（59.15/69.94）、Feature 3DGS（48.89/57.51），论文称相对基线平均提升 16% mIoU、22% mAcc",
+   "stance": "support",
+   "relation": "支持『显式语义建图路线持续演进且仍是具身场景理解的载体』：该 2026 年系统与其直接对比对象（OpenGS-SLAM 等语义 SLAM 系统）同属 3DGS 语义建图谱系，比较前提是显式 3D 语义地图仍是开放词汇场景理解的主导基础设施——基础模型（SAM/YOLO-World/GPT-4o）承担语义解释，空间一致性与地图载体仍由位姿驱动的 3D 建图保证",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I（page 12）：四方法在 room0-room2/office0-office4 上的 mIoU/mAcc，OGScene3D 全部场景领先，Avg mIoU 71.77 vs 61.91（OpenGS-SLAM）；正文称平均 16% mIoU、22% mAcc 提升。",
+   "locator": "page 12, Table I",
+   "source_context": "The quantitative results in Tab. I demonstrate that our method achieves superior novel-view seg- mentation performance across all test scenes, with an average 16% improvement in mIoU metric and 22% improvement in mAcc metric compared to baselines.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "零样本新视角 2D 语义分割 mIoU (%) / mAcc (%)",
+    "value_or_direction": "OGScene3D Avg mIoU 71.77、mAcc 89.15；OpenGS-SLAM 61.91/73.11；GS-Grouping 59.15/69.94；Feature 3DGS 48.89/57.51；论文称平均提升 16% mIoU、22% mAcc",
+    "comparator": "OGScene3D vs OpenGS-SLAM vs GS-Grouping vs Feature 3DGS",
+    "task_or_sample": "Replica 8 场景（room0-2, office0-4）零样本新视角语义分割",
+    "locator": "page 12, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 为 page 12 原句（'seg- mentation' 跨行连字符保留原样）；Table I 数值逐项核对一致（71.77/89.15、61.91/73.11、59.15/69.94、48.89/57.51 均在 page 12 表内）；16%/22% 与表格数值相对最优基线的相对提升（71.77/61.91-1≈15.9%，89.15/73.11-1≈21.9%）一致；claim 限定于该数据集与指标。"
+   }
+  },
+  {
+   "card_id": "2603.16301-C04",
+   "claim": "3D 语义分割主评测（Replica/ScanNet，Table II-III 结果）使用数据集真值位姿以与基线保持一致，尽管系统声称具备建图中自行估计位姿的能力；论文未报告任何位姿估计精度指标（无 ATE/轨迹误差），且局部优化被显式设计为对位姿估计与重建误差鲁棒——语义建图性能对 SLAM 位姿质量的依赖在该论文中是隐性且未量化的",
+   "stance": "conditional",
+   "relation": "对『语义建图系统已内化/替代 SLAM 职能』的判断给出限定：此类系统把定位外包给 DROID-SLAM 并在主评测中回避位姿误差影响（用真值位姿），同时以鲁棒性设计（段级关联对位姿误差鲁棒，page 6）吸收 SLAM 噪声——SLAM 定位质量是语义建图性能的隐性前提，但端到端（位姿误差→语义质量）的量化证据缺失",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 13 评测协议：为与基线一致，3D 语义分割评测用真值位姿（'although our approach is capable of estimating poses during mapping'）；page 6 'This segment-level label association enhances robustness against potential pose estimation or reconstruction errors'；全文无位姿精度/轨迹误差指标（已检索核对）。",
+   "locator": "page 13",
+   "source_context": "Additionally, for consistency with baseline methods, we utilize ground truth poses for 3D semantic mapping during 3D segmentation evaluation, although our approach is capable of estimating poses during mapping.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 原句逐字出现（ground truth poses / capable of estimating poses during mapping 均在原文）；'未报告位姿精度指标'经全文检索核实（无 pose accuracy/trajectory/ATE 类指标，'ground truth poses' 全文仅此一处）；page 6 鲁棒性设计原句已在 extraction 核对；claim 把三处事实合并为一个限定性观察，stance 取 conditional 以反映证据缺口。"
+   }
+  },
+  {
+   "card_id": "2603.16301-C05",
+   "claim": "增量场景图构建在关系估计上大幅优于离线预建管线：3RScan 4 个场景的关系 Recall 为 28.7/25.6/22.8/18.3，离线基线 ConceptGraphs（先建完整语义地图再构图）仅 2.5/fail/3.5/0.9（一个场景完全失败）——随探索持续更新的增量构图在真实扫描数据上同时更准且更快（单场景 10m13s vs 122m5s，见 page 15 Table V）",
+   "stance": "support",
+   "relation": "支持『SLAM 式增量在线建图是具身场景理解的实际路线』：在真实扫描数据上，增量在线管线（位姿流驱动的持续更新）以约一个数量级的 Recall 差距和 12 倍的速度优势压倒离线预建管线——为『机器人需要的地图必须在探索过程中在线长出来』这一 SLAM 核心价值提供了直接对比证据",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table IV（page 14）：ConceptGraphs 2.5/fail/3.5/0.9 vs OGScene3D 28.7/25.6/22.8/18.3；作者为公平起见扩展了 ConceptGraphs 的关系词表（原文 3 种→覆盖 3RScan 全部关系）。运行时间对比（ConceptGraphs 122m5s、HOV-SG 31m56s、OGScene3D 10m13s）在 page 15 Table V。",
+   "locator": "page 14, Table IV",
+   "source_context": "As shown in Tab. IV, baseline struggles to accurately identify relationships in real-world scenes, while our approach achieves superior open-set relationship estimation results.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "场景图关系 Recall (%)（3RScan 4 场景）",
+    "value_or_direction": "OGScene3D 28.7/25.6/22.8/18.3 vs ConceptGraphs 2.5/fail/3.5/0.9（离线基线一场景失败）",
+    "comparator": "OGScene3D（增量在线构图）vs ConceptGraphs（预建完整语义地图后离线构图）",
+    "task_or_sample": "3RScan 4 场景（137a8158, 10b17940, bf9a3dd3, 0988ea72）开放集关系估计",
+    "locator": "page 14, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 原句逐字出现；Table IV 数值逐项核对一致（28.7/25.6/22.8/18.3 与 2.5/fail/3.5/0.9 均在 page 14 表内）；ConceptGraphs 关系词表被扩展的事实见 page 14 'we extended its relationship vocabulary to cover the full range of relationships present in the 3RScan dataset'；运行时间数值在 page 15 Table V（已在 extraction 核对），claim 中已明确标注其出处页。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "DROID-SLAM: Deep Visual SLAM for Monocular, Stereo, and RGB-D Cameras (Teed & Deng, NeurIPS)",
+   "why": "系统的在线位姿估计基础设施（定位职能的外包对象）",
+   "locator": "page 18, ref [84]（正文引用 page 5）"
+  },
+  {
+   "ref": "OpenGS-SLAM: Open-Set Dense Semantic SLAM with 3D Gaussian Splatting (Yang et al., ICRA 2025)",
+   "why": "3DGS 开放集语义 SLAM 代表与 2D 评测最强基线，表明该工作直接处于语义 SLAM 谱系上",
+   "locator": "page 16, ref [10]"
+  },
+  {
+   "ref": "ConceptGraphs: Open-Vocabulary 3D Scene Graphs for Perception and Planning (Gu et al., ICRA 2024)",
+   "why": "离线预建地图构图路线的代表基线（被增量路线对比压倒）",
+   "locator": "page 16, ref [1]"
+  },
+  {
+   "ref": "HOV-SG: Hierarchical Open-Vocabulary 3D Scene Graphs (Werby et al., RSS 2024)",
+   "why": "开放词汇 3D 场景图基线，部分对比数值来源",
+   "locator": "page 16, ref [2]"
+  },
+  {
+   "ref": "Kimera: from SLAM to Spatial Perception with 3D Dynamic Scene Graphs (Rosinol et al., IJRR)",
+   "why": "『SLAM→空间感知/3D 场景图』谱系的源头工作，论文在语义建图与场景图相关工作两节引用",
+   "locator": "page 17, ref [31]"
+  }
+ ],
+ "notes": "对综述最有价值的结构性观察有三点：(1) 这篇 2026 年的开放词汇场景理解系统把定位整体外包给 DROID-SLAM——SLAM 是被显式消费的输入基础设施（C01）；(2) 该领域的『增量在线化』本质上是把 SLAM 的工作方式（位姿流+增量地图更新）引入语义层，且增量管线以约一个数量级优势压倒离线预建管线（C02/C05）——语义建图是 SLAM 的演化形态而非被替代物；(3) 但语义建图对位姿质量的依赖是隐性的：主评测用真值位姿、无位姿精度指标（C04），说明『语义 SLAM 一体化』的评估实践仍滞后。另注意：VLM/LLM（SAM/YOLO-World/GPT-4o）在此承担语义解释，跨视角空间一致性仍由位姿驱动的 3D 优化保证——基础模型与 SLAM 是组合关系而非替代关系。"
+}

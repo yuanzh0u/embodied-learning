@@ -2,23 +2,23 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-08-23
+updated: 2026-09-04
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 24 个 paper-reader-backed 基础 run、14 个跨 run 主题综合与 2 项引文图派生综述；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 3 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 26 个 paper-reader-backed 基础 run、14 个跨 run 主题综合与 2 项引文图派生综述；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 3 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
 
 ## 批次概况
 
-- Review mode：24 项基础 run 均为 `scoping`；其中 LR-ALLO-YEAR 候选池（18）与全文层（15）低于 scoping floor，run.json notes 已声明原因（arXiv API 当时不可用），结论为初步性质。
+- Review mode：25 项基础 run 均为 `scoping`；其中 LR-ALLO-YEAR 候选池（18）与全文层（15）低于 scoping floor，run.json notes 已声明原因（arXiv API 当时不可用），结论为初步性质。
 - 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
 - bundle 规范演变：2026-07-20 前沉淀的 bundle 不含独立 `paper-notes/` 与 `claim-support-audits/` 子目录——早期 run（`-reader-v1/v2` 结构）的精读产物在平行工作区目录中，另有部分 run 以 evidence.jsonl 内嵌事件（paper + locator）承载精读定位；这是当时规范，不构成追溯缺口。legacy/ 子目录为 writer 迁移前旧版成稿，git 可追溯。
 
-## 24 项成果
+## 26 项成果
 
 “规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
 
@@ -48,6 +48,8 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-EMB-SUP | 具身端到端模型除动作监督外还需要哪些监督信号 | EA-MODEL, EA-EVAL, EA-ALIGN, EA-SENSOR, EA-4D | 558 / 20 / 20 | [run](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/run.json) · [packet](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/review-packet.md) |
 | LR-BRAIN-YEAR | 近一年类脑模型的发展 | EA-MODEL | 1,280 / 45 / 20 | [run](../evidence/literature-review-近一年类脑模型的发展-20260822/run.json) · [packet](../evidence/literature-review-近一年类脑模型的发展-20260822/review-packet.md) |
 | LR-ALLO-YEAR | 近一年 allocentric representation 在具身领域的应用 | EA-DATA, EA-MODEL, EA-XEMBODIMENT, EA-SENSOR | 18 / 15 / 15 | [run](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/run.json) · [packet](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/review-packet.md) |
+| LR-SLAMCORE | 近一年SLAM技术在具身智能领域是否有核心作用 | EA-VLOC, EA-HARDWARE, EA-4D, EA-MODEL | 141 / 48 / 39 | [run](../evidence/literature-review-近一年slam技术在具身智能领域是否有核心作用-20260903/run.json) · [packet](../evidence/literature-review-近一年slam技术在具身智能领域是否有核心作用-20260903/review-packet.md) |
+| LR-TRAJACC-YEAR | 近一年机器人末端轨迹精度的解决方案与痛点 | EA-MODEL, EA-SENSOR, EA-EVAL, EA-BIZ | 206 / 62 / 25 | [run](../evidence/literature-review-近一年机器人末端轨迹精度的解决方案与痛点-20260903/run.json) · [packet](../evidence/literature-review-近一年机器人末端轨迹精度的解决方案与痛点-20260903/review-packet.md) |
 
 ## 引文图派生与问题相关性综述
 
@@ -137,5 +139,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 - 世界模型训练中"监督 vs 端到端"是伪二元对立：纯端到端存在表征坍缩、物理幻觉和视觉—动作分裂三类系统性失败，但外部监督不对齐时比无监督更危险；当前最有说服力的范式是"特权监督"——训练时注入结构化外部信号（几何先验、可微物理、语义标注）塑造表征，推理时丢弃监督分支零开销运行。
 - 具身端到端模型除动作监督外至少需要七类非动作监督：触觉/力觉（解决力觉盲和接触感知）、几何/3D（解决空间推理和视图泛化）、物理（弥补演示数据的物理无知）、语义/中间表征（提供结构化任务理解）、奖励/RL（超越静态演示的闭环优化）、对比/表征学习（跨模态对齐）、安全/纠正（防止信用分配偏差）；这些信号具有维度互补性、特权范式（训练时注入推理时丢弃）和生命周期依赖三个共同特征，且监督施加位置和任务对齐性决定有效性。
 - 近一年类脑模型第一次跨入大模型规模（76B 脉冲模型、免乘法推理、多模态与具身脉冲化），但其形态是 ANN-to-SNN 转换路线寄生于成熟 ANN 生态，而非替代；几乎所有能耗优势数字来自突触操作数×单位能耗系数的折算口径，不是神经形态芯片实测，GPU 上仿真 SNN 反而更慢更耗电——这是"算法先行、硬件欠账"的进展，兑现以真实芯片部署为前置条件。
+- 近一年 SLAM 对具身智能是“职能核心、形态迁移”而非被替代：遥操作与演示数据采集链路依赖其提供位姿真值，VLA 类基础模型自身的空间能力短板需要显式几何先验补足，宣称 map-free 的隐式导航方法内部仍保留几何估计与回环修正；被替代的是传统特征点建图的表征形态——正迁移到 3D 高斯泼溅与开放词汇语义地图，而定位—建图职能仍在数据生产、操作与导航链条中承担基础设施角色。
+- 近一年末端轨迹精度的证据把误差归因分层化：推理—执行时序错位（同一策略同步评测 98.58% vs 异步部署 75.48%）、动作块边界不连续（边界 jerk 为块内部 2 倍以上）、控制模型失配与感知/测量歧义各自独立贡献；对应四族修法——控制层补偿、块边界解析平滑、训练期延迟适配、感知伺服与力控评测——均带作者自述的硬边界，执行层修法救不了策略能力缺失；测量层存在高重复性与分米级粗大偏差共存于同一系统的元问题，应先分层定位误差、再选对应层修法。
 
 这些结论来自 22 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。

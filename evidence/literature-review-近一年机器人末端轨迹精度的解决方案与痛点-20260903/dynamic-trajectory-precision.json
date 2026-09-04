@@ -1,0 +1,221 @@
+{
+  "sources": [
+    {
+      "source": "llm",
+      "confidence": "medium",
+      "notes": "末端轨迹精度是控制/标定/学习三条线的交叉词，静态分类法（last-centimeter 偏最后接近段）覆盖不足；Agent 依据机器人学控制文献常规术语推断动态扩展。"
+    }
+  ],
+  "knowledge_ids": ["EA-MODEL", "EA-SENSOR", "EA-EVAL", "EA-BIZ"],
+  "families": ["last-centimeter", "industrial-deployment", "sim2real"],
+  "queries": [
+    {
+      "label": "dynamic-trajectory-tracking-control",
+      "tier": "dynamic-direct",
+      "query": "all:\"trajectory tracking\" AND all:robot",
+      "why": "末端轨迹精度的直接文献用语是 trajectory tracking，控制类论文标题高频。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-end-effector-accuracy",
+      "tier": "dynamic-direct",
+      "query": "all:\"end-effector\" AND all:accuracy",
+      "why": "直接命中以末端执行器精度为题的论文。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-positioning-accuracy-compensation",
+      "tier": "dynamic-direct",
+      "query": "all:\"positioning accuracy\" AND all:compensation AND all:robot",
+      "why": "工业机器人绝对定位精度补偿是解决方案主文献线。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-kinematic-calibration",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"kinematic calibration\" AND all:robot",
+      "why": "运动学标定是提升末端精度的经典机制层方案。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-dynamic-parameter-identification",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"dynamic parameter identification\" AND all:robot",
+      "why": "动力学参数辨识支撑模型基控制补偿。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-friction-compensation",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"friction compensation\" AND all:robot",
+      "why": "摩擦是轨迹跟踪误差的高频来源，补偿文献密集。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-mpc-robot",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"model predictive control\" AND all:manipulator",
+      "why": "MPC 是近年轨迹级精度控制主流方案之一。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-disturbance-observer",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"disturbance observer\" AND all:robot AND all:manipulator",
+      "why": "扰动观测器针对未建模动态造成的跟踪误差。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-iterative-learning-control",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"iterative learning control\" AND all:robot",
+      "why": "ILC 面向重复轨迹任务消除跟踪误差。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-residual-dynamics-learning",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"residual dynamics\" AND all:learning AND all:robot",
+      "why": "学习残差动力学再叠加模型控制是近年混合方案主线。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-vibration-suppression",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"vibration suppression\" AND all:robot",
+      "why": "柔性/振动直接破坏末端轨迹精度。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "elastic-joint-control",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"elastic joints\" AND all:manipulator",
+      "why": "谐波减速器弹性关节是跟踪误差的机制层痛点。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-learning-tracking-error",
+      "tier": "dynamic-limit",
+      "query": "all:\"tracking error\" AND all:\"neural network\" AND all:robot",
+      "why": "学习法消除跟踪误差的论文与痛点的实证来源。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-action-chunking-smoothness",
+      "tier": "dynamic-limit",
+      "query": "all:\"action chunking\" AND (all:smooth OR all:jerk OR all:oscillation)",
+      "why": "VLA/ACT 动作分块带来的末端抖动是学习侧轨迹精度痛点。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-lowlevel-control-vla",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"low-level control\" AND (all:\"vision-language-action\" OR all:VLA)",
+      "why": "VLA 与底层轨迹控制器的接口是近年精度讨论热点。",
+      "source": "llm",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-diffusion-policy-tracking",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"diffusion policy\" AND all:tracking",
+      "why": "扩散策略输出轨迹与跟踪控制器组合的精度证据。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-whole-body-control",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"whole-body control\" AND (all:humanoid OR all:manipulator)",
+      "why": "全身控制把任务空间轨迹精度下沉到全身关节。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-visual-servoing-precision",
+      "tier": "dynamic-deployment",
+      "query": "all:\"visual servoing\" AND all:precision",
+      "why": "视觉伺服用感知闭环补偿末端轨迹偏差。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-iso9283-path-accuracy",
+      "tier": "dynamic-evaluation",
+      "query": "all:ISO AND all:9283",
+      "why": "ISO 9283 规定轨迹精度/重复性的评测口径。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-sim2real-tracking",
+      "tier": "dynamic-evaluation",
+      "query": "all:\"sim-to-real\" AND all:\"tracking control\" AND all:robot",
+      "why": "sim-to-real 控制差距以跟踪精度为度量的证据。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-backlash-gear",
+      "tier": "dynamic-limit",
+      "query": "all:backlash AND all:robot AND all:joint",
+      "why": "传动间隙是精度痛点的硬件层语言。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-rl-tracking-control",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"reinforcement learning\" AND all:\"tracking control\" AND all:robot",
+      "why": "RL 直接学习跟踪控制器近年证据线。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-trajectory-precision-browser",
+      "query": "robot end-effector trajectory accuracy solutions 2026",
+      "why": "检查 arXiv 元数据之外是否有工业侧讨论。",
+      "source": "llm",
+      "confidence": "low"
+    },
+    {
+      "label": "dynamic-vla-jitter-browser",
+      "query": "VLA action chunking jitter smoothing low-level control 2026",
+      "why": "学习侧末端抖动痛点的社区讨论校准。",
+      "source": "llm",
+      "confidence": "low"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-trajectory-accuracy-terms",
+      "query": "\"trajectory tracking accuracy\" robot manipulator compensation survey",
+      "why": "校准轨迹精度领域当前术语。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-absolute-accuracy-repeatability",
+      "query": "industrial robot \"absolute accuracy\" repeatability gap",
+      "why": "确认绝对精度 vs 重复性术语仍在使用。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ]
+}

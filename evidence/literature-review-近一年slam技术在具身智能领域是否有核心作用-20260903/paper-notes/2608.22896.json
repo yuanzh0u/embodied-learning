@@ -1,0 +1,361 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.22896",
+  "title": "SuperMap: A Spatio-Temporal SLAM System for Visual-Language Navigation",
+  "published": "2026-08-24",
+  "url": "https://arxiv.org/abs/2608.22896",
+  "authors": [
+   "Shibo Zhao",
+   "Guofei Chen",
+   "Honghao Zhu",
+   "Zhiheng Li",
+   "Changwei Yao",
+   "Nader Zantout",
+   "Seungchan Kim",
+   "Wenshan Wang",
+   "Ji Zhang",
+   "Sebastian Scherer"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC",
+   "EA-4D"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接回答综述问题的导航侧：论证 SLAM 几何骨干 + 4D 场景图是 VLM/VLN 空间接地的必要接口，端到端基础模型预测是间歇且视角依赖的，需要 SLAM 维护一致的时空语义地图。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2",
+    "role": "problem",
+    "purpose": "摘要/引言：开放词汇导航需要时空语义表示，基础模型预测间歇且视角依赖"
+   },
+   {
+    "locator": "page 2-3",
+    "role": "relevant-core",
+    "purpose": "相关工作能力清单：现有语义建图/语义SLAM无一同时满足实时+开放词汇+实例级+短长期动态"
+   },
+   {
+    "locator": "page 4-5",
+    "role": "method-or-design",
+    "purpose": "方法：SuperOdometry 几何层、2D-3D 运动补偿实例关联、贝叶斯语义融合、4D 场景图与 VLN 接口"
+   },
+   {
+    "locator": "page 5-8",
+    "role": "results-or-analysis",
+    "purpose": "实验：ScanNet 基准、变化检测、消融、VLM 接地推理、VLN 部署、运行时"
+   },
+   {
+    "locator": "page 8",
+    "role": "conclusion-or-limitations",
+    "purpose": "局限：高动态物体跟踪受限、依赖预定义物体提示词列表"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-10",
+    "reason": "参考文献"
+   },
+   {
+    "locator": "page 11-16",
+    "reason": "补充材料：定性分析与实现细节，关键定量结果已在主文核对"
+   }
+  ]
+ },
+ "research_question": "如何构建实时、开放词汇、实例级的 4D 时空 SLAM，使语言引导导航在动态变化环境中保持对象身份与语义一致性？",
+ "contributions": [
+  "首个同时满足实时、开放词汇、实例级、短期+长期动态处理的 4D 时空语义 SLAM 系统（作者能力清单主张）",
+  "一致性驱动建图引擎：3D 感知实例关联/重激活 + 存在与标签置信度更新，在遮挡与场景变化下维护稳定对象身份并修剪过期地图内容",
+  "4D 场景图（空间边+时间边）作为 VLM 的可查询接口，支持组合式语义/关系/历史查询",
+  "开源系统 + 变化检测基准 + 真实机器人 VLN 管线"
+ ],
+ "method": {
+  "summary": "三层架构：(1) 几何层用 SuperOdometry（LiDAR-视觉-惯导）做状态估计与稠密重建；(2) 实例层用 GroundingDINO+SAM2 异步开放词汇感知，2D-3D 运动补偿的混合跟踪状态（将 3D 实例质心投影为 2D Kalman 先验）做实例关联，几何+语义一致性检查与贝叶斯语义融合做在线地图更新；(3) 拓扑层构建 4D 场景图（空间谓词边 + 时间轨迹边），序列化后作为 VLM 输入，VLM 输出实例 ID 映射到 3D 质心作为导航路径点。全部板载运行。",
+  "assumptions": [
+   "开放词汇检测器输出虽间歇且视角依赖，但经贝叶斯融合可收敛到稳定标签",
+   "对象级变化（出现/消失/移动）可通过几何+语义一致性检查在线检测",
+   "VLM 可以在结构化场景图文本上做可靠的空间/时间推理（无需原始视频）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "ScanNet（类级+实例级分割基准）",
+   "自建 10 分钟 30m×20m 室内变化检测实验（6 个目标物体人工标注）"
+  ],
+  "tasks": [
+   "开放词汇语义建图",
+   "时空变化检测（出现/消失）",
+   "VLM 空间/时间逻辑接地",
+   "零样本语言引导导航（空间排序、关系检索）"
+  ],
+  "embodiments": [
+   "麦克纳姆轮移动平台 + Livox Mid-360 LiDAR + 360° 全景相机，i9 CPU + RTX 4090 笔记本 GPU 全板载"
+  ],
+  "sample_or_scale": "ScanNet 基准 + 6 物体变化检测定量 + 真实机器人 VLN 定性演示"
+ },
+ "evaluation": {
+  "design": "基准评测（ScanNet 类级/实例级）+ 时空一致性定量（变化检测 recall）+ 消融（去 2D 跟踪/语义融合/几何一致性）+ VLM 接地对比（场景图输入 vs 原始视频输入）+ 真实机器人 VLN",
+  "baselines": [
+   "HOV-SG",
+   "ConceptGraphs",
+   "ConceptFusion",
+   "NACLIP-3D",
+   "Trident-3D",
+   "RayFronts（类级）",
+   "Khronos",
+   "DualMap（变化检测）"
+  ],
+  "metrics": [
+   "mIoU / f-mIoU / Acc（类级）",
+   "mAP50 / mAP25（实例级）",
+   "对象检测 recall / 变化检测 recall（3D IoU>0.1、质心距离<0.3m、标签正确）",
+   "Precision/Recall/F1（消融）",
+   "各模块更新频率与内存"
+  ],
+  "ablations": [
+   "去 2D 跟踪器、去语义融合、去几何一致性更新 vs 完整系统（F1 0.6308 最高）",
+   "2D-only vs 2D-3D 跟踪（视角剧变/动态物体）",
+   "一致性检查几何/语义分层"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "实例级分割大幅超越离线基线：Chair mAP50 63.76 vs HOV-SG 4.58、ConceptGraphs 0.00，证明 3D 感知跟踪-检测范式在实例级任务上的优势",
+   "scope": "ScanNet 实例级基准",
+   "locator": "page 6"
+  },
+  {
+   "finding": "类级分割不占优：mIoU 27.42 低于 RayFronts 41.29——系统定位是实例级时空一致性而非逐帧识别精度",
+   "scope": "ScanNet 类级基准",
+   "locator": "page 6"
+  },
+  {
+   "finding": "变化检测显著优于 DualMap（桶 1.000 vs 0.000，椅子 1.000 vs 0.000），Khronos 在该协议下不可运行",
+   "scope": "6 物体出现/消失事件",
+   "locator": "page 7"
+  },
+  {
+   "finding": "全板载实时：位姿 10Hz、3D 建图 3Hz、2D 分割 1Hz、4D 场景图 5Hz，RTX 4090 笔记本 GPU",
+   "scope": "运行时剖析",
+   "locator": "page 8"
+  },
+  {
+   "finding": "场景图输入比原始视频输入给 VLM 带来更可靠的空间推理（度量边消歧）与时间推理（时间边回溯轨迹），视频输入随时间深度增加产生幻觉",
+   "scope": "Gemini 2.0 Flash 对比实验",
+   "locator": "page 7"
+  },
+  {
+   "finding": "零样本 VLN 在视觉歧义环境（四个相同白板的空间排序、冰箱-画的关系检索）可靠工作",
+   "scope": "真实机器人定性演示",
+   "locator": "page 8"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "高度动态物体的跟踪性能仍然受限",
+    "locator": "page 8"
+   },
+   {
+    "limitation": "开放词汇 2D 检测依赖预定义物体提示词列表，缺乏自动开放世界物体发现机制",
+    "locator": "page 8"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "类级分割精度不及专用点特征方法（RayFronts），以实例级一致性换类级精度",
+    "basis": "page 6 Table II 数字对比"
+   },
+   {
+    "boundary": "变化检测 recall 不均衡（购物车 0.262 vs 桶 1.000），对部分物体类型的出现检测仍不可靠",
+    "basis": "page 7 Table IV"
+   },
+   {
+    "boundary": "VLN 与 VLM 接地收益以定性案例呈现，未报告导航成功率等统计显著的定量对比",
+    "basis": "page 7-8 实验为 qualitative demonstration"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于室内移动机器人的开放词汇建图与语言导航；系统依赖 LiDAR+全景相机的传感配置与板载 GPU 算力；对高度动态物体、无提示词先验的真正开放世界场景、户外大范围环境不适用。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "能力清单（Table I）明确系统定位并与 9 个基线系统逐项对比",
+   "消融完整：三个核心组件各自贡献可分离",
+   "运行时与内存剖析透明，证明真实板载可行性"
+  ],
+  "design_risks": [
+   "类级精度落后于专用方法，实例级优势部分来自任务定义偏好",
+   "变化检测样本极小（6 个物体事件），recall 方差大",
+   "VLN 收益未做定量统计评测"
+  ],
+  "baseline_fairness": "ScanNet 对比为零样本在线设置 vs 离线全场景方法，设置差异已说明；变化检测对比 Khronos 在作者协议下无法运行，只与 DualMap 有效对比",
+  "metric_validity": "变化检测 TP 判据（3D IoU>0.1、质心<0.3m、标签正确）严格且可复现；但对象级 recall 未报置信区间",
+  "reproducibility": "全系统开源 + 基准发布 + 运行时细节，可复现性高",
+  "external_validity": "室内动态环境有效；依赖提示词列表先验限制了真正开放世界泛化"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.22896-C01",
+   "claim": "SuperMap 论文主张：SLAM 维护的时空地图是 VLM 空间接地的必要接口——将几何细节委托给时空地图后，VLM 可对长期场景动态做零样本推理而无需处理原始点云或视频流；直接使用基础模型预测会因间歇性和视角依赖导致身份漂移与过期语义",
+   "stance": "support",
+   "relation": "支持'SLAM 在导航/空间推理环节的核心作用'：SLAM 不是被基础模型替代，而是为基础模型提供一致的度量-语义接地层",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "论文动机与方法节明确论证：基础模型零样本识别强但预测间歇、视角依赖，naive 集成导致 identity drift 和 stale semantics；4D 场景图作为 VLM 与物理空间的接口。",
+   "locator": "page 5",
+   "source_context": "By delegating geometric detail to the spatio-temporal map, the VLM can perform zero-shot reasoning over long-term scene dynamics without processing raw point clouds or video streams.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字出现该句；摘要（page 1）中 foundation models 'predictions are intermittent and view-dependent... identity drift and stale semantics' 支持前半 claim。措辞未超出原文。"
+   }
+  },
+  {
+   "card_id": "2608.22896-C02",
+   "claim": "在线实例级开放词汇建图在 ScanNet 实例级分割上大幅超越离线基线：Chair mAP50 63.76 vs HOV-SG 4.58、ConceptGraphs 0.00；Window 42.20 vs 两者 0.00，证明 SLAM 几何先验驱动的 3D 感知跟踪-检测优于点特征聚类",
+   "stance": "support",
+   "relation": "支持'SLAM 几何层对开放词汇感知的增值'：SLAM 位姿与几何先验把间歇的 2D 检测融合成一致的 3D 实例地图，这是纯感知管线做不到的",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III：零样本在线设置下 SuperMap 在 5 类物体上的 mAP50/mAP25 全面领先。",
+   "locator": "page 6",
+   "source_context": "HOV-SG [30] 4.58 4.73 0.00 0.00 0.00 0.00 30.00 31.25 9.70 10.40 ConceptGraphs [5] 0.00 2.33 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 SuperMap (Ours) 63.76 74.72 42.20 67.92 62.50 62.50 33.35 83.35 10.00 25.00",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mAP50 (instance segmentation)",
+    "value_or_direction": "Chair 63.76 vs 4.58 (HOV-SG) vs 0.00 (ConceptGraphs); Window 42.20 vs 0.00 vs 0.00",
+    "comparator": "HOV-SG and ConceptGraphs offline baselines",
+    "task_or_sample": "ScanNet instance-level benchmark, zero-shot online setting",
+    "locator": "page 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Table III 数字逐字核对一致；正文 'SuperMap significantly outperforms these baselines' 与数字相符，claim 限定在 ScanNet 零样本在线设置。"
+   }
+  },
+  {
+   "card_id": "2608.22896-C03",
+   "claim": "该系统在全板载（i9 CPU + RTX 4090 笔记本 GPU）实现实时运行：位姿估计 10Hz、3D 建图 3Hz、2D 实例分割 1Hz、4D 场景图更新 5Hz——实时性是区别于离线场景图方法（HOV-SG/ConceptGraphs 需数分钟到数小时）的关键部署属性",
+   "stance": "support",
+   "relation": "支持'SLAM 系统的实时性使语义建图可用于真实机器人部署'：反驳'场景图/语义地图只能离线构建所以不实用'的替代路线批评",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "运行时剖析节报告各模块更新频率；补充材料 Table I 报告 TPF 0.3604s/frame（HOV-SG 8.623s）。",
+   "locator": "page 8",
+   "source_context": "The pose estimation module maintains a consistent 10 Hz output, while 2D instance segmentation operates at 1 Hz due to the heavy inference requirements of semantic segmentation. The remainder of the architecture performs 3D mapping and 4D scene graph updates at 3 Hz and 5 Hz, respectively.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "module update rate (Hz)",
+    "value_or_direction": "pose 10 Hz, mapping 3 Hz, segmentation 1 Hz, scene graph 5 Hz",
+    "comparator": "real-time onboard requirement (offline scene-graph methods need minutes to hours)",
+    "task_or_sample": "onboard runtime profiling on i9-14900H + RTX 4090 laptop",
+    "locator": "page 8"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字出现四个频率；离线基线耗时（minutes to hours）在 page 2 逐字出现（'they are time consuming (minutes to hours) to construct and not suitable for real-time mapping'）。"
+   }
+  },
+  {
+   "card_id": "2608.22896-C04",
+   "claim": "时空变化检测上 SuperMap 显著优于现有在线语义建图系统：出现物体检测 recall（桶 1.000/购物车 0.262/标志 0.583/植物 0.755/垃圾桶 0.434/椅子 1.000）对比 DualMap 全部接近零（0.000-0.310），Khronos 在该协议下无法产生结果",
+   "stance": "support",
+   "relation": "支持'SLAM 地图维护能力（存在/标签置信度更新、过期内容修剪）是长时程部署的差异化能力'：非 SLAM 的在线建图路线无法处理场景变化",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table IV：6 个出现/消失事件的变化检测对比，DualMap 因不稳定的实例关联接近零 recall。",
+   "locator": "page 7",
+   "source_context": "DualMap [8] 0.000 0.000 0.000 0.000 0.310 0.000 SuperMap (ours) 1.000 0.262 0.583 0.755 0.434 1.000",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "object detection recall (appearance interval)",
+    "value_or_direction": "SuperMap 1.000/0.262/0.583/0.755/0.434/1.000 vs DualMap 0.000-0.310",
+    "comparator": "DualMap (online semantic mapping baseline)",
+    "task_or_sample": "six object appearance/disappearance events, TP requires 3D IoU>0.1, centroid<0.3m, correct label",
+    "locator": "page 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table IV 数字逐字一致；Khronos 无结果（表内为破折号）与正文 'Khronos 在该协议下' 表述相符（正文实际写 DualMap achieves near-zero recall）。"
+   }
+  },
+  {
+   "card_id": "2608.22896-C05",
+   "claim": "SuperMap 类级分割精度不占优：ScanNet mIoU 27.42（无背景）低于 RayFronts 41.29——系统以类级精度换取实例级时空一致性，作者明确声明设计目标不是最大化逐帧分割分数",
+   "stance": "limit",
+   "relation": "限定'SLAM+开放词汇感知路线'的能力边界：该路线在类级稠密语义上仍落后于专用点特征方法，不能宣称全面领先",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 类级对比：SuperMap 27.42/43.50/55.48（mIoU/f-mIoU/Acc）vs RayFronts 41.29/46.42/56.76。",
+   "locator": "page 6",
+   "source_context": "RayFronts [1] 41.29 46.42 56.76 32.29 39.04 49.15 ConceptGraphs [5] object-level 21.62 24.32 31.05 20.83 23.61 35.80 HOV-SG [30] 26.79 36.05 35.17 23.48 28.92 38.52 SuperMap (Ours) 27.42 43.50 55.48 22.61 29.10 33.00",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mIoU without background (ScanNet class-level)",
+    "value_or_direction": "SuperMap 27.42 below RayFronts 41.29",
+    "comparator": "RayFronts (point-feature method)",
+    "task_or_sample": "ScanNet class-level segmentation benchmark",
+    "locator": "page 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Table II 数字逐字一致；补充材料 page 11 'Our goal is not to maximize isolated per-frame segmentation scores' 支持设计目标表述。"
+   }
+  },
+  {
+   "card_id": "2608.22896-C06",
+   "claim": "作者自述局限：高度动态物体的跟踪性能仍然受限；且开放词汇 2D 检测依赖预定义物体提示词列表，缺乏自动开放世界物体发现机制——系统尚不能在无语义先验的真正新颖环境中运行",
+   "stance": "limit",
+   "relation": "限定该系统作为'SLAM+VLM 接地'路线的部署边界：动态性极强的场景与无提示词先验的开放世界仍是未解决问题",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "LIMITATION 节两条自述：动态物体跟踪 + 提示词列表依赖。",
+   "locator": "page 8",
+   "source_context": "its performance in tracking highly dynamic objects remains limited. Future iterations could address this by incorporating specialized tracking-by-detection modules or efficient segmentation-based tracking to improve temporal coherence.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 LIMITATION 节逐字出现；提示词列表依赖在同节（'our current pipeline relies on a pre-defined list of object prompts'）逐字出现。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": "2402.13817",
+   "title": "Khronos: spatio-temporal metric-semantic SLAM"
+  },
+  {
+   "arxiv_id": "2406.17249",
+   "title": "SlideSLAM: sparse decentralized metric-semantic SLAM"
+  }
+ ],
+ "figures": [],
+ "tables": [],
+ "notes": "锚点论文（导航侧）。对综述问题的价值：(1) 'SLAM 为基础模型提供接地接口'的明确主张与系统证据；(2) 实时板载可行性反驳'语义地图只能离线'；(3) 类级精度落后与提示词依赖的诚实边界。CMU RI 团队，开源。"
+}

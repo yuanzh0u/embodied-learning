@@ -1,0 +1,401 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2508.12296",
+  "title": "A Robust and Compliant Robotic Assembly Control Strategy for Batch Precision Assembly Task",
+  "published": "2026-01-01",
+  "url": "https://arxiv.org/abs/2508.12296",
+  "authors": [
+   "Bin Wang",
+   "Jiwen Zhang",
+   "Song Wang",
+   "Dan Wu"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "力控装配方案族的直接证据：面向批量精密装配中不确定配合类型/配合量（过盈-0.04mm至间隙+0.04mm），提出力-视觉融合控制器+多任务RL+多教师蒸馏的柔顺控制方案，含真机成功率/接触力量化结果与工业适用条件，并同时暴露'单任务RL泛化差''过盈配合仿真缺失''只看成功率不评力柔顺'等痛点，直接服务综述问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "批量装配不确定配合量的问题定义、模型法/学习法相关工作与鲁棒性研究缺口"
+   },
+   {
+    "locator": "2.1. Robotic batch precision assembly task",
+    "role": "relevant-core",
+    "purpose": "任务形式化：公差设计、配合量分布区间、初始对准误差来源与吸盘夹持"
+   },
+   {
+    "locator": "2.2. Overall method framework",
+    "role": "method-or-design",
+    "purpose": "三阶段框架总览：任务分解→子任务RL→策略蒸馏集成"
+   },
+   {
+    "locator": "3.1. Task decomposition",
+    "role": "method-or-design",
+    "purpose": "配合量区间线性细分（n=4）与确定性子任务构造"
+   },
+   {
+    "locator": "3.2. Force-vision fusion controller-driven reinforcement learning",
+    "role": "method-or-design",
+    "purpose": "FVFC结构（力控+视觉控+坐标变换、吸盘变形补偿）与RL状态/动作/奖励设计"
+   },
+   {
+    "locator": "3.3. Efficient MTRL training method",
+    "role": "method-or-design",
+    "purpose": "MTSAC+两层LSTM+PCGrad+解耦熵的多任务训练与任务编码"
+   },
+   {
+    "locator": "3.4. Policy distillation for robustness strategy",
+    "role": "method-or-design",
+    "purpose": "多教师蒸馏到无任务编码的学生网络（KL损失、复用回放数据）"
+   },
+   {
+    "locator": "4.1. Experimental system setup",
+    "role": "data-or-setting",
+    "purpose": "UR10+力/力矩传感器+双单目相机+吸盘硬件、四子任务与批量元件参数（Table 1/2）"
+   },
+   {
+    "locator": "4.2. Training process",
+    "role": "results-or-analysis",
+    "purpose": "训练收敛与样本效率对比（MTRL vs STRL vs MDRL，3随机种子）"
+   },
+   {
+    "locator": "4.3. Compliance and robustness verification",
+    "role": "results-or-analysis",
+    "purpose": "四子任务各50次的奖励/成功率（Table 3）与最大接触力/步数（Table 4/5）对比"
+   },
+   {
+    "locator": "4.4. Batch precision assembly verification",
+    "role": "results-or-analysis",
+    "purpose": "8组批量未知配合量元件的鲁棒性验证（Table 6、力热图）"
+   },
+   {
+    "locator": "5. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "贡献总结、多形状扩展声明与未来方向（过盈配合仿真与sim-to-real）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "reason": "仅提取核心arXiv引用（1904.05240/1511.06295/1910.10897/2001.06782）"
+   }
+  ]
+ },
+ "research_question": "在批量精密装配（公差为过渡配合、每组销孔的配合类型与配合量确定但未知）中，如何高效构建对不确定配合状态鲁棒且力柔顺的机器人装配控制策略？",
+ "contributions": [
+  "提出批量精密装配的鲁棒柔顺控制策略构建框架：任务分解（按配合量线性细分为4个确定性子任务）→子任务策略联合学习→多教师策略蒸馏为单一鲁棒策略（FVFC-MTRL-PD）",
+  "设计力-视觉融合控制器（FVFC）作为RL的策略基座：RL不直接输出6-D位姿而是自适应调节FVFC的10个控制器参数；视觉特征（角点/边缘线）补偿吸盘软变形导致的相对位姿不可观测",
+  "高效多任务RL训练：MTSAC共享actor/critic+两层LSTM时序特征+PCGrad梯度手术+任务解耦熵系数+基于回放量的任务选择器",
+  "真机验证：六边形销孔（名义10mm、公差±0.02mm、配合量-0.04~+0.04mm）批量装配中单一鲁棒策略达到98.5%平均成功率与最优力柔顺，MTRL训练效率提升50%以上"
+ ],
+ "method": {
+  "summary": "三阶段构建鲁棒柔顺装配策略。(1)任务分解：由公差区间[d_p,min-d_h,max, d_p,max-d_h,min]按弹性力学'配合量→接触力近似线性'的论据线性细分为4个子任务（T1大过盈/T2小过盈/T3小间隙/T4大间隙），每个子任务内仅随机化初始对准误差（±0.3-0.4mm/±0.5°）。(2)子任务策略学习：FVFC由比例力控制器（式7，经重力补偿与坐标变换把传感器系力/力矩折算到销端坐标系）与视觉控制器（式9，双正交单目相机提取角点/边缘线特征表征销孔相对位姿）叠加输出位姿增量；RL（MTSAC）的动作是10个控制器参数的自适应修正，状态含相对位姿+力/力矩+视觉特征（5步堆叠），奖励=插入进度-力/力矩惩罚-步数惩罚+成功/失败稀疏奖励（过盈子任务不罚轴向力）。(3)鲁棒化：以各子任务训练好的策略为多教师，去掉任务编码后用回放数据以KL散度蒸馏出更深更宽LSTM的学生网络，使其能从力/视觉轨迹隐式推断当前配合量，直接部署于批量装配。",
+  "assumptions": [
+   "配合量变化范围先验已知（由公差设计决定，式1）",
+   "配合量变化近似线性地引起接触力变化（弹性力学建模[9]），故线性细分子区间即可均匀覆盖力状态空间",
+   "每个子任务内配合量确定，环境随机性只来自初始对准误差",
+   "销/孔为等截面规则几何（不规则六边形），孔由夹具固定、视觉参数可预标定",
+   "吸盘角变形小于2°，力臂误差可忽略（式5近似）",
+   "重要性不适用；蒸馏仅复用训练期回放数据即可达到满意性能（无需额外交互）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "无公开数据集；自采真机RL交互数据（各子任务独立回放缓冲）"
+  ],
+  "tasks": [
+   "不规则六边形销-孔批量精密装配：4个确定性子任务（过盈-0.04~-0.02、-0.02~0.00、间隙0.00~0.02、0.02~0.04 mm）",
+   "批量验证：8组（G1-G8）从未知配合量（-0.04~+0.04mm）的批次制造件中随机抽取，含无倒角孔（G7）与制造变形销（G8）压力组",
+   "插入深度4mm；销高/孔深5mm；孔缘0.1mm倒角；初始位姿误差±0.3-0.4mm/±0.5°"
+  ],
+  "embodiments": [
+   "UR10六轴机械臂 + SMC柔性吸盘（销粘接于吸盘）+ SRI M3815B六维力/力矩传感器 + 2个正交单目相机（Hik MV-CH120-10UC）+ 白光源",
+   "计算：Ubuntu 20.04 / i7-13700 / RTX 4080"
+  ],
+  "sample_or_scale": "训练：4子任务联合MTRL（3随机种子，~50k步收敛）；评测：每子任务50次、每组批量元件50次；总计4×50+8×50次评测；蒸馏为监督学习（无额外交互）"
+ },
+ "evaluation": {
+  "design": "真机对比实验：(i)四子任务各50次的奖励/成功率对比（Table 3）；(ii)成功装配的最大接触力/力矩与控制步数（Table 4/5）；(iii)8组未知配合量批量验证，MDRL按最相似子任务部署（Table 6）；(iv)训练效率对比（3种子平均奖励曲线，Fig.7）",
+  "baselines": [
+   "FBCC[9]：恒参数柔顺力控（高精度装配基线）",
+   "MDRL[16]：模型驱动RL+精心设计的力控制器（纯力控、无视觉）",
+   "FVFC-CP：恒参数FVFC（结构对照，隔离'学习调参'贡献）",
+   "FVFC-MTRL：本方法非鲁棒版本（需任务编码，按子任务部署）"
+  ],
+  "metrics": [
+   "平均奖励（4子任务平均）",
+   "成功率（%）",
+   "最大接触力Fx/Fy/Fz（N）与力矩Mx/My/Mz（Nm）",
+   "控制步数（装配效率）",
+   "样本效率（收敛步数）"
+  ],
+  "ablations": [
+   "MTRL vs STRL（多任务联合 vs 逐个单任务训练）→样本效率+50%",
+   "策略蒸馏 vs 任务编码输入（鲁棒性来源）",
+   "RL调参 vs 恒参数（FVFC-MTRL-PD vs FVFC-CP）",
+   "力控 vs 力-视觉融合（MDRL vs FVFC类）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "单一鲁棒策略FVFC-MTRL-PD在四子任务上取得最高平均奖励22.1与平均成功率98.5%，显著高于恒参数力控FBCC（42.0%）、单任务RL的MDRL（54.0%）与恒参数FVFC-CP（61.0%），与非鲁棒的FVFC-MTRL（97.0%）相当但无需任务编码",
+   "scope": "4子任务×50次真机试验",
+   "locator": "Table 3 / 4.3. Compliance and robustness verification"
+  },
+  {
+   "finding": "MTRL联合训练使四子任务平均奖励在约50k步稳定收敛，样本效率比逐个单任务训练（FVFC-STRL）提升50%以上；MDRL最终奖励显著更低，说明力-视觉融合优于纯力控",
+   "scope": "3随机种子训练过程",
+   "locator": "4.2. Training process / Fig. 7"
+  },
+  {
+   "finding": "力柔顺最优：子任务T4中FVFC-MTRL-PD最大轴向力Fz=0.202N（FBCC 1.818N、MDRL 1.394N、FVFC-CP 0.468N），T2中Fz=1.028N（FBCC 2.129N）；控制步数亦最少（80.1/81.0步）",
+   "scope": "T2/T4子任务各50次成功装配的平均最大值",
+   "locator": "Table 4 / Table 5"
+  },
+  {
+   "finding": "批量验证（8组未知配合量）：FVFC-MTRL-PD成功率88-100%；G6干涉力5.18N超出训练子任务范围（T1约3N、T2约1N）仍100%成功；无倒角孔+变形销的G7/G8达92%/88%，而按最相似子任务部署的MDRL在G7/G8全部失败（0%）",
+   "scope": "8组×50次，随机初始位姿误差",
+   "locator": "Table 6 / 4.4. Batch precision assembly verification"
+  },
+  {
+   "finding": "非鲁棒策略跨任务迁移显著退化：E-(4)（大间隙）训练的FVFC-MTRL策略用于E-(1)（大过盈）时平均成功率降至82%、平均控制步数增加25%；MDRL跨配合类型（间隙→过盈）多数情况直接失败",
+   "scope": "四子任务间迁移",
+   "locator": "4.3 / 4.4"
+  },
+  {
+   "finding": "批量装配中接触力峰值Fx/Fy保持在0.7N以下；间隙配合Fz全程低，过盈配合Fz在入孔后线性增长——策略在8组上保持低且稳定的接触力",
+   "scope": "8组×5次力轨迹热图",
+   "locator": "Fig. 10"
+  },
+  {
+   "finding": "作者判断：现有面向多形状鲁棒装配的RL研究通常只追求成功率而不评估装配过程中的接触力柔顺性，对高精度工业任务并不充分",
+   "scope": "对相关文献[23-26]的批判性综述",
+   "locator": "1. Introduction"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "locator": "3.4. Policy distillation for robustness strategy",
+    "limitation": "蒸馏仅复用MTRL回放数据在理论上是次优方案（状态分布可能与实际部署不同）；补充真实交互采样可解决但带来大量物理交互，实验表明前者性能已满意"
+   },
+   {
+    "locator": "5. Conclusion",
+    "limitation": "未来更重要的方向：如何精确仿真精密装配过程（尤其过盈配合装配）并将仿真所学有效迁移到真实世界"
+   },
+   {
+    "locator": "1. Introduction / 5. Conclusion",
+    "limitation": "对多几何形状的泛化仅在补充材料的仿真研究中验证（修改任务分解模式即可扩展的声明）"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "basis": "4.1实验设置与Table 6样本规模",
+    "boundary": "对真实产线更大批次、更厚公差尾部的覆盖证据有限：实验中销钉粘接于吸盘、配合量变化仅由4个孔实现，批量验证仅8组×50次且无置信区间"
+   },
+   {
+    "basis": "3.2.2特征提取模块设计",
+    "boundary": "视觉通道为传统CV手工特征（ROI+自适应二值化+EDLines角点/边缘线），依赖孔位预标定与规则六边形截面；迁移到任意形状/弱纹理/无固定夹具工件需重写特征提取，几何先验依赖强"
+   },
+   {
+    "basis": "评测指标体系（Table 3-6）与Table 2随机位姿范围",
+    "boundary": "方法解决的是接触柔顺与公差鲁棒性而非绝对轨迹精度：评测仅有成功率+接触力+步数，无末端位姿/轨迹误差指标；初始误差仅±0.3-0.4mm/±0.5°，更大初始误差未验证"
+   },
+   {
+    "basis": "3.1任务分解需实体元件 + 5. Conclusion未来方向",
+    "boundary": "换型成本高：新公差范围或新形状需重新制造子任务元件并重新真机训练（~50k步交互），无仿真迁移路径（过盈配合仿真缺失）"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于等截面规则几何、过渡配合公差±0.05mm量级、柔性吸盘夹持的批量销孔插入装配；依赖孔位预标定与传统视觉特征和真机RL训练，不直接适用于任意形状工件、大初始误差或以末端绝对轨迹精度为核心指标的场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "真机实验且每子任务/每组50次统计评测，训练曲线含3随机种子与置信带",
+   "设置恒参数FVFC-CP作结构对照，可部分隔离'控制器结构'与'RL调参'的贡献",
+   "G7/G8（无倒角孔、变形销）与G6（超训练范围干涉力）构成难度递进的压力测试，直接检验批量外推",
+   "同时报告成功率与力柔顺（最大力/力矩+控制步数），回应工业场景双指标需求"
+  ],
+  "design_risks": [
+   "MDRL基线为纯力控（无视觉输入），与FVFC类方法的差距混合了'有无视觉'与'学习方法'两个因素（FVFC-CP部分缓解但未完全解耦）",
+   "批量验证仅8组、每组50次，G7/G8'约90%'无统计不确定性报告",
+   "成功率/力指标为代理指标，无绝对定位/轨迹误差度量，不能直接映射到'末端轨迹精度'主线",
+   "单一机器人（UR10）、单一任务族（六边形销孔）"
+  ],
+  "baseline_fairness": "非鲁棒策略（MDRL/FVFC-MTRL）按各自专用子任务策略测试，设定合理；但MDRL缺视觉输入使'学习vs感知模态'归因部分混淆；FVFC-CP缓解了该问题。",
+  "metric_validity": "成功率+最大接触力+控制步数契合装配目标且可复现；但缺少位姿/轨迹误差与显著性检验，力指标仅报告成功样本的平均最大值（失败样本力分布未见）。",
+  "reproducibility": "硬件型号与全部关键超参（Table 2）公开，控制器与训练方程完整；但传统CV特征工程、4孔标定与吸盘粘接等工程细节无代码支撑，独立复现有中等难度。",
+  "external_validity": "单一任务族与单一机器人；形状泛化仅有补充材料仿真证据；产线级扰动（磨损、温度、来料批次漂移）未评估，向其他工业场景的外推未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2508.12296-C01",
+   "claim": "在四个配合量子任务（过盈-0.04mm至间隙+0.04mm、各50次真机试验）上，多教师蒸馏得到的单一鲁棒策略FVFC-MTRL-PD取得最高平均奖励22.1与最高平均成功率98.5%，优于恒参数力控FBCC（42.0%）、单任务RL基线MDRL（54.0%）与恒参数FVFC（61.0%），且与非鲁棒多任务策略FVFC-MTRL（97.0%）相当而无需任务编码。",
+   "stance": "support",
+   "relation": "支撑'力-视觉融合柔顺控制+多任务RL+蒸馏可在亚0.1mm公差批量装配中构建单一高成功率策略'的方案命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "原文4.3节明确陈述FVFC-MTRL-PD在保持FVFC-MTRL高性能的同时获得跨子任务鲁棒性，取得最高平均奖励22.1与成功率98.5%；Table 3给出各基线平均成功率42.0%/54.0%/61.0%/97.0%。",
+   "locator": "4.3. Compliance and robustness verification / Table 3",
+   "source_context": "As shown in Table 3, FVFC-\nMTRL demonstrates strong performance in each specific subtask, and\nFVFC-MTRL-PD further maintains the high performance of FVFC-MTRL\nwhile additionally achieving robustness across different subtasks. It\noutperforms all other methods, achieving the highest average reward of\n22.1 and success rate of 98.5%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "四子任务平均成功率/平均奖励",
+    "value_or_direction": "98.5% / 22.1（所有方法中最高）",
+    "comparator": "FBCC 42.0%、MDRL 54.0%、FVFC-CP 61.0%、FVFC-MTRL 97.0%",
+    "task_or_sample": "4个子任务（配合量-0.04~+0.04mm）各50次真机装配",
+    "locator": "Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对原文4.3节正文与Table 3：FVFC-MTRL-PD平均奖励22.1、成功率98.5%，基线依次为1.7/42.0%、5.8/54.0%、8.6/61.0%、21.6/97.0%；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2508.12296-C02",
+   "claim": "多任务RL训练框架（MTRL）使四个装配子任务的平均奖励在约50k步稳定收敛，样本效率比逐个独立训练（FVFC-STRL）提升50%以上。",
+   "stance": "support",
+   "relation": "支撑'多任务学习共享表征可显著降低真机RL交互训练成本'的训练效率命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "原文4.2节陈述FVFC-MTRL平均奖励稳定增长并在约50k步收敛，而FVFC-STRL奖励波动且增长缓慢，并明确'样本效率提升超过50%'的结论。",
+   "locator": "4.2. Training process / Fig. 7",
+   "source_context": "The average reward across four subtasks in FVFC-MTRL\nincreases steadily and converges at approximately 50k steps. However, the\nreward of FVFC-STRL fluctuates and increases slowly. It is verified that\nthe proposed MTRL training framework effectively leverages the\nsimilarities among subtasks to enhance sample efficiency by more than\n50%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "样本效率提升幅度（收敛步数）",
+    "value_or_direction": "提升>50%；MTRL约50k步收敛",
+    "comparator": "FVFC-STRL（四子任务逐个独立训练）",
+    "task_or_sample": "4个装配子任务的真机RL训练（3随机种子）",
+    "locator": "4.2. Training process / Fig. 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对原文4.2节：'converges at approximately 50k steps'与'enhance sample efficiency by more than 50%'均为原文原句；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2508.12296-C03",
+   "claim": "批量验证的8组元件中，无倒角孔+制造变形销的两个困难组（G7/G8）上，按最相似子任务部署的MDRL成功率为0%，而FVFC-MTRL-PD仍达约90%（Table 6中G7为92%、G8为88%）。",
+   "stance": "support",
+   "relation": "支撑'力-视觉融合鲁棒策略对制造缺陷与困难配合状态有外推能力'的方案效果命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "原文4.4节明确陈述G7/G8为故意设计的更困难场景（孔无倒角、销有制造变形），MDRL完全失败（0%）而所提方法仍约90%；Table 6给出92%/88%的具体值。",
+   "locator": "4.4. Batch precision assembly verification / Table 6",
+   "source_context": "Furthermore, Groups G7 and G8 represent two intentionally designed, more\nchallenging assembly scenarios, featuring hole with non-chamfered edges\nand pegs with manufacturing-induced deformations. For these groups, the\nMDRL approach failed completely (0% success rate), whereas the proposed\nmethod still achieved success rates of approximately 90%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "装配成功率（困难组G7/G8）",
+    "value_or_direction": "FVFC-MTRL-PD约90%（G7 92%、G8 88%）；MDRL 0%",
+    "comparator": "MDRL（按最相似子任务T1训练的策略）",
+    "task_or_sample": "无倒角孔（G7）与变形销（G8）两组批量元件各50次",
+    "locator": "4.4. Batch precision assembly verification / Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对原文4.4节正文与Table 6（G7: 18.0/92% vs -9.5/0%；G8: 16.9/88% vs -9.9/0%）；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2508.12296-C04",
+   "claim": "在四子任务各50次成功装配的力柔顺评测中，FVFC-MTRL-PD的最大接触力/力矩与控制步数在所有评估策略中最优：子任务T4最大轴向力Fz为0.202N，而FBCC为1.818N、MDRL为1.394N、恒参数FVFC为0.468N。",
+   "stance": "support",
+   "relation": "支撑'柔顺控制方案族以接触力柔顺为收益指标（力峰值大幅下降）而非绝对轨迹精度'的效果刻画",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "原文4.3节明确陈述FVFC-MTRL-PD取得最佳装配力柔顺与最高装配效率；Table 5（子任务T4）给出各方法最大力/力矩与控制步数，本文方法Fz=0.202N为最低。",
+   "locator": "4.3. Compliance and robustness verification / Table 5",
+   "source_context": "To quantitatively evaluate the assembly compliance, the maximum\nforces/moments, and the number of control steps are recorded for each\nsuccessful assembly over 50 trials per subtask. The average values for\nsubtasks T \n2 \nand T \n4 \nare reported in Tables 4 and 5, respectively. It is verified\nthat FVFC-MTRL-PD achieves the best assembly force compliance and the\nhighest assembly efficiency among all evaluated strategies.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "最大轴向接触力Fz（子任务T4）",
+    "value_or_direction": "FVFC-MTRL-PD 0.202N（最低）",
+    "comparator": "FBCC 1.818N、MDRL 1.394N、FVFC-CP 0.468N",
+    "task_or_sample": "子任务T4各50次成功装配的平均最大值",
+    "locator": "Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对原文Table 5（T4行：FBCC 1.818/MDRL 1.394/FVFC-CP 0.468/Ours 0.202）与Table 4（T2行：FBCC 2.129/Ours 1.028）及4.3节结论句；source_context经脚本验证为md文件原始子串（含公式排版断行）。"
+   }
+  },
+  {
+   "card_id": "2508.12296-C05",
+   "claim": "非鲁棒策略跨任务迁移显著退化：将在E-(4)（大间隙配合）训练的FVFC-MTRL策略直接用于E-(1)（大过盈配合）时，平均成功率降至82%、平均控制步数增加25%。",
+   "stance": "limit",
+   "relation": "限制'任务专用RL策略可直接跨配合状态泛化'——单任务/任务编码策略对公差变化的泛化差是柔顺控制方案族的关键痛点",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "原文4.3节以FVFC-MTRL的跨子任务迁移为例说明非鲁棒策略缺乏跨任务泛化能力：E-(4)策略用于E-(1)时成功率降至82%、步数增加25%。",
+   "locator": "4.3. Compliance and robustness verification",
+   "source_context": "Non-robust policies\ntypically lack cross-task generalization capability, exhibiting significant\nperformance degradation when directly transferred to different task\nconfigurations. For example, when applying the FVFC-MTRL policy\ntrained in E-(4) to subtask E-(1), the average success rate decreases to 82%\nand the average control steps increase by 25%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "cross-task generalization: average success rate and average control steps",
+    "value_or_direction": "average success rate decreases to 82% and the average control steps increase by 25%",
+    "comparator": "FVFC-MTRL policy trained in E-(4) directly transferred to subtask E-(1)",
+    "task_or_sample": "E-(4)（间隙0.02~0.04mm）训练的FVFC-MTRL迁移到E-(1)（过盈-0.04~-0.02mm）",
+    "locator": "4.3. Compliance and robustness verification"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对原文4.3节原句'decreases to 82%...increase by 25%'，及Table 3中E-(4)内FVFC-MTRL为23.0/100%作对照；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2508.12296-C06",
+   "claim": "作者判断：现有面向多形状鲁棒装配的RL研究通常只追求提升成功率而不评估装配过程中的接触力柔顺性，这对高精度工业任务并不充分。",
+   "stance": "gap",
+   "relation": "支撑'装配类评测普遍只看成功率、忽视力柔顺/力安全指标'的评测痛点命题",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "原文引言在综述低精度（0.5-2.0mm间隙）多形状鲁棒装配研究[23-26]后，明确指出这些研究通常只追求成功率而不评估装配力柔顺，不足以支撑高精度工业任务——为本论文双指标（成功率+力柔顺）动机。",
+   "locator": "1. Introduction",
+   "source_context": "different shapes, but numerous agents are trained separated, which is very\ninefficient. In summary, these researches usually only pursue improving the\nsuccess rate without evaluating the contact force compliance during\nassembly, which is not sufficient for high-precision industrial tasks.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对原文引言对[23-26]的批评性总结原句；该卡为作者对文献的判断（author-judgment），非本文实验结果；source_context经脚本验证为md文件原始子串。"
+   }
+  }
+ ],
+ "core_citations": [
+  "1904.05240",
+  "1511.06295",
+  "1910.10897",
+  "2001.06782"
+ ],
+ "notes": "补充材料（多形状装配的仿真研究）不在本全文缓存中，'框架可扩展至多形状'按作者自述处理，不作证据卡。Fig.9/10为力轨迹图，数值结论以正文与表格为准。"
+}
