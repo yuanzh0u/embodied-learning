@@ -25,6 +25,14 @@ python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py \
   --output work/<run>/extraction-2402.10329.json
 ```
 
+For casual human reading (not evidence work), the same gateway renders markdown directly —
+`--terms` is optional, `.md` outputs imply `--format markdown`, and full text is always included:
+
+```bash
+python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py 2402.10329 \
+  --output paper.md          # or: pip install -e . && extract_arxiv 2402.10329 --output paper.md
+```
+
 ## Quality And Promotion
 
 | Result | Candidate status | Evidence action |

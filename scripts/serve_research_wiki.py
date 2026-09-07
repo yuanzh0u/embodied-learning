@@ -26,18 +26,76 @@ if str(SCRIPT_DIR) not in sys.path:
 from build_research_wiki import resolve_snapshot_directory  # noqa: E402
 
 
-WIKI_ROOT = REPO_ROOT / "wiki"
-BUILDER = REPO_ROOT / "scripts" / "build_research_wiki.py"
-GRAPH_BUILDER = REPO_ROOT / "scripts" / "visualize_kb_index.py"
+# Sibling scripts resolve next to this file, so the installed console command
+# (site-packages/wiki_scripts/) and a repo checkout behave identically.
+BUILDER = SCRIPT_DIR / "build_research_wiki.py"
+GRAPH_BUILDER = SCRIPT_DIR / "visualize_kb_index.py"
+# Frontend is never bundled or copied: serve the existing wiki/ folder next to
+# the knowledge base, falling back to the repo checkout's wiki/ in-place.
+DEFAULT_KB_ROOT = Path.home() / "Documents" / "arxiv"
+REPO_WIKI_ROOT = REPO_ROOT / "wiki"
+CATALOG_RELPATH = Path("knowledge") / "literature-review-catalog.md"
 REFRESH_LOCK = threading.Lock()
+
+
+def resolve_kb_root(requested: Path | None) -> Path | None:
+    """KB root: an explicit --kb-root (must carry a catalog, validated by the
+    caller), else ~/Documents/arxiv, else the repo checkout. None = not found."""
+
+    candidates: list[Path] = []
+    if requested is not None:
+        candidates.append(requested)
+    else:
+        candidates.append(DEFAULT_KB_ROOT)
+        candidates.append(REPO_ROOT)
+    for candidate in candidates:
+        resolved = candidate.expanduser().resolve()
+        if (resolved / CATALOG_RELPATH).is_file():
+            return resolved
+    return None
+
+
+def resolve_wiki_root(kb_root: Path) -> Path:
+    """Serve <kb-root>/wiki when it exists (data refreshes in place there);
+    otherwise fall back to the repo checkout's wiki/ (a plain repo run)."""
+
+    kb_wiki = kb_root / "wiki"
+    if (kb_wiki / "index.html").is_file():
+        return kb_wiki
+    if not REPO_WIKI_ROOT.is_dir():
+        # First serve against a KB without wiki/: build the static shell in
+        # place from the repo frontend assets if available, else fail loudly.
+        raise RuntimeError(
+            f"未找到 Wiki 前端目录：{kb_wiki}（缺少 index.html）。"
+            "请从仓库复制 wiki/ 目录到该路径。"
+        )
+    return REPO_WIKI_ROOT
+
+
+def build_refresh_command(kb_root: Path, data_dir: Path) -> list[str]:
+    command = [sys.executable, str(BUILDER), "--output", str(data_dir)]
+    if (kb_root / CATALOG_RELPATH).is_file():
+        command += ["--kb-root", str(kb_root)]
+    return command
 
 
 class WikiHandler(SimpleHTTPRequestHandler):
     server_version = "ResearchWiki/1.0"
 
-    def __init__(self, *args, knowledge_map: Path | None = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        knowledge_map: Path | None = None,
+        kb_root: Path,
+        wiki_root: Path,
+        data_dir: Path,
+        **kwargs,
+    ):
         self.knowledge_map = knowledge_map
-        super().__init__(*args, directory=str(WIKI_ROOT), **kwargs)
+        self.kb_root = kb_root
+        self.data_dir = data_dir
+        self.refresh_command = build_refresh_command(kb_root, data_dir)
+        super().__init__(*args, directory=str(wiki_root), **kwargs)
 
     def end_headers(self) -> None:
         if self.path.startswith("/data/"):
@@ -65,13 +123,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
             return
         try:
             result = subprocess.run(
-                [
-                    sys.executable,
-                    str(BUILDER),
-                    "--output",
-                    str(WIKI_ROOT / "data"),
-                ],
-                cwd=REPO_ROOT,
+                self.refresh_command,
+                cwd=str(self.kb_root),
                 capture_output=True,
                 text=True,
                 timeout=120,
@@ -81,7 +134,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 message = (result.stderr or result.stdout or "刷新脚本执行失败").strip()
                 self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": message})
                 return
-            snapshot_dir = resolve_snapshot_directory(WIKI_ROOT / "data")
+            snapshot_dir = resolve_snapshot_directory(self.data_dir)
             manifest = json.loads((snapshot_dir / "manifest.json").read_text(encoding="utf-8"))
             self._send_json(
                 HTTPStatus.OK,
@@ -117,10 +170,10 @@ class WikiHandler(SimpleHTTPRequestHandler):
         self.wfile.write(payload)
 
 
-def refresh_snapshot() -> None:
+def refresh_snapshot(kb_root: Path, data_dir: Path) -> None:
     result = subprocess.run(
-        [sys.executable, str(BUILDER)],
-        cwd=REPO_ROOT,
+        build_refresh_command(kb_root, data_dir),
+        cwd=str(kb_root),
         text=True,
         check=False,
     )
@@ -128,10 +181,13 @@ def refresh_snapshot() -> None:
         raise RuntimeError("初始成果快照构建失败。")
 
 
-def build_knowledge_map(output: Path) -> None:
+def build_knowledge_map(output: Path, kb_root: Path) -> None:
+    command = [sys.executable, str(GRAPH_BUILDER), "--no-open", "--output", str(output)]
+    if (kb_root / "knowledge" / "index.md").is_file():
+        command += ["--root", str(kb_root)]
     result = subprocess.run(
-        [sys.executable, str(GRAPH_BUILDER), "--no-open", "--output", str(output)],
-        cwd=REPO_ROOT,
+        command,
+        cwd=str(kb_root),
         capture_output=True,
         text=True,
         check=False,
@@ -145,22 +201,54 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--port", type=int, default=8018, help="本地端口，默认 8018")
     parser.add_argument("--open", action="store_true", help="启动后自动打开浏览器")
     parser.add_argument("--no-refresh", action="store_true", help="启动时不重新扫描成果")
+    parser.add_argument(
+        "--kb-root",
+        type=Path,
+        default=None,
+        help=f"本地知识库根目录（含 knowledge/ 与 evidence/），默认优先 {DEFAULT_KB_ROOT}",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    if args.kb_root is not None:
+        # An explicit --kb-root is authoritative: never fall back to defaults.
+        kb_root = args.kb_root.expanduser().resolve()
+        if not (kb_root / CATALOG_RELPATH).is_file():
+            print(
+                f"--kb-root 指定的目录缺少 {CATALOG_RELPATH}：{kb_root}",
+                file=sys.stderr,
+            )
+            return 1
+    else:
+        kb_root = resolve_kb_root(None)
+    if kb_root is None:
+        print(
+            f"未找到本地知识库（默认查找 {DEFAULT_KB_ROOT}）。"
+            "请用 --kb-root 指定包含 knowledge/literature-review-catalog.md 的目录。",
+            file=sys.stderr,
+        )
+        return 1
+    wiki_root = resolve_wiki_root(kb_root)
+    data_dir = wiki_root / "data"
     if not args.no_refresh:
         try:
-            refresh_snapshot()
+            refresh_snapshot(kb_root, data_dir)
         except RuntimeError as exc:
             print(exc, file=sys.stderr)
             return 1
 
     with tempfile.TemporaryDirectory(prefix="research-wiki-map-") as temp_dir:
         knowledge_map = Path(temp_dir) / "index.html"
-        build_knowledge_map(knowledge_map)
-        handler = partial(WikiHandler, knowledge_map=knowledge_map)
+        build_knowledge_map(knowledge_map, kb_root)
+        handler = partial(
+            WikiHandler,
+            knowledge_map=knowledge_map,
+            kb_root=kb_root,
+            wiki_root=wiki_root,
+            data_dir=data_dir,
+        )
         url = f"http://127.0.0.1:{args.port}/"
         try:
             server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)

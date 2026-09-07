@@ -615,15 +615,32 @@ def publish_snapshot(
                 shutil.rmtree(final)
 
 
+def resolve_io_paths(args: argparse.Namespace) -> tuple[Path, Path]:
+    """Resolve --source/--output, defaulting them from --kb-root when given."""
+
+    kb_root = Path(args.kb_root).resolve() if args.kb_root else None
+    source = args.source or (
+        (kb_root / "knowledge" / "literature-review-catalog.md") if kb_root else DEFAULT_SOURCE
+    )
+    output = args.output or DEFAULT_OUTPUT
+    return source, output
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="构建空间智能研究 Wiki 的静态内容快照")
     parser.add_argument(
         "--source",
         type=Path,
-        default=DEFAULT_SOURCE,
-        help="成果目录 Markdown；也兼容直接扫描目录",
+        default=None,
+        help="成果目录 Markdown；也兼容直接扫描目录（默认随 --kb-root 或仓库目录解析）",
     )
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="静态数据输出目录")
+    parser.add_argument("--output", type=Path, default=None, help="静态数据输出目录（默认 wiki/data）")
+    parser.add_argument(
+        "--kb-root",
+        type=Path,
+        default=None,
+        help="本地知识库根目录（含 knowledge/ 与 evidence/）；--source 未指定时使用其中的文献综述目录",
+    )
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--check", action="store_true", help="只校验当前原子快照")
     action.add_argument("--activate", metavar="SNAPSHOT_ID", help="回滚或切换到已验证快照")
@@ -635,14 +652,15 @@ def main() -> int:
     args = parse_args()
     try:
         if args.check:
-            manifest = validate_published_snapshot(args.output)
+            manifest = validate_published_snapshot(args.output or DEFAULT_OUTPUT)
             print(f"Wiki 快照有效：{len(manifest['topics'])} 个最新完整话题。")
         elif args.activate:
-            with publication_lock(args.output):
-                manifest = activate_snapshot(args.output, args.activate)
+            with publication_lock(args.output or DEFAULT_OUTPUT):
+                manifest = activate_snapshot(args.output or DEFAULT_OUTPUT, args.activate)
             print(f"Wiki 已切换到快照 {args.activate}：{len(manifest['topics'])} 个话题。")
         else:
-            manifest = publish_snapshot(args.source, args.output, retain=args.retain)
+            source, output = resolve_io_paths(args)
+            manifest = publish_snapshot(source, output, retain=args.retain)
             stats = manifest["stats"]
             print(
                 "Wiki 已原子发布："

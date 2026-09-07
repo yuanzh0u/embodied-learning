@@ -94,6 +94,7 @@ class LatexmlParser(HTMLParser):
         self.open_bibitem: str | None = None
         self.figures: list[dict[str, object]] = []
         self.tables: list[dict[str, object]] = []
+        self.formulas: list[dict[str, object]] = []
         # Figure/table capture state (captions and cell text must not leak
         # into section text, so they are routed into their own accumulators).
         self._capture: list[str] = []  # stack: "figure" | "table"
@@ -143,6 +144,21 @@ class LatexmlParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs) -> None:  # type: ignore[no-untyped-def]
         tag = tag.lower()
+        if tag == "math":
+            alttext = self._attr(attrs, "alttext")
+            if alttext:
+                elem_id = self._attr(attrs, "id")
+                # LaTeXML ids like `S3.E1` / `S3.E1.m1` mark numbered display equations.
+                match = re.search(r"\.E(\d+)(?:\.|$)", elem_id or "")
+                self.formulas.append(
+                    {
+                        "id": elem_id,
+                        "latex": alttext,
+                        "display": self._attr(attrs, "display") == "block" or bool(match),
+                        "number": f"({match.group(1)})" if match else "",
+                        "section_index": self.stack[-1][0] if self.stack else None,
+                    }
+                )
         if tag in SKIP_TAGS:
             self.skip_depth += 1
             return
@@ -300,6 +316,23 @@ class LatexmlParser(HTMLParser):
             section["text"] = text
             section["char_count"] = len(text)
             section["para_count"] = len(section["para_offsets"])  # type: ignore[arg-type]
+
+    def references(self) -> list[dict[str, object]]:
+        """Bibliography entries in document order with arXiv IDs resolved."""
+        bib_arxiv = resolve_bib_arxiv_ids(self.bibitems)
+        references: list[dict[str, object]] = []
+        for key in self.bibitems:  # insertion order = document order
+            text = " ".join(self.bibitems[key].split())
+            if not text:
+                continue
+            references.append(
+                {
+                    "id": key,
+                    "text": text,
+                    "arxiv_id": bib_arxiv.get(key, ""),
+                }
+            )
+        return references
 
 
 def parse_args() -> argparse.Namespace:
@@ -572,7 +605,7 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
         "cache_file": str(target) if available else "",
     }
     if not available:
-        output.update({"structure": "unavailable", "text_chars": 0, "term_matches": [], "reference_hints": [], "figures": [], "tables": []})
+        output.update({"structure": "unavailable", "text_chars": 0, "term_matches": [], "reference_hints": [], "figures": [], "tables": [], "formulas": [], "references": []})
         return output
 
     structured = extract_structured(html)
@@ -590,6 +623,8 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
                 "reference_hints": flat_reference_hints(text) if text else [],
                 "figures": [],
                 "tables": [],
+                "formulas": [],
+                "references": [],
             }
         )
         if args.include_text:
@@ -626,6 +661,8 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
             "reference_hints": reference_hints_from_bib(structured.bibitems),
             "figures": structured.figures,
             "tables": structured.tables,
+            "formulas": structured.formulas,
+            "references": structured.references(),
         }
     )
     if args.include_text:

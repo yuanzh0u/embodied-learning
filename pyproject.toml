@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "embodied-ai-literature-hub"
+version = "0.1.0"
+description = "Unified arXiv extraction entrance and local research-wiki server for the embodied-learning knowledge base"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+] # HTML path is stdlib-only; PDF fallback needs the optional extra below
+
+[project.optional-dependencies]
+pdf = ["pypdf"] # only needed for --force-pdf / PDF fallback extraction
+
+[project.scripts]
+extract_arxiv = "extract_arxiv_content:main"
+serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
+
+[tool.setuptools]
+# Two module roots in one distribution: the hub's flat extractor modules, and
+# the top-level wiki scripts as the `wiki_scripts` package (repo scripts/,
+# including the shared `lib/` helpers). Only code ships — the wiki frontend and
+# data live in the repo's wiki/ folder or next to the knowledge base
+# (<kb-root>/wiki), which serve_research_wiki serves in place.
+package-dir = { "" = "skills/embodied-ai-literature-hub/scripts", "wiki_scripts" = "scripts" }
+packages = ["wiki_scripts", "wiki_scripts.lib"]
+py-modules = [
+    "extract_arxiv_content",
+    "extract_arxiv_html",
+    "extract_arxiv_pdf",
+]

@@ -13,6 +13,10 @@ order — read it before loading knowledge files.
 
 The interpreter is `python3` (`python` is not on PATH). Scripts are **stdlib-only Python 3** — there
 is no build, lint, install, or dependency step. Run any script with `--help` to see its contract.
+Optionally, `pip install .` (editable `-e .` also works) registers the `extract_arxiv` console command
+(human-readable `--format markdown` included) and `serve_research_wiki`, which serves the local
+research Wiki and defaults to the local knowledge base at `~/Documents/arxiv` (override with
+`--kb-root`; falls back to the repo catalog). Install is not required for any pipeline step.
 
 Tests are stdlib `unittest` (network is mocked with `unittest.mock`; no live arXiv calls):
 

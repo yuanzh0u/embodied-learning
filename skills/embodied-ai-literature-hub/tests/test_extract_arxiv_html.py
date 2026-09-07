@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import unittest
 from pathlib import Path
@@ -167,7 +168,24 @@ FIG_TABLE_FIXTURE = """
 </table></span></div>
 <figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1</span>: <span>Comparison between Ego-Exo4D and relevant datasets.</span></figcaption>
 </figure>
-<div id="S3.p1" class="ltx_para"><p class="ltx_p">The Aria rig is worn by participants.</p></div>
+<div id="S3.p1" class="ltx_para"><p class="ltx_p">The Aria rig is worn by participants.
+Inline math <math id="S3.EQ1.m1" alttext="x+y" class="ltx_Math" display="inline"><semantics><mi>x</mi></semantics></math> appears here.
+</p></div>
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+<tbody><tr class="ltx_equation ltx_eqn_row">
+<td class="ltx_eqn_cell"><math id="S3.E2.m1" alttext="E=mc^{2}" display="block" class="ltx_Math"><semantics><annotation encoding="application/x-tex">E=mc^{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno"><span class="ltx_tag ltx_tag_equation">(2)</span></td>
+</tr></tbody>
+</table>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bibX">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">Scan matching survey. arXiv:2305.00099, 2023.</span>
+</li>
+</ul>
 </section>
 </body></html>
 """
@@ -203,6 +221,45 @@ class FigureTableTest(unittest.TestCase):
     def test_nested_caption_tags_flattened(self) -> None:
         figure = self.parser.figures[0]
         self.assertNotIn("<span>", figure["caption"])
+
+
+class FormulaReferenceTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.parser = parse_fixture(FIG_TABLE_FIXTURE)
+
+    def test_display_equation_captured_with_number(self) -> None:
+        display = [f for f in self.parser.formulas if f["id"] == "S3.E2.m1"]
+        self.assertEqual(1, len(display))
+        self.assertEqual("E=mc^{2}", display[0]["latex"])
+        self.assertTrue(display[0]["display"])
+        self.assertEqual("(2)", display[0]["number"])
+
+    def test_inline_math_captured_without_number(self) -> None:
+        inline = [f for f in self.parser.formulas if f["id"] == "S3.EQ1.m1"]
+        self.assertEqual(1, len(inline))
+        self.assertEqual("x+y", inline[0]["latex"])
+        self.assertFalse(inline[0]["display"])
+        self.assertEqual("", inline[0]["number"])
+
+    def test_math_text_does_not_leak_into_section(self) -> None:
+        section = next(s for s in self.parser.sections if s["title"] == "3 Ego-Exo4D dataset")
+        self.assertNotIn("semantics", section["text"])
+
+    def test_references_in_document_order_with_arxiv_id(self) -> None:
+        references = self.parser.references()
+        self.assertEqual(1, len(references))
+        self.assertEqual("bib.bibX", references[0]["id"])
+        self.assertEqual("2305.00099", references[0]["arxiv_id"])
+        self.assertIn("Scan matching survey", references[0]["text"])
+
+    def test_build_output_includes_formulas_and_references(self) -> None:
+        args = argparse.Namespace(
+            paper_id="2403.12550", terms="", max_chars=0, include_text=False,
+            top_sections=3, include_section_text=False,
+        )
+        output = extract_arxiv_html.build_output(args, "https://arxiv.org/html/2403.12550", Path("cached.html"), True, FIG_TABLE_FIXTURE)
+        self.assertEqual(2, len(output["formulas"]))
+        self.assertEqual(1, len(output["references"]))
 
 
 if __name__ == "__main__":

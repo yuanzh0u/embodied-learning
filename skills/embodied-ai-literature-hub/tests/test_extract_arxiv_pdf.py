@@ -116,7 +116,7 @@ class ContentFallbackTest(unittest.TestCase):
         self.assertIn("pages", result)
         args.include_full_text = False
         with mock.patch.object(content.extract_arxiv_pdf, "extract_pdf_document", return_value=dict(extracted)):
-            result = content.try_pdf(args, ["robot"])
+            result = content.try_pdf(args, ["robot"], want_full_text=False)
         self.assertNotIn("pages", result)
 
 
