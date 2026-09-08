@@ -27,8 +27,24 @@
     dataBase: "data",
     snapshotId: "legacy",
     pointerResolved: false,
+    chat: {
+      open: false,
+      serverEnabled: false,
+      sessionId: null,
+      streaming: false,
+      controller: null,
+      messages: [],
+    },
   };
   const mobileNavigationQuery = window.matchMedia("(max-width: 900px)");
+  // Thrown when the snapshot pointer or manifest does not exist yet — the
+  // brand-new knowledge-base shape, distinct from a broken/partial deploy.
+  class MissingSnapshotError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "MissingSnapshotError";
+    }
+  }
 
   const el = (id) => document.getElementById(id);
   const nodes = {
@@ -67,6 +83,19 @@
     refreshButton: el("refresh-button"),
     refreshLabel: el("refresh-label"),
     toast: el("toast"),
+    chatPanel: el("chat-panel"),
+    chatToggle: el("chat-toggle"),
+    chatOpenButton: el("chat-open-button"),
+    chatClose: el("chat-close"),
+    chatReset: el("chat-reset"),
+    chatTitle: el("chat-title"),
+    chatSessionMeta: el("chat-session-meta"),
+    chatMessages: el("chat-messages"),
+    chatStatus: el("chat-status"),
+    chatForm: el("chat-form"),
+    chatInput: el("chat-input"),
+    chatSend: el("chat-send"),
+    chatStop: el("chat-stop"),
   };
 
   const escapeHtml = (value) => String(value)
@@ -133,7 +162,17 @@
 
   async function loadManifest(bust = false) {
     await resolveDataBase(bust);
-    const manifest = await fetchJson(dataPath("manifest.json"), bust);
+    let manifest;
+    try {
+      manifest = await fetchJson(dataPath("manifest.json"), bust);
+    } catch (error) {
+      // resolveDataBase already tolerates a missing pointer (legacy mode);
+      // a missing manifest on top of that is a brand-new empty knowledge base.
+      if (/\(404\)$/.test(error.message)) {
+        throw new MissingSnapshotError("完成第一次文献综述并刷新后，这里会出现话题列表。");
+      }
+      throw error;
+    }
     if (!Array.isArray(manifest.topics) || !manifest.topics.length) throw new Error("成果索引为空");
     state.manifest = manifest;
     nodes.topicCount.textContent = manifest.topics.length;
@@ -219,6 +258,11 @@
       state.version = topic.versions[requestedVersion] ? requestedVersion : "zhihu";
       state.drawerMode = null;
       state.expandedFields.add(topic.field);
+      resetChatView();
+      setChatTitle(topic.title);
+      if (state.chat.open) loadChatState();
+      nodes.chatInput.disabled = false;
+      nodes.chatInput.placeholder = "就本话题提问，或让 Claude 写综述草稿…";
       renderArticle();
       closeMobileSidebar();
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -290,6 +334,10 @@
     nodes.tocNav.innerHTML = "";
     nodes.progress.style.width = "0";
     state.drawerMode = "recent";
+    resetChatView();
+    setChatTitle("研究助手");
+    nodes.chatInput.disabled = true;
+    nodes.chatInput.placeholder = "先选择一个话题，再开始对话。";
     renderFieldTree();
     document.title = "空间智能研究 Wiki";
   }
@@ -299,6 +347,24 @@
     nodes.welcome.hidden = true;
     nodes.error.hidden = false;
     nodes.errorMessage.textContent = message;
+  }
+
+  // First-run knowledge base: nothing published yet (or no snapshot at all).
+  // Keep the shell usable and explain the next step instead of an error.
+  function showEmptyLibrary(detail) {
+    state.manifest = { topics: [], fields: [], generated_at: null };
+    nodes.topicCount.textContent = "0";
+    nodes.snapshotTime.textContent = "暂无成果快照";
+    nodes.error.hidden = true;
+    nodes.welcome.hidden = false;
+    nodes.article.hidden = true;
+    nodes.welcomeGrid.innerHTML = `
+      <div class="welcome-card is-empty">
+        <small>空知识库</small>
+        <strong>还没有可发布的完整成果</strong>
+        <span>${escapeHtml(detail)}</span>
+      </div>`;
+    renderFieldTree();
   }
 
   function route() {
@@ -362,7 +428,9 @@
   }
 
   function syncBodyScroll() {
-    const overlayOpen = (isMobileNavigation() && nodes.sidebar.classList.contains("is-open")) || nodes.evidenceDrawer.classList.contains("is-open");
+    const overlayOpen = (isMobileNavigation() && nodes.sidebar.classList.contains("is-open"))
+      || nodes.evidenceDrawer.classList.contains("is-open")
+      || (isMobileNavigation() && state.chat.open);
     document.body.style.overflow = overlayOpen ? "hidden" : "";
   }
 
@@ -506,6 +574,7 @@
     nodes.refreshButton.disabled = true;
     nodes.refreshButton.classList.add("is-spinning");
     const previous = state.manifest?.generated_at;
+    probeChatAvailability(); // the server may have restarted with chat on/off
     try {
       if (isLocalRefreshAvailable()) {
         setRefreshLabel("扫描成果中");
@@ -541,6 +610,329 @@
     nodes.refreshLabel.textContent = label;
     nodes.refreshButton.setAttribute("aria-label", label);
     nodes.refreshButton.dataset.tooltip = label;
+  }
+
+  // ---- 研究助手对话（本地 claude CLI）----
+
+  function chatAvailable() {
+    if (!isLocalRefreshAvailable()) return false; // GitHub Pages has no server API
+    return state.chat.serverEnabled === true;
+  }
+
+  // Ask the server whether chat is actually enabled (claude found, --no-chat
+  // unset). The hostname check above only short-circuits static hosting.
+  async function probeChatAvailability() {
+    state.chat.serverEnabled = false;
+    syncChatAvailability();
+    if (!isLocalRefreshAvailable()) return;
+    try {
+      const response = await fetch("api/chat/state", { cache: "no-store" });
+      const payload = await response.json();
+      state.chat.serverEnabled = Boolean(response.ok && payload.enabled);
+    } catch {
+      state.chat.serverEnabled = false;
+    }
+    syncChatAvailability();
+  }
+
+  function syncChatAvailability() {
+    const available = chatAvailable();
+    nodes.chatToggle.hidden = !available;
+    nodes.chatOpenButton.hidden = !available;
+  }
+
+  function setChatOpen(open) {
+    if (open && !chatAvailable()) return;
+    state.chat.open = open;
+    nodes.chatPanel.classList.toggle("is-open", open);
+    nodes.chatPanel.setAttribute("aria-hidden", String(!open));
+    nodes.chatToggle.setAttribute("aria-expanded", String(open));
+    if (open) {
+      if (state.topic) {
+        setChatTitle(state.topic.title);
+        loadChatState();
+      }
+      setTimeout(() => nodes.chatInput.focus(), 220);
+    }
+    syncBodyScroll();
+  }
+
+  function setChatTitle(title) {
+    nodes.chatTitle.textContent = title || "研究助手";
+  }
+
+  function setChatSessionMeta(text) {
+    nodes.chatSessionMeta.textContent = text || "";
+  }
+
+  function setChatStatus(text) {
+    if (!text) {
+      nodes.chatStatus.hidden = true;
+      nodes.chatStatus.textContent = "";
+      return;
+    }
+    nodes.chatStatus.textContent = text;
+    nodes.chatStatus.hidden = false;
+  }
+
+  function setChatStreaming(streaming) {
+    state.chat.streaming = streaming;
+    nodes.chatSend.disabled = streaming;
+    nodes.chatStop.hidden = !streaming;
+  }
+
+  function chatNearBottom() {
+    const box = nodes.chatMessages;
+    return box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  }
+
+  // Autoscroll reads layout; coalesce to one scroll per frame while deltas
+  // stream in instead of forcing a reflow per SSE event.
+  let chatScrollPending = false;
+  function chatScrollToBottom(force = false) {
+    if (!force && !chatNearBottom()) return;
+    if (chatScrollPending) return;
+    chatScrollPending = true;
+    requestAnimationFrame(() => {
+      chatScrollPending = false;
+      nodes.chatMessages.scrollTop = nodes.chatMessages.scrollHeight;
+    });
+  }
+
+  function appendChatMessage(role, text) {
+    const item = document.createElement("div");
+    item.className = `chat-msg chat-msg-${role}`;
+    const body = document.createElement("div");
+    body.className = role === "assistant" ? "chat-msg-text markdown-body" : "chat-msg-text";
+    body.textContent = text;
+    item.appendChild(body);
+    nodes.chatMessages.appendChild(item);
+    chatScrollToBottom(true);
+    return item;
+  }
+
+  function appendChatSystemNote(text) {
+    const note = document.createElement("p");
+    note.className = "chat-system-note";
+    note.textContent = text;
+    nodes.chatMessages.appendChild(note);
+    chatScrollToBottom(true);
+  }
+
+  function appendChatError(text) {
+    const note = document.createElement("p");
+    note.className = "chat-msg-error";
+    note.textContent = text;
+    nodes.chatMessages.appendChild(note);
+    chatScrollToBottom(true);
+  }
+
+  function setChatSession(sessionId) {
+    state.chat.sessionId = sessionId || null;
+    setChatSessionMeta(
+      sessionId ? `会话 ${String(sessionId).slice(0, 8)} · 可继续追问` : "新话题 · 还没有对话记录"
+    );
+  }
+
+  function renderChatMessages() {
+    nodes.chatMessages.innerHTML = "";
+    for (const message of state.chat.messages) {
+      const item = appendChatMessage(message.role, "");
+      const body = item.querySelector(".chat-msg-text");
+      if (message.role === "assistant") body.innerHTML = renderChatMarkdown(message.text);
+      else body.textContent = message.text;
+    }
+    chatScrollToBottom(true);
+  }
+
+  function resetChatView() {
+    state.chat.sessionId = null;
+    state.chat.messages = [];
+    nodes.chatMessages.innerHTML = "";
+    setChatSessionMeta("");
+    setChatStatus(null);
+  }
+
+  async function loadChatState() {
+    if (!state.topic) return;
+    const topicId = state.topic.id;
+    try {
+      const response = await fetch(`api/chat/state?topic=${encodeURIComponent(topicId)}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || `读取失败（${response.status}）`);
+      if (state.topic?.id !== topicId) return; // topic switched mid-flight
+      state.chat.messages = Array.isArray(payload.messages) ? payload.messages : [];
+      renderChatMessages();
+      setChatSession(payload.session_id);
+    } catch (error) {
+      setChatSessionMeta(`对话状态读取失败：${error.message}`);
+    }
+  }
+
+  // Minimal markdown for finished assistant replies: fenced code, inline code,
+  // bold, links, headings, lists, paragraphs. Input is escaped first, so no
+  // raw HTML ever reaches innerHTML.
+  function renderChatMarkdown(text) {
+    const escaped = escapeHtml(text);
+    const fences = [];
+    const withFences = escaped.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_match, lang, code) => {
+      fences.push(`<pre><code${lang ? ` data-lang="${lang}"` : ""}>${code.replace(/\n$/, "")}</code></pre>`);
+      return ` FENCE${fences.length - 1} `;
+    });
+    const inline = withFences
+      .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    const blocks = inline.split(/\n{2,}/).map((block) => {
+      const fenceMatch = block.match(/^ FENCE(\d+) $/);
+      if (fenceMatch) return fences[Number(fenceMatch[1])];
+      const lines = block.split("\n");
+      if (lines.every((line) => /^\s*([-*]|\d+\.)\s+/.test(line))) {
+        const items = lines.map((line) => `<li>${line.replace(/^\s*([-*]|\d+\.)\s+/, "")}</li>`).join("");
+        return /^\s*\d+\./.test(lines[0]) ? `<ol>${items}</ol>` : `<ul>${items}</ul>`;
+      }
+      const heading = block.match(/^(#{1,4})\s+(.*)$/);
+      if (heading) {
+        const level = Math.min(heading[1].length + 1, 6);
+        return `<h${level}>${heading[2]}</h${level}>`;
+      }
+      return `<p>${block.replace(/\n/g, "<br>")}</p>`;
+    });
+    return blocks.join("");
+  }
+
+  function renderFinalAssistant(item, text) {
+    const body = item.querySelector(".chat-msg-text");
+    body.innerHTML = text ? renderChatMarkdown(text) : "";
+  }
+
+  function handleChatEvent(evt, body, acc) {
+    if (evt.type === "session") {
+      setChatSession(evt.session_id);
+      return;
+    }
+    if (evt.type === "status") {
+      if (evt.stage === "tool") {
+        const detail = evt.detail ? `：${evt.detail}` : "";
+        setChatStatus(`正在调用 ${evt.tool}${detail}…`);
+      } else {
+        setChatStatus("正在思考…");
+      }
+      return;
+    }
+    if (evt.type === "delta") {
+      acc.push(evt.text || "");
+      // Append the delta as its own text node: O(delta) per event, no
+      // re-copy of the accumulated reply. Final markdown render swaps
+      // innerHTML once the stream ends.
+      body.appendChild(document.createTextNode(evt.text || ""));
+      chatScrollToBottom();
+      return;
+    }
+    if (evt.type === "session_reset") {
+      setChatSession(null);
+      appendChatSystemNote("原会话已失效，已开启新对话。");
+      return;
+    }
+    if (evt.type === "done") {
+      if (evt.session_id) setChatSession(evt.session_id);
+      setChatStatus(null);
+      return;
+    }
+    if (evt.type === "error") {
+      setChatStatus(null);
+      appendChatError(evt.message || "对话失败。");
+    }
+  }
+
+  async function streamChat(message) {
+    if (!state.topic) {
+      showToast("先选择一个话题，再开始对话。");
+      return;
+    }
+    if (state.chat.streaming) return;
+    appendChatMessage("user", message);
+    const msgEl = appendChatMessage("assistant", "");
+    const body = msgEl.querySelector(".chat-msg-text");
+    const acc = [];
+    const controller = new AbortController();
+    state.chat.controller = controller;
+    setChatStreaming(true);
+    try {
+      const response = await fetch("api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic_id: state.topic.id, message }),
+        signal: controller.signal,
+      });
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || `对话失败（${response.status}）`);
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let index;
+        while ((index = buffer.indexOf("\n\n")) !== -1) {
+          const frame = buffer.slice(0, index);
+          buffer = buffer.slice(index + 2);
+          for (const line of frame.split("\n")) {
+            if (!line.startsWith("data:")) continue;
+            try {
+              handleChatEvent(JSON.parse(line.slice(5).trim()), body, acc);
+            } catch {
+              // malformed frame — skip
+            }
+          }
+        }
+      }
+      renderFinalAssistant(msgEl, acc.join(""));
+      state.chat.messages.push({ role: "assistant", text: acc.join("") });
+    } catch (error) {
+      renderFinalAssistant(msgEl, acc.join(""));
+      if (acc.length) state.chat.messages.push({ role: "assistant", text: acc.join("") });
+      if (error.name !== "AbortError") {
+        appendChatError(`对话失败：${error.message}`);
+      }
+    } finally {
+      state.chat.controller = null;
+      setChatStreaming(false);
+      setChatStatus(null);
+    }
+  }
+
+  function abortChat() {
+    if (state.chat.controller) state.chat.controller.abort();
+    fetch("api/chat/stop", { method: "POST" }).catch(() => {});
+  }
+
+  async function resetChatSession() {
+    if (!state.topic) return;
+    if (state.chat.messages.length && !window.confirm("开启新对话？当前话题的对话记录将被清空。")) return;
+    if (state.chat.streaming) abortChat();
+    try {
+      await fetch("api/chat/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic_id: state.topic.id }),
+      });
+    } catch {
+      // reset is best-effort; the view clears regardless
+    }
+    resetChatView();
+    setChatTitle(state.topic.title);
+    await loadChatState();
+  }
+
+  function submitChatMessage() {
+    const value = nodes.chatInput.value.trim();
+    if (!value || state.chat.streaming) return;
+    nodes.chatInput.value = "";
+    streamChat(value);
   }
 
   function showToast(message) {
@@ -622,6 +1014,21 @@
     nodes.refreshButton.addEventListener("click", refreshWiki);
     el("retry-button").addEventListener("click", () => init(true));
     el("next-topic").addEventListener("click", goNext);
+    nodes.chatToggle.addEventListener("click", () => setChatOpen(!state.chat.open));
+    nodes.chatOpenButton.addEventListener("click", () => setChatOpen(true));
+    nodes.chatClose.addEventListener("click", () => setChatOpen(false));
+    nodes.chatReset.addEventListener("click", resetChatSession);
+    nodes.chatStop.addEventListener("click", abortChat);
+    nodes.chatForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitChatMessage();
+    });
+    nodes.chatInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        submitChatMessage();
+      }
+    });
     document.addEventListener("keydown", (event) => {
       const tag = document.activeElement?.tagName;
       if (event.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") {
@@ -629,6 +1036,7 @@
         openSearch();
       }
       if (event.key === "Escape") {
+        if (state.chat.open && nodes.chatPanel.contains(document.activeElement)) setChatOpen(false);
         closeEvidence();
         closeSidebar();
       }
@@ -636,11 +1044,18 @@
   }
 
   async function init(bust = false) {
+    probeChatAvailability();
     try {
       await loadManifest(bust);
       setRefreshLabel(isLocalRefreshAvailable() ? "刷新成果" : "检查更新");
       route();
     } catch (error) {
+      // A missing manifest (404) is the first-run empty-KB shape, not a
+      // failure: show the empty-library state with next-step guidance.
+      if (error instanceof MissingSnapshotError) {
+        showEmptyLibrary(error.message);
+        return;
+      }
       showError(`成果索引读取失败：${error.message}`);
     }
   }

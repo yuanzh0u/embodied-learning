@@ -6,10 +6,13 @@ on:
       - 'wiki/**'
       - 'scripts/build_research_wiki.py'
       - 'scripts/serve_research_wiki.py'
+      - 'scripts/wiki_chat.py'
       - 'scripts/lib/**'
       - 'tests/test_build_research_wiki.py'
       - 'tests/test_markdown_semantics.py'
       - 'tests/test_review_runs.py'
+      - 'tests/test_serve_research_wiki.py'
+      - 'tests/test_wiki_chat.py'
       - '.github/workflows/deploy-research-wiki.yml'
       - '.github/workflows/validate-research-wiki.yml'
 
@@ -26,6 +29,6 @@ jobs:
         # build runs validate_snapshot internally, so it is itself the check.
         run: python3 scripts/build_research_wiki.py --output /tmp/wiki-check
       - name: Check Python syntax
-        run: python3 -m py_compile scripts/build_research_wiki.py scripts/serve_research_wiki.py scripts/lib/markdown_semantics.py scripts/lib/review_runs.py
+        run: python3 -m py_compile scripts/build_research_wiki.py scripts/serve_research_wiki.py scripts/wiki_chat.py scripts/lib/markdown_semantics.py scripts/lib/review_runs.py
       - name: Run Wiki architecture tests
-        run: python3 -m unittest tests.test_build_research_wiki tests.test_markdown_semantics tests.test_review_runs tests.test_visualize_kb_index
+        run: python3 -m unittest tests.test_build_research_wiki tests.test_markdown_semantics tests.test_review_runs tests.test_serve_research_wiki tests.test_visualize_kb_index tests.test_wiki_chat

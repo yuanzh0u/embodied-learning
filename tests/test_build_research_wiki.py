@@ -251,6 +251,40 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn('data/current.json', script)
         self.assertIn('state.dataBase', script)
 
+    def test_wiki_chat_panel_contract(self) -> None:
+        wiki_root = Path(__file__).resolve().parents[1] / "wiki"
+        index = (wiki_root / "index.html").read_text(encoding="utf-8")
+        script = (wiki_root / "assets" / "wiki.js").read_text(encoding="utf-8")
+        styles = (wiki_root / "assets" / "wiki.css").read_text(encoding="utf-8")
+
+        # Triggers: a topbar toggle and an article-level open button.
+        topbar = index.split('<header class="topbar">', 1)[1].split("</header>", 1)[0]
+        self.assertIn('id="chat-toggle"', topbar)
+        self.assertIn('id="chat-open-button"', index)
+        self.assertIn('id="chat-panel"', index)
+        self.assertIn('id="chat-messages"', index)
+        self.assertIn('id="chat-input"', index)
+        self.assertIn('id="chat-stop"', index)
+        # JS: localhost-guarded availability, SSE stream reader, topic binding.
+        self.assertIn("function streamChat(", script)
+        self.assertIn("api/chat", script)
+        self.assertIn("data:", script)
+        self.assertIn("function syncChatAvailability()", script)
+        self.assertIn("chatAvailable()", script)
+        self.assertIn("getReader()", script)
+        self.assertIn("function renderChatMarkdown(", script)
+        # GitHub Pages has no local claude: the triggers must be hidden behind
+        # the loopback-hostname guard, and no chat fetch may run there.
+        self.assertIn('["localhost", "127.0.0.1", "::1"].includes(location.hostname)', script)
+        self.assertIn("nodes.chatToggle.hidden = !available;", script)
+        self.assertIn("nodes.chatOpenButton.hidden = !available;", script)
+        # CSS: overlay panel above the evidence drawer, width token, mobile.
+        self.assertIn("--chat-width: 420px", styles)
+        self.assertIn(".chat-panel {", styles)
+        self.assertIn(".chat-panel.is-open", styles)
+        self.assertIn(".chat-msg-user", styles)
+        self.assertIn(".chat-msg-assistant", styles)
+
 
 if __name__ == "__main__":
     unittest.main()

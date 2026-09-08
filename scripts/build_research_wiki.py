@@ -18,7 +18,6 @@ import shutil
 import sys
 import tempfile
 import unicodedata
-import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -31,6 +30,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from lib.jsonio import atomic_write_json  # noqa: E402
 from lib.markdown_semantics import (  # noqa: E402
     first_heading,
     markdown_to_plain,
@@ -520,19 +520,6 @@ def validate_published_snapshot(output: Path) -> dict[str, object]:
     return validate_snapshot(resolve_snapshot_directory(output))
 
 
-def _atomic_write_json(path: Path, value: object) -> None:
-    temporary = path.with_name(f".{path.name}.tmp-{uuid.uuid4().hex}")
-    payload = json.dumps(value, ensure_ascii=False, indent=2) + "\n"
-    try:
-        with temporary.open("w", encoding="utf-8") as handle:
-            handle.write(payload)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
 def activate_snapshot(output: Path, snapshot_id: str) -> dict[str, object]:
     """Validate and atomically switch the public pointer to one snapshot."""
 
@@ -548,7 +535,7 @@ def activate_snapshot(output: Path, snapshot_id: str) -> dict[str, object]:
         "generated_at": manifest.get("generated_at"),
         "topic_count": len(manifest["topics"]),
     }
-    _atomic_write_json(output / "current.json", pointer)
+    atomic_write_json(output / "current.json", pointer)
     return manifest
 
 
@@ -669,7 +656,14 @@ def main() -> int:
                 f"跳过 {stats['skipped_incomplete']} 个不完整目录。"
             )
         return 0
-    except (FileNotFoundError, RuntimeError, ValueError, json.JSONDecodeError, OSError) as exc:
+    except (RuntimeError, ValueError) as exc:
+        print(f"构建失败：{exc}", file=sys.stderr)
+        # Exit code 3 = "nothing publishable yet" (empty/first-run corpus), so
+        # callers (serve_research_wiki) can distinguish it from real failures.
+        if "没有发现同时包含三种成稿" in str(exc) or "no run manifests routed" in str(exc):
+            return 3
+        return 1
+    except (FileNotFoundError, json.JSONDecodeError, OSError) as exc:
         print(f"构建失败：{exc}", file=sys.stderr)
         return 1
 

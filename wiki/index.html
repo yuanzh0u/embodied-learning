@@ -43,6 +43,9 @@
           <span class="refresh-icon" aria-hidden="true">↻</span>
           <span class="sr-only" id="refresh-label">检查更新</span>
         </button>
+        <button class="topbar-icon-button" id="chat-toggle" type="button" aria-label="研究助手对话" aria-expanded="false" aria-controls="chat-panel" data-tooltip="研究助手对话">
+          <span aria-hidden="true">✦</span>
+        </button>
       </div>
     </header>
 
@@ -83,6 +86,9 @@
               </div>
               <button class="evidence-button" id="evidence-button" type="button">
                 <span aria-hidden="true">▤</span> 查看证据
+              </button>
+              <button class="evidence-button chat-open-button" id="chat-open-button" type="button">
+                <span aria-hidden="true">✦</span> 与 Claude 讨论
               </button>
             </div>
           </header>
@@ -136,6 +142,30 @@
       </header>
       <div class="evidence-source" id="evidence-source"></div>
       <div class="markdown-body evidence-body" id="evidence-body"></div>
+    </aside>
+
+    <aside class="chat-panel" id="chat-panel" aria-label="研究助手对话" aria-hidden="true">
+      <header class="chat-panel-header">
+        <div>
+          <p class="eyebrow">Chat</p>
+          <h2 id="chat-title">研究助手</h2>
+        </div>
+        <div class="chat-header-actions">
+          <button class="icon-button" id="chat-reset" type="button" aria-label="开启新对话" data-tooltip="新对话">⟳</button>
+          <button class="icon-button" id="chat-close" type="button" aria-label="关闭对话面板">×</button>
+        </div>
+      </header>
+      <p class="chat-session-meta" id="chat-session-meta"></p>
+      <div class="chat-messages" id="chat-messages"></div>
+      <p class="chat-status" id="chat-status" hidden></p>
+      <form class="chat-composer" id="chat-form">
+        <textarea id="chat-input" rows="2" placeholder="就本话题提问，或让 Claude 写综述草稿…" autocomplete="off"></textarea>
+        <div class="chat-composer-actions">
+          <span class="chat-hint">Enter 发送 · Shift+Enter 换行</span>
+          <button class="chat-stop" id="chat-stop" type="button" hidden>停止</button>
+          <button class="chat-send" id="chat-send" type="submit">发送</button>
+        </div>
+      </form>
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
