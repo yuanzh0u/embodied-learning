@@ -13,6 +13,9 @@ dependencies = [
 
 [project.optional-dependencies]
 pdf = ["pypdf"] # only needed for --force-pdf / PDF fallback extraction
+s3 = ["boto3"] # anonymous S3 download of arXiv TeX source tarballs (download_arxiv_source.py)
+tex = ["pypandoc"] # TeX -> Markdown parsing (extract_arxiv_tex.py); pandoc binary required separately
+sources = ["boto3", "pypandoc"] # convenience: full TeX-source recovery chain
 
 [project.scripts]
 extract_arxiv = "extract_arxiv_content:main"
@@ -38,4 +41,6 @@ py-modules = [
     "extract_arxiv_content",
     "extract_arxiv_html",
     "extract_arxiv_pdf",
+    "extract_arxiv_tex",
+    "download_arxiv_source",
 ]

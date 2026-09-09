@@ -68,10 +68,12 @@ def complete_text(extraction: dict[str, Any]) -> tuple[str, str]:
         raise ValueError(f"extraction quality must be high or medium, got {quality or 'missing'}")
 
     source_format = str(extraction.get("source_format") or ("pdf" if method == "pdf-text" else "html"))
-    if source_format == "html":
+    if source_format in {"html", "tex"}:
+        # TeX-source extraction carries the same single complete-text blob;
+        # pandoc markdown is authoritative text, so it satisfies the html gate.
         text = extraction.get("text")
         if not isinstance(text, str) or len(re.sub(r"\s+", "", text)) < 500:
-            raise ValueError("HTML extraction lacks complete `text`; selected passages are insufficient")
+            raise ValueError(f"{source_format.upper()} extraction lacks complete `text`; selected passages are insufficient")
         return source_format, text
     if source_format == "pdf":
         pages = extraction.get("pages")
@@ -107,7 +109,7 @@ def normalize_metadata(metadata: dict[str, Any], extraction: dict[str, Any]) -> 
 
 
 def render_structure(extraction: dict[str, Any], source_format: str) -> list[str]:
-    if source_format == "html" and isinstance(extraction.get("sections"), list):
+    if source_format in {"html", "tex"} and isinstance(extraction.get("sections"), list):
         lines = []
         for section in extraction["sections"]:
             if isinstance(section, dict):

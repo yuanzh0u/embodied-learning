@@ -132,6 +132,22 @@ class WriteLitOutputsTest(unittest.TestCase):
             events = write_lit_outputs.load_events(path)
         self.assertEqual("pdf-ocr", events[0]["evidence"]["extraction"]["method"])
 
+    def test_accepts_tex_pandoc_extraction_provenance(self) -> None:
+        event = event_with_authors(
+            [{"name": "TeX Author", "author_key": "tex-author", "role": "paper-author"}]
+        )
+        event["evidence"]["extraction"] = {  # type: ignore[index]
+            "source_format": "tex",
+            "method": "tex-pandoc",
+            "quality": "high",
+            "visual_validation": "not-required",
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "evidence.jsonl"
+            path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            events = write_lit_outputs.load_events(path)
+        self.assertEqual("tex-pandoc", events[0]["evidence"]["extraction"]["method"])
+
 
 if __name__ == "__main__":
     unittest.main()

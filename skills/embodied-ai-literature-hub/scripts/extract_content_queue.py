@@ -45,6 +45,24 @@ def parse_args() -> argparse.Namespace:
         help="Checkpoint complete HTML text/PDF pages for $embodied-ai-paper-reader.",
     )
     parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--preferred-source",
+        choices=["html", "tex", "auto"],
+        default="html",
+        help="Forwarded to extract_arxiv_content.py; default keeps the legacy html->pdf chain.",
+    )
+    parser.add_argument(
+        "--tex-transport",
+        choices=["arxiv2md", "s3-tex"],
+        default="arxiv2md",
+        help="Markdown-tier transport, forwarded to extract_arxiv_content.py.",
+    )
+    parser.add_argument("--curl-timeout", type=float, default=120.0,
+                        help="[arxiv2md] curl max time in seconds, forwarded to the gateway.")
+    parser.add_argument(
+        "--tex-cache-dir",
+        help="[s3-tex] Cache directory for S3 TeX source tarballs, forwarded to extract_arxiv_content.py.",
+    )
     parser.add_argument("--summary-output")
     return parser.parse_args()
 
@@ -106,6 +124,11 @@ def extract_one(paper_id: str, args: argparse.Namespace, output_dir: Path) -> di
         command.extend(["--html-cache-dir", args.html_cache_dir])
     if args.pdf_cache_dir:
         command.extend(["--pdf-cache-dir", args.pdf_cache_dir])
+    if args.tex_cache_dir:
+        command.extend(["--tex-cache-dir", args.tex_cache_dir])
+    command.extend(["--preferred-source", args.preferred_source])
+    command.extend(["--tex-transport", args.tex_transport])
+    command.extend(["--curl-timeout", str(args.curl_timeout)])
     if args.include_full_text:
         command.append("--include-full-text")
     try:

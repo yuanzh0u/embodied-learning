@@ -25,6 +25,12 @@ ALLOWED_STATUSES = {
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--search-result", action="append", default=[], help="search_arxiv.py JSON; repeat by round.")
+    parser.add_argument(
+        "--semantic-scholar-result",
+        action="append",
+        default=[],
+        help="search_semantic_scholar.py JSON; repeat by round.",
+    )
     parser.add_argument("--browser-result", action="append", default=[], help="parse_browser_candidates.py JSON; repeatable.")
     parser.add_argument("--citation-result", action="append", default=[], help="expand_via_citations.py JSON; repeatable.")
     parser.add_argument("--screening-file", help="Optional JSON candidate/status updates.")
@@ -44,6 +50,7 @@ def load_json(path: Path) -> Any:
 def candidate_base(arxiv_id: str) -> dict[str, Any]:
     return {
         "arxiv_id": arxiv_id,
+        "doi": "",
         "title": "",
         "authors": [],
         "published": "",
@@ -51,6 +58,7 @@ def candidate_base(arxiv_id: str) -> dict[str, Any]:
         "pdf_url": f"https://arxiv.org/pdf/{arxiv_id}.pdf",
         "summary": "",
         "categories": [],
+        "citation_count": None,
         "status": "discovered",
         "exclusion_reason": "",
         "extraction": {},
@@ -59,7 +67,7 @@ def candidate_base(arxiv_id: str) -> dict[str, Any]:
 
 
 def merge_metadata(record: dict[str, Any], raw: dict[str, Any]) -> None:
-    for field in ("title", "published", "summary", "abs_url", "pdf_url"):
+    for field in ("title", "published", "summary", "abs_url", "pdf_url", "doi"):
         value = raw.get(field)
         if value and not record.get(field):
             record[field] = value
@@ -70,6 +78,9 @@ def merge_metadata(record: dict[str, Any], raw: dict[str, Any]) -> None:
             for value in values:
                 if value not in current:
                     current.append(value)
+    citation_count = raw.get("citation_count")
+    if isinstance(citation_count, (int, float)):
+        record["citation_count"] = max(int(citation_count), int(record.get("citation_count") or 0))
 
 
 def add_discovery(record: dict[str, Any], *, batch: str, channel: str, labels: list[str], source: str) -> None:
@@ -96,6 +107,33 @@ def load_api_results(paths: list[Path], registry: dict[str, dict[str, Any]]) -> 
             labels = [label for label in str(raw.get("query_label") or "").split(",") if label]
             add_discovery(record, batch=batch, channel="arxiv-api", labels=labels, source=str(path))
         batches.append({"batch": batch, "channel": "arxiv-api", "candidate_ids": sorted(set(ids)), "source": str(path)})
+    return batches
+
+
+def load_semantic_scholar_results(paths: list[Path], registry: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge search_semantic_scholar.py output: S2 metadata-search candidates.
+
+    Shares load_api_results()'s "papers" shape (plus doi/citation_count which
+    merge_metadata carries through) but tags the discovery channel truthfully
+    as "semantic-scholar".
+    """
+    batches: list[dict[str, Any]] = []
+    for index, path in enumerate(paths, start=1):
+        data = load_json(path)
+        batch = str(data.get("batch") or path.stem or f"s2-{index}")
+        ids: list[str] = []
+        for raw in data.get("papers", []):
+            if not isinstance(raw, dict):
+                continue
+            arxiv_id = normalize_id(raw.get("arxiv_id"))
+            if not arxiv_id:
+                continue
+            ids.append(arxiv_id)
+            record = registry.setdefault(arxiv_id, candidate_base(arxiv_id))
+            merge_metadata(record, raw)
+            labels = [label for label in str(raw.get("query_label") or "").split(",") if label]
+            add_discovery(record, batch=batch, channel="semantic-scholar", labels=labels, source=str(path))
+        batches.append({"batch": batch, "channel": "semantic-scholar", "candidate_ids": sorted(set(ids)), "source": str(path)})
     return batches
 
 
@@ -195,9 +233,11 @@ def build_registry(
     browser_results: list[Path],
     screening_file: Path | None = None,
     citation_results: list[Path] | None = None,
+    semantic_scholar_results: list[Path] | None = None,
 ) -> dict[str, Any]:
     registry: dict[str, dict[str, Any]] = {}
     batches = load_api_results(search_results, registry)
+    batches.extend(load_semantic_scholar_results(semantic_scholar_results or [], registry))
     batches.extend(load_browser_results(browser_results, registry))
     batches.extend(load_citation_results(citation_results or [], registry))
     apply_screening(registry, load_screening(screening_file))
@@ -218,13 +258,16 @@ def build_registry(
 
 def main() -> int:
     args = parse_args()
-    if not args.search_result and not args.browser_result and not args.citation_result:
-        raise SystemExit("provide at least one --search-result, --browser-result, or --citation-result")
+    if not args.search_result and not args.browser_result and not args.citation_result and not args.semantic_scholar_result:
+        raise SystemExit(
+            "provide at least one --search-result, --semantic-scholar-result, --browser-result, or --citation-result"
+        )
     result = build_registry(
         [Path(path) for path in args.search_result],
         [Path(path) for path in args.browser_result],
         Path(args.screening_file) if args.screening_file else None,
         [Path(path) for path in args.citation_result],
+        [Path(path) for path in args.semantic_scholar_result],
     )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

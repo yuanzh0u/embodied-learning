@@ -115,8 +115,8 @@ def validate_note(note: dict[str, Any]) -> tuple[list[str], list[str]]:
     method = str(extraction.get("method") or "")
     if method == "pdf-ocr" or extraction.get("ocr_pages"):
         errors.append("OCR-derived papers are outside this workflow")
-    if method not in {"html-latexml", "html-flat", "pdf-text"}:
-        errors.append("extraction.method must be html-latexml|html-flat|pdf-text")
+    if method not in {"html-latexml", "html-flat", "pdf-text", "tex-pandoc", "arxiv2md"}:
+        errors.append("extraction.method must be html-latexml|html-flat|pdf-text|tex-pandoc|arxiv2md")
     quality = str(extraction.get("quality") or "")
     if quality not in {"high", "medium"}:
         errors.append("extraction.quality must be high|medium")

@@ -50,15 +50,31 @@ Canonical literature-mining chain (see `embodied-ai-literature-hub/SKILL.md` for
 ```bash
 python3 skills/embodied-ai-query-planner/scripts/build_query_plan.py --topic "..." --family umi \
   --knowledge-id EA-DATA --output /tmp/plan.json --markdown-output /tmp/plan.md
+python3 skills/embodied-ai-literature-hub/scripts/search_semantic_scholar.py --query-file /tmp/plan.json \
+  --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/s2-candidates.json   # default metadata-search backend
 python3 skills/embodied-ai-literature-hub/scripts/search_arxiv.py --query-file /tmp/plan.json \
   --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/candidates.json
+python3 skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
+  --semantic-scholar-result /tmp/s2-candidates.json --search-result /tmp/candidates.json --output work/<run>/registry.json
 python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_html.py --paper-id 2402.10329 --terms UMI,data
+# Markdown tier (default arxiv2md transport: public REST API via curl, no credentials;
+# `--transport s3-tex` = S3 tarball + pandoc, TODO pending AWS credentials — requester-pays bucket)
+python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --paper-id 2402.10329 \
+  --terms UMI,data --preferred-source auto --include-full-text --output /tmp/extraction.json
 python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py --paper-id 2402.10329 \
   --topic "..." --topic-id EA-DATA --id-prefix EA-XXX-2026 --terms UMI,data \
   --output-skeleton /tmp/skeleton.jsonl --output-digest /tmp/digest.md   # candidate→evidence promotion
 python3 skills/embodied-ai-literature-review/scripts/build_review_packet.py --topic "..." \
   --knowledge-id EA-DATA --evidence-jsonl /tmp/evidence.jsonl
+# Local public paper pool (default ~/Documents/arxiv/pool, outside the repo): one folder per paper
+python3 skills/embodied-ai-literature-hub/scripts/pool_add_paper.py add --extraction /tmp/extraction.json
 ```
+
+The paper pool is a local store outside the repository (`~/Documents/arxiv/pool` by default) where
+each paper owns one folder keyed by unique ID (`arxiv-<id>/` with `paper.md`, `extraction.json`,
+`note.md`, `meta.json`). Topic cards may cite pool papers with a `POOL-<...>` frontmatter `source`
+entry carrying an absolute `file:` path and a semantic-anchor `locator`; `scripts/check_kb_links.py`
+validates the file exists without requiring `sources.md` registration.
 
 ## Architecture: the skill pipeline
 
@@ -124,7 +140,9 @@ Run `python3 scripts/check_kb_links.py` after editing knowledge files.
   `Google`); no departments/labs. Use `institutions: []` when the mapping is unreliable, and do not
   merge same-name authors without stronger evidence.
 - **Topic-card edits are suggestions** unless the user explicitly asks to edit the knowledge base.
-- **Do not store full papers or full extracted text in the repo** — cache HTML outside it.
+- **Do not store full papers or full extracted text in the repo** — cache HTML/tarballs outside it. The
+  one sanctioned full-text store is the **local public paper pool outside the repository**
+  (`~/Documents/arxiv/pool`, managed by `pool_add_paper.py`), which the repo references but never contains.
 - **Skill layout convention:** each skill is `SKILL.md` + `scripts/` + `references/` + `tests/` +
   `agents/openai.yaml`. A new script gets a matching stdlib-only `unittest` file in the skill's `tests/`
   that loads the script via `importlib.util.spec_from_file_location`.

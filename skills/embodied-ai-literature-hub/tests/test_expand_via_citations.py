@@ -58,6 +58,28 @@ def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPEr
 
 
 class FetchRetryTest(unittest.TestCase):
+    def test_fetch_cached_hit_skips_network_and_no_cache_bypasses(self) -> None:
+        url = mod.build_neighbor_url("2403.12550", "references", 50)
+        with tempfile.TemporaryDirectory() as tmp:
+            cached_args = args_with_retries(3)
+            cached_args.cache_dir = tmp
+            cached_args.no_cache = False
+            with mock.patch.object(mod.urllib.request, "urlopen", return_value=DummyResponse(b'{"data": []}')) as urlopen:
+                payload = mod.fetch_cached("2403.12550", "references", cached_args)
+            self.assertEqual(payload, b'{"data": []}')
+            self.assertEqual(urlopen.call_count, 1)
+            with mock.patch.object(mod.urllib.request, "urlopen") as urlopen_again:
+                payload_again = mod.fetch_cached("2403.12550", "references", cached_args)
+            self.assertEqual(payload_again, b'{"data": []}')
+            urlopen_again.assert_not_called()
+
+            bypass_args = args_with_retries(3)
+            bypass_args.cache_dir = tmp
+            bypass_args.no_cache = True
+            with mock.patch.object(mod.urllib.request, "urlopen", return_value=DummyResponse(b'{"data": []}')) as urlopen_third:
+                mod.fetch_cached("2403.12550", "references", bypass_args)
+            urlopen_third.assert_called_once()
+
     def test_fetch_retries_429_with_retry_after_and_caps_at_three_retries(self) -> None:
         error = http_error(429, retry_after="7")
         with mock.patch.object(mod.urllib.request, "urlopen", side_effect=[error, error, error, error]) as urlopen:

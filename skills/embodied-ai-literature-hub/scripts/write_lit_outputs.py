@@ -24,7 +24,7 @@ REQUIRED = {
 }
 STANCES = {"support", "limit", "conditional", "gap"}
 CONFIDENCE = {"direct", "citation-supported", "inference"}
-EXTRACTION_METHODS = {"html-latexml", "html-flat", "pdf-text", "pdf-ocr"}
+EXTRACTION_METHODS = {"html-latexml", "html-flat", "pdf-text", "pdf-ocr", "tex-pandoc", "arxiv2md"}
 EXTRACTION_QUALITY = {"high", "medium"}
 
 PRIMARY_INSTITUTION_RULES = (

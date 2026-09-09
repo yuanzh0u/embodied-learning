@@ -174,7 +174,8 @@ def check_topic_cards(root: Path) -> list[str]:
             sid = source.get("id", "")
             rel = card.relative_to(root)
             evidence_run = sid.startswith("RUN-") and bool(source.get("file"))
-            if sid and sid not in known_ids and not evidence_run:
+            pool_paper = sid.startswith("POOL-") and bool(source.get("file"))
+            if sid and sid not in known_ids and not evidence_run and not pool_paper:
                 problems.append(f"{rel}: source id `{sid}` not registered in sources.md")
             archive = source.get("archive", "")
             if source.get("status") == "retired":

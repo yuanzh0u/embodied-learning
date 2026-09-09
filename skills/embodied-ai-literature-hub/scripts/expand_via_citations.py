@@ -17,10 +17,12 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import re
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -33,6 +35,8 @@ MAX_RETRIES = 3
 TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
 DEFAULT_SEED_STATUSES = frozenset({"accepted", "full-text-queued", "extracted"})
 WRAPPER_KEY = {"references": "citedPaper", "citations": "citingPaper"}
+# Shared with search_semantic_scholar.py: same URL -> same cache entry.
+DEFAULT_S2_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "s2")
 
 _FUNCTION_STOPWORDS = frozenset(
     {
@@ -89,7 +93,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", help="Candidate-registry-compatible JSON. Defaults to stdout.")
     parser.add_argument("--graph-output", help="Citation edges + seed-similarity JSON.")
     parser.add_argument("--dynamic-output", help="query-planner --dynamic-file compatible JSON.")
-    parser.add_argument("--sleep-seconds", type=float, default=1.0, help="Delay between seeds.")
+    parser.add_argument("--sleep-seconds", type=float, default=0.1, help="Delay between seeds.")
     parser.add_argument("--timeout", type=float, default=20.0, help="Per-request timeout in seconds.")
     parser.add_argument("--retries", type=int, default=MAX_RETRIES, help="Retries per request after transient failures. Capped at 3.")
     parser.add_argument("--retry-base-seconds", type=float, default=5.0, help="Base wait before retrying transient failures.")
@@ -101,6 +105,12 @@ def parse_args() -> argparse.Namespace:
         help="HTTP User-Agent sent to Semantic Scholar.",
     )
     parser.add_argument("--api-key", default=None, help="Semantic Scholar API key. Falls back to the S2_API_KEY env var.")
+    parser.add_argument(
+        "--cache-dir",
+        default=DEFAULT_S2_CACHE_DIR,
+        help="Semantic Scholar response cache, shared with search_semantic_scholar.py.",
+    )
+    parser.add_argument("--no-cache", action="store_true", help="Bypass the response cache for reads and writes.")
     return parser.parse_args()
 
 
@@ -180,6 +190,24 @@ def fetch(seed_id: str, direction: str, args: argparse.Namespace) -> bytes:
     raise RuntimeError(
         f"Semantic Scholar request for {seed_id} ({direction}) failed after {attempts} attempt(s): {last_error}"
     ) from last_error
+
+
+def cache_file(cache_dir: str, url: str) -> Path:
+    return Path(cache_dir).expanduser() / f"{hashlib.sha1(url.encode('utf-8')).hexdigest()}.json"
+
+
+def fetch_cached(seed_id: str, direction: str, args: argparse.Namespace) -> bytes:
+    """fetch() behind the shared S2 response cache (URL-keyed, read and write)."""
+    enabled = not getattr(args, "no_cache", False)
+    url = build_neighbor_url(seed_id, direction, args.max_per_seed_per_direction)
+    path = cache_file(args.cache_dir, url)
+    if enabled and path.is_file() and path.stat().st_size > 0:
+        return path.read_bytes()
+    payload = fetch(seed_id, direction, args)
+    if enabled:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(payload)
+    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -583,7 +611,7 @@ def main() -> int:
     for index, seed_id in enumerate(seed_ids):
         for direction in directions:
             try:
-                payload = fetch(seed_id, direction, args)
+                payload = fetch_cached(seed_id, direction, args)
                 raw = json.loads(payload)
                 papers, excluded = extract_neighbor_papers(direction, raw)
             except Exception as exc:  # pragma: no cover - network dependent

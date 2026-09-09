@@ -216,6 +216,42 @@ class PaperReaderTest(unittest.TestCase):
         self.assertEqual(1, report["accepted_evidence_paper_count"])
         self.assertEqual(1, report["unavailable_count"])
 
+    def test_tex_source_extraction_builds_packet_and_passes_pipeline(self) -> None:
+        """TeX-source (tex-pandoc) extraction rides the html contract end to end."""
+        tex_extraction = extraction()
+        tex_extraction["source_format"] = "tex"
+        tex_extraction["extraction_method"] = "tex-pandoc"
+        source_format, text = build_packet.complete_text(tex_extraction)
+        self.assertEqual("tex", source_format)
+        self.assertIn("4 Experiments", text)
+
+        note = valid_note()
+        note["extraction"].update({"source_format": "tex", "method": "tex-pandoc", "visual_validation": "not-required"})
+        errors, warnings = validator.validate_note(note)
+        self.assertEqual([], errors)
+        self.assertEqual([], warnings)
+        audit = audit_support.audit(note, tex_extraction)
+        self.assertEqual("pass", audit["status"])
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual("tex-pandoc", events[0]["evidence"]["extraction"]["method"])
+
+    def test_arxiv2md_method_rides_the_same_contract(self) -> None:
+        """arxiv2md markdown is authoritative text like tex-pandoc."""
+        md_extraction = extraction()
+        md_extraction["source_format"] = "tex"
+        md_extraction["extraction_method"] = "arxiv2md"
+        source_format, text = build_packet.complete_text(md_extraction)
+        self.assertEqual("tex", source_format)
+
+        note = valid_note()
+        note["extraction"].update({"source_format": "tex", "method": "arxiv2md", "visual_validation": "not-required"})
+        errors, _ = validator.validate_note(note)
+        self.assertEqual([], errors)
+        audit = audit_support.audit(note, md_extraction)
+        self.assertEqual("pass", audit["status"])
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual("arxiv2md", events[0]["evidence"]["extraction"]["method"])
+
     def test_cli_end_to_end_projection_passes_hub_validator(self) -> None:
         note_path = self.tmp / "paper-note.json"
         extraction_path = self.tmp / "extraction.json"

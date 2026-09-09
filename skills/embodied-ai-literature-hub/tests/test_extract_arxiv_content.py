@@ -298,6 +298,61 @@ class BuildMarkdownTest(unittest.TestCase):
         self.assertIn("--include-full-text", rendered)
 
 
+class PreferredSourceChainTest(unittest.TestCase):
+    """--preferred-source controls the fallback tier order; default is legacy."""
+
+    def make_chain_args(self, preferred: str) -> argparse.Namespace:
+        # minimum_html_chars=1 makes the small fixture pass the medium gate so
+        # no test in this class ever reaches the real network tier.
+        return make_args(preferred_source=preferred, tex_cache_dir="/tmp/kb-test-src", minimum_html_chars=1)
+
+    def test_default_chain_is_html_then_pdf_without_tex(self) -> None:
+        pdf_result = {"available": False, "evidence_eligible": False, "quality": {"grade": "low"}, "extraction_method": "pdf-text"}
+        with mock.patch.object(content.extract_arxiv_html, "fetch_html", return_value=(False, "")), \
+             mock.patch.object(content, "try_pdf", return_value=pdf_result):
+            output = content.extract_content(self.make_chain_args("html"))
+        methods = [attempt["method"] for attempt in output["attempts"]]
+        self.assertEqual(["html-unavailable", "pdf-text"], methods)
+
+    def test_html_eligible_short_circuits_tex_tier_on_default(self) -> None:
+        with mock.patch.object(content.extract_arxiv_html, "fetch_html", return_value=(True, HTML_FIXTURE)), \
+             mock.patch.object(content, "try_tex") as try_tex:
+            output = content.extract_content(self.make_chain_args("html"))
+        self.assertTrue(output["evidence_eligible"])
+        try_tex.assert_not_called()
+
+    def test_tex_chain_tries_tex_first_and_falls_back(self) -> None:
+        tex_result = {"available": False, "evidence_eligible": False, "quality": {"grade": "low"},
+                      "extraction_method": "tex-pandoc"}
+        pdf_result = {"available": False, "evidence_eligible": False, "quality": {"grade": "low"}, "extraction_method": "pdf-text"}
+        with mock.patch.object(content, "try_tex", return_value=tex_result), \
+             mock.patch.object(content.extract_arxiv_html, "fetch_html", return_value=(False, "")), \
+             mock.patch.object(content, "try_pdf", return_value=pdf_result):
+            output = content.extract_content(self.make_chain_args("tex"))
+        methods = [attempt["method"] for attempt in output["attempts"]]
+        self.assertEqual(["tex-pandoc", "html-unavailable", "pdf-text"], methods)
+
+    def test_auto_chain_is_html_tex_pdf(self) -> None:
+        tex_result = {"available": True, "evidence_eligible": True, "quality": {"grade": "high"},
+                      "extraction_method": "tex-pandoc", "text": "full text"}
+        with mock.patch.object(content, "try_tex", return_value=tex_result), \
+             mock.patch.object(content.extract_arxiv_html, "fetch_html", return_value=(False, "")):
+            output = content.extract_content(self.make_chain_args("auto"))
+        self.assertTrue(output["evidence_eligible"])
+        self.assertEqual("tex-pandoc", output["extraction_method"])
+        methods = [attempt["method"] for attempt in output["attempts"]]
+        self.assertEqual(["html-unavailable", "tex-pandoc"], methods)
+
+    def test_tex_tier_missing_dependency_falls_through(self) -> None:
+        with mock.patch.object(content, "try_tex", side_effect=SystemExit("pandoc missing")), \
+             mock.patch.object(content.extract_arxiv_html, "fetch_html", return_value=(True, HTML_FIXTURE)):
+            output = content.extract_content(self.make_chain_args("tex"))
+        # HTML succeeds after the TeX tier's SystemExit; chain survives.
+        self.assertTrue(output["evidence_eligible"])
+        tex_attempt = next(attempt for attempt in output["attempts"] if attempt["method"] == "tex")
+        self.assertFalse(tex_attempt["available"])
+
+
 class MainPlumbingTest(unittest.TestCase):
     def run_main(self, argv: list[str], *, markdown_source: dict, isatty: bool) -> tuple[int, str]:
         buf = io.StringIO()

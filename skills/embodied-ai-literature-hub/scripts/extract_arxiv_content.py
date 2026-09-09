@@ -48,6 +48,21 @@ def load_sibling(name: str):
 
 extract_arxiv_html = load_sibling("extract_arxiv_html")
 extract_arxiv_pdf = load_sibling("extract_arxiv_pdf")
+# The TeX tier is loaded lazily inside try_tex(): it only needs boto3/pypandoc
+# when actually exercised, and the default html-first chain must not pay for it.
+extract_arxiv_tex: Any = None
+
+
+def _load_tex_tier():
+    global extract_arxiv_tex
+    if extract_arxiv_tex is None:
+        extract_arxiv_tex = load_sibling("extract_arxiv_tex")
+    return extract_arxiv_tex
+
+
+def extract_arxiv_tex_default_cache_dir() -> str:
+    """TeX tarball cache default without importing the (optionally-depended) tier."""
+    return "/tmp/embodied-ai-literature-hub/src"
 
 
 VOID_ELEMENTS = {
@@ -165,6 +180,34 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         default=extract_arxiv_html.DEFAULT_CACHE_DIR)
     parser.add_argument("--pdf-cache-dir",
                         default=extract_arxiv_pdf.DEFAULT_CACHE_DIR)
+    parser.add_argument(
+        "--preferred-source",
+        choices=["html", "tex", "auto"],
+        default="html",
+        help=("Full-text tier order. html (default) = html -> pdf, the legacy "
+              "chain. tex = markdown tier first (arxiv2md API by default, see "
+              "--tex-transport) -> html -> pdf. auto = html -> markdown tier "
+              "-> pdf. The markdown tier needs only curl (arxiv2md) and is "
+              "skipped gracefully when the API has no HTML for the paper."),
+    )
+    parser.add_argument(
+        "--tex-transport",
+        choices=["arxiv2md", "s3-tex"],
+        default="arxiv2md",
+        help=("Transport for the markdown tier. arxiv2md (default) = public "
+              "REST API via curl, no credentials. s3-tex = S3 TeX source "
+              "tarball + pandoc (TODO: needs AWS credentials — the "
+              "s3://arxiv/ bucket is requester-pays)."),
+    )
+    parser.add_argument("--curl-timeout", type=float, default=120.0,
+                        help="[arxiv2md] curl max time in seconds.")
+    parser.add_argument("--tex-cache-dir",
+                        default=extract_arxiv_tex_default_cache_dir(),
+                        help="[s3-tex] Cache directory for S3 TeX source tarballs.")
+    parser.add_argument("--source-tarball",
+                        help="[s3-tex] Local TeX source .tar.gz; skips the S3 download.")
+    parser.add_argument("--main-tex",
+                        help="[s3-tex] Main .tex member inside the source tarball.")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--top-sections", type=int, default=6)
     parser.add_argument("--max-pages", type=int, default=0)
@@ -309,6 +352,28 @@ def try_pdf(args: argparse.Namespace,
     return output
 
 
+def try_tex(args: argparse.Namespace, terms: list[str]) -> dict[str, Any]:
+    """Markdown tier via extract_arxiv_tex: arxiv2md API (default) or s3-tex."""
+    tex = _load_tex_tier()
+    tex_args = argparse.Namespace(
+        paper_id=args.paper_id,
+        transport=getattr(args, "tex_transport", "arxiv2md"),
+        curl_timeout=getattr(args, "curl_timeout", 120.0),
+        source=getattr(args, "source_tarball", None),
+        source_cache_dir=getattr(args, "tex_cache_dir", None)
+        or tex.DEFAULT_SOURCE_CACHE_DIR,
+        main_tex=getattr(args, "main_tex", None),
+        terms=",".join(terms),
+        minimum_chars=args.minimum_html_chars,
+        to=tex.DEFAULT_TO,
+        pandoc_timeout=60.0,
+        output=None,
+        markdown_output=None,
+    )
+    output = tex.run(tex_args)
+    return output
+
+
 def extract_content(args: argparse.Namespace) -> dict[str, Any]:
     terms = [
         term.strip() for term in (args.terms or "").split(",") if term.strip()
@@ -318,31 +383,27 @@ def extract_content(args: argparse.Namespace) -> dict[str, Any]:
         getattr(args, "include_full_text", False)
         or getattr(args, "_render_markdown", False))
     attempts: list[dict[str, Any]] = []
-    if not args.force_pdf:
-        try:
-            html = try_html(args, terms, want_full_text=want_full_text)
-            attempts.append({
-                "method": html["extraction_method"],
-                "available": html.get("available", False),
-                "quality": html["quality"]["grade"],
-            })
-            if html.get("evidence_eligible"):
-                html["attempts"] = attempts
-                html["fallback_reason"] = ""
-                return html
-            fallback_reason = "HTML unavailable or below the minimum full-text quality gate."
-        except Exception as exc:  # pragma: no cover - network/parser dependent
-            attempts.append({
-                "method": "html",
-                "available": False,
-                "quality": "low",
-                "error": str(exc)
-            })
-            fallback_reason = f"HTML extraction failed: {exc}"
-    else:
-        fallback_reason = "PDF path forced by caller."
+    preferred = getattr(args, "preferred_source", "html") or "html"
 
-    try:
+    def run_html() -> dict[str, Any]:
+        html = try_html(args, terms, want_full_text=want_full_text)
+        attempts.append({
+            "method": html["extraction_method"],
+            "available": html.get("available", False),
+            "quality": html["quality"]["grade"],
+        })
+        return html
+
+    def run_tex() -> dict[str, Any]:
+        tex = try_tex(args, terms)
+        attempts.append({
+            "method": tex.get("extraction_method", "tex-pandoc"),
+            "available": tex.get("available", False),
+            "quality": (tex.get("quality") or {}).get("grade", "low"),
+        })
+        return tex
+
+    def run_pdf() -> dict[str, Any]:
         pdf = try_pdf(args, terms, want_full_text=want_full_text)
         attempts.append({
             "method":
@@ -352,34 +413,67 @@ def extract_content(args: argparse.Namespace) -> dict[str, Any]:
             "quality": (pdf.get("quality") or {}).get("grade", "low"),
             "ocr_pages": (pdf.get("ocr") or {}).get("pages_used", []),
         })
-        pdf["attempts"] = attempts
-        pdf["fallback_reason"] = fallback_reason
         return pdf
-    except Exception as exc:  # pragma: no cover - network/PDF dependent
-        attempts.append({
-            "method": "pdf",
-            "available": False,
-            "quality": "low",
-            "error": str(exc)
-        })
-        return {
-            "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-            "paper_id": normalize_id(args.paper_id),
-            "available": False,
-            "source_format": "metadata-only",
-            "extraction_method": "unavailable",
-            "quality": {
-                "grade": "low",
-                "text_chars": 0
-            },
-            "evidence_eligible": False,
-            "needs_visual_validation": False,
-            "selected_passages": [],
-            "term_matches": [],
-            "reference_hints": [],
-            "attempts": attempts,
-            "fallback_reason": fallback_reason,
-        }
+
+    # Tier order per --preferred-source. Default "html" reproduces the legacy
+    # chain (html -> pdf) exactly; "auto" prefers authoritative TeX over lossy
+    # PDF; "tex" forces the TeX tier first.
+    tiers: list[tuple[str, Any]] = []
+    if preferred == "tex":
+        tiers = [("tex", run_tex), ("html", run_html), ("pdf", run_pdf)]
+    elif preferred == "auto":
+        tiers = [("html", run_html), ("tex", run_tex), ("pdf", run_pdf)]
+    else:
+        tiers = [("html", run_html), ("pdf", run_pdf)]
+
+    fallback_reason = ""
+    for tier_name, runner in tiers:
+        if tier_name == "pdf" and args.force_pdf:
+            fallback_reason = "PDF path forced by caller."
+        try:
+            output = runner()
+            if output.get("evidence_eligible"):
+                output["attempts"] = attempts
+                output["fallback_reason"] = ""
+                return output
+            fallback_reason = f"{tier_name.upper()} unavailable or below the minimum full-text quality gate."
+        except SystemExit:
+            # Missing optional dependency (boto3/pypandoc) for this tier —
+            # fall through to the next tier instead of killing the chain.
+            attempts.append({
+                "method": tier_name,
+                "available": False,
+                "quality": "low",
+                "error": "optional dependency missing for this tier",
+            })
+            fallback_reason = f"{tier_name.upper()} tier unavailable: optional dependency missing."
+        except Exception as exc:  # pragma: no cover - network/parser dependent
+            attempts.append({
+                "method": tier_name,
+                "available": False,
+                "quality": "low",
+                "error": str(exc),
+            })
+            fallback_reason = f"{tier_name.upper()} extraction failed: {exc}"
+
+    return {
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "paper_id": normalize_id(args.paper_id),
+        "available": False,
+        "source_format": "metadata-only",
+        "extraction_method": "unavailable",
+        "quality": {
+            "grade": "low",
+            "text_chars": 0
+        },
+        "evidence_eligible": False,
+        "needs_visual_validation": False,
+        "selected_passages": [],
+        "term_matches": [],
+        "reference_hints": [],
+        "attempts": attempts,
+        "fallback_reason": fallback_reason,
+    }
 
 
 def _md_escape_cell(text: str) -> str:

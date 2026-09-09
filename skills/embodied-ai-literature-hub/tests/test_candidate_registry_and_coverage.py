@@ -95,6 +95,44 @@ class CandidateRegistryAndCoverageTest(unittest.TestCase):
         )
         self.assertEqual(["citation-graph"], [b["channel"] for b in result["batches"]])
 
+    def test_semantic_scholar_results_get_a_truthful_channel_and_carry_doi(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            s2_file = root / "s2-round-1.json"
+            s2_file.write_text(
+                json.dumps(
+                    {
+                        "batch": "s2-round-1",
+                        "papers": [
+                            {
+                                "arxiv_id": "2605.07777",
+                                "title": "S2 Discovered Paper",
+                                "doi": "10.1000/xyz",
+                                "citation_count": 9,
+                                "query_label": "core",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            arxiv_file = root / "arxiv-round-1.json"
+            arxiv_file.write_text(
+                json.dumps({"papers": [{"arxiv_id": "2605.07777", "title": "S2 Discovered Paper"}]}),
+                encoding="utf-8",
+            )
+
+            result = registry_module.build_registry([arxiv_file], [], semantic_scholar_results=[s2_file])
+
+        self.assertEqual(1, result["candidate_count"])
+        candidate = result["candidates"][0]
+        self.assertEqual("2605.07777", candidate["arxiv_id"])
+        self.assertEqual("10.1000/xyz", candidate["doi"])
+        self.assertEqual(9, candidate["citation_count"])
+        channels = {discovery["channel"] for discovery in candidate["discoveries"]}
+        self.assertEqual({"arxiv-api", "semantic-scholar"}, channels)
+        self.assertEqual({"arxiv-api", "semantic-scholar"}, {b["channel"] for b in result["batches"]})
+
     def test_coverage_requires_targets_dimensions_and_saturation(self) -> None:
         plan = {
             "review_mode": "rapid",
