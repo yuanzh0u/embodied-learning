@@ -1,0 +1,592 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.05777",
+  "title": "Observation Quality Matters: Robust Multi-Fisheye Calibration via Failure-Oriented Analysis",
+  "published": "2026-07",
+  "url": "https://arxiv.org/abs/2607.05777",
+  "authors": [
+   "Peize Liu",
+   "Zhe Tong",
+   "Chen Feng",
+   "Shaojie Shen"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "鱼眼镜头在具身平台部署的前置工程环节（多鱼眼 rig 标定）的机理与解决方案证据：(1) 应用背景——大 FoV 多鱼眼系统广泛用于移动机器人（DJI/Skydio）与数据采集平台（WoodScape/Ant3D），支撑状态估计与深度预测；(2) 局限的定量化——宽 FoV（220°-240°）下现有管线（Kalibr）失败率 36%-88%，失败几乎全部源于内参初始化；反直觉地，用完整 GT 观测替换检测观测反而使成功率 68.1%→53.7%，证明鱼眼标定失败是优化病态（焦距-投影形状耦合）而非数据缺失；(3) 效果——CO-Calib（学习检测器+帧选择器插件）把合成成功率 68.1%→99.3%、真实 Hex-Fisheye 系统 0/10→10/10。直接回答综述问题中'鱼眼在具身系统的工程代价与鲁棒化路径'。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：多鱼眼系统标定随 rig 尺寸/排布多样性/FoV 增大而失稳，现有管线依赖经验采集规则；核心研究问题——何种观测条件下多鱼眼标定问题才是良态可优化的；提取四项贡献。"
+   },
+   {
+    "locator": "page 2, II Related Work (A. Fisheye Camera Model and Calibration; B. Multi-Fisheye System Calibration)",
+    "role": "relevant-core",
+    "purpose": "定位鱼眼相机模型三条路线（统一几何/入射角函数/通用多项式）、TartanCalib 外周覆盖法的中间模型敏感性、Kalibr/MC-Calib 的 BA 框架与观测构造差异。"
+   },
+   {
+    "locator": "page 2-5, III Failure Mechanism Analysis (A-F)",
+    "role": "results-or-analysis",
+    "purpose": "精读失败分析：16 合成配置（4 stereo×4 FoV，各 100 序列×480 帧）；Table I 失败定位到内参初始化；Table II GT 观测反直觉实验排除召回假说；Table III 排除空间分布假说（D_qty<0.30%、Δ_sp≤0.13pp）；Fig. 3 条件数证据；Fig. 4 三投影族（Omni/EUCM/Double-Sphere）焦距-投影耦合与径向覆盖关系；Key Findings 总结。"
+   },
+   {
+    "locator": "page 5-6, IV CO-Calib (A. Framework Overview; B. Robust Calibration Target Detection; C. Coverage- and Observability-Aware Selector)",
+    "role": "method-or-design",
+    "purpose": "精读方法：插件式框架不改 BA 后端；U-Net 式多阶段学习检测器（在线物理仿真数据生成）；帧选择器两准则（projective isotropy s_iso、directed radial span s_drs）与三阶段（Anchor/Co-visible/Mono-fill）。"
+   },
+   {
+    "locator": "page 6-8, V Experiments (A. Setup; B. Spatial Constraint Improvement; C. Calibration on Synthetic and Real-world Data)",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table IV 检测器对比（recall 0.93 vs 0.68-0.71）、Table V/VI 合成 16 配置结果（68.1%→99.3%、外参 0.54/0.029→0.18/0.021）、随机子集（30.9%）与 BA-only（13.5%）消融、Table VII 真实外参一致性（Hex-Fisheye Kalibr 0/10 vs CO-Calib 10/10）与 ATE 略增代价。"
+   },
+   {
+    "locator": "page 7, VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论：观测质量应以参数方向可分性衡量而非仅覆盖或样本数；失败主因为内参初始化中焦距尺度与投影形状参数的病态耦合。"
+   },
+   {
+    "locator": "page 8-9, Appendix A (Spatial Distribution Metrics) and Appendix B (Implementation Details of Target Detector)",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 D_qty/D_sp/D_rand 指标定义（用于 Table III 解释）、检测器架构（多阶段 heatmap+精修）与在线物理仿真训练管线（Appendix B.2 域合成数据来源）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 7-8, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需核对核心引文（Kalibr、TartanCalib、MC-Calib、Kannala-Brandt）条目。"
+   }
+  ]
+ },
+ "research_question": "多鱼眼相机系统标定在何种观测条件下才是良态（well-conditioned）可优化的：通过失败导向的受控分析定位失败环节与机制（检测召回、空间分布还是内参初始化病态），并据此构建优化就绪的标定观测集（CO-Calib：鲁棒学习检测器+可观测性引导帧选择器）以提升多鱼眼标定鲁棒性？",
+ "contributions": [
+  "失败导向分析：多鱼眼标定失败不能由检测召回损失或全局图像平面分布不平衡解释，而与内参初始化的病态更新强相关（焦距尺度与投影形状参数可分性不足）。",
+  "机制识别：焦距-投影耦合（focal–projection coupling）是鱼眼初始化的观测依赖失败机制；宽径向覆盖的观测对分离焦距尺度与投影形状参数至关重要，在 Omni/EUCM/Double-Sphere 三投影族验证。",
+  "CO-Calib 插件式标定数据构造框架：学习型标靶检测器（严重畸变下高召回）+误差分析引导帧选择器（anchor/共视/补覆盖三阶段），不改动相机模型与 BA 后端。",
+  "合成+真实验证：合成成功率 68.1%→99.3% 且外参精度提升；真实 Hex-Fisheye 系统 Kalibr 全失败（0/10）而 CO-Calib 10/10 成功。代码将开源。"
+ ],
+ "method": {
+  "summary": "论文分两半。失败分析（III）：在 16 个受控合成 stereo 配置（相对旋转 0/60/90/120°×FoV 180/200/220/240°，每配置 100 序列×480 帧、f-theta 投影、5cm 基线）上逐假说排除：替换 GT 观测证明召回非主因（成功率反降 68.1%→53.7%）；成功/失败组的观测计数差 D_qty<0.30%、空间分布差与随机分组无异（Δ_sp≤0.13pp）排除分布假说；Schur 消去目标位姿后的规范化相机参数信息块条件数轨迹（γ_k=log10 κ）显示失败案例一致更高（Fig. 3），机制为焦距尺度 F 与投影形状参数 η 在窄径向跨度观测下 Jacobian 方向局部相似（Fϕ(r;η) 项耦合），单带径向剖面（中心/中径/边缘）比径向覆盖剖面耦合更强且在三投影族一致（Fig. 4）。CO-Calib（IV）：(1) 学习型标靶检测器——多阶段 U-Net 式网络（1/4 heatmap 粗定位+1/8、1/16 特征更新+浅层分支精修，带可见性/可学性/置信度辅助监督），用在线物理仿真数据生成管线训练（随机目标位姿+相机参数渲染+背景合成）；(2) 覆盖与可观测性感知帧选择器——每帧计算投影各向同性 s_iso（单应矩阵 Jacobian 奇异值比）与有向径向跨度 s_drs（主径向方向上归一化投影跨度），阈值 s_iso=0.3、s_drs=110/FoV（共视与补覆盖阶段放宽 0.6 倍），按 Anchor（双门槛通过）→Co-visible（时间戳匹配双相机均通过）→Mono-fill（补弱观测区域）组织帧序列。整体为插件：不改相机模型与 BA 优化后端。",
+  "assumptions": [
+   "标定流程基于平面棋盘标靶与三阶段 BA 管线（内参初始化→精化→联合优化），失败分析结论绑定该管线结构。",
+   "合成实验全部采用 f-theta 投影模型与仿真噪声；机制验证覆盖 Omni/EUCM/Double-Sphere 三族但定量标定结果仅 f-theta。",
+   "真实应用中可从镜头厂商获得粗略 FoV 值用于设定 s_drs 阈值。",
+   "真实评估无 GT，以外参重复标定一致性（std）作为稳定性代理指标。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "合成：16 stereo 配置（4 相对旋转×4 FoV 180-240°）×100 序列×480 帧，1280×720，f-theta 投影，5cm 基线，相机位姿随机采样",
+   "真实：5 种 stereo 鱼眼对（相对旋转 0/30/60/90/120°）各 5 序列 + 六相机 Hex-Fisheye 系统 10 序列（Fig. 6）",
+   "对比基线：Kalibr、Basalt、Random-subset、BA-only two-stage"
+  ],
+  "tasks": [
+   "多鱼眼相机系统标定（内参+外参+标靶位姿联合 BA）",
+   "标定成功判据：管线正常终止且返回重投影误差有界的有效参数"
+  ],
+  "embodiments": [
+   "目标应用：移动机器人与数据采集平台的多鱼眼 rig（引 DJI/Skydio 无人机与 WoodScape/Ant3D 采集平台）",
+   "真实硬件：stereo 鱼眼对（5 种相对旋转）与 Hex-Fisheye 六相机系统"
+  ],
+  "sample_or_scale": "合成 1600 试验（16×100）；真实 25 stereo 序列 + 10 Hex-Fisheye 序列；每序列 480 帧（合成）。"
+ },
+ "evaluation": {
+  "design": "三段：(1) 失败机制受控实验（16 配置，GT 观测对照、成功/失败分布统计、条件数轨迹、三投影族耦合分析）；(2) 合成标定对比（Kalibr/CO-Calib/Random-subset/BA-only，SR+ATE+外参误差，逐配置与总体 Table V/VI）；(3) 真实标定（5 stereo 配置+Hex-Fisheye，以外参重复标定 std 为代理，Table VII）+ 检测器对比（Table IV）。",
+  "baselines": [
+   "Kalibr（代表性 BA 标定管线）",
+   "Basalt（真实实验对照）",
+   "Random-subset（同规模随机帧子集消融）",
+   "BA-only two-stage（去初始化消融）",
+   "Geometry-based detector（检测器对照）"
+  ],
+  "metrics": [
+   "标定成功率 SR（合成+真实 trial 计数）",
+   "外参误差 Ext.（平移 mm/旋转 deg，合成 GT，strict-success 试验平均）",
+   "位姿误差 ATE（mm/deg）",
+   "检测 recall 与平均定位误差（px）",
+   "真实外参一致性 std（基线长度/相对旋转角跨重复试验标准差）"
+  ],
+  "ablations": [
+   "GT 观测 vs 几何检测观测（68.1% vs 53.7%，排除召回假说）",
+   "Random-subset（99.3%→30.9%，帧选择而非数量）",
+   "BA-only 去初始化（99.3%→13.5%，初始化必要性）",
+   "s_iso/s_drs 双准则与三阶段选择流程"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "失败定位：窄 FoV（180°）下失败罕见（0-3%），宽 FoV 骤增（220°：36-67%；240°：59-88%）；失败时几乎全部（75-100%）源自内参初始化阶段而非后续联合优化。",
+   "scope": "16 合成 stereo 配置×100 试验，Kalibr 式三阶段管线",
+   "locator": "page 3, Table I, Section III-B"
+  },
+  {
+   "finding": "两个'数据量'假说被排除：用完整 GT 观测替换检测观测，成功率反从 68.1% 降到 53.7%（召回非主因）；成功/失败组的观测计数差 D_qty<0.30%、空间分布差与随机分组无异（Δ_sp≤0.13pp）——鱼眼标定失败是优化条件性问题而非观测数量/分布问题。",
+   "scope": "受控合成对照实验",
+   "locator": "page 3, Table II, Section III-C; page 4, Table III, Section III-D"
+  },
+  {
+   "finding": "失败机制：失败案例的内参初始化条件数轨迹一致更高（Fig. 3）；机制为焦距尺度与鱼眼投影形状参数的耦合（Fϕ(r;η) 项下二者都能改变径向图像坐标），窄径向跨度观测的 Jacobian 方向局部相似导致参数不可分；与针孔标定相比鱼眼标定耦合更强。",
+   "scope": "Schur 消去位姿后的规范化信息块条件数分析 + 三投影族（Omni/EUCM/Double-Sphere）Jacobian 耦合分析",
+   "locator": "page 4, Section III-E, Fig. 3; page 5, Fig. 4, Section III-F"
+  },
+  {
+   "finding": "径向覆盖是关键观测属性：中心/中径/边缘单带剖面的焦距-投影耦合一致强于径向覆盖剖面（R），三投影族一致——稳定内参初始化要求观测跨宽径向范围。",
+   "scope": "合成径向剖面分析（Fig. 4）",
+   "locator": "page 5, Fig. 4, Section III-E"
+  },
+  {
+   "finding": "CO-Calib 效果：学习检测器 recall 0.926-0.934（几何法 0.684-0.709）且平均误差略低；合成总成功率 Kalibr 68.1%→CO-Calib 99.3%，外参误差 0.54/0.029→0.18/0.021 mm/deg；FoV240 配置 Kalibr 12-41% vs CO-Calib 98-100%。",
+   "scope": "16 合成配置 + 检测器对比",
+   "locator": "page 6, Table IV; page 6, Section V-C; page 7, Table V, Table VI"
+  },
+  {
+   "finding": "消融归因：同规模随机帧子集成功率降至 30.9%（收益来自帧选择质量而非数量）；去掉初始化的 BA-only 管线降至 13.5%（初始化不可绕过，联合优化无法补偿病态初始化）。",
+   "scope": "合成 16 配置总体",
+   "locator": "page 6, Section V-C"
+  },
+  {
+   "finding": "真实系统：5 种 stereo 配置 CO-Calib 全部 5/5 成功、外参一致性与 Kalibr 相当（亚毫米级平移）；挑战性 Hex-Fisheye 六相机系统上 Kalibr 0/10 全失败、Basalt 4/10（一致性 51.23mm/6.626°），CO-Calib 10/10 成功且一致性 0.97mm/0.048°。",
+   "scope": "真实 stereo 鱼眼对与 Hex-Fisheye rig（无 GT，一致性代理）",
+   "locator": "page 7, Section V-C; page 8, Table VII"
+  },
+  {
+   "finding": "方法代价：FoV180-220 若干配置 CO-Calib 的位姿估计误差（ATE）略高于 Kalibr，作者归因于选择策略用更少帧减少了可用于位姿估计的轨迹覆盖。",
+   "scope": "合成对比中的 ATE 指标",
+   "locator": "page 6, Section V-C"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "CO-Calib 在 FoV180-220 若干配置的位姿估计误差略高于 Kalibr：选择策略使用更少帧做优化，可能减少相机位姿估计可用的轨迹覆盖。",
+    "locator": "page 6, Section V-C"
+   },
+   {
+    "limitation": "真实数据无相机参数与位姿真值，只能用重复标定序列间的外参一致性（基线长度与相对旋转角标准差）作为稳定性代理指标，而非直接精度。",
+    "locator": "page 7, Section V-C"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "合成定量结论绑定 f-theta 单一投影模型（16 配置全部 f-theta 生成）；焦距-投影耦合机制虽在三投影族（Omni/EUCM/Double-Sphere）验证，但标定成功率/精度提升的定量结果对其他投影族镜头、真实畸变与噪声模型的迁移未直接验证。",
+    "basis": "page 6 V-A 'All cameras followed the f -theta projection model'；Fig. 4 分析覆盖三族但仅做耦合度量非端到端标定。"
+   },
+   {
+    "boundary": "真实评估规模有限：5 stereo 配置各 5 序列 + 单一 Hex-Fisheye rig 10 序列，无第二套多相机 rig 验证泛化；且 Hex-Fisheye 的'成功'仍以外参一致性界定，绝对精度未知。",
+    "basis": "page 6 V-A 采集协议；page 7 V-C 代理指标说明。"
+   },
+   {
+    "boundary": "标定'成功'判据含'有界的重投影误差'但阈值未给出，合成与真实的 success 定义可能不一致；SR 数字对该阈值敏感。",
+    "basis": "page 2 III 'A trial is considered successful if the pipeline terminates normally and returns valid calibration parameters with bounded reprojection errors'，全文无阈值数值。"
+   },
+   {
+    "boundary": "学习检测器依赖在线物理仿真数据训练（随机渲染目标+背景合成），对真实域差距（镜头眩光、光照、非棋盘背景、运动模糊）的鲁棒性未单独量化；Table IV 的检测对比在何种数据上统计未明示真实/合成来源。",
+    "basis": "page 8-9 Appendix B.2 在线数据生成管线描述；page 6 Table IV 未标注评估数据来源。"
+   },
+   {
+    "boundary": "方法局限于平面标靶离线标定流程：无标靶自标定、在线/动态 rig、非平面目标场景未评估；与 TartanCalib（同样针对外周覆盖）和 MC-Calib（多标靶）只有相关工作讨论而无实验对比。",
+    "basis": "page 2 II-A/II-B 相关工作定位；V 章实验基线仅 Kalibr/Basalt/内部消融。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：平面标靶、三阶段 BA 管线（Kalibr 式）的多鱼眼 stereo/rig 离线标定，FoV 180-240°、f-theta 类投影；核心机制结论（焦距-投影耦合、宽径向覆盖必要性）经 Omni/EUCM/Double-Sphere 三族分析支持但端到端定量仅 f-theta。真实部署证据限 5 种 stereo 鱼眼对与单一 Hex-Fisheye 六相机 rig、外参一致性代理指标。不适用/未验证：无标靶自标定与在线标定、非平面标靶、其他投影族镜头的端到端效果、绝对外参精度（真实无 GT）、检测器的真实域差距。对综述的接口：本文是'鱼眼相机在具身平台落地的工程代价'的机理级证据——宽 FoV 鱼眼的标定失败是结构性的（内参病态耦合），不能靠堆数据解决，需要观测构造（径向覆盖）层面的干预；同时给出鱼眼 rig（无人机、采集平台）在具身生态中的位置锚点。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "假设驱动的失败分析设计严密：三个候选假说（外周约束不足/空间分布不平衡/初始化病态）逐一用受控实验排除或确认，GT 观测对照实验（Table II）是干净的反事实设计。",
+   "合成实验规模充分（16 配置×100 试验×480 帧）且因子清晰（FoV×相对旋转），失败率随 FoV 的剂量-响应关系（3%→88%）为机制解释提供强支撑。",
+   "两个关键消融分离机制：Random-subset（99.3%→30.9%）排除'少帧即好'，BA-only（→13.5%）证明初始化不可绕过。",
+   "真实 Hex-Fisheye 案例提供极端验证：Kalibr 全败 0/10 vs CO-Calib 10/10，且给出量化一致性。",
+   "插件式设计（不改相机模型/BA 后端）使结论可移植到现有工作流。"
+  ],
+  "design_risks": [
+   "合成全部 f-theta 单投影族，机制与端到端结论的证据强度不对称（机制三族、定量单族）。",
+   "真实评估无 GT 且规模小（25+10 序列、单一 hex rig），外参一致性是稳定性而非精度指标。",
+   "成功判据（有界重投影误差）阈值未公开，SR 绝对值不可复现校验。",
+   "与最相关的 TartanCalib/MC-Calib 无实验对比，改进幅度只相对 Kalibr/Basalt 成立。",
+   "检测器依赖仿真训练，真实域鲁棒性与 Table IV 评估数据来源未交代。"
+  ],
+  "baseline_fairness": "Kalibr 与 Basalt 为社区广泛使用的标定工具箱，在同一合成/真实数据上运行对比公平；但 TartanCalib（外周覆盖预测，与本方法动机最接近）与 MC-Calib（多标靶约束增强）仅在相关工作讨论而未进入实验对比，'相对于现有改进型标定方法'的优势未验证；Random-subset 与 BA-only 为机制消融而非竞争基线。",
+  "metric_validity": "合成 SR（判据含未公开阈值）+外参误差（GT、strict-success 平均）+ATE 构成多层指标；真实外参一致性 std 是合理的稳定性代理但不能替代精度；ATE 略增的坦诚报告（并给出帧数-覆盖解释）增强了指标间权衡的透明度。",
+  "reproducibility": "代码承诺开源（GitHub 链接已给出）；合成协议详尽（配置因子、序列数、帧数、分辨率、投影模型、基线）；阈值 s_iso=0.3、s_drs=110/FoV 与放宽系数 0.6 公开；检测器架构与损失函数在附录 B 给出；缺口：成功判据阈值、真实采集的标靶类型/序列协议细节、Table IV 评估数据。",
+  "external_validity": "结论外推受限：定量证据以 f-theta 仿真为主，真实证据限两类 rig 且无 GT；对其他投影族、更多相机数（>6）、更大 rig、无标靶/在线标定场景的泛化未验证；引用的具身应用（无人机、数据采集平台）仅为动机锚点，本文未在实际机器人任务中评估标定质量对下游感知的影响。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.05777-C01",
+   "claim": "作者指出：配备大视场（FoV）鱼眼镜头的多鱼眼相机系统广泛用于移动机器人与数据采集平台，在状态估计与深度预测等任务中提升感知性能——这是本文多鱼眼标定研究的应用背景。",
+   "stance": "support",
+   "relation": "支持命题：多鱼眼相机 rig 是具身智能平台（移动机器人/数据采集平台）的主流感知配置，鱼眼镜头通过状态估计与深度预测等任务进入具身系统——为综述提供'鱼眼 rig 在具身生态中的部署位置'的锚点证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言首句说明大 FoV 多鱼眼系统广泛用于移动机器人（引 DJI、Skydio）与数据采集平台（引 WoodScape、Ant3D），在状态估计（引 VINS-Mono）与深度预测（引 Omnidirectional Stereo、Omnividar）等任务中提升感知性能。",
+   "locator": "page 1, I Introduction",
+   "source_context": "ULTI-FISHEYE camera systems equipped with large- field-of-view (FoV) lenses are widely used in mo- bile robots [1], [2] and data collection platforms [3], [4], where they improve perception performance in tasks such as state estimation [5] and depth prediction [6], [7].",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 引言首句（首字下沉 M 单独成行，context 从 ULTI-FISHEYE 起逐字匹配）给出 mobile robots、data collection platforms、state estimation、depth prediction 四要素；引用对应 DJI/Skydio、WoodScape/Ant3D、VINS-Mono、Omnividar（page 7 参考文献，已核对）；claim 为背景论断未附加定量。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C02",
+   "claim": "在受控合成实验中，标定失败率随 FoV 增大骤增：180° 时仅 0-3%，220° 时 36-67%，240° 时 59-88%（依 stereo 相对旋转配置而异）；且失败时几乎全部（75-100%）可归因于内参初始化阶段而非后续联合优化。",
+   "stance": "limit",
+   "relation": "限定命题：宽 FoV（≥220°）鱼眼/超广角 rig 的标定是具身部署的结构性瓶颈——现有 BA 管线在宽 FoV 下大面积失败且失败集中在内参初始化，说明鱼眼 FoV 越大工程代价越高。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 报告 16 配置（4 相对旋转×4 FoV）的失败率与失败中内参初始化占比：FoV180 0-3%/0-100%；FoV220 36-67%/98.5-100%；FoV240 59-88%/98.9-100%；正文总结窄 FoV 失败罕见、宽 FoV 骤增、几乎全部失败源自内参初始化。",
+   "locator": "page 3, Table I, Section III-B",
+   "source_context": "Failures are rare at narrower FoVs but increase sharply for wide-FoV settings; when calibration fails, almost all failed trials originate from intrinsic initialization.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "calibration failure rate and fraction of failures attributed to intrinsic initialization",
+    "value_or_direction": "FoV180: 0.0%-3.0% failure; FoV220: 36.0%-67.0%; FoV240: 59.0%-88.0%; failed trials attributed to intrinsic initialization: 75.0%-100.0%",
+    "comparator": "across four stereo relative-rotation configurations (0/60/90/120 deg) at each FoV",
+    "task_or_sample": "16 synthetic stereo multi-fisheye settings, 100 trials each (480 frames per sequence)",
+    "locator": "page 3, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Table I 数据行（67.0%/98.5%、88.0%/98.9% 等，已核对）与叙述句一致给出各 FoV 失败率区间与内参初始化占比区间；样本限定为合成 16 配置×100 试验；claim 未超出 Table I 范围。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C03",
+   "claim": "反直觉对照实验：把检测到的标靶点替换为完整真值（GT）观测后重跑同一标定管线，总成功率反而从 68.1% 降到 53.7%、多数宽 FoV 配置更不稳定——说明多鱼眼标定失败不能由低检测召回或外周观测不足解释，完整观测反而暴露底层优化不稳定性。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼标定的失败模式是优化条件性（病态）问题而非数据量问题——'给更多/更准的观测'不能修复宽 FoV 鱼眼标定，这框定了鱼眼 rig 在具身部署中的工程约束性质。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 对比几何检测观测与全 GT 观测的成功率（每格 geometry/GT）：总体 68.1%/53.7%，宽 FoV 配置 GT 下更差（如 FoV240-0：12%/2%）；正文解释失败不能仅由低召回或外周样本不足解释。",
+   "locator": "page 3, Table II, Section III-C",
+   "source_context": "Table II shows the opposite: the success rate drops from 68.1% to 53.7%, and most wide-FoV settings become less stable. Thus, calibration failure cannot be explained by low recall or insufficient peripheral sample count alone; full observations can instead expose the underlying optimization instability.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "overall calibration success rate under full ground-truth vs geometry-based observations",
+    "value_or_direction": "68.1% (geometry-based) -> 53.7% (full ground-truth), success drops with more complete observations",
+    "comparator": "geometry-based detections vs full ground-truth observations in the same pipeline",
+    "task_or_sample": "16 synthetic multi-fisheye configurations, 100 trials each",
+    "locator": "page 3, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 叙述句与 Table II Total 行 '68.1% / 53.7%'（已核对）逐字一致；'most wide-FoV settings become less stable' 对应表格中 FoV220/240 GT 列普遍更低；claim 忠实保留反直觉方向且限定同一管线对照。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C04",
+   "claim": "成功与失败试验的观测分布无系统差异：全部 16 设置中观测计数差 D_qty 低于 0.30%（中位 0.15%、均值 0.17%），空间分布差 D_sp 与随机标签基线 D_rand 几乎一致（Δ_sp 至多 0.13 个百分点）——图像平面观测数量与分布不足以解释初始化失败。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼标定失败的根因在参数可观测性而非观测采样——排除'分布不平衡'假说的证据链一环，将失败机制收窄到内参初始化病态。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 对每配置比较成功/失败组的 D_qty/D_sp/D_rand/Δ_sp：D_qty 全部 <0.30%，D_sp 与 D_rand 匹配、Δ_sp≤0.13pp，成功/失败分割的空间分离度不高于随机分割。",
+   "locator": "page 4, Table III, Section III-D",
+   "source_context": "Table III confirms that the point-count difference is neg- ligible: D qty remains below 0.30% in all settings, with a median of 0.15% and a mean of 0.17%. Moreover, D sp closely matches D rand , and ∆ sp is at most 0.13 percentage points.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "success/failure observation-count difference (D_qty) and spatial-distribution excess over random baseline (Δ_sp)",
+    "value_or_direction": "D_qty < 0.30% in all 16 settings (median 0.15%, mean 0.17%); Δ_sp ≤ 0.13 percentage points",
+    "comparator": "successful vs failed trials within each configuration, against random-label baseline D_rand",
+    "task_or_sample": "16 synthetic multi-fisheye configurations, 100 trials each",
+    "locator": "page 4, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 叙述句与 Table III 数据（D_qty 0.01-0.29%、Δ_sp 0.00-0.13pp，已核对）一致；附录 A（page 8）给出 D_qty/D_sp/D_rand 定义（已核对）；claim 限定在成功/失败组对比范围。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C05",
+   "claim": "失败案例沿内参初始化路径的条件数一致高于成功案例：以 Schur 消去标靶位姿后的规范化相机参数信息块定义条件数轨迹，失败试验诱导更病态的内参更新——失败与局部参数可分性差相关，而非仅缺检测或空间不平衡。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼标定失败的机制层证据——把'为什么宽 FoV 鱼眼难标定'从现象（失败率）推进到优化动力学（条件数），为综述的鱼眼工程局限提供机理解释。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 3 比较成功/失败试验沿初始化路径的 conditioning score（γ_k=log10 κ(S̃_c)）：失败案例一致更大，表明在优化器遇到的当前线性化点处诱导更病态的内参更新。",
+   "locator": "page 4, Section III-E, Fig. 3",
+   "source_context": "Fig. 3 compares the conditioning scores of successful and failed trials along the initialization path. Failed cases consis- tently exhibit larger γ k values than successful cases, indicating that they induce more ill-conditioned intrinsic updates at the current linearization points encountered by the optimizer.",
+   "evidence_type": "reported-statistic",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 III-E 叙述句逐字给出条件数定义语境（Schur 消去位姿的规范化信息块，式 7-9 已核对）与失败案例 γ_k 一致更大的结论；claim 为作者基于 Fig. 3 分布图的定性结论，未附加论文未给出的具体数值阈值。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C06",
+   "claim": "作者的核心机制结论：与针孔标定不同，鱼眼标定在内参初始化中引入更强的焦距尺度与投影形状参数耦合；当观测只占据窄径向范围时，两组参数可产生几乎相同的残差变化而难以可靠估计——失败的核心是内参参数方向可分性差。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼镜头区别于常规相机的标定难度有明确数学结构（焦距-投影形状耦合），是鱼眼在具身系统中相对窄 FoV 相机的固有工程代价——'哪些环节受限'的机理证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-F Key Findings：低召回与空间不平衡可观察但均非主要失败机制；核心问题是初始化中内参参数方向可分性差；鱼眼（相对针孔）引入更强焦距-投影耦合，窄径向范围观测使参数产生相似残差变化、难以可靠估计。",
+   "locator": "page 5, Section III-F Key Findings",
+   "source_context": "the core issue is the poor separability of intrinsic parameter directions during initializa- tion. Unlike pinhole calibration, fisheye calibration introduces stronger coupling between focal scale and projection-shape parameters, and when observations occupy only a narrow radial range, these parameters can produce similar residual changes and become difficult to estimate reliably.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Key Findings 逐字给出'Unlike pinhole calibration, fisheye calibration introduces stronger coupling between focal scale and projection-shape parameters'与窄径向范围的后果；页 4 式 (10) 的 Fϕ(r;η) 耦合项（已核对）提供数学支撑；claim 未超出作者机理结论。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C07",
+   "claim": "径向覆盖实验（Fig. 4）：中心、中径、边缘三类单带径向剖面的焦距-投影耦合一致强于径向覆盖剖面，且该结论在 Omni、EUCM、Double-Sphere 三个鱼眼投影族上一致——稳定内参初始化要求观测跨越宽径向范围。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼标定的可操作采集准则——标定板观测须覆盖宽径向范围（而非仅多检测点或均匀图像分布），为具身平台鱼眼 rig 的标定流程设计提供直接指导。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 4 对比 C/M/E/R 四类径向剖面的焦距-投影耦合度量（式 12 的 C_fη=log10 κ(G_fη)）：单带剖面耦合一致更强，径向覆盖剖面在三投影族上耦合最低。",
+   "locator": "page 5, Fig. 4, Section III-E",
+   "source_context": "Fig. 4 compares central (C), middle-radius (M), edge (E), and radially covered (R) profiles. Single-band profiles consis- tently produce stronger coupling, while radial coverage yields the lowest coupling across all three fisheye families.",
+   "evidence_type": "reported-statistic",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 叙述句逐字给出 C/M/E/R 剖面对比与三投影族（Omni/EUCM/Double-Sphere，page 5 'we analyze Omni, EUCM, and Double-Sphere projection families'，已核对）结论；紧随句 'stable intrinsic initialization requires observations spanning a broad radial range'（已核对）支撑采集准则部分；claim 限于耦合度量实验。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C08",
+   "claim": "学习型标靶检测器在四档 FoV（180-240°）上召回率 0.9255-0.9344，几何检测法仅 0.6838-0.7085（240° 时差距最大：0.9263 vs 0.6838），且平均定位误差也更低（0.7841-0.8277 px vs 0.8304-0.8553 px）——学习检测显著提升严重鱼眼畸变下的检测召回与精度。",
+   "stance": "support",
+   "relation": "支持命题：深度学习可以补偿鱼眼强畸变下几何检测器的召回损失——这是 CO-Calib 组件一的证据，也是'鱼眼图像的角点检测困难'这一工程局限的量化对照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table IV 对比学习检测器与几何检测器在 180/200/220/240° FoV 下的 Recall/Mean Error：学习法召回稳定在 0.93 上下且误差略低；几何法召回随 FoV 增大降至 0.68。",
+   "locator": "page 6, Table IV, Section V-B",
+   "source_context": "180 0.9330 / 0.7841 0.7085 / 0.8377 200 0.9344 / 0.7944 0.7049 / 0.8380 220 0.9255 / 0.7941 0.7077 / 0.8304 240 0.9263 / 0.8277 0.6838 / 0.8553",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "calibration-target detection recall and mean localization error (px)",
+    "value_or_direction": "learning-based recall 0.9255-0.9344 vs geometry-based 0.6838-0.7085 (FoV 180-240 deg); mean error 0.7841-0.8277 px vs 0.8304-0.8553 px",
+    "comparator": "geometry-based detector",
+    "task_or_sample": "calibration target detection across FoV 180/200/220/240 deg (Table IV)",
+    "locator": "page 6, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Table IV 数据行逐字给出四档 FoV 的 Learning-based 与 Geometry-based Recall/Mean Error（表头 'Learning-based Det. Recall / Mean Error px' 与 'Geometry-based Det.'，已核对）；claim 的数值区间与表格一致且按 FoV 排列方向正确。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C09",
+   "claim": "在 16 个合成配置的总体结果上，CO-Calib 把标定成功率从 Kalibr 的 68.1% 提升到 99.3%，并把总体外参误差从 0.54mm/0.029° 降到 0.18mm/0.021°（平移/旋转）。",
+   "stance": "support",
+   "relation": "支持命题：针对鱼眼标定病态问题的观测构造干预（学习检测+可观测性帧选择）可将多鱼眼 rig 标定从不可靠（68.1%）提升到近确定性（99.3%）并提高外参精度——鱼眼标定痛点存在工程解。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 与 Table VI：CO-Calib 在各 FoV/配置一致提升成功率，总体 68.1%→99.3%，外参误差 0.54/0.029→0.18/0.021（mm/deg，strict-success 试验平均）。",
+   "locator": "page 6, Section V-C; page 7, Table VI",
+   "source_context": "In particular, the overall success rate increases from 68.1% with Kalibr to 99.3% with CO-Calib. Meanwhile, CO-Calib also reduces the overall extrinsic calibration error from 0.54/0.029 to 0.18/0.021 in translation and rotation, respectively.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "overall calibration success rate and extrinsic error (translation mm / rotation deg)",
+    "value_or_direction": "SR 68.1% -> 99.3%; extrinsic error 0.54/0.029 -> 0.18/0.021 mm/deg",
+    "comparator": "Kalibr",
+    "task_or_sample": "16 synthetic stereo multi-fisheye configurations (FoV 180-240 deg), 100 trials each",
+    "locator": "page 6, Section V-C; page 7, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 V-C 叙述与 page 7 Table VI（Kalibr 68.1% 3.27/0.079 0.54/0.029；CO-Calib 99.3% 3.69/0.111 0.18/0.021，已核对）数值一致；claim 限定合成 16 配置总体且指标口径（strict-success 平均）与表注一致。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C10",
+   "claim": "在最宽的 FoV240 档，Kalibr 成功率仅 12%-41%（依 stereo 相对旋转 0/60/90/120° 配置），CO-Calib 达到 98%-100%——宽 FoV 是现有管线最痛、CO-Calib 增益最大的区间。",
+   "stance": "support",
+   "relation": "支持命题：超宽 FoV（240°）鱼眼 rig 的标定在现有工具链下基本不可用（最低 12%），观测构造干预在该区间增益最大——界定了鱼眼 FoV 与标定难度的定量关系及解法边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table V FoV240 四配置：Kalibr SR 12%/41%/25%/23%，CO-Calib 98%/98%/98%/100%；外参误差 CO-Calib 也普遍更低（如 0/0.005 vs 0.24/0.006）。",
+   "locator": "page 7, Table V",
+   "source_context": "Kalibr 12% 3.56/0.099 0.24/0.006 41% 3.40/0.089 0.54/0.032 25% 3.37/0.099 0.64/0.078 23% 3.41/0.108 0.82/0.058 CO-Calib 98% 3.35/0.076 0.18/0.005 98% 3.07/0.056 0.14/0.009 98% 2.97/0.059 0.17/0.027 100% 3.03/0.067 0.22/0.015",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "calibration success rate at FoV240 across stereo configurations",
+    "value_or_direction": "Kalibr 12%-41% vs CO-Calib 98%-100%",
+    "comparator": "Kalibr",
+    "task_or_sample": "FoV240 synthetic stereo configurations with relative rotations 0/60/90/120 deg",
+    "locator": "page 7, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table V FoV240 段两行数据逐字给出 Kalibr（12/41/25/23%）与 CO-Calib（98/98/98/100%）SR 及外参误差；表注 'SR denotes success rate ... Bold marks the best SR'（已核对）确认口径；claim 限于 FoV240 档。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C11",
+   "claim": "帧选择消融：对每个被选择序列构造同规模随机子集并跑同一标定管线，总体成功率从 99.3% 暴跌到 30.9%——CO-Calib 的收益来自按覆盖与可观测性选择帧，而非单纯减少帧数。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼标定鲁棒化的关键变量是观测的构造质量（哪些帧）而非数量——为'观测质量 Matters'的核心主张提供消融级证据，也说明标定数据采集协议本身是设计对象。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 消融：same-size random subset 使总体成功率从 99.3% 降至 30.9%，确认改进不是来自减少帧数而是来自选择覆盖/可观测性更好的帧。",
+   "locator": "page 6, Section V-C",
+   "source_context": "For each selected sequence, we construct a same-size random subset and run the same calibration pipeline. The random subsets lead to a much lower overall success rate, dropping from 99.3% to 30.9%.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "overall calibration success rate with random same-size frame subsets",
+    "value_or_direction": "99.3% -> 30.9% when selected frames are replaced by random subsets of equal size",
+    "comparator": "CO-Calib selected frame sequences",
+    "task_or_sample": "16 synthetic multi-fisheye configurations, same-size random subsets per selected sequence",
+    "locator": "page 6, Section V-C"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 V-C 消融段落逐字给出 same-size random subset 设计与 99.3%→30.9% 的下降；page 7 Table VI Random-subset 行 SR 30.9%（已核对）一致；claim 忠实于该消融的归因（帧选择质量而非数量）。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C12",
+   "claim": "初始化必要性消融：把标准三阶段管线改为去掉初始化的 BA-only 两阶段管线后，总体成功率降至 13.5%——可靠的（线性化）初始化对鲁棒标定不可绕过，最终联合优化无法补偿病态初始化。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼标定的失败集中在且只能在内参初始化阶段解决——'绕过初始化直接全局优化'不可行，这解释了为何标定数据采集（观测构造）是鱼眼 rig 部署的必要工程投入。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 消融：BA-only two-stage（去初始化）总体成功率 13.5%，Table V 各配置普遍个位数至两成（FoV240 低至 1%），证明初始化阶段的关键性。",
+   "locator": "page 6, Section V-C; page 7, Table V",
+   "source_context": "Finally, we evaluate the effect of removing the initialization stage by comparing the standard three-stage pipeline with a BA-only two-stage pipeline. Without initialization, the overall success rate decreases to 13.5%, demonstrating that a reliable",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "overall calibration success rate without the initialization stage",
+    "value_or_direction": "decreases to 13.5% (BA-only two-stage pipeline)",
+    "comparator": "standard three-stage pipeline with initialization (99.3%)",
+    "task_or_sample": "16 synthetic multi-fisheye configurations",
+    "locator": "page 6, Section V-C; page 7, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 V-C 消融段落逐字给出 BA-only two-stage 设计与 13.5%；page 7 Table VI BA-only 行 SR 13.5%（已核对）与 Table V 各配置行（1%-29%，已核对）一致；跨页续句 'initialization remains critical for robust calibration'（page 7，已核对）支撑归因。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C13",
+   "claim": "真实挑战案例：在六相机 Hex-Fisheye 系统上，Kalibr 在全部 10 个序列上标定失败（0/10），而 CO-Calib 全部 10 个试验成功并保持高外参一致性（Table VII：0.97mm/0.048°）——超多相机鱼眼 rig 是现有工具链的失败边界，CO-Calib 将其变为可用。",
+   "stance": "support",
+   "relation": "支持命题：六相机级鱼眼 rig（接近全向布局）的标定在现有工具链下完全失败，是鱼眼在具身平台规模化部署（环视/全景 rig）的最前沿工程瓶颈及其解法的真实系统证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 真实实验：Hex-Fisheye 数据集上 Kalibr 全序列失败，CO-Calib 10/10 成功且外参一致性高；Table VII 给出 CO-Calib Hex-Fisheye Ext. Std. 0.97/0.048（mm/deg），Basalt 51.23/6.626 且仅 4/10。",
+   "locator": "page 7, Section V-C; page 8, Table VII",
+   "source_context": "More importantly, on the challeng- ing Hex-Fisheye dataset, Kalibr fails on all sequences, while CO-Calib succeeds on all 10 trials and maintains high extrinsic consistency.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "real-world calibration success rate and extrinsic consistency (t/r std in mm/deg)",
+    "value_or_direction": "Kalibr 0/10 vs CO-Calib 10/10; CO-Calib Hex-Fisheye Ext. Std. 0.97 mm / 0.048 deg (Basalt 51.23/6.626, 4/10)",
+    "comparator": "Kalibr and Basalt on the same Hex-Fisheye sequences",
+    "task_or_sample": "10 calibration sequences on a real hexagonal six-fisheye camera rig",
+    "locator": "page 7, Section V-C; page 8, Table VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 V-C 叙述逐字给出 Kalibr 全失败与 CO-Calib 10/10；page 8 Table VII Hex-Fisheye 列（Kalibr '– 0/10'、CO-Calib '0.97/0.048 10/10'、Basalt '51.23/6.626 4/10'，已核对）支撑量化部分；一致性为代理指标（真实无 GT，C14 已覆盖）。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C14",
+   "claim": "真实评估方法与 stereo 结果：因真实数据无相机参数与位姿真值，作者用重复标定序列间的外参一致性（基线长度与相对旋转角的标准差）作代理指标；在 5 种标准 stereo 鱼眼配置上 CO-Calib 全部 5/5 成功，外参一致性与 Kalibr 相当（平移差异典型在亚毫米级、旋转在小数度以内）。",
+   "stance": "support",
+   "relation": "支持命题：在常规 stereo 鱼眼配置（具身平台最常见的双目鱼眼布局）上，CO-Calib 保持与成熟工具箱相当的标定质量——其增益主要体现在困难配置（宽 FoV、多相机），同时揭示真实标定评估普遍缺乏 GT 的方法学限制。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C：真实无 GT 故用外参一致性代理；Table VII 显示 5 种 stereo 配置（Rot-0/30/60/90/120）CO-Calib 与 Kalibr 均 5/5 成功，CO-Calib 一致性数值互有胜负（如 Rot-90 0.43 vs 0.71mm 更好、Rot-60 0.33 vs 0.17mm 略差），Basalt 一致性显著更差。",
+   "locator": "page 7, Section V-C; page 8, Table VII",
+   "source_context": "Since ground-truth camera parameters and camera poses are unavail- able in real-world data, we use extrinsic consistency across repeated calibration sequences as a proxy metric. Specifically, lower standard deviations of the estimated baseline length and relative rotation angle indicate more stable calibration results.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "real-world success rate and extrinsic consistency std (t/r in mm/deg) across repeated trials",
+    "value_or_direction": "CO-Calib 5/5 on all five stereo configurations; consistency comparable to Kalibr (translation typically sub-millimeter, rotation within a small fraction of a degree)",
+    "comparator": "Kalibr (5/5) and Basalt (consistency up to 14.20 mm / 1.088 deg at Rot-90)",
+    "task_or_sample": "five real stereo fisheye configurations (relative rotations 0/30/60/90/120 deg), 5 sequences each",
+    "locator": "page 8, Table VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 V-C 逐字给出无 GT 与外参一致性代理指标定义；'comparable to Kalibr, with translation differences typically within sub-millimeter range and rotation differences within a small fraction of a degree'（page 7，已核对）与 page 8 Table VII 数值（互有胜负，已核对）支撑'相当'的措辞；claim 未宣称 CO-Calib 在 stereo 配置上更优。"
+   }
+  },
+  {
+   "card_id": "2607.05777-C15",
+   "claim": "方法代价（作者承认）：在 FoV180-220 的若干配置上 CO-Calib 的位姿估计误差（ATE）略高于 Kalibr，作者归因于选择策略使用更少帧做优化、可能减少相机位姿估计可用的轨迹覆盖——帧选择的鲁棒性收益以部分位姿估计精度为代价。",
+   "stance": "limit",
+   "relation": "限定命题：CO-Calib 的帧选择不是无损改进——它以牺牲部分标靶位姿估计精度（更少帧/更短轨迹覆盖）换取标定鲁棒性与外参精度，综述引用时应注明该权衡。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C：FoV180-220 若干配置 CO-Calib 的 ATE 略高（Table V 如 FoV180-0：4.30 vs 3.14），作者解释为选择策略用更少帧、减少位姿估计的轨迹覆盖；同时选中帧提供更好几何约束使外参更准。",
+   "locator": "page 6, Section V-C; page 7, Table V",
+   "source_context": "For several configurations from FoV180 to FoV220, CO-Calib shows a slightly higher pose estimation error than Kalibr. This is mainly because the proposed selection strategy uses fewer frames for optimization, which may reduce the trajectory coverage available for camera pose estimation.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "pose estimation error ATE (mm/deg) on selected configurations",
+    "value_or_direction": "slightly higher ATE for CO-Calib than Kalibr on several FoV180-220 configurations (e.g., FoV180-0: 4.30/0.159 vs 3.14/0.067)",
+    "comparator": "Kalibr",
+    "task_or_sample": "several synthetic configurations from FoV180 to FoV220 (Table V)",
+    "locator": "page 6, Section V-C; page 7, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 V-C 逐字给出'slightly higher pose estimation error'与'uses fewer frames ... may reduce the trajectory coverage'的作者归因；page 7 Table V FoV180-0 ATE 3.14/0.067（Kalibr）vs 4.30/0.159（CO-Calib，已核对）为实例；claim 忠实保留'若干配置/略高'的范围限定。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "TartanCalib: Iterative Wide-Angle Lens Calibration using Adaptive SubPixel Refinement of AprilTags",
+   "arxiv_id": null,
+   "reason": "引文 [9]：最相关的前作——通过中间相机模型预测未检测标靶来改善外周覆盖，但其对中间模型质量敏感；本文用学习检测器从源头解决，是方法定位的关键对照（未做实验对比）。"
+  },
+  {
+   "title": "MC-Calib: A Generic and Robust Calibration Toolbox for Multi-Camera Systems",
+   "arxiv_id": null,
+   "reason": "引文 [10]：多标靶设计增强几何约束的多相机标定代表，与 Kalibr 同为 BA 框架内'丰富观测构造'路线的参照。"
+  },
+  {
+   "title": "WoodScape: A multi-task, multi-camera fisheye dataset for autonomous driving",
+   "arxiv_id": null,
+   "reason": "引文 [3]：多鱼眼数据采集平台的代表数据集，支撑本文'多鱼眼 rig 广泛用于具身数据采集'的应用背景锚点。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是'鱼眼在具身平台落地的工程代价与鲁棒化'的机理级证据。关键判断：(1) 应用背景——大 FoV 多鱼眼 rig 是移动机器人/数据采集平台主流配置（DJI/Skydio/WoodScape），支撑状态估计与深度预测；(2) 局限的定量化——宽 FoV 鱼眼标定失败率随 FoV 剂量式上升（180° 0-3% → 240° 59-88%），失败集中于内参初始化；最反直觉的是 GT 观测反而更差（68.1%→53.7%），证明失败是优化病态（焦距-投影耦合）而非数据量问题，'堆数据'救不了鱼眼标定；(3) 解法与效果——观测构造干预（学习检测器 recall ~0.93 vs 0.68-0.71 + 径向覆盖/各向同性帧选择）把合成成功率提到 99.3%、真实 Hex-Fisheye 六相机 rig 从 Kalibr 0/10 到 10/10；(4) 边界——合成绑定 f-theta 单投影族、真实无 GT 用一致性代理、成功判据阈值未公开、TartanCalib/MC-Calib 无实验对比、stereo 常规配置上与 Kalibur 相当（增益在困难配置）、ATE 略增的代价被作者坦诚报告。页面定位器按 extraction 9 页文本层（含 2 页附录）。"
+}

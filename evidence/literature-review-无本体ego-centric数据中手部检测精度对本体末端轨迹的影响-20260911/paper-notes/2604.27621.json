@@ -1,0 +1,374 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.27621",
+  "title": "Robot Learning from Human Videos: A Survey",
+  "published": "2026-04-30",
+  "url": "https://arxiv.org/abs/2604.27621",
+  "authors": [
+   "Ma et al. (Shanghai Jiao Tong University; University of Cambridge; corresponding: Hesheng Wang)"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "survey",
+  "relevance": {
+   "decision": "include",
+   "reason": "该综述系统组织了从人类视频到机器人执行的三级迁移路径（任务/观测/动作导向），其中动作导向路径的核心中间件正是手部检测/追踪/重建（HOI 分析）；综述明确给出误差来源分类（HOI 解析不可靠、遮挡、相机运动、物体重建误差、形态失配）、失效模式（mis-grounding：轨迹在视频中合理但违反机器人运动学/控制频率/碰撞/接触约束）与路线选择指南，为综述问题提供领域共识性框架。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble / Abstract",
+    "role": "problem",
+    "purpose": "摘要：综述范围、三层迁移分类法、数据基础与挑战"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "LfHV 动机、与既有综述差异、五项贡献；Table 1 人类视频采集效率量化证据"
+   },
+   {
+    "locator": "2 Journal Title XX(X); 2.1 Imitation Learning; 2.2 Reinforcement Learning; 4 Journal Title XX(X)",
+    "role": "method-or-design",
+    "purpose": "背景：IL/RL 接口与 LfHV 统一形式化（L_obs+L_act+L_obj 跨本体差异最小化）"
+   },
+   {
+    "locator": "6 Journal Title XX(X); 8 Journal Title XX(X); 10 Journal Title XX(X)",
+    "role": "relevant-core",
+    "purpose": "任务导向与观测导向迁移的家族内分析"
+   },
+   {
+    "locator": "12 Journal Title XX(X); 14 Journal Title XX(X)",
+    "role": "relevant-core",
+    "purpose": "HOI 分析工具链：2D HOI 检测、点追踪、MediaPipe/FrankMocap/HaMeR/WiLoR/HaWoR 手部重建、物体位姿估计——手部估计误差来源的直接综述"
+   },
+   {
+    "locator": "16 Journal Title XX(X); 18 Journal Title XX(X); 20 Journal Title XX(X); 22 Journal Title XX(X); 24 Journal Title XX(X)",
+    "role": "relevant-core",
+    "purpose": "affordance 作为 backbone 训练/奖励/条件/策略的四级耦合方式与代表方法表（Tab.2-5）"
+   },
+   {
+    "locator": "26 Journal Title XX(X); 28 Journal Title XX(X); 30 Journal Title XX(X)",
+    "role": "results-or-analysis",
+    "purpose": "latent action 家族；跨数据配置统计（视角偏好 52%/41%、机器人数据依赖）；3.5 路线选择与失效模式"
+   },
+   {
+    "locator": "32 Journal Title XX(X); 34 Journal Title XX(X)",
+    "role": "data-or-setting",
+    "purpose": "Tab.9 路线选择指南；4.1 数据集属性表 Tab.10（含手部标注协议 Mocap/Device tracking/RGB/RGB(-D)+opt.）与数据集趋势"
+   },
+   {
+    "locator": "36 Journal Title XX(X)",
+    "role": "data-or-setting",
+    "purpose": "数据集使用频率分析（Ego4D/EPIC-KITCHENS 最常用；动作导向迁移依赖标注密集数据集）与 4.2 视频生成"
+   },
+   {
+    "locator": "38 Journal Title XX(X); 40 Journal Title XX(X)",
+    "role": "conclusion-or-limitations",
+    "purpose": "5 Discussion：物理世界模型、低质量视频利用、标准化基准、自我中心数据生态等挑战；6 Conclusion"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References; 42 Journal Title XX(X); 44 Journal Title XX(X); 46 Journal Title XX(X); 48 Journal Title XX(X); 50 Journal Title XX(X); 52 Journal Title XX(X)",
+    "role": "relevant-core",
+    "reason": "参考文献列表页，按需回查引用，不逐条深读"
+   },
+   {
+    "locator": "34 Journal Title XX(X) (Table 10 行主体)",
+    "role": "data-or-setting",
+    "reason": "50 个数据集的属性表逐行内容仅作查阅，趋势分析文字已读"
+   }
+  ]
+ },
+ "research_question": "如何从人类视频中学习机器人操作技能：迁移路径如何分类、各路径与数据配置/学习范式如何耦合、数据基础如何演化、领域面临哪些挑战？",
+ "contributions": [
+  "提出任务/观测/动作三级人机技能迁移分类法，识别每级关键视频衍生中间件并给出路线选择指南（Tab.9）",
+  "跨家族分析迁移路径与视角选择、真实机器人数据依赖、学习范式的耦合关系（Tab.7/8，含 52%/41% 等统计）",
+  "系统总结 2D/3D/4D HOI 分析工具（手部与物体检测、追踪、重建、位姿估计）",
+  "对 50 个人类视频数据集做属性统计与发展趋势分析（含手部标注协议分类）",
+  "提出物理世界模型、物理感知 affordance、持续学习、多智能体、多模态、低质量视频利用、标准化基准、自我中心数据生态八个未来方向"
+ ],
+ "method": {
+  "summary": "叙述性综述：以'人类视频->机器人执行的信息流'为轴建立三级分类法；对每个家族做时间线梳理与代表方法表（affordance 格式、末端类型等）；跨家族统计视角偏好与机器人数据依赖（仅统计原文有真实机器人实验的工作）；数据基础部分统计 50 个数据集的 17 项属性与使用频率。",
+  "assumptions": [
+   "方法按主导信息桥归入单一家族（即使使用辅助组件）",
+   "视角/机器人数据依赖统计只纳入作者判断有强证据且在真实机器人上部署的工作",
+   "数据集部分属性（如总时长）由可得统计量估计"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "50 个人类视频数据集属性表（Tab.10，2014-2026）",
+   "Ego4D、EPIC-KITCHENS 系列为最常用来源",
+   "动作导向迁移偏好 DexYCB、H2O、OakInk2、EgoDex、HOT3D 等标注密集数据集"
+  ],
+  "tasks": [
+   "机器人操作（manipulation）为主；明确排除无复杂操作的全身控制与 locomotion"
+  ],
+  "embodiments": [
+   "平行夹爪与灵巧手均有；Table 2-5 按末端类型统计"
+  ],
+  "sample_or_scale": "综述覆盖 2015-2026 年数百篇 LfHV 工作；50 个数据集；视角统计基于各家族代表工作（任务/观测/动作导向各数十篇）"
+ },
+ "evaluation": {
+  "design": "综述无实验评测；其'证据'为文献统计（Tab.1 效率数字、Tab.7/8 比例）与家族内/跨家族定性分析",
+  "baselines": [
+   "与既有综述（McCarthy 2025; Eze & Crick 2025; Feng 2026; Zheng 2026a）做覆盖面对比"
+  ],
+  "metrics": [
+   "论文计数与百分比（视角、机器人数据依赖）",
+   "数据集属性与使用频率"
+  ],
+  "ablations": [
+   "不适用"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "动作导向迁移中自我中心视频占 52%、外部视角 41%，且越接近可执行动作，保留交互几何与精确操作时序越重要；ego+exo 混合视角在动作导向中占比极小，因为同时解决视角差与本体差显著更难",
+   "scope": "综述统计的动作导向代表工作",
+   "locator": "28 Journal Title XX(X)"
+  },
+  {
+   "finding": "接近动作的迁移路线典型失效模式是 mis-grounding：提取的轨迹/接触线索/潜动作在人类视频中看似合理，但违反目标机器人运动学、控制频率、碰撞约束或接触动力学",
+   "scope": "LfHV 文献综合分析",
+   "locator": "30 Journal Title XX(X)"
+  },
+  {
+   "finding": "affordance 路线的失效条件：HOI 解析因遮挡、相机运动、物体重建误差或严重形态失配而不可靠；力、柔顺性、接触稳定性无法仅从视觉推断",
+   "scope": "Tab.9 路线选择指南",
+   "locator": "32 Journal Title XX(X)"
+  },
+  {
+   "finding": "affordance 迁移的有效性仍严重依赖可靠的 HOI 分析、准确的空间定位与鲁棒的重定向，在开放世界（严重遮挡、大视角变化、多样物体与末端）下尤其受挑战",
+   "scope": "3.3.1(f) 家族结论",
+   "locator": "24 Journal Title XX(X)"
+  },
+  {
+   "finding": "手部重建工具链沿误差修正方向演进：HaMeR 端到端回归存在固有 misalignment 与错误位姿，WiLoR 加 mesh 对齐多尺度特征精修层，HaWoR 面向 ego 视频做世界系手部运动重建并对出画帧做 motion infilling",
+   "scope": "3.3.1(a) HOI 分析综述",
+   "locator": "14 Journal Title XX(X)"
+  },
+  {
+   "finding": "数据集趋势：近年数据集更重视细粒度手部 pose/joint 标注，反映'准确手部运动建模对 HOI->机器人迁移至关重要'的共识；智能眼镜内置追踪可免额外标注管线获取手部位姿",
+   "scope": "4.1 数据集趋势分析",
+   "locator": "32 Journal Title XX(X)"
+  },
+  {
+   "finding": "低质量互联网视频（低分辨率、运动模糊、严重遮挡、相机抖动、时序不连贯、任务执行不完整）是 LfHV 的内在挑战；当前管线要么用策展数据要么激进过滤，牺牲了规模优势",
+   "scope": "5.6 Discussion",
+   "locator": "38 Journal Title XX(X)"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "许多 LfHV 方法依赖 in-domain 真实人类视频，其外观、相机运动、交互动态与本体特征难以在仿真中忠实重建，故难以仅在仿真中基准化",
+    "locator": "38 Journal Title XX(X) (5.7)"
+   },
+   {
+    "limitation": "affordance 迁移仍依赖可靠 HOI 分析、准确空间定位与鲁棒重定向，在遮挡、大视角变化、多样物体/末端下受挑战",
+    "locator": "24 Journal Title XX(X)"
+   },
+   {
+    "limitation": "潜动作方法难以从相机自运动、背景变化等干扰因素中解耦可控动作，且落地仍需机器人数据监督",
+    "locator": "26 Journal Title XX(X)"
+   },
+   {
+    "limitation": "本文范围不含基于动捕设备的 HOI 分析，也不覆盖无复杂操作的全身控制/locomotion",
+    "locator": "14 Journal Title XX(X)"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "综述未提供手部检测精度->末端轨迹误差的定量传播模型或可接受阈值；所有相关主张是定性综合或文献计数，阈值问题仍是开放问题",
+    "basis": "3.5/Tab.9 失效模式为定性描述；全文无误差-性能曲线"
+   },
+   {
+    "boundary": "文献统计依赖作者对'强证据'的判断与论文清单（GitHub awesome list）的完整性，无 PRISMA 式系统检索协议，百分比可重复性有限",
+    "basis": "3.4.1 'We only list works with strong evidence for these categories'；无检索式与筛选流程披露"
+   },
+   {
+    "boundary": "Table 1 的效率数字（5x-10.4x 等）来自各论文自报的不同设置，非统一基准下测量",
+    "basis": "1 Introduction Table 1 各行设置互不相同"
+   }
+  ]
+ },
+ "transfer_boundary": "综述的分类与失效模式分析适用于'从人类（含 ego-centric）视频学习机器人操作'的方法选型；其关于手部估计误差的主张是领域定性共识而非定量阈值；2026 年前的文献覆盖与百分比统计不能直接外推为误差-性能的定量规律。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "以信息流（任务/观测/动作）为轴的分类法直接对应误差传播路径分析",
+   "跨家族统计（视角、机器人数据依赖）以代表工作表支撑，透明可查",
+   "明确给出各迁移路线的失效模式与选型指南（3.5、Tab.9），对误差来源梳理最有用",
+   "数据集属性表区分手部标注协议（Mocap/Device tracking/RGB/RGB+opt.），直接服务标注质量评估"
+  ],
+  "design_risks": [
+   "无系统检索协议（无数据库、检索式、纳入排除流程），论文清单完整性依赖作者维护的 awesome list",
+   "统计口径'主导设计选择'与'强证据'由作者判定，存在归类主观性",
+   "作者单位信息不完整（HTML 抽取仅见单位与通讯作者），利益相关无法完全核查"
+  ],
+  "baseline_fairness": "不适用（综述）。与既有综述的差异在引言中有明确陈述。",
+  "metric_validity": "文献计数与百分比是领域结构的有效描述指标，但不能作为方法优劣的证据；作者也强调失效模式分析而非性能排名。",
+  "reproducibility": "论文清单公开在 GitHub（awesome-robot-learning-from-human-videos）；分类标准与统计口径有文字说明，但无数据/代码发布声明，百分比的精确复算不可得。",
+  "external_validity": "范围限于操作任务与视频源（明确排除动捕与 locomotion）；对手部检测精度问题只提供定性共识，不提供定量阈值。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.27621-C01",
+   "claim": "在 LfHV 领域共识中，接近动作的迁移路线的典型失效模式是 mis-grounding：从人类视频提取的轨迹、接触线索或潜动作在视频中看似合理，但违反目标机器人的运动学、控制频率、碰撞约束或接触动力学。",
+   "stance": "support",
+   "relation": "直接回答综述问题的'传播路径'：手部/轨迹提取环节的误差在重定向为机器人动作时才以不可执行性（运动学/控制频率/碰撞/接触约束违反）的形式暴露。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.5 节作者对文献失效模式的综合：远离动作的路线失效于 under-grounding，接近动作的路线失效于 mis-grounding，观测路线失效于 false visual equivalence。",
+   "locator": "30 Journal Title XX(X)",
+   "source_context": "Methods close to actions usually fail through mis-grounding: the extracted trajectory, contact cue, or latent action appears plausible in the human video but violates the target robot’s kinematics, control frequency, collision constraints, or contact dynamics.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.5 节原文逐句给出 mis-grounding 定义与四类约束违反；该段是作者对全文献的综合判断（author-claim），卡断言未超出其陈述范围。"
+   }
+  },
+  {
+   "card_id": "2604.27621-C02",
+   "claim": "综述的路线选择指南指出：affordance 迁移在 HOI 解析不可靠时失效——原因包括遮挡、相机运动、物体重建误差与严重形态失配；并且在力、柔顺性或接触稳定性无法仅从视觉推断时同样吃力。",
+   "stance": "conditional",
+   "relation": "给出 affordance/重定向路线成立的边界条件：手部检测与 HOI 解析精度是该路线的前置条件；视觉不可观测的接触物理量是另一类固有误差源。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Tab.9 中 affordance-based action transfer 行的'When it tends to fail'栏明确列出上述条件。",
+   "locator": "32 Journal Title XX(X)",
+   "source_context": "It fails when HOI parsing is unreliable because of occlusion, camera motion, object reconstruc- tion errors, or severe morphology mismatch. It also struggles when force, compliance, or contact stability cannot be inferred from vision alone.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Tab.9 原文逐字匹配（含 extraction 的连字符断行 reconstruc- tion）；上下文明确该行属于 affordance-based action transfer 路线；卡断言与表中陈述一致且未外推。"
+   }
+  },
+  {
+   "card_id": "2604.27621-C03",
+   "claim": "手部重建工具链的演进反映了已知误差模式：HaMeR 的端到端回归存在固有的 misalignment 与错误位姿；WiLoR 通过 mesh 对齐多尺度特征的精修层缓解；HaWoR 进一步面向自我中心视频做世界系手部运动重建（解耦相机系手部恢复与世界系相机轨迹估计，并对出画帧做 motion infilling），产出时序连贯的全局手部轨迹。",
+   "stance": "support",
+   "relation": "回答'误差来源与缓解手段'：单目手部回归的 misalignment/错误位姿是公认误差源，精修层、世界系重建、出画帧补全是文献中的缓解手段；自我中心视频的手部追踪需专门处理相机自运动。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "综述转述 Pavlakos et al. 2024 (HaMeR)、Potamias et al. 2025 (WiLoR)、Zhang et al. 2025d (HaWoR) 的方法定位与动机；这些是对被引工作的描述而非综述作者的实验。",
+   "locator": "14 Journal Title XX(X)",
+   "source_context": "To address the inherent misalignments and incorrect poses of HaMeR’s end-to-end regression, WiLoR (Potamias et al. 2025) introduces an additional refinement layer that deforms hand pose using mesh- aligned multi-scale features. It supports efficient multi-hand reconstruction and smooth monocular video tracking",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "14 节原文逐句支持 HaMeR 误差与 WiLoR 缓解；同节后续 'While HaMeR and WiLoR mainly recover hand geometry in the camera frame, HaWoR ... further targets world-space hand motion reconstruction from egocentric videos ... motion infilling for out-of-view frames' 支持 HaWoR 部分。属对被引工作的转述，故标 citation-supported。"
+   }
+  },
+  {
+   "card_id": "2604.27621-C04",
+   "claim": "在综述统计的动作导向迁移代表工作中，52% 使用纯自我中心视频、41% 使用纯外部视角视频；作者分析指出越接近可执行动作，保留交互几何与时序精确的操作线索越重要，自我中心视频因此在该家族占主导。",
+   "stance": "support",
+   "relation": "说明 ego-centric 视频是动作级迁移（手部轨迹->机器人末端）的主要数据来源，因此其手部检测精度问题直接决定该主流路线的数据质量上限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab.7 及 3.4.1 节给出 52%/41% 统计与'closer observations of hand-object interactions and manipulation timings'的机制解释。",
+   "locator": "28 Journal Title XX(X)",
+   "source_context": "The egocentric tendency becomes even more pronounced in action-oriented transfer, where egocentric and exocentric sources account for 52% and 41% of the reviewed works, respectively.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "share of reviewed action-oriented LfHV works by video viewpoint",
+    "value_or_direction": "egocentric 52% > exocentric 41%",
+    "comparator": "exocentric-only works in the same family (41%); cf. task-oriented egocentric share 13%, observation-oriented egocentric 49%",
+    "task_or_sample": "survey statistics over representative reviewed works with strong evidence (Tab.7)",
+    "locator": "28 Journal Title XX(X)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "28 节（Tab.7 及正文）包含 52%、41%、13%、49% 数字与视角-动作接近性的机制解释；卡断言限定于'综述统计的代表工作'，未外推为领域全体。"
+   }
+  },
+  {
+   "card_id": "2604.27621-C05",
+   "claim": "综述的数据集趋势分析指出：近期数据集越来越重视细粒度手部位姿与关节标注，反映了'准确的手部运动建模对将 HOI 知识迁移到机器人操作至关重要'这一日益增强的共识；智能眼镜（Vision Pro、Aria）的内置追踪使手部位姿可免额外标注管线直接获取。",
+   "stance": "support",
+   "relation": "为'手部检测/标注精度是数据质量关键维度'提供领域共识性证据，并指出设备内置追踪是绕开纯视觉手部估计误差的一条数据路线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.1 节趋势第 4 条原文表述；Tab.10 的 Pose annot. 列（Mocap/Device tracking/RGB/RGB(-D)+opt.）为标注协议差异提供结构化佐证。",
+   "locator": "32 Journal Title XX(X)",
+   "source_context": "This trend reflects the growing recognition that accurate hand motion modeling is critical for transferring HOI knowledge to robot manipulation. Besides, with the development of smart glasses (e.g., Vision Pro and Aria), hand poses can be efficiently captured with built-in tracking algorithms, without requiring additional annotation pipelines",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "32 节趋势条原文逐句支持；'growing recognition' 是作者对数据集趋势的解读（author-claim），卡断言保留了这一归属，未将其升级为被证明的因果结论。"
+   }
+  },
+  {
+   "card_id": "2604.27621-C06",
+   "claim": "综述总结：尽管 affordance 迁移快速发展，其有效性仍严重依赖可靠的 HOI 分析、准确的空间定位与鲁棒的重定向；这一依赖在复杂操作任务、尤其是严重遮挡、大视角变化、物体与末端类别多样的开放世界设定下尤其受到挑战。",
+   "stance": "support",
+   "relation": "领域共识层面确认'手部检测/追踪精度->重定向末端轨迹可用性'的瓶颈地位，并点名遮挡与视角变化（ego 视频的固有属性）为主要挑战来源。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.3.1(f) affordance 家族结论段的作者综合判断，与 Tab.9 失效条件互证。",
+   "locator": "24 Journal Title XX(X)",
+   "source_context": "Despite the rapid development of affordance-based transfer, its effectiveness still depends heavily on reliable HOI analysis, accurate spatial grounding, and robust retargeting. This is particularly challenged in complex manipulation tasks, especially in open-world settings with severe occlusion, large viewpoint variation, and diverse object and effector categories.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "24 节原文逐句匹配；该陈述是作者对 affordance 家族的总结性 author-claim，卡断言忠实保留其范围与措辞强度。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref_key": "Pavlakos2024",
+   "citation": "Pavlakos et al. 2024, HaMeR: Hand Mesh Recovery",
+   "reason": "单目手部重建主流工具，其误差模式是 C03 的前提"
+  },
+  {
+   "ref_key": "Potamias2025",
+   "citation": "Potamias et al. 2025, WiLoR",
+   "reason": "精修层缓解 HaMeR misalignment 的方法"
+  },
+  {
+   "ref_key": "Zhang2025d",
+   "citation": "Zhang et al. 2025d, HaWoR",
+   "reason": "ego 视频世界系手部轨迹重建，直接关系 ego 数据手部追踪精度"
+  },
+  {
+   "ref_key": "Kareer2025a",
+   "citation": "Kareer et al. 2025a, EgoMimic",
+   "reason": "ego 视频 3D 手部追踪+遥操作共训练的代表，Tab.1 效率数据来源之一"
+  }
+ ],
+ "notes": "综述证据均为领域综合/文献统计，无一手误差-性能定量数据；阈值问题在本文中为空白（reader-inferred boundary 已记录）。页式分节，定位器用页眉节名。"
+}

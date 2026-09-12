@@ -1,0 +1,371 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.19626",
+  "title": "EgoBridge: Domain Adaptation for Generalizable Imitation from Egocentric Human Data",
+  "published": "2025-09-23",
+  "url": "https://arxiv.org/abs/2509.19626",
+  "authors": [
+   "Ryan Punamiya",
+   "Dhruv Patel",
+   "Patcharapong Aphiwetsa",
+   "Pranav Kuppili",
+   "Lawrence Y. Zhu",
+   "Simar Kareer",
+   "Judy Hoffman",
+   "Danfei Xu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "完整给出了从 Aria MPS 手部追踪到机器人 SE(3) 末端监督的生产链（设备系手部 3D 位置→ego 相机系伪参考系 action chunk→z-score 归一化→掩码 BC），并用 DTW/MSE 消融直接量化『轨迹相似性度量精度』对迁移性能的影响——触及综述问题的来源、传播路径与缓解手段。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "主结果与框架定位"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "人机域差与动机"
+   },
+   {
+    "locator": "3.2 Human and Robot Data Sources",
+    "role": "data-or-setting",
+    "purpose": "共享动作空间定义"
+   },
+   {
+    "locator": "3.3 Cross-Embodiment Imitation Learning: Challenges and Objectives",
+    "role": "problem",
+    "purpose": "潜空间协变量偏移的形式化"
+   },
+   {
+    "locator": "4.1 Joint Domain Adaptation via Optimal Transport",
+    "role": "method-or-design",
+    "purpose": "联合分布对齐目标"
+   },
+   {
+    "locator": "4.2 Designing OT Cost Function for Action-Aware Joint Adaptation",
+    "role": "method-or-design",
+    "purpose": "DTW 伪配对与代价设计"
+   },
+   {
+    "locator": "4.3 Putting it all together: EgoBridge",
+    "role": "method-or-design",
+    "purpose": "数据采集平台、参考系构建与共享架构"
+   },
+   {
+    "locator": "5.1 Simulation Evaluation",
+    "role": "data-or-setting",
+    "purpose": "PushT 受控基准"
+   },
+   {
+    "locator": "5.2 Real World Evaluation",
+    "role": "data-or-setting",
+    "purpose": "三真实任务数据规模与评测"
+   },
+   {
+    "locator": "5.3 Results",
+    "role": "results-or-analysis",
+    "purpose": "主结果、消融与潜空间分析"
+   },
+   {
+    "locator": "6 Conclusion and Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "DTW 多任务局限"
+   },
+   {
+    "locator": "A Algorithm Pseudocode",
+    "role": "appendix-or-supplement",
+    "purpose": "训练流程细节"
+   },
+   {
+    "locator": "B Network Architecture",
+    "role": "appendix-or-supplement",
+    "purpose": "掩码损失与超参"
+   },
+   {
+    "locator": "D Robot Data",
+    "role": "appendix-or-supplement",
+    "purpose": "机器人动作 FK 与手眼标定链"
+   },
+   {
+    "locator": "E Embodied human data",
+    "role": "appendix-or-supplement",
+    "purpose": "Aria MPS 手部追踪来源与 action chunk 构建"
+   },
+   {
+    "locator": "F Data processing and alignment",
+    "role": "appendix-or-supplement",
+    "purpose": "归一化与人机时间尺度差异"
+   },
+   {
+    "locator": "I Pseudo-pair Visualisation",
+    "role": "appendix-or-supplement",
+    "purpose": "DTW vs MSE 配对的定性失效模式"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "仅用于定位引用，非证据来源"
+   },
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "not-applicable: 仅用于定位引用"
+   }
+  ]
+ },
+ "research_question": "如何把 ego 人类示教与机器人遥操作示教在共享潜空间中做动作感知的联合分布对齐，使策略能从仅在人类数据中出现的行为/场景泛化？",
+ "contributions": [
+  "将人-机跨本体模仿形式化为域适应问题，提出对（潜特征, 动作）联合分布的 Sinkhorn OT 对齐损失",
+  "用动作轨迹 DTW 距离塑造 OT ground cost 形成行为伪配对，处理人机 2-3 倍速度差与残差运动学差异",
+  "三个真实任务上较人类数据增强基线最高 +44% 绝对成功率，并能泛化到仅人类数据中出现的目标/场景/动作"
+ ],
+ "method": {
+  "summary": "人类数据由 Meta Project Aria 眼镜采集，Aria MPS 云端返回设备系下的双手 3D 位置追踪；按 EgoMimic 方式把未来 k 帧手部位置投影到当前时刻设备系，构造稳定伪参考系的 SE(3) 动作块（仅 3D 位置被监督，掩码掉姿态/夹爪）；机器人侧用解析 FK 求末端笛卡尔位姿再经手眼标定投影到 Aria 相机系；机器人佩戴同款 Aria 眼镜模拟人类手眼配置以消除相机设备差。编码器共享、按本体做 z-score 归一化；训练目标为 BC 协同训练损失加 α 加权的联合 OT 损失，OT 代价矩阵中 DTW 最近的行为伪配对被打 λ≪1 折扣。",
+  "assumptions": [
+   "Aria MPS 的手部追踪精度足以充当 SE(3) 末端监督（论文未对其进行噪声消融或误差测量）",
+   "共享 SE(3) ego 相机系 + 每本体归一化后，人机动作分布可用同一动作头预测",
+   "DTW 距离能在存在 2-3 倍速度差时可靠识别行为相似的人机轨迹对"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "人类 Aria 数据：Drawer 1 小时（360 示教）、Scoop Coffee 3 小时（720 示教）、Laundry 2 小时（约 700 示教）",
+   "机器人遥操作数据：Drawer 144 示教、Scoop Coffee 50 示教、Laundry 300 示教",
+   "仿真 PushT：圆形/三角形推子共 350 示教"
+  ],
+  "tasks": [
+   "Drawer（开抽屉放玩具）",
+   "Scoop Coffee（舀咖啡豆）",
+   "Laundry（双臂叠衣）",
+   "仿真 PushT"
+  ],
+  "embodiments": [
+   "定制双臂移动操作平台（2×ViperX 300s 从臂 + WidowX 主臂，Eve 衍生）",
+   "人类佩戴 Meta Project Aria 眼镜"
+  ],
+  "sample_or_scale": "三真实任务共约 6 小时人类数据与 494 条机器人示教；真实评测 Drawer 48 试次、Scoop Coffee 15 试次、Laundry 18 试次；仿真 100 固定种子"
+ },
+ "evaluation": {
+  "design": "仿真 PushT 受控基准（换背景色/镜像 T 模拟观测与行为泛化）+ 三真实任务的分布内/泛化评测；与人类数据增强基线（Co-train、EgoMimic、MimicPlay、ATM、Robot-only BC）对照；消融替换 DTW 为 MSE、联合 OT 为边际对齐、去除对齐损失",
+  "baselines": [
+   "Robot-only BC",
+   "Co-train",
+   "EgoMimic",
+   "MimicPlay",
+   "ATM",
+   "（仿真）MMD / Standard OT / Target-only"
+  ],
+  "metrics": [
+   "任务成功率/阶段得分",
+   "（仿真）平均奖励（max IoU）与 SR（reward≥0.9）",
+   "潜空间 Wasserstein-2 距离与 KNN 语义一致性"
+  ],
+  "ablations": [
+   "DTW→MSE 配对度量",
+   "Joint-OT→Standard-OT 边际对齐",
+   "去除对齐损失（直接协同训练）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "EgoBridge 较人类数据增强跨本体基线最高提升 44% 绝对成功率；Drawer 上 47 分|47% SR 对最优基线 55 分|22%（Co-train）",
+   "scope": "三个真实任务",
+   "locator": "5.3 Results, Table 1"
+  },
+  {
+   "finding": "仅在人类数据中出现的行为泛化：Drawer 第四象限（机器人未见）EgoBridge 33% SR，其余方法全部 0%",
+   "scope": "Drawer 行为泛化",
+   "locator": "5.3 Results"
+  },
+  {
+   "finding": "配对度量消融：DTW→MSE 使 Drawer 分布内 SR 从 47% 降至 14%（正文行文写 47%→17%，与表 2 的 14% 不一致），行为泛化 33%→17%",
+   "scope": "Drawer 消融",
+   "locator": "5.3 Results, Table 2"
+  },
+  {
+   "finding": "潜空间分析：EgoBridge 的人机潜特征 Wasserstein-2 距离最低且 KNN 近邻语义一致（同任务同阶段），与成功率高低一致相关",
+   "scope": "Drawer/Scoop Coffee",
+   "locator": "5.3 Results, Figure 5"
+  },
+  {
+   "finding": "DTW 失效模式：轨迹跨越多阶段时产生时间错配；空间相距远但视角极端偏移导致视觉相近时误配；多任务联合适应下 DTW 代价可能不再有效",
+   "scope": "方法局限",
+   "locator": "6 Conclusion and Limitations / I Pseudo-pair Visualisation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "DTW 动作对齐代价在多任务联合域适应设置下可能不再有效，未来用语言嵌入距离替代",
+    "locator": "6 Conclusion and Limitations"
+   },
+   {
+    "limitation": "DTW 失效模式：轨迹覆盖多个子阶段导致时间错配；空间远离但极端视角偏移导致视觉相近而误配",
+    "locator": "I Pseudo-pair Visualisation"
+   },
+   {
+    "limitation": "尚未扩展到多本体与无动作标签的互联网人类视频",
+    "locator": "6 Conclusion and Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部追踪精度本身完全未被消融或测量：Aria MPS 追踪被当作给定真值，缺少噪声注入或追踪质量-性能曲线，无法回答可接受阈值",
+    "basis": "附录 E 仅描述 MPS 输出格式，全文无追踪误差定量"
+   },
+   {
+    "boundary": "正文与表 2 存在内部不一致：正文称 MSE 消融使分布内 SR 从 47% 降至 17%，表 2 MSE 行列的是 14%（17% 是其行为泛化列），引用时需二选一",
+    "basis": "5.3 消融段 vs Table 2"
+   },
+   {
+    "boundary": "人类监督仅覆盖 3D 位置（无姿态/夹爪），意味着手部追踪信号对机器人末端姿态精度无任何直接监督贡献，姿态精度完全由机器人侧数据承担",
+    "basis": "B.1.2 掩码损失描述"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：Aria 眼镜采集的人类 ego 数据 + 同款眼镜模拟手眼配置的机器人 + 单任务场景下的 SE(3) 位置级轨迹迁移；不提供手部追踪精度阈值或噪声-性能关系；多任务、无动作标签互联网视频、姿态/夹爪粒度监督均出界。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "仿真 PushT 提供可复现的受控域差环境，与真实任务互相印证",
+   "消融同时隔离配对度量（DTW vs MSE）与对齐层级（联合 vs 边际 vs 无）两个因子",
+   "用 Wasserstein 距离与 KNN 语义对潜空间对齐质量做了量化+定性双重验证"
+  ],
+  "design_risks": [
+   "手部追踪（Aria MPS）作为动作监督的唯一来源却无任何精度审计，追踪误差的影响被整个隐去",
+   "正文与表格数字不一致（47%→17% vs 表 2 的 14%）",
+   "真实任务试次数较小（15-48）且每任务独立训练，统计稳健性有限"
+  ],
+  "baseline_fairness": "真实任务基线共享同一编码器/解码器架构与数据，仅训练目标不同；ATM/MimicPlay 按原论文精神复现并说明改动，公平性较好。",
+  "metric_validity": "成功率+阶段得分组合合理；Drawer 24 抽屉×2 试次的协议明确；正文-表格数字不一致是报告瑕疵。",
+  "reproducibility": "算法伪代码、超参表、数据处理公式（含 action chunk 构建与手眼标定式）齐全；但 Aria MPS 为闭源云服务，其追踪精度不可控。",
+  "external_validity": "对综述问题的价值：给出『手部追踪→设备系轨迹→ego 相机系伪参考系→掩码位置监督』的完整误差传播链设计，并用 DTW/MSE 消融证明轨迹度量精度对迁移性能有最大单因子影响；但对追踪噪声本身不设实验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.19626-C01",
+   "claim": "EgoBridge 的人类动作监督完全来自 Aria MPS 云端服务返回的设备系双手 3D 位置追踪（非自训练检测器、无人工标注）；且由于人类数据只有 3D 位置，BC 损失对人类样本做掩码、仅监督预测中的 3D 位置分量——手部追踪信号对机器人末端姿态与夹爪精度没有直接贡献。",
+   "stance": "conditional",
+   "relation": "回答轨迹来源与监督粒度：手腕/手部轨迹来自商用 MPS 追踪管线并以其输出为真值；监督信号被显式收窄到位置维度，意味着追踪精度问题被限定在位置通道内传播，姿态精度完全依赖机器人侧数据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 E 描述 MPS 返回设备系双手 3D 位置；附录 B.1.2 描述人类数据仅有 3D 位置故使用掩码损失。（extraction 将附录 A-H 并入 References 区段表面，故用复合定位器。）",
+   "locator": "References / Appendix E Embodied human data",
+   "source_context": "The service returns device pose estimated using the SLAM camera, hand tracking relative to the device frame, a semi-dense point-cloud of the environment and eye gaze estimation.",
+   "evidence_type": "system-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配附录 E；掩码损失句逐字见于 B.1.2（'the loss is a masked loss which is only calculated on the values in the prediction corresponding to the 3D position for human data'），两部分合并表述未超出原文。"
+   }
+  },
+  {
+   "card_id": "2509.19626-C02",
+   "claim": "为弥合人机域差，EgoBridge 在数据侧叠加三重对齐：机器人佩戴同款 Aria 眼镜并模拟成年人类手眼配置以消除相机设备差；人机动作统一投影到 ego 相机（设备）伪参考系的 SE(3) 空间并按本体做 z-score 归一化；训练侧再用 DTW 距离吸收人机 2-3 倍的执行速度差与共享 SE(3) 空间内的残余运动学差异。",
+   "stance": "support",
+   "relation": "回答域差异如何量化与弥合：作者把视角/设备差、参考系差、时间尺度与运动学差分层归因，并分别用硬件配置、坐标系变换+归一化、DTW 软配对三种手段对应缓解——这是『检测/追踪误差之外』误差来源的结构化清单。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 给出 2-3 倍速度差与共享 SE(3) 下残余运动学差异的表述；4.3 给出同款眼镜模拟手眼配置；附录 F 给出每本体 z-score 归一化。",
+   "locator": "4.2 Designing OT Cost Function for Action-Aware Joint Adaptation",
+   "source_context": "humans might be 2-3 times faster than teleoperated robots, and kinematic variations, where even within a shared SE(3) end-effector action space and hand-eye alignment through an egocentric coordinate frame (Sec. 4.3), minor kinematic differences exist.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 4.2；'mount it in a way that emulates the hand-eye configuration of a human adult' 与每本体 z-score 归一化分别逐字见于 4.3 与附录 F，claim 的三重归纳与三处原文一一对应。"
+   }
+  },
+  {
+   "card_id": "2509.19626-C03",
+   "claim": "在三个真实单臂/双臂任务上，EgoBridge 较人类数据增强跨本体基线最高提升 44% 绝对成功率；在机器人数据从未覆盖的 Drawer 第四象限（行为仅见于人类数据），EgoBridge 取得 33% 成功率而所有基线完全失败（0%）。",
+   "stance": "support",
+   "relation": "支持『手部追踪驱动的人类监督具有实际可用性』：即使人类监督仅到 3D 位置粒度、且人机存在 2-3 倍速度差，经对齐后人类轨迹仍能转化为机器人末端可执行的新行为，说明在该管线下追踪质量的现有水平足以支撑正收益。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要与 5.3 分别给出 44% 与 33%/0% 数字；Table 1 中 Drawer 行为泛化列基线全部为 0%。",
+   "locator": "5.3 Results",
+   "source_context": "find that EgoBridge is\nable to generalize to these locations with a success rate of 33%, whereas most methods fail entirely\n(Tab. 1)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate",
+    "value_or_direction": "最高 +44% 绝对提升；Drawer 行为泛化 33% vs 基线 0%",
+    "comparator": "Co-train / EgoMimic / MimicPlay / ATM / Robot-only BC（同架构同数据）",
+    "task_or_sample": "Drawer / Scoop Coffee / Laundry 三真实任务；Drawer 48 试次",
+    "locator": "5.3 Results, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "33%/0% 引文逐字匹配 5.3；44% 逐字见于摘要；Table 1 各基线在 Drawer Beh. Gen. 列均为 0%，claim 未超任务范围。"
+   }
+  },
+  {
+   "card_id": "2509.19626-C04",
+   "claim": "轨迹相似性度量的精度直接决定迁移性能：把 DTW 伪配对换成简单 MSE 后，Drawer 分布内成功率从 47% 降至 14%（正文行文写 47%→17%，与表 2 的 14% 存在内部不一致）、行为泛化从 33% 降至 17%，是三项消融中分布内降幅最大者；作者另定性指出 DTW 在轨迹跨阶段与极端视角偏移下会误配。",
+   "stance": "limit",
+   "relation": "回答误差传播路径与可接受度量标准：监督信号本身不变、仅改变轨迹配对度量就造成最大性能坍塌，说明从手部轨迹到策略收益的链条中『轨迹级相似性/对齐精度』是瓶颈环节；同时 DTW 自身的失效模式限定了该缓解手段的边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 给出四行消融数字；5.3 消融段给出最大降幅归因；附录 I 给出 DTW 失效模式。",
+   "locator": "5.3 Results",
+   "source_context": "replacing the cost function\nwith MSE leads to the largest performance drop for in-\ndistribution policy success rate from 47% to 17%, seen\nin Tab. 2, which emphasizes the importance of creating\nsemantically similar pseudo-pairs",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Drawer success rate（分布内 / 行为泛化）",
+    "value_or_direction": "DTW 47%/33% → MSE 14%/17% → Standard-OT 33%/17% → Co-train 22%/0%",
+    "comparator": "EgoBridge 自身的三项消融变体",
+    "task_or_sample": "Drawer 真实任务",
+    "locator": "5.3 Results, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 5.3 消融段；表 2 四行数字已核对（EgoBridge 47/33、MSE 14/17、Standard-OT 33/17、Co-train 22/0），claim 同时如实标注正文 17% 与表 14% 的不一致；DTW 失效模式逐字见于附录 I。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": "2410.24221",
+   "title": "EgoMimic: Scaling Imitation Learning via Egocentric Video",
+   "reason": "数据平台、伪参考系 action chunk 与机器人 Eve 平台均直接继承自该工作"
+  },
+  {
+   "arxiv_id": "",
+   "title": "Any-Point Trajectory Modeling (ATM)",
+   "reason": "基线之一，代表点轨迹伪标签路线，与手部 SE(3) 追踪路线对照"
+  }
+ ],
+ "notes": "批次 B07-4。对综述问题的接口：C01 轨迹来源与监督粒度收窄、C02 域差分层归因与缓解清单、C03 追踪驱动监督的正收益证据、C04 轨迹度量精度作为传播瓶颈。最大盲区：Aria MPS 追踪精度从未被消融，可接受阈值问题在本文不可回答。事件 ID 预计占 EA-EGOPREC-2026-0314..0317。"
+}

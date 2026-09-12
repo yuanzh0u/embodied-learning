@@ -1,0 +1,1448 @@
+{
+  "generated_at": "2026-09-11T06:47:14.932116+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "无本体ego-centric数据中手部检测精度对本体末端轨迹的影响",
+  "start_date": "2025-09-01",
+  "end_date": "2026-08-31",
+  "knowledge_ids": [
+    "EA-DATA",
+    "EA-XEMBODIMENT",
+    "EA-SENSOR",
+    "EA-MODEL"
+  ],
+  "families": [],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 144,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 144,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-ego-hand-robot-core",
+        "dynamic-ego-video-imitation-hand",
+        "dynamic-hand-pose-retarget",
+        "dynamic-human-video-wrist-trajectory",
+        "dynamic-egodex-egovla-titles",
+        "dynamic-wearable-data-collection",
+        "dynamic-egoexo-robot-transfer",
+        "dynamic-motion-retarget-humanoid-adjacent",
+        "ea-data-in-the-wild",
+        "ea-data-dataset-curation",
+        "ea-xembodiment-retargeting-dexterous",
+        "ea-xembodiment-human-to-robot",
+        "ea-sensor-tactile-force",
+        "ea-sensor-point-cloud",
+        "ea-model-finetuning"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "dynamic-world-space-hand-recon",
+        "dynamic-hand-object-4d-policy",
+        "dynamic-embodiment-agnostic-rep",
+        "dynamic-point-track-action",
+        "ea-xembodiment-action-representation",
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-pose-noise-robust-policy",
+        "dynamic-hand-tracking-noise",
+        "dynamic-label-noise-imitation",
+        "ea-sensor-occlusion"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "evaluation-and-validation",
+      "query_labels": [
+        "dynamic-hand-pose-benchmark-eval",
+        "dynamic-retarget-eval-dexterous",
+        "dynamic-human-video-success-rate"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "deployment-and-operations",
+      "query_labels": [
+        "dynamic-umi-tracking-deploy",
+        "dynamic-teleop-hand-tracking-deploy"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "ea-data-robot-demonstrations",
+        "ea-data-demonstration-quality",
+        "ea-xembodiment-cross-embodiment",
+        "ea-sensor-multimodal-policy",
+        "ea-model-vla",
+        "ea-model-named-foundation"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "web-calibration dynamic expansion (high): Web calibration on 2026-09-11 identified the hand-detection-to-trajectory pipeline family: EgoVLA (arXiv:2507.12440, wrist/hand actions from ego video -> IK retargeting), EgoDex (Apple, 829h AVP device-tracked 3D hand), VideoManip (arXiv:2602.09013, 4D hand-object trajectory -> DP3 policy 62.86%), AoE (arXiv:2602.23893, HaWoR hand reconstruction pipeline), Video2Sim2Real (arXiv:2606.08828, HaMeR keypoints -> Mink retargeting), LUCID (embodiment-agnostic intent: object flow + palm pose), 3PoinTr (arXiv:2603.08485, 3D point tracks as embodiment-agnostic representation), MobileEgo Anywhere (arXiv:2605.05945). Retargeting-error analyses: mingrui-yu key-objectives retargeting study, Vision-Based Hand Shadowing (arXiv:2603.11383, failures stem exclusively from landmark detection issues), HumDex (arXiv:2603.12260), PKDA (arXiv:2511.10987). Device-tracked contrast family: FastUMI / ActiveUMI (arXiv:2510.01607) / UMI-3D / DexUMI. Prior run LR-EGO-HAND (20260729) quantified ego hand-tracking accuracy itself (in-domain MKPE 9-11mm -> 16.28mm in the wild); this run targets the downstream propagation into end-effector trajectory and policy success."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-ego-hand-robot-core",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:egocentric AND all:\"hand pose\" AND all:robot",
+      "why": "Core intersection: egocentric hand pose used for robot learning."
+    },
+    {
+      "label": "dynamic-ego-video-imitation-hand",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"egocentric video\" AND all:\"imitation learning\" AND all:hand",
+      "why": "Direct: imitation from egocentric human video via hand signals (EgoVLA/EgoMimic family)."
+    },
+    {
+      "label": "dynamic-hand-pose-retarget",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"hand pose\" AND all:retargeting AND all:robot",
+      "why": "Direct: hand-pose-to-robot retargeting pipelines and their error behavior."
+    },
+    {
+      "label": "dynamic-human-video-wrist-trajectory",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"human video\" AND all:\"wrist trajectory\" AND all:robot",
+      "why": "Direct: wrist/end-effector trajectory recovery from human video."
+    },
+    {
+      "label": "dynamic-egodex-egovla-titles",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "ti:EgoDex OR ti:EgoVLA OR ti:EgoMimic",
+      "why": "Title anchors for the three flagship ego-video-to-robot systems."
+    },
+    {
+      "label": "dynamic-world-space-hand-recon",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"world-space\" AND all:\"hand\" AND all:reconstruction AND all:egocentric",
+      "why": "Method: world-space hand reconstruction (HaWoR family) as the ego-video action-labeling front end."
+    },
+    {
+      "label": "dynamic-hand-object-4d-policy",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"hand-object\" AND all:trajectory AND all:policy AND all:video",
+      "why": "Method: 4D hand-object trajectory reconstruction feeding manipulation policies (VideoManip)."
+    },
+    {
+      "label": "dynamic-embodiment-agnostic-rep",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"embodiment-agnostic\" AND all:\"human video\"",
+      "why": "Method: embodiment-agnostic intermediate representations that bypass or buffer hand-pose error (LUCID, 3PoinTr)."
+    },
+    {
+      "label": "dynamic-point-track-action",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"point tracks\" AND all:robot AND all:manipulation",
+      "why": "Method/alternative: point-track action representations that avoid explicit hand pose (ATM, Track2Act, 3PoinTr)."
+    },
+    {
+      "label": "dynamic-pose-noise-robust-policy",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:noisy AND all:demonstrations AND all:policy AND all:robot",
+      "why": "Limit: robustness of imitation policies to noisy action labels/trajectories."
+    },
+    {
+      "label": "dynamic-hand-tracking-noise",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"hand tracking\" AND (all:noise OR all:error OR all:accuracy) AND all:robot",
+      "why": "Limit: hand tracking noise/error/accuracy in robot data pipelines."
+    },
+    {
+      "label": "dynamic-label-noise-imitation",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:\"label noise\" AND all:\"imitation learning\" AND all:manipulation",
+      "why": "Limit: action-label noise in imitation learning for manipulation."
+    },
+    {
+      "label": "dynamic-hand-pose-benchmark-eval",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"hand pose estimation\" AND all:benchmark AND all:egocentric",
+      "why": "Eval: egocentric hand pose benchmarks/metrics (MPJPE/MKPE) that quantify the upstream error budget."
+    },
+    {
+      "label": "dynamic-retarget-eval-dexterous",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:retargeting AND all:evaluation AND all:\"dexterous manipulation\"",
+      "why": "Eval: retargeting objective ablations and error metrics for dexterous manipulation (mingrui-yu study, PKDA)."
+    },
+    {
+      "label": "dynamic-human-video-success-rate",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:\"human videos\" AND all:\"success rate\" AND all:robot AND all:manipulation",
+      "why": "Eval: downstream policy success rates from human-video-derived trajectories."
+    },
+    {
+      "label": "dynamic-umi-tracking-deploy",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:UMI AND all:tracking AND all:manipulation",
+      "why": "Deploy: device-based tracking (UMI/FastUMI/DexUMI) as the accuracy contrast to visual hand detection."
+    },
+    {
+      "label": "dynamic-teleop-hand-tracking-deploy",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:teleoperation AND all:\"hand tracking\" AND all:robot",
+      "why": "Deploy: teleoperation hand tracking accuracy/latency (Vision Pro class) as deployed baseline."
+    },
+    {
+      "label": "dynamic-wearable-data-collection",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:wearable AND all:\"data collection\" AND all:manipulation AND all:hand",
+      "why": "Adjacent: wearable ego data collection where hand signal quality is the bottleneck."
+    },
+    {
+      "label": "dynamic-egoexo-robot-transfer",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:EgoExo4D OR (all:ego-exo AND all:robot)",
+      "why": "Adjacent: Ego-Exo datasets/benchmarks feeding robot learning."
+    },
+    {
+      "label": "dynamic-motion-retarget-humanoid-adjacent",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:\"motion retargeting\" AND all:humanoid AND all:video",
+      "why": "Adjacent: human-video motion retargeting to humanoid whole bodies (GenMimic family) — wrist trajectory error tolerance."
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-ego-hand-robot-core",
+      "tier": "dynamic-direct",
+      "query": "all:egocentric AND all:\"hand pose\" AND all:robot",
+      "why": "Core intersection: egocentric hand pose used for robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-hand-robot-core"
+      ]
+    },
+    {
+      "label": "dynamic-ego-video-imitation-hand",
+      "tier": "dynamic-direct",
+      "query": "all:\"egocentric video\" AND all:\"imitation learning\" AND all:hand",
+      "why": "Direct: imitation from egocentric human video via hand signals (EgoVLA/EgoMimic family).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-video-imitation-hand"
+      ]
+    },
+    {
+      "label": "dynamic-hand-pose-retarget",
+      "tier": "dynamic-direct",
+      "query": "all:\"hand pose\" AND all:retargeting AND all:robot",
+      "why": "Direct: hand-pose-to-robot retargeting pipelines and their error behavior.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-pose-retarget"
+      ]
+    },
+    {
+      "label": "dynamic-human-video-wrist-trajectory",
+      "tier": "dynamic-direct",
+      "query": "all:\"human video\" AND all:\"wrist trajectory\" AND all:robot",
+      "why": "Direct: wrist/end-effector trajectory recovery from human video.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-video-wrist-trajectory"
+      ]
+    },
+    {
+      "label": "dynamic-egodex-egovla-titles",
+      "tier": "dynamic-direct",
+      "query": "ti:EgoDex OR ti:EgoVLA OR ti:EgoMimic",
+      "why": "Title anchors for the three flagship ego-video-to-robot systems.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egodex-egovla-titles"
+      ]
+    },
+    {
+      "label": "dynamic-world-space-hand-recon",
+      "tier": "dynamic-method",
+      "query": "all:\"world-space\" AND all:\"hand\" AND all:reconstruction AND all:egocentric",
+      "why": "Method: world-space hand reconstruction (HaWoR family) as the ego-video action-labeling front end.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-space-hand-recon"
+      ]
+    },
+    {
+      "label": "dynamic-hand-object-4d-policy",
+      "tier": "dynamic-method",
+      "query": "all:\"hand-object\" AND all:trajectory AND all:policy AND all:video",
+      "why": "Method: 4D hand-object trajectory reconstruction feeding manipulation policies (VideoManip).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-object-4d-policy"
+      ]
+    },
+    {
+      "label": "dynamic-embodiment-agnostic-rep",
+      "tier": "dynamic-method",
+      "query": "all:\"embodiment-agnostic\" AND all:\"human video\"",
+      "why": "Method: embodiment-agnostic intermediate representations that bypass or buffer hand-pose error (LUCID, 3PoinTr).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-embodiment-agnostic-rep"
+      ]
+    },
+    {
+      "label": "dynamic-point-track-action",
+      "tier": "dynamic-method",
+      "query": "all:\"point tracks\" AND all:robot AND all:manipulation",
+      "why": "Method/alternative: point-track action representations that avoid explicit hand pose (ATM, Track2Act, 3PoinTr).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-point-track-action"
+      ]
+    },
+    {
+      "label": "dynamic-pose-noise-robust-policy",
+      "tier": "dynamic-limit",
+      "query": "all:noisy AND all:demonstrations AND all:policy AND all:robot",
+      "why": "Limit: robustness of imitation policies to noisy action labels/trajectories.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-pose-noise-robust-policy"
+      ]
+    },
+    {
+      "label": "dynamic-hand-tracking-noise",
+      "tier": "dynamic-limit",
+      "query": "all:\"hand tracking\" AND (all:noise OR all:error OR all:accuracy) AND all:robot",
+      "why": "Limit: hand tracking noise/error/accuracy in robot data pipelines.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-tracking-noise"
+      ]
+    },
+    {
+      "label": "dynamic-label-noise-imitation",
+      "tier": "dynamic-limit",
+      "query": "all:\"label noise\" AND all:\"imitation learning\" AND all:manipulation",
+      "why": "Limit: action-label noise in imitation learning for manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-label-noise-imitation"
+      ]
+    },
+    {
+      "label": "dynamic-hand-pose-benchmark-eval",
+      "tier": "dynamic-eval",
+      "query": "all:\"hand pose estimation\" AND all:benchmark AND all:egocentric",
+      "why": "Eval: egocentric hand pose benchmarks/metrics (MPJPE/MKPE) that quantify the upstream error budget.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-pose-benchmark-eval"
+      ]
+    },
+    {
+      "label": "dynamic-retarget-eval-dexterous",
+      "tier": "dynamic-eval",
+      "query": "all:retargeting AND all:evaluation AND all:\"dexterous manipulation\"",
+      "why": "Eval: retargeting objective ablations and error metrics for dexterous manipulation (mingrui-yu study, PKDA).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-retarget-eval-dexterous"
+      ]
+    },
+    {
+      "label": "dynamic-human-video-success-rate",
+      "tier": "dynamic-eval",
+      "query": "all:\"human videos\" AND all:\"success rate\" AND all:robot AND all:manipulation",
+      "why": "Eval: downstream policy success rates from human-video-derived trajectories.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-video-success-rate"
+      ]
+    },
+    {
+      "label": "dynamic-umi-tracking-deploy",
+      "tier": "dynamic-deploy",
+      "query": "all:UMI AND all:tracking AND all:manipulation",
+      "why": "Deploy: device-based tracking (UMI/FastUMI/DexUMI) as the accuracy contrast to visual hand detection.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-umi-tracking-deploy"
+      ]
+    },
+    {
+      "label": "dynamic-teleop-hand-tracking-deploy",
+      "tier": "dynamic-deploy",
+      "query": "all:teleoperation AND all:\"hand tracking\" AND all:robot",
+      "why": "Deploy: teleoperation hand tracking accuracy/latency (Vision Pro class) as deployed baseline.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-teleop-hand-tracking-deploy"
+      ]
+    },
+    {
+      "label": "dynamic-wearable-data-collection",
+      "tier": "dynamic-adjacent",
+      "query": "all:wearable AND all:\"data collection\" AND all:manipulation AND all:hand",
+      "why": "Adjacent: wearable ego data collection where hand signal quality is the bottleneck.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-wearable-data-collection"
+      ]
+    },
+    {
+      "label": "dynamic-egoexo-robot-transfer",
+      "tier": "dynamic-adjacent",
+      "query": "all:EgoExo4D OR (all:ego-exo AND all:robot)",
+      "why": "Adjacent: Ego-Exo datasets/benchmarks feeding robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egoexo-robot-transfer"
+      ]
+    },
+    {
+      "label": "dynamic-motion-retarget-humanoid-adjacent",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"motion retargeting\" AND all:humanoid AND all:video",
+      "why": "Adjacent: human-video motion retargeting to humanoid whole bodies (GenMimic family) — wrist trajectory error tolerance.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-motion-retarget-humanoid-adjacent"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-ego-hand-robot-core",
+      "tier": "dynamic-direct",
+      "query": "all:egocentric AND all:\"hand pose\" AND all:robot",
+      "why": "Core intersection: egocentric hand pose used for robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-hand-robot-core"
+      ]
+    },
+    {
+      "label": "dynamic-ego-video-imitation-hand",
+      "tier": "dynamic-direct",
+      "query": "all:\"egocentric video\" AND all:\"imitation learning\" AND all:hand",
+      "why": "Direct: imitation from egocentric human video via hand signals (EgoVLA/EgoMimic family).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-ego-video-imitation-hand"
+      ]
+    },
+    {
+      "label": "dynamic-hand-pose-retarget",
+      "tier": "dynamic-direct",
+      "query": "all:\"hand pose\" AND all:retargeting AND all:robot",
+      "why": "Direct: hand-pose-to-robot retargeting pipelines and their error behavior.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-pose-retarget"
+      ]
+    },
+    {
+      "label": "dynamic-human-video-wrist-trajectory",
+      "tier": "dynamic-direct",
+      "query": "all:\"human video\" AND all:\"wrist trajectory\" AND all:robot",
+      "why": "Direct: wrist/end-effector trajectory recovery from human video.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-video-wrist-trajectory"
+      ]
+    },
+    {
+      "label": "dynamic-egodex-egovla-titles",
+      "tier": "dynamic-direct",
+      "query": "ti:EgoDex OR ti:EgoVLA OR ti:EgoMimic",
+      "why": "Title anchors for the three flagship ego-video-to-robot systems.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egodex-egovla-titles"
+      ]
+    },
+    {
+      "label": "dynamic-world-space-hand-recon",
+      "tier": "dynamic-method",
+      "query": "all:\"world-space\" AND all:\"hand\" AND all:reconstruction AND all:egocentric",
+      "why": "Method: world-space hand reconstruction (HaWoR family) as the ego-video action-labeling front end.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-world-space-hand-recon"
+      ]
+    },
+    {
+      "label": "dynamic-hand-object-4d-policy",
+      "tier": "dynamic-method",
+      "query": "all:\"hand-object\" AND all:trajectory AND all:policy AND all:video",
+      "why": "Method: 4D hand-object trajectory reconstruction feeding manipulation policies (VideoManip).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-object-4d-policy"
+      ]
+    },
+    {
+      "label": "dynamic-embodiment-agnostic-rep",
+      "tier": "dynamic-method",
+      "query": "all:\"embodiment-agnostic\" AND all:\"human video\"",
+      "why": "Method: embodiment-agnostic intermediate representations that bypass or buffer hand-pose error (LUCID, 3PoinTr).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-embodiment-agnostic-rep"
+      ]
+    },
+    {
+      "label": "dynamic-point-track-action",
+      "tier": "dynamic-method",
+      "query": "all:\"point tracks\" AND all:robot AND all:manipulation",
+      "why": "Method/alternative: point-track action representations that avoid explicit hand pose (ATM, Track2Act, 3PoinTr).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-point-track-action"
+      ]
+    },
+    {
+      "label": "dynamic-pose-noise-robust-policy",
+      "tier": "dynamic-limit",
+      "query": "all:noisy AND all:demonstrations AND all:policy AND all:robot",
+      "why": "Limit: robustness of imitation policies to noisy action labels/trajectories.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-pose-noise-robust-policy"
+      ]
+    },
+    {
+      "label": "dynamic-hand-tracking-noise",
+      "tier": "dynamic-limit",
+      "query": "all:\"hand tracking\" AND (all:noise OR all:error OR all:accuracy) AND all:robot",
+      "why": "Limit: hand tracking noise/error/accuracy in robot data pipelines.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-tracking-noise"
+      ]
+    },
+    {
+      "label": "dynamic-label-noise-imitation",
+      "tier": "dynamic-limit",
+      "query": "all:\"label noise\" AND all:\"imitation learning\" AND all:manipulation",
+      "why": "Limit: action-label noise in imitation learning for manipulation.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-label-noise-imitation"
+      ]
+    },
+    {
+      "label": "dynamic-hand-pose-benchmark-eval",
+      "tier": "dynamic-eval",
+      "query": "all:\"hand pose estimation\" AND all:benchmark AND all:egocentric",
+      "why": "Eval: egocentric hand pose benchmarks/metrics (MPJPE/MKPE) that quantify the upstream error budget.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-hand-pose-benchmark-eval"
+      ]
+    },
+    {
+      "label": "dynamic-retarget-eval-dexterous",
+      "tier": "dynamic-eval",
+      "query": "all:retargeting AND all:evaluation AND all:\"dexterous manipulation\"",
+      "why": "Eval: retargeting objective ablations and error metrics for dexterous manipulation (mingrui-yu study, PKDA).",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-retarget-eval-dexterous"
+      ]
+    },
+    {
+      "label": "dynamic-human-video-success-rate",
+      "tier": "dynamic-eval",
+      "query": "all:\"human videos\" AND all:\"success rate\" AND all:robot AND all:manipulation",
+      "why": "Eval: downstream policy success rates from human-video-derived trajectories.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-human-video-success-rate"
+      ]
+    },
+    {
+      "label": "dynamic-umi-tracking-deploy",
+      "tier": "dynamic-deploy",
+      "query": "all:UMI AND all:tracking AND all:manipulation",
+      "why": "Deploy: device-based tracking (UMI/FastUMI/DexUMI) as the accuracy contrast to visual hand detection.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-umi-tracking-deploy"
+      ]
+    },
+    {
+      "label": "dynamic-teleop-hand-tracking-deploy",
+      "tier": "dynamic-deploy",
+      "query": "all:teleoperation AND all:\"hand tracking\" AND all:robot",
+      "why": "Deploy: teleoperation hand tracking accuracy/latency (Vision Pro class) as deployed baseline.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-teleop-hand-tracking-deploy"
+      ]
+    },
+    {
+      "label": "dynamic-wearable-data-collection",
+      "tier": "dynamic-adjacent",
+      "query": "all:wearable AND all:\"data collection\" AND all:manipulation AND all:hand",
+      "why": "Adjacent: wearable ego data collection where hand signal quality is the bottleneck.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-wearable-data-collection"
+      ]
+    },
+    {
+      "label": "dynamic-egoexo-robot-transfer",
+      "tier": "dynamic-adjacent",
+      "query": "all:EgoExo4D OR (all:ego-exo AND all:robot)",
+      "why": "Adjacent: Ego-Exo datasets/benchmarks feeding robot learning.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-egoexo-robot-transfer"
+      ]
+    },
+    {
+      "label": "dynamic-motion-retarget-humanoid-adjacent",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"motion retargeting\" AND all:humanoid AND all:video",
+      "why": "Adjacent: human-video motion retargeting to humanoid whole bodies (GenMimic family) — wrist trajectory error tolerance.",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-motion-retarget-humanoid-adjacent"
+      ]
+    },
+    {
+      "label": "ea-data-robot-demonstrations",
+      "tier": "core",
+      "query": "all:\"robot demonstration\" AND all:data",
+      "why": "Find papers that treat demonstrations as reusable robot-learning data.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-robot-demonstrations"
+      ]
+    },
+    {
+      "label": "ea-data-demonstration-quality",
+      "tier": "quality",
+      "query": "all:\"demonstration quality\" AND all:\"robot learning\"",
+      "why": "Surface work that audits operator traces, consistency, and usable trajectory quality.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-demonstration-quality"
+      ]
+    },
+    {
+      "label": "ea-data-in-the-wild",
+      "tier": "collection-setting",
+      "query": "all:\"in-the-wild\" AND all:\"robot manipulation\"",
+      "why": "Capture natural-scene collection papers and their generalization tradeoffs.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-in-the-wild"
+      ]
+    },
+    {
+      "label": "ea-data-dataset-curation",
+      "tier": "adjacent",
+      "query": "all:\"dataset curation\" AND all:\"robot learning\"",
+      "why": "Find dataset organization, filtering, metadata, and quality-control discussions.",
+      "source_key": "EA-DATA",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-data-dataset-curation"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-cross-embodiment",
+      "tier": "core",
+      "query": "all:\"cross-embodiment\" AND all:\"robot manipulation\"",
+      "why": "Find work that explicitly transfers skills or data across robot bodies.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-cross-embodiment"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-retargeting-dexterous",
+      "tier": "retargeting",
+      "query": "all:retargeting AND all:\"dexterous hand\"",
+      "why": "Cover human hand to dexterous robot hand mapping and its limits.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-retargeting-dexterous"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-human-to-robot",
+      "tier": "transfer",
+      "query": "all:\"human-to-robot\" AND all:demonstration",
+      "why": "Find human demonstration transfer papers beyond exact robot teleoperation.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-human-to-robot"
+      ]
+    },
+    {
+      "label": "ea-xembodiment-action-representation",
+      "tier": "representation",
+      "query": "all:\"action representation\" AND all:embodiment AND all:robot",
+      "why": "Expose latent actions, adapters, and interfaces that mediate embodiment mismatch.",
+      "source_key": "EA-XEMBODIMENT",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-xembodiment-action-representation"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "browser-topic-arxiv",
+      "query": "site:arxiv.org/abs \"无本体ego-centric数据中手部检测精度对本体末端轨迹的影响\" \"robot\"",
+      "why": "Fallback candidate discovery on arXiv pages when API metadata search under-recovers.",
+      "source_key": "generic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "web-topic-calibration",
+      "query": "\"无本体ego-centric数据中手部检测精度对本体末端轨迹的影响\" \"robot\" \"arXiv\"",
+      "why": "Find paper-facing terminology for the requested topic.",
+      "source_key": "generic",
+      "source_type": "web",
+      "channel": "web_calibration"
+    }
+  ]
+}

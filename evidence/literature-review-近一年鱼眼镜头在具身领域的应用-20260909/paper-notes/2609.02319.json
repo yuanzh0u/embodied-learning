@@ -1,0 +1,571 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2609.02319",
+  "title": "From Multi-Fisheye Sensing to Panoramic Perception: A Parallax-Aware Onboard Platform for Ultra-Low-Altitude UAVs",
+  "published": "2026-09",
+  "url": "https://arxiv.org/abs/2609.02319",
+  "authors": [
+   "Dun Dai",
+   "Ze Lu",
+   "Cheng He",
+   "Yaowen Wang",
+   "Quan Quan"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "对综述问题最直接的多鱼鱼眼具身系统证据：(1) 应用方式——超低空 UAV 机载把 4 路硬件同步 200° FoV 鱼眼拼成开放 1280×640 ERP 接口（Jetson Orin NX 25 W），逐重叠区视差感知深度自适应（离散半径库 1/2/4/12/30 m）+动态接缝+两带融合，并给出封闭消费全景相机 vs 开放 rig 的生态分界（Table I）；(2) 效果——18 条真实序列/>50,000 四视图组/7 场地昼夜，远场 P90 错位 5.82 px（较 Fixed Depth -41.6%）、近场中位 2.32 px、held-out 跨场地最低聚合误差（5.23/8.95/9.98 px）、八扇区人员响应覆盖 6.9%→55.1%、白天 VPR R@1 74.9%；(3) 局限——P95 延迟 71.88 ms/及时率 71.04%/13.29 W 的机载代价、每重叠区单深度假设（混合深度失效）、夜间/跨光照 VPR 被原始鱼眼反超、冻结模型接口代理非检测精度、无闭环避障实验——'获益（环视检测覆盖、白天 VPR、拼接几何）与受限（夜间、机载算力、混合深度近场、任务闭环）'两端证据齐全且作者自我限定充分。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and I Introduction",
+    "role": "problem",
+    "purpose": "确认问题：超低空 UAV 需要环视（前视相机转弯丢地标、感知方向耦合避障决策）；四相机多光心视差与开放 rig 的同步/标定/拼接/运行时负担；systems gap=同步原始视图访问+视差感知 ERP 形成+实测嵌入式传感器率执行的组合。"
+   },
+   {
+    "locator": "page 2-3, II Related Work（Table I）",
+    "role": "relevant-core",
+    "purpose": "定位相关工作：航空全景感知（Aerial-PASS PAL、PAIR360、PanoAir 双鱼眼 SLAM、OmniNxt 开源多鱼眼 VIO、RflyPano 仿真）与拼接/全景感知/定位方法；Table I 界定各系统开放接口差异。"
+   },
+   {
+    "locator": "page 3-4, III System Design and Field Dataset（A-C）",
+    "role": "data-or-setting",
+    "purpose": "核对平台规格（尺寸/质量/推重比/续航、4×1088×1280@20 Hz 200° 鱼眼、Jetson Orin NX 25 W、1280×640 ERP 目标）、同步与 Kalibr 标定、时钟关联（SLERP 插值+0.2 s 间隙拒绝）与 18 序列/>50,000 组/7 场地昼夜数据。"
+   },
+   {
+    "locator": "page 4-6, IV Adaptive Multi-Fisheye Panorama Formation（A-D）",
+    "role": "method-or-design",
+    "purpose": "精读管线：逐重叠区半径选择（SIFT 证据+65 分位得分+0.5 px 边际门控+5 帧更新+光度回退）、验证门控 APAP 残差网格（>8 px、≥15 控制点、2/3 拟合 1/3 验证）、动态规划接缝（72/120 px 带宽+时间限幅）、曝光图求解+两带融合（16/3 px 羽化）、CUDA 嵌入式实现（FP16 批处理、缓存映射、两级输入队列）。"
+   },
+   {
+    "locator": "page 7-9, V System and Experimental Evaluation（A-D, Tables III-VII, Figs. 5-6）",
+    "role": "results-or-analysis",
+    "purpose": "精读全部定量结果：远/近场拼接质量与 YOLO 接口（Table III）、held-out 连续质量（Table IV）、时间策略消融（Table V、Fig 5a）、Jetson 传感器率执行（Table VI）、VPR 四表示对比（Table VII、Fig 5b/6）。"
+   },
+   {
+    "locator": "page 9, VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者限制：单主导深度/混合深度/实时资源限制；冻结下游证据不确立检测精度或 ERP 内在优势；质量-效率权衡按任务与预算选择。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 10, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，无补充实验；scoping 模式下仅按需核对被引系统（PanoAir/RflyPano/OmniNxt/FishEye8K/CosPlace）名称与年份。"
+   }
+  ]
+ },
+ "research_question": "本论文问题：如何为超低空 UAV 构建一个把四路同步鱼眼流实时转换为几何可用、开放接口的机载 ERP 全景平台，并在拼接质量、传感器率嵌入式执行与下游感知/定位接口三轴上系统评测。综述问题映射：该文是'多鱼鱼鱼眼→机载全景'路线在具身（低空无人机）领域的完整系统证据，覆盖应用方式（开放 ERP 接口+扇区采样）、量化效果（几何/覆盖/定位）与多层局限（机载代价、单深度假设、夜间条件、接口代理性质）。",
+ "contributions": [
+  "开放机载多鱼鱼眼感知平台：定制碳纤维机架+四嵌入式鱼眼相机头+板载计算+飞行/导航传感，开放原始视图、全景、标定元数据与时钟感知位姿/导航接口（Table I 中五项全开放）。",
+  "视差感知全景形成管线：逐重叠区投影深度自适应+边际门控时间选择+受控光度融合，配缓存映射与多率状态更新实现嵌入式执行（远/近场与 held-out 站点最低几何误差）。",
+  "系统级评测：几何/光度全景质量、完整路径 Jetson Orin NX 性能（20 Hz 输入 19.99 fps、0.026% 丢帧、71.04% 50 ms 及时率、13.29 W）、以及真实 UAV 数据上的冻结下游感知与定位测试。",
+  "真实数据集：18 条序列、>50,000 四视图组、7 场地昼夜与 teach-repeat 飞行记录（附开源代码仓库）。"
+ ],
+ "method": {
+  "summary": "传感与平台：四台朝向前左/前右/后右/后左的硬件同步全局快门鱼眼相机（1088×1280@20 Hz、标称 200° FoV、USB 3.0）嵌入 1002.3 g 碳纤维四旋翼，Jetson Orin NX 16 GB（25 W 模式）板载形成 1280×640 ERP，MicoAir743 飞控+双频 GNSS 提供导航元数据。拼接管线：以左前相机为参考系，对每个相邻重叠区从离散投影半径库 R={1,2,4,12,30} m 中以 SIFT 匹配的 65 分位 ERP 位移得分独立选半径；时间上用边际门控滞后（≥0.5 px 改善一次更新、弱证据两次确认、每 5 帧更新、光度回退始终两次确认）稳定深度；残差>8 px 且 ≥15 互控制点时触发验证门控 APAP 仿射网格（2/3 拟合/1/3 验证，验证中位改善 ≥1 px 与 12% 才保留）；动态规划接缝在 72/120 px 带宽内最小化多成本项并受时间/位移约束；跨相机曝光由鲁棒对数强度差解重叠图（每 10 帧指数平滑）；两带融合以 16 px 低频羽化+3 px 高频羽化避免宽羽化双边缘。嵌入式实现：CUDA 缓存映射/掩膜/缓冲，FP16 批处理，特征选择每 5 帧异步提交；输入队列 2 组、满时丢弃最旧；传感器率运行定义为输出率在 0.1 Hz 内、队列不无界增长、定时丢帧可忽略。",
+  "assumptions": [
+   "固定标定在评测期保持有效（安装或相机顺序变化会使标定失效，需重标定）。",
+   "每个相邻重叠区可用单一主导投影深度近似（混合深度内容为作者明示失效场景）。",
+   "SIFT 匹配与光度回退可在重叠区提供足够的半径选择证据（≥8 有效匹配+0.18 px 改善阈值）。",
+   "下游视觉模型保持冻结（不做 ERP 适配/微调），接口评测不预测 ERP 专用训练的结果。",
+   "GNSS 在 10 m 阈值内可用于 teach-repeat 查询采样与 VPR 真值。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自建真实飞行记录：18 条完整序列、>50,000 有效四视图组、7 场地（Court/Farmland/Lake/North Playground/North Square/South Playground/South Square）、昼夜与 teach-repeat；近场序列作压力测试；按序列/场地划分避免泄漏（Farmland 留作开发）",
+   "评测子集：远/近场各 60 帧匹配样本、181 帧匹配远场序列、33 帧匹配室外角度匹配帧、held-out lake/south-square 连续片段"
+  ],
+  "tasks": [
+   "机载四鱼鱼眼→ERP 全景形成（几何/光度质量评测）",
+   "时间策略消融（半径状态切换与结构连续性）",
+   "Jetson 嵌入式传感器率执行（延迟/吞吐/及时率/丢帧/功率/内存）",
+   "冻结 YOLOv10-N 八视检测接口评测（人员响应覆盖、角度目标匹配）",
+   "冻结 CosPlace 视觉位置识别（白天/昼→夜/夜→夜）"
+  ],
+  "embodiments": [
+   "超低空四旋翼 UAV（定制碳纤维机架，推重比 4.2:1，续航 9 min）"
+  ],
+  "sample_or_scale": ">50,000 四视图组×4 视角；Jetson 评测每条件 3 次×3-5 分钟；VPR 每 2 s 采样查询、10 m GNSS 阈值"
+ },
+ "evaluation": {
+  "design": "三轴系统评测：(1) 拼接几何/光度（独立 AKAZE 特征错位 Med./P90、接缝 RGB 中位数、CIEDE2000、LSD 结构连续性）与六方法匹配管线对比；(2) 严格 20 Hz 输入门控的完整路径 Jetson 测量（INA3221 功率+tegrastats 内存温度，剔除前 10 s，保守聚合）；(3) 冻结下游模型（YOLOv10-N 检测、CosPlace VPR）接口评测，明确不预测 ERP 专用训练结果。",
+  "baselines": [
+   "Fixed Feather（固定羽化）、Fixed Depth（固定 30 m 投影+动态接缝）、Global Radius（全局单自适应半径）、Per-seam (abl.)（固定 72 px 接缝搜索）、Adaptive Seam (abl.)（72/120 px 无网格）",
+   "VPR 表示对照：raw fisheye 4V（宽 FoV 参照）、rectified multi-view 4V、ERP 4V（等 FoV 控制）、ERP 8V"
+  ],
+  "metrics": [
+   "AKAZE 特征错位 Med./P90/最差重叠 P90（ERP 像素）",
+   "接缝 RGB 中位数、CIEDE2000",
+   "LSD 线结构连续性（±85 px 带、中央 80% 高度）",
+   "P50/P95 延迟、FPS、50 ms 及时率、丢帧率、平均 VDD_IN 功率、RAM",
+   "YOLO 人员响应覆盖率/均值置信度、AP/Prec./Rec.@10°（角度目标匹配，非 IoU）",
+   "CosPlace R@1/R@5/中位 Top-1 GNSS 误差"
+  ],
+  "ablations": [
+   "时间策略单变量消融：Two-confirmation vs Immediate vs Ours（边际门控）",
+   "接缝与网格组件：Per-seam/Adaptive Seam/Ours（验证门控残差网格）",
+   "扇区密度：forward/direct ERP/4V/8V 检测覆盖对比"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "远场 P90 特征错位 5.82 px（Fixed Depth 9.97，-41.6%）；近场中位 2.32 px（Fixed Depth 10.12）——逐重叠区深度自适应对近场视差收益最大。",
+   "scope": "远/近场各 60 帧匹配样本（Table III）",
+   "locator": "page 7, Table III"
+  },
+  {
+   "finding": "held-out 跨场地连续片段聚合几何误差最低（Med/P90/最差 5.23/8.95/9.98 px、CIEDE2000 2.403），但相对 Global Radius 边际很小。",
+   "scope": "held-out lake/south-square teach/repeat 片段（Table IV）",
+   "locator": "page 7-8, Table IV"
+  },
+  {
+   "finding": "八扇区 ERP 采样把冻结检测器人员响应覆盖从 6.9%（前向扇区）提升到 55.1%（direct ERP 39.4%、四扇区 46.4%）——环视接口的检测覆盖增益近 48 pp。",
+   "scope": "匹配起飞后远场全景，冻结 YOLOv10-N（Fig. 5(b)）",
+   "locator": "page 7, Section V-A"
+  },
+  {
+   "finding": "白天 VPR ERP 8V 最强（R@1 74.9/R@5 90.8/17.2 m）但描述子调用翻倍；跨光照原始鱼眼 4V 最佳（9.5）、夜→夜 ERP 4V 最佳（77.8）而 ERP 8V 最差（63.0）。",
+   "scope": "冻结 CosPlace 三协议 VPR（Table VII）",
+   "locator": "page 9, Table VII"
+  },
+  {
+   "finding": "机载代价：Ours P95 延迟 71.88 ms、50 ms 及时率 71.04%、13.29 W（Fixed Depth 24.73 ms/100%/10.92 W）；时间策略切换数较 Immediate -69.4%/-68.4%，但结构连续性 50.8% 低于 Two-confirmation 51.8% 与固定方法 55.8%/56.1%。",
+   "scope": "Jetson Orin NX 严格 20 Hz 执行（Table VI）与近场结构测试（Fig. 5(a)）",
+   "locator": "page 8-9, Tables V-VI / Fig. 5(a)"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "单主导深度假设：每个重叠区只建模一个主导深度，混合深度内容与实时资源约束下仍受限。",
+    "locator": "page 9, Section VI Conclusion 末段"
+   },
+   {
+    "limitation": "冻结下游证据边界：冻结检测/VPR 在未适配 ERP 的常规图像训练模型下不确立检测器精度、通用表示排序或 ERP 的内在下游优势。",
+    "locator": "page 9, Section VI Conclusion"
+   },
+   {
+    "limitation": "质量-效率权衡：扇区密度、时间自适应与嵌入式成本应按任务与算力预算选择（Ours 及时率 71.04% vs 固定方法 100%）。",
+    "locator": "page 9, Section VI Conclusion 与 Table VI"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无闭环任务证据：动机指向避障与飞行安全，但全文无闭环避障/航迹控制/飞行任务实验，收益证据止于拼接质量、运行时与冻结模型接口代理。",
+    "basis": "page 1 动机 vs page 6-9 实验范围与 page 9 结论的对照（见 C15）。"
+   },
+   {
+    "boundary": "夜间/跨光照定位受限：VPR 跨光照场景原始鱼眼四视图最佳（9.5 vs ERP8V 23.8）、夜→夜八扇区最差（63.0），全景表示的定位优势应限定在白天/同照度条件。",
+    "basis": "page 9, Table VII 数字与作者'condition- and budget-dependent'表述（见 C09）。"
+   },
+   {
+    "boundary": "质量评测样本较小：Table III 主质量对比为每条件 60 帧、角度匹配仅 33 帧、接口覆盖 181 帧；held-out 连续测试仅 2 个场地，作者自述帧相关只做描述性汇报，缺少置信检验。",
+    "basis": "page 7, Table III 表注与 page 7-8 正文（matched frames 均匀采样、descriptively 报告）。"
+   },
+   {
+    "boundary": "标定脆弱性未量化：作者指出安装/相机顺序变化会使标定失效，但未评测标定漂移或在线重标定的敏感性（对标定漂移敏感是 OneOcc 等单全景方案的已知问题，本文未做对应实验）。",
+    "basis": "page 1 引言陈述（A mount or camera-order change can invalidate calibration）与全文实验范围（固定 Kalibr 标定、评测期不变）对照。"
+   },
+   {
+    "boundary": "续航与任务半径受限：25 W 模式无载荷续航 9 min，长任务需换电池或降功耗模式，全景接口的持续任务价值未在长航时下评估。",
+    "basis": "page 3, Table II 续航参数；全文无长航时评测。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论可迁移范围：已标定四鱼鱼 rig（1088×1280@20 Hz、200° FoV）+Jetson Orin NX 25 W 的机载平台，在真实户外 7 场地昼夜飞行数据上，逐重叠区深度自适应 ERP 形成可获得远场 P90 5.82 px/近场中位 2.32 px 的拼接几何、held-out 最低聚合误差、白天 VPR R@1 74.9% 与检测覆盖 6.9%→55.1% 的接口收益，并维持 19.99 fps 传感器率（代价 P95 71.88 ms/71.04% 及时率/13.29 W）。不可迁移/未验证：混合深度重叠区（单深度假设失效）、夜间与跨光照定位（原始鱼眼反超）、ERP 专用训练后的下游表现（模型均冻结未适配）、闭环避障/飞行任务收益、标定漂移鲁棒性、长于 9 min 的任务场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三轴系统评测设计（质量/嵌入式/下游接口）与其系统主张一一对应，评测范围与结论限定严格对齐。",
+   "评测特征（AKAZE）与选择特征（SIFT）相互独立，避免自证循环；LSD 仅作测量工具不进入管线。",
+   "held-out 场地（lake/south-square，开发数据 Farmland 分离）+按序列/场地划分，控制相邻帧泄漏。",
+   "嵌入式测量协议严格：20.0±0.1 Hz 输入门控（P95 到达误差 ≤5 ms，实测最大 0.235 ms）、3 次重复轮换顺序、剔除前 10 s、保守聚合规则明示。",
+   "下游模型冻结并明确不预测 ERP 专用训练结果；角度指标被作者主动标注为接口代理非 IoU。",
+   "开源代码与五项开放接口（Table I），可复现性主张具体。"
+  ],
+  "design_risks": [
+   "主质量对比样本小（每条件 60 帧），且作者自述连续测试帧相关只做描述性汇报，无显著性检验，小边际（如 CIEDE2000 2.403 vs 2.406）的稳健性未知。",
+   "对比方法多为自家管线的消融变体（Fixed Feather/Fixed Depth/Global Radius/Per-seam/Adaptive Seam 同管线共享标定与融合），缺少与外部 SOTA 拼接/全景方法（如深度拼接方法）的横向对比。",
+   "VPR 结论受冻结 CosPlace 的透视图像训练偏置影响，四表示对比不能分离'表示本身'与'预训练域匹配度'的混叠。",
+   "无闭环避障/飞行控制实验，动机层收益未验证。",
+   "夜间/跨光照覆盖有限（South Playground/South Square 两个场地含夜间），光照鲁棒性证据面窄。",
+   "角度目标匹配协议（10° 关联、33 帧）为自定义指标，跨论文可比性存疑。"
+  ],
+  "baseline_fairness": "内部公平性高：六方法共享标定/曝光/ERP 采样/两带融合，单变量隔离清晰（时间策略、接缝、网格各自消融）；但对外部方法仅以 Table I 的接口可用性对比替代性能对比，无第三方拼接基线的同场评测，'最优'结论限于自家管线族内。",
+  "metric_validity": "直接几何/光度指标（AKAZE 错位、接缝 RGB、CIEDE2000）与运行时指标（延迟/及时率/功率）有效性高且定义透明；下游指标（角度匹配 AP@10°、人员响应覆盖、CosPlace 召回）为接口代理，作者明确标注不度量检测精度或内在表示优势——该自我限定降低了过度解读风险但同时也说明任务级效用证据缺失。",
+  "reproducibility": "高：开源代码仓库（GitHub）、Table I 五项开放接口、平台参数/管线超参（半径库、门控阈值、接缝带宽、融合参数）逐项给出、嵌入式测量协议（设备/功率计/统计规则）完整；数据开放按 Table I 声明。残余风险：自建平台硬件定制（复现需重建机架与标定），且部分评测子集（matched frames）的选择标准由作者定义。",
+  "external_validity": "中：真实多场地昼夜飞行数据与 held-out 协议提供一定外部效度；但所有证据限于单一自建平台、单一 rig 几何、户外中低空场景与两个冻结下游模型；夜间仅 2 场地、闭环任务未验证、混合深度场景明示受限——向其他机体/传感器配置/城市峡谷/室内/长航时的外推未检验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2609.02319-C01",
+   "claim": "应用方式：超低空无人机机载平台上，把四路硬件同步鱼眼视频流实时拼成开放的 1280×640 等距柱面全景（ERP）接口，作为下游感知/定位任务的统一可复用视觉接口；机载计算为 Jetson Orin NX，整机为定制碳纤维机架（相机+计算+飞控+GNSS 一体）。",
+   "stance": "support",
+   "relation": "支持命题：多鱼眼→机载全景是具身智能（低空无人机）中鱼眼镜头的核心应用方式之一——ERP 作为连续角坐标框架解耦多相机拼接与可复用视觉模型，任务专属的直线扇区可从 ERP 一致采样。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要与前言给出系统概念：四路同步鱼眼流→开放 ERP 接口→下游目标检测与定位；ERP 使角覆盖成为显式操作选择。",
+   "locator": "page 1, Abstract 与 Section I Introduction（Fig. 1）",
+   "source_context": "Abstract—Ultra-low-altitude unmanned aerial vehicles (UAVs)\nrequire surround vision near buildings, vegetation, and other\nobstacles. We present a parallax-aware onboard platform that\nconverts four synchronized fisheye streams into an open 1280 ×\n640 equirectangular panorama (ERP) interface.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 converts four synchronized fisheye streams into an open 1280×640 equirectangular panorama (ERP) interface 及 Jetson Orin NX/碳纤维机架组成；'ERP 解耦多相机拼接与可复用视觉模型'在同页前言逐字核对（This interface decouples multi-camera formation from reusable vision models）；claim 为作者系统陈述的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C02",
+   "claim": "多鱼眼环视的核心挑战与方案分界：四相机各自有不同光心，近处与远处内容需要不同投影深度（视差）；封闭消费级全景相机隐藏原始视图与标定，开放 rig 则把同步、标定、拼接与运行时控制转移给机器人——本文选开放 rig 并按相邻相机重叠区独立选择投影深度（离散半径库 R={1,2,4,12,30} m，page 4）来处理视差。",
+   "stance": "support",
+   "relation": "支持命题：界定多鱼鱼眼拼接在具身平台上的结构性难点（多光心视差、标定脆弱、曝光分层）与两条路线（封闭消费全景相机 vs 开放 rig）的取舍——是综述'应用方式+局限'的关键机制证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "前言'Angular coverage is the first requirement'段说明四相机不同光心导致近/远内容需要不同投影深度、封闭全景相机隐藏原始视图与标定、开放 rig 把同步/标定/拼接/运行时控制转移给机器人。",
+   "locator": "page 1, Section I Introduction；半径库 R={1,2,4,12,30} m 见 page 4, Section IV-A",
+   "source_context": "Angular coverage is the first requirement. Four cameras\nhave different optical centres, so near and far content require\ndifferent projection depths. A mount or camera-order change\ncan invalidate calibration, while independent exposure control\nproduces visible colour layers. Closed consumer panoramic\ncameras hide the raw views and calibration. Open rigs expose\nthem, but transfer synchronization, calibration, panorama\nformation, and runtime control to the robot.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 逐字给出 Four cameras have different optical centres, so near and far content require different projection depths 与 Closed consumer panoramic cameras hide the raw views and calibration. Open rigs expose them, but transfer synchronization, calibration, panorama formation, and runtime control to the robot；半径库 R = {1, 2, 4, 12, 30} m 在 page 4 逐字核对；claim 各分句均有原文锚点。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C03",
+   "claim": "平台硬件规格：定制碳纤维四旋翼 28×28×13.3 cm、含 4000 mAh 电池重 1002.3 g（不含 693.2 g）、辅助载荷上限 500 g、推重比 4.2:1、25 W 模式无载荷续航 9 min；四路硬件同步全局快门鱼眼相机 1088×1280@20 Hz、标称 200° FoV、USB 3.0；Jetson Orin NX 16 GB 在 25 W 模式形成 1280×640 ERP，目标每 20 Hz 输入组发布一帧全景。",
+   "stance": "support",
+   "relation": "支持命题：给出多鱼眼机载全景平台的具体可实现规格（传感器、算力、功耗、续航），是'鱼眼镜头在具身智能的机载部署方式'的硬件层定量证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III-A 与 Table II 给出整机尺寸/重量/推重比/续航、相机分辨率/帧率/FoV/接口与板载计算配置。",
+   "locator": "page 3, Section III-A 与 Table II（Table II 跨 page 3-4）",
+   "source_context": "The platform measures 28 ×\n28 × 13.3 cm and has a measured mass of 1002.3 g with a\n4000 mAh battery and 693.2 g without it. It supports up to\n500 g auxiliary payload and has a 4.2:1 thrust-to-weight ratio.\nWith no auxiliary payload and the Jetson configured in 25 W\nmode, the measured endurance is 9 min. The integrated sensing\nassembly provides four hardware-synchronized global-shutter\nstreams at 1088×1280, 20 Hz, and nominal 200\n◦ \nFOV through\nUSB 3.0.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "整机尺寸/质量/推重比/续航/相机分辨率与帧率/FoV",
+    "value_or_direction": "28×28×13.3 cm；1002.3 g（带电池）/693.2 g；4.2:1；9 min；4×1088×1280@20 Hz；标称 200° FoV",
+    "comparator": "定制碳纤维四旋翼+Jetson Orin NX 25 W 模式（自建平台）",
+    "task_or_sample": "超低空 UAV 机载全景感知平台",
+    "locator": "page 3, Section III-A / Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 28×28×13.3 cm、1002.3 g、693.2 g、500 g、4.2:1、9 min、1088×1280、20 Hz、nominal 200◦ FOV、USB 3.0；Jetson Orin NX 16 GB 25 W 模式与 1280×640 ERP 目标同页核对；claim 为参数表的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C04",
+   "claim": "评测数据集：真实飞行采集 18 条完整序列、>50,000 个有效四视图组、覆盖 7 个场地（Court/Farmland/Lake/North Playground/North Square/South Playground/South Square），含白天与夜间重访及 teach-repeat 飞行；另有一条近场序列作近距离结构压力测试；全景评测采用按序列或场地不相交的划分以避免相邻帧泄漏。",
+   "stance": "support",
+   "relation": "支持命题：多鱼眼→全景管线的真实机载评测数据基础（规模、场地多样性、昼夜与泄漏控制），支撑其效果证据的可信度评估。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III-C 描述采集范围：自然与人工场地、teach-repeat、昼夜重访；按 sequence/site 划分避免泄漏。",
+   "locator": "page 4, Section III-C Field data for evaluation（Fig. 3 在 page 5）",
+   "source_context": "The collection spans natural and built sites, teach–repeat\nflights, and daytime and night-time revisits recorded as syn-\nchronized four-view data (Fig. 3). The curated field record\ncontains 18 complete sequences and more than 50,000 valid\nfour-view groups across seven field sites: Court, Farmland,\nLake, North Playground, North Square, South Playground, and\nSouth Square. South Playground and South Square include\nboth daytime and night-time revisits. An additional near-field\nsequence provides a close-structure stress test.",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "序列数/四视图组数/场地数",
+    "value_or_direction": "18 条序列；>50,000 个四视图组；7 个场地（含昼夜与 teach-repeat）",
+    "comparator": "自建真实飞行 field record（7 个 field sites）",
+    "task_or_sample": "全景质量与嵌入式运行时评测",
+    "locator": "page 4, Section III-C"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 18 complete sequences、more than 50,000 valid four-view groups、七场地名称列表、daytime and night-time revisits、close-structure stress test 及 Splits are made by sequence or site to avoid adjacent-frame leakage；claim 为原文数字的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C05",
+   "claim": "拼接几何效果：远场样本中 Ours 的特征错位 Med./P90 为 3.81/5.82 像素，优于 Fixed Depth 的 5.66/9.97（P90 相对削减 41.6%，摘要口径）与 Adaptive Seam 的 3.99/6.02；近场样本中 Ours 取得最佳 Med./P90（2.32/10.33 像素）并与 Adaptive Seam 并列最佳接缝 RGB 中位数（8.50），Fixed Depth 近场中位错位 10.12 像素、Adaptive Seam 近场 P90 18.27 像素。",
+   "stance": "support",
+   "relation": "支持命题：视差感知的逐重叠区深度自适应相对固定深度拼接的量化收益（远场 P90 -41.6%、近场中位错位 10.12→2.32 像素），是鱼眼多相机拼接在具身平台'效果'端的直接证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section V-A 文字与 Table III 报告远/近场各 60 帧条件下的 AKAZE 特征错位中位数/P90 与接缝 RGB 中位数（评估特征与选择特征的 SIFT 相互独立）。",
+   "locator": "page 7, Section V-A 与 Table III（41.6% 表述在 page 1 Abstract）",
+   "source_context": "In the far-field sample, Ours achieved median/P90 mis-\nalignment of 3.81/5.82 pixels, compared with 5.66/9.97 pixels\nfor Fixed Depth and 3.99/6.02 pixels for Adaptive Seam. In\nthe near-field sample, Ours achieved the best median/P90\nmisalignment (2.32/10.33 pixels) and tied Adaptive Seam\nfor the best seam RGB median (8.50).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "独立 AKAZE 特征错位 Med./P90（ERP 像素）",
+    "value_or_direction": "远场 Ours 3.81/5.82 vs Fixed Depth 5.66/9.97（P90 -41.6%）；近场 Ours 2.32/10.33（最佳）",
+    "comparator": "Fixed Feather、Fixed Depth、Global Radius、Per-seam (abl.)、Adaptive Seam (abl.)",
+    "task_or_sample": "远/近场各 60 帧匹配样本（matched quality inputs，评估用 AKAZE 与选择用 SIFT 独立）",
+    "locator": "page 7, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 3.81/5.82、5.66/9.97、3.99/6.02、2.32/10.33、8.50、10.12、18.27；Table III 同页逐行核对（Ours 行 3.81 5.82 5.00 2.32 10.33 8.50 ...）；41.6% 在 page 1 摘要逐字出现（reduces far-field P90 feature misalignment by 41.6%），claim 中已标注摘要口径；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C06",
+   "claim": "跨场地持续泛化（held-out）：在预留的 Lake 与 South-Square teach/repeat 片段上，Ours 取得 Med./P90/最差重叠 P90 为 5.23/8.95/9.98 像素、CIEDE2000 色差 2.403，均优于 Global Radius 的 5.42/9.29/10.20 与 2.406——在 held-out 场地上聚合几何误差最低，但相对最优基线的边际很小（<0.2 像素/0.003 色差）。",
+   "stance": "support",
+   "relation": "支持命题（带边界收紧）：视差自适应方法在未见过场地上的连续低空序列仍保持最低聚合几何误差，说明增益非特定场地过拟合；但边际量级很小，引用时应作为'小幅一致改善'而非大幅突破。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section V-A 末段与 Table IV 报告 held-out lake/south-square 连续片段的错位与色差，所有方法均产出完整 ERP；作者注明帧间相关故只做描述性汇报。",
+   "locator": "page 7, Section V-A 末段（Table IV 在 page 8）",
+   "source_context": "Ours achieved median, P90, and worst-overlap P90 errors\nof 5.23, 8.95, and 9.98 pixels in Table IV. The corresponding\nGlobal Radius values were 5.42, 9.29, and 10.20 pixels.\nOurs tied the best seam RGB median at 3.33 and achieved\nCIEDE2000 colour consistency of 2.403, compared with 2.406\nfor Global Radius.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AKAZE 错位 Med./P90/最差重叠 P90（px）与 CIEDE2000",
+    "value_or_direction": "Ours 5.23/8.95/9.98、CIEDE2000 2.403；Global Radius 5.42/9.29/10.20、2.406（边际小）",
+    "comparator": "Fixed Feather、Fixed Depth、Global Radius",
+    "task_or_sample": "held-out Lake 与 South-Square teach/repeat 连续片段（贴近最低记录 GNSS 高度的持续低空迁移评测）",
+    "locator": "page 7, Section V-A 末段（Table IV, page 8）"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 5.23、8.95、9.98、5.42、9.29、10.20、2.403、2.406 及 Global Radius 对比；Table IV（page 8）逐行核对一致；'边际小'为对同一数字的直接观察，未附加论文外断言；held-out 协议（Farmland 留作开发）同页逐字核对。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C07",
+   "claim": "嵌入式代价（质量-效率权衡的限制面）：在严格 20 Hz 四鱼眼输入下 Ours 维持 19.99 frames/s、0.026% 定时丢帧，但 P50/P95 延迟为 42.32/71.88 ms、50 ms 及时输出率仅 71.04%、平均模块输入功率 13.29 W——相对 Global Radius 功率从 12.31 W 增至 13.29 W、P95 延迟从 29.40 ms 增至 71.88 ms；而 Fixed Depth 为 20.54/24.73 ms、100% 及时、10.92 W。",
+   "stance": "limit",
+   "relation": "限制命题：视差自适应拼接的几何收益以接近 3 倍的 P95 延迟（24.73→71.88 ms 相对 Fixed Depth）、约 2.2 W 功率与 29 个百分点的及时率损失为代价——综述回答'哪些受限'时，机载算力/功耗预算是鱼眼全景实时的主要约束。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section V-C 与 Table VI 报告四配置在 Jetson Orin NX 上的完整路径延迟/吞吐/及时率/丢帧/功率/内存（每条件 3 次重复、轮换顺序、剔除前 10 s）。",
+   "locator": "page 9, Section V-C 与 Table VI",
+   "source_context": "Relative to Global Radius, Ours increases mean module-input\npower from 12.31 to 13.29 W and P95 latency from 29.40\nto 71.88 ms. Both retain 19.99 frames/s with 0.026% cross-\ncondition timed drops, but their 50 ms timely-output rates are\n99.92% and 71.04%, respectively. The maximum measured\njunction temperature is 59.3 \n◦\nC. Together, output rate and the\nseparate 50 ms timely-output metric define the verified quality–\nefficiency operating point.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "P50/P95 延迟、50 ms 及时输出率、丢帧率、平均模块输入功率",
+    "value_or_direction": "Ours 42.32/71.88 ms、71.04% 及时、0.026% 丢帧、13.29 W；Fixed Depth 20.54/24.73 ms、100%、0.000%、10.92 W；Global Radius 29.40 ms P95、99.92% 及时、12.31 W",
+    "comparator": "Fixed Feather、Fixed Depth、Global Radius（同一嵌入式协议）",
+    "task_or_sample": "1280×640 ERP、严格 20 Hz 四鱼眼输入、Jetson Orin NX 25 W 模式完整路径（3-5 分钟×3 次重复）",
+    "locator": "page 9, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 12.31 到 13.29 W、29.40 到 71.88 ms、99.92% 和 71.04%、0.026%；Table VI 同页逐行核对（Ours 42.32/71.88 19.99 71.04 0.026 13.29 9.91；Fixed Depth 20.54/24.73 20.00 100.00 0.000 10.92 9.21）；延迟边界（四视图可用到 ERP 发布）与测量协议同页核对；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C08",
+   "claim": "下游检测接口收益：用冻结 YOLOv10-N 在匹配的起飞后远场全景上评测，八扇区 ERP 采样把人员响应覆盖从单前向扇区的 6.9% 提升到 55.1%，高于直接 ERP 推理的 39.4% 与四扇区的 46.4%——环视接口相对前视的覆盖增益约 48 个百分点（6.9%→55.1%）。",
+   "stance": "support",
+   "relation": "支持命题：360°/环视视觉相对前视相机在具身感知（人员检测覆盖）上的量化获益证据——正是综述'哪些任务获益'（环视态势/检测覆盖类任务）的直接数字支撑。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 5(b) 与正文报告前向扇区、直接 ERP、四扇区、八扇区四种采样的人员响应覆盖率，含 95% bootstrap 置信区间；作者注明该指标不度量检测器再训练或真值检测精度。",
+   "locator": "page 7, Section V-A object-detection interface validation（Fig. 5(b) 在 page 8）",
+   "source_context": "Using frozen\nYOLOv10-N, Fig. 5(b) evaluates the exported ERP represen-\ntations of Ours on matched post-takeoff far-field panoramas.\nEight sectors increased response coverage from 6.9% for the\nforward sector to 55.1%, compared with 39.4% for direct ERP\ninference and 46.4% for four sectors.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "含人员响应的帧占比（冻结 YOLOv10-N）",
+    "value_or_direction": "前向扇区 6.9% → 八扇区 55.1%；直接 ERP 39.4%；四扇区 46.4%",
+    "comparator": "forward sector / direct ERP / 4-sector / 8-sector ERP 采样",
+    "task_or_sample": "匹配的起飞后远场全景（Ours 生成的 ERP 表示）",
+    "locator": "page 7, Section V-A（Fig. 5(b), page 8）"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 6.9% for the forward sector to 55.1%、39.4% for direct ERP inference、46.4% for four sectors；图 5(b) 标签在 page 8 同数字核对；'约 48 个百分点'为 55.1-6.9 的直接算术，未引入论文外信息；作者自述边界（bootstrap 区间不度量检测器再训练/真值精度）同页核对并入 C10。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C09",
+   "claim": "VPR 定位的条件性结果：冻结 CosPlace 跨飞行视觉位置识别中，白天 ERP 八扇区最强（R@1 74.9%、R@5 90.8%、误差 17.2 m，优于原始鱼眼 4V 的 69.3/85.8 与 ERP 4V 的 66.7/83.6），但描述子调用翻倍；跨光照（South-Square 昼→夜）原始鱼眼 4V 最佳（9.5 vs ERP8V 23.8）；同照度夜→夜（South-Playground）ERP 4V 最佳（77.8）而 ERP 8V 最差（63.0）——最优扇区密度随条件与算力预算变化。",
+   "stance": "conditional",
+   "relation": "条件性支持命题：ERP 全景接口在 VPR 上白天增益明确（+5.6pp R@1 vs 原始鱼眼），但夜间/跨光照条件下原始鱼眼四视图反超且八扇区可能最差——综述应把'全景表示利于定位'限定为白天/同照度条件，夜间与预算受限场景原始多鱼眼视图仍占优。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table VII 与正文报告四种表示（raw fisheye 4V/rectified 4V/ERP 4V/ERP 8V）在白天、昼→夜、夜→夜协议下的 CosPlace 召回与 GNSS 误差。",
+   "locator": "page 9, Section V-D 与 Table VII",
+   "source_context": "ERP 8V gives the strongest daytime result (74.9% Recall@1,\n90.8% Recall@5, and 17.2 m error), but doubles descriptor\ncalls relative to ERP 4V. ERP 8V gives the highest South-\nSquare day-to-night Recall@5 (23.8%), whereas ERP 4V gives\nthe highest South-Playground night-to-night Recall@5 (77.8%);\nthe preferred sector density is therefore condition- and budget-\ndependent.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "CosPlace Recall@1 / Recall@5 / 平均中位 Top-1 GNSS 误差",
+    "value_or_direction": "白天 ERP8V 74.9/90.8/17.2 m（vs 原始鱼眼 4V 69.3/85.8/18.1）；D→N 原始鱼眼 9.5 最佳（ERP8V 23.8）；N→N ERP4V 77.8 最佳（ERP8V 63.0 最差）",
+    "comparator": "raw fisheye 4V（宽 FoV 参照）、rectified multi-view 4V、ERP 4V、ERP 8V（等 FoV 控制）",
+    "task_or_sample": "teach-repeat 每 2 s 采样查询、10 m GNSS 阈值，白天/昼→夜/夜→夜协议",
+    "locator": "page 9, Table VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 74.9% Recall@1, 90.8% Recall@5, 17.2 m、doubles descriptor calls、highest South-Square day-to-night Recall@5 (23.8%)、highest South-Playground night-to-night Recall@5 (77.8%)、condition- and budget-dependent；Table VII 同页逐行核对（Raw fisheye 4V 4 69.3 85.8 18.1 9.5 70.4；ERP 4V 4 66.7 83.6 20.1 19.0 77.8；ERP 8V 8 74.9 90.8 17.2 23.8 63.0）；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C10",
+   "claim": "冻结检测器接口的条件性：八视 ERP 角度目标匹配上 Ours 取得最高均值置信度 0.809 与 AP@10° 88.0%，与 Adaptive Seam 并列覆盖率 49.7%、精确率 96.1%、召回 89.1%；但作者明确这些角度目标指标是下游接口代理而非边界框 IoU 精度，且 YOLOv10-N 与 CosPlace 均未针对 ERP 适配或微调，结果不能分离 ERP 图像的内在下游优势。",
+   "stance": "conditional",
+   "relation": "限制命题：拼接质量对冻结检测器响应的传导证据是接口级代理（角度匹配/响应覆盖/置信度），不是检测精度——引用'全景提升检测'时必须限定为'冻结模型接口代理指标'，防止综述过度解读。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 右三列与正文报告 YOLO 8V 响应指标；作者两次声明角度目标指标非 IoU 精度、模型未适配 ERP。",
+   "locator": "page 7, Table III 右三列与 Section V-A（'interface proxies' 声明）",
+   "source_context": "Ours achieved the highest mean confidence\n(0.809) and AP@10\n◦ \n(88.0%). Ours and Adaptive Seam tied\non coverage (49.7%), precision (96.1%), and recall (89.1%).\nThese angular target metrics are downstream interface proxies,\nnot bounding-box IoU accuracy.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "八视 ERP 角度目标匹配 AP/Prec./Rec.@10°、人员响应覆盖、均值置信度",
+    "value_or_direction": "Ours AP 88.0%、Prec 96.1%、Rec 89.1%、Cov 49.7%、Conf 0.809（cov/prec/rec 与 Adaptive Seam 并列）",
+    "comparator": "Fixed Feather、Fixed Depth、Global Radius、Per-seam (abl.)、Adaptive Seam (abl.)",
+    "task_or_sample": "匹配的 181 帧远场序列（覆盖/置信度）与 33 帧匹配室外帧（固定标定+10° 跨相机关联的角度匹配）",
+    "locator": "page 7, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 0.809、88.0%、49.7%、96.1%、89.1% 及 These angular target metrics are downstream interface proxies, not bounding-box IoU accuracy；'未适配 ERP 不能分离内在优势'在 page 9 Section V-D 逐字核对（neither YOLOv10-N nor CosPlace was adapted or fine-tuned for ERP inputs...do not isolate an intrinsic downstream advantage）；claim 已把代理性质写入限定。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C11",
+   "claim": "时间策略与结构连续性的权衡：相对 Immediate，Ours 的半径状态切换数在近/远场分别减少 69.4%/68.4%（49→15、19→6 次）；但近场线结构连续性上 Default（Ours）为 50.8%，低于 Two-confirmation 的 51.8%（-0.99 pp）与固定方法（Fixed Depth 55.8%、Global Radius 56.1%），仅高于 Immediate 的 50.6%（+0.25 pp）和 Fixed Feather 的 27.4%——自适应时间策略以小幅结构连续性损失换取状态响应性，固定深度方法在该指标上反而更高。",
+   "stance": "limit",
+   "relation": "限制命题：视差自适应的时间切换在减少状态抖动（-69%）的同时并不改善、反而轻微降低拼接结构连续性（相对 Two-confirmation 与固定方法），说明其收益集中在特征错位对齐而非结构保持——综述引用时应区分这两类质量指标。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section V-B 与 Table V 报告时间策略单变量消融的切换数与结构连续性差值；Fig. 5(a) 标签给出各方法近场结构保持率与每帧保留段数。",
+   "locator": "page 8, Table V 与 Fig. 5(a)（正文 '50.8%/51.8%/27.4%' 段在 page 7）",
+   "source_context": "27.4% | 2.82/frame\n55.8% | 6.92/frame\n56.1% | 6.75/frame\n51.8% | 5.94/frame\n50.6% | 5.85/frame\n50.8% | 5.76/frame",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "半径状态切换数与近场线结构连续性",
+    "value_or_direction": "状态切换 49→15（近场，-69.4%）、19→6（远场，-68.4%）；连续性 Default 50.8% vs Two-confirmation 51.8%、Immediate 50.6%、Fixed Feather 27.4%、Fixed Depth 55.8%、Global Radius 56.1%",
+    "comparator": "Immediate / Two-confirmation 时间策略；Fixed Feather / Fixed Depth / Global Radius 完整方法",
+    "task_or_sample": "独立连续近场序列四物理重叠缝（±85 px 带、中央 80% 高度）；1280×640 单变量时间策略消融",
+    "locator": "page 8, Table V / Fig. 5(a)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 reduced state changes by 69.4%/68.4%、from 49/19 switches to 15/6、0.25/0.12 above Immediate、0.99/0.20 below Two-confirmation；Fig. 5(a) 标签同页逐字核对（27.4%|2.82、55.8%|6.92、56.1%|6.75、51.8%|5.94、50.6%|5.85、50.8%|5.76）；50.8/50.6/51.8/27.4 亦在 page 7 正文逐字出现；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C12",
+   "claim": "作者自述限制：当前公式对每个重叠区只建模一个主导深度，在混合深度内容与实时资源约束下仍然受限——这两点边界促使其提出更丰富的局部场景模型（同时保持开放原始视图与标定接口）。",
+   "stance": "limit",
+   "relation": "限制命题：逐重叠区单一深度假设是该方法的结构性局限——重叠区内同时含近/远物（混合深度）时视差自适应失效，这是多鱼眼拼接在复杂近场环境的核心残余问题（作者明示）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论段明确 one dominant depth per overlap 与 mixed-depth content、real-time resource constraints 两项限制。",
+   "locator": "page 9, Section VI Conclusion 末段",
+   "source_context": "The present formulation models one dominant depth per\noverlap and remains limited by mixed-depth content and\nreal-time resource constraints. These boundaries motivate\nricher local scene models that preserve the open raw-view\nand calibration interfaces while extending downstream aerial\nperception and localization.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 The present formulation models one dominant depth per overlap and remains limited by mixed-depth content and real-time resource constraints；claim 为作者限制陈述的忠实复述，未附加论文外断言。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C13",
+   "claim": "作者自述的下游证据边界：冻结检测与 VPR 在未适配 ERP 的常规图像训练模型下只提供互补的接口证据，不能确立检测器精度、通用表示排序或 ERP 图像的内在下游优势；结果同时揭示质量-效率权衡（扇区密度、时间自适应与嵌入式成本应按任务与算力预算选择）。",
+   "stance": "limit",
+   "relation": "限制命题：作者主动收窄下游结论的适用范围——防止把冻结模型接口结果外推为'ERP 表示本身更优'的领域级结论；综述引用该文的定位/检测收益时必须保留此限定。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论段两处限定：frozen 下游证据的 scope 与 quality–efficiency trade-off 的任务依赖性。",
+   "locator": "page 9, Section VI Conclusion",
+   "source_context": "Frozen detection and VPR provide complementary\ninterface evidence under conventional-image-trained models\nthat were not adapted to ERP inputs. They do not establish\ndetector accuracy, a universal representation ranking, or an\nintrinsic downstream advantage of ERP imagery.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 They do not establish detector accuracy, a universal representation ranking, or an intrinsic downstream advantage of ERP imagery 与 The results also expose a quality–efficiency trade-off: sector density, temporal adaptation, and embedded cost should be selected for the task and compute budget；claim 为作者结论的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C14",
+   "claim": "开放接口对比（Table I）：在所列研究级 aerial 系统与消费级 360 相机中，只有本平台同时开放硬件、软件、数据、ERP 输出与鱼眼原始输出五项（Ours 全 ✓）；PanoAir/RflyPano 硬件不开放；OmniNxt 数据不开放且无 ERP 输出；Omni-Swarm 无 ERP 输出；Insta360 X5/DJI Osmo 360 消费全景相机仅 ERP 输出、其余均不开放——开放原始视图与标定是把多鱼眼感知交还给机器人侧研发的关键接口属性。",
+   "stance": "support",
+   "relation": "支持命题：具身多鱼眼平台与封闭消费全景相机的生态分界——开放原始鱼眼视图+标定元数据+时钟感知位姿接口是可复用下游视觉接口的前提，界定该领域'应用方式'的系统生态维度。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Table I 以 ✓/– 列出各系统的硬件/软件/数据开放性与 ERP/鱼眼输出接口；正文总结这些接口级差异。",
+   "locator": "page 2, Table I 与 Section II-A 末段",
+   "source_context": "TABLE I\nPUBLIC AVAILABILITY AND OUTPUT INTERFACES OF RESEARCH AERIAL\nSYSTEMS AND COMMERCIAL 360 CAMERAS. ✓: PUBLICLY RELEASED; –:\nNOT RELEASED OR NOT STATED IN THE CITED SOURCE.\nSystem/product \nHardware\nopen \nSoftware\nopen \nData\nopen \nERP\nout.\nFisheye\nout.\nPanoAir [3] – ✓ ✓ ✓ ✓\nRflyPano [4] – ✓ ✓ ✓ ✓\nOmniNxt [10] ✓ ✓ – – ✓\nOmni-Swarm [11] – ✓ ✓ – ✓\nInsta360 X5/DJI Osmo 360 [12], [13] – – – ✓ –\nOurs ✓ ✓ ✓ ✓ ✓",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Table I 行逐字核对（PanoAir – ✓ ✓ ✓ ✓；RflyPano – ✓ ✓ ✓ ✓；OmniNxt ✓ ✓ – – ✓；Omni-Swarm – ✓ ✓ – ✓；Insta360 X5/DJI Osmo 360 – – – ✓ –；Ours ✓ ✓ ✓ ✓ ✓）与表头 ✓: publicly released；正文 summarizes these interface-level differences 同页核对；✓/– 的含义按表注解释，claim 未附加排序判断。"
+   }
+  },
+  {
+   "card_id": "2609.02319-C15",
+   "claim": "动机-证据缺口：论文动机是超低空 UAV 在建筑物/植被/人群附近穿行时需要环视以避免前视相机在转弯中丢失地标并把感知方向耦合到避障决策，但全文评测止于拼接几何/光度质量、Jetson 嵌入式运行时与冻结检测/VPR 接口代理，未报告任何闭环避障、航迹控制或飞行任务级收益实验。",
+   "stance": "gap",
+   "relation": "缺口命题：多鱼眼全景对飞行安全/避障的最终收益（动机层）缺少闭环任务证据——综述回答'哪些任务获益'时，避障/飞行控制类收益应标注为动机性而非已验证。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "page 1 引言给出避障耦合与环视动机；page 7-9 全部实验（Tables III-VII、Figs. 5-6）为拼接质量、运行时与冻结模型接口评测；page 9 结论亦未提飞行任务实验。",
+   "locator": "page 1, Section I Introduction（动机）；page 7-9, Sections V-A–V-D（实验范围，无闭环避障/飞行控制实验）",
+   "source_context": "Ultra-low-altitude unmanned aerial vehicles (UAVs) move be-\ntween open views and cluttered areas near buildings, vegetation,\nand people. A forward camera can lose landmarks or objects\nduring turns, whereas panoramic vision preserves surround-\nview context.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 逐字给出 cluttered areas near buildings, vegetation, and people、A forward camera can lose landmarks or objects during turns, whereas panoramic vision preserves surround-view context、limited visual coverage can couple sensing direction to avoidance decisions（后者在同段相邻句，page 1 已核对）；'全文无闭环避障/飞行任务实验'基于通读 page 6-9 实验部分（V-A 质量、V-B 时间策略、V-C 嵌入式、V-D VPR）与 page 9 结论核对；该推断若因后续版本补充闭环实验而被削弱。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[4] RflyPano: A panoramic benchmark for ultra low altitude UAV localization powered by RflySim (AAAI 2026)",
+   "reason": "同一作者群的多鱼鱼鱼眼传感排列仿真前作，本文是其物理平台化；是综述'仿真→实机'链条的关键节点。"
+  },
+  {
+   "ref": "[10] OmniNxt: A fully open-source and compact aerial robot with omnidirectional visual perception (IROS 2024)",
+   "reason": "最接近的开源多鱼鱼眼航平台（VIO+稠密建图），本文以其无传感器率 ERP 输出为差异点。"
+  },
+  {
+   "ref": "[3] PanoAir: A panoramic visual-inertial SLAM with cross-time real-world UAV dataset (arXiv 2026)",
+   "reason": "双鱼鱼消费相机+全景 VI-SLAM 的相邻系统，硬件不开放。"
+  },
+  {
+   "ref": "[8] FishEye8K: A benchmark and dataset for fisheye camera object detection (CVPRW 2023)",
+   "reason": "多鱼鱼鱼眼检测基准，说明鱼眼原始视图路线的畸变/标定挑战。"
+  },
+  {
+   "ref": "[39] CosPlace / [28] MixVPR 等冻结 VPR 模型",
+   "reason": "下游定位接口评测所用的冻结模型，决定接口证据的解释边界。"
+  }
+ ],
+ "notes": "alphaxiv 文本层提取（extraction method 记为 pdf-text；来源 alphaxiv-fulltext-api 非 OCR 文本层），10 页 IEEE/ASME Trans. Mechatronics 单栏排版，Roman 章节编号（I-VI）。本文作者自我限定 unusually 严格（接口代理声明、单深度假设、质量-效率权衡），证据卡大量利用其自我收窄的表述以保持 claim 忠实。与综述主题的连接点：这是五篇中唯一'真鱼鱼鱼眼相机阵列→机载实时拼接'的硬件系统论文，与 2604.13476（多相机不拼接、走 3DGS 渲染）构成同一问题的两条技术路线对照。定位器统一用 page N。"
+}

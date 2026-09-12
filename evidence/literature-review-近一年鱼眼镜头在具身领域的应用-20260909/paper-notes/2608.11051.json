@@ -1,0 +1,574 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.11051",
+  "title": "HUI360: A 360° Egocentric Dataset and Baselines for Human-Robot Interaction Anticipation",
+  "published": "2026-08",
+  "url": "https://arxiv.org/abs/2608.11051",
+  "authors": [
+   "Raphael Lorenzo-Louis",
+   "Fabio Amadio",
+   "Bertrand Luvison",
+   "Serena Ivaldi"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "dataset",
+  "relevance": {
+   "decision": "include",
+   "reason": "对综述问题高度相关的 360° 全景 ego 数据基础设施证据：(1) 应用方式——固定服务机器人以机顶 360° 全景相机为唯一视觉传感器在 9 环境采集 in-the-wild HRI 交互预期数据（612K 帧/4310 tracks/1M 标注），配任意 360° ERP 视频的自动标注管线（region-images 缓解全景对未训练模型的负面效应、掩码-交互区相交判据、SSUP-A 凸包解法）并扩至移动垃圾桶平台（1.15M 帧）；(2) 效果——in-dataset LSTM AUC 0.91、跨数据集 0.84-0.88、前瞻 0.33-2.0s 平缓退化（0.97→0.77）、3Hz 输入基本保持（0.85）而 1Hz 坍塌（0.78）；(3) 局限——物理接触定义排除 gaze/hesitation 等前接触信号（作者自述）、跨数据集 AP 0.60→0.16 崩塌、细粒度 308 关键点无增益、基线 architecturally basic 且未利用 ERP 特性、mask 尺寸作距离代理（无度量距离）——'获益（环视数据规模/多样性/交互预期基线）与受限（跨域精度、语义收窄、非全景原生方法）'两端证据齐全。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and I Introduction",
+    "role": "problem",
+    "purpose": "确认问题：服务机器人需预判路人是否将交互以主动搭话；现有 HRI 预期数据集过小/缺多样性/硬件特定/无自发行为、缺可复现与域迁移评估；贡献三点=最大数据集+开源自动标注管线+形式化评估协议（含首个跨数据集评估）。"
+   },
+   {
+    "locator": "page 2-3, II Related Works（Table I）",
+    "role": "relevant-core",
+    "purpose": "定位相关工作：engagement/交互预期方法（特征/时序模型/评测口径）与 9 个相关数据集的 Table I 对比（FoV/tracks/poses/场景/ITW），确立'360 FoV+规模+策展'组合缺口。"
+   },
+   {
+    "locator": "page 3-5, III Dataset（A-E：概览/采集/预处理与自动标注/人工策展/问题陈述）",
+    "role": "data-or-setting",
+    "purpose": "精读数据设计：68 recordings/1937 episodes/71.3h/612K 帧/4310 tracks（375 交互 9%）；SSUP-A 扩展（277 episodes/1.15M 帧/26,970 tracks）；region-images 检测跟踪管线、掩码-交互区相交判据、ViTPose+Sapiens 双姿态模型有效率、15% episodes 人工剔除；T_ADV/T_POS/T_CUT 采样协议与负样本 mask 最大时刻对齐。"
+   },
+   {
+    "locator": "page 4-5, III-C Pre-processing and automatic labelling 与 page 15, Algorithm 1",
+    "role": "method-or-design",
+    "purpose": "精读全景处理机制：4 个 wrap-around 重叠固定区域（W/2×H、中心半区去重）、YOLOv11x+SAM2.1-Image/Video+ViTPose 级联、IoU>0.7/95% 包含停止条件、RLE 存储的腐蚀膨胀；交互区固定 vs 移动（SAM2 跟踪+Convex Hull）。"
+   },
+   {
+    "locator": "page 5-8, III-E/IV Experiments（Tables III-VII）",
+    "role": "results-or-analysis",
+    "purpose": "精读全部定量结果：RF/MLP/LSTM 基线（AUC/AP/F1）的 in-dataset 与跨数据集矩阵、六档前瞻时域、四档输入帧率、D1-D7 特征消融；page 14 ROC 与预测示例。"
+   },
+   {
+    "locator": "page 8, V Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者限制：物理接触定义的语义收窄（排除 gaze/hesitation/verbal/approach-and-stop）、可扩展性-语义丰富度权衡、基线 architecturally basic、ERP 特性未利用、未来方向。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-11, References 与 Supplementary VII-X（伦理/多样性/管线形式化/策展动作）",
+    "role": "appendix-or-supplement",
+    "reason": "scoping 模式下按需核对：伦理批准（决定 no. 465、GDPR 撤回流程）与策展动作类型已在正文卡片引用处交叉核对；参考文献仅用于 core_citations 定位，无需逐条精读。"
+   }
+  ]
+ },
+ "research_question": "本论文问题：如何构建并评测 in-the-wild 的人机交互预期（interaction anticipation）数据与基线——以非歧义物理交互为可自动标注的定义、以 360° ego 全景视频为传感载体、以跨环境与跨数据集协议评估泛化。综述问题映射：该文是'360° 全景相机作为具身平台 ego 传感器（数据基础设施+社交感知任务）'路线的核心证据，覆盖应用方式（全景采集+区域化自动标注管线+跨平台同质标注）、量化效果（AUC/AP/F1/前瞻/帧率/特征消融全套基线）与多层局限（物理定义收窄、跨域精度崩塌、非全景原生方法、无度量距离）。",
+ "contributions": [
+  "HUI360 数据集：9 环境/20 天/3 个月 in-the-wild 采集的 360° ego 全景视频，612K 有人帧、4310 tracks、375 物理交互、1M 预处理标注（2D poses/242+面部关键点/分割掩码），原始 360° 图像按 GDPR 按需开放——Table I 中唯一 360 FoV+tracks+poses+9 场景组合。",
+  "开源自动标注管线：任意 360° equirectangular 视频上的检测（4 wrap-around 区域 YOLOv11x）、跟踪/分割（SAM2.1 移动区域）、姿态（ViTPose+Sapiens）、物理交互判定（掩码-交互区相交，移动交互区用 SAM2 跟踪+Convex Hull）+人工修正接口与专用工具。",
+  "SSUP-A 扩展：对既有移动垃圾桶 360° 数据（1.15M 帧）施加同质管线得 6M 标注（27,698 tracks/419 交互），使跨机器人平台（固定 vs 移动、服务 vs 垃圾桶）零样本迁移可评估。",
+  "形式化评估协议与基线：T_ADV/T_POS/T_CUT 采样协议 + RF/MLP/LSTM 基线在迁移（in/cross-dataset）、预测（0.33-2.0s 六档）、输入帧率（15-1Hz 四档）、特征集（D1-D7）四轴的系统结果——该任务首个跨数据集评估。"
+ ],
+ "method": {
+  "summary": "传感与采集：定制服务机器人（提供食物/贴纸等物品、静止放置）机顶 360° 全景相机采集 ego 视频，9 环境/68 recordings/1937 episodes（episode=检测到人前 10s 至消失后 10s），71.3h 录制提取 11.3h 有效 episodes（15fps、612K 帧）；SSUP-HRI 垃圾桶数据（NYC 公共广场、移动平台、Wizard of Oz）以同管线处理成 SSUP-A（1.15M 帧、5.5 人/帧）。自动标注管线：ERP 全景图不做全景原生推理——检测在 4 个 wrap-around 重叠固定区域（W/2×H、仅保留中心半区）上以 YOLOv11x 进行；SAM2.1-Image 初始化分割+ViTPose 过滤（有效关键点/掩码内关键点/掩码尺寸阈值）；SAM2.1-Video 在围绕目标的移动区域逐帧跟踪（无 reprompt、仅记忆库，IoU>0.7 或 95% 被包含即终止；掩码腐蚀膨胀 k=11 便于 RLE）；姿态双模型 ViTPose-B（17 COCO，256×192）与 Sapiens-0.6B-Pose-308（含 242 面部，1024×768）互补。交互判定：人掩码与交互区（机器人托盘/垃圾桶顶）相交；移动相机情形逐帧 SAM2 跟踪交互区取 Convex Hull 求交。人工策展：专用工具作废/删/拆/并 track 与修标签（15% episodes 作废）。任务形式化：观测窗 T 帧、T_ADV=T_POS=T_CUT+1 提前量、负样本 T0 取 mask 最大时刻（距离代理）、正负样本各 1 段/track；基线 RF（500 树深 5）/MLP（[32,256]）/LSTM（3 层 128 隐）以加权 BCE 训练，特征 D3=掩码面积+框位置+ViTPose 关键点，AUC 为主指标。",
+  "assumptions": [
+   "物理交互（掩码-交互区相交）是交互预期任务的可操作且可自动扩展的代理定义；凝视/犹豫/语言等前接触信号刻意排除（标注模糊性）。",
+   "mask 尺寸在无严重遮挡时是人-机距离的可靠代理（RGBD 交叉验证）；框尺寸次之。",
+   "区域裁剪（region-images）足以让常规透视图像训练的检测/分割/姿态模型在 ERP 全景图上可靠工作，无需全景原生微调。",
+   "交互区为凸形状时掩码相交判据有效（非凸外观需人工修正，如 SSUP-A 的垃圾袋变形）。",
+   "负样本以'最大 mask 时刻'对齐可缓解正负不平衡与远离机器人的明显负例偏置。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HUI360（自建）：9 环境（Bulle12X/Cafeteria/CoffeeB/ECBack/MainEntrance/MainHallway/Room005/ECFace/Room104）、30 setups、68 recordings、1937 episodes、71.3h、612,378 有人帧、4310 tracks（375 交互 9%）、1M 预处理标注；2 环境留作 Test（HUI360 Test），7 作 Train",
+   "SSUP-A（扩展标注）：NYC 公共广场 2 field sessions、移动垃圾桶平台、277 episodes、1,149,438 帧（15fps 重处理）、27,698 tracks（419 交互 2%）；第二半留 Test",
+   "合并 Ours+SSUP-A：96 recordings、2214 episodes、93.3h、1,761,816 帧、32,008 tracks（794 交互）"
+  ],
+  "tasks": [
+   "人机交互预期（interaction anticipation，物理接触前二分类；AUC/AP/F1）",
+   "全景视频上的行人检测/跟踪/分割/姿态自动标注（管线本身）",
+   "跨环境（in-dataset）与跨数据集（零样本换平台）迁移评估",
+   "前瞻时域（0.33-2.0s）与输入帧率（15-1Hz）敏感性评估"
+  ],
+  "embodiments": [
+   "定制静止服务机器人（机顶 360° 全景相机，提供食物/贴纸等交互物）",
+   "SSUP-HRI 移动垃圾桶机器人（360 相机、Wizard of Oz 操作）——仅作跨域测试平台"
+  ],
+  "sample_or_scale": "612K+1.15M 有人帧；4310+26,970 tracks；测试集 HUI360 Test 71 正例/377 负例、SSUP-A Test 154 正例/5080 负例（正负比 0.19/0.03）；正负例采样各 1 段/track"
+ },
+ "evaluation": {
+  "design": "四轴基线评估：(1) 迁移——每模型 native 训练后 in-dataset（留出环境）与 cross-dataset（零样本换平台）双向；(2) 前瞻——T_ADV∈{5,10,15,20,25,30}（0.33-2.0s）同训同评；(3) 帧率——15/5/3/1Hz 子采样（2s 窗不变）；(4) 特征——D1-D7 消融。AUC 为主指标（阈值无关），AP/F1@0.5 补充主迁移矩阵以暴露不平衡影响；ROC 与预测示例在补充材料。",
+  "baselines": [
+   "Random Forest（500 棵树、深度 5、类权重平衡）",
+   "MLP（2 隐层 [32,256]、ReLU、加权 BCE、25 epochs、lr 0.001）",
+   "LSTM（3 层、隐 128、线性分类头）",
+   "特征集对照：D1 mask / D2 +box / D3 +ViTPose17 / D4 +Sapiens 面部 242 / D5 +Sapiens 全 308 / D6 +头肩耳眼 / D7 无框"
+  ],
+  "metrics": [
+   "AUC（主指标，阈值无关）",
+   "Average Precision 与 F1-score@0.5（主迁移矩阵补充）",
+   "T_ADV 六档前瞻 AUC 曲线（0.33-2.0s）",
+   "输入帧率四档 AUC（15/5/3/1Hz）"
+  ],
+  "ablations": [
+   "特征集 D1-D7（含细粒度 Sapiens 308/242 面部关键点 vs ViTPose 17）",
+   "补充材料 Table VIII/IX：跨数据集与各 T_ADV 下 D3/D6/D7 三特征集复检",
+   "mask 尺寸 vs 框尺寸作距离代理（RGBD 验证，Fig. 13）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "HUI360 填补 360° FoV×规模×策展的组合缺口：612K 帧/4310 tracks/375 交互/9 场景，合并 SSUP-A 达 1.8M 帧/32,008 tracks——Table I 中唯一 360 FoV 且有 tracks+poses 的数据集。",
+   "scope": "Table I 的 9 数据集横向对比",
+   "locator": "page 2, Table I"
+  },
+  {
+   "finding": "全景 ego 数据上交互预期可行：in-dataset LSTM AUC 0.91（MLP 0.86/RF 0.81）；前瞻 1s 内 AUC≥0.89、2s 降至 0.77；跨数据集（换机器人平台）AUC 保持 0.84-0.88。",
+   "scope": "HUI360 Test（71 正/377 负）与双向跨数据集，D3 特征、T_ADV=15",
+   "locator": "page 7, Tables III-V"
+  },
+  {
+   "finding": "跨数据集精度崩塌：LSTM AP 0.60（HUI360 内）→0.16（零样本 SSUP-A）、F1 0.61→0.23——AUC 0.84 的迁移表象下，真实不平衡（0.03 正例）条件查准率接近不可用。",
+   "scope": "Cross-dataset 双向（Table IV 全矩阵）",
+   "locator": "page 7, Table IV"
+  },
+  {
+   "finding": "部署边界：3Hz 输入 AUC 0.85 基本保持、1Hz 坍塌至 0.78；细粒度 Sapiens 308/242 面部关键点相对 ViTPose 17 无实质增益（LSTM 0.88-0.90 vs 0.91）——判别信息集中于低维几何特征。",
+   "scope": "帧率四档与特征集 D1-D7 消融（HUI360 Train→Test）",
+   "locator": "page 8, Tables VI-VII"
+  },
+  {
+   "finding": "全景处理的工程范式与代价：region-images+4 wrap-around 区域让常规模型吃 ERP 全景（region 裁剪规避全景负面效应）；无度量距离以 mask 尺寸代理（RGBD 验证相关、框尺寸 less stable）；15% episodes 人工剔除保质量。",
+   "scope": "管线设计（Section III-C/D）与补充材料 Section XI",
+   "locator": "page 4-5, Section III-C/D；page 12, Supplementary XI"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "操作化交互定义只覆盖 HRI 行为谱子集：物理接触判据未显式建模 gaze、hesitation、verbal engagement、approach-and-stop 等前接触社会信号——可扩展性与语义丰富度的权衡。",
+    "locator": "page 8, Section V Conclusion 末两段"
+   },
+   {
+    "limitation": "基线 architecturally basic：更丰富时空建模、利用 equirectangular 图像特性、社交/群体动态均为未开展的未来方向。",
+    "locator": "page 8, Section V Conclusion"
+   },
+   {
+    "limitation": "AUC 在类别不平衡下有局限（作者自述），SSUP-A 上影响尤其明显——需 AP/F1 补充。",
+    "locator": "page 6, Section IV-A"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无全景原生模型证据：全文检测/分割/姿态/分类均为常规透视模型+region 裁剪，未量化'直接全景输入 vs 区域化'的性能差，全景几何价值止于数据采集层（作者亦承认为未来方向）。",
+    "basis": "page 4 Section III-C.1（region-images 动机）与 page 8 结论（leveraging equirectangular imagery 为 open direction）对照；全文无全景 vs 透视输入的受控对比实验。"
+   },
+   {
+    "boundary": "跨域结论限于'排序能力'：跨数据集 AUC 0.84 但 AP 0.16——任何需要实际触发机器人主动行为的部署（须选阈值）在跨域场景下误报率不可控；正例绝对数小（HUI360 Test 71、SSUP-A Test 154）。",
+    "basis": "page 7 Table IV 数字与 page 14 ROC 图注（TP/TN 计数）交叉核对。"
+   },
+   {
+    "boundary": "单 360° 相机无度量空间信息：距离/速度/社交距离均退化为 mask 尺寸代理（RGBD 验证的是相关性而非标定精度），接近动力学与人机距离区间分析受限；交互区凸形状假设在非凸外观（垃圾袋变形）下产生假阳性需人工修正。",
+    "basis": "page 12 Supplementary XI（mask proxy/RGBD 相关性、box less stable）与 page 4 Section III-C.2（convex 形状条件）。"
+   },
+   {
+    "boundary": "场景与人群的生态效度边界：9 环境均为科研机构建筑内外（法国），SSUP-A 为纽约广场；文化与场所外推未检验；静止机器人 vs 移动机器人的行为差异仅由 SSUP-A 侧面覆盖；GDPR 使原始图像仅按需开放（非完全公开），复现门槛高于纯开放数据集。",
+    "basis": "page 3 Table II 环境列表（Bulle12X/Cafeteria/... 均为机构场所）与 page 1 摘要（on demand, for research purpose only in compliance with GDPR）对照。"
+   },
+   {
+    "boundary": "自动标注管线的误差未量化：论文未报告自动交互标注相对人工的精度/召回（仅描述修正类型与 15% 剔除率），SSUP-A 的假阳性/假阴性修正量未给出数字——下游基线的标签噪声水平未知。",
+    "basis": "page 5 Section III-D 与 page 11-12 Supplementary X（修正动作描述无量化）对照；全文无标注质量评估表。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论可迁移范围：360° 全景相机作为静止/移动具身平台的 ego 传感器，经'4 wrap-around 区域+SAM2 移动区域+双姿态模型+掩码-交互区相交'管线可规模化产出 in-the-wild HRI 预期数据（612K+1.15M 帧），其上 LSTM 基线取得 in-dataset AUC 0.91、1s 前瞻 AUC≥0.89、3Hz 部署 0.85、跨平台 AUC 0.84-0.88；mask 尺寸可作距离代理（RGBD 验证）。不可迁移/未验证：跨域查准率（AP 0.16，阈值化部署不可用）、非物理接触类社会信号预期（定义排除）、全景原生模型收益（基线 basic、ERP 特性未利用）、度量距离与接近动力学、1Hz 以下帧率、文化与场所外推、自动标注精度（未量化）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "数据集设计针对泛化痛点：9 环境多 setup 采集+两环境留出、SSUP-A 跨平台同质标注，使 in-dataset 跨环境与零样本跨数据集两级评估可行——该任务首个跨数据集评估。",
+   "交互定义可操作化且自动可扩展（物理接触+几何判据），并以 15% episodes 人工剔除+专用修正工具控制质量；伦理/GDPR 流程完整（批准决定号、撤回机制+人脸识别辅助定位）。",
+   "评估四轴（迁移/前瞻/帧率/特征）与真实部署关切一一对应，AUC 为主指标的选择理由（阈值依赖应用）明示，并以 AP/F1 暴露不平衡影响——指标自我限定诚实。",
+   "开源管线+数据+修正工具，region-images 等工程细节（Algorithm 1 形式化）完整可复现。"
+  ],
+  "design_risks": [
+   "正例绝对量小（HUI360 Test 71、SSUP-A Test 154，交互仅 375/419 例），AUC/AP 的置信区间未报告，小样本下跨数据集结论稳健性未知。",
+   "基线刻意简单（RF/MLP/LSTM），无任何时空深度模型或预训练视觉基座对照——数字只定义下界而非该数据上可达水平，容易在外部引用时被误读为任务难度上限。",
+   "自动标注管线无标注质量量化（自动 vs 人工一致率、SSUP-A 修正量），标签噪声对基线数字的影响未评估。",
+   "负样本对齐以 mask 最大时刻为 T0 的启发式可能引入选择偏置（靠近者更可能被判负例的构造性关联），作者仅以'经验上可靠'带过（细节在补充材料）。",
+   "SSUP-A 以 15fps 重处理原 30fps 数据并手工滤除无效段，与 HUI360 帧率对齐但丢弃量未完整披露（脚注只给 1.15M/9.8h+12.1h）。"
+  ],
+  "baseline_fairness": "三基线共享同一特征与采样协议、超参与训练细节全披露，内部公平性高；但基线族本身（RF/MLP/LSTM）远离当前时空建模水平，且无第三方方法在同一划分上可比（HRI 预期文献各用私有数据），'首个跨数据集评估'同时也是'无外部方法可对比'的信号。",
+  "metric_validity": "AUC 作为主指标对不平衡数据的排序能力有效但被作者自述有局限，AP/F1 补充使真实部署差距可见（0.60→0.16）——指标组合诚实且互补；前瞻/帧率曲线的口径（仅长 tracks、T_ADV=15 与主表略异）披露清楚；mask 距离代理经 RGBD 交叉验证是少见的负样本构造有效性检验。",
+  "reproducibility": "高：数据（标注开放、原始 360 图像按需）+代码+修正工具+管线形式化（Algorithm 1/2）+超参全披露+Grid'5000 算力致谢；残余风险：原始图像 GDPR 按需流程、机构场景接入门槛、以及 SSUP-A 重处理的丢弃细节。",
+  "external_validity": "中：9 环境+2 城市跨平台提供一定外部效度，且跨数据集协议正是外部效度检验本身；但环境均为机构/广场类公共场所、机器人为静止服务型/移动垃圾桶两类、人群文化与年龄结构未报告，向家庭/医院/多文化场景与移动服务机器人的外推未检验；交互定义的物理接触口径进一步收窄可迁移行为谱。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.11051-C01",
+   "claim": "应用方式：固定服务机器人以机顶 360° 全景相机（egocentric panoptic 360° 图像）为唯一视觉传感器，在 9 个真实环境、跨 3 个月共 20 天的部署中采集 in-the-wild 人机交互预期数据集 HUI360（多天/多环境/自然发生行为），并配套开放任意 360° 等距柱面视频的自动交互标注管线与人工修正接口；原始 360° 全景图像按 GDPR 按需开放（仅限研究用途）。",
+   "stance": "support",
+   "relation": "支持命题：360° 全景相机作为服务机器人 ego 视觉传感器用于 HRI 交互预期（embodied 社交感知任务）是鱼眼/全景镜头在具身智能的核心应用方式之一——全景 FoV 使机器人无需云台转向即可捕捉四周自发行人，支撑数据规模与多样性主张。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要给出：最大 in-the-wild HRI 预期数据集、移动机器人多天多环境采集、任意 360° equirectangular 视频的自动标注管线、1M 预处理标注与原始 panoptic 360° ego 图像（GDPR 按需）。",
+   "locator": "page 1, Abstract",
+   "source_context": "we introduce HUI360, the largest dataset for\nhuman-robot interaction anticipation in the wild and its set of\nbaselines. The dataset was collected from a mobile robot, in the\nwild, over multiple days within a 3-month period, and in several\nenvironments, capturing natural, spontaneous behaviors from\nboth passersby and users, and encompassing a diverse range of\nindividuals. This variety enables evaluating and improving the\ngeneralization capabilities of interaction anticipation models.\nWe designed a pipeline and share code for automatic interac-\ntion annotation in arbitrary 360° equirectangular videos, along\nwith interfaces for manual refinement. Using this pipeline, we\nrelease the HUI360 open set of 1M pre-processed annotations,\nincluding detailed 2D poses, facial keypoints, and segmentation\nmasks, obtained using state-of-the-art computer vision methods\nand manually curated to ensure high-quality tracking and in-\nteraction annotation. Additionally, we release the raw panoptic\n360° images captured from the robot’s egocentric viewpoint (on\ndemand, for research purpose only in compliance with GDPR).",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 the largest dataset for human-robot interaction anticipation in the wild、collected from a mobile robot, in the wild, over multiple days within a 3-month period, and in several environments、automatic interaction annotation in arbitrary 360° equirectangular videos、raw panoptic 360° images captured from the robot's egocentric viewpoint (on demand, for research purpose only in compliance with GDPR)；采集天数/环境数（20 days、9 places）在 page 3 Section III-B.1 逐字核对；claim 为作者系统陈述的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C02",
+   "claim": "全景 FoV 与规模的组合缺口被填补：在 Table I 所列 9 个 HRI 预期相关数据集中，HUI360 是唯一同时具备 360° FoV、612K 帧、4310 tracks、375 次交互、开放 2D poses、视频与 9 个场景的 in-the-wild 数据集；既有 360° 数据集要么无 tracks/poses（SSUP-HRI 1.4M 帧 0 tracks）、要么规模小（ATC 33K 帧 4 tracks），而具细粒度标注的多为窄 FoV Kinect 数据（90°-100°）——Ours+SSUP-A 合计 1.8M 帧、32,008 tracks、794 交互。",
+   "stance": "support",
+   "relation": "支持命题：界定 360° 环视相对窄 FoV（90°-100° Kinect）在 HRI 数据采集上的结构性优势（四周行人全覆盖）与此前'360° 视角或大规模标注二选一'的缺口——是综述'应用方式（数据基础设施层）+ 获益任务'的定位证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Table I 以 #Frames/#Tracks/#Interaction/Available/Curated/FOV/Poses/Video/#Scenes/ITW 十维对比 9 个数据集；Ours 行 612K/4310/375/360/2D/9，Ours+SSUP-A 行 1.8M/32,008/794。",
+   "locator": "page 2, Table I（图 1 概览同页）",
+   "source_context": "Ours 612K 4310 375 ✓ ✓ 360 2D ✓ 9 ✓\nOurs+SSUP-A 1.8M\n2 \n32 008 794 ✓ ✓ 360 2D ✓ 9 + Mobile",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "数据集帧数/tracks 数/交互数/FoV/场景数",
+    "value_or_direction": "Ours 612K frames、4310 tracks、375 interactions、360 FOV、9 scenes；Ours+SSUP-A 1.8M frames、32 008 tracks、794 interactions",
+    "comparator": "SSUP-HRI 1.4M frames 0 tracks；ATC 33K frames 4 tracks；Shutter 58K frames 1057 tracks；UE-HRI 207K frames 195 tracks、56 FOV",
+    "task_or_sample": "HRI 交互预期数据集横向对比（Table I 全部 9 个数据集）",
+    "locator": "page 2, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Table I 逐行核对：SSUP-HRI [1] 1.4M 0 118 ✓ ✗ 360 ✗ ✓ Mobile ✓；ATC 33K 4 245 112 ✓ ✓ 360 ✗ ✗ Mobile ✓；Shutter 58K 1 057 314 ✓ ✗ 100 Kinect；UE-HRI 207K 195 1 195 ✓ ✓ 56 ✗ ✓ 1 ✓；Ours 612K 4310 375 ✓ ✓ 360 2D ✓ 9 ✓；Ours+SSUP-A 1.8M 2 32 008 794 ✓ ✓ 360 2D ✓ 9 + Mobile ✓；'唯一同时具备'由表内逐列交叉核对得出（360 FoV 行中仅 Ours/Ours+SSUP-A/SSUP-HRI/ATC，其中仅 Ours 系有 tracks+poses+9 scenes）；claim 为表数据的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C03",
+   "claim": "全景图像的处理代价与解法：直接把 ERP 全景图喂给未在全景图上训练的模型有负面影响，故检测/过滤/分割/跟踪全部改在 region-images（全景图的裁剪区域）上进行——检测用 4 个带 wrap-around 的重叠固定区域（各 W/2×H、仅保留中心半区避免重复），跟踪/分割用围绕目标的移动区域逐帧推进，过滤基于 box 尺寸、mask 尺寸与有效关键点数。",
+   "stance": "support",
+   "relation": "支持命题：给出全景/ERP 数据接入常规视觉模型（YOLO/SAM2/ViTPose）的工程范式（区域化处理替代全景原生模型）——这是'全景相机收益'与'标准 CV 工具链兼容'之间的桥梁，也是当前该应用方式的现实约束（模型非全景原生）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III-C.1 与 Fig. 2/3 说明 region-images 缓解 panoptic 图像对未训练模型的负面效应、4 个 wrap-around 重叠固定区域与中心半区去重、Algorithm 1（page 10/15）给出形式化流程。",
+   "locator": "page 4, Section III-C.1 与 Fig. 2/Fig. 3（Algorithm 1 见 page 15）",
+   "source_context": "In practice, we performed the steps of detection, filtering,\nsegmentation and tracking using region-images (crops of\nthe panoptic image) to mitigate the negative effects of\ndirectly using panoptic images on models that have not been\ntrained with them. The full process is briefly illustrated in\nFigure 2 (detection and filtering) in Figure 3 (tracking and\nsegmentation) and is detailed in the supplementary materials\n(Algorithm 1).\nFig. 2. Detection and filtering process in equirectangular images: the\nprocess of detection uses 4 overlapping fixed regions of the image with\nwrapping. Filtering is done based on box size, mask size and number of\nvalid keypoints.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 using region-images (crops of the panoptic image) to mitigate the negative effects of directly using panoptic images on models that have not been trained with them 与 Fig. 2 标题 the process of detection uses 4 overlapping fixed regions of the image with wrapping；W/2×H 与仅保留中心半区（detections are only kept for their central half）在 page 10 Section VIII 逐字核对；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C04",
+   "claim": "交互的自动标注以几何判据完成：只认与平台的物理交互（拿取/放置/投掷），把交互区（HUI360 为机器人托盘、SSUP-A 为垃圾桶顶）与人分割掩码的相交作为交互判据；HUI360 相机固定故交互区在画面中位置固定、判定直接；SSUP-A 相机随垃圾桶移动且自稳定导致交互区在画面中漂移，需逐帧用 SAM2 跟踪交互区并取 Convex Hull 再求交——方法适用于任意固定或移动交互区（要求凸形状）。",
+   "stance": "support",
+   "relation": "支持命题：360° ego 视频上规模化解译'谁在跟机器人交互'的可行判据（掩码-交互区相交），以及全景相机移动/自稳定带来的交互区漂移这一全景特有工程问题及其凸包解法——应用方式（自动标注管线）的关键机制证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III-C.2 定义物理交互与交互区判据，说明 HUI360（固定区）与 SSUP-A（移动区+Convex Hull）两种情形及凸形状适用条件。",
+   "locator": "page 4, Section III-C.2 Automatic detection of interactions",
+   "source_context": "We adopt a precise\ndefinition of an interaction where we only consider physical\ninteraction with the platform. In practice, we define an\ninteraction zone (the trashcans in SSUP-A and the plate\nof the robot in HUI360) and consider that someone is\ninteracting when their segmentation mask intersects with\nthis zone. Doing so is straightforward in HUI360, as the\ninteraction zone occupies a fix place in the camera frame,\nbut the mounting of the camera on the trashcans of SSUP\nmakes that they move and appear differently in the camera\nframe; in consequence, we use a different intersection mask\nfor each frame obtained with SAM2 with a manual prompt of\nthe initial position and refined by computing its Convex Hull,\nsuch that, when someone throws something or puts their hand\nin the trashcan, we can still compute the intersection, see this\nprocess in the Supplementary Materials (Figure 9).\nOur method can then be used for any fixed or moving\ninteraction zone as long as it is a convex shape.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 we only consider physical interaction with the platform、an interaction zone (the trashcans in SSUP-A and the plate of the robot in HUI360)、interacting when their segmentation mask intersects with this zone、the mounting of the camera on the trashcans of SSUP makes that they move and appear differently in the camera frame、obtained with SAM2 with a manual prompt of the initial position and refined by computing its Convex Hull、any fixed or moving interaction zone as long as it is a convex shape；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C05",
+   "claim": "姿态提取采用互补双模型：ViTPose-B（17 COCO 关键点，256×192 稳健）与 Sapiens-0.6B-Pose-308（308 关键点含 242 面部，1024×768 高精度）；全景图中人像尺度分布为 26% 框高<256、73% 在 [256,1024]、0.4%>1024，多数人像对 ViTPose 下采样、对 Sapiens 上采样，最终 73% 的 ViTPose 与 62% 的 Sapiens 关键点（面部 64%、其余 55%）有效（score c>0.5）。",
+   "stance": "support",
+   "relation": "支持命题：全景 ego 数据上人体姿态自动提取的量化可行性（有效率 62-73%）与分辨率-精度互补设计——支撑'全景数据可被标准姿态工具链规模化加工'的效果证据，同时其尺度分布揭示全景相机的中低分辨率人像代价。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section III-C.3 报告两种姿态模型的分辨率互补性与全数据集关键点有效率统计（按 ×1.25 框扩张口径）。",
+   "locator": "page 5, Section III-C.3 Automatic extraction of pose",
+   "source_context": "Two methods were used because they appear to be com-\nplementary. Indeed, ViTPose operates reliably and robustly at\nreasonable working resolutions (256×192), whereas Sapiens\nworks at much higher resolutions (1024×768) but provides a\nvery precise estimation with keypoints on the face and hands.\nIn our dataset 26% of the boxes have and height h < 256,\n73% have h ∈ [256, 1024] and 0.4% have h > 1024 (after\n×1.25 expansion as used for those methods). Meaning that\nmost of the persons images are downscaled for ViTPose and\nupscaled for Sapiens, ultimately 73% of ViTPose and 62%\nof Sapiens keypoints (64% for facial keypoints, and 55% for\nthe rest) are valid (i.e. with a score c > 0.5).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "关键点有效率（score c>0.5）与人像框高分布",
+    "value_or_direction": "ViTPose 73%、Sapiens 62%（facial 64%、其余 55%）valid；26% h<256、73% h∈[256,1024]、0.4% h>1024",
+    "comparator": "ViTPose（256×192 分辨率）vs Sapiens（1024×768 分辨率）互补双模型",
+    "task_or_sample": "HUI360 全部检测框（×1.25 expansion 口径）",
+    "locator": "page 5, Section III-C.3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字给出 ViTPose operates reliably and robustly at reasonable working resolutions (256×192)、Sapiens works at much higher resolutions (1024×768)、26% of the boxes have and height h < 256, 73% have h ∈ [256, 1024] and 0.4% have h > 1024、73% of ViTPose and 62% of Sapiens keypoints (64% for facial keypoints, and 55% for the rest) are valid (i.e. with a score c > 0.5)；'242 facial'在 page 4（finetuned ... 308 keypoints including 242 facial keypoints）逐字核对；claim 为原文数字的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C06",
+   "claim": "跨域扩展 SSUP-A：为检验跨机器人平台迁移，把自动管线加标注到既有 SSUP-HRI 数据（纽约公共广场、2 个 field sessions 相隔一年、2 台移动垃圾桶机器人配 360 相机、Wizard-of-Oz 操作），共平均每帧 5.5 人、总计 1.15M 帧的检测/跟踪/标注——移动平台+视角偏移+截然不同的行为域使其成为迁移性基准，并与 HUI360 共享同质标注协议。",
+   "stance": "support",
+   "relation": "支持命题：360° 相机使两个形态迥异的具身平台（固定服务机器人 vs 移动垃圾桶）用同一 ego 全景视角+同一标注协议对齐，构成跨本体/跨域评估基础——综述'应用方式'的跨平台数据层证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III-B.2 说明 SSUP-A 的来源（2 sessions×5 days、公共广场、2 mobile trash barrels with 360 cameras、Wizard of Oz）与标注规模（average of 5.5 persons per frame、total of 1.15M frames）。",
+   "locator": "page 3, Section III-B.2 SSUP-A: Extension to other domains",
+   "source_context": "To push even\nfurther the diversity of environments, we annotated the\nSSUP-HRI dataset [1], which was collected in the wild\nduring 2 field sessions of 5 days each, one year apart, on\npublic squares of New York using 2 mobile trash barrels\nequipped with 360 cameras and operated in a Wizard of\nOz fashion. The videos exhibit a full range of passerbys\nand users all around, with individual and group interactions.\nThe different nature of behaviors, the shift in viewpoint, as\nwell as the use of a mobile recording platform make it an\ninteresting testbed for benchmarking the transferability of\nHRI anticipation methods to drastically different domains.\nWe detected, tracked and annotated an average of 5.5 persons\nper frame, on a total of 1.15M frames.\nFor practical reasons, we split the SSUP dataset in 5\nminutes episodes, meaning that some tracks are interrupted\nand restarted as a new one in the next episode.",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "SSUP-A 标注规模与平台条件",
+    "value_or_direction": "average of 5.5 persons per frame、total 1.15M frames；2 field sessions of 5 days each、one year apart",
+    "comparator": "SSUP-A（2 mobile trash barrels with 360 cameras、public squares of New York、Wizard of Oz）vs HUI360（固定服务机器人、9 environments、20 days）",
+    "task_or_sample": "cross-dataset 零样本迁移评估的源/目标域",
+    "locator": "page 3, Section III-B.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 2 field sessions of 5 days each, one year apart, on public squares of New York using 2 mobile trash barrels equipped with 360 cameras and operated in a Wizard of Oz fashion 与 We detected, tracked and annotated an average of 5.5 persons per frame, on a total of 1.15M frames；HUI360 侧 20 days、9 environments 在 page 3 Section III-B.1 逐字核对；1.15M 帧口径（15fps 处理后）见 page 7 脚注 3；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C07",
+   "claim": "质量控制靠人工策展：全套视频人工观看，可整集作废（异常行为归因于机器人新鲜感、操作员在场执行技术任务、不可恢复的跟踪失败、伦理协议与 GDPR 撤回）、可删/拆/并 track、可修正交互标签（SSUP-A 的假阴性投掷与凸包假阳性）；掩码与关键点不做逐点修正、失败即整 track 作废——最终 15% 的 episodes 被标记且不导出。",
+   "stance": "support",
+   "relation": "支持命题：全景自动标注管线的可信度边界（自动+人工两段式），量化的人工复核成本（15% 集作废）——评估'360° 自动标注管线'证据质量时必要的过程性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section III-D 说明策展动作类型（作废/删/拆/并/改标签）与原因类别，给出 15% episodes flagged 未导出的量化结果。",
+   "locator": "page 5, Section III-D Manual curation",
+   "source_context": "To ensure the quality of the data we share, we proceeded to\nmanual curation using specifically designed user interfaces.\nOur curation consisted in (1) flagging full episodes as invalid\nfor reason such as: multiple abnormal behaviors attributed to\nthe novelty of the robot’s presence, presence of the operator\nfor technical task (launching/stopping recording, maintaining\nthe robot), multiple and non recoverable tracking issues,\nremoval request in compliance with our ethics protocol and\nGDPR, (2) corrections on tracking : removing, splitting or\nassociating tracks, (3) corrections on automatic labeling (es-\npecially in SSUP-A) : correcting false negatives (interaction\nwithout masks intersection such as throwing or dropping\nan object without direct contact) and false positives (mostly\ninduced by an excessive interaction zone mask when it ap-\npears as not convex because of the moving 360 camera view\npoint). We refer to the Supplementary Materials (Figure 10)\nfor examples of such issues that were flagged or corrected.\nOverall 15% of episodes were flagged and not exported.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "人工策整剔除比例",
+    "value_or_direction": "15% of episodes were flagged and not exported",
+    "comparator": "全自动标注管线（YOLOv11x+SAM2.1+ViTPose/Sapiens）+ 人工 review and correction vs 无复核",
+    "task_or_sample": "HUI360 1937 episodes 的质量控制（SSUP-A 277 episodes 同流程）",
+    "locator": "page 5, Section III-D"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字给出 Our curation consisted in (1) flagging full episodes as invalid for reason such as: multiple abnormal behaviors attributed to the novelty of the robot's presence, presence of the operator for technical task..., multiple and non recoverable tracking issues, removal request in compliance with our ethics protocol and GDPR 与 Overall 15% of episodes were flagged and not exported；'掩码/关键点不逐点修正、失败整 track 作废'在 page 11 Section X 逐字核对（We did not directly corrected the masks or the extracted keypoints, in case of failure the tracks were fully discarded）；episodes 总数 1937/277 在 page 4 Table II 核对；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C08",
+   "claim": "主基线效果：以 mask 面积（距离代理）+框位置+ViTPose 关键点为特征（D3）、T_ADV=15（提前 1s），LSTM 在 HUI360 留出环境上 AUC 0.91（MLP 0.86、RF 0.81）；跨数据集零样本（换机器人平台）LSTM 为 HUI360→SSUP-A 0.84、SSUP-A→HUI360 0.84、SSUP-A 原生 0.88——LSTM 全面优于 MLP/RF，平台变化带来可见但非毁灭性的 AUC 下降。",
+   "stance": "support",
+   "relation": "支持命题：360° 全景 ego 数据上交互预期任务的可行基线水平（in-dataset AUC 0.91）与跨平台 AUC 保持度（0.84-0.88）——综述'哪些任务获益'中 HRI 交互预期/社交感知任务的直接量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-C.1 Transfer capabilities 与 Table III 报告 RF/MLP/LSTM 在两数据集 native 训练下的 in-dataset 与 cross-dataset AUC。",
+   "locator": "page 7, Table III 与 Section IV-C.1",
+   "source_context": "As reported in Table III, the LSTM model outperforms\nthe MLP and Random Forest in all scenarios. As expected,\na change in the robotic platform results in a noticeable drop\nin performance under cross-dataset evaluation.\nThese findings establish an initial baseline emphasizing\ngeneralization for robots operating in unseen, in-the-wild\nenvironments.\nTABLE III\nAUC OF MLP, RF AND LSTM. EACH MODEL IS TRAINED ON ITS\nNATIVE DATASET, AND SUBSEQUENTLY EVALUATED IN A\nCROSS-DOMAIN TRANSFER SCENARIO.\nHUI360 Test SSUP-A Test\nRF MLP LSTM RF MLP LSTM\nHUI360 Train 0.81 0.86 0.91 0.83 0.79 0.84\nSSUP-A Train 0.76 0.81 0.84 0.86 0.85 0.88",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AUC（交互预期二分类）",
+    "value_or_direction": "in-dataset LSTM 0.91/MLP 0.86/RF 0.81（HUI360 Test）；cross-dataset LSTM 0.84（HUI360→SSUP-A）、0.84（SSUP-A→HUI360）、SSUP-A native 0.88",
+    "comparator": "RF / MLP / LSTM 三基线 × HUI360↔SSUP-A 双向迁移",
+    "task_or_sample": "D3 特征、T_ADV=15、正负比 0.19（HUI360 Test）/0.03（SSUP-A Test）",
+    "locator": "page 7, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 the LSTM model outperforms the MLP and Random Forest in all scenarios 与 a change in the robotic platform results in a noticeable drop in performance under cross-dataset evaluation；Table III 同页逐行核对（HUI360 Train 0.81 0.86 0.91 0.83 0.79 0.84；SSUP-A Train 0.76 0.81 0.84 0.86 0.85 0.88）；D3 特征与 T_ADV=15 默认设置在 page 7 Section IV-C.1 开头逐字核对；正负比 0.19/0.03 在 page 6 Section IV-A 逐字核对；claim 为数字的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C09",
+   "claim": "AUC 表象下的精度崩塌：跨数据集 AP/F1 大幅下降——HUI360 训练的 LSTM 在 HUI360 Test 上 AP 0.60/F1 0.61，零样本到 SSUP-A Test 后 AP 仅 0.16、F1 0.23；SSUP-A 训练的 LSTM 原生 SSUP-A Test 为 AP 0.24/F1 0.26、零样本到 HUI360 Test 反而 AP 0.50/F1 0.50；作者指出类别不平衡（尤其 SSUP-A）使该影响在 AP/F1 上比 AUC 更可见——跨平台交互预期的正类查准率仍接近不可用水平。",
+   "stance": "limit",
+   "relation": "限制命题：360° 数据上的 AUC 0.84 跨数据集'迁移成功'是阈值无关排序能力的表象；在 2-3% 正例的真实不平衡部署条件下查准率崩塌——综述回答'哪些受限'时，HRI 交互预期的跨平台/跨域泛化是明确短板。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-A（page 6）说明 AP/F1 报告动机与类别不平衡；Table IV 给出三基线 AP 与 F1@0.5 的 in/cross-dataset 全矩阵。",
+   "locator": "page 7, Table IV（不平衡比例 0.19/0.03 见 page 6, Section IV-A）",
+   "source_context": "TABLE IV\nAVERAGE PRECISION AND F1-SCORE (AT 0.5) OF MLP, RF AND LSTM\nIN IN-DATASET AND CROSS-DATASET EVALUATION\nHUI360 Test SSUP-A Test\nRF MLP LSTM RF MLP LSTM\nAP\nHUI360 Train 0.48 0.53 0.60 0.14 0.12 0.16\nSSUP-A Train 0.33 0.49 0.50 0.16 0.21 0.24\nF1-Score\nHUI360 Train 0.45 0.57 0.61 0.06 0.20 0.23\nSSUP-A Train 0.39 0.44 0.50 0.23 0.24 0.26",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AP 与 F1-score@0.5（in-dataset vs cross-dataset）",
+    "value_or_direction": "LSTM：HUI360→HUI360 AP 0.60/F1 0.61 → HUI360→SSUP-A AP 0.16/F1 0.23；SSUP-A→SSUP-A AP 0.24/F1 0.26、SSUP-A→HUI360 AP 0.50/F1 0.50",
+    "comparator": "RF/MLP/LSTM × HUI360↔SSUP-A 双向 vs 对应 in-dataset（Table III AUC）",
+    "task_or_sample": "T_ADV=15、D3 特征；HUI360 Test 正负比 0.19、SSUP-A Test 0.03",
+    "locator": "page 7, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table IV 逐行核对（AP：HUI360 Train 0.48 0.53 0.60 0.14 0.12 0.16；SSUP-A Train 0.33 0.49 0.50 0.16 0.21 0.24；F1：0.45 0.57 0.61 0.06 0.20 0.23；0.39 0.44 0.50 0.23 0.24 0.26）；'类别不平衡影响在 AP/F1 更可见'在 page 6 逐字核对（making the impact of class imbalance more visible, especially on SSUP-A）；正负比 0.19/0.03 同页核对；SSUP-A→HUI360 的 LSTM F1 0.26 由 Table IV 末行（SSUP-A Train F1 HUI360 Test 列 0.23 0.24 0.26）核对；claim 为数字的直接读出。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C10",
+   "claim": "前瞻时域退化平缓：观测窗离交互起点越近越易判对，AUC 随 T_ADV（5→30 帧，即 0.33→2.0s）呈近似规律下降——LSTM 0.97/0.94/0.89/0.87/0.84/0.77、MLP 0.96/0.92/0.89/0.86/0.84/0.76、RF 0.90/0.84/0.81/0.78/0.73/0.71；MLP 与 LSTM 优于 RF 且退化更缓——2 秒前瞻仍有 0.77 的排序能力，但可靠预警窗口实质在 1s 内（≥0.89）。",
+   "stance": "support",
+   "relation": "支持命题：全景 ego 交互预期的时间边界量化（0.33-2.0s 前瞻 AUC 曲线）——机器人决定何时主动搭话的提前量依据，属综述'效果'证据；'1s 内可靠'的读出同时限定其获益边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-C.1 Forecasting capabilities 与 Table V 报告六档 T_ADV 下三基线 AUC（仅用足够长的 track 以支持 30 帧采样）。",
+   "locator": "page 7, Table V 与 Section IV-C.1",
+   "source_context": "Forecasting capabilities On Table V, we provide the\nbaseline of our proposed models. Unsurprisingly, the closer\nthe observation window is to the onset of the interaction,\nthe easier it becomes to correctly classify the anticipation.\nMoreover, the decrease in performance follows a fairly\nregular trend. It can also be observed that the MLP and\nLSTM outperforms the Random Forest and exhibit a more\ngradual degradation in performance as T\nADV \nincreases.\nClassifiers and trained and evaluated with the same\nT\nADV \n∈ {5, 10, 15, 20, 25, 30}, corresponding to a forecast-\ning of 0.33, 0.66, 1.0, 1.33, 1.66 or 2.0 seconds respectively.\nFor consistency all of them are only trained and evaluated\non set of tracks from HUI360 Train and evaluated on a set\nof tracks from HUI360 Test that are long enough to allow\nsampling with T\nADV \nup to 30 (for this reason results at\nT\nADV \n= 15 i.e. the default modality, differ from the other\nbaselines.)\nTABLE V\nAUC OF RF AND MLP CLASSIFIER AT DIFFERENT ADVANCE DETECTION\nTHRESHOLDS T\nADV \n(5 TO 30 FRAMES, OR 0.33 TO 2.0 SECONDS).\nT\nADV \n5 10 15 20 25 30\nRF 0.9 0.84 0.81 0.78 0.73 0.71\nMLP 0.96 0.92 0.89 0.86 0.84 0.76\nLSTM 0.97 0.94 0.89 0.87 0.84 0.77",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AUC vs 前瞻时域 T_ADV",
+    "value_or_direction": "LSTM 0.97（0.33s）→0.89（1s）→0.77（2s）；MLP 0.96→0.76；RF 0.90→0.71",
+    "comparator": "RF vs MLP vs LSTM 退化梯度（MLP/LSTM 更缓）",
+    "task_or_sample": "HUI360 Train→Test、仅用足够长的 tracks（T_ADV=15 口径与主基线略异）",
+    "locator": "page 7, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 the closer the observation window is to the onset of the interaction, the easier it becomes 与 fairly regular trend、MLP and LSTM outperforms the Random Forest and exhibit a more gradual degradation；Table V 同页逐行核对（RF 0.9 0.84 0.81 0.78 0.73 0.71；MLP 0.96 0.92 0.89 0.86 0.84 0.76；LSTM 0.97 0.94 0.89 0.87 0.84 0.77）；0.33/2.0 秒换算与'仅用足够长的 tracks'口径同页核对；'可靠窗口 1s 内'为对 0.89/0.77 数字梯度的直接读出。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C11",
+   "claim": "低帧率部署边界：固定 2s 观测窗、输入降采样至 15/5/3/1 Hz 时 AUC 为 LSTM 0.91/0.87/0.85/0.78、MLP 0.87/0.87/0.85/0.75、RF 0.81/0.80/0.80/0.73——5Hz 与 3Hz 基本保持（LSTM 各降 4/6 个点），但 1Hz 出现明显坍塌（再降 7 个点至 0.78），作者将其定位为机载算力受限下预期系统对时间分辨率敏感性的基线。",
+   "stance": "conditional",
+   "relation": "条件性支持命题：360° 交互预期在算力受限机载部署下可容忍降至 3Hz 而基本保持效果、但 1Hz 以下不可用——综述'哪些任务获益'需附带'帧率预算 ≥3Hz'的条件限定。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-C.1 Input frequency robustness 与 Table VI 报告四档子采样率下三基线 AUC（T_org=30 保持 2 秒窗）。",
+   "locator": "page 8, Table VI 与 Section IV-C.1",
+   "source_context": "degrades as the input framerate decreases (cf. VI), with a\npronounced collapse when the rate drops to a critical value\nof one frame per second. The results presented here serve as\nan additional baseline, highlighting the sensitivity of antic-\nipation systems to temporal resolution under computational\nconstraints.\nTABLE VI\nAUC OF RF AND MLP WITH DIFFERENT SUBSAMPLING RATE s. FOR\nALL BASELINES WE KEEP T\norg \n= 30 (2 SEC).\ns / Freq. 1 / 15Hz 3 / 5Hz 5 / 3Hz 15 / 1Hz\nRF 0.81 0.80 0.80 0.73\nMLP 0.87 0.87 0.85 0.75\nLSTM 0.91 0.87 0.85 0.78",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AUC vs 输入帧率（子采样率 s）",
+    "value_or_direction": "LSTM 0.91（15Hz）→0.87（5Hz）→0.85（3Hz）→0.78（1Hz）；RF 0.81→0.73；MLP 0.87→0.75",
+    "comparator": "1/15Hz、3/5Hz、5/3Hz、15/1Hz 四档（T_org=30，2 SEC 观测窗不变）",
+    "task_or_sample": "机载算力受限下的部署鲁棒性基线（HUI360 Train→Test）",
+    "locator": "page 8, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 performance degrades as the input framerate decreases (cf. VI), with a pronounced collapse when the rate drops to a critical value of one frame per second 与 highlighting the sensitivity of anticipation systems to temporal resolution under computational constraints；Table VI 同页逐行核对（s/Freq. 1/15Hz 3/5Hz 5/3Hz 15/1Hz；RF 0.81 0.80 0.80 0.73；MLP 0.87 0.87 0.85 0.75；LSTM 0.91 0.87 0.85 0.78）；'基本保持/坍塌'为对数字梯度的直接读出。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C12",
+   "claim": "特征消融的边际收益递减：加入姿态关键点显著提升（仅 mask 的 D1：LSTM 0.79→D3 含 ViTPose 0.91；MLP 0.81→0.87），但更细的 Sapiens-308 关键点与 242 面部关键点（D4/D5）相对 D3 无实质增益（MLP 0.88/0.88、LSTM 0.88/0.90 vs 0.91），不含框位置的 D7（MLP 0.89）与头肩耳眼手工子集 D6（LSTM 0.90）同样持平——作者结论：Sapiens 关键点与 ViTPose 结果相近 despite being much more detailed。",
+   "stance": "conditional",
+   "relation": "条件性命题：全景 ego 视角下交互预期的判别信息集中于低维几何特征（mask 尺寸、框位置、17 个身体关键点），细粒度面部/全身 308 关键点几乎不带来增益——综述引用'全景数据配高精度姿态模型'时应限定其边际收益有限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-C.2 定义 D1-D7 特征集并给出 Table VII 消融；正文明确 Sapiens 与 ViTPose 结果相近。",
+   "locator": "page 8, Table VII 与 Section IV-C.2",
+   "source_context": "The results presented in\nTable VII suggest that the key points provided by Sapiens\nyield results similar to those of ViTPose for the reference\ndatabases tested, despite being much more detailed.\nTABLE VII\nABLATION STUDY OF FEATURE SETS FOR RF, MLP AND LSTM\nCLASSIFIERS. BEST RESULT FOR EACH CLASSIFIER IN BOLD.\nD\n1 \nD\n2 \nD\n3 \nD\n4 \nD\n5 \nD\n6 \nD\n7\nRF 0.78 0.80 0.81 0.81 0.81 0.81 0.80\nMLP 0.81 0.83 0.87 0.88 0.88 0.87 0.89\nLSTM 0.79 0.81 0.91 0.88 0.90 0.90 0.89",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AUC（feature sets 消融，Table VII）",
+    "value_or_direction": "LSTM：D1 0.79 → D3 0.91（最佳）、D4 0.88、D5 0.90、D6 0.90、D7 0.89；MLP：D1 0.81→D3 0.87、D4/D5 0.88、D7 0.89",
+    "comparator": "D1（仅 mask）vs D2（+box）vs D3（+ViTPose 17）vs D4/D5（+Sapiens 308/242 facial）vs D6/D7（手工子集/无框）",
+    "task_or_sample": "HUI360 Train→HUI360 Test（T_ADV=15，Table VII 主表）",
+    "locator": "page 8, Table VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 the key points provided by Sapiens yield results similar to those of ViTPose for the reference databases tested, despite being much more detailed；Table VII 同页逐行核对（RF 0.78 0.80 0.81 0.81 0.81 0.81 0.80；MLP 0.81 0.83 0.87 0.88 0.88 0.87 0.89；LSTM 0.79 0.81 0.91 0.88 0.90 0.90 0.89）；D1-D7 定义在 page 8 Section IV-C.2 逐字核对；claim 为数字的直接读出。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C13",
+   "claim": "作者自述定义局限：以'与平台物理接触'为操作化交互定义只覆盖 HRI 行为谱的子集，未显式建模前接触社会信号（gaze、hesitation、verbal engagement、approach-and-stop）——这是可扩展性与语义丰富度的权衡：客观可自动测量的判据换来大规模可复现标注，但限制了可捕捉的交互范围；作者将 HUI360 定位为 foundation 而非完整定义。",
+   "stance": "limit",
+   "relation": "限制命题：该数据集的'交互预期'不等同'交互意图预期'（凝视/犹豫/语言等弱信号被明确排除）——综述引用其效果数字时必须声明任务定义收窄，防止把物理接触预期外推为社会意图理解。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论末段明确操作化定义的子集性质、未建模的前接触信号与可扩展性-语义丰富度权衡。",
+   "locator": "page 8, Section V Conclusion 末两段",
+   "source_context": "We acknowledge that the operational definition of inter-\naction adopted in HUI360, based on physical contact with\nthe platform, captures only a subset of the rich spectrum of\nhuman-robot interaction behaviors. In particular, it does not\nexplicitly model pre-contact social signals such as gaze, hes-\nitation, verbal engagement, or approach-and-stop behaviors,\nwhich may also convey interaction intent.\nThis design choice reflects a trade-off between scalability\nand semantic richness. While objective and automatically\nmeasurable criteria enable large-scale and reproducible anno-\ntation, they also limit the range of interactions captured. We\nthus consider HUI360 as a foundation rather than a complete\ndefinition, and hope that the release of both the raw 360° data\nand the annotation pipeline will support future extensions\ntoward more nuanced and socially grounded interaction\nlabels.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 captures only a subset of the rich spectrum of human-robot interaction behaviors、it does not explicitly model pre-contact social signals such as gaze, hesitation, verbal engagement, or approach-and-stop behaviors、This design choice reflects a trade-off between scalability and semantic richness、a foundation rather than a complete definition；claim 为作者限制陈述的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C14",
+   "claim": "基线与全景表示均未充分开发：作者自述当前基线 architecturally basic（RF/MLP/LSTM），把'利用 equirectangular 图像的特有性质'、更丰富的时空建模与社交/群体动态列为未来方向——即全景输入目前只被当普通特征源处理，其角坐标/环绕几何尚未转化为模型归纳偏置，全景 ego 数据的独特价值未被基线兑现。",
+   "stance": "limit",
+   "relation": "限制命题：360° 数据在手而全景原生方法缺席——'应用方式'仍停留在数据采集与常规管线，未出现针对 ERP 几何的模型设计；综述应把该文定位为数据基础设施证据而非全景感知方法证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论段：baselines architecturally basic；leveraging the specific characteristics of equirectangular imagery 列为 open direction。",
+   "locator": "page 8, Section V Conclusion",
+   "source_context": "While the current baselines are architecturally basic, they\nopen promising directions whether it is exploring richer\ntemporal and spatial modeling, leveraging the specific char-\nacteristics of equirectangular imagery, or incorporating social\nand group dynamics. In this sense, HUI360 represents not\nonly a significant step toward practical and generalizable\nhuman-robot interaction anticipation, but also an important\nresource for future research in socially aware robotics and\nanticipatory perception.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 While the current baselines are architecturally basic, they open promising directions whether it is exploring richer temporal and spatial modeling, leveraging the specific characteristics of equirectangular imagery, or incorporating social and group dynamics；claim 前半为忠实复述，'尚未转化为模型归纳偏置'为对该未来方向表述的直接读出。"
+   }
+  },
+  {
+   "card_id": "2608.11051-C15",
+   "claim": "全景单目的距离信息缺口：系统无距离传感器输入，用分割 mask 尺寸作人到机器人距离的代理（负样本 T0 取 mask 最大时刻），补充实验以额外 RGBD 相机测量验证 mask 尺寸（全 360 图内）与距离的明显相关；框尺寸同样相关但 less stable（受位置与运动偏置，mask 尺寸除严重遮挡外稳定，而遮挡样本在采样时已被过滤）。",
+   "stance": "conditional",
+   "relation": "条件性命题：360° ERP 单目无度量距离，交互预期完全依赖表观尺寸代理且其有效性经 RGBD 交叉验证——综述'哪些受限'：需要精确空间关系（接近速度、社交距离度量）的任务在该全景配置下受限，只能拿到相对/序数距离信息。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "补充材料 Section XI 说明 mask 尺寸作为距离代理的动机与 RGBD 验证（Fig. 13）、框尺寸的相对不稳定性与遮挡过滤。",
+   "locator": "page 12, Supplementary Section XI（Fig. 13 在 page 13）",
+   "source_context": "We used the mask size as a proxy for distance when align-\ning the negative tracks during sampling, for those tracks T\n0\nis define as the moment where they appear with the biggest\nmask size. We show in 13 the obvious correlation between\nmask size (in the full 360 image) and distance (measured\nwith an additional RGBD camera), we also compare it to\nthe box size. The box size also appears correlated to the\ndistance but we found it to be less stable (more subject to\nbias depending on position and movement whereas the mask\nsize is stable except in the presence of severe occlusions,\nand these cases are usually filtered out during sampling as\nexplained in XII).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mask size 与 distance 的相关性（RGBD 交叉验证）",
+    "value_or_direction": "obvious correlation between mask size (in the full 360 image) and distance (measured with an additional RGBD camera)",
+    "comparator": "mask size vs box size 作 distance 代理（box size less stable、mask size 稳定但严重遮挡失效）",
+    "task_or_sample": "负样本 track 采样对齐（T0 取 mask 最大时刻；遮挡样本采样时过滤）",
+    "locator": "page 12, Supplementary Section XI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 逐字给出 We used the mask size as a proxy for distance、We show in 13 the obvious correlation between mask size (in the full 360 image) and distance (measured with an additional RGBD camera)、The box size also appears correlated to the distance but we found it to be less stable (more subject to bias depending on position and movement whereas the mask size is stable except in the presence of severe occlusions, and these cases are usually filtered out during sampling)；T0 取 mask 最大时刻的负样本对齐在 page 5-6 Section III-E 与 page 12 交叉核对；claim 为原文的忠实复述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[1] Bu & Ju. SSUP-HRI: Social signaling in urban public human-robot interaction dataset, 2024",
+   "reason": "被扩展标注成 SSUP-A 的源头数据集（移动垃圾桶+360 相机），构成本文跨平台迁移评估的另一半。"
+  },
+  {
+   "ref": "[2] Thompson et al. Predicting human intent to interact with a public robot (PAR-D), ICMI 2024",
+   "reason": "Shutter/ATC 系数据集与 RF/GRU 基线来源，是 Table I 对比与本基线设计的直接参照。"
+  },
+  {
+   "ref": "[3] Abbate et al. Self-supervised prediction of the intention to interact with a service robot, RAS 2024",
+   "reason": "低位几何特征（位置/速度/朝向）与 advance detection time/距离分箱评估方法的来源，本文 T_ADV 协议与其对接。"
+  },
+  {
+   "ref": "[8] Ben-Youssef et al. UE-HRI: user engagement in spontaneous HRI, 2017",
+   "reason": "最接近的自发交互数据集（56° 窄 FoV），反衬 360 FoV 的数据基础设施差异。"
+  },
+  {
+   "ref": "[35]-[38] YOLO11 / SAM2 / ViTPose / Sapiens",
+   "reason": "全景区域化处理所依赖的四个冻结视觉基座，决定'非全景原生方法'这条边界的技术构成。"
+  }
+ ],
+ "notes": "alphaxiv 文本层提取（extraction method 记为 pdf-text；来源 alphaxiv-fulltext-api 非 OCR 文本层），15 页 FG 2026 双栏排版含 6 页补充材料（Roman VII-XV）。与前几篇的互补关系：2604.13476（多超广角不拼接走 3DGS）、2609.02319（多鱼眼实时拼 ERP）、2605.13169（MLLM 全景原生理解）之后，本文补上'单 360 全景相机作 ego 数据基础设施'一极——四者合成全景/环视在具身领域的完整应用方式谱系。定位器统一用 page N；表格页码按 extraction 分页（Table II 跨 page 4、Table III/IV/V 在 page 7、Table VI/VII 在 page 8）。"
+}

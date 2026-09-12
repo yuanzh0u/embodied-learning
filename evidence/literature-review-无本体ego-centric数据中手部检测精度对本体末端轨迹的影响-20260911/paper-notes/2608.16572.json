@@ -1,0 +1,420 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.16572",
+  "title": "ViHaTeleop: A Low-Cost, Lightweight Visual-Haptic Teleoperation System for Dexterous Manipulation Learning",
+  "published": "2026-08-17",
+  "url": "https://arxiv.org/abs/2608.16572",
+  "authors": [
+   "Fucai Zhu",
+   "Yanhou Lai",
+   "Paul Maestre",
+   "K. Hashimoto"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "腕部 VSLAM+IMU 追踪器 + 腕戴鱼眼相机 MediaPipe 21 点手部追踪的双源追踪链，代表『消费级 SLAM 追踪 + ego 腕戴视觉』路线；其 LED 补光降低关键点抖动的定量实验、对 ACE 浮动基座导致末端映射失稳的批评、IK 失败保持末指令与重定向 snapping 平滑等设计直接命中综述的误差来源/传播路径/缓解手段三问。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "问题定位：低成本遥操作缺触觉反馈；系统追踪链构成（Vive Ultimate 腕部 + 鱼眼相机手部）。"
+   },
+   {
+    "locator": "A. Dexterous Teleoperation",
+    "role": "relevant-core",
+    "purpose": "追踪方案谱系的误差权衡：视觉法遮挡、动捕成本、外骨骼负担；ACE 浮动基座→末端映射失稳的误差来源陈述。"
+   },
+   {
+    "locator": "III. SYSTEM DESIGN",
+    "role": "method-or-design",
+    "purpose": "系统设计目标（成本/重量/鲁棒性）总览。"
+   },
+   {
+    "locator": "A. Hardware Design",
+    "role": "method-or-design",
+    "purpose": "四模块硬件：Vive Ultimate 6-DoF 腕部追踪、OV5647 鱼眼手部相机、LED、LRA 触觉。"
+   },
+   {
+    "locator": "B. Pose Estimation",
+    "role": "method-or-design",
+    "purpose": "MediaPipe 21 点手部检测 + LED 补光降低关键点抖动的定量评估（160 试次）。"
+   },
+   {
+    "locator": "C. Robot Arm Control",
+    "role": "method-or-design",
+    "purpose": "相对位姿映射、工作空间钳制、IK 失败保持最后有效指令的轨迹连续性保护。"
+   },
+   {
+    "locator": "D. Robot Hand Motion Retargeting",
+    "role": "method-or-design",
+    "purpose": "DexPilot 重定向的 snapping 不连续问题与平滑化、触觉感知平行约束。"
+   },
+   {
+    "locator": "E. Vibrotactile Haptic Feedback",
+    "role": "method-or-design",
+    "purpose": "9DTact 形变→PWM→LRA 振动反馈链路；LRA 环避开指尖以免干扰视觉追踪。"
+   },
+   {
+    "locator": "IV. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "评估总览：触觉消融用户研究 + 模仿学习验证。"
+   },
+   {
+    "locator": "C. User Study: Haptic Feedback Ablation",
+    "role": "results-or-analysis",
+    "purpose": "9 人 6 任务有/无触觉对照协议与指标定义。"
+   },
+   {
+    "locator": "D. User Study Results",
+    "role": "results-or-analysis",
+    "purpose": "成功率提升 +2.2~+15.6pp、完成时间任务依赖、平行约束消融。"
+   },
+   {
+    "locator": "E. Imitation Learning Validation",
+    "role": "results-or-analysis",
+    "purpose": "50 条演示训练视觉-触觉策略（peg-in-hole +17pp）的下游可用性证据。"
+   },
+   {
+    "locator": "F. Discussion",
+    "role": "conclusion-or-limitations",
+    "purpose": "局限性：无追踪器/相机精度的外部 ground-truth 基准，LED 评估仅单人。"
+   },
+   {
+    "locator": "V. CONCLUSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与开源承诺。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "B. Visual-Tactile Policy Learning from Human Demonstra-",
+    "role": "relevant-core",
+    "reason": "3D-ViTac 背景综述，与追踪精度问题仅间接相关，略读。"
+   },
+   {
+    "locator": "REFERENCES; ACKNOWLEDGMENT",
+    "role": "references",
+    "reason": "参考文献与致谢不含一手证据，仅用于引文核对。"
+   }
+  ]
+ },
+ "research_question": "低成本（$550）、轻量（0.7kg）的视觉-触觉遥操作系统中，振动触觉反馈是否能在匹配视觉条件下可测量地提升接触密集任务的遥操作质量，且采得演示能否支持下游视觉-触觉模仿学习？",
+ "contributions": [
+  "9 人有/无触觉匹配条件的对照用户研究：6 项接触密集任务成功率全部提升（+2.2~+15.6pp），接触清晰度与抓握置信度主观评分显著提升。",
+  "完整触觉集成管线：触觉感知重定向平行约束、三指尖 9DTact 传感、LRA 振动映射，运行于 $550/0.7kg 平台。",
+  "仿真集成管线：Isaac Sim 任务环境 + 深度相机 9DTact 代理 + 多指尖触觉点云配准，支持从多模态采集到策略评估闭环。"
+ ],
+ "method": {
+  "summary": "腕部位姿由 HTC Vive Ultimate（VSLAM+IMU）提供 6-DoF 追踪，经相对位姿映射（初始腕姿定义参考系）映到 Franka 末端目标位姿，工作空间钳制 + IK 求解（失败时保持最后有效指令）。手部构型由腕戴 160° 鱼眼相机（OV5647）+ MediaPipe 21 关键点实时检测，LED 补光提升照明鲁棒性；经 DexPilot 扩展版（平滑化距离依赖投影 + 指尖平行约束）重定向到 LEAP Hand。9DTact 指尖形变经 PWM 映射驱动操作者拇指/食指/中指上的 LRA 环产生振动反馈。",
+  "assumptions": [
+   "Vive Ultimate 的 SLAM+IMU 腕部追踪精度足以支撑遥操作（引用第三方评估称其与低成本运动学系统相当或更优，本文未自建基准）。",
+   "MediaPipe 在腕戴鱼眼视角下的 21 点检测在 LED 补光后足够稳定（仅单人 160 试次评估）。",
+   "相对位姿映射下操作者初始腕姿与机器人固定初始位姿的对应关系在每次会话中一致。",
+   "弹性接触假设下 LRA 振动强度与接触力近似成比例（作者自述非最优编码）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "约 50 条 ViHaTeleop 演示（peg-in-hole / cube stacking / fruit pick-and-place，含 RGB-D + 9DTact + 机器人状态动作，20Hz）"
+  ],
+  "tasks": [
+   "真实：移蛋入碗、抓薯片入筒",
+   "仿真：peg-in-hole、三立方体堆叠、水果抓放、双手机器人交接瓶子"
+  ],
+  "embodiments": [
+   "Franka FR3 + LEAP Hand（16-DoF）+ 9DTact 三指尖",
+   "Isaac Sim 5.0 单/双臂 Franka FR3"
+  ],
+  "sample_or_scale": "用户研究 9 人（6 男 3 女，22-31 岁）× 6 任务 × 10 试次（5 有触觉/5 无，随机顺序）；LED 评估单人 4 手势×4 光照条件×10 次=160 试次；策略评估每任务 100 rollout。"
+ },
+ "evaluation": {
+  "design": "匹配有/无触觉的组内对照消融（随机顺序控学习效应）；平行约束聚焦消融（4 人子集）；模仿学习视觉-only vs 视觉-触觉对照；指标含成功率、完成时间、5 点 Likert 主观评分，Wilcoxon 符号秩检验。",
+  "baselines": [
+   "无触觉反馈的同系统（匹配条件）",
+   "默认 DexPilot 重定向（平行约束消融）",
+   "vision-only 策略（模仿学习）"
+  ],
+  "metrics": [
+   "任务成功率",
+   "成功试次完成时间",
+   "Likert 主观评分（易用性/接触清晰度/抓握置信度）",
+   "策略 rollout 成功率",
+   "LED 消融：关键点帧间抖动、低光检测率"
+  ],
+  "ablations": [
+   "有/无触觉",
+   "默认 vs 平行约束重定向",
+   "LED 开/关×光照条件",
+   "vision-only vs visual-tactile 策略"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "LED 补光使 MediaPipe 关键点帧间抖动在直射眩光下降 39.6%、低光下降 21.3%，低光检测率从 98.3% 升至 100%（单人 160 试次）。",
+   "scope": "腕戴鱼眼相机 + MediaPipe，4 手势×4 光照条件",
+   "locator": "B. Pose Estimation"
+  },
+  {
+   "finding": "触觉反馈使 6 项任务成功率全部上升（+2.2~+15.6pp），完成时间效应任务依赖（单接触任务提速、多阶段任务变慢）。",
+   "scope": "9 人×6 任务匹配对照",
+   "locator": "D. User Study Results, Table II, Table III"
+  },
+  {
+   "finding": "平行约束消融：蓝立方体成功率无触觉 35.0%→50.0%、有触觉 55.0%→75.0%（4 人子集）。",
+   "scope": "仿真 cube stacking，4 人子集",
+   "locator": "D. User Study Results, Table IV"
+  },
+  {
+   "finding": "视觉-触觉策略平均成功率 24% vs 纯视觉 16%（+8pp），peg-in-hole 提升最大（10%→27%），fruit placement 反降 2pp。",
+   "scope": "每任务 100 rollout，~50 演示",
+   "locator": "E. Imitation Learning Validation, Table V"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "无追踪器或相机精度的外部 ground-truth 基准；LED 评估仅单人；平行约束消融规模小；用户研究样本仅 9 人。",
+    "locator": "F. Discussion"
+   },
+   {
+    "limitation": "PWM-LRA 反馈是低成本实用选择而非最优编码，振动强度与接触力的比例仅在弹性接触假设下近似成立。",
+    "locator": "E. Vibrotactile Haptic Feedback"
+   },
+   {
+    "limitation": "模仿学习部分仅为受限的下游可行性验证，非独立算法贡献。",
+    "locator": "I. INTRODUCTION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "腕部位姿链依赖 Vive Ultimate 的 SLAM 追踪，其精度证据全部来自引用文献 [28] 的第三方评估；本文未在自身平台上测量末端轨迹误差，因此无法给出『该追踪源支撑的末端轨迹精度等级』的直接数据。",
+    "basis": "III.A/B 与 IV.B 全文未报告任何位姿误差、追踪延迟或丢帧测量；IV.F 明确承认无外部 ground-truth 基准。"
+   },
+   {
+    "boundary": "LED 抖动降低实验为单人、单设备、4 手势的小样本工程验证，39.6%/21.3% 的降幅不能外推为多用户统计结论。",
+    "basis": "III.B 明确标注 single-participant evaluation；IV.F 将其列为 limitation。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：低成本接触密集遥操作数据采集场景下，腕戴 ego 相机+SLAM 追踪链的误差缓解设计参考（LED 补光、IK 失败保持、重定向平滑）；触觉反馈对成功率与主观接触感知的增益证据。不适用于：需要手部追踪→末端轨迹误差定量传导模型的场景（全文无位姿级误差测量）；LED 实验结论不可作统计外推；Vive Ultimate 精度结论依赖第三方评估而非本文实测。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "误差缓解设计链完整且可追溯：照明→检测抖动（LED 消融）、基座参考系→末端映射稳定（固定原点 SLAM 替代浮动基座）、IK 失败→轨迹连续（保持最后有效指令）、重定向阈值→平滑插值（消 snapping）。",
+   "有/无触觉匹配对照 + 随机顺序控制学习效应，因果归因强于多数系统论文的前后对比。"
+  ],
+  "design_risks": [
+   "核心追踪链（Vive Ultimate + MediaPipe）无任何位姿级精度/延迟基准，作者自列为 limitation；系统级性能声明全部停在任务成功率层面。",
+   "LED 量化实验仅单人 160 试次，平行约束消融仅 4 人子集，证据强度弱。",
+   "完成时间只统计成功试次，无触觉基线被『快速失败』选择性滤除（作者已披露），时间比较存在幸存者偏差。"
+  ],
+  "baseline_fairness": "触觉消融为同系统匹配条件、试次顺序随机化，公平性较好；模仿学习对照共享架构与 checkpoint 规则，公平；未做跨系统对比（作者以混杂变量为由主动回避）。",
+  "metric_validity": "成功率/完成时间/Likert 是可用性代理而非追踪精度度量；LED 实验的帧间抖动是唯一接近追踪质量的定量指标，但测的是检测稳定性而非位姿误差。对综述问题的贡献在误差来源枚举与缓解设计，阈值问题无数据。",
+  "reproducibility": "硬件清单（Vive Ultimate/OV5647/LRA/9DTact）、控制频率（20Hz）、重定向超参数（d_min=30mm, d_max=50mm 等）完整披露且承诺开源，可复现性高；缺追踪精度测试协议。",
+  "external_validity": "结论限于 Franka+LEAP Hand+9DTact 平台与 6 项接触密集任务；n=9 用户研究 + 单人 LED 评估限制统计外推；仿真→真实的触觉代理（深度相机近似 9DTact）保真度未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.16572-C01",
+   "claim": "ViHaTeleop 在腕戴鱼眼相机上加装 LED 补光后，MediaPipe 手部关键点的帧间抖动（frame-to-frame landmark jitter）在直射眩光下平均降低 39.6%、在低光下降低 21.3%，低光检测率从 98.3% 升至 100%（单人 4 手势×4 光照条件×10 次=160 试次）。",
+   "stance": "support",
+   "relation": "支持『缓解手段』问题：照明条件是 ego 视觉手部检测精度的可控误差来源，低成本 LED 补光可量化降低关键点抖动——为手部追踪噪声的工程缓解提供罕见的前后对照数值。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III.B 逐字给出 160 试次 LED 开/关消融的抖动降幅与检测率提升四个数字。",
+   "locator": "B. Pose Estimation",
+   "source_context": "comprising four gestures, four lighting/LED conditions, and ten repetitions each (160 trials), LEDs reduced mean frame- to-frame landmark jitter by 39.6% under direct glare and 21.3% in low light, while increasing low-light detection from 98.3% to 100%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean frame-to-frame landmark jitter reduction 关键点帧间抖动降幅; low-light detection rate 低光检测率",
+    "value_or_direction": "jitter −39.6% under direct glare, −21.3% in low light; detection 98.3% → 100%",
+    "comparator": "LED off vs LED on under matched gestures 同手势 LED 开关对照",
+    "task_or_sample": "single-participant evaluation, four gestures × four lighting/LED conditions × ten repetitions (160 trials), MediaPipe on wrist fisheye camera",
+    "locator": "B. Pose Estimation"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 III.B（frame- to-frame 断词按原文保留）；四个数值与 160 试次设计与原文一致；claim 保留 single-participant 限定，未外推为多人统计结论。"
+   }
+  },
+  {
+   "card_id": "2608.16572-C02",
+   "claim": "ViHaTeleop 作者指出 ACE 移动版因浮动基座未被追踪而存在末端执行器映射失稳问题，并据此以 SLAM 追踪替代外骨骼，为遥操作提供固定原点参考系，使腕部→末端映射更直观稳定。",
+   "stance": "support",
+   "relation": "支持『误差来源与传播路径』枚举：腕部追踪参考系不固定（浮动基座未追踪）会以末端映射失稳的形式直接传导为末端轨迹失真；固定原点参考系是对应缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "II.A 段先指认 ACE 移动版非追踪浮动基座导致 unstable end-effector mapping，再给出本系统的固定原点 SLAM 替代方案。",
+   "locator": "A. Dexterous Teleoperation",
+   "source_context": "while ACE’s exoskeleton adds considerable weight, and its mobile version suffers from unstable end-effector mapping due to a non-tracked floating base. We adopt ACE’s hand- tracking approach but replace the exoskeleton with SLAM- based tracking, providing a fixed-origin reference frame for more intuitive and stable mapping.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 II.A（hand- tracking / SLAM- based 断词按原文保留）；『浮动基座→末端映射失稳』的因果陈述为作者原文，claim 未添加量化或推广。"
+   }
+  },
+  {
+   "card_id": "2608.16572-C03",
+   "claim": "ViHaTeleop 在腕部位姿→末端控制链上设置了两级轨迹保护：目标平移被钳制在机器人基座坐标系的预定义工作空间盒内；IK 求解失败或违反关节限时保持最后一条有效指令，以避免末端轨迹不连续。",
+   "stance": "support",
+   "relation": "支持『缓解手段』问题：追踪噪声/越界运动经 IK 环节会以解失败或指令跳变的形式表现为末端轨迹断裂，工作空间钳制 + 保持最后有效指令是低成本系统常用的传播阻断设计。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III.C 逐字描述相对位姿映射、工作空间钳制与 IK 失败时 hold the last valid command 的防不连续策略。",
+   "locator": "C. Robot Arm Control",
+   "source_context": "The target pose is executed through inverse kinematics with joint limits; if IK fails or violates limits, we hold the last valid command to avoid discontinuities.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 III.C；工作空间钳制句同属该节（to handle workspace mismatch, we clamp target translation...）；claim 仅复述机制设计，未声称其消除误差——保持指令本身即以停滞换连续性，措辞未越界。"
+   }
+  },
+  {
+   "card_id": "2608.16572-C04",
+   "claim": "ViHaTeleop 指认 DexPilot 重定向中距离依赖投影的突变阈值会造成中间抓握构型不连续（『snapping』），并以随拇指-手指距离平滑插值的自适应函数（投影距离 η(d) 与重定向权重 w(d)）替代硬阈值，消除该重定向引入的轨迹伪影。",
+   "stance": "support",
+   "relation": "支持『误差来源』枚举的补充维度：即使手部追踪本身准确，重定向算法中的不连续映射也会在手部→手指关节轨迹上制造跳变伪影——误差来源不止于检测环节，平滑化是对应缓解。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III.D 先指出 abrupt thresholding 导致 snapping，再给出 η(d)/w(d) 平滑插值公式与 LEAP Hand 超参数。",
+   "locator": "D. Robot Hand Motion Retargeting",
+   "source_context": "We smooth this schedule because abrupt thresholding can cause discontinuous intermediate grasp configurations (“snapping”).",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 III.D（弯引号按原文保留）；η(d)/w(d) 的插值机制与同节公式 (2) 及超参数句一致；claim 将 snapping 明确归为重定向算法伪影而非追踪误差，未混淆两个误差来源。"
+   }
+  },
+  {
+   "card_id": "2608.16572-C05",
+   "claim": "ViHaTeleop 作者明确承认：全系统没有对追踪器（Vive Ultimate）或相机（MediaPipe 手部检测）精度的外部 ground-truth 基准测量；腕部 SLAM 追踪的精度声明依赖第三方文献 [28] 的评估而非本文实测。",
+   "stance": "gap",
+   "relation": "标记证据缺口：该系统的手部/腕部追踪精度对末端轨迹的影响在本文不可定量判定——成功率类指标不能替代位姿误差基准，综述的『可接受阈值』问题在此无直接数据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV.F limitation 段逐字列出无 ground-truth 基准；II.A 对 Vive Ultimate 精度的唯一支撑是引用 Kulozik & Jarrassé 的第三方评估。",
+   "locator": "F. Discussion",
+   "source_context": "Remaining limitations include no external ground-truth benchmark of tracker or camera accu- racy, single-participant LED evaluation, a small parallelism- constraint ablation, and a limited user-study sample (n = 9).",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 IV.F（accu- racy / parallelism- constraint 断词按原文保留）；claim 前半句为作者明示 limitation，后半句（依赖 [28] 第三方评估）可由 II.A『Recent evaluation of SLAM-based tracker HTC Vive Ultimate [28] demonstrates performance...』独立验证，合并陈述未夸大。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": "2407.03162",
+   "reference": "[7] R. Ding et al. Bunny-VisionPro: Real-Time Bimanual Dexterous Teleoperation for Imitation Learning. arXiv:2407.03162, 2024.",
+   "reason": "Table I 将 BunnyVP 列为触觉反馈先例与对照系统；低成本振动反馈路线即承自该工作。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[28] J. Kulozik and N. Jarrassé. Evaluating the precision of the HTC VIVE Ultimate Tracker with robotic and human movements under varied environmental conditions. arXiv:2409.01947, 2024.",
+   "reason": "C05 指出本文对 Vive Ultimate 追踪精度的唯一支撑来自该第三方评估。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[9] S. Yang et al. ACE: A Cross-platform Visual-Exoskeletons System for Low-Cost Dexterous Teleoperation. CoRL 2024.",
+   "reason": "C02 的浮动基座误差来源归因对象；手部追踪方案亦承自 ACE。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[16] A. Handa et al. DexPilot: Vision based teleoperation of dexterous robotic hand-arm system. ICRA 2020.",
+   "reason": "C04 的 snapping 误差来源所属的重定向基线框架。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "T2",
+   "caption": "User Study: Success Rates",
+   "section": "D. User Study Results",
+   "rows": [
+    [
+     "Task",
+     "w/o Haptic",
+     "w/ Haptic",
+     "∆",
+     "p"
+    ],
+    [
+     "Egg transfer",
+     "66.7%",
+     "80.0%",
+     "+13.3%",
+     ".172"
+    ],
+    [
+     "Chip grasping",
+     "46.7%",
+     "48.9%",
+     "+2.2%",
+     ".516"
+    ],
+    [
+     "Peg-in-hole",
+     "42.2%",
+     "51.1%",
+     "+8.9%",
+     ".250"
+    ],
+    [
+     "Cube stacking",
+     "24.4%",
+     "28.9%",
+     "+4.5%",
+     ".500"
+    ],
+    [
+     "Fruit placement",
+     "46.7%",
+     "57.8%",
+     "+11.1%",
+     ".531"
+    ],
+    [
+     "Handover",
+     "51.1%",
+     "66.7%",
+     "+15.6%",
+     ".125"
+    ]
+   ],
+   "usage": "支撑 findings 中触觉反馈对 6 项接触密集任务成功率的全部正向增益（描述性，单任务未达显著）。"
+  }
+ ],
+ "notes": "对综述问题的定位：代表『SLAM 腕部追踪 + 腕戴 ego 相机手部检测』双源路线，是 Bunny-VisionPro（头显手部追踪）之外的低成本对照分支。核心价值在三点：(1) LED 补光→关键点抖动降幅是本批次少见的追踪稳定性定量消融（虽单人）；(2) 误差来源枚举覆盖参考系（浮动基座）、控制链（IK 失败断裂）、重定向（snapping）三个非检测环节，补全『检测精度不是唯一误差源』的论证；(3) limitation 明示无追踪精度 ground-truth 基准，与 TeleDex 同属阈值证据缺口。触觉反馈部分与综述问题仅间接相关（操作者感知补偿，非追踪精度本身），未单独成卡。"
+}

@@ -1,0 +1,490 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2510.01607",
+  "title": "ActiveUMI: Robotic Manipulation with Active Perception from Robot-Free Human Demonstrations",
+  "published": "2025-10",
+  "url": "https://arxiv.org/abs/2510.01607",
+  "authors": [
+   "Qiyuan Zeng",
+   "Chengmeng Li",
+   "Jude St. John",
+   "Zhongyi Zhou",
+   "Junjie Wen",
+   "Guorui Feng",
+   "Yichen Zhu",
+   "Yi Xu"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "UMI 系采集中对'腕装鱼眼宽视野是否足够'这一问题的直接否定性证据：(1) 系统给每个控制器加装鱼眼腕相机以最大化 FoV，但论文核心论断是'即使有宽视野，末端中心视角仍不足以服务长程任务与精细操作'，视角受操作需求而非感知目标约束；(2) 以仅双鱼眼腕相机为 UMI 基线的受控对比显示其 in-domain 平均成功率仅 26%、新环境崩至 6%，而加入主动头视角的 ActiveUMI 达 70%/56%——腕装鱼眼-only 是三种相机配置中最弱且分布偏移下最脆弱的；(3) 真机平台两 ARX R5 臂各配鱼眼腕相机+第三臂主动视角，给出相机配置（腕鱼眼×2+主动头相机）对任务类型（长程/可变形/精密/铰接）收益的系统分解。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract and 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：现有手持接口忽视主动 egocentric 感知，腕装相机（即使宽 FoV）视角受操作约束；ActiveUMI 以 VR 遥操作套件+头动记录桥接人-机运动学与主动视角。"
+   },
+   {
+    "locator": "page 2, 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位与 UMI/DexUMI/FastUMI/AirExo/DexCap 等手持与穿戴采集系统及 Vision-in-Action 的差异：共同局限是主要依赖腕装相机。"
+   },
+   {
+    "locator": "page 3-4, 3 Method (3.1 Data Collection System, 3.2 Active Perception for Policy Learning)",
+    "role": "method-or-design",
+    "purpose": "精读硬件：VR 控制器复刻机器人夹爪、微电机驱动夹爪、每控制器加装鱼眼腕相机、HMD 双职能（定位枢纽+前向彩色相机作为动态 top camera）、背包可穿戴计算；主动感知机制（HMD 6-DoF 位姿作为策略输入，部署时预测头部位姿）。"
+   },
+   {
+    "locator": "page 4-6, 3.3 Calibrating End-Effector for Precise Data Collection",
+    "role": "method-or-design",
+    "purpose": "核对三项校准机制：B 按钮基座重置+实时坐标轴渲染、夹爪占位对接站、3cm 内触觉振动零点提示。"
+   },
+   {
+    "locator": "page 6-8, 4 Experiment (4.1-4.5)",
+    "role": "results-or-analysis",
+    "purpose": "精读 Table 1/2 三相机配置对比（UMI 腕鱼眼-only vs +固定头相机 vs ActiveUMI，in-domain 与新环境）、Table 3 数据混合、Figure 6 采集效率与 RPE、30Hz/π0/10 trials 设置。"
+   },
+   {
+    "locator": "page 8, 5 Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论主张（learning how to look is as important as learning what to do）；确认全文无独立 Limitations 章节。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8-11, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需核对核心引文（UMI、FastUMI、DexUMI、π0、Vision-in-Action）条目。"
+   }
+  ]
+ },
+ "research_question": "如何把 in-the-wild 人本演示（含操作者主动头动）迁移为可执行的双臂机器人策略：以 VR 遥操作套件精确对齐人-机运动学、显式记录头部位姿学习'视觉注意-操作'关联，从而让策略在部署时主动控制自身视角，克服腕装相机视角受操作约束的局限？",
+ "contributions": [
+  "ActiveUMI 采集系统：改造 Meta Quest 3s 控制器直接安装目标机器人夹爪的同款副本（非侵入式、跨机器人适配），背包级自包含计算，每控制器加装鱼眼腕相机，HMD 兼任定位枢纽与前向彩色相机。",
+  "主动 egocentric 感知数据管线：显式记录操作者 HMD 6-DoF 位姿作为策略输入，学习头动（视觉注意）与手部动作的关联；部署时策略预测头部 6-DoF 位姿并由第三臂执行（总 20-DoF）。",
+  "受控三配置对比：腕鱼眼-only（UMI 设置，14-DoF）vs +固定顶视相机（14-DoF）vs 主动感知（20-DoF），in-domain 平均 26%/42%/70%，新环境 6%/16%/56%。",
+  "数据策略发现：纯 ActiveUMI 数据即可训出 70% 平均成功率；混入仅 1% 遥操作数据将 shirt folding 从 80% 提至 95%；采集效率介于裸手与遥操作之间（1.49-2.06× vs 2.63-3.27× 裸手时间）。"
+ ],
+ "method": {
+  "summary": "ActiveUMI 由便携 VR 遥操作套件构成：改造的 Meta Quest 3s 控制器（inside-out 红外 LED 三角化 6-DoF 跟踪）刚性安装目标机器人夹爪的同款副本，微电机驱动夹爪开合；每个控制器加装一枚腕装鱼眼相机（位置以最大化 FoV）作为腕视图，HMD 前向彩色相机作为随视线耦合的动态 top camera。操作者背包装 PC 与电池实现自包含。VR 环境实时渲染与控制器对齐的机械臂 3D 模型提供沉浸反馈。数据以绝对世界坐标记录（统一初始校准：B 按钮基座重置、夹爪占位对接站、3cm 内触觉振动零点提示）。策略侧：HMD 6-DoF 位姿作为额外输入使模型学习头动-手部动作关联；部署在 3 台 ARX R5 上（两臂各一鱼眼腕相机+第三臂携带相机执行预测的头部位姿），π0 VLA 微调 50k iterations，30Hz，10 trials/实验（混合实验 20 trials）。",
+  "assumptions": [
+   "VR inside-out 跟踪精度足以支撑演示-机器人一一映射（RPE 实测 4.0mm vs UMI 10.1mm）。",
+   "操作者的头动模式（视觉注意）是任务可迁移信息而非个体噪声（论文假设两驱动因素：主动相机补偿演示者头身运动、按需获取任务关键信息）。",
+   "部署平台可提供执行头部位姿的第三臂（20-DoF），腕鱼眼-only 14-DoF 平台无法获得主动感知收益。",
+   "腕装鱼眼视图与头装相机视图互补（两者并存优于任一单独）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采 in-the-wild ActiveUMI 双臂演示数据（六任务：block disassembly/shirt folding/rope boxing/toolbox cleaning/bottle placing/take drink from bag），30Hz，含腕鱼眼双视图+头相机视图+6-DoF 位姿+夹爪状态+语言指令"
+  ],
+  "tasks": [
+   "Block disassembly（精密：分离互锁小块并分拣入盒）",
+   "Shirt folding（可变形：叠衣）",
+   "Rope boxing（长程：长绳入箱）",
+   "Toolbox cleaning（铰接：关工具箱盖）",
+   "Bottle placing（大位置随机化鲁棒性）",
+   "Take drink from bag（视觉遮挡：从背包取饮料）"
+  ],
+  "embodiments": [
+   "采集：人持改造 VR 控制器（同款机器人夹爪+鱼眼腕相机）+HMD+背包 PC",
+   "部署：3 台 6-DoF ARX R5（两臂双臂系统各配鱼眼腕装相机，第三臂主动视角相机源为操作者 VR 头显）"
+  ],
+  "sample_or_scale": "策略评估默认 10 trials/实验（数据混合实验 20 trials）；π0 微调 50k iterations；RPE 实验 100-10cm 十档十次。"
+ },
+ "evaluation": {
+  "design": "四组实验：(1) 三相机配置受控对比（同 π0 基座、同任务集、in-domain 5 任务+新环境同任务复测；腕-only 基线按 π0 官方实现 pad 缺失第三视角 token）；(2) 数据混合比例（shirt folding，10%/1%/0% 遥操作数据，20 trials）；(3) 新物体+新场景泛化；(4) 采集吞吐（vs 裸手与真机遥操作）与采集精度（RPE vs UMI）。",
+  "baselines": [
+   "UMI（wrist-camera-only：仅两枚鱼眼腕相机，14-DoF，π0 pad 缺失视角）",
+   "UMI w/ Fixed Head Camera（静态顶视头相机，14-DoF）",
+   "真机 VR 遥操作（效率对比）与裸手演示（效率上界）",
+   "UMI（RPE 精度对比）"
+  ],
+  "metrics": [
+   "真机任务成功率（10 trials，混合实验 20 trials）",
+   "采集时间相对裸手的倍率",
+   "Relative Pose Error（RPE，回放距离相对标称距离的相对误差）"
+  ],
+  "ablations": [
+   "相机配置消融（Table 1/2）：腕鱼眼-only vs +固定头相机 vs 主动头相机，in-domain 与新环境双 setting",
+   "数据混合比例（Table 3）：0%/1%/10% 遥操作数据",
+   "任务类型分解（Table 1 列）：精密/可变形/长程/铰接/遮挡五类任务分别报告"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "系统为每个控制器加装腕装鱼眼相机（位置以最大化 FoV），腕视图作为 HMD 第一视角的补充；部署侧两 ARX R5 臂各配一枚鱼眼腕相机，第三臂提供主动视角。",
+   "scope": "采集与部署的相机配置",
+   "locator": "page 3, Section 3.1; page 6, Section 4.1"
+  },
+  {
+   "finding": "核心论断：即使有宽视野，末端中心（腕装）视角仍不足以服务长程任务与精细操作，且与头装相机平台不对齐——腕装相机视角受操作需求而非感知目标约束。",
+   "scope": "对腕装鱼眼宽 FoV 范式的结构性批评",
+   "locator": "page 2, Section 1 Introduction; page 4, Section 3.2"
+  },
+  {
+   "finding": "三配置受控对比（Table 1）：仅双鱼眼腕相机（UMI 设置）in-domain 平均 26%，加静态顶视头相机 42%，ActiveUMI 主动头视角 70%；固定头相机可靠优于腕-only，说明第三人称视角为复杂双臂任务提供互补信息。",
+   "scope": "in-domain 5 任务，10 trials",
+   "locator": "page 7, Table 1"
+  },
+  {
+   "finding": "新环境泛化（Table 2）：腕鱼眼-only 从 26% 崩至 6%（五任务中四个为 0%），固定头相机 16%，ActiveUMI 56%——腕装鱼眼-only 策略对视觉分布偏移最脆弱。",
+   "scope": "新环境同任务复测，10 trials",
+   "locator": "page 7, Table 2"
+  },
+  {
+   "finding": "数据策略：纯 ActiveUMI 数据训练即可达 70% 平均成功率；混入 1% 遥操作数据把 shirt folding 从 80% 提至 95%（10% 遥操作为 90%）。",
+   "scope": "数据混合实验（shirt folding，20 trials）",
+   "locator": "page 7, Table 3"
+  },
+  {
+   "finding": "采集效率与精度：ActiveUMI 采集耗时为裸手的 1.49-2.06 倍（遥操作为 2.63-3.27 倍）；RPE 4.0mm vs UMI 10.1mm。",
+   "scope": "两个长程任务的吞吐对比与十档距离回放精度实验",
+   "locator": "page 7, Figure 6(d)(e); page 8, Section 4.5"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "全文无独立 Limitations 章节，未报告失败案例、方差或统计显著性；默认每实验 10 trials（成功率粒度 10%），Table 1/2 中 20%-30% 量级的差异在 10 trials 下统计功效很低（如 0% vs 10% vs 20% 仅 0-2 次成功之差）。",
+    "basis": "page 6 'Unless otherwise stated, all experiments were conducted over 10 trials'；page 8 结论后直接进入 References，无 limitations 段。"
+   },
+   {
+    "boundary": "主动感知收益依赖 20-DoF 部署硬件（第三臂执行预测的头部位姿）；对无头部臂的常规腕相机平台（14-DoF），ActiveUMI 数据的可迁移性未单独评估——固定头相机（42%/16%）是这类平台的近似上界参照。",
+    "basis": "page 6 三配置 DoF 定义（20-DoF vs 14-DoF×2）；论文未报告把 ActiveUMI 数据用于无第三臂平台的实验。"
+   },
+   {
+    "boundary": "数字一致性问题：引言称相对静态第三人称相机'平均成功率提升 38%'，但 Table 1 为 70% vs 42%（差 28pp），38% 与表格对不上（相对腕中心视角的 44pp 则与 70-26 一致）；正文 4.2 提到的 PourWater 任务（+30%/+60%）未出现在 Table 1/2 的任务列中；4.4 节引用'Table III'但实际对应 Table 2。引用本文数字时应以 Table 1/2/3 为准。",
+    "basis": "page 2 'improves average success by 44% and 38%' vs page 7 Table 1（26/42/70）；page 6 'PourWater task...30% higher...60% higher' vs Table 1 任务列无 PourWater；page 8 'presented in Table III'。"
+   },
+   {
+    "boundary": "相机规格未披露：两枚腕装相机仅描述为 fisheye camera（无型号/FoV 度数/分辨率/去畸变处理），HMD 前向相机是否按广角原样消费亦未说明；'maximize its field of view'是安装意图描述而非量化指标，无法据此比较与 UMI GoPro 鱼眼的 FoV 差异。",
+    "basis": "page 3 仅一句 fisheye camera 描述；全文无相机参数表。"
+   },
+   {
+    "boundary": "头部相机视角由人类操作者的注意力模式驱动，操作者间差异（头动习惯、观看策略）对策略的影响未讨论；数据混合实验仅在 shirt folding 单任务上完成，结论外推到其它任务未验证。",
+    "basis": "page 4 机制描述基于单操作者范式（无多操作者差异分析）；page 7 Table 3 仅 shirt folding。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：双臂操作任务（精密/可变形/长程/铰接/遮挡）的 in-the-wild 人本演示采集与 π0 级 VLA 微调，部署平台需第三臂（或等效主动云台）执行预测头部位姿（20-DoF）方能兑现主动感知收益（in-domain 70%、新环境 56%）；腕装鱼眼双相机在采集端提供互补腕视图、在部署端是 ARX R5 的标准配置。受限/不适用：仅有腕装鱼眼相机（无头相机）的 14-DoF 平台（in-domain 26%、新环境 6%，为三配置最弱且分布偏移下近乎全崩）；10 trials 评估的统计功效不足以区分 10pp 内差异；相机型号/FoV/标定未披露，无法与其它鱼眼系统定量比较。对综述的接口：本文是'腕装鱼眼宽视野不等于充分感知'的最直接受控证据——宽 FoV 解决的是视野覆盖，不解决视角受操作约束的结构问题；主动头视角是对该结构的修正方案。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三相机配置受控对比（同 π0 基座、同任务、同训练量；腕-only 基线按官方实现 pad 视角 token）干净隔离了相机配置变量。",
+   "in-domain 与新环境双 setting 复测同一任务集，把'能力'与'分布偏移鲁棒性'分开度量。",
+   "任务集覆盖精密/可变形/长程/铰接/遮挡五类技能，避免了单一任务族结论。",
+   "RPE 实验给出回放精度协议（十档距离、十次重复），使 VR 跟踪精度主张可检验。"
+  ],
+  "design_risks": [
+   "默认 10 trials 的成功率统计功效低（10% 粒度），无方差/置信区间；Table 1/2 中多个 0%-10% 差异不可靠。",
+   "摘要/引言的 38% 提升数字与 Table 1（70 vs 42=28pp）不一致；PourWater 任务出现在正文但缺席 Table 1/2；4.4 节 Table III 引用编号错误——论文数字校对不严。",
+   "腕-only 基线通过 pad 缺失第三视角 token 实现，与原生双相机 π0 训练的等价性未论证（可能低估 UMI 设置）。",
+   "相机规格（型号/FoV/分辨率/畸变处理）完全未披露，复现与跨系统比较困难。",
+   "主动感知与 20-DoF（多一条臂的额外动作维度）混杂：70% vs 42% 的增益不能全归因于'主动视角'，额外自由度本身可能贡献信息（无 14-DoF 主动视角对照）。"
+  ],
+  "baseline_fairness": "三配置共享 π0 基座与训练流程，任务与 trials 一致；但腕-only 基线以 token padding 模拟缺失视角而非原生架构，且 ActiveUMI 配置独有 20-DoF 动作空间（第三臂），使'主动感知'与'额外自由度'两个变量未解耦；遥操作/裸手效率对比与 UMI RPE 对比的协议描述较简。",
+  "metric_validity": "成功率（10 trials）为部署效用指标但样本量小；采集时间倍率与 RPE（mm 级相对误差）是面向数据系统的有效操作性指标；新环境成功率作为泛化代理合理但环境数未报告。",
+  "reproducibility": "项目页 activeumi.github.io 承诺开源；硬件改造（控制器+夹爪副本+背包）与校准协议描述具体但无 BOM；相机规格与训练超参（除 50k iterations 外）披露不足；π0 为公开基座，复现中等难度。",
+  "external_validity": "结论限定于双臂桌面/ household 任务、ARX R5 平台、10-20 trials 评估与单一新环境测试点；对无主动视角平台的迁移仅有固定头相机近似；腕装鱼眼-only 在新环境 6% 的崩溃结论基于五任务×10 trials，方向明确但量值置信度有限。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2510.01607-C01",
+   "claim": "ActiveUMI 为每个 VR 控制器加装一枚腕装鱼眼相机，安装位置以最大化视野为目标，捕捉机器人即时操作环境的全面视觉信息；该腕视图作为头戴相机第一视角的补充进入下游策略。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼相机是 UMI 系采集接口的标准视觉组件——ActiveUMI 在保留腕鱼眼的同时叠加头相机，说明腕鱼眼被视为必要但不充分的视觉通道。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.1 夹爪驱动段说明为丰富数据流，每个控制器加装鱼眼相机；该腕装相机位置以最大化 FoV，为下游策略模型提供丰富视觉上下文，腕视图作为头戴第一视角的补充。",
+   "locator": "page 3, Section 3.1 Data Collection System for ActiveUMI",
+   "source_context": "To enrich the data stream, we augment each controller with a fisheye camera. This wrist-mounted camera is po- sitioned to maximize its field of view, capturing compre- hensive visual information of the robot’s immediate oper- ational environment. This provides the downstream pol- icy model with rich visual context, and the resulting “wrist view” serves as a valuable complement to the first-person perspective from the head-mounted camera.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字（含 PDF 断词）给出 augment each controller with a fisheye camera、positioned to maximize its field of view、wrist view serves as a valuable complement to the first-person perspective from the head-mounted camera；claim 仅复述设计意图，未附加 FoV 量化断言（相机规格未披露已记入 reader_inferred）。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C02",
+   "claim": "论文核心论断：现有手持接口主要依赖腕装相机，而人类靠移动头部管理遮挡、获取上下文；即使具备宽视野，末端中心（腕装）视角仍不足以服务长程任务与精细操作，并与使用头装相机的平台不对齐——腕装相机视角受操作需求而非感知目标约束。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼腕装相机的宽 FoV 解决视野覆盖问题但不解决视角受操作约束的结构问题——宽 FoV 不足以支撑长程任务、精细操作与遮挡管理，这是对'鱼眼宽视野=充分感知'假设的直接结构性限定。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言指出多数现有接口忽视主动 egocentric 感知：人类移动头部管理遮挡与收集上下文，而现有 rig 主要依赖腕装相机；即使有宽 FoV，末端中心视角仍 underserve 长程任务与精细操作，且与头装相机平台不对齐。Section 3.2 重申：腕装相机随臂移动，视角受操作需求而非感知目标约束，难以处理视觉遮挡、可变形物体操作或需要大幅视角转换的任务。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "Yet most current inter- faces overlook active, egocentric perception: humans move their heads to manage occlusion and gather context, while existing rigs rely primarily on wrist-mounted cameras. Even with a wide field-of-view, an end-effector–centric view underserves long-horizon tasks and fine manipula- tion and misaligns with platforms that use head-mounted cameras.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 引言逐字给出 wrist-mounted cameras、Even with a wide field-of-view、end-effector-centric view underserves long-horizon tasks and fine manipulation、misaligns with platforms that use head-mounted cameras；'视角受操作需求约束'由 page 4 Section 3.2 'their viewpoints are constrained by manipulation needs rather than guided by perceptual objectives'（已核对）逐字支撑；claim 是作者论断的忠实复述，定量验证由 C04/C05 承载。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C03",
+   "claim": "真机部署设置：测试台由三台 6-DoF ARX R5 机械臂构成，两臂各配一枚鱼眼腕装相机构成双臂操作系统，第三臂提供主动移动视角、其相机源为人类操作者 VR 头显以模拟 egocentric 头相机；全部传感器与机器人数据以 30Hz 采集，策略用 π0 微调 50k iterations，默认每实验 10 trials。",
+   "stance": "support",
+   "relation": "界定命题：ActiveUMI 的部署相机配置为'腕装鱼眼×2+主动头相机'三视角组合——腕鱼眼在此是双臂系统的标配视觉通道，结论外延以该配置为边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 4.1 说明实验平台（三台 ARX R5、两臂各配鱼眼腕装相机、第三臂主动视角源为操作者 VR 头显）、30Hz 采集、π0 微调 50k iterations 与 10 trials 协议。",
+   "locator": "page 6, Section 4.1 Implementation Details and Task Descriptions",
+   "source_context": "Our real-world experiments are conducted on a testbed con- sisting of three 6-DoF ARX R5 robotic arms. Two arms, each equipped with a fisheye wrist-mounted camera, form a bimanual manipulation system. The third arm provides an active, mobile viewpoint, with its camera feed sourced from a human operator’s VR headset to simulate an egocentric head camera. All sensor and robot data is collected at a fre- quency of 30Hz.",
+   "evidence_type": "experiment-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 4.1 逐字（含 PDF 断词）给出三台 ARX R5、两臂各配 fisheye wrist-mounted camera、第三臂相机源为操作者 VR 头显、30Hz；π0 与 50k iterations 出自同段后文 'For policy learning, we uses π 0 ... fine-tuned for 50k iterations'（已核对）；10 trials 出自同段末句 'Unless otherwise stated, all experiments were conducted over 10 trials'（已核对）；claim 仅复述设置。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C04",
+   "claim": "三相机配置受控对比（同 π0 基座，in-domain 五任务）：仅双鱼眼腕相机的 UMI 设置平均成功率 26%（bottle placing 60%、rope boxing 20%、shirt folding 10%、block disassembly 0%、take drink from bag 40%），加静态顶视头相机升至 42%，ActiveUMI 主动头视角达 70%（对应 90%/70%/80%/30%/80%）——腕鱼眼-only 是三种配置中最弱的。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼宽视野作为唯一视觉通道不足以支撑复杂双臂任务（精密拆解 0%、叠衣 10%）；额外视角（固定或主动）带来大幅增益，量化了腕装鱼眼-only 的能力上限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 报告三配置在五个 in-domain 任务上的成功率与均值；表注明确 wrist-camera-only 配置对应 UMI 设置；正文指出主动感知在全部任务上显著优于两个对照，且固定顶视相机可靠优于腕-only，说明第三人称视角提供互补信息。",
+   "locator": "page 7, Table 1",
+   "source_context": "Table 1. We compare our active perception approach to two variants: a fixed top-down camera and a wrist-camera-only setup. The wrist- camera-only configuration corresponds to the UMI setting. Camera View Tasks (In-Domain) Bottle placing Rope boxing Shirt folding Block disassembly Take Drink from Bag Average UMI 60% 20% 10% 0% 40% 26% UMI w/ Fixed Head Camera 60% 40% 40% 20% 50% 42% ActiveUMI 90% 70% 80% 30% 80% 70%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "in-domain success rate by camera configuration",
+    "value_or_direction": "wrist-fisheye-only (UMI) average 26%; +fixed head camera 42%; ActiveUMI 70%",
+    "comparator": "UMI (two fisheye wrist cameras, 14-DoF) vs UMI w/ Fixed Head Camera (14-DoF) vs ActiveUMI (20-DoF), same π0 base",
+    "task_or_sample": "five bimanual tasks (bottle placing, rope boxing, shirt folding, block disassembly, take drink from bag), 10 trials each",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 文本层逐字给出三行数字（60/20/10/0/40/26；60/40/40/20/50/42；90/70/80/30/80/70）、任务列与表注 'The wrist-camera-only configuration corresponds to the UMI setting'；page 6 正文 'active perception significantly outperforms both counterparts on all evaluated tasks'（已核对）确认方向；claim 数字全部逐字，任务名与表头一致。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C05",
+   "claim": "新环境同任务复测下腕装鱼眼-only 策略近乎全崩：UMI（仅双鱼眼腕相机）平均成功率从 in-domain 的 26% 跌至 6%（rope boxing/shirt folding/block disassembly/take drink from bag 四任务均为 0%），固定头相机 16%，ActiveUMI 保持 56%——腕装鱼眼-only 配置对视觉分布偏移最脆弱，主动视角的相对优势在新环境下扩大。",
+   "stance": "limit",
+   "relation": "限定命题：仅靠腕装鱼眼视觉训练的策略泛化能力最弱（新环境几乎归零）——鱼眼腕视图的视角约束在分布偏移下被放大，是腕装鱼眼采集接口在开放环境部署的关键局限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 在新环境下复测 Table 1 同任务集：UMI 30/0/0/0/0 均值 6%，固定头相机 30/10/20/0/20 均值 16%，ActiveUMI 70/50/80/30/50 均值 56%；正文指出依赖静态或受限视角的策略在环境改变时无法适应，而主动控制视角使策略对视觉偏移更有韧性。",
+   "locator": "page 7, Table 2",
+   "source_context": "Table 2. We compare our active perception approach to two variants in a new environment under the same task as Table 1. Camera View Tasks (New Environment) Bottle placing Rope boxing Shirt folding Block disassembly Take Drink from Bag Average UMI 30% 0% 0% 0% 0% 6% UMI w/ Fixed Head Camera 30% 10% 20% 0% 20% 16% ActiveUMI 70% 50% 80% 30% 50% 56%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "new-environment success rate by camera configuration",
+    "value_or_direction": "UMI (wrist fisheye only) 26%→6% (four of five tasks at 0%); fixed head camera 16%; ActiveUMI 56%",
+    "comparator": "same task set and π0 base as Table 1, retested in a new environment",
+    "task_or_sample": "five bimanual tasks in a new environment, 10 trials each",
+    "locator": "page 7, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 2 文本层逐字给出三行数字（30/0/0/0/0/6；30/10/20/0/20/16；70/50/80/30/50/56）与新环境表头；page 8 Section 4.4 'It achieves an average success rate of 56% in the new environment...The policy using a fixed head camera dropped to a 16% success rate, while the wrist-camera-only (UMI) baseline’s performance fell to just 6%'（已核对）逐字确认三个均值与跌落叙述；claim 数字全部逐字。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C06",
+   "claim": "作者报告：纯 ActiveUMI 数据训练的策略在全部任务上取得平均 70% 成功率，相对非主动感知对照（腕中心视角策略与静态第三人称相机策略）平均成功率分别提升 44% 与 38%；在新物体与新环境测试中保持 56% 平均成功率（摘要口径：70% in-distribution、56% 泛化保持）。",
+   "stance": "support",
+   "relation": "支持命题：主动感知（含头相机）数据管线的整体收益规模——70% vs 腕中心 26% 的差距（+44pp，与 Table 1 一致）量化了超越腕装鱼眼视角约束的价值；38% 数字与 Table 1 的 70-42=28pp 不一致，引用时以表格为准。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言概述实验结论：纯 ActiveUMI 数据训练的策略平均 70% 成功率，相对腕中心视角与静态第三人称相机分别提升 44% 与 38%；新物体新环境保持 56%。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "By training policies trained purely on ActiveUMI demonstrations, they attain an average 70% success rate on all tasks. Relative to non-active perception counterparts (i.e., policies trained from wrist-centric views or static third-person cameras), ActiveUMI improves aver- age success by 44% and 38%, respectively. Furthermore, when evaluated with novel objects and scenes, learned poli- cies retain 56% of the average success rate, indicating a meaningful generalization from in-wild data.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "average success rate and relative improvement (author-reported summary)",
+    "value_or_direction": "70% average (ActiveUMI-only data); +44% vs wrist-centric; +38% vs static third-person camera; 56% on novel objects/scenes",
+    "comparator": "wrist-centric view policies and static third-person camera policies (Table 1: 26% and 42%)",
+    "task_or_sample": "all evaluated bimanual tasks, 10 trials",
+    "locator": "page 2, Section 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字给出 70% average success rate、44% and 38%、retain 56%；摘要（page 1）'average success rate of 70% on in-distribution tasks...retaining a 56% success rate'（已核对）同向；44 与 Table 1 的 70-26 一致，38 与 Table 1 的 70-42=28 不一致——claim 按 author-claim 口径忠实转录并在措辞上标注'作者报告'，不一致问题记入 critical_appraisal 与 reader_inferred。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C07",
+   "claim": "数据混合实验（shirt folding，每实验 20 trials）：纯 ActiveUMI 数据成功率 80%，混入 10% 遥操作数据升至 90%，混入仅 1% 遥操作数据最优达 95%——大规模低成本 ActiveUMI 数据配合极少量真机遥操作数据即可显著提升策略。",
+   "stance": "support",
+   "relation": "支持命题：含鱼眼腕视图+头视图的人本演示数据具备高样本效率，可作为 VLA 训练的主体数据源（1% 遥操作数据的对齐作用）——降低具身数据采集成本的结构性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 报告三种遥操作数据占比（10%/1%/0%）下的平均成功率（90%/95%/80%）；正文指出最优策略是混入仅 1% 遥操作数据，与'大规模数据+少量真实演示'的先前结论一致。",
+   "locator": "page 7, Table 3",
+   "source_context": "Table 3. Data Mixing Ratio Experiments. We conducted experi- ments on the shirt folding task to find the optimal data mixture for maximizing model performance. Teleoperated Data Ratio 10% 1% 0% Avg. Success Rate 90% 95% 80%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate vs teleoperated data mixing ratio",
+    "value_or_direction": "0% teleop 80%; 10% teleop 90%; 1% teleop 95% (optimal)",
+    "comparator": "training exclusively on ActiveUMI data vs mixing 10% or 1% teleoperated data",
+    "task_or_sample": "shirt folding task, 20 trials per experiment",
+    "locator": "page 7, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 3 文本层逐字给出 10%/1%/0% 与 90%/95%/80%；page 7 正文 'adding 10% teleoperated data increased the success rate from 80% to 90%. Interestingly, the optimal strategy was mixing in just 1% teleoperated data, which achieved a 95% success rate'（已核对）逐字确认；20 trials 出自 page 6-7 'conducting 20 trials for each experiment'（已核对）；claim 数字全部逐字。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C08",
+   "claim": "采集吞吐：对两个长程任务，ActiveUMI 采集耗时为直接人手演示的 1.49-2.06 倍（shirt folding 1.49×、rope boxing 2.06×），而常规真机遥操作为 2.63-3.27 倍（2.63×、3.27×）——ActiveUMI 是介于裸手效率与遥操作之间的实用折中。",
+   "stance": "support",
+   "relation": "支持命题：手持接口（含鱼眼腕相机+VR 跟踪）保住了人手演示的绝大部分效率优势——是 UMI 类采集接口相对遥操作的吞吐量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.5 报告 rope boxing 与 shirt folding 两任务在三种采集方式下的耗时对比（Figure 6(d)）：ActiveUMI 分别为裸手的 2.06× 与 1.49×，遥操作为 3.27× 与 2.63×。",
+   "locator": "page 8, Section 4.5 Data Collection Throughput and Accuracy",
+   "source_context": "As shown in Figure 6(d), ActiveUMI significantly speeds up data collection compared to teleoperation. For the rope boxing task, ActiveUMI was 2.06x slower than a direct human demonstration, while conventional teleoper- ation was 3.27x slower. Similarly, for shirt folding, Ac- tiveUMI was 1.49x slower, compared to 2.63x for teleop- eration.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "collection time relative to bare-hand demonstration",
+    "value_or_direction": "ActiveUMI 2.06x (rope boxing) and 1.49x (shirt folding) of bare-hand time; teleoperation 3.27x and 2.63x",
+    "comparator": "direct human bare-hand demonstration (1.0x) and conventional VR teleoperation",
+    "task_or_sample": "two long-horizon tasks: rope boxing and shirt folding",
+    "locator": "page 8, Section 4.5; Figure 6(d) page 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Section 4.5 逐字（含断词 teleoper- ation）给出 2.06x/3.27x（rope boxing）与 1.49x/2.63x（shirt folding）；page 7 Figure 6 图注 '(a)-(d) We utilize efficiency comparison among ActivateUMI, bare hand, and teleoperation...ActivateUMI reaches an efficiency level between bare hand and teleoperation'（已核对）确认对比设置；claim 数字全部逐字。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C09",
+   "claim": "采集精度：以卷尺标称距离（100cm 递减 10cm 至 10cm，十档十次）为真值测得的相对位姿误差（RPE），ActiveUMI 为 4.0mm，UMI 为 10.1mm——VR 控制器跟踪的数据精度约为 UMI 视觉管线的 2.5 倍。",
+   "stance": "support",
+   "relation": "支持命题：UMI 系采集接口的位姿精度通道选择（VR inside-out vs 视觉 SLAM 管线）有实测差异——ActiveUMI 以 VR 跟踪替代 UMI 视觉位姿恢复后精度提升约 2.5×，与 exUMI 以 AR MoCap 替代视觉跟踪的路线同向。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Figure 6(e) 报告 RPE 对比：UMI 10.1mm、ActiveUMI 4.0mm；正文叙述两系统 RPE 相差 2.5 倍（原文表述存在笔误，图形数字为准）。",
+   "locator": "page 7, Figure 6(e)",
+   "source_context": "RPE(mm) UMI 10.1 ActiveUMI (Ours) 4.0 (e) Relative Pose Error (RPE) Comparison Rope boxing Shirt folding Rope boxing Rope boxing Shirt folding Figure 6. Data Collection Comparison. (a)-(d) We utilize efficiency comparison among ActivateUMI, bare hand, and teleoperation in two tasks: rope boxing and shirt folding.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Relative Pose Error (RPE) of collected vs replayed gripper distance",
+    "value_or_direction": "ActiveUMI 4.0 mm vs UMI 10.1 mm (≈2.5x better)",
+    "comparator": "UMI visual pipeline (SLAM/ArUco based pose recovery)",
+    "task_or_sample": "tape-measure protocol: nominal distances 100cm down to 10cm in 10cm steps, 10 trials averaged",
+    "locator": "page 7, Figure 6(e)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Figure 6(e) 文本层逐字给出 'RPE(mm) UMI 10.1 ActiveUMI (Ours) 4.0' 与图注 '(e) The comparison of relative pose error between UMI and ActiveUMI'（已核对后半句出自图注末行）；协议（100cm 递减 10cm、十次平均、公式 ΔL 与 RPE）出自 page 8 Section 4.5（已核对）；page 8 正文 'the RPE of UMI is 2.5x smaller than UMI' 为笔误（图形显示 UMI 10.1 > ActiveUMI 4.0，10.1/4.0≈2.5），claim 以图形数字为准并注明 2.5 倍换算。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C10",
+   "claim": "主动感知机制：系统显式记录操作者头戴显示器（HMD）的实时 6-DoF 位姿作为策略额外输入，使模型学习操作者头动（即视觉注意）与手部动作的关键关联；部署时策略为机器人头部预测 6-DoF 位姿，由低层控制器执行，使机器人能动态调整视角、克服遮挡。",
+   "stance": "support",
+   "relation": "支持命题：超越腕装鱼眼固定视角的路径是把'视角选择'本身作为动作学习——头部位姿作为动作空间一部分（active perception），为鱼眼/广角相机的视角约束提供机制层修正方案。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.2 说明 ActiveUMI 通过显式记录 HMD 6-DoF 位姿作为策略输入学习头动-动作关联；部署时策略预测头部 6-DoF 位姿并由低层控制器执行，实现动态视角调整与遮挡克服。",
+   "locator": "page 4, Section 3.2 Active Perception for Policy Learning",
+   "source_context": "the real-time 6-DoF pose of the operator’s Head-Mounted Display (HMD) as an additional input to the policy. This allows the model to learn the crucial correlation between an operator’s head movements (i.e., their visual attention) and their corresponding hand actions.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Section 3.2 逐字给出 explicitly record the real-time 6-DoF pose of the operator's HMD as an additional input to the policy 与 learn the crucial correlation between head movements (visual attention) and hand actions；部署侧预测与执行出自同段后文 'the policy can then predict a 6-DoF pose for the robot's head...executed by the robot's low-level controller, enabling the robot to dynamically adjust its viewpoint, overcome occlusions'（已核对）；claim 仅复述机制。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C11",
+   "claim": "固定顶视头相机可靠地优于仅腕相机配置，表明第三人称视角为复杂双臂任务提供互补信息；作者将主动感知增益归因于两点：主动相机让策略把演示者的头/身运动补偿掉而非当作观测噪声，以及主动视角选择使策略按需获取任务关键信息（如确认抓取）。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼双相机与第三视角是互补而非替代关系——即便固定第三视角也能显著提升（26%→42%），说明腕鱼眼视图缺少全局/上下文信息是可测量的事实。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 4.2 末段给出两点解释与固定相机优于腕-only 的结论：演示者头/身运动在主动相机下可被补偿；主动视角选择按需获取任务关键信息；固定顶视相机可靠优于腕-only，说明第三人称视角提供互补信息。",
+   "locator": "page 6, Section 4.2 How Important is the Egocentric Active Perception?",
+   "source_context": "We hypothesize two drivers of the improvements: (i) during in-the-wild data collection, demonstrators move their head and body; an active camera lets the policy com- pensate for this motion rather than treat it as observation noise; and (ii) active viewpoint selection enables the pol- icy to acquire task-critical information (e.g., verifying a grasp) on demand. Finally, the fixed top-down camera re- liably outperforms wrist-only, indicating that a third-person view adds complementary information for complex biman- ual tasks.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 4.2 逐字（含断词 pol- icy、re- liably、biman- ual）给出两点假设（compensate for head/body motion、acquire task-critical information on demand）与 'the fixed top-down camera reliably outperforms wrist-only, indicating that a third-person view adds complementary information for complex bimanual tasks'；两点为作者假设（hypothesize），claim 措辞保留'归因于/假设'口径。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C12",
+   "claim": "论文结论主张：主动感知数据管线显著优于缺乏主动感知的基线，证实'学习如何看与学习做什么同等重要'；腕装动作中心相机限制复杂、长程或遮挡任务性能是现有机器人学习系统的关键缺陷。",
+   "stance": "support",
+   "relation": "支持命题：作者把相机视角策略（视角选择作为学习对象）提升到与操作策略同等的高度——为综述中'鱼眼/广角相机 FoV 之外，视角可控性是感知接口的另一关键维度'提供结论层主张。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论指出当前数据采集方法忽视主动 egocentric 感知是关键缺陷，多数系统依赖动作中心的腕装相机限制复杂/长程/遮挡任务；实验证实主动视角控制高度有效（70% 成功率），learning how to look 与 learning what to do 同等重要。",
+   "locator": "page 8, Section 5 Conclusions",
+   "source_context": "In conclusion, we identified a critical limitation in current robot data collection methods: the neglect of active, egocen- tric perception. While humans naturally move their heads to understand and interact with the world, most robot learn- ing systems rely on action-centric, wrist-mounted cameras that limit performance on complex, long-horizon, or oc- cluded tasks.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 结论首段逐字给出 neglect of active, egocentric perception、action-centric, wrist-mounted cameras that limit performance on complex, long-horizon, or occluded tasks；'learning how to look is as important as learning what to do' 出自同段后文（已核对，原文含断词 outper- forms）；claim 是结论主张的忠实复述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Universal Manipulation Interface: In-the-Wild Robot Teaching Without In-The-Wild Robots",
+   "arxiv_id": "2402.10329",
+   "reason": "被作为腕装相机范式的代表与对照基线（引文 [9]），其腕相机-only 设置在 Table 1/2 中为最弱配置。"
+  },
+  {
+   "title": "FastUMI: A Scalable and Hardware-independent Universal Manipulation Interface with Dataset",
+   "arxiv_id": "2409.19499",
+   "reason": "相关工作中的 UMI 改造代表（引文 [28]），通过加装顶部相机加速部署，但仍以腕装相机为主要感知。"
+  },
+  {
+   "title": "Vision in Action: Learning Active Perception from Human Demonstrations",
+   "arxiv_id": "2506.15666",
+   "reason": "最接近的主动感知遥操作工作（引文 [43]），ActiveUMI 的差异是显式以 VR 头显跟踪操作者头动。"
+  },
+  {
+   "title": "π0: A Vision-Language-Action Flow Model for General Robot Control",
+   "arxiv_id": "2410.24164",
+   "reason": "全部策略训练的基座 VLA 模型（引文 [4]），三配置对比均在其上微调 50k iterations。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是'腕装鱼眼宽 FoV 不等于充分感知'的最直接受控证据。关键判断：(1) 应用方式——腕装鱼眼相机仍是采集端（每控制器一枚、最大化 FoV）与部署端（两 ARX R5 臂各一枚）的标准组件，但被降级为与头相机互补的'腕视图'；(2) 效果——腕鱼眼-only（UMI 设置）in-domain 平均仅 26%，加固定第三视角 42%、主动头视角 70%；新环境腕鱼眼-only 崩至 6%（五任务四个 0%）；(3) 局限——作者结构性论断'即使有宽视野，末端中心视角仍不足以服务长程任务与精细操作'，视角受操作需求而非感知目标约束；(4) 批判——10 trials 统计功效低、38% 数字与表格不符、PourWater 任务缺席表格、主动感知与 20-DoF 额外自由度未解耦、相机规格未披露、RPE 正文笔误。立场分布：support 9 / limit 3 / conditional 0 / gap 0。"
+}

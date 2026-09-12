@@ -1,0 +1,583 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.13169",
+  "title": "PanoWorld: Towards Spatial Supersensing in 360° Panorama World",
+  "published": "2026-05",
+  "url": "https://arxiv.org/abs/2605.13169",
+  "authors": [
+   "Changpeng Wang",
+   "Xin Lin",
+   "Junhan Liu",
+   "Yuheng Liu",
+   "Zhen Wang",
+   "Donglian Qi",
+   "Yunfeng Yan",
+   "Xi Chen"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "对综述问题高度相关的全景具身应用证据（模型/数据侧）：(1) 应用方式——把 360° 全景（ERP）作为 MLLM 的原生'超感知'输入，服务导航/人形视觉搜索/3D 空间推理三类具身任务，并给出'全景分解为透视视图 vs pano-native 直接推理'的路线分界；(2) 效果——PanoSpace-Bench overall 30.8→56.5（BFOV mIoU 1.41→73.3）、H*Bench 零样本 56.1 超 perspective 最强基线 38.4（微调后 70.1）、R2R-CE 54.3 SR/52.1 SPL（超 GridMM +5.3 SR/+11.1 SPL）、直接 ERP 单步推理较视角旋转省 13%-81% token 成本；(3) 局限——通用 MLLM 直读 ERP 全面弱（BFOV mIoU≤4.9，提示工程只部分有效、naive SFT 负迁移）、元数据自动管线噪声传播（作者自述）、基准止于静态诊断（无长时程具身交互/动态场景/多智能体导航）、无实体机器人与传感端实验（读者推断）——'获益（全环绕空间推理/人形搜索/导航与推理效率）与受限（通用模型直读、动态/实机/传感端）'两端证据齐全。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract and 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：透视范式窄瞬时视场 vs 具身任务的全环绕感知需求；既有 MLLM 管线把全景分解为透视视图致球面结构隐式；提出 pano-native（ERP 连续观察者中心空间直接推理）的问题设定与三项贡献。"
+   },
+   {
+    "locator": "page 3, 2 Related Work 与 Table 1",
+    "role": "relevant-core",
+    "purpose": "定位相关工作版图：pano-native 数据/模型设计（畸变图、球面位置建模）、MLLM 空间推理、Thinking in 360 的视图分解路线；Table 1 对比九个既有全景资源（数量/深度 3D/实体元数据/可扩展标注/验证图），确认 570K+验证图的差异化位置。"
+   },
+   {
+    "locator": "page 3-6, 3 Method（3.1 几何预备、3.2 能力分类、3.3 数据与元数据管线、3.4 SSCA 模型）",
+    "role": "method-or-design",
+    "purpose": "精读方法：ERP yaw-pitch 参数化与单位射线；四能力族；混合来源 570K 语料+检测/语义/深度元数据+两级验证+元数据图；SSCA 球面 token 交叉注意力与门控残差（公式 7-10）。"
+   },
+   {
+    "locator": "page 6-10, 4 Experiments（4.1 设置、4.2 主结果 Tables 2-4、4.3 消融 Tables 5-8）",
+    "role": "results-or-analysis",
+    "purpose": "精读全部定量结果：PanoSpace-Bench 主对比（通用基线+prompt 变体+PanoWorld）、H*Bench 零样本/微调迁移、R2R-CE VLN 迁移、能力数据组合/元数据验证/架构/可训练范围四组消融。"
+   },
+   {
+    "locator": "page 10, 5 Conclusion 与 page 22, Appendix F Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者限制：结论重述框架/数据/基准/模型贡献；限制=元数据管线噪声传播+基准诊断性范围（无长时程具身交互/动态场景/多智能体导航）。"
+   },
+   {
+    "locator": "page 15-22, Appendix A-F（A 数据细节、B 基准设置、C 案例、D 效率、E 消融细节、F 限制）",
+    "role": "data-or-setting",
+    "purpose": "核对语料构成（Table 9）、管线参数与指令分布（Tables 10-11）、PanoSpace-Bench 协议（八类×250=2,000 题、BFOV mIoU 公式与 wrap-around 规则）、H*/VLN 官方评测协议、效率对比（Table 14）与限制节原文。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 11-14, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表；scoping 模式下仅按需核对被引工作（H*Bench=Thinking in 360、R2R-CE、Depth any panoramas、Dense360/360-R1）。"
+   }
+  ]
+ },
+ "research_question": "本论文问题：如何让 MLLM 把 360° ERP 全景当作连续的观察者中心空间直接推理（而非分解为局部透视视图），并系统化其能力分类、规模化其监督数据、注入球面几何于模型。综述问题映射：该文是'全景作为 MLLM 原生输入'路线（模型/数据侧）在具身领域的代表证据——覆盖应用方式（全景超感知→导航/人形搜索/3D 理解）、量化效果（三基准提升+推理效率）与多层局限（通用模型直读受限、数据管线噪声、静态/仿真边界、无实机部署）。",
+ "contributions": [
+  "能力结构化分类：把全景 MLLM 空间推理分解为语义锚定、球面定位、参考系变换、深度感知 3D 空间推理四族能力，并以此统一监督设计与评测。",
+  "可验证元数据管线：570,321 张混合来源 ERP→两级验证（几何 IoU 0.6/语言复检 IoU 0.7）→结构化元数据图→7.65M 候选/2.998M 规范能力对齐指令数据。",
+  "PanoWorld 模型：Qwen3.5-VL+Spherical Spatial Cross-Attention（patch 级球面 token 交叉注意力+门控残差），几何早注入且主干不变。",
+  "PanoSpace-Bench 诊断基准：四能力族八类×250=2,000 题，与训练语料图像/问题双分离，含 BFOV 角 IoU 与 wrap-around 评测规则。",
+  "三基准实验：PanoSpace-Bench 56.5（基线 30.8）、H*Bench 零样本 56.1/微调 70.1、R2R-CE 54.3 SR，加单步直接 ERP 推理效率证据（作者自述贡献，数字见证据卡）。"
+ ],
+ "method": {
+  "summary": "任务设定：给定 ERP 全景 I 与文本查询 q 学习 y=f_θ(I,q)（答案/方向/空间关系/接地目标），要求把 I 当作连续观察者中心球面空间（含接缝连续、视点重定向、全环绕实体关系）。能力分类：语义锚定/球面定位（粗方向→BFOV 角度接地）/参考系变换（相机旋转、以物体为条件重定向、相对方向）/深度感知 3D 关系（观察者距离、距离排序、相对 3D 位置、复合关系）。数据管线：570,321 张混合来源 ERP（室内 52.2%/室外 47.8%，Realsee3D 合成占 47.9%）→120° FoV/60° 步长透视投影+WeDetect-Large 检测（conf 0.3/NMS 0.5）→ERP 重投影跨视图合并（IoU 0.6）→Qwen3-VL-32B 语义标注→WeDetect-Ref-4B 指代复检（IoU 0.7）→对齐深度或全景深度模型伪深度→元数据图（节点=语义/属性/角足迹/观察者距离/局部上下文；边=球面角差/深度差/离散 2D-3D 关系）→7.65M 候选采样为 2,997,516 条规范指令（每全景 5.26 条，按四族均衡混合）。模型：Qwen3.5-VL 底座+SSCA 适配器（patch embedding 后）：patch 中心→(λ,φ)→固定正弦球面编码→MLP→球面 token S；视觉 token 经交叉注意力（Q=LN(H0)、K=V=LN(S)）与门控残差 H̃0=H0+α⊙A 融合；全量微调 Vision+VL 接口+LLM（Table 8 消融显示全量最优）。训练：8×A100、AdamW、lr 1e-6、全局 batch 2（梯度累积 4）、1 epoch。",
+  "assumptions": [
+   "ERP 全景作为输入已在传感端可靠获得——论文不涉及鱼眼相机阵列、拼接或标定（传感端被假定上游解决）。",
+   "自动检测+MLLM 标注+复检+伪深度经两级验证足以产出可用监督（作者自认误差仍会传播到元数据图）。",
+   "观察者中心参考系与 yaw/pitch 约定可通过统一系统提示在训练与评测间对齐（page 17 统一提示模板）。",
+   "四能力族分类覆盖 pano-native 理解的核心需求（作者自定义分类法，未见外部独立验证）。",
+   "静态单帧全景足以承载所评测的空间推理与导航方向决策（时序信息不在设定内）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "570,321 张混合来源 ERP 全景（Realsee3D 真实 24,025/合成 273,451、360+X 15,290、户外爬取 76,643、街景 63,651、API 117,261；室内 52.2%/室外 47.8%）",
+   "2,997,516 条规范 pano-native 指令（自 7,646,067 候选池采样；每全景 5.26 条；四族均衡混合）",
+   "PanoSpace-Bench：与训练语料图像来源/问题模板双分离的自建诊断基准（四族八类×250=2,000 题；MC 准确率+BFOV 角 IoU）",
+   "外部迁移基准：H*Bench（HOS/HPS 人形视觉搜索）、R2R-CE Val-Unseen（R2R/RxR 训练集，仅用 80% 数据）"
+  ],
+  "tasks": [
+   "ERP 全景空间推理八类：绝对方向、BFOV 接地、相对方向、相机旋转、物体重定向、观察者距离、相对 3D 位置、接缝连续",
+   "H*Bench 人形视觉搜索（静态全景一步方向预测，HOS/HPS）",
+   "R2R-CE 视觉语言导航（直接 ERP 观测，RGB-only 训练设定）"
+  ],
+  "embodiments": [
+   "无实体平台：MLLM 在静态全景与仿真导航协议上评测（'人形/导航'为下游任务语义而非硬件 embodiment）"
+  ],
+  "sample_or_scale": "训练 570K 全景/3.0M 指令、单 epoch 8×A100；评测 2,000 题自建基准+H*Bench+R2R-CE Val-Unseen；效率对比 H* 任务"
+ },
+ "evaluation": {
+  "design": "能力对齐评测：自建 PanoSpace-Bench（MC 准确率+BFOV 角 IoU，含 yaw wrap-around 处理与无效预测零分规则，page 19）+两个外部基准迁移（H*Bench 官方协议零样本/微调、R2R-CE 标准协议 NE/OSR/SR/SPL）+四组消融（能力数据组合、元数据两级验证、SSCA 融合×位置、可训练范围）+推理效率对比（交互步/调用数/有效 token）。",
+  "baselines": [
+   "商用：GPT-4o、Gemini-2.5-Pro、Mimo-v2.5",
+   "开源通用 MLLM：InternVL3.5-4B/8B/14B、Qwen2.5-VL-3B/7B、Qwen3-VL-8B/32B、Qwen3.5-9B、Ministral-8B/14B",
+   "提示变体：Qwen3.5-9B+text prompt/+visual prompt（ERP 坐标网格提示）",
+   "H*Bench：HVS-3B*（perspective 最强）与各模型 ERP 输入；VLN：waypoint 范式（HPN+DN/Sim2Sim/GridMM/DreamWalker）与 RGB-only（Uni-NaVid/StreamVLN/Efficient-VLN/NaVIDA）"
+  ],
+  "metrics": [
+   "MC 准确率（分类任务）与 BFOV mIoU（角 IoU，含 wrap-around）",
+   "H*Bench overall/HOS/HPS 成功率与 Yaw/Pitch Acc",
+   "R2R-CE NE/OSR/SR/SPL",
+   "交互步数/模型调用数/有效输入 token（效率）"
+  ],
+  "ablations": [
+   "能力族训练数据组合（Table 5：四族逐增/组合，全族最佳）",
+   "元数据两级验证（Table 6：38.8→46.4→48.0→55.1）",
+   "SSCA 融合机制×插入位置（Table 7：Cross-Attn Patch 55.1 最优）",
+   "可训练范围 Vision/VL 接口/LLM（Table 8：全量微调最优，LLM-only 84.80 vs Full 92.80 绝对方向）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "pano-native 训练把 PanoSpace-Bench overall 从 30.8 提到 56.5：绝对方向 25.2→93.7、BFOV mIoU 1.41→73.3、球面关系 26.1→47.4、3D 空间 36.9→49.8、接缝 41.2→65.5，增益跨类别。",
+   "scope": "PanoSpace-Bench 八类 2,000 题（Table 2 与 page 8 正文）",
+   "locator": "page 8, Section 4.2（Table 2, page 7）"
+  },
+  {
+   "finding": "H*Bench 零样本 56.1 超最强 perspective 基线 HVS-3B* 38.4（+17.7）；H* 微调后 70.1；而 Qwen3.5 naive H* SFT 仅 17.8（负迁移）、prompt 工程止步 38.5-40.4。",
+   "scope": "H*Bench HOS/HPS（Table 3(a)/(b)）",
+   "locator": "page 8, Table 3"
+  },
+  {
+   "finding": "R2R-CE Val-Unseen 直接 ERP 输入 54.3 SR/52.1 SPL（NE 4.98/OSR 59.3），+5.3 SR/+11.1 SPL vs GridMM、+4.1 SR/+5.0 SPL vs StreamVLN，仅用 80% 训练数据。",
+   "scope": "R2R-CE Val-Unseen（Table 4）",
+   "locator": "page 8-9, Section 4.2 / Table 4"
+  },
+  {
+   "finding": "通用 MLLM 直读 ERP 全面弱：11 基线 overall 23.6-37.2、BFOV mIoU 0.7-4.9；视觉提示仅 36.4 且只改善粗定位——受限面集中在 BFOV/参考系/3D 推理。",
+   "scope": "PanoSpace-Bench 基线对比（Table 2）",
+   "locator": "page 7, Table 2"
+  },
+  {
+   "finding": "消融：元数据两级验证 38.8→55.1（数据质量是主要因素）；SSCA patch 级交叉注意力 0.484→0.551（几何早注入最优）；全量微调（Vision+VL+LLM）优于仅 LLM（绝对方向 84.80→92.80）。",
+   "scope": "同一 PanoSpace-Bench 划分上的四组消融（Tables 5-8）",
+   "locator": "page 9-10, Section 4.3 / Tables 6-8"
+  },
+  {
+   "finding": "推理效率：直接 ERP 单步单调用 16.5k tokens vs 视角旋转 3.58-6.34 步/18.7k-29.9k tokens（1.13-1.81×）——全环绕输入把迭代旋转搜索压缩为单次前向。",
+   "scope": "H* 任务效率对比（Table 14）",
+   "locator": "page 22, Table 14"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "元数据管线噪声传播：自动开放世界检测、MLLM 语义标注、指代复检与全景深度估计的误差虽经两级验证仍可能传播到最终元数据图。",
+    "locator": "page 22, Appendix F Limitations"
+   },
+   {
+    "limitation": "基准诊断性范围：PanoSpace-Bench 不覆盖长时程具身交互、动态场景、多智能体导航等全景任务（作者建议向交互导航/时序全景视频/动态 3D 环境扩展）。",
+    "locator": "page 22, Appendix F Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无实体机器人/机载部署证据：全部具身评测为静态全景问答/搜索与 R2R-CE 协议导航，无实机闭环、动态环境或真实部署实验（见 C15）。",
+    "basis": "page 20 B.3 评测协议与 page 7-10/page 18-21 实验范围通读对照；page 22 作者自认不覆盖 long-horizon embodied interaction/dynamic scenes。"
+   },
+   {
+    "boundary": "传感端不可见：ERP 全景被假定上游已提供（训练/评测消费 Realsee3D/360+X/网络/街景 API 既有数据），鱼眼相机阵列、拼接质量、标定对下游推理的影响本文均未涉及——'鱼眼→ERP'链路是该路线的未验证上游依赖。",
+    "basis": "page 15 Table 9 语料来源构成与全文方法/实验部分（无采集 rig 或传感端章节）对照。"
+   },
+   {
+    "boundary": "静态单帧设定与具身时序需求错配：模型输入为静态全景快照，导航决策不含视频流/动态观测；与 RGB 视频流 VLN 方法（如 StreamVLN）的对比在观测模态上不对等，54.3 SR 的增益不能完全归因于模型能力。",
+    "basis": "page 20 B.3（直接以 ERP panorama 为观测）与 Table 4 各方法 Observation 列（RGB 流 vs Pano.）对照；作者未做同观测模态消融。"
+   },
+   {
+    "boundary": "训练语料域偏合成与网络：47.9% 为 Realsee3D 合成、约 45% 网络爬取/街景 API（Table 9），与真实机器人视角全景的域差距未量化；H*Bench/R2R-CE 迁移结果部分依赖其数据域与训练域的重合度。",
+    "basis": "page 15 Table 9 来源占比与 page 18 B.1 基准来源分离声明对照。"
+   },
+   {
+    "boundary": "数据发布为条件承诺：隐私过滤、许可兼容筛选与移除通道均为'发布前将做'的承诺（写作时点），语料实际可用性与可复现性待验证。",
+    "basis": "page 15 许可与隐私段（will apply privacy-oriented filtering...will release only assets whose redistribution is compatible）。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论可迁移范围：经 pano-native 训练的 Qwen3.5-VL 系模型在静态 ERP 全景上的空间推理/接地/搜索可获大幅提升（PanoSpace-Bench 56.5、H*Bench 零样本 56.1/微调 70.1），仿真 VLN（R2R-CE 54.3 SR）与推理效率（单步 16.5k tokens）获益成立；提示工程与 naive 任务微调不可替代 pano-native 预训练（17.8-40.4 vs 56.1-70.1）。不可迁移/未验证：通用 MLLM 直读 ERP（BFOV mIoU≤4.9）、动态场景与时序全景、长时程具身交互与多智能体、真实机器人部署、传感端 ERP 获取质量（拼接/标定）、合成/网络语料向真实机器人视角域的外推、数据资产的实际发布。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "能力分解→监督设计→基准构建三处同构（同一分类法贯穿），消融逐组件验证（数据组合/验证/架构/可训练范围四组）。",
+   "PanoSpace-Bench 与训练语料做图像来源与问题模板双分离并人工核验（page 18 B.1），降低自建基准泄漏风险。",
+   "零样本迁移评测于两个外部基准（H*Bench、R2R-CE）而非仅自建基准，支持泛化主张。",
+   "效率对比（Table 14）把'一步推理 vs 迭代旋转'的范式差异量化为步数/调用/token 成本。",
+   "元数据两级验证消融（38.8→55.1）诚实揭示自动标注管线的质量敏感性。",
+   "训练超参与管线阈值完整给出（8×A100/lr 1e-6/120°/IoU 0.6/0.7），代码与数据承诺开源。"
+  ],
+  "design_risks": [
+   "PanoSpace-Bench 为同团队自建（八类×250 题 MC 形式），评测协议自定义，跨论文可比性与题目难度校准未经外部验证。",
+   "训练语料 47.9% 合成、约 45% 网络来源，域与真实机器人全景的差距未量化；H*/VLN 迁移可能受益于域重合。",
+   "元数据自动管线误差传播为作者自认（两级验证不消除）；伪深度（Depth any panoramas）质量对 3D 关系标签的影响未单独评估。",
+   "R2R-CE 对比混合范式（waypoint/RGB-only/direct ERP）且观测模态不对等（全景快照 vs RGB 视频流），增益归因不纯；80% 训练数据的设定虽声明公平但无 100% 对照。",
+   "H*Bench 的 perspective 基线数字为'已报告'结果（HVS-3B* 38.4），非同协议复测，协议差异（交互预算/输入分辨率）可能影响可比性。",
+   "无置信区间/显著性检验报告（表格为单值），2,000 题规模下单点差异的稳健性未知。"
+  ],
+  "baseline_fairness": "模型侧对比公平性较好：PanoWorld 与 Qwen3.5-9B 同底座、同训练数据混合与优化设置（Table 7-8 消融同 mixture）；但对外部基线（GPT-4o/Gemini 等通用 MLLM）未做 ERP 适配或提示调优以外的对齐——对比更多展示'pano-native 训练的必要性'而非方法族间的公平排序；R2R-CE 上 ERP 输入相对 RGB-only 方法有观测信息量优势，'同设定'声明（80% 数据）不等于同观测模态。",
+  "metric_validity": "自建指标定义透明且针对 ERP 特有构念（BFOV 角 IoU 含 wrap-around、接缝连续性、参考系变换），构念效度好；H*Bench/R2R-CE 沿用官方协议，外部可比性保留；但全部指标止于静态图像任务与仿真导航，与'具身任务成功率'的最终效标仍有距离（作者自认 diagnostic）。",
+  "reproducibility": "中-高：训练超参、管线阈值、提示模板（page 17）、评测协议与公式完整给出并承诺开源代码与数据；但数据发布附带许可兼容与隐私过滤条件（page 15），且 570K 语料中爬取/API 部分的再分发可行性未定；未报告随机种子/方差。",
+  "external_validity": "中：零样本迁移到两个外部基准提供一定外部效度；但具身评测止于静态全景与仿真协议、语料近半合成且域差距未量化、无实机/动态/长时程证据——向真实机器人全景视角、动态环境与其他具身任务的外推未检验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.13169-C01",
+   "claim": "应用方式与动机：主流透视图像范式的 MLLM 继承人眼式感知的窄瞬时视场，而导航、机器人搜索与 3D 场景理解等任务受益于 360° 全景'超感知'（supersensing）——一次捕获整个周围环境；但现有 MLLM 管线通常把全景分解为多个透视视图，使等距柱面投影（ERP）的球面结构基本保持隐式；本文提出 pano-native 理解：要求 MLLM 把 ERP 全景当作连续的观察者中心空间直接推理，并定义语义锚定、球面定位、参考系变换、深度感知 3D 空间推理四项关键能力。",
+   "stance": "support",
+   "relation": "支持命题：全景/超广角视觉在具身智能中的一种核心应用方式——把 360° 全景作为具身空间推理（导航、机器人搜索、3D 理解）的原生输入与超感知来源；并给出'全景分解为局部透视视图（既有路线）vs pano-native 直接推理（本文路线）'的分界，为综述梳理应用方式提供路线级证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 1 摘要陈述窄视场问题、360° 超感知动机、既有管线分解全景致球面结构隐式，以及 pano-native 四能力定义。",
+   "locator": "page 1, Abstract",
+   "source_context": "Multimodal large language models (MLLMs) still struggle with spatial understand-\ning under the dominant perspective-image paradigm, which inherits the narrow\nfield of view of human-like perception. For navigation, robotic search, and 3D\nscene understanding, 360\n◦ \npanoramic sensing offers a form of supersensing by\ncapturing the entire surrounding environment at once. However, existing MLLM\npipelines typically decompose panoramas into multiple perspective views, leav-\ning the spherical structure of equirectangular projection (ERP) largely implicit.\nIn this paper, we study pano-native understanding, which requires an MLLM\nto reason over an ERP panorama as a continuous, observer-centered space. To\nthis end, we first define the key abilities for pano-native understanding, including\nsemantic anchoring, spherical localization, reference-frame transformation, and\ndepth-aware 3D spatial reasoning.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 still struggle with spatial understand- ing under the dominant perspective-image paradigm, which inherits the narrow field of view of human-like perception、For navigation, robotic search, and 3D scene understanding, 360◦ panoramic sensing offers a form of supersensing by capturing the entire surrounding environment at once、typically decompose panoramas into multiple perspective views, leav- ing the spherical structure of equirectangular projection (ERP) largely implicit、reason over an ERP panorama as a continuous, observer-centered space 及四能力列表（semantic anchoring, spherical localization, reference-frame transformation, and depth-aware 3D spatial reasoning）；claim 为作者动机与问题设定的忠实复述，无外推。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C02",
+   "claim": "能力分类法：pano-native 理解被分解为四个能力族并作为监督设计与基准构建的共同基础——(1) 语义锚定：把语言锚定到 ERP 中的视觉实体（身份、属性、场景内容与全局场景拓扑语义）；(2) 球面定位：在以 yaw/pitch 参数化的观察者中心球面上定位实体（从粗方向分类到细粒度 BFOV 式角度接地），而非仅平面图像网格；(3) 参考系变换：推理观察者旋转或以物体为条件的重定向下空间关系如何变化（含角度关系与接缝感知的环绕连续性）；(4) 深度感知 3D 空间推理（定义在 page 5 开头）：把球面观测连接到周围 3D 结构（深度、相对距离与观察者中心关系）。",
+   "stance": "support",
+   "relation": "支持命题：为'全景在具身任务中需要什么能力'提供系统化分类——综述回答'哪些任务获益'时可按此四族（接地/关系/参考系/3D）组织全景获益的任务类型，也是全景具身评测的维度框架。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.2 给出语义锚定/球面定位/参考系变换三族定义并声明该分类法是监督设计与基准构建的基础；第四族（深度感知 3D）在 page 5 开头定义。",
+   "locator": "page 4, Section 3.2 Capability Taxonomy（Depth-aware 3D 一族定义在 page 5 开头）",
+   "source_context": "We decompose pano-native understanding into four capability families that together define the core\nrequirements for reasoning over ERP panoramas. This taxonomy serves as the foundation for both\nsupervision design and benchmark construction.\nSemantic anchoring. The model must ground language to visual entities in ERP panoramas, covering\nobject identity, attributes, scene contents, and global scene-topology semantics such as environment\nand layout structure. This forms the semantic basis for subsequent spatial reasoning.\nSpherical grounding. The model must localize entities on the observer-centered viewing sphere,\nwhere directions are parameterized by yaw and pitch, rather than only on a planar image grid. This\nranges from coarse directional localization to fine-grained BFOV-style angular grounding.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 We decompose pano-native understanding into four capability families、This taxonomy serves as the foundation for both supervision design and benchmark construction 及语义锚定/球面定位/参考系变换三族定义；第四族深度感知 3D 在 page 5 开头逐字核对（The model must connect spherical observations to surrounding 3D structure, including depth, relative distance, and viewer-centered relations such as left/right, front/behind, and above/below）；claim 各分句均有原文锚点，无外推。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C03",
+   "claim": "数据规模与构成：ERP 语料库含 570,321 张全环绕全景，室内（297,476 张，52.2%）与室外（272,845 张，47.8%）近似均衡——作者认为该均衡对 pano-native 学习重要（室内提供物体丰富的局部布局与深度关系，室外引入更大尺度结构、长程可见性与多样全景拓扑）；来源混合：Realsee3D 合成 273,451 张（47.9%，最大单一来源）、API 采集 117,261、户外网络爬取 76,643、街景爬取 63,651、Realsee3D 真实 24,025、360+X 15,290；发布前将做隐私过滤（遮蔽可识别内容、排除敏感场景）并只发布与源许可兼容的资产。",
+   "stance": "support",
+   "relation": "支持命题：给出全景监督数据侧的规模与构成证据——pano-native MLLM 路线的底座是混合来源 570K 全景语料（近半为合成数据），界定该应用方式的数据可行性与许可/隐私边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Appendix A.1 与 Table 9 报告语料总量、室内外均衡及其学习意义、六类来源构成；同页给出许可与隐私处理承诺。",
+   "locator": "page 15, Appendix A.1 与 Table 9",
+   "source_context": "Our ERP corpus contains 570,321 full-surround\npanoramas collected from mixed sources. The corpus is approximately balanced between indoor\nand outdoor scenes, with 297,476 indoor panoramas and 272,845 outdoor panoramas. This balance\nis important for pano-native spatial learning, since indoor scenes provide object-rich local layouts\nand depth relations, while outdoor scenes introduce larger-scale structures, long-range visibility, and\ndiverse panoramic topology.",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "ERP 全景语料规模/室内外构成/来源占比",
+    "value_or_direction": "总量 570,321；室内 297,476（52.2%）；室外 272,845（47.8%）；Realsee3D-synthetic 273,451（47.9%）、API 117,261、Outdoor web 76,643、Street-view 63,651、Realsee3D-real 24,025、360+X 15,290",
+    "comparator": "混合来源全景语料（Realsee3D/360+X 既有数据集+网络+街景 API）",
+    "task_or_sample": "pano-native 指令数据构建的底座语料",
+    "locator": "page 15, Table 9"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 15 逐字给出 570,321、297,476 indoor、272,845 outdoor、This balance is important for pano-native spatial learning、indoor scenes provide object-rich local layouts and depth relations, while outdoor scenes introduce larger-scale structures, long-range visibility, and diverse panoramic topology、will apply privacy-oriented filtering...release only assets whose redistribution is compatible with the corresponding source licenses；Table 9 同页逐行核对（Realsee3D-synthetic 273,451 47.9%、API-based collection 117,261 20.6%、Outdoor web crawling 76,643、Street-view web crawling 63,651、Realsee3D-real 24,025、360+X 15,290）；claim 为数字与作者陈述的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C04",
+   "claim": "可验证元数据管线与指令规模：每张全景投影为 120° FoV、60° yaw 步长（相邻视图约 60° 重叠）的透视视图，用 WeDetect-Large 开放世界检测器（置信阈值 0.3、视图级 NMS IoU 0.5）检测后重投影回 ERP 坐标并跨视图合并（两框 ERP IoU 超 0.6 视为几何一致）；用 Qwen3-VL-32B 生成类别/属性/描述/判别性指代短语，再以 WeDetect-Ref-4B 做描述引导复检（原始提议与复检框 IoU 超 0.7 才保留实体）；深度取源数据对齐深度或全景深度模型伪深度；最终从验证后元数据图实例化 7.65M 候选指令样本、采样 2,997,516 条规范训练集（平均每张全景 5.26 条指令）。",
+   "stance": "support",
+   "relation": "支持命题：说明全景监督的规模化生产方式——'透视检测+ERP 重投影+两级验证（几何+语言）+伪深度'的自动管线把混合来源全景转化为能力对齐指令数据，是 pano-native 应用方式的数据工程证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Appendix A.2-A.3 给出管线实现参数（投影 FoV/步长、检测/复检阈值、模型选择）与候选/规范指令两级规模。",
+   "locator": "page 15, Appendix A.2 与 A.3（Table 10 指令分布在 page 16）",
+   "source_context": "We provide additional implementation details for the metadata construction pipeline in Sec. 3.3. For\neach ERP panorama, we render overlapping perspective views with a 120\n◦ \nFoV and a 60\n◦ \nyaw stride,\nresulting in approximately 60\n◦ \noverlap between adjacent views. We use WeDetect-Large [ 13] as the\nopen-world detector, with a confidence threshold of 0.3 and a view-level NMS IoU threshold of 0.5.\nThe detected boxes are reprojected to ERP coordinates and merged across overlapping views; two\nboxes are considered geometrically consistent if their ERP IoU exceeds 0.6. For semantic annotation,\nwe use Qwen3-VL-32B [ 1 ] to generate object categories, attributes, descriptions, and discriminative\nreferring phrases. We then use WeDetect-Ref-4B [ 13 ] for description-guided re-detection and retain\nan entity only if the IoU between the original proposal and the re-detected box exceeds 0.7. This\nprovides a strong implementation of geometric and language verification before constructing the final\nmetadata graph [41].\nA.3 Instruction Data Distribution\nTable 11 summarizes the ERP corpus composition, and Table 10 reports the final instruction distri-\nbution. From the verified metadata graphs, we first instantiate 7.65M candidate instruction samples\nand then sample a canonical training set of 2.998M examples. The sampling procedure targets a\nbalanced mixture across semantic, angular, reference-frame, and depth-aware reasoning tasks, while\nlimiting repeated samples from the same scene within each family. On average, each ERP panorama\ncontributes 5.26 canonical instruction examples.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "元数据管线关键参数与指令数据规模",
+    "value_or_direction": "120° FoV/60° yaw stride；检测合并 ERP IoU 0.6；语义复检 IoU 0.7；候选池 7.65M→规范训练集 2.998M（2,997,516，每全景 5.26 条）",
+    "comparator": "WeDetect-Large 检测+Qwen3-VL-32B 标注+WeDetect-Ref-4B 复检（两级验证管线）",
+    "task_or_sample": "pano-native 监督元数据与指令数据构建",
+    "locator": "page 15, Appendix A.2/A.3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 15 逐字给出 a 120◦ FoV and a 60◦ yaw stride, resulting in approximately 60◦ overlap、WeDetect-Large [13] as the open-world detector, with a confidence threshold of 0.3 and a view-level NMS IoU threshold of 0.5、geometrically consistent if their ERP IoU exceeds 0.6、Qwen3-VL-32B [1] to generate object categories, attributes, descriptions, and discriminative referring phrases、WeDetect-Ref-4B [13] for description-guided re-detection...IoU...exceeds 0.7、instantiate 7.65M candidate instruction samples and then sample a canonical training set of 2.998M examples、contributes 5.26 canonical instruction examples；2,997,516 在 page 16 Table 10 逐字核对；claim 为管线参数的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C05",
+   "claim": "模型设计：PanoWorld 以 Qwen3.5-VL 为底座并扩展 pano-aware 模块——Spherical Spatial Cross-Attention（SSCA）适配器插入 patch embedding 之后：对每个 ERP patch 计算其图像坐标中心 (u,v) 并映射到球面方向 (λ,φ)，经固定正弦球面编码 γ 后由 MLP 投影为球面空间 token S；视觉 token H(0) 通过交叉注意力（Q=LN(H(0))、K=V=LN(S)）检索几何信息，所得几何感知信号经门控残差更新 H̃(0)=H(0)+α⊙A 融合回视觉流再送入其余视觉块（α 为小值初始化的可学习门，说明接排 page 7）——预训练主干保持不变，球面几何经视觉内容与观察者中心空间 token 的自适应交互注入，以弥合'同一像素位移在不同纬度对应不同角度变化、左右边界在真实场景相邻'的 ERP 与平面栅格错配。",
+   "stance": "support",
+   "relation": "支持命题：全景原生表示的模型侧方案——SSCA 把球面几何显式注入视觉流，是'直接在 ERP 上做具身空间推理'这一应用方式的架构支点，其组件有效性由 C12 架构消融支撑。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.4 给出 SSCA 的插入位置、球面 token 构造（公式 7-8）、交叉注意力融合（公式 9）与门控残差更新（公式 10），并陈述主干不变的设计意图。",
+   "locator": "page 6, Section 3.4 Pano-aware MLLM Adaptation（公式 (7)-(10)；α 门说明在 page 7 开头）",
+   "source_context": "We adopt Qwen3.5-VL as the backbone and extend it with a\npano-aware module that injects spherical geometry into the visual stream. Since the native visual\nencoder operates on a planar raster, it does not explicitly account for the spherical structure of ERP\nimages, where the same pixel displacement may correspond to different angular changes at different\nlatitudes and the left and right image borders are adjacent in the real scene. To address this mismatch,\nwe introduce Spherical Spatial Cross-Attention (SSCA), a pano-aware adapter inserted immediately\nafter patch embedding.\nSpherical spatial token construction. Given an ERP panorama, let H\n(0) \n∈ R\nN ×d \ndenote the patch\nembeddings produced by the visual patch projector, where N is the number of visual patches and d is\nthe hidden dimension. For each patch i, we compute its center (u\ni\n, v\ni\n) in ERP image coordinates and\nmap it to the corresponding spherical direction (λ\ni\n, ϕ\ni\n). We then encode this direction using a fixed\nsinusoidal spherical encoding γ(·) and project it into the visual hidden space:\ns\ni \n= MLP(γ(λ\ni\n, ϕ\ni\n)) ∈ R\nd\n. (7)\nStacking all patch-level spherical tokens gives\nS = [s\n1\n, . . . , s\nN \n] ∈ R\nN ×d\n. (8)\nUnlike standard 2D positional indices, these tokens are explicitly tied to directions on the viewing\nsphere. They therefore provide the model with observer-centered geometric cues that remain aligned\nwith the ERP representation.\nCross-attention fusion after patch embedding. SSCA injects spherical geometry by allowing visual\ntokens to retrieve information from the spherical tokens through cross-attention:\nA = MHA\n\nQ = LN(H\n(0)\n), K = LN(S), V = LN(S)\n\u0001\n. (9)\nThe resulting geometry-aware signal is fused back into the visual stream through a gated residual\nupdate:",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 We adopt Qwen3.5-VL as the backbone、inserted immediately after patch embedding、map it to the corresponding spherical direction (λi, ϕi)...fixed sinusoidal spherical encoding γ(·)...MLP、A = MHA(Q = LN(H(0)), K = LN(S), V = LN(S))、fused back into the visual stream through a gated residual update、the pretrained backbone remains unchanged 及 the same pixel displacement may correspond to different angular changes at different latitudes and the left and right image borders are adjacent in the real scene；公式 (10) 与 α 可学习门小值初始化说明在 page 6 末-page 7 开头逐字核对；claim 为设计陈述的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C06",
+   "claim": "主基准结果：pano-native 训练把 Qwen3.5 基线在 PanoSpace-Bench 上从 overall 30.8 提升到 56.5，且增益是跨类别而非类别特定的——绝对方向 25.2→93.7、BFOV mIoU 1.41→73.3、球面关系均值 26.1→47.4、3D 空间均值 36.9→49.8、接缝推理 41.2→65.5；作者结论：稳健的全景理解需要 pano-native 空间学习，而不是把 ERP 当作一张宽 2D 图像或仅依赖提示级的坐标描述。",
+   "stance": "support",
+   "relation": "支持命题：全景原生训练在具身空间推理任务族上的量化效果证据——综述'哪些任务获益'的核心数字：全景接地（BFOV mIoU 1.41→73.3）与方向/关系/3D 推理全谱系获益。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.2 正文汇总 Table 2 的主对比：基线 30.8→PanoWorld 56.5 及五类增益数字，并给出中心结论。",
+   "locator": "page 8, Section 4.2（Table 2 在 page 7）",
+   "source_context": "Our pano-native model achieves the best overall performance, improving the Qwen3.5 baseline from\n30.8 to 56.5. The gains are broad rather than category-specific: absolute direction rises from 25.2 to\n93.7, BFOV mIoU from 1.41 to 73.3, spherical relation average from 26.1 to 47.4, 3D spatial average\nfrom 36.9 to 49.8, and seam reasoning from 41.2 to 65.5. These results support the central claim of\nthe paper: robust panoramic understanding requires pano-native spatial learning rather than treating\nERP as a wide 2D image or relying only on prompt-level coordinate descriptions.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PanoSpace-Bench overall 与分类指标（MC 准确率/BFOV mIoU）",
+    "value_or_direction": "overall 30.8→56.5；Abs.Dir 25.2→93.7；BFOV mIoU 1.41→73.3；球面关系均值 26.1→47.4；3D 空间均值 36.9→49.8；Seam 41.2→65.5",
+    "comparator": "Qwen3.5-9B 基线 vs PanoWorld（同底座+pano-native 训练）",
+    "task_or_sample": "PanoSpace-Bench 四能力族八类任务（2,000 题）",
+    "locator": "page 8, Section 4.2（Table 2, page 7）"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 improving the Qwen3.5 baseline from 30.8 to 56.5、absolute direction rises from 25.2 to 93.7、BFOV mIoU from 1.41 to 73.3、spherical relation average from 26.1 to 47.4、3D spatial average from 36.9 to 49.8、seam reasoning from 41.2 to 65.5 及 robust panoramic understanding requires pano-native spatial learning rather than treating ERP as a wide 2D image or relying only on prompt-level coordinate descriptions；Table 2（page 7）PanoWorld 行 56.5 93.7 73.3 42.6 52.4 47.2 47.4 59.6 40.6 49.8 65.5 与 Qwen3.5-9B 行 30.8 25.2 1.4 32.2 22.6 26.3 26.1 48.6 24.5 36.9 41.2 逐行核对一致；'2,000 题'在 page 19 逐字核对（2,000 questions in total）；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C07",
+   "claim": "通用 MLLM 直读 ERP 的能力受限：Table 2 中商用与开源通用 MLLM 在 pano-native 空间推理上整体偏弱（GPT-4o 31.8、Mimo-v2.5 37.2、Qwen3.5-9B 30.8 overall），性能在 BFOV 接地、参考系变换与观察者中心 3D 推理上下滑最明显，而基本物体识别相对较强——主要挑战不在物体语义而在把 ERP 全景当作连续观察者中心表示来推理；提示增强（视觉提示 36.4）只改善粗定位，在球面关系与 3D 空间推理上收益仍然有限（各通用基线 BFOV mIoU 仅 0.7-4.9）。",
+   "stance": "limit",
+   "relation": "限制命题：全景输入对未经 pano-native 训练的现有 MLLM 基本是未解难题（BFOV 接地近零、参考系/3D 推理显著下滑）——综述回答'哪些受限'时，'通用多模态模型直接消费全景'是当前明确受限的任务面，需专用监督与几何感知适配。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.2 开头段总结 Table 2：通用模型弱、下滑集中在 BFOV/参考系/3D；视觉提示只救粗定位。",
+   "locator": "page 7, Section 4.2 与 Table 2",
+   "source_context": "Table 2 shows that general-purpose MLLMs remain weak on pano-native spatial reasoning. Across\nboth proprietary and open-source models, performance drops most clearly on BFOV grounding,\nreference-frame transformation, and viewer-centered 3D reasoning, even when basic object recogni-\ntion is relatively strong. This gap indicates that the main challenge is not object semantics alone, but\nreasoning over the ERP panorama as a continuous observer-centered representation.\nPrompt enhancement improves direct ERP inference, especially for coarse localization, confirming\nthat part of the difficulty lies in the missing spherical coordinate convention. However, these gains\nremain limited on spherical relational reasoning and 3D spatial reasoning, where simply describing\nthe ERP layout is insufficient.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PanoSpace-Bench overall 与 BFOV mIoU（通用 MLLM 基线）",
+    "value_or_direction": "GPT-4o 31.8、Mimo-v2.5 37.2、Qwen3.5-9B 30.8（+visual prompt 36.4）；各通用基线 BFOV mIoU 0.7-4.9",
+    "comparator": "商用/开源通用 MLLM（含提示增强变体） vs PanoWorld 56.5",
+    "task_or_sample": "PanoSpace-Bench 八类 pano-native 空间推理任务",
+    "locator": "page 7, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 general-purpose MLLMs remain weak on pano-native spatial reasoning、performance drops most clearly on BFOV grounding, reference-frame transformation, and viewer-centered 3D reasoning, even when basic object recog- nition is relatively strong、the main challenge is not object semantics alone、Prompt enhancement improves direct ERP inference, especially for coarse localization、these gains remain limited on spherical relational reasoning and 3D spatial reasoning；Table 2 同页逐行核对（GPT-4o 31.8...17.7、Mimo-v2.5 37.2...0.7、Qwen3.5-9B 30.8...1.4、+visual prompt 36.4...4.9、PanoWorld 56.5...73.3）；BFOV mIoU 0.7-4.9 范围由 Table 2 各基线行（0.7/2.9/2.8/2.7/3.1/2.2/2.5/2.1/2.3/1.4/4.9）直接得出。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C08",
+   "claim": "提示工程与朴素微调的边界（条件性）：H*Bench 上通用 Qwen3.5 直接 ERP 推理仅 19.4 overall，文本提示提升到 38.5、视觉提示 40.4——显式坐标指令有帮助但不能解决 pano-native 推理；对 H*Bench 做朴素 ERP 微调反而更差（17.8），说明底座模型缺乏全景空间先验时目标任务监督本身不足；相比之下 pano-native 模型零样本 56.10、H* 微调后 70.00——pano-native 学习提供了从提示工程或朴素任务监督不可恢复的可迁移空间初始化。",
+   "stance": "conditional",
+   "relation": "条件性命题：全景任务的收益取决于训练路线——提示级修复与目标任务微调都不可替代 pano-native 预训练；综述引用'全景提升 X 任务'时应限定为'经 pano-native 训练的模型'，对通用模型+提示或朴素微调的方案不成立（甚至负迁移）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.2 H*Bench 段报告 prompt-only 变体、naive SFT 与 pano-native 模型的三路对比及结论句。",
+   "locator": "page 8, Section 4.2 H*Bench 段（Table 3(b) 同页）",
+   "source_context": "Table 3(b) shows that direct ERP inference with\na generic Qwen3.5 model reaches only 19.4 over-\nall, and prompt engineering improves it to 38.5–\n40.4, suggesting that explicit coordinate instruc-\ntions help but do not solve pano-native reasoning.\nNaive H\n∗\nBench fine-tuning with ERP input per-\nforms even worse (17.8 overall), indicating that\ntarget-task supervision alone is insufficient when\nthe base model lacks panoramic spatial priors. In\ncontrast, our model reaches 56.10 zero-shot and\n70.00 after H\n∗ \nfine-tuning. Together, these results\nshow that pano-native learning provides a trans-\nferable spatial initialization that is not recoverable\nfrom prompting or naive task-specific supervision.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "H*Bench overall 成功率（HOS/HPS 人形视觉搜索）",
+    "value_or_direction": "Qwen3.5 直接 ERP 19.4；+text prompt 38.5；+visual prompt 40.4；naive H* SFT 17.8；Ours zero-shot 56.10、+H* SFT 70.00",
+    "comparator": "prompt-only 变体与 naive SFT（Qwen3.5） vs pano-native 训练（Ours）",
+    "task_or_sample": "H*Bench HOS/HPS（ERP 输入协议）",
+    "locator": "page 8, Table 3(b) 与正文"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 direct ERP inference with a generic Qwen3.5 model reaches only 19.4 overall, and prompt engineering improves it to 38.5–40.4, suggesting that explicit coordinate instructions help but do not solve pano-native reasoning、Naive H*Bench fine-tuning with ERP input per- forms even worse (17.8 overall)、our model reaches 56.10 zero-shot and 70.00 after H* fine-tuning、a transferable spatial initialization that is not recoverable from prompting or naive task-specific supervision；Table 3(b) 同页逐行核对（Qwen3.5-9B 19.4、+Text prompt 38.5、+Visual prompt 40.4、Qwen3.5+H*SFT 17.8、Ours+H*SFT 70.1）；claim 各数字与限定均有原文锚点。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C09",
+   "claim": "零样本迁移到外部人形搜索基准：H*Bench 原协议为透视视图迭代探索，本模型直接以 ERP 全景为输入一步预测方向——PanoWorld 零样本达 overall 56.1（HOS 61.8/HPS 47.5），大幅超过最强已报告透视视图基线 HVS-3B*（38.4），也高于 GPT-4o（21.3）与 Gemini-2.5-Pro（32.3）；作者据此说明 pano-native 监督学到的表示可迁移到下游全景搜索而非过拟合 PanoSpace-Bench。",
+   "stance": "support",
+   "relation": "支持命题：全景原生表示向具身下游任务（人形视觉搜索）的零样本迁移证据——360° 全景输入在人形搜索类任务上同时带来精度优势（+17.7 vs 最强透视基线）与范式优势（一步推理取代迭代旋转）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.2 报告 Table 3(a) 对比：零样本 ERP 输入 56.1 vs 最强透视视图基线 38.4，并给出泛化性解释。",
+   "locator": "page 8, Section 4.2 H*Bench 零样本段（Table 3(a) 同页）",
+   "source_context": "Table 3(a) compares the conventional perspective-view protocol with direct ERP input. Our zero-shot\nmodel reaches 56.10 overall, substantially outperforming the strongest reported perspective-view\nbaseline (38.40). This shows that the representation learned from pano-native supervision transfers to\ndownstream panoramic search rather than overfitting to PanoSpace-Bench alone.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "H*Bench overall/HOS/HPS 成功率（零样本 ERP 输入）",
+    "value_or_direction": "Ours zero-shot 56.1（HOS 61.8、HPS 47.5）vs HVS-3B* 38.4、Gemini-2.5-Pro 32.3、GPT-4o 21.3",
+    "comparator": "最强 perspective-view 基线 HVS-3B*（38.4） vs 零样本直接 ERP（Ours）",
+    "task_or_sample": "H*Bench HOS/HPS 人形视觉搜索",
+    "locator": "page 8, Table 3(a)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 Our zero-shot model reaches 56.10 overall, substantially outperforming the strongest reported perspective-view baseline (38.40)、transfers to downstream panoramic search rather than overfitting to PanoSpace-Bench alone；Table 3(a) 同页逐行核对（GPT-4o 21.3、Gemini-2.5-Pro 32.3、HVS-3B* 38.4 47.3 24.9、Ours zero-shot 56.1 61.8 47.5）；HVS-3B* 标注与 Figure 4 的迭代搜索 vs 一步推理对照（perspective-view iterative search is inefficient...direct ERP input enables holistic reasoning and correct prediction in one step）同页核对；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C10",
+   "claim": "VLN 迁移：R2R-CE Val-Unseen 上仅以 ERP 全景为输入（区别于用全景采样候选透视图做视点选择的既有用法），PanoWorld-VLN 达 54.3 SR/52.1 SPL，较 waypoint 范式的 GridMM +5.3 SR/+11.1 SPL，较 RGB-only 的 StreamVLN +4.1 SR/+5.0 SPL——且在与近期 RGB-only VLN 相同的 R2R/RxR 训练设定下仅用 80% 训练数据；作者结论：直接全景理解为 VLN 提供高效可迁移范式，从碎片化局部视图探索转向统一全环绕空间推理。",
+   "stance": "support",
+   "relation": "支持命题：全景输入在具身导航（VLN）上的量化获益证据——综述'哪些任务获益'的导航侧数字（+5.3 SR/+11.1 SPL vs waypoint 方法，80% 训练数据下超 RGB-only SOTA）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.2 VLN 段报告直接 ERP 输入的 R2R-CE 结果与两类范式（waypoint/RGB-only）对比及 80% 数据设定。",
+   "locator": "page 8, Section 4.2 VLN 段（Table 4 在 page 9）",
+   "source_context": "Quantitative comparison on VLN. We further\nevaluate transfer on R2R-CE Val-Unseen using\nonly ERP panorama as input, which is different\nfrom methods that use panoramas to sample candidate perspective views for viewpoint selection. As\nshown in Table 4, PanoWorld achieves 54.3 SR and 52.1 SPL using only panorama input. Compared\nwith methods that rely on waypoint predictors or use panoramas mainly for candidate-view selection,\nPanoWorld directly consumes the ERP panorama as a unified full-surround observation and improves\nover GridMM by 5.3 SR and 11.1 SPL. It also outperforms recent RGB-only VLN models under\nthe same R2R/RxR training setting, surpassing StreamVLN by 4.1 SR and 5.0 SPL despite using\nonly 80% of the training data. These results suggest that direct panoramic understanding provides\nan efficient and transferable paradigm for VLN, moving beyond fragmented local-view exploration\ntoward unified full-surround spatial reasoning.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "R2R-CE Val-Unseen SR/SPL（NE/OSR 见 Table 4）",
+    "value_or_direction": "SR 54.3、SPL 52.1；较 GridMM +5.3 SR/+11.1 SPL；较 StreamVLN +4.1 SR/+5.0 SPL（80% 训练数据）",
+    "comparator": "GridMM（waypoint 范式）与 StreamVLN（RGB-only）",
+    "task_or_sample": "R2R-CE Val-Unseen 视觉语言导航（直接 ERP 观测，RGB-only 训练设定）",
+    "locator": "page 8, Section 4.2（Table 4, page 9）"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 PanoWorld achieves 54.3 SR and 52.1 SPL using only panorama input、improves over GridMM by 5.3 SR and 11.1 SPL、surpassing StreamVLN by 4.1 SR and 5.0 SPL despite using only 80% of the training data、directly consumes the ERP panorama as a unified full-surround observation；Table 4（page 9）逐行核对（GridMM 5.11 61.0 49.0 41.0、StreamVLN 5.73 56.4 50.2 47.1、PanoWorld-VLN 4.98 59.3 54.3 52.1）；'区别于用全景采样候选视图'的方法学定位同页逐字核对（different from methods that use panoramas to sample candidate perspective views for viewpoint selection）；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C11",
+   "claim": "数据质量消融：两级元数据验证对可靠 ERP 监督重要——从无验证 baseline 出发，检测验证（滤除几何不稳定提议与接地目标）把 overall 从 38.8 提到 46.4，语义验证（去除语义不一致问答对）提到 48.0，两者结合得最佳 55.1 且定位/方向/3D/接缝全面增益——作者确认数据质量是 pano-native 学习的一个主要因素。",
+   "stance": "support",
+   "relation": "支持命题：全景监督的效果以数据验证为前提——综述引用全景大规模自动标注路线时，'两级验证（几何+语言）贡献 38.8→55.1 的 16.3 点'是数据工程侧的关键边界条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.3 Metadata verification 段报告 Table 6 的四档管线消融与结论。",
+   "locator": "page 9, Section 4.3 Metadata verification 段（Table 6 在 page 10）",
+   "source_context": "Metadata verification. Table 6 shows that both verification modules are important for reliable ERP\nsupervision. Starting from the unverified baseline, detection verification improves overall accuracy\nfrom 38.8 to 46.4 by filtering geometrically unstable proposals, while semantic verification raises it\nto 48.0 by removing inconsistent language-region pairs. Combining both yields the best result of\n55.1, with gains across localization, directional reasoning, 3D reasoning, and seam continuity. This\nconfirms that data quality is a major factor in pano-native learning.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PanoSpace-Bench overall（元数据验证消融）",
+    "value_or_direction": "baseline 38.8→+检测验证 46.4→+语义验证 48.0→完整管线 55.1",
+    "comparator": "无验证 baseline vs +Det. Verif. vs +Sem. Verif. vs Full pipeline",
+    "task_or_sample": "同一 PanoSpace-Bench 划分上的管线消融",
+    "locator": "page 9, Section 4.3（Table 6, page 10）"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 detection verification improves overall accuracy from 38.8 to 46.4 by filtering geometrically unstable proposals、semantic verification raises it to 48.0 by removing inconsistent language-region pairs、Combining both yields the best result of 55.1, with gains across localization, directional reasoning, 3D reasoning, and seam continuity、confirms that data quality is a major factor in pano-native learning；Table 6（page 10）逐行核对（baseline 38.8、w/Detection Verification 46.4、w/Semantic Verification 48.0、Full pipeline 55.1）；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C12",
+   "claim": "架构消融：比较残差融合与交叉注意力在 patch/merge/output 三种插入位置——patch 级交叉注意力整体最佳，把准确率从 0.484 提升到 0.551 并取得最强球面关系均值（0.460）与 3D 空间均值（0.488）；残差融合在部分设定（尤其接缝连续性）有帮助但在关系密集类别上不一致——支持 SSCA 设计结论：球面几何在早期（patch 级）经与视觉 token 的内容依赖交互注入最有效。",
+   "stance": "support",
+   "relation": "支持命题：全景几何注入方式的效果边界——'几何早注入+内容依赖交互'优于晚注入与残差直加，为全景模型适配给出可复用的设计规则（Table 7 中 Cross-Attn Patch 55.1 vs 无适配 Qwen3.5 48.40）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.3 Architecture ablation 段报告 Table 7 的融合机制×插入位置消融与 SSCA 设计结论。",
+   "locator": "page 9, Section 4.3 Architecture ablation 段（Table 7 在 page 10）",
+   "source_context": "Architecture ablation. Table 7 compares residual fusion and cross-attention at different insertion\npositions. Patch-level cross-attention performs best overall, improving accuracy from 0.484 to 0.551\nand yielding the strongest spherical relation average (0.460) and 3D spatial average (0.488). Residual\nfusion also helps in some settings, especially seam continuity, but is less consistent on relation-heavy\ncategories. These results support the proposed SSCA design: geometry is most effective when\ninjected early and through content-dependent interaction with visual tokens.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PanoSpace-Bench overall/球面关系均值/3D 空间均值（架构消融）",
+    "value_or_direction": "patch 级 cross-attention 0.484→0.551；球面关系均值 0.460；3D 空间均值 0.488",
+    "comparator": "residual fusion and cross-attention at different insertion positions（patch/merge/output；无适配 Qwen3.5 对照见 Table 7）",
+    "task_or_sample": "同一 PanoSpace-Bench 划分上的架构消融",
+    "locator": "page 9, Section 4.3（Table 7, page 10）"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 Patch-level cross-attention performs best overall, improving accuracy from 0.484 to 0.551 and yielding the strongest spherical relation average (0.460) and 3D spatial average (0.488)、Residual fusion also helps in some settings, especially seam continuity, but is less consistent on relation-heavy categories、geometry is most effective when injected early and through content-dependent interaction with visual tokens；Table 7（page 10）逐行核对（Qwen3.5 48.40、Residual Patch 51.50、Cross-Attn Patch 55.10 92.80 72.60...48.80 64.80）；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C13",
+   "claim": "推理效率：H* 任务上直接 ERP 推理仅需 1 步/1 次模型调用/16.5k 有效输入 token 并维持完整 360° 空间覆盖；透视视图旋转范式平均需 3.58-6.34 次交互步与 18.7k-29.9k 有效输入 token，对应 1.13-1.81× 于直接 ERP 推理的成本，且旋转法每步只观察局部 FoV——直接全景推理以单次前向把迭代局部视图搜索替换为统一高效的全环绕推理范式。",
+   "stance": "support",
+   "relation": "支持命题：全景输入的具身效率获益——全环绕观测把多步旋转交互压缩为单步单调用（token 成本降 13%-81%），是'哪些任务获益'中导航/搜索类任务的推理成本维度证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix D 与 Table 14 报告视角旋转 vs 直接 ERP 的交互步/调用数/有效输入 token/相对成本对比。",
+   "locator": "page 22, Appendix D Efficiency Study 与 Table 14",
+   "source_context": "As shown in Table 14, perspective-view rotation requires 3.58–6.34 interaction steps on average,\nleading to 18.7K–29.9K effective input tokens. This corresponds to 1.13–1.81× the cost of direct ERP\ninference. Our method requires only one step and one model call, with 16.5K effective input tokens,\nwhile maintaining full 360\n◦ \nspatial coverage. This demonstrates that pano-native spatial learning\nreplaces iterative local-view search with a unified and efficient full-surround inference paradigm.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "交互步数/模型调用数/有效输入 token（H* 任务）",
+    "value_or_direction": "直接 ERP 1 步、1 次调用、16.5k tokens；perspective 旋转 3.58-6.34 步、18.7k-29.9k tokens（1.13-1.81× 成本）",
+    "comparator": "Qwen3-VL-4B/8B、H*-trained Qwen2.5-VL/Qwen3-VL 视角旋转 vs Ours 直接 ERP",
+    "task_or_sample": "H*Bench 人形视觉搜索推理效率对比",
+    "locator": "page 22, Table 14"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 22 逐字给出 perspective-view rotation requires 3.58–6.34 interaction steps on average, leading to 18.7K–29.9K effective input tokens、1.13–1.81× the cost of direct ERP inference、Our method requires only one step and one model call, with 16.5K effective input tokens, while maintaining full 360◦ spatial coverage、replaces iterative local-view search with a unified and efficient full-surround inference paradigm；Table 14 同页逐行核对（6.27/6.34/3.70/3.58 步，29.6k/29.9k/19.2k/18.7k tokens，1.80×/1.81×/1.16×/1.13×，Ours Direct ERP 1600×800 1.00 1.00 16.5k 1.00×）；'每步只观察局部 FoV'同页逐字核对（Rotation-based methods observe only one local FoV at each step）；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C14",
+   "claim": "作者自述限制：(1) 元数据构建管线依赖自动开放世界检测、MLLM 语义标注、指代复检与全景深度估计——尽管引入两级验证提升可靠性，这些组件的错误仍可能传播到最终元数据图；(2) PanoSpace-Bench 定位为观察者中心 ERP 空间推理的诊断性基准，因此不覆盖所有全景任务，如长时程具身交互、动态场景或多智能体导航；作者据此提出未来方向：更可靠的全景感知模块与更强跨模态验证（数据侧），以及把 pano-native 基准从静态 ERP 推理扩展到交互导航、时序全景视频与动态 3D 环境（评测侧）。",
+   "stance": "limit",
+   "relation": "限制命题：作者明示该路线的两条硬边界——监督数据含自动管线噪声（两级验证不消除传播）、基准与设定止于静态 ERP（不含长时程具身交互/动态场景/多智能体）；综述引用其具身收益时必须保留这两条限定。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Appendix F Limitations 给出元数据噪声传播与基准诊断范围两项限制及对应未来方向。",
+   "locator": "page 22, Appendix F Limitations",
+   "source_context": "While PanoWorld demonstrates strong pano-native spatial reasoning, several limitations remain.\nFirst, our metadata construction pipeline relies on automatic open-world detection, MLLM-based\nsemantic annotation, referring re-detection, and panoramic depth estimation. Although we introduce\ntwo-level verification to improve reliability, errors from these components may still propagate to\nthe final metadata graph. Second, PanoSpace-Bench is designed as a diagnostic benchmark for\nobserver-centered ERP spatial reasoning, and therefore does not cover all possible panoramic tasks,\nsuch as long-horizon embodied interaction, dynamic scenes, or multi-agent navigation.\nThese limitations suggest several directions for future work. On the data side, more reliable panoramic\nperception modules and stronger cross-modal verification could further improve metadata quality.\nOn the evaluation side, extending pano-native benchmarks from static ERP reasoning to interactive\nnavigation, temporal panoramic videos, and dynamic 3D environments would provide a broader\ntestbed for full-surround spatial intelligence.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 22 逐字给出 our metadata construction pipeline relies on automatic open-world detection, MLLM-based semantic annotation, referring re-detection, and panoramic depth estimation. Although we introduce two-level verification to improve reliability, errors from these components may still propagate to the final metadata graph 与 PanoSpace-Bench is designed as a diagnostic benchmark...therefore does not cover all possible panoramic tasks, such as long-horizon embodied interaction, dynamic scenes, or multi-agent navigation 及 future-work 两句（more reliable panoramic perception modules and stronger cross-modal verification、extending pano-native benchmarks from static ERP reasoning to interactive navigation, temporal panoramic videos, and dynamic 3D environments）；claim 为作者限制陈述的忠实复述，未附加论文外断言。"
+   }
+  },
+  {
+   "card_id": "2605.13169-C15",
+   "claim": "具身部署证据缺口：论文动机与任务叙事面向导航/机器人搜索等具身场景，但全部具身评测止于静态 ERP 全景上的问答与搜索（PanoSpace-Bench 2,000 题、H*Bench 静态全景一步方向预测）以及 R2R-CE 协议下的导航评测——无实体机器人、机载部署或真实环境闭环实验；且 ERP 全景输入被假定为上游已提供（训练与评测直接消费 Realsee3D/360+X/网络/街景 API 等既有全景数据），鱼眼/全景传感端的获取管线（相机阵列、拼接、标定）在本文中不可见。",
+   "stance": "gap",
+   "relation": "缺口命题：从'全景超感知'主张到真实具身部署之间缺两环证据——实机/动态环境闭环任务、以及传感端 ERP 获取质量对下游推理的影响；综述回答'哪些任务获益'时应把本文获益限定为静态全景与仿真导航协议内的结果，实机收益标注为未验证。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "Appendix B.3 确认 R2R-CE 评测为直接全景输入的离线协议；主实验（page 7-10）与附录（page 15-22）范围内无实机实验与传感端描述；训练语料来源见 page 15 Table 9。",
+   "locator": "page 20, Appendix B.3 R2R-CE 评测协议段（实验范围核对：page 7-10 主实验与 page 18-21 附录；语料来源 page 15 Table 9）",
+   "source_context": "We further evaluate transfer to embodied navigation on R2R-CE Val-Unseen. Unlike conventional\nVLN methods that often use panoramas to construct candidate perspective views or rely on additional\nobservations such as odometry, depth, or single-view RGB streams, our model directly takes the ERP\npanorama as the visual observation and predicts the navigation direction from the full-surround input.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 20 逐字给出 We further evaluate transfer to embodied navigation on R2R-CE Val-Unseen、our model directly takes the ERP panorama as the visual observation and predicts the navigation direction from the full-surround input，确认具身评测为全景输入的离线/协议化设定；'无实体机器人/机载/闭环实验与传感端不可见'基于通读 page 5-10 实验设置（三个基准均为静态全景问答/搜索或 R2R-CE 协议）、page 15 Table 9 训练语料全部为既有全景来源、page 22 限制节（作者自认不覆盖 long-horizon embodied interaction/dynamic scenes）的对照推断；该推断若因后续版本补充实机部署或传感端实验而被削弱，应相应修订本卡。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[52] Yu et al., Thinking in 360: Humanoid visual search in the wild (arXiv 2511.20351)",
+   "reason": "H*Bench 人形视觉搜索基准与'全景分解为局部视图'的对照路线，本文主要具身迁移评测对象与效率对比基线。"
+  },
+  {
+   "ref": "[20] Krantz et al., Beyond the Nav-graph: VLN in continuous environments (ECCV 2020)",
+   "reason": "R2R-CE 连续环境导航协议来源，本文 VLN 迁移外部效度的载体。"
+  },
+  {
+   "ref": "[25] Lin et al., Depth any panoramas: A foundation model for panoramic depth estimation (arXiv 2512.16913)",
+   "reason": "元数据管线伪深度的外部依赖，其质量决定深度感知 3D 关系标签的上限。"
+  },
+  {
+   "ref": "[24] Lin et al., One flight over the gap: A survey from perspective to panoramic vision (arXiv 2509.04444)",
+   "reason": "全景-透视表示差距（畸变/非均匀采样/边界不连续）的综述依据，本文问题动机的引用支撑。"
+  },
+  {
+   "ref": "[63] Zhou et al., Dense360 (arXiv 2506.14471) 与 [57] Zhang et al., 360-R1 (arXiv 2505.14197)",
+   "reason": "最接近的邻接全景 MLLM 工作（Table 1 资源对比与相关工作定位）。"
+  }
+ ],
+ "notes": "alphaxiv 文本层提取（extraction.method 记 pdf-text），22 页双栏 CVPR 风格，附录 A-F 完整。定位器统一 page N。本文是'全景作为 MLLM 原生输入'的模型/数据侧路线代表：与 2604.13476（环视传感→NVS 渲染系统侧）、2609.02319（多鱼眼→机载拼接硬件侧）构成同一综述问题下的三层互补证据（传感端/表示端/任务端）。注意本文无鱼眼硬件内容，'ERP 获取被假定上游解决'已作为读者推断边界（C15 与 limitations.reader_inferred）记录，综述引用时应把该文的具身收益限定在静态全景与仿真协议内。"
+}

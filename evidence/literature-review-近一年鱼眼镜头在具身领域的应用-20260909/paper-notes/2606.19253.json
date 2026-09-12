@@ -1,0 +1,591 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.19253",
+  "title": "OneCanvas: 3D Scene Understanding via Panoramic Reprojection",
+  "published": "2026-06",
+  "url": "https://arxiv.org/abs/2606.19253",
+  "authors": [
+   "Bartłomiej Baranowski",
+   "Dave Zhenyu Chen",
+   "Matthias Nießner"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是『全景格式作为具身 3D 空间推理统一表征』路线的代表方法工作：把已标定多视角 RGB-D 的 patch 特征提升到 3D 后重投影到单一 ERP 全景画布，配 3D 度量位置嵌入与空间预训练课程，冻结架构地在 Qwen3-VL-8B 上取得 SQA3D/VSI-Bench/SPBench 三基准 SOTA 且训练算力低一个数量级。对鱼眼综述的价值：(1) 提供全景/ERP 格式在具身空间问答上的收益证据与任务面分布（视角依赖题型、多视角 MCQ、路径规划获益最大；逐实例计数受损）；(2) 提供机制级归因（画布原点=智能体位姿驱动 Which 增益、3D 位置嵌入驱动度量读数、课程驱动路径规划）；(3) 提供 ERP 格式的边界证据（原始像素 ERP 畸变伤害 VLM、特征投影吸收畸变、度量深度丢失需显式嵌入补偿、需要逐帧深度+位姿）。注意：本文的全景是『虚拟全景』（特征重投影产物），输入是常规 pinhole 多视角 RGB-D，不是物理鱼眼/全景相机——综述引用时须按『全景格式的表征层价值与边界』口径使用，不能当作物理全景相机硬件证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-3, Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：3D-aware VLM 的两条既有路线（几何编码器融合/数据规模放大）成本高且场景仅逐帧可见；文本先验审计（Ma et al. 2026）显示几何输入常不被真正使用；OneCanvas 以输入准备代替架构改造。"
+   },
+   {
+    "locator": "page 4-7, Section 3 Method",
+    "role": "method-or-design",
+    "purpose": "精读表征构造：特征提升（depth+pose）、连续经纬度画布放置（无栅格化）、3D 位置嵌入（136 通道）、MRoPE 坐标内容替换；两阶段训练（stage-1 空间课程 LoRA r=256 + stage-2 下游适配 r=64）。"
+   },
+   {
+    "locator": "page 4, Section 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "梳理几何扩展/数据放大两族 3D VLM、统一场景表征（PanoGrounder/PanoEnv/BEV lift-project 范式）与 ERP 畸变对现成 VLM 的挑战。"
+   },
+   {
+    "locator": "page 7-9, Section 4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取三基准主结果（Table 1/2/3）、实现细节（K=32 帧、GT 深度位姿优先）、组件消融（Table 4）、画布原点消融（Table 5）与物体计数反例。"
+   },
+   {
+    "locator": "page 9-10, Section 5 Conclusion and Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "汇集作者自述限制：深度+位姿依赖、位姿失败退化画布、全局全景换精细精度（超大/室外受限）、手工课程、骨干需 ≥2D 位置编码、单骨干验证。"
+   },
+   {
+    "locator": "page 13-17, Appendix A/B/C",
+    "role": "appendix-or-supplement",
+    "purpose": "审读课程内容对比（Table 6 合成框 vs 场景物体 70.1/69.4）、训练算力归一化（Table 7/8/9，290 vs 27,648 A100 等效 GPU 时）与六族课程任务的精确定义。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 10-13, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 参考文献列表，无正文内容。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何让预训练 VLM 从普通多视角视频可靠地回答 3D 空间问题（哪里/多远/朝哪/可见性），而不依赖几何编码器融合或大规模空间 QA 数据？核心手段：把全部视角的 patch 特征按深度+位姿提升并重投影到单一 ERP 全景画布（连续经纬度+度量位置嵌入），VLM 原样消费；配抑制捷径的空间预训练课程。",
+ "contributions": [
+  "全景特征重投影机制：多视角 patch 特征提升到 3D 后按连续经纬度放置于单一 ERP 画布，画布原点/朝向可自由选择（场景中心或智能体位姿），VLM 无架构修改地消费该表示。",
+  "3D 度量位置嵌入：136 通道（逐轴正弦 16 频率+径向原语 8 频率+单位方向直通）经 2 层 MLP 与学习门注入特征，补偿角坐标折叠丢失的度量深度，保持 3D-RoPE 预训练语义。",
+  "空间预训练课程：在空画布上程序化放置真实图像 patch 于选定 3D 位置，在线生成六族几何任务（度量/自我中心方向/多轮导航/可观测性/计数/多目标框），答案分布受控以压制场景统计捷径。",
+  "三基准 SOTA + 低算力：SQA3D 65.3 EM@1（+2.3）、VSI-Bench 70.1、SPBench 零样本 72.1（+4.8），训练算力 290 A100 等效 GPU 时（最强对手 95 倍）。",
+  "画布原点消融：智能体位姿中心化（65.3 EM@1）稳定优于场景中心（61.2）/随机相机（61.4）/场景外（59.8），视角依赖题型（Which 74.4 vs 58.7）差距最大。"
+ ],
+ "method": {
+  "summary": "表征侧：每帧图像经 Qwen3-VL 冻结视觉编码器得 patch 特征图，逐 patch 用深度 z、缩放后内参与 camera-to-world 位姿 T_k∈SE(3) 提升到世界坐标；再相对画布原点 c 与朝向 R 计算连续经度/纬度，把每个 patch 作为独立 token 放在 ERP 画布的连续 (φ,θ) 位置上（不栅格化、不跨视图聚合，共置 patch 由注意力消解）；patch 的 MRoPE 三轴分别填经度（W∈[-π,π]）、纬度（H）、源帧序号（T），线性重缩放到 [0,100]；136 通道度量位置嵌入（画布系偏移的逐轴正弦 16 频率+径向原语 8 频率+单位方向直通）经 2 层 MLP 与学习标量门加进特征。训练侧两阶段：stage-1 在空画布上程序化放置 ScanNet/ScanNet++/ARKitScenes 真实 patch 特征构成的六族几何任务（家族平权采样），训练 LoRA r=256；合并后 stage-2 用 r=64 新适配器在 VLM-3R-VSIBench/SQA3D/ViCA≈70/15/15 混合数据上微调 10k 步。推理：每场景采 K=32 帧，画布原点按任务选择（SQA3D 用标注智能体位姿、SPBench 单图查询用查询位姿、其余用相机质心），320×240（SQA3D）或 640×480（VSI/SPBench）分辨率，GT 深度/位姿优先、损坏时回退前馈重建估计。",
+  "assumptions": [
+   "输入为已标定的多视角 RGB-D（pinhole 内参 + 逐帧位姿）；深度与位姿或来自数据集 GT 或来自前馈重建估计。",
+   "骨干 VLM 具备 ≥2D 位置编码（多轴 RoPE）以承载经纬度；Qwen3-VL-8B 为唯一验证骨干。",
+   "空间推理能力可通过几何答案因果依赖输入的课程获得，且答案分布控制可压制语言/场景先验捷径。",
+   "连续 token 位置的注意力可以消解共置 patch 的歧义，无需手工归约规则。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "SQA3D（ScanNet 情境问答，test split，Table 1 十四方法对比）",
+   "VSI-Bench（室内视频八空间子任务，Table 3 十方法对比）",
+   "SPBench（单图+多视角空间推理，零样本评测，Table 2 六方法对比）",
+   "课程 patch 池：ScanNet / ScanNet++ / ARKitScenes 的 held-out 场景激活",
+   "stage-2 混合：VLM-3R-VSIBench / SQA3D / ViCA ≈ 70/15/15"
+  ],
+  "tasks": [
+   "3D 情境问答（SQA3D：What/Is/How/Can/Which/Others 六题型 + EM@1/EM@R1）",
+   "室内视频空间推理（VSI-Bench：物体计数/绝对距离/物体大小/房间大小/相对距离/相对方向/路径规划/出现顺序）",
+   "零样本空间推理（SPBench 多视角 NQ/MCQ + 单图 NQ/MCQ）",
+   "stage-1 六族合成几何任务（度量测量/自我中心方向/多轮导航/可观测性/计数/多目标框）"
+  ],
+  "embodiments": [
+   "以机器人/AR 助手/自主代理的空间问答为动机（引言），SQA3D 情境以智能体位姿为画布原点",
+   "全部实验为感知/问答基准，无动作控制闭环"
+  ],
+  "sample_or_scale": "8×A6000（580 原始 GPU 时/290 A100 等效）两阶段训练；每场景 K=32 帧；输入 320×240~640×480；Qwen3-VL-8B 唯一骨干。"
+ },
+ "evaluation": {
+  "design": "三基准评测：SQA3D test split（EM@1/EM@R1+六题型）、VSI-Bench（八子任务）、SPBench 零样本（多视角/单图 NQ+MCQ）；组件消融（Table 4：完整/去 3D PE/去课程/仅画布/基础 VLM，LoRA 容量对齐 r=256）；画布原点消融（Table 5：智能体位姿/场景中心/随机相机/场景外，同一检查点）；课程内容对比（Table 6：合成框 vs 场景物体）；训练算力归一化对比（Table 7/8/9）。",
+  "baselines": [
+   "SQA3D：PQ3D、3D-VisTA、LEO、SIG3D、Scene-LLM、ChatScene、Video-3D LLM、GPT4Scene-HDM、VLM-3R、SpaceMind、SR-3D、Loc3R-VLM、Ross3D（点云/视频/几何编码器三族）",
+   "SPBench：Video-R1、SpaceR-7B、VILASR-7B、Spatial-MLLM-4B、SpaceMind（零样本）",
+   "VSI-Bench：Spacer、ViLaSR、Spatial-MLLM、ViCA、VLM-3R、VST、Cambrian-S、SenseNova-SI、SpaceMind",
+   "消融基线：Base VLM（Qwen3-VL-8B 直接吃多视角输入）"
+  ],
+  "metrics": [
+   "EM@1 / EM@R1（SQA3D）",
+   "各子任务准确率与总平均（VSI-Bench）",
+   "NQ/MCQ/平均准确率（SPBench 零样本）",
+   "A100 等效 GPU 时（训练算力归一化）"
+  ],
+  "ablations": [
+   "组件消融（Table 4）：70.1→69.0（去 3D PE）→66.6（再去课程）→63.7（仅画布）→63.5（基础 VLM）",
+   "画布原点（Table 5）：Agent pose 65.3 > Random camera 61.4 > Scene center 61.2 > Outside scene 59.8 EM@1",
+   "课程内容（Table 6）：合成框 70.1 vs 场景真实物体 69.4（VSI-Bench）",
+   "算力（Table 7/9）：290 vs 240/1,320/4,800/27,648 A100 等效 GPU 时"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "三基准 SOTA：SQA3D 65.3 EM@1（+2.3，此前最佳 Ross3D 63.0）、VSI-Bench 70.1 平均、SPBench 零样本 72.1（+4.8，次佳 SpaceMind 67.3）。",
+   "scope": "SQA3D/VSI-Bench/SPBench 统一评测口径",
+   "locator": "page 3, Section 1; page 8, Tables 1-3"
+  },
+  {
+   "finding": "增益集中于全景机制直接支撑的能力：多视角 MCQ 91.8（次佳 76.2）、路径规划 59.8（表内次佳 48.5）、Which 题型 74.4（次佳 60.1）；单图/视角无关题型增益小。",
+   "scope": "SPBench/VSI-Bench/SQA3D 分题型",
+   "locator": "page 7, Section 4.2; page 8, Tables 1-3"
+  },
+  {
+   "finding": "机制归因（消融）：3D 位置嵌入→度量读数（房间大小 76.5→69.8）；stage-1 课程→路径规划（59.8→46.4）；统一画布→跨场景关系（相对方向提升最大）；智能体位姿原点→情境题型（Which 74.4 vs 场景中心 58.7）。",
+   "scope": "VSI-Bench/SQA3D 消融",
+   "locator": "page 9, Tables 4-5"
+  },
+  {
+   "finding": "成本：290 A100 等效 GPU 时，比最强对手 SenseNova-SI（27,648）低 95 倍；作者披露归一化偏向低估对手算力、保守换算下数量级结论不变。",
+   "scope": "训练算力归一化对比",
+   "locator": "page 14-15, Appendix B, Tables 7-9"
+  },
+  {
+   "finding": "反例与边界：物体计数 68.4 低于基础 VLM 71.3（疑因重投影误差碎片化/合并实例）；需要深度+位姿、位姿失败退化画布；超大/室外场景受限；骨干需 ≥2D 位置编码。",
+   "scope": "VSI-Bench 消融与作者 Limitations",
+   "locator": "page 9, Section 4.3 and Section 5; page 10, Section 5"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "需要深度与相机位姿（纯 RGB 方法可避免）；位姿估计失败会使画布退化（前馈度量重建在缩小差距）。",
+    "locator": "page 9, Section 5, Limitations"
+   },
+   {
+    "limitation": "单一全局全景以精细空间精度换紧凑性，可能限制非常大或室外场景。",
+    "locator": "page 9-10, Section 5, Limitations"
+   },
+   {
+    "limitation": "预训练课程为手工设计：新增定性新空间技能需编写新任务生成器而非收集更多数据。",
+    "locator": "page 10, Section 5, Limitations"
+   },
+   {
+    "limitation": "方法假设骨干至少有 2D 位置编码承载经纬度（Qwen3-VL 类多轴 RoPE 成立、1D 位置模型不成立）；全部实验仅用 Qwen3-VL-8B，跨骨干验证留作未来工作。",
+    "locator": "page 10, Section 5, Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "『全景』是虚拟表征而非物理相机：输入是常规 pinhole 多视角 RGB-D，鱼眼/全景相机的原始畸变建模不在本文范围内——不能作为物理全景相机硬件收益的证据，只能作为 ERP 格式表征价值的证据；物理全景相机需先解决畸变标定或改走特征重投影。",
+    "basis": "page 4 Sec 3 Method（pinhole intrinsics 假设）与 page 4 Related Work（畸变被投影几何吸收的前提是已有深度+位姿的特征管线）；全文无任何鱼眼/物理全景传感器实验"
+   },
+   {
+    "boundary": "无文本先验对照基线：论文自己引用的审计（Ma et al. 2026：文本-only 基线在 SQA3D 类基准可匹敌几何感知模型），但 Table 1 未含文本-only 对照行，+2.3 EM@1 的几何使用归因主要靠分题型间接论证（Which/Can 增益）与零样本 SPBench 支撑。",
+    "basis": "page 2 Introduction 引用 audits 段与 page 8 Table 1 方法列表（无 text-only 行）"
+   },
+   {
+    "boundary": "无方差/显著性/多种子报告：全部表格为单值；消融差距（如 70.1 vs 69.0）在无不确定性下应视为点估计。",
+    "basis": "page 8-9 Tables 1-5 均为单值；Sec 4 未声明重复实验"
+   },
+   {
+    "boundary": "评测分辨率与帧数固定（K=32、320×240~640×480）：更高分辨率/更多帧对精细空间任务的影响未测；物体计数已显示重投影精度敏感。",
+    "basis": "page 7 Sec 4.1 Implementation Details（K=32、分辨率设定）；全文无分辨率/帧数敏感性实验"
+   },
+   {
+    "boundary": "外部效度限于室内基准（ScanNet 系/VSI-Bench/SPBench）：无室外、无动态场景、无真实机器人在线闭环；『具身』证据止于情境问答与位姿中心化。",
+    "basis": "page 7 Sec 4.2 三个评测基准均为室内静态场景；引言的机器人动机无机器人实验支撑"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：已标定多视角 RGB-D（pinhole + 逐帧位姿）输入的具身空间问答/推理（SQA3D 情境问答、VSI-Bench 室内空间子任务、SPBench 零样本多视角/单图）；骨干需多轴 RoPE 类 ≥2D 位置编码（Qwen3-VL-8B 唯一验证）；需逐帧深度+位姿（GT 或前馈重建）；8×A6000 约 72.5h 训练量级；K=32 帧、320×240~640×480 分辨率。证据支持：全景画布+智能体位姿中心化对视角依赖情境题型、多视角 MCQ、路径规划、房间大小等度量读数获益；ERP 畸变在特征投影下被吸收。未验证/不适用：物理鱼眼/全景相机的原始成像（pinhole 假设，畸变建模不在范围）；室外与超大场景；1D 位置编码骨干；逐实例计数的精细分离（重投影误差敏感）；动作控制闭环；任何真实机器人部署。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "消融链条完整且各归因清晰：表征（画布/3D PE）、训练（课程）、配置（画布原点）三层消融把『全景格式哪部分带来哪种能力』拆开验证，是表征类工作少见的归因粒度。",
+   "算力对比方法学透明：A100 等效归一化的换算口径、偏向性讨论（低估对手算力）与保守带宽换算的稳健性检查全部披露。",
+   "任务面正反证据都报告：物体计数上基础 VLM 领先的反例与疑因（重投影精度）被诚实呈现，未隐藏不利子任务。",
+   "课程设计针对已知审计问题（文本先验捷径）：答案分布控制+外观与几何解耦的合成对象，直面 SQA3D 类基准的语言先验污染问题。"
+  ],
+  "design_risks": [
+   "无文本-only 对照基线：在作者自己引用的『文本先验可匹敌几何模型』审计背景下，Table 1 缺该对照使 SOTA 声明的几何使用归因需依赖间接证据（分题型+零样本）。",
+   "全部单值结果、无方差/种子/显著性：消融差距 1.1pp（70.1→69.0）的统计稳健性未知。",
+   "单骨干（Qwen3-VL-8B）验证：方法对骨干位置编码形式的硬依赖（≥2D RoPE）未在第二骨干上检验。",
+   "依赖 GT 深度/位姿（仅小部分回退前馈估计）：真实机器人在线条件下深度/位姿噪声对画布质量的影响未量化，位姿失败仅作为 Limitations 提及。",
+   "分辨率/帧数固定（K=32、最高 640×480）：精细空间精度已显示敏感（计数反例），更高分辨率下的代价-收益未测。"
+  ],
+  "baseline_fairness": "总体公平：三基准对比方法覆盖点云/视频/几何编码器/数据放大四族代表性方法，SPBench 统一零样本口径，消融中 LoRA 容量对齐（r=256 匹配两阶段总量）；算力归一化偏向对手（作者自证 biases against our method）。缺口：无文本-only 对照（对 SQA3D 尤其相关）；对比方法各自的输入模态差异（点云 vs RGB-D）由任务性质决定而非调参不公。",
+  "metric_validity": "EM@1/EM@R1 与各子任务准确率为社区标准指标；SPBench 零样本设计有效压制训练数据泄漏；但均为单值报告、无不确定性；VSI-Bench 部分子任务（Obj.Cnt.）已知的文本先验敏感性问题未被对照量化；作者用分题型分析（Which/Can 增益）与零样本结果部分弥补。",
+  "reproducibility": "方法与训练细节披露充分（K=32、分辨率、LoRA 超参、两阶段流程、课程六族任务在 Appendix C 逐任务定义、算力归一化方法学在 Appendix B）；骨干/数据集/评测协议均可复现；缺口：课程任务的采样分布参数（间隔/角度裕度等）部分在正文、代码与画布构造的工程细节依赖项目页承诺。",
+  "external_validity": "结论限于室内静态场景的已标定多视角 RGB-D 空间问答；对物理鱼眼/全景相机输入、室外/超大场景、动态环境、真实机器人在线闭环均未验证；『situated reasoning』的具身价值主张以基准题型（Which/Can）与画布原点消融间接支撑，无机器人系统级证据；单骨干结论对 1D 位置编码模型明确不适用（作者自述）。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.19253-C01",
+   "claim": "OneCanvas 的核心表征：把来自全部视角的 patch 特征按其深度与相机位姿提升到 3D 世界坐标，再按该点相对画布原点的连续经纬度放置到单一等距柱状（equirectangular）全景画布上，不做栅格化、不做跨视图聚合；3D 位置嵌入把 patch 的度量坐标加回特征，以弥补世界位置折叠到角坐标时丢失的深度；预训练 VLM 像消费普通图像一样消费该表示，骨干无融合器、无重大架构修改。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：全景/ERP 格式在具身 3D 场景理解中存在一条『表征层』路线——不改造 VLM 架构，而是把多视角观测重投影为单一全景画布作为统一输入格式；这为全景格式（与物理全景相机互补）进入具身空间推理管线提供了代表性机制。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要与引言给出机制四要素：深度+位姿提升、连续经纬度放置（无栅格化）、3D 位置嵌入恢复度量信息、VLM 原样消费。",
+   "locator": "page 1, Abstract",
+   "source_context": "Instead, OneCanvas aggregates patch fea-\ntures from all views onto a single equirectangular panoramic canvas. Namely, each\npatch is unprojected to a 3D world coordinate using its depth and camera pose, then\nplaced on the canvas at the continuous longitude and latitude of that point as seen\nfrom the canvas origin, with no rasterization or aggregation across overlapping\nviews. A 3D position embedding of the patch’s metric coordinates is added to its\nfeature, restoring the depth lost when collapsing the world position to an angular\ncanvas coordinate. Patches from all frames thus share one spatial coordinate system\nwith no fusion or major architectural modifications of the backbone. The pretrained\nVLM consumes this representation as if it were an ordinary image.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 Instead, OneCanvas aggregates patch features from all views onto a single equirectangular panoramic canvas、each patch is unprojected to a 3D world coordinate using its depth and camera pose, then placed on the canvas at the continuous longitude and latitude of that point as seen from the canvas origin, with no rasterization or aggregation across overlapping views、A 3D position embedding of the patch's metric coordinates is added to its feature, restoring the depth lost when collapsing the world position to an angular canvas coordinate、Patches from all frames thus share one spatial coordinate system with no fusion or major architectural modifications of the backbone. The pretrained VLM consumes this representation as if it were an ordinary image；claim 各分句逐点对应，未附加原文之外的断言。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C02",
+   "claim": "为恢复 ERP 全景折叠丢失的度量信息，OneCanvas 为每个 patch 编码画布系下的度量偏移：逐轴正弦（x/y/z 各 16 个对数间隔频率）+ 径向原语（范数与水平径距各 8 个频率）+ 单位射线方向直通，共 136 通道，经 2 层 MLP 投影后以可学习标量门加到 patch 特征上；作者强调以特征空间注入而非新增 RoPE 维度，以保持 3D-RoPE 预训练的角/时语义不变。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：全景/ERP 格式把 3D 世界折叠为 2D 角坐标会丢失度量深度——这是全景表征的固有信息损失，OneCanvas 用显式度量位置嵌入作为补偿机制的代表性做法。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec 3.2 的 3D position embedding 段：136 通道编码 = 逐轴正弦（16 频率）+ 径向原语（8 频率）+ 单位方向直通，2 层 MLP + 学习标量门注入特征。",
+   "locator": "page 5, Section 3.2, 3D position embedding",
+   "source_context": "3D position embedding. A 2D VLM picks up only a class-conditioned scale prior from pix-\nels, not a metric reading of the actual layout. We supply explicit per-patch metric position by\nencoding the canvas-frame offset q\ni \n= (q\nx\n, q\ny \n, q\nz \n) as the concatenation of (i) per-axis sinusoids\n{sin(ω\nk\nq\na\n), cos(ω\nk\nq\na\n), q\na\n} for a ∈ {x, y, z} at 16 log-spaced frequencies ω\nk \n∈ [0.1, 100] rad/m,\n(ii) the same form on the radial primitives ∥q\ni\n∥ and r\nxz \n= \np\nq\n2\nx \n+ q\n2\nz \nat 8 log-spaced frequencies\nν\nk \n∈ [0.1, 10] rad/m, and (iii) the unit-ray direction q\ni\n/∥q\ni\n∥ as raw passthrough. These radial\nprimitives directly expose quantities relevant to pairwise distance and horizontal-radial reads such\nas floor area, rather than requiring the model to synthesise them from per-axis components. The\n136-channel encoding is projected by a 2-layer MLP and added to the patch feature through a learned\nscalar gate.",
+   "evidence_type": "method-detail",
+   "quantitative": {
+    "metric": "channel count and structure of the 3D position embedding injected into patch features",
+    "value_or_direction": "136-channel encoding (per-axis sinusoids at 16 log-spaced frequencies, radial primitives at 8 frequencies, unit-ray passthrough), projected by a 2-layer MLP and added through a learned scalar gate",
+    "comparator": "feature-space metric injection vs adding RoPE dimensions (rejected to keep pretrained 3D-RoPE semantics intact)",
+    "task_or_sample": "OneCanvas panoramic canvas representation for VLM 3D scene understanding",
+    "locator": "page 5, Section 3.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字给出 A 2D VLM picks up only a class-conditioned scale prior from pixels, not a metric reading of the actual layout、per-axis sinusoids ... at 16 log-spaced frequencies、the same form on the radial primitives ... at 8 log-spaced frequencies、the unit-ray direction ... as raw passthrough、The 136-channel encoding is projected by a 2-layer MLP and added to the patch feature through a learned scalar gate；claim 的 136 通道/16/8 频率/MLP/门控与原文逐点对应；『保持 RoPE 语义』句在同段紧随其后逐字可核（keeps 3D-RoPE's pretrained angular and temporal semantics intact）。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C03",
+   "claim": "作者声称：由于全景画布可以以任意感兴趣的位姿为原点，同一表征直接支持从特定视角出发的情境推理（situated reasoning）——这是机器人与具身智能的常见需求；摘要亦把机器人、AR 助手、自主代理的空间问答动机作为 3D 场景理解的目标场景。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：全景格式的核心具身价值主张之一是『以智能体自身位姿为中心的全向情境推理』——画布原点可自由选择是全景表征区别于普通多视角输入的关键自由度。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要明确 canvas 可中心化于任意 pose of interest、直接支持 situated reasoning、是 robotics and embodied AI 的 common requirement；引言列举机器人/AR/自主代理的空间问题需求。",
+   "locator": "page 1, Abstract",
+   "source_context": "Because the\ncanvas can be centered on any pose of interest, the same representation directly\nsupports situated reasoning from a specific viewpoint, a common requirement in\nrobotics and embodied AI.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 Because the canvas can be centered on any pose of interest, the same representation directly supports situated reasoning from a specific viewpoint, a common requirement in robotics and embodied AI；claim 前半句为逐字复述；『摘要亦把机器人/AR/自主代理列为动机』在 page 1 摘要前的引言段与 page 2 Introduction 开头逐字可核（Robots that act in human environments, augmented-reality assistants ... autonomous agents that plan trajectories）。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C04",
+   "claim": "作者给出采用全景表征的动机：全景图像表征提供 360° 视场，天然保持长程空间关系，该性质已被场景理解与近期的 3D 视觉定位工作利用。",
+   "stance": "support",
+   "relation": "支持综述命题（动机）：360° 全 FoV 保持长程空间关系是全景/环视格式在具身场景理解中被反复引用的收益主张——本文把它作为表征选择的直接理由。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "相关工作『Unified scene representations』段首句：panoramic representations offer a 360° field of view that naturally preserves long-range spatial relationships。",
+   "locator": "page 4, Section 2, Unified scene representations",
+   "source_context": "Unified scene representations. Panoramic image representations offer a 360\n◦ \nfield of view that nat-\nurally preserves long-range spatial relationships, a property exploited for scene understanding Zheng\net al. [2025c] and recently for 3D visual grounding.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "field of view claimed for panoramic image representations",
+    "value_or_direction": "360 degrees, naturally preserving long-range spatial relationships",
+    "comparator": "panoramic representations vs piecewise per-frame viewing of multi-view input",
+    "task_or_sample": "VLM-based 3D scene understanding and 3D visual grounding literature",
+    "locator": "page 4, Section 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 Panoramic image representations offer a 360° field of view that naturally preserves long-range spatial relationships, a property exploited for scene understanding ... and recently for 3D visual grounding；claim 为该句的忠实复述；comparator 措辞来自同节『methods in both families still see the scene only piecewise across frames』（page 2，已核对）。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C05",
+   "claim": "作者指出：已有研究（PanoEnv）表明 ERP 图像的几何畸变对现成 VLM 仍是挑战；OneCanvas 的应对是投影特征而非原始像素——把 lift-then-project 原则（BEV 方法的既有范式）迁移到 VLM 3D 场景理解，畸变被投影几何吸收而不强加给 VLM 的感知；画布原点可自由选择以同时支持场景中心与位姿中心的情境推理。",
+   "stance": "conditional",
+   "relation": "条件性命题：全景/ERP 格式的畸变问题是输入形式相关的——对『原始像素全景』畸变直接伤害 VLM 感知，对『特征空间重投影全景』畸变被投影几何吸收；物理鱼眼/全景相机输出原始 ERP 像素时不能直接享受该结论，需先解决畸变或改走特征重投影路线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "相关工作段：PanoEnv 证明 ERP 畸变对 off-the-shelf VLMs 是挑战；BEV 的 unproject-then-reproject 范式被迁移；we project features rather than raw pixels 使畸变被投影几何吸收。",
+   "locator": "page 4, Section 2, Unified scene representations",
+   "source_context": "Our\nwork brings this principle to VLM-based 3D scene understanding: per-view features are lifted with\nmetric depth and camera poses, projected once onto a panoramic canvas, and consumed directly by\nthe VLM, with the canvas origin chosen freely to support both scene-centered and pose-centered\nsituated reasoning. Because we project features rather than raw pixels, the distortion that PanoEnv\ndocuments is absorbed by the projection geometry rather than forced onto the VLM’s perception.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 Our work brings this principle to VLM-based 3D scene understanding: per-view features are lifted with metric depth and camera poses, projected once onto a panoramic canvas, and consumed directly by the VLM, with the canvas origin chosen freely to support both scene-centered and pose-centered situated reasoning. Because we project features rather than raw pixels, the distortion that PanoEnv documents is absorbed by the projection geometry rather than forced onto the VLM's perception；PanoEnv 畸变挑战句（geometric distortion in ERP images remains a challenge for off-the-shelf VLMs）在同页上一段逐字可核；relation 中对物理全景相机的边界推论是综述侧限定，不进入 claim。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C06",
+   "claim": "在 SQA3D（3D 情境问答）上 OneCanvas 取得 65.3 EM@1，比此前最佳方法高 2.3 个百分点，为该基准新 SOTA。",
+   "stance": "support",
+   "relation": "支持综述命题（效果）：全景画布表征在具身情境空间问答上取得当前最佳——情境问答是从全景表征获益的代表性任务面。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言结果句：state of the art on SQA3D (65.3 EM@1, 2.3 points above the previous best)；Table 1 中此前最佳为 Ross3D 63.0 EM@1。",
+   "locator": "page 3, Section 1, Introduction",
+   "source_context": "OneCanvas reaches state of the\nart on SQA3D Ma et al. [2023] (65.3 EM@1, 2.3 points above the previous best),",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "EM@1 on SQA3D test split",
+    "value_or_direction": "OneCanvas 65.3 EM@1, 2.3 points above the previous best",
+    "comparator": "OneCanvas vs previous best method on SQA3D (Ross3D 63.0 EM@1 in Table 1, page 8)",
+    "task_or_sample": "SQA3D situated question answering benchmark",
+    "locator": "page 3, Section 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 OneCanvas reaches state of the art on SQA3D Ma et al. [2023] (65.3 EM@1, 2.3 points above the previous best)；『此前最佳为 Ross3D 63.0』在 page 8 Table 1 行 Ross3D ... 63.0 65.7 与 OneCanvas (Ours) ... 65.3 68.4 逐格可核（已核对）；claim 数值均逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C07",
+   "claim": "OneCanvas 同时在 VSI-Bench 取得 70.1 平均分、在 SPBench 零样本取得 72.1 总分（高于次佳 4.8 个百分点），并且训练计算量比最强竞争方法低一个数量级（作者归一化口径：290 vs 最高 27,648 A100 等效 GPU 小时）。",
+   "stance": "support",
+   "relation": "支持综述命题（效果+成本）：全景画布表征以低一个数量级的训练算力在两个空间推理基准上取得 SOTA——全景格式的统一参考系使多视角问题不必逐视图拼接，是效率与效果兼得的证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言结果句给出 VSI-Bench 70.1 average、SPBench 72.1 zero-shot overall（+4.8）、order of magnitude less training compute；Appendix B Table 7 归一化计算量 290 A100-equiv GPU-h。",
+   "locator": "page 3, Section 1, Introduction",
+   "source_context": "VSI-Bench Yang\net al. [2025a] (70.1 average), and SPBench Li et al. [2026] (72.1 zero-shot overall, 4.8 points above\nthe next best method), while using an order of magnitude less training compute than the strongest\ncompeting methods (Figure 2,",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "VSI-Bench average accuracy, SPBench zero-shot overall accuracy, and normalized training compute (A100-equivalent GPU-hours)",
+    "value_or_direction": "VSI-Bench 70.1 average; SPBench 72.1 zero-shot overall, 4.8 points above the next best method; training compute an order of magnitude lower (290 A100-equiv GPU-h vs up to 27,648 for SenseNova-SI, Table 7 page 14)",
+    "comparator": "OneCanvas vs strongest competing spatial-VLM methods (VLM-3R, ViCA, SpaceMind, SenseNova-SI) under the authors' A100-equivalent normalization",
+    "task_or_sample": "VSI-Bench eight spatial subtasks; SPBench zero-shot evaluation; training budgets reported in Appendix B",
+    "locator": "page 3, Section 1 (compute detail: page 14, Appendix B, Table 7)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 VSI-Bench Yang et al. [2025a] (70.1 average), and SPBench Li et al. [2026] (72.1 zero-shot overall, 4.8 points above the next best method), while using an order of magnitude less training compute than the strongest competing methods；290/27,648 计算量数值在 page 14 Table 7 行 OneCanvas (Ours) A6000 8 ≈72.5 h 580 290 与 SenseNova-SI ... 27,648 逐格可核（已核对）；claim 各数值逐点对应，290 的页面在 quantitative.locator 中显式标注。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C08",
+   "claim": "SQA3D 分题型结果（Table 1）：OneCanvas 总体 65.3 EM@1 / 68.4 EM@R1，超过最强基线 Ross3D（63.0 / 65.7）；最直接检验情境推理的题型上优势最大——Which 74.4（Ross3D 60.1）、Can 75.4（70.4）、Others 70.5（60.1）；正文指出剩余差距集中在依赖文本先验的 Is（是/否）与 How（计数）题型。",
+   "stance": "support",
+   "relation": "支持综述命题（效果归因）：全景画布的增益集中在视角依赖的情境题型（Which/Can），与画布原点可选（智能体位姿中心化）的机制一致——情境推理是全景表征获益的核心任务面。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 行：OneCanvas 62.1/76.2/61.1/75.4/74.4/70.5 | 65.3 | 68.4 对 Ross3D 56.0/79.8/60.6/70.4/55.3/60.1 | 63.0 | 65.7；Sec 4.2 叙述 best on Which/Can/Others、gap 集中在 Is/How。",
+   "locator": "page 8, Table 1 and Section 4.2 (page 7)",
+   "source_context": "Ross3D Wang et al. [2025a] 56.0 79.8 60.6 70.4 55.3 60.1 63.0 65.7\nOneCanvas (Ours) 62.1 76.2 61.1 75.4 74.4 70.5 65.3 68.4",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SQA3D per-question-type accuracy and EM@1 / EM@R1",
+    "value_or_direction": "OneCanvas 65.3 EM@1 / 68.4 EM@R1 vs Ross3D 63.0 / 65.7; Which 74.4 vs 60.1, Can 75.4 vs 70.4, Others 70.5 vs 60.1",
+    "comparator": "OneCanvas vs strongest baseline Ross3D (and per-type leaders where another method leads)",
+    "task_or_sample": "SQA3D test split, six question types plus EM@1/EM@R1",
+    "locator": "page 8, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 1 行逐格给出 Ross3D ... 56.0 79.8 60.6 70.4 55.3 60.1 63.0 65.7 与 OneCanvas (Ours) 62.1 76.2 61.1 75.4 74.4 70.5 65.3 68.4；page 7 Sec 4.2 逐字给出 We obtain the best results on the question types that most directly test situated reasoning (Which, Can, Others), with the largest margin on Which 与 The remaining gap concentrates on Is (yes/no questions, where textual priors carry most of the signal) and How (predominantly counting...)；claim 数值与分型归因逐点对应。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C09",
+   "claim": "SPBench 零样本评测（Table 2）：OneCanvas 总分 72.1、多视角子集平均 81.5（数值题 79.0、多选题 91.8），超过次佳 SpaceMind（总分 67.3、多视角 73.8）；单图子集平均 62.8 亦居首（SpaceMind 59.7）。正文将多选题上的最大增益归因于单一全景画布给多视角问题统一参考系、免于 VLM 逐视图拼接。",
+   "stance": "support",
+   "relation": "支持综述命题（效果）：多视角空间问答是从全景统一参考系获益最明显的任务面——多视角 MCQ 91.8 对比最强对手 76.2，增益远大于单图子集，正对应『一张全景 vs 多视图拼接』的表征差异。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 行：OneCanvas 72.1 | 79.0 91.8 81.5 | 62.8 62.7 62.8 对 SpaceMind 67.3 | 76.2 70.5 73.8 | 66.3 53.2 59.7；Sec 4.2 归因于 unified frame of reference。",
+   "locator": "page 8, Table 2 and Section 4.2 (page 7)",
+   "source_context": "SpaceMind Zhao et al. [2025] 67.3 \n76.2 70.5 73.8 66.3 53.2 59.7\nOneCanvas (Ours) 72.1 79.0 91.8 81.5 62.8 62.7 62.8",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SPBench zero-shot accuracy (overall, multi-view, single-image)",
+    "value_or_direction": "OneCanvas overall 72.1; multi-view NQ 79.0 / MCQ 91.8 / avg 81.5 vs SpaceMind 76.2 / 70.5 / 73.8; single-image avg 62.8 vs 59.7",
+    "comparator": "OneCanvas vs second-best SpaceMind and other spatial-VLM baselines, all evaluated without SPBench training data",
+    "task_or_sample": "SPBench multi-view and single-image spatial reasoning splits, zero-shot",
+    "locator": "page 8, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 2 行逐格给出 SpaceMind Zhao et al. [2025] 67.3 76.2 70.5 73.8 66.3 53.2 59.7 与 OneCanvas (Ours) 72.1 79.0 91.8 81.5 62.8 62.7 62.8；page 7 Sec 4.2 逐字给出 We top the leaderboard, with the largest gain concentrated on multi-view MCQ, consistent with the intuition that a single panoramic canvas gives multi-view questions a unified frame of reference rather than forcing the VLM to stitch several independent views 与 We also top the single-image split on average accuracy；claim 数值与归因逐点对应。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C10",
+   "claim": "VSI-Bench 八子任务（Table 3）：OneCanvas 总平均 70.1 居首；优势最大的是路径规划（Route）59.8（表内次佳 SenseNova-SI 48.5）；房间大小 76.5 领先；相对距离 71.0、相对方向 84.8 居第二；但物体计数 68.4 明显低于 SpaceMind 73.3 与基础 VLM 基线 71.3。正文称路径规划最直接检验统一全景画布上的多步推理。",
+   "stance": "support",
+   "relation": "支持综述命题（任务面分布）：全景画布的收益集中在需要跨场景全局关系的任务（路径规划/房间大小/相对方向），而逐实例计数等局部任务不获益甚至受损——全景格式的任务面选择性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 行：OneCanvas 70.1 | 68.4 59.5 75.4 76.5 | 71.0 84.8 59.8 65.7；SpaceMind 69.6 | 73.3 ...；SenseNova-SI 68.8 ... 48.5；Base VLM Obj.Cnt 71.3 来自 Table 4（page 9）。",
+   "locator": "page 8, Table 3 and Section 4.2 (page 7)",
+   "source_context": "Cambrian-S Yang et al. [2026] 67.5 73.2 50.5 74.9 72.2 71.1 76.2 41.8 80.1\nSenseNova-SI Cai et al. [2026] 68.8 72.0 53.5 76.8 72.8 69.6 80.8 48.5 \n76.4\nSpaceMind Zhao et al. [2025] 69.6 73.3 61.4 77.3 74.2 67.2 88.4 44.3 70.6\nOneCanvas (Ours) 70.1 68.4 59.5 75.4 76.5 71.0 84.8 59.8 65.7",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "VSI-Bench average and per-subtask accuracy",
+    "value_or_direction": "OneCanvas avg 70.1 (best); Route 59.8 vs table second-best 48.5; Room Size 76.5 (best); Rel.Dist. 71.0 and Rel.Dir. 84.8 second; Object Counting 68.4 below SpaceMind 73.3 and Base VLM 71.3 (Table 4, page 9)",
+    "comparator": "OneCanvas vs strongest per-subtask methods (SpaceMind, SenseNova-SI, Cambrian-S, ViCA) and vs base VLM multi-view input",
+    "task_or_sample": "VSI-Bench eight spatial subtasks (numerical and multiple-choice)",
+    "locator": "page 8, Table 3 (Base VLM counting figure: page 9, Table 4)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 3 行逐格给出 OneCanvas (Ours) 70.1 68.4 59.5 75.4 76.5 71.0 84.8 59.8 65.7、SpaceMind ... 69.6 73.3 61.4 77.3 74.2 67.2 88.4 44.3 70.6、SenseNova-SI ... 68.8 72.0 53.5 76.8 72.8 69.6 80.8 48.5 76.4；Base VLM 计数 71.3 在 page 9 Table 4 行 Base VLM (multi-view) 63.5 71.3 ... 逐格可核（已核对）；page 7 叙述（largest margin on route planning ... We also lead on room size and finish second on absolute distance, relative distance, and relative direction）逐字可核；claim 数值逐点对应。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C11",
+   "claim": "训练算力对比（Table 7，作者 A100 等效归一化）：OneCanvas 两阶段合计约 72.5 小时 × 8×A6000（580 原始 GPU 时）= 290 A100 等效 GPU 时；对比 VLM-3R 240、ViCA 1,320（4.6 倍）、SpaceMind 4,800（17 倍）、SenseNova-SI 27,648（95 倍）；作者并披露归一化仅按峰值 TFLOPS、偏向低估对手算力（对己方不利），且带带宽约束的保守换算下数量级结论不变。",
+   "stance": "support",
+   "relation": "支持综述命题（成本边界）：全景画布表征路线的工程卖点是无架构改造下的低算力 SOTA——对于在具身平台上部署空间推理能力的成本核算，表征层方案的算力优势是一个数量级级别的。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix B Table 7/9：OneCanvas 290 A100-equiv GPU-h；ViCA 1,320（4.6×）、SpaceMind 4,800（17×）、SenseNova-SI 27,648（95×）；GPU 归一化方法与保守性讨论在 Table 8 与正文。",
+   "locator": "page 14, Appendix B, Table 7",
+   "source_context": "OneCanvas (Ours) A6000 8 ≈72.5 h 580 290\nVLM-3R Fan et al. [2026] H200 16 5 h 80 240\nViCA Feng [2025] H100 8 55 h 440 1,320\nSpaceMind Zhao et al. [2025] H100 64 25 h 1,600 4,800\nSenseNova-SI Cai et al. [2026] H100\n† \n128 72 h 9,216 27,648",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "normalized training compute (A100-equivalent GPU-hours) and relative factors",
+    "value_or_direction": "OneCanvas 290 (8x A6000, ~72.5 h, 580 raw GPU-h) vs VLM-3R 240, ViCA 1,320 (4.6x), SpaceMind 4,800 (17x), SenseNova-SI 27,648 (95x)",
+    "comparator": "OneCanvas two-stage total vs competing spatial-VLM training budgets under the authors' peak-TFLOPS A100 normalization",
+    "task_or_sample": "reported training budgets of OneCanvas and four competing methods (Appendix B, Table 7 and Table 9)",
+    "locator": "page 14, Appendix B, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Table 7 行逐格给出 OneCanvas (Ours) A6000 8 ≈72.5 h 580 290、VLM-3R ... 80 240、ViCA ... 440 1,320、SpaceMind ... 1,600 4,800、SenseNova-SI ... 9,216 27,648；倍数（4.6×/17×/95×）在 page 15 Table 9 的 vs. Ours 列逐字可核（已核对）；归一化偏向性与保守换算的声明在 page 14 正文逐字可核（biases the comparison against our method、the order-of-magnitude conclusion ... holds even at the conservative bandwidth-bound conversion）；claim 各数值逐点对应。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C12",
+   "claim": "组件消融（Table 4，VSI-Bench）：完整模型 70.1；去掉 3D 位置嵌入降至 69.0（房间大小 76.5→69.8，降幅集中于度量型子任务）；再去掉 stage-1 空间预训练（仅 Panorama+3D PE）降至 66.6（路径规划 59.8→46.4）；仅全景画布（Panorama only）63.7；基础 VLM 多视角输入 63.5。归因：空间预训练课程主要支撑路径规划，3D 位置嵌入主要支撑度量读数，统一全景表征对跨场景关系任务（相对方向提升最大）贡献显著。",
+   "stance": "support",
+   "relation": "支持综述命题（机制归因）：全景表征的收益可被消融分解——统一画布、度量位置嵌入、几何课程三个组件分别对应跨视图关系、度量读数、多步规划三类能力，说明全景格式收益是结构性的而非偶然。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4：Full 70.1 / w/o 3D PE 69.0 / Panorama+3D PE 66.6 / Panorama only 63.7 / Base VLM 63.5；正文归因 route 由 stage-1 支撑、room size 由 3D PE 支撑、相对方向提升来自统一全景。",
+   "locator": "page 9, Section 4.3 and Table 4",
+   "source_context": "Full model (ours) 70.1 68.4 59.5 75.4 76.5 71.0 84.8 59.8 65.7\nFull w/o 3D PE 69.0 68.5 55.9 75.3 69.8 68.9 86.2 63.4 63.8\nPanorama + 3D PE 66.6 67.6 53.7 75.6 71.5 70.4 85.9 46.4 61.3\nPanorama only 63.7 67.3 52.1 75.8 56.2 69.3 83.6 44.3 60.4\nBase VLM (multi-view) 63.5 71.3 50.3 74.8 66.0 67.9 72.2 41.8 63.4",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "VSI-Bench average and key subtask accuracy under component ablation",
+    "value_or_direction": "Full 70.1; w/o 3D PE 69.0 (Room Size 76.5 -> 69.8); Panorama + 3D PE 66.6 (Route 59.8 -> 46.4); Panorama only 63.7; Base VLM (multi-view) 63.5",
+    "comparator": "full model vs component-removed variants vs base VLM with plain multi-view input, LoRA capacity matched",
+    "task_or_sample": "VSI-Bench eight subtasks, matched LoRA training settings",
+    "locator": "page 9, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 4 行逐格给出 Full model (ours) 70.1 68.4 59.5 75.4 76.5 71.0 84.8 59.8 65.7、Full w/o 3D PE 69.0 68.5 55.9 75.3 69.8 ...、Panorama + 3D PE 66.6 ... 46.4 61.3、Panorama only 63.7、Base VLM (multi-view) 63.5 71.3 50.3 74.8 66.0 67.9 72.2 41.8 63.4；page 8-9 正文逐字给出 Without the spatial pretraining stage we observe a large drop on the route task、Removing the positional encoding produces a large additional drop on the room size task、tasks that require relating objects across different parts of the scene perform notably better with our method, with the largest improvement on relative direction；claim 数值与归因逐点对应。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C13",
+   "claim": "消融中的反例是物体计数：基础 VLM（多视角原始输入）保持小幅领先（Table 4 中 71.3 对 OneCanvas 68.4），作者怀疑这反映了较小的重投影误差会把画布上的实例碎片化或合并——即全景重投影管线在逐实例精细任务上有精度代价。",
+   "stance": "limit",
+   "relation": "限定综述命题（受限任务面）：特征重投影式全景表征并非全域获益——需要精确逐实例分离的计数类任务上，重投影误差的碎片化/合并效应使基础多视角输入反而占优；这是全景格式路线的已知精度边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 4.3 消融讨论：object counting 是唯一 base VLM 领先的子任务（71.3 vs 68.4，Table 4 page 9）；作者归因 suspected small reprojection inaccuracies。",
+   "locator": "page 9, Section 4.3 (Table 4)",
+   "source_context": "The exception is object counting, where the base VLM retains a small lead, which we\nsuspect reflects small reprojection inaccuracies that can fragment or merge instances on the canvas.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "VSI-Bench object counting accuracy, OneCanvas vs base VLM",
+    "value_or_direction": "base VLM (multi-view) 71.3 vs OneCanvas 68.4 (base VLM retains a small lead); author-suspected cause: small reprojection inaccuracies fragmenting or merging instances",
+    "comparator": "base VLM with plain multi-view input vs full OneCanvas model",
+    "task_or_sample": "VSI-Bench object counting subtask within component ablation (Table 4)",
+    "locator": "page 9, Section 4.3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 The exception is object counting, where the base VLM retains a small lead, which we suspect reflects small reprojection inaccuracies that can fragment or merge instances on the canvas；71.3 与 68.4 两数在 page 9 Table 4 行 Base VLM (multi-view) 63.5 71.3 ... 与 Full model (ours) 70.1 68.4 ... 逐格可核（已核对）；claim 数值与作者归因逐点对应，『精度代价』为 relation 侧的综述措辞限定。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C14",
+   "claim": "画布原点消融（Table 5，SQA3D 同一检查点）：以智能体位姿（位置+朝向）为原点得 65.3 EM@1；场景中心 61.2、随机相机 61.4、场景外 59.8。视角依赖题型差距最大——Which 在智能体位姿下 74.4，对场景中心 58.7、随机相机 57.5、场景外 53.0；正文指出 Is/How 等视角无关题型不受原点策略影响，场景外原点则一致变差。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：全景画布的『以智能体位姿为中心』选择是情境推理增益的主要来源——这直接对应具身智能中『以自身为中心的全向感知』的诉求，是全景格式在具身任务上的关键配置项。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 5：Agent pose 65.3 EM@1（Which 74.4）对 Scene center 61.2（58.7）、Random camera 61.4（57.5）、Outside scene 59.8（53.0）；Sec 4.3 叙述 agent-pose centering 驱动 Which 题型的大部分增益。",
+   "locator": "page 9, Section 4.3 and Table 5",
+   "source_context": "Agent pose 62.1 76.2 61.1 75.4 74.4 70.5 65.3 68.4\nScene center 60.3 76.1 60.4 68.9 58.7 62.4 61.2 64.3\nRandom camera 61.1 76.2 61.9 68.9 57.5 62.6 61.4 64.6\nOutside scene 59.5 75.3 60.6 68.3 53.0 59.1 59.8 62.7",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SQA3D EM@1 and Which-type accuracy under four canvas origin strategies (same checkpoint)",
+    "value_or_direction": "Agent pose 65.3 EM@1 (Which 74.4); Scene center 61.2 (Which 58.7); Random camera 61.4 (Which 57.5); Outside scene 59.8 (Which 53.0)",
+    "comparator": "agent-pose origin vs scene-centroid / random-camera / outside-scene origins, same model checkpoint",
+    "task_or_sample": "SQA3D evaluation with four canvas-origin strategies (Table 5)",
+    "locator": "page 9, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 5 行逐格给出 Agent pose 62.1 76.2 61.1 75.4 74.4 70.5 65.3 68.4、Scene center 60.3 76.1 60.4 68.9 58.7 62.4 61.2 64.3、Random camera 61.1 76.2 61.9 68.9 57.5 62.6 61.4 64.6、Outside scene 59.5 75.3 60.6 68.3 53.0 59.1 59.8 62.7；page 7-8 与 page 9 正文逐字给出 agent-pose centering drives most of it（Which 增益归因，page 7）与 Using the agent's pose increases the results noticeably on most tasks, except on the Is and How categories, which are generally viewpoint agnostic（page 9）；claim 数值逐点对应。"
+   }
+  },
+  {
+   "card_id": "2606.19253-C15",
+   "claim": "作者自述限制：OneCanvas 需要深度与相机位姿（纯 RGB 方法可避免这一依赖），且位姿估计失败仍会使画布退化（前馈度量重建正在缩小该差距）；单一全局全景以精细空间精度换取紧凑性（跨页续文：可能限制非常大或室外场景）；课程为手工设计、新增空间技能需编写新任务生成器；方法假设骨干至少有 2D 位置编码承载经纬度（Qwen3-VL 类多轴 RoPE 成立、1D 位置模型不成立）；全部实验仅用 Qwen3-VL-8B。",
+   "stance": "limit",
+   "relation": "限定综述命题（局限）：全景重投影表征的部署前提是有质量的逐帧深度+位姿；对超大/室外场景与精细空间精度存在结构性取舍；且对骨干位置编码形式有硬性要求——这些边界划定了该路线在具身平台上的适用范围。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节 Limitations 段：深度+位姿依赖、位姿失败退化画布、全局全景换精度、手工课程、2D 位置编码骨干假设、单骨干实验；续文在 page 10 开头。",
+   "locator": "page 9, Section 5, Limitations",
+   "source_context": "Limitations. OneCanvas requires depth and camera poses, which pure RGB methods avoid, and\npose-estimation failures can still degrade the canvas, though feed-forward metric reconstruction is\nnarrowing this gap. The single global panorama trades fine spatial precision for compactness and",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 Limitations. OneCanvas requires depth and camera poses, which pure RGB methods avoid, and pose-estimation failures can still degrade the canvas, though feed-forward metric reconstruction is narrowing this gap. The single global panorama trades fine spatial precision for compactness and；page 10 续文逐字给出 may limit very large or outdoor scenes. The pretraining curriculum is hand-authored, so adding a qualitatively new spatial skill requires writing a new task generator rather than collecting more data. Finally, the method assumes a backbone with at least a 2D position encoding to carry each patch's longitude and latitude, which holds for the multi-axis RoPE in Qwen3-VL and similar video-VLMs but not for 1D-position models. All experiments use Qwen3-VL-8B, and validating on additional backbones is left to future work（已核对）；claim 各分句逐点对应原文。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "PanoEnv: Exploring 3D spatial intelligence in panoramic environments with reinforcement learning",
+   "arxiv_id": "2602.21992",
+   "reason": "ERP 图像几何畸变对现成 VLM 构成挑战的直接证据来源（本文 Related Work 引用），是全景格式像素路线 vs 特征路线分界的参照。"
+  },
+  {
+   "title": "Do 3D Large Language Models Really Understand 3D Spatial Relationships?",
+   "arxiv_id": "2603.23523",
+   "reason": "Ma et al. 2026 审计：文本-only 基线在广泛引用的 3D QA 基准上匹敌几何感知模型——本文动机与评测解读的关键背景。"
+  },
+  {
+   "title": "Panorama: The Rise of Omnidirectional Vision in the Embodied AI Era",
+   "arxiv_id": "2509.12989",
+   "reason": "全景视觉在具身智能时代兴起的综述（本文引用 Zheng et al. 2025c），与本 run 的 2509.12989 精读笔记直接互链。"
+  },
+  {
+   "title": "SpaceMind: Camera-Guided Modality Fusion for Spatial Reasoning in Vision-Language Models",
+   "arxiv_id": "2511.23075",
+   "reason": "三基准上最强的几何编码器融合对手（SPBench 67.3/VSI 69.6），是全景表征 vs 架构融合路线对比的参照点。"
+  },
+  {
+   "title": "VLM-3R: Vision-Language Models Augmented with Instruction-Aligned 3D Reconstruction",
+   "arxiv_id": null,
+   "reason": "隐式 3D token 融合代表（SQA3D 63.4 EM@R1 次佳、算力 240 A100 等效），本文 stage-2 数据亦用其 VSI-Bench 语料。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：OneCanvas 是『全景格式的表征层应用』代表——虚拟 ERP 全景（特征重投影）而非物理鱼眼相机。应用方式=把已标定多视角 RGB-D 折叠为单一 ERP 画布喂给 VLM，画布原点可选在智能体位姿上（具身情境推理的关键配置）。效果=三基准 SOTA（65.3 EM@1/+2.3、70.1、72.1/+4.8）且算力低一个数量级（290 A100 等效 GPU 时）；增益集中于视角依赖题型、多视角 MCQ（91.8）、路径规划（59.8）与度量读数（房间大小 76.5）。机制归因=智能体位姿中心化（Which 74.4 vs 58.7）、3D 度量嵌入（房间大小 76.5→69.8）、几何课程（路径规划 59.8→46.4）。受限面=物体计数（68.4<基础 VLM 71.3，重投影误差碎片化）、需要深度+位姿、超大/室外场景、骨干需 ≥2D 位置编码。对综述的独特价值：ERP 畸变问题在『特征投影』下被吸收的论断（对照 PanoEnv 的像素路线证据），以及全景折叠丢度量深度需显式补偿的设计判断。alphaxiv 全文 API 提取（17 页/63,106 字符，非 OCR），extraction.method 按 pdf-text 口径登记。"
+}

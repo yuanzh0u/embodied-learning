@@ -1,0 +1,288 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2410.24221",
+  "title": "EgoMimic: Scaling Imitation Learning via Egocentric Video",
+  "published": "2024-10-31",
+  "url": "https://arxiv.org/abs/2410.24221",
+  "authors": [
+   "Simar Kareer",
+   "Dhruv Patel",
+   "Ryan Punamiya",
+   "Pranay Mathur",
+   "Shuo Cheng",
+   "Chen Wang",
+   "Judy Hoffman",
+   "Danfei Xu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "核心系统：Aria 眼镜 MPS 手部追踪作为人类动作监督，与机器人数据共训练并在真机上评估；显式处理坐标系统一（SLAM 投影）、测量精度差异导致的分布对齐，并有去除归一化的消融，直接对应误差来源/传播/缓解。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "问题定位：ego 视频+3D 手部追踪作为一等数据源的动机与贡献清单"
+   },
+   {
+    "locator": "III. EGOMIMIC",
+    "role": "method-or-design",
+    "purpose": "全栈框架概览"
+   },
+   {
+    "locator": "A. Data Collection Systems and Hardware Design",
+    "role": "data-or-setting",
+    "purpose": "Aria 采集系统、侧目相机追踪、机器人硬件对齐"
+   },
+   {
+    "locator": "B. Data Processing and Domain Alignment",
+    "role": "method-or-design",
+    "purpose": "坐标系统一（MPS SLAM 投影）、分布差异来源与归一化、视觉掩蔽"
+   },
+   {
+    "locator": "C. Training Human-Robot Joint Policies",
+    "role": "method-or-design",
+    "purpose": "联合策略架构、位姿/关节双头、抓取动作监督缺口"
+   },
+   {
+    "locator": "IV. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "真机任务结果、泛化、scaling、消融"
+   },
+   {
+    "locator": "V. CONCLUSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与未来工作"
+   },
+   {
+    "locator": "VI. APPENDIX",
+    "role": "appendix-or-supplement",
+    "purpose": "MPS 管线细节、时间对齐、抓取监督缺口、训练/rollout 频率"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II. RELATED WORKS",
+    "role": "relevant-core",
+    "purpose": "背景定位，无直接证据，略读"
+   }
+  ]
+ },
+ "research_question": "如何把 Aria 眼镜采集的 ego 视频+3D 手部追踪（人体实体数据）与遥操作机器人数据统一训练，使人类数据可扩展地提升机器人模仿学习性能？",
+ "contributions": [
+  "基于 Project Aria 的人体数据采集系统（ego RGB + MPS 3D 手部追踪 + 设备 SLAM）",
+  "与人体运动学匹配的低成本双臂机器人（ViperX 300S ×2 + 同款 Aria 作为主传感器）",
+  "跨域对齐技术：相机中心坐标系统一、逐源高斯动作归一化、SAM 视觉掩蔽+红线叠加",
+  "统一策略架构（ACT 主干+位姿/关节双头）共训练人体与机器人数据；真机三任务验证及手部数据 scaling 分析"
+ ],
+ "method": {
+  "summary": "Aria 眼镜采集 ego RGB，MPS 云端输出设备 SLAM 位姿与相对设备系的手部 3D 追踪；用 SLAM 将手部轨迹投影到当前相机系，与机器人末端轨迹统一参考系；逐源 Z-score 归一化对齐动作分布；SAM2 掩蔽手/机械臂并叠加红线对齐外观；ACT 主干共享表征，位姿头监督人体+机器人、关节头只监督机器人。",
+  "assumptions": [
+   "MPS 手部追踪+SLAM 精度足以作为动作监督（未定量标定）",
+   "4 倍减速可时间对齐人/机器人数据",
+   "人-机器人位姿分布差异可由逐源高斯归一化吸收",
+   "Aria 只记录手腕级手部位姿，抓取自由度由机器人关节损失补足"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "人体数据：Object-in-Bowl 1400 条/60 min、Groceries 160 条/80 min、Laundry 590 条/100 min；机器人数据：270/120 min、300/300 min、430/300 min（Table II）"
+  ],
+  "tasks": [
+   "Continuous Object-in-Bowl（40s 连续循环）",
+   "Laundry（双臂叠 T 恤）",
+   "Groceries（装袋，含抓取软袋提手）"
+  ],
+  "embodiments": [
+   "双臂 ViperX 300 S（6-DoF）+ WidowX 示教臂 + RealSense D405 腕部相机；Aria 眼镜为主视觉传感器"
+  ],
+  "sample_or_scale": "评估：Bowl 45 次、Laundry 40 次、Groceries 50 次 rollout"
+ },
+ "evaluation": {
+  "design": "真机任务得分（Pts）与成功率（SR）；基线 ACT、Mimicplay（同骨干复现）、EgoMimic(0% human)；泛化（未见颜色/全新场景）；scaling（人 vs 机器人数据小时数）；组件消融（Table IV）",
+  "baselines": [
+   "ACT",
+   "Mimicplay",
+   "EgoMimic w/o human data"
+  ],
+  "metrics": [
+   "任务得分 Pts",
+   "Success Rate",
+   "Groceries 抓袋率"
+  ],
+  "ablations": [
+   "w/o hand data（-47% 得分）",
+   "w/o action normalization（-38%）",
+   "w/o red line（-13%）",
+   "w/o line+mask（-26%）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "EgoMimic 相对 ACT 得分提升 34-228%，绝对成功率提升 8-33%；去除手部数据得分降 47%",
+   "scope": "三个真机长程任务",
+   "locator": "B. Results"
+  },
+  {
+   "finding": "人-机器人末端位姿分布差异源于生物力学差异、任务执行差异与测量精度差异；逐源高斯归一化是关键缓解，去除后得分降 38%",
+   "scope": "Object-in-Bowl 消融",
+   "locator": "B. Data Processing and Domain Alignment; B. Results"
+  },
+  {
+   "finding": "2h 机器人数据+1h 人体数据（128 分）显著优于 3h 机器人数据的 ACT（74 分）；1 小时人体数据产出 1400 条演示，机器人仅约 135 条",
+   "scope": "Object-in-Bowl scaling 实验",
+   "locator": "B. Results"
+  },
+  {
+   "finding": "Aria 只记录手部（腕级）位姿，抓取动作信息缺失，只能由机器人关节预测损失监督",
+   "scope": "系统动作空间设计",
+   "locator": "C. Training Human-Robot Joint Policies (appendix)"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "人体数据缺少抓取动作信息，因为 Aria 只记录手部位姿；抓取仅由机器人关节损失监督",
+    "locator": "C. Training Human-Robot Joint Policies (appendix)"
+   },
+   {
+    "limitation": "末端位姿控制因 ViperX 6-DoF 低冗余出现奇异/不平滑解，被迫改用关节空间控制，位姿空间预测仅用于表征学习",
+    "locator": "C. Training Human-Robot Joint Policies"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "MPS 手部追踪与 SLAM 的绝对精度全文未量化，所有下游增益无法按追踪误差量级归因",
+    "basis": "III-B 与附录 B 只描述管线，无精度标定"
+   },
+   {
+    "boundary": "仅腕级（无手指）追踪，结论不适用于灵巧手指级重定向；任务为抓取-放置类，未测试精细指尖操作",
+    "basis": "附录 C 的抓取监督缺口说明 + 任务设计"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于 Aria MPS 腕级追踪 + 关节空间控制的双臂抓取-放置类真机任务；不覆盖手指级灵巧重定向，也未回答追踪误差多大时共训练失效（无剂量-响应实验）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "真机评估且有同架构 0%-human 对照，能把增益归因于人体数据",
+   "消融逐一覆盖归一化、掩蔽、红线等对齐组件，测量精度差异被显式列为分布差异来源",
+   "MPS+SLAM 的坐标系统一处理直接针对 ego 相机运动这一误差源"
+  ],
+  "design_risks": [
+   "手部追踪精度完全依赖 MPS 黑盒，无独立标定或误差报告",
+   "评估 rollout 数较小（40-50/任务），成功率置信区间宽",
+   "手腕遮罩与红线依赖 SAM2 实时运行，部署链路增加额外感知误差源"
+  ],
+  "baseline_fairness": "Mimicplay 用同 Transformer 骨干复现并去除目标条件以匹配单任务设定；ACT 为原版；对照公平。",
+  "metric_validity": "Pts/SR 为任务级指标；无轨迹级误差测量，无法直接读出末端轨迹保真度。",
+  "reproducibility": "训练超参（Table V）、数据采集量（Table II）、rollout 频率（Table VII）齐全；BOM 承诺公开。",
+  "external_validity": "单一低自由度机器人与三任务；对高 DoF 灵巧手与更精细任务的外推未知。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2410.24221-C01",
+   "claim": "EgoMimic 将人-机器人末端位姿分布差异部分归因于两侧的测量精度差异，并以逐源高斯归一化对齐动作分布；Object-in-Bowl 消融中去除动作归一化导致任务得分下降 38%（128→79 分），说明该对齐是人体手部追踪数据可用性的关键前提。",
+   "stance": "support",
+   "relation": "误差来源与缓解：手部追踪与机器人本体感知的测量精度差异会表现为人-机动作分布偏移；简单的逐源归一化即可吸收大部分差异，缺之则下游性能显著受损。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B 明确列出 'measurement precision disparities between human and robotic systems' 作为分布差异来源之一；IV-B/Table IV 报告去除归一化的 -38% 消融。",
+   "locator": "B. Results; B. Data Processing and Domain Alignment",
+   "source_context": "First, removing action normalization results in a 38% drop in task score.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task score (points) on Object-in-Bowl ablation",
+    "value_or_direction": "-38% (128 → 79 points) when action normalization removed",
+    "comparator": "full EgoMimic with per-source Gaussian action normalization",
+    "task_or_sample": "Continuous Object-in-Bowl real-world task ablations (Table IV)",
+    "locator": "B. Results, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "IV-B 原文给出 38% 下降，Table IV 数值 128/79 与之吻合；III-B 原文含 'measurement precision disparities' 归因（同节核对）。claim 将归一化定位为必要条件，未声称其补偿的是检测误差的全部。"
+   }
+  },
+  {
+   "card_id": "2410.24221-C02",
+   "claim": "在 Object-in-Bowl 上，EgoMimic 用 2 小时机器人数据+1 小时 Aria 手部追踪人体数据（128 分）显著优于 3 小时纯机器人数据训练的 ACT（74 分）；1 小时人体数据产出 1400 条演示而机器人 1 小时仅约 135 条。",
+   "stance": "support",
+   "relation": "可用性证据：Aria MPS 腕级手部追踪虽未标定绝对精度，但作为动作监督在真机上带来大幅净收益，说明其误差水平在该任务集合内可用且采集效率约 10 倍。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B scaling 段落给出 128 vs 74 分对比与每小时演示数对比；对照 ACT 使用更多机器人数据。",
+   "locator": "B. Results",
+   "source_context": "EgoMimic trained on 2 hours of robot data and 1 hour of human data significantly outperforms ACT trained on 3 hours of robot data (128 vs 74",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task score (points) on Object-in-Bowl",
+    "value_or_direction": "128 vs 74 points (2h robot + 1h human EgoMimic vs 3h robot ACT)",
+    "comparator": "ACT trained on 3 hours of robot data",
+    "task_or_sample": "Continuous Object-in-Bowl, 45 evaluation rollouts",
+    "locator": "B. Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "IV-B 原文逐字匹配（context 止于 74 因原文跨图断行）；1400 vs 135 条/小时在同段核对；claim 限定于该任务与数据量。"
+   }
+  },
+  {
+   "card_id": "2410.24221-C03",
+   "claim": "尽管机器人末端位姿在语义上比关节位置更接近人手位姿，EgoMimic 发现 6-DoF ViperX 臂因解冗余度低，用末端位姿经笛卡尔控制器（如微分 IK）驱动时常遇到奇异或不平滑解，因此被迫改用关节空间控制、位姿空间预测仅用于学习人-机共享表征。",
+   "stance": "limit",
+   "relation": "传播路径：手部轨迹→末端位姿轨迹→IK 的链路在低冗余机器人上会产生可行性瓶颈，位姿级重定向的可用性受机器人运动学约束，与追踪精度正交。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-C 明确说明末端位姿控制因 6-DoF 低冗余而遭遇奇异/不平滑解，故采用关节空间控制、位姿预测仅服务于共享表征。",
+   "locator": "C. Training Human-Robot Joint Policies",
+   "source_context": "While the robot end-effector poses are more semantically similar to human hand pose than robot-joint positions, it is difficult to control our robot with end-effector poses via a cartesian-based controller",
+   "evidence_type": "reported-finding",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "III-C 原文逐字匹配，同段含 'singularities or non-smooth solutions' 与 'low solution redundancy' 佐证；claim 限定于该系统硬件，未外推所有机器人。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Engel et al., Project Aria (2023) & Aria MPS docs",
+   "reason": "手部追踪与 SLAM 来源管线，全部精度特性继承自该黑盒"
+  },
+  {
+   "citation": "Wang et al., Mimicplay (2023)",
+   "reason": "层级式基线，时间对齐方法来源"
+  },
+  {
+   "citation": "Zhao et al., ALOHA/ACT (2023)",
+   "reason": "策略主干与动作 chunk 设计来源"
+  }
+ ],
+ "notes": "六遍式完成；scoping 深度。本文是真机评估的腕级追踪共训练系统；对综述的核心贡献是：测量精度差异→分布偏移→归一化缓解的完整链条（含 -38% 消融），以及腕级观测缺口的局限。MPS 精度未量化是主要证据缺口。"
+}

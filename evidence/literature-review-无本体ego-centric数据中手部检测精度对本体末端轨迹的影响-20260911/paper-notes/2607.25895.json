@@ -1,0 +1,374 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.25895",
+  "title": "HiFi-UMI: Learning Deployable Manipulation Policies from High-Fidelity UMI Data Alone",
+  "published": "2026-07-28",
+  "url": "https://arxiv.org/abs/2607.25895",
+  "authors": [
+   "Simple AI",
+   ":",
+   "Yuteng Wei",
+   "Jinming Ma",
+   "Jiawei Wang",
+   "Weitao Zhou",
+   "Yushen Zuo",
+   "Ke Rui",
+   "Minglei Li",
+   "Jinhao Zhang",
+   "Zhikang Pan",
+   "Xiang Wang",
+   "S. Wei",
+   "Zhi Pan",
+   "Haoran Jia",
+   "Hua Du",
+   "Zicheng Zeng",
+   "Jun Ma",
+   "Guiyu Qin",
+   "Di Zhang",
+   "Xiaofei Li"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "UMI 族高保真采集系统，直接量化手部/末端轨迹精度（3 mm vs 基站真值）、同步误差与重建失效率，并用受控实验证明该精度水平下无本体数据可直接后训练部署，正面命中综述问题的精度-可用性关系。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确立机器人数据保真度瓶颈与 zero-robot post-training 假设"
+   },
+   {
+    "locator": "3 mm",
+    "role": "data-or-setting",
+    "purpose": "图文混排的总览数字（3mm/40us/98%）作为系统指标的线索"
+   },
+   {
+    "locator": "3.1 HiFi-UMI Capture Device",
+    "role": "method-or-design",
+    "purpose": "采集端追踪方案（头戴离线双目惯性 SLAM + 标记块）与其相对腕部 VIO 的失效模式对比"
+   },
+   {
+    "locator": "3.2 Data-Quality Criteria",
+    "role": "method-or-design",
+    "purpose": "数据质量的硬约束定义（传感器/轨迹/标注）"
+   },
+   {
+    "locator": "3.3 HiFi-UMI Data Processing Pipeline",
+    "role": "method-or-design",
+    "purpose": "六阶段处理管线与轨迹重建/回放两道 98% 闸门"
+   },
+   {
+    "locator": "3.4 Processed-Data Quality",
+    "role": "results-or-analysis",
+    "purpose": "Table 2 端到端保真度数值与精度评测口径"
+   },
+   {
+    "locator": "4 Dataset and Release",
+    "role": "data-or-setting",
+    "purpose": "语料规模与发布口径"
+   },
+   {
+    "locator": "5 Baselines and Training Setup",
+    "role": "method-or-design",
+    "purpose": "三个 backbone、动作表示与 chunk-anchor 物理语义"
+   },
+   {
+    "locator": "5.5 Data Processing and Episode Filtering",
+    "role": "method-or-design",
+    "purpose": "源轨迹有效性检查中的 SLAM 失败/异常剔除规则"
+   },
+   {
+    "locator": "6 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "UMI vs 遥操作后训练的受控对比、数据规模缩放、WAM 跨域动作解码精度"
+   },
+   {
+    "locator": "7 Discussion",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：保真度未分解、统计分辨率有限"
+   },
+   {
+    "locator": "8 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与边界"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表，不影响证据判定"
+   }
+  ]
+ },
+ "research_question": "足够高保真的机器人无本体（robot-free）UMI 数据能否在不混入任何真机遥操作数据的情况下，单独支撑可部署操作策略的后训练？",
+ "contributions": [
+  "HiFi-UMI 采集系统：头戴离线双目惯性 SLAM + 标记块手部定位，3 mm 末端精度、微秒级 GPIO 硬同步、约 200° 超广角六目覆盖，无外部追踪基础设施",
+  "自动化数据引擎：轨迹重建与整机回放验证各约 98% 通过率（累计约 96% 原始采集保留率），HiFi-UMI-2K 2000 小时开源子集",
+  "受控证据：三种 VLA/WAM backbone 上纯 UMI 后训练与同场景遥操作后训练近似持平（-2.5/+3.1/-0.6 个百分点），并在 4000 小时预训练下将十个未见任务动作误差降低 41%"
+ ],
+ "method": {
+  "summary": "头戴双目相机跑离线立体惯性 SLAM 估计全局头轨迹，两手通过刚性固连的标记块在同一头相机坐标系内定位，合成全局一致的手部轨迹并原生测得双臂相对位姿；所有传感器由单一 GPIO 触发器硬同步；处理管线含离线轨迹重建（放弃全局回环、改用动态滑窗局部一致性约束）、仿真整机回放验证、AI 辅助标注与人工抽检；策略端在三种 backbone 上以 chunk-anchor 相对位姿动作表示做 UMI-only 后训练，与同场景遥操作后训练对照。",
+  "assumptions": [
+   "目标操作场景依赖工作空间内局部一致轨迹与精确的双手相对位姿，而非大范围全局精度（放弃全局回环换取毫米级局部精度）",
+   "采集与部署共享同一夹爪与腕部相机物理接口，残余本体差距仅限于手臂运动学",
+   "以保真度为整体设计原则，不对各保真度因子做受控退化消融"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HiFi-UMI 全量语料 20000+ 小时 / 432 万+ episodes / 480+ 场景",
+   "HiFi-UMI-2K 发布子集 2000 小时 / 482100+ episodes / 110+ 场景",
+   "每任务 3200 条 UMI 后训练轨迹 vs 约 300 条同场景遥操作轨迹"
+  ],
+  "tasks": [
+   "Stain Wiping",
+   "Shirt Folding",
+   "Remote Insertion",
+   "Produce Sorting",
+   "十个未见预训练迁移任务"
+  ],
+  "embodiments": [
+   "双臂 Tianji Robotics Marvin M6 七轴力控臂 + 与采集端相同的夹爪与四腕部相机"
+  ],
+  "sample_or_scale": "真机评测共 960 次 rollout（VLA 轨道 640 + WAM 轨道 320），每任务-策略对 40 次"
+ },
+ "evaluation": {
+  "design": "冻结基准（任务定义、物体集、初始条件库、超时与安全规则）后评测；策略执行与场景搭建双人分离；策略顺序随机化；记录终止原因；UMI 数据全部采自非评测场景（保守的场景偏移设置）",
+  "baselines": [
+   "同 backbone 的真机遥操作后训练（C2/C4/C6）",
+   "Qwen-VL 随机初始化动作头的 scratch 基线（C1 vs C7）",
+   "真随机动作参考（WAM 解码诊断）"
+  ],
+  "metrics": [
+   "二元任务成功率",
+   "WAM 整段 12 步双臂 XYZ 轨迹 RMSE（mm）",
+   "相邻帧 SO(3) 测地误差（度）",
+   "held-out 动作 MSE 及幂律拟合"
+  ],
+  "ablations": [
+   "UMI 后训练数据量缩放（400-6400 episodes）",
+   "UMI 预训练初始化消融",
+   "真值未来视频条件化诊断（隔离视频生成与动作解码误差）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "处理管线端到端保真度：约 2 m 工作空间内末端平均平移误差 3 mm（对基站真值）、跨传感器时间偏差 <40 μs、轨迹重建通过率 98%、夹爪角误差 <0.1°",
+   "scope": "HiFi-UMI 采集与处理管线",
+   "locator": "3.4 Processed-Data Quality, Table 2"
+  },
+  {
+   "finding": "纯 UMI 后训练在 StarVLA-QwenPI/OpenPI-π0.5/LingBot-VA 上与同场景遥操作后训练差距分别为 -2.5/+3.1/-0.6 个百分点，方向不一致且在抽样噪声内",
+   "scope": "四任务三 backbone、960 次真机 rollout",
+   "locator": "6.2 Can UMI-Only Post-Training Match Teleoperation-Based Post-Training?"
+  },
+  {
+   "finding": "WAM 真值视频诊断下，UMI 后训练策略在真实机器人 held-out 观测上整段 XYZ RMSE 24.33 mm，与遥操作后训练的 21.64 mm 接近；UMI→Real 与 UMI→UMI 跨域差仅 3.20 mm / 0.23°",
+   "scope": "LingBot-VA，四任务，真值未来视频条件",
+   "locator": "6.2 Can UMI-Only Post-Training Match Teleoperation-Based Post-Training?, Figure 12"
+  },
+  {
+   "finding": "保真度被整体验证而未分解：结果证明高保真充分，但未回答部署需要每项保真度因子的具体阈值",
+   "scope": "作者自述局限",
+   "locator": "7 Discussion"
+  },
+  {
+   "finding": "腕部相机 VIO 视野被手或操作物遮挡，轨迹易受追踪失败与累积漂移影响；头戴视点更稳定",
+   "scope": "设计动机，对比既有 UMI 族设备",
+   "locator": "3.1 HiFi-UMI Capture Device"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "评测范围限于四个桌面双臂任务与三个 backbone，其他任务/本体/偏移下的泛化未验证；预训练缩放证据仅在 StarVLA-QwenPI 上",
+    "locator": "7 Discussion"
+   },
+   {
+    "limitation": "每任务-策略对仅 40 次 rollout，2.5 个百分点的分辨率限制任务级比较",
+    "locator": "7 Discussion"
+   },
+   {
+    "limitation": "保真度整体验证、未分解，未给出各保真度因子（轨迹精度/相对位姿/同步/视场）的边际贡献与部署所需阈值",
+    "locator": "7 Discussion"
+   },
+   {
+    "limitation": "UMI 与遥操作对比非样本匹配（约 3200 vs 300 条），比较的是实用数据生产线而非逐条数据效率",
+    "locator": "7 Discussion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "3 mm 精度声明是相对基站真值在约 2 m 累积头轨迹工作空间内的均值，且作者主动放弃全局回环、将长时程全局漂移仅约束到厘米级；更大范围移动操作的全局精度不能由本文直接支持",
+    "basis": "3.3.2 放弃全局回环 + 3.4 精度评测口径"
+   },
+   {
+    "boundary": "持平结论在约 10 倍于遥操作的 UMI 样本量下取得；若只能获得少量无本体数据，本文结论不保证同样的部署可用性",
+    "basis": "6.2.1 与 7 Discussion 的非样本匹配声明"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：与采集端共享夹爪/腕部相机物理接口的双臂桌面操作、约 2 m 工作空间内局部轨迹精度、数千条级 UMI 后训练数据与 40 次 rollout 的统计分辨率；不直接外推到全局长时程移动操作、不同末端执行器接口、或低样本（数百条）无本体后训练场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "数据源头是唯一受控变量：backbone、初始化、优化、动作表示、部署栈在 UMI 与遥操作条件间完全固定，且三个 backbone 一致结论提供收敛证据",
+   "评测协议严格（冻结基准、双人分离、随机顺序、终止原因记录），且 UMI 条件处于场景偏移的不利位置，使持平结论保守",
+   "WAM 真值视频诊断将动作解码误差与视频生成误差解耦，直接量化跨域动作标签可用性"
+  ],
+  "design_risks": [
+   "精度数字（3 mm）为自测且各文献口径不同，作者在 Table 1 也承认只能按数量级解读",
+   "UMI 条件样本量约为遥操作 10 倍，持平部分可由数据量而非仅由保真度解释（作者已声明未分解）",
+   "98%×98% 两道闸门意味着约 4% 采集被丢弃，被丢弃轨迹的误差分布未报告"
+  ],
+  "baseline_fairness": "同 backbone 内公平（仅换数据源）；遥操作基线在评测场景内采集，对基线有利；跨 backbone 绝对成功率不可比，作者明确只做组内对比。",
+  "metric_validity": "二元成功率是部署效用指标；WAM 的整段 chunk XYZ RMSE 与相邻帧 SO(3) 误差直接度量交给控制器的轨迹，比单步误差更贴近部署；握持通道因接口语义不一致被显式排除，处理谨慎。",
+  "reproducibility": "开源 2000 小时子集与格式元数据；评测协议细节（40 次、双人分离、冻结基准）完整；但采集硬件与 SLAM 实现未在文中给出可复现的开源承诺细节。",
+  "external_validity": "四任务三 backbone 的范围有限；场景偏移下单场景评测；UMI 操作者多样性（多场地多操作者）支持一定外部效度。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.25895-C01",
+   "claim": "HiFi-UMI 的头戴离线双目惯性 SLAM + 标记块手部定位管线在约 2 m 累积头轨迹工作空间内达到 3 mm 平均末端平移误差（以基站追踪为真值、仅用于精度评测），跨传感器时间偏差 <40 μs，轨迹重建通过率 98%，夹爪开合角误差 <0.1°。",
+   "stance": "support",
+   "relation": "为综述问题提供采集端手部追踪精度的量化锚点：无本体 ego-centric 采集可达到 3 mm 级末端轨迹精度与微秒级同步，这是该数据可直接充当动作标签的精度前提。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 3.4 与 Table 2 直接报告端到端保真度五项指标，并说明 3 mm 是在约 2 m 工作空间内对基站真值的平均平移误差。",
+   "locator": "3.4 Processed-Data Quality, Table 2",
+   "source_context": "Tab. 2 reports the end-to-end fidelity of the processed data. The pipeline delivers 3 mm end-effector accuracy, cross-sensor timing offsets below 40 μs, fewer than two dropped frames per hour of capture, a 98% trajectory- reconstruction success rate, and gripper-state error below 0.1",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "local end-effector translational error (mm); cross-sensor timing offset; trajectory reconstruction pass rate; gripper opening-angle error（末端平移误差/同步偏差/重建通过率/夹爪角误差）",
+    "value_or_direction": "3 mm mean; < 40 μs; 98%; < 0.1°",
+    "comparator": "base-station tracking ground truth, used only for the accuracy evaluation（基站追踪真值，仅用于精度评测）",
+    "task_or_sample": "HiFi-UMI 全量处理语料的典型操作工作空间",
+    "locator": "3.4 Processed-Data Quality, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值、口径（局部工作空间、对基站真值、均值）与 Table 2 及 3.4 节正文一致；claim 限定在该采集管线内，未外推到其他设备。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C02",
+   "claim": "在三种 backbone（StarVLA-QwenPI、OpenPI-π0.5、LingBot-VA）上，仅用 HiFi-UMI 无本体数据后训练的策略与同场景遥操作后训练相比，聚合成功率差分别为 -2.5、+3.1、-0.6 个百分点，方向不一致且在 40 次/任务-策略的抽样噪声内；UMI 数据全部采自非评测场景，处于场景偏移的不利位置。",
+   "stance": "support",
+   "relation": "支持综述核心命题的条件性答案：当手部/末端轨迹精度达到 3 mm 级、同步达微秒级时，无本体 ego-centric 采集数据重定向后的本体末端轨迹可用性可与真机遥操作后训练持平，无需真机锚点数据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 6.2 三个组内受控对比（VLA 轨道 640 次 + WAM 轨道 320 次 rollout）报告了聚合成功率差；作者明确差异在抽样噪声内且比较非样本匹配（每任务约 3200 条 UMI vs 300 条遥操作）。",
+   "locator": "6.2 Can UMI-Only Post-Training Match Teleoperation-Based Post-Training?",
+   "source_context": "On StarVLA-QwenPI, the UMI-post-trained policy achieves 51.3% success (82/160), compared with 53.8% (86/160) for its teleoperation-trained counterpart, corresponding to a difference of only 2.5 percentage points.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "二元任务成功率（聚合四任务）",
+    "value_or_direction": "UMI 减遥操作：StarVLA-QwenPI -2.5 pp（51.3% vs 53.8%）、OpenPI-π0.5 +3.1 pp（77.5% vs 74.4%）、LingBot-VA -0.6 pp（56.9% vs 57.5%）",
+    "comparator": "同 backbone 的真机遥操作后训练（同评测场景采集）",
+    "task_or_sample": "四个桌面双臂任务，每任务-策略对 40 次真机 rollout，共 960 次",
+    "locator": "6.2 Can UMI-Only Post-Training Match Teleoperation-Based Post-Training?"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "三个差值与 6.2.1/6.2.2 正文逐一核对一致；claim 保留了非样本匹配与场景偏移两处限定，未将持平推广为逐条数据效率等价。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C03",
+   "claim": "HiFi-UMI 将保真度（轨迹精度、双臂相对位姿、同步、视场）作为整体设计原则验证，但未做受控退化消融，因此其结果只证明高保真充分，未回答可部署策略对每项保真度因子的具体需求阈值。",
+   "stance": "gap",
+   "relation": "直接标明综述问题中『可接受阈值』子问题的证据空白：目前尚无将手部追踪精度逐步退化以测定部署可用性阈值的受控实验。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec 7 作者自述『Fidelity is validated as a whole, not decomposed』，并提出需要选择性退化各因子的系统消融才能给出可操作的保真度规格。",
+   "locator": "7 Discussion",
+   "source_context": "Fidelity is validated as a whole, not decomposed. We treat fidelity as a design principle realized jointly by trajectory accuracy, inter-gripper relative pose, synchronization, and field of view, and we do not isolate these factors through controlled degradation. Our results thus show that high fidelity suffices, but not how much of each property a deployable policy requires.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文明确承认未分离各保真度因子、未给出阈值；claim 与作者表述同义且未扩大。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C04",
+   "claim": "腕部相机 VIO 的视野会被手或被操作物体经常性遮挡，使轨迹易受追踪失败与累积漂移影响；HiFi-UMI 据此改用头戴视点（头运动远小于手运动）加标记块相对定位，并以源轨迹有效性检查剔除 SLAM 追踪失败、丢帧、时间戳不连续、严重手部位姿离群与动作尖峰等片段。",
+   "stance": "conditional",
+   "relation": "刻画误差来源与缓解手段：无本体 ego-centric 手部追踪的主要失效模式是遮挡驱动的追踪失败与漂移；头戴视点 + 离线优化 + 显式有效性过滤是本文给出的缓解路径。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 3.1.1 陈述腕部 VIO 的遮挡/漂移失效模式与头戴方案动机；Sec 5.5 列出训练前的源轨迹剔除规则，覆盖 SLAM 失败与手部位姿离群。",
+   "locator": "3.1 HiFi-UMI Capture Device",
+   "source_context": "Wrist-camera VIO is cheaper and lighter than either, yet its view is routinely occluded by the hand or the manipulated object, leaving trajectories vulnerable to tracking failure and accumulated drift.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "失效模式表述逐字来自 3.1.1；剔除规则清单与 5.5 原文一致（同卡合并两处、均限定于本文系统）。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C05",
+   "claim": "在 LingBot-VA 的真值未来视频诊断下（隔离视频生成误差），UMI 后训练策略在真实机器人 held-out 观测上的整段 12 步双臂 XYZ 轨迹 RMSE 为 24.33 mm，接近遥操作后训练的 21.64 mm；UMI→Real 与 UMI→UMI 的跨域差仅 3.20 mm 平移、0.23° 旋转，表明 UMI 动作标签训练出的解码器跨观测域退化很小。",
+   "stance": "support",
+   "relation": "量化误差传播链末端：采集端 3 mm 级轨迹误差经重定向进入动作标签后，策略输出的整段轨迹误差保持在厘米级（约 24 mm），且与遥操作标签训练的解码器差距约 2.7 mm。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 6.2.2 Figure 12 及正文给出 Real→Real 21.64 mm、UMI→Real 24.33 mm、UMI→UMI 21.13 mm，并报告跨域差 3.20 mm/0.23°；真随机参考约 117-124 mm 提供尺度。",
+   "locator": "6.2 Can UMI-Only Post-Training Match Teleoperation-Based Post-Training?, Figure 12",
+   "source_context": "resulting in cross-domain differences of only 3.20 mm in translation and 0.23",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "整段 12 步双臂 XYZ 轨迹 RMSE / 相邻帧 SO(3) 误差",
+    "value_or_direction": "UMI→Real 24.33 mm / 0.65°；遥操作 Real→Real 21.64 mm / 0.46°；跨域差 3.20 mm / 0.23°",
+    "comparator": "遥操作后训练参考与真随机动作（117.57 mm）",
+    "task_or_sample": "LingBot-VA 四任务 held-out 观测，真值未来视频条件化诊断",
+    "locator": "6.2 Can UMI-Only Post-Training Match Teleoperation-Based Post-Training?, Figure 12"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四个数值与图 12 标注及正文一致；claim 明确该诊断以真值视频为条件、非可部署模式，未把离线误差当作闭环成功率。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Chi et al., Universal Manipulation Interface (UMI), RSS 2024, arXiv:2402.10329",
+   "role": "本文改进的基准采集方案；其腕部 VI-SLAM 精度与失效模式是对照对象"
+  },
+  {
+   "citation": "Fang et al., AirExo-2, arXiv:2503.03081",
+   "role": "对 UMI 族手持设备缺陷的归因（视觉 SLAM 动作不准、视场限制深度感知）被本文引用以定位问题"
+  }
+ ],
+ "notes": "html-flat 抽取中 Related Work（Sec 2）标题未被识别为独立 section，相关背景证据改由 3.1/5.5 内的等价表述承载。Table 1 的跨系统精度数字作者自述只能按数量级解读，未单独成卡。"
+}

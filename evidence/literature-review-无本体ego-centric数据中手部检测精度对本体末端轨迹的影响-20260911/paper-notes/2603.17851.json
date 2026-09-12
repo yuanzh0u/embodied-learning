@@ -1,0 +1,291 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.17851",
+  "title": "DexViTac: Collecting Human Visuo-Tactile-Kinematic Demonstrations for Contact-Rich Dexterous Manipulation",
+  "published": "2026-03-18",
+  "url": "https://arxiv.org/abs/2603.17851",
+  "authors": [
+   "Xitong Chen",
+   "Yifeng Pan",
+   "Min Li",
+   "X. Ding"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接对比视觉手部追踪（RTMPose）与 IMU 动捕手套在遮挡下的轨迹质量，并给出 T265 VIO 全局位姿 + 增量重定向的误差路径；覆盖误差来源（遮挡）、缓解手段（手套/触觉/触觉锚定同步）与效率-精度权衡。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "接触丰富灵巧操作中触觉与手部运动学采集的缺口"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "UMI/DexCap/DexUMI 等采集范式定位"
+   },
+   {
+    "locator": "III. METHOD",
+    "role": "method-or-design",
+    "purpose": "硬件（Manus 手套、T265、GoPro、LongLin-96 触觉）、触觉锚定同步、重定向与去噪"
+   },
+   {
+    "locator": "IV. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "策略消融 Table I、采集效率、IV-D 手部追踪质量对比"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "局限（固定基座、单臂）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "ACKNOWLEDGMENT",
+    "role": "appendix-or-supplement",
+    "purpose": "致谢与证据无关"
+   },
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表，不影响证据判定"
+   }
+  ]
+ },
+ "research_question": "如何以便携、无本体的人本系统在非结构化环境大规模采集视觉-触觉-运动学耦合的灵巧操作示教，并通过运动学锚定的触觉表征学习支撑接触丰富任务的策略学习？",
+ "contributions": [
+  "DexViTac 采集系统：鱼眼第一视角（177°）+ Manus Quantum 动捕手套 + HIT LongLin-96 高密度触觉 + T265 全局位姿，人机镜像同构传感",
+  "运动学锚定的触觉表征学习（视觉冻结锚点 + InfoNCE 时空对齐），两阶段迁移到 ACT 策略",
+  "2400+ 条视触运动学示教数据集（40+ 任务、10+ 环境），采集效率 248 条/小时"
+ ],
+ "method": {
+  "summary": "人本接口用 Manus IMU 手套以 Stretch/Spread 相对参数表示 19 自由度手运动，T265 VIO 输出腕部 6 自由度局部轨迹（带置信度），经自定义误差补偿与 R_c2b 自动标定增量重定向到机器人基座坐标系；触觉 1000Hz 传感经动态基线软阈值去噪；多模态以触觉 60Hz 时间戳为锚做帧级/整数下采样/最近邻软件对齐；策略端先自监督预训练（视觉-触觉对齐 + 时序一致性）再用 ACT 行为克隆。",
+  "assumptions": [
+   "IMU 动捕手套在遮挡与近距离接触下比视觉手部追踪更稳健",
+   "Stretch/Spread 相对参数在精度与跨操作者泛化间取得平衡并利于重定向",
+   "触觉事件时间敏感性最高，故以触觉时间戳为全局锚可保证接触状态的因果完整性"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "DexViTac 数据集：2400+ 示教、40+ 任务、10+ 真实环境（厨房/家居/零售/办公）"
+  ],
+  "tasks": [
+   "Pipetting",
+   "Whiteboard Erasing",
+   "Marker Insertion",
+   "Fruit Collection"
+  ],
+  "embodiments": [
+   "RealMan RM-65 臂 + Inspire RH56DFTP 五指灵巧手（与人本接口同型号触觉传感器）"
+  ],
+  "sample_or_scale": "策略评测每任务 30 次；采集效率对比（DexViTac 14.5 s/条 vs 自然手 13.1 s/条 vs 遥操作 112.3 s/条）"
+ },
+ "evaluation": {
+  "design": "四任务策略消融（Full vs 仅视觉 B1 vs 无预训练 B2 vs 无时空锚定 B3），各 30 次；采集效率对比；IV-D 与 RTMPose 的手部追踪轨迹质量对比（图 8-9，曲线级）",
+  "baselines": [
+   "B1 Vision-only ACT",
+   "B2 w/o Pretraining",
+   "B3 w/o Spatio-temporal Grounding",
+   "RTMPose（手部追踪对照）"
+  ],
+  "metrics": [
+   "任务成功率",
+   "采集时长/吞吐",
+   "追踪曲线平滑性（定性）"
+  ],
+  "ablations": [
+   "触觉模态去除",
+   "预训练去除",
+   "运动学先验与时序一致性去除"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Full 方法四任务平均成功率 85.8%（83.3/86.7/80.0/93.3），仅视觉 B1 平均 17.5%，其中遮挡/力控任务 pipetting 6.7%、erasing 16.7%",
+   "scope": "四任务各 30 次",
+   "locator": "B. Task-Level Deployment and Generalization, Table I"
+  },
+  {
+   "finding": "抓取中 1.5-5 s 手物互遮挡段，RTMPose 出现显著高频抖动与阶跃跳变及物理穿插，DexViTac 动捕手套输出平滑连续且满足物理约束的关节轨迹",
+   "scope": "IV-D 图 8-9 曲线级对比，无数值误差指标",
+   "locator": "D. Hand Pose Tracking Quality"
+  },
+  {
+   "finding": "采集效率 248 条/小时，显著高于遥操作 84 条/小时，接近自然人手 275 条/小时",
+   "scope": "四任务平均 14.5 s/条",
+   "locator": "C. Data Collection Efficiency"
+  },
+  {
+   "finding": "全局腕部轨迹来自 T265 VIO 局部位姿 + 误差补偿 + R_c2b 自动标定的增量重定向；论文未报告全局轨迹的定量精度",
+   "scope": "III-A-4 与 III-C-2",
+   "locator": "C. Data Preprocessing"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "固定基座限制长时程操作范围，单臂模态不足以支撑双臂非对称协调任务",
+    "locator": "V. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "IV-D 的视觉 vs 手套追踪对比为曲线级定性证据（无关节误差数值、无真值参照），『quantitatively analyzed』实际只定位了抖动发生的时段",
+    "basis": "IV-D 与图 9 均无数值指标"
+   },
+   {
+    "boundary": "T265 已于上游停产且其 VIO 在弱纹理/快速运动下的漂移未评估；全局轨迹精度完全未量化，重定向公式的误差传播未分析",
+    "basis": "III-A-4/III-C-2 仅描述机制"
+   },
+   {
+    "boundary": "摘要称 248 条/小时而结论写『exceeding 100 demos/hour』，两处数字不一致（应为同一指标的笔误）",
+    "basis": "摘要与 V. CONCLUSION 表述不一致"
+   },
+   {
+    "boundary": "同步为软件级（ROS2 时钟+最近邻匹配），无硬件触发，接触级微秒对齐不在本文范围",
+    "basis": "III-B 同步机制"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：单臂+五指灵巧手的桌面接触丰富任务、IMU 动捕手套可用的操作者、T265 局部轨迹可接受的相对短程演示；全局末端轨迹精度无定量口径，视觉基线对比为定性曲线级；固定基座与单臂设定不外推至移动/双臂场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "消融链完整（去触觉/去预训练/去时空锚定），成功率差距大且方向一致",
+   "人机两侧使用同型号触觉传感器，硬件层消除触觉域差",
+   "采集效率给出与遥操作、自然手的量化对照"
+  ],
+  "design_risks": [
+   "追踪质量对比（Q3）无定量误差指标，仅有图 8-9 的曲线展示，且 RTMPose 为单人通用 2D 姿态模型而非手部专用 SOTA，基线代表性有限",
+   "未报告 T265 全局轨迹精度，『stable and precise tracking』无数值支撑",
+   "摘要与结论的吞吐数字不一致（248 vs 100 条/小时）"
+  ],
+  "baseline_fairness": "策略消融公平（同数据同架构）；追踪对比的 RTMPose 非手部追踪最强基线，存在低估视觉方案上限的风险。",
+  "metric_validity": "成功率为任务级指标；追踪质量无定量指标是主要缺口；效率指标（条/小时）定义清晰。",
+  "reproducibility": "硬件型号、采样率、去噪公式、训练目标完整；声称开源硬件/数据/代码。",
+  "external_validity": "10+ 环境与 40+ 任务提供一定多样性；所有策略评测限于四个代表性任务与单一机器人平台。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.17851-C01",
+   "claim": "在 DexViTac 数据中，视觉手部追踪（RTMPose）在手-物互遮挡与自遮挡下失效：抓取 1.5-5 s 段出现显著高频抖动、阶跃式突变与物理穿插；IMU 动捕手套输出全程平滑连续、满足物理约束的关节轨迹。该对比为曲线级定性证据，无关节误差数值。",
+   "stance": "support",
+   "relation": "直接回答误差来源：ego-centric 接触丰富场景中视觉手部检测的失效模式（遮挡驱动抖动/跳变/穿插）会污染手指级动作标签；物理动捕是本文验证的缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 与图 8-9 描述 RTMPose 在遮挡下的抖动/跳变/穿插及手套方案的平滑连续；作者自述『quantitatively analyzed』但仅给出时段定位（1.5-5 s），无误差数值。",
+   "locator": "D. Hand Pose Tracking Quality",
+   "source_context": "It is observed that between 1.5 s and 5 s, the vision- based baseline RTMPose exhibits significant high-frequency jitter and sudden step-like mutations.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "失效现象与时段与 IV-D 原文一致；claim 显式标注证据为定性曲线级、无数值，未夸大。"
+   }
+  },
+  {
+   "card_id": "2603.17851-C02",
+   "claim": "在四任务各 30 次的真机评测中，完整多模态方法平均成功率 85.8%，而仅视觉 ACT 基线仅 17.5%；在视觉遮挡（pipetting 6.7%）与力反馈依赖（erasing 16.7%）任务上仅视觉方案近乎失效。",
+   "stance": "support",
+   "relation": "支撑『遮挡下的观测缺口会转化为部署失败』：视觉在接触丰富任务中丢失手部-物体状态，加入动捕手部运动学与触觉（其采集不依赖视觉检测）后成功率恢复，说明采集端绕开视觉手部检测的价值。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 给出四任务四方法成功率；IV-B 正文将 B1 的失败归于视觉遮挡与力反馈缺失。",
+   "locator": "B. Task-Level Deployment and Generalization, Table I",
+   "source_context": "In tasks characterized by visual occlusion (pipetting) or a heavy reliance on force feedback (erasing), the vision- only scheme (B1) yields success rates of only 6.7% and 16.7%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate (%)",
+    "value_or_direction": "Ours(Full) avg 85.8 vs B1 vision-only avg 17.5; pipetting 83.3 vs 6.7; erasing 86.7 vs 16.7",
+    "comparator": "B1 Vision-only ACT trained on the same demonstrations",
+    "task_or_sample": "four contact-rich tasks, 30 trials each, RealMan RM-65 + Inspire hand",
+    "locator": "B. Task-Level Deployment and Generalization, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值与 Table I（B1 6.7/16.7/13.3/33.3 均值 17.5；Ours 83.3/86.7/80.0/93.3 均值 85.8）一致；注意该对比同时改变触觉与运动学条件化，claim 未将其单独归因于手部追踪精度。"
+   }
+  },
+  {
+   "card_id": "2603.17851-C03",
+   "claim": "DexViTac 的全局腕部轨迹由 RealSense T265 内置 VIO 输出（带置信度、无需外部标定）经自定义误差补偿与 R_c2b 自动标定后增量重定向到机器人基座；作者声明该设置可稳定精确追踪腕部轨迹，但全文未报告全局轨迹的定量精度或漂移数值。",
+   "stance": "gap",
+   "relation": "指出末端轨迹精度证据缺口：无本体采集的全局末端轨迹依赖消费级 VIO + 增量重定向，其误差（漂移、标定误差传播）未经量化即被声称为精确，综述中此类『高保真』声明需按未量化处理。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-A-4 描述 T265 VIO + 误差补偿；III-C-2 给出增量重定向公式与 R_c2b 标定流程；全文检索无任何毫米/度数级轨迹精度数值。",
+   "locator": "A. Hardware Design; C. Data Preprocessing",
+   "source_context": "Combined with a custom error- compensation algorithm, this setup enables stable and precise tracking of wrist trajectories.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "机制描述与 III-A-4/III-C-2 一致；『无量化精度』经全文检索确认（唯一数值精度声明是触觉传感器 <5% FS）。"
+   }
+  },
+  {
+   "card_id": "2603.17851-C04",
+   "claim": "DexViTac 的采集效率超过 248 条/小时（四任务平均 14.5 s/条），显著高于传统遥操作的 84 条/小时（112.3 s/条），接近自然人手的 275 条/小时（13.1 s/条）。",
+   "stance": "conditional",
+   "relation": "说明手套+VIO 的无本体采集在保持手指级与触觉保真的同时维持接近自然手的吞吐，是高精度方案可规模化的条件性证据（效率口径不含因追踪失败而丢弃的数据比例，该比例未报告）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-C 与图 7 给出三方案每示教时长与吞吐对比；结论节另写『exceeding 100 demos/hour』与摘要/正文不一致，按正文 248 为准。",
+   "locator": "C. Data Collection Efficiency",
+   "source_context": "the data collection efficiency of our system ex- ceeds 248 demos/hour, which is significantly higher than the 84 demos/hour of teleoperation and approaches the 275 demos/hour efficiency of natural human hands",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "data collection throughput (demos/hour) and mean duration (s/demo)",
+    "value_or_direction": "248 demos/h (14.5 s/demo) vs teleoperation 84 demos/h (112.3 s/demo) vs natural hand 275 demos/h (13.1 s/demo)",
+    "comparator": "traditional teleoperation and natural human demonstration",
+    "task_or_sample": "four representative contact-rich tasks",
+    "locator": "C. Data Collection Efficiency, Figure 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "三组数字与 IV-C 正文及图 7 标题一致；claim 附加说明废片率未报告，未把吞吐等同于有效高精度数据产率。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Chi et al., Universal Manipulation Interface (UMI), RSS 2024",
+   "role": "无本体采集范式基准，本文扩展至五指+触觉"
+  },
+  {
+   "citation": "Jiang et al., RTMPose, CoRR 2023",
+   "role": "IV-D 视觉手部追踪对照基线"
+  }
+ ],
+ "notes": "摘要『248/h』与结论『100/h』不一致，卡片采用正文数值并在 verification 中注明。追踪对比为定性曲线级，引用时勿赋予数值精度。"
+}

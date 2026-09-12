@@ -1,0 +1,273 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.11628",
+  "title": "LUCID: Learning Embodiment-Agnostic Intent Models from Unstructured Human Videos for Scalable Dexterous Robot Skill Acquisition",
+  "published": "2026-06-10",
+  "url": "https://arxiv.org/abs/2606.11628",
+  "authors": [
+   "Harsh Gupta",
+   "Guanya Shi",
+   "Wenzhen Yuan"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "LUCID 代表与直接轨迹重定向相对的另一条路线：只用 WiLoR 手部重建提供'粗略 palm pose'意图监督，把精度敏感的执行交给仿真 RL 策略；其 Limitations 明确给出四级感知链（ViPE/SAM 3.1/DenseTrack3Dv2/WiLoR）的故障点与'in-hand occlusion 等感知故障沿链传播到策略'的误差传播路径，闭环 73% vs 开环 28% 的对照量化了闭环重查询对感知/参考误差的吸收能力，直接命中综述问题的误差传播与缓解维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "intent-control 分离动机与闭环 73% vs 开环 28% 头条结果"
+   },
+   {
+    "locator": "2.3 Intent representations for robot policies",
+    "role": "relevant-core",
+    "purpose": "flow vs hand-centric 表征的互补性与 executor 为主要失败模式的论断"
+   },
+   {
+    "locator": "3.1 Intent Model",
+    "role": "method-or-design",
+    "purpose": "四级提取管线（ViPE/SAM 3.1/DenseTrack3Dv2/WiLoR）与 palm pose 获取方式"
+   },
+   {
+    "locator": "3.2 Generalist Sensorimotor Policy; 3.3 Real-World Execution",
+    "role": "method-or-design",
+    "purpose": "仿真 RL 策略如何消费含噪意图参考、闭环部署时序"
+   },
+   {
+    "locator": "4 Experimental Results",
+    "role": "results-or-analysis",
+    "purpose": "五任务真实成功率、数据规模缩放、跨本体迁移与失败模式聚类"
+   },
+   {
+    "locator": "5 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "管线脆弱性、任务条件缺口、接口信息损失三条作者自述局限"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1 Dexterous robot manipulation from human video; 2.2 Sim-to-real RL",
+    "reason": "相关工作定位，无独立证据价值"
+   }
+  ]
+ },
+ "research_question": "如何用非结构化人视频（互联网规模）提供 embodiment-agnostic 的操作意图监督，同时用大规模仿真 RL 提供本体特定的控制，从而摆脱遥操作与结构化采集？",
+ "contributions": [
+  "提出 intent-control 分离框架：意图模型 f_θ 从非结构化人视频学习短期物体 flow + 粗略 palm pose 预测，sensorimotor 策略 π 在仿真中学会跟踪该参考",
+  "意图模型闭环部署：每个意图周期从实时场景重查询，而非 t=0 一次性开环规划",
+  "同一意图模型驱动灵巧手与平行夹爪两种本体，self-collected 任务上成功率相当（各 19/30）",
+  "数据缩放规律：binning 语料 1k→20k clips，held-out intent loss 幂律下降、真实成功率随之上升"
+ ],
+ "method": {
+  "summary": "意图模型：适配 CoTracker3 为 point-token transformer，条件于冻结 DINOv3 patch tokens + 深度残差适配器，从当前 RGB-D 观测前向预测 T 步物体 query 点 3D flow 与 palm pose；监督来自四级提取管线——ViPE 估计相机内外参与米制深度、SAM 3.1 给出物体/人 mask、DenseTrack3Dv2 追踪物体 query 点并经深度反投影得 3D 轨迹、WiLoR 输出 MANO 手网格经逐帧刚体拟合到深度得 palm pose。控制策略：Isaac Lab 中 PPO 训练 teacher（特权状态），再混合 PPO+蒸馏得到 student（机载传感）；奖励以物体跟踪为主、palm 跟随与手指接触为 shaping。部署时慢意图环套快控制环，f_θ 周期性重查询。",
+  "assumptions": [
+   "短期意图可用物体 flow + 粗略 palm pose 充分表达（显式丢弃手指构型与精细接触）",
+   "人视频提取管线（深度/分割/追踪/手部网格）的输出质量足以监督意图模型",
+   "仿真中程序生成的参考分布能覆盖部署时 f_θ 输出的参考分布",
+   "部署时有外部 RGB-D 相机与腕部深度相机可用"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "每任务 20k 互联网视频 clips（stirring/wiping/binning，来自公开视频数据集）",
+   "每任务约 100 条自采智能手机演示 / 1 hr（push-T、cable routing）",
+   "held-out 1k binning clips（intent loss 评测）"
+  ],
+  "tasks": [
+   "stirring（三圈搅拌）",
+   "wiping（清除随机污渍）",
+   "binning（拾取入容器）",
+   "push-T",
+   "cable routing"
+  ],
+  "embodiments": [
+   "LEAP Hand（灵巧手）+ 机械臂",
+   "平行夹爪变体"
+  ],
+  "sample_or_scale": "web-supervised 三任务各 10 trials × 3 scenarios；自采两任务每本体 15 trials；策略消融 3 seeds"
+ },
+ "evaluation": {
+  "design": "真实世界端到端评测：web 任务上闭环 LUCID vs 开环 Veo 3.1 planner（同一 sensorimotor 策略）；自采任务上灵巧手 vs 平行夹爪；binning 数据规模扫描（1k-20k）；仿真内四项策略消融。",
+  "baselines": [
+   "Open-loop planner（Veo 3.1 视频生成 + 提取 flow/palm 参考驱动同一策略）",
+   "MLP encoder / no eigen-grasp / DAgger-BC / no wrist cam（策略消融）"
+  ],
+  "metrics": [
+   "真实世界任务成功率",
+   "held-out intent loss",
+   "仿真 episode reward（消融）"
+  ],
+  "ablations": [
+   "闭环 vs 开环意图（4.1）",
+   "意图数据规模 1k/2k/5k/10k/20k（4.2）",
+   "跨本体（4.3）",
+   "策略编码器/eigen-grasp/蒸馏目标/腕部相机（4.4）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "闭环 LUCID 在 web 监督三任务上平均成功率 73%，开环 planner 基线仅 28%；开环在执行偏离计划时因陈旧参考使策略混乱失败",
+   "scope": "stirring/wiping/binning 三任务各 30 trials，同一 sensorimotor 策略",
+   "locator": "1 Introduction; 4.1 Real-World Capability on Web-Scraped Tasks"
+  },
+  {
+   "finding": "失败聚类于感知问题（物体被手遮挡，如勺子）与不稳定抓取导致的不可恢复状态；自采任务上失败集中于意图模型无法驱动策略的 OOD 状态",
+   "scope": "作者定性归纳；App. C.2 有 per-scenario 分解",
+   "locator": "4.1 Real-World Capability on Web-Scraped Tasks; 4.3 Intent Transfer Across Robot Embodiments"
+  },
+  {
+   "finding": "作者自述四级提取链（SAM 3.1、DenseTrack3Dv2、ViPE、WiLoR）每一级都是数据提取与部署时的故障点，in-hand occlusion 与无纹理物体等感知故障沿链传播到 sensorimotor 策略",
+   "scope": "作者 Limitations (1) 自述",
+   "locator": "5 Limitations"
+  },
+  {
+   "finding": "3D-flow+palm-pose 接口是手工设计的有损接口，丢弃手指构型与精细接触信息；即使意图预测准确，也缺少策略完整复现人类演示所需的线索",
+   "scope": "作者 Limitations (3) 自述",
+   "locator": "5 Limitations"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "管线过度模块化：SAM 3.1、DenseTrack3Dv2、ViPE、WiLoR 各自在数据提取与部署时引入故障点；in-hand occlusion、无纹理物体等感知故障沿链传播到 sensorimotor 策略",
+    "locator": "5 Limitations"
+   },
+   {
+    "limitation": "任务条件缺口：无可验证终止条件的任务使意图模型无限循环（stirring 需外部停止）；新任务需手工语料过滤，扩展性差",
+    "locator": "5 Limitations"
+   },
+   {
+    "limitation": "有损显式接口：3D-flow+palm-pose 丢弃手指构型与精细接触，即使意图准确也缺失完整复现人类演示所需线索",
+    "locator": "5 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "palm pose 由 WiLoR MANO 网格逐帧刚体拟合到深度得到，其精度未被独立量化；论文以'rough palm pose'定位该信号，把精度压力转移到 RL 策略的跟踪容差上，因此无法从本文直接读出手部检测误差阈值",
+    "basis": "3.1 定义 intent 为 'rough palm pose'；全文无 WiLoR 重建精度的定量消融"
+   },
+   {
+    "boundary": "73% vs 28% 的对照混杂了闭环重查询与视频生成器（Veo 3.1）幻觉两个因素，不能完全归因于对感知误差的鲁棒性",
+    "basis": "4.1 同时报告 Veo 3.1 会幻觉场景细节（wiped regions where no wipe occurred）"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于'意图级'使用人视频的路线：手部重建只需提供粗略 palm pose 监督，精细执行由仿真 RL 保证；对需要精确指尖/接触轨迹的直接重定向路线不构成替代，其 73%/28% 数字也不能直接读作手部检测精度的容错阈值。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "闭环 vs 开环在同一 sensorimotor 策略上对照，隔离了意图更新机制的贡献",
+   "数据规模扫描同时报告 held-out intent loss 与真实成功率，连接了代理指标与下游表现",
+   "跨本体（灵巧手 vs 夹爪）同意图模型对照设计干净"
+  ],
+  "design_risks": [
+   "开环基线依赖 Veo 3.1 视频生成质量，与闭环对照不完全等价",
+   "感知链四级串联，每级误差未独立拆解，无法归因主导误差源",
+   "自采任务仅 1 hr 数据，跨本体相当成功率可能受小语料瓶颈限制"
+  ],
+  "baseline_fairness": "开环基线复用同一策略公平；但基线本身是视频生成路线而非轨迹重定向路线代表。策略消融在仿真 3 seeds 下进行，规模偏小但方向一致。",
+  "metric_validity": "真实成功率为任务级二值指标（stirring 需外部停止），不含轨迹级精度；intent loss 为代理指标，与成功率同向但非线性。",
+  "reproducibility": "管线组件全部命名（ViPE/SAM 3.1/DenseTrack3Dv2/WiLoR/CoTracker3/DINOv3），超参在附录；有项目页面。",
+  "external_validity": "覆盖互联网视频与自采手机视频、两种本体，外推性较好；但全部任务为单臂单物体短期操作，长程与双手任务未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.11628-C01",
+   "claim": "LUCID 的人视频监督依赖四级提取链（ViPE 深度/相机、SAM 3.1 分割、DenseTrack3Dv2 物体点追踪、WiLoR 手部 MANO 网格拟合），作者自述每一级都是数据提取与部署时的故障点，in-hand occlusion 与无纹理物体等感知故障会沿链传播到 sensorimotor 策略。",
+   "stance": "limit",
+   "relation": "给出无本体人视频路线中手部/物体检测误差的显式传播路径：感知链模块化故障点→意图参考→控制策略",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "5 Limitations (1) 逐项命名四个组件并称各自引入故障点，明确'Perception faults like in-hand occlusion or textureless objects propagate down the chain to the sensorimotor policy'；3.1 详述四级管线职责。",
+   "locator": "5 Limitations",
+   "source_context": "(1) Pipeline brittleness. The system is over-modularized; SAM 3.1, DenseTrack3Dv2, ViPE, and WiLoR each introduce a failure point during data extraction and at deployment. Perception faults like in-hand occlusion or textureless objects propagate down the chain to the sensorimotor policy.",
+   "evidence_type": "discussion",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 5 Limitations 第 (1) 条；claim 组件职责与 3.1 管线描述一致（ViPE=相机/深度、SAM 3.1=mask、DenseTrack3Dv2=物体点追踪、WiLoR=MANO 手网格），未超出作者陈述范围。"
+   }
+  },
+  {
+   "card_id": "2606.11628-C02",
+   "claim": "在同一 sensorimotor 策略下，闭环重查询意图的 LUCID 在三个 web 监督真实任务上平均成功率 73%，显著高于开环视频生成 planner 的 28%；开环在执行偏离（如 misgrasp 后勺子移位）时因陈旧参考使策略混乱失败。",
+   "stance": "support",
+   "relation": "支持'闭环重查询可吸收含噪手部/物体参考带来的误差'这一缓解手段：与其提高单帧检测精度，不如周期性从实时场景重建意图",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "1 Introduction 报告 73% vs 28%；4.1 描述开环基线在 misgrasp 后陈旧参考导致策略混乱，LUCID 在抓取偏差或物体移位时重查询场景并重定向策略。",
+   "locator": "1 Introduction",
+   "source_context": "Closed-loop LUCID achieves 73% average success on the web-supervised tasks vs 28% for an open-loop baseline, and the same intent model drives both embodiments with comparable success (63%) on the smartphone-collected tasks.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-world success rate",
+    "value_or_direction": "73% average success vs 28% for an open-loop baseline",
+    "comparator": "open-loop planner (Veo 3.1) driving the same sensorimotor policy",
+    "task_or_sample": "stirring/wiping/binning 三任务，各 10 trials × 3 scenarios",
+    "locator": "1 Introduction; 4.1 Real-World Capability on Web-Scraped Tasks"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "73%/28% 逐字出现于 1 Introduction 并在 4.1 展开；claim 限定于同一策略的三任务真实评测，注明开环失败机制来自 4.1 正文，未将差距完全归因于感知误差（基线含视频生成因素）。"
+   }
+  },
+  {
+   "card_id": "2606.11628-C03",
+   "claim": "LUCID 有意将手部重建降级为'粗略 palm pose'：WiLoR 的 MANO 手网格逐帧刚体拟合到深度得到 palm pose，与物体 flow 共同构成短视野意图参考，精细手指构型与接触被显式丢弃并委托给仿真 RL 策略；作者承认该有损接口即使在意图准确时也缺失完整复现人类演示所需线索。",
+   "stance": "conditional",
+   "relation": "说明一条绕开手部检测精度瓶颈的设计路线：降低对手部轨迹精度的依赖（rough palm pose），代价是接口信息损失限制可复现的动作精细度",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.1 定义 intent 为 'object motion and rough palm pose' 并描述 WiLoR→刚体拟合→palm pose 链路；5 Limitations (3) 自述接口丢弃 finger configuration and fine contact、即使意图准确也缺失复现线索。",
+   "locator": "3.1 Intent Model",
+   "source_context": "We define manipulation intent as a short-horizon prediction of object motion and rough palm pose, shared across embodiments; the joint-level commands that realize it are delegated to a separate sensorimotor policy.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 3.1 开头定义段；WiLoR 拟合链路与 Limitations (3) 的有损接口陈述均在正文对应位置可查证；claim 把两处信息组合为设计权衡，未超出原文语义。"
+   }
+  }
+ ],
+ "core_citations": [
+  "K. Karaulov et al., WiLoR: End-to-end 3D hand localization and reconstruction in-the-wild, 2024 — palm pose 来源",
+  "N. Karaev et al., CoTracker3, 2024 — 意图模型架构基础",
+  "M. Xu et al., Flow as the cross-domain manipulation interface, CoRL 2024 — flow 接口思想来源"
+ ],
+ "figures": [
+  {
+   "figure_id": "S4.F5",
+   "caption": "Real-world success rates. Per-task success across five real-world tasks, evaluated against task-appropriate baselines.",
+   "section": "4 Experimental Results",
+   "usage": "作者用该图对比闭环 LUCID 与开环 planner（web 任务）及灵巧手与平行夹爪（自采任务）的逐任务成功率。"
+  }
+ ],
+ "notes": "B10 批次第 5 篇。该篇代表'意图级'使用人视频的路线，与直接轨迹重定向路线（EgoAERO/Do as I Do/VideoManip）形成精度需求对照：它把精确手部轨迹的需求替换为粗略 palm pose + 闭环重查询。reader_inferred 已标注 palm pose 精度未独立量化、73/28 对照混杂视频生成因素。"
+}

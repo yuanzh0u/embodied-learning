@@ -1,0 +1,611 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2609.09012",
+  "title": "Spheriverse: 3D Scene Understanding from Spherical Observations in the Wild",
+  "published": "2026-09",
+  "url": "https://arxiv.org/abs/2609.09012",
+  "authors": [
+   "Fei Teng",
+   "Sheng Wu",
+   "Mengfei Duan",
+   "Guoqiang Zhao",
+   "Junhui Ma",
+   "Kai Luo",
+   "Siyu Li",
+   "Hao Shi",
+   "Zhiyong Li",
+   "Kailun Yang"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "dataset",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是『球面（360°全景）相机用于具身/驾驶 3D 空间感知』路线的代表性数据集+基准+方法工作：单台球面相机（360°×136.7° FoV）作为全景感知输入源，LiDAR 提供体素级 3D 监督，建立占据预测/BEV 语义制图/3D 检测三个基准（30+ 方法）。对鱼眼综述的价值：(1) 提供全景相机在稠密占据任务获益（SphereOcc +1.70 mIoU）、BEV 制图获益（OneBEV 第一）、3D 检测受限（最佳 mAP 0.1689 且场景敏感）的任务级对比证据；(2) 提供跨空间表示差异、垂直 FoV 冗余（136.7°→76.7° 性能几乎不变）、水平覆盖收缩退化、顶/底体素层低性能、远距前景可观测性受限等量化边界；(3) 区分环形鱼眼（垂直 ~45°）与宽 FoV 球面相机的硬件谱系。局限：全部为户外车载驾驶场景，无动作/决策闭环，『具身』停留在感知层。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：球面观测（角域）与笛卡尔体素空间的跨空间表示差异引发投影畸变；具身智能对整体 3D 空间感知的需求与球面 FoV 覆盖契合但研究空白。"
+   },
+   {
+    "locator": "page 2-4, Section 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "梳理球面数据集谱系（Table 1）、环形相机垂直 FoV ~45° 局限、占据三范式与 LiDAR 辅助代价、BEV 制图/检测方法在球面输入下的适配空白。"
+   },
+   {
+    "locator": "page 4-6, Section 3 Spheriverse Dataset",
+    "role": "data-or-setting",
+    "purpose": "精读采集平台（DuxCam M4 5188×1979 + Hesai OT128 128 线 LiDAR、标定流程）、数据规模（64,400 对/644 序列/13 区域/五类场景）、时间与语义统计（径向类分布）。"
+   },
+   {
+    "locator": "page 6-8, Section 4 SphereOcc: Proposed Method",
+    "role": "method-or-design",
+    "purpose": "精读问题形式化（球面映射 θ/φ、ERP 像素映射、体素网格定义）与 CSRR（range-azimuth 嵌入+区域重要性门控）与 SER（RTZ 条件化可变形重查询）两模块的数学构造。"
+   },
+   {
+    "locator": "page 8-11, Section 5 Benchmark Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取三基准主结果：占据 Table 3（SphereOcc 13.91/24.65）、语义制图 Table 4（OneBEV 22.66 第一）、3D 检测 Table 5（SparseBEV mAP 0.1689/NDS 0.1221，场景敏感）。"
+   },
+   {
+    "locator": "page 11-14, Section 6 Ablation Studies",
+    "role": "results-or-analysis",
+    "purpose": "提取组件消融（骨干/CSRR/SER 增量）、方位角与垂直分层分析（Table 7 顶/底层极低）、缩减 FoV 鲁棒性（Table 8 水平退化/垂直稳定）与挑战场景（Fig. 8）。"
+   },
+   {
+    "locator": "page 13-14, Section 7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "汇集结论与作者展望（端到端具身驾驶、语言接地空间推理、轨迹规划）；确认无独立 Limitations 节，限制证据分散在 Sec 5.2（检测困难）与 Sec 6.4（挑战场景）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 15-16, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 提取文本到参考文献结束（16 页），论文提到 detailed category definitions 提供在 Appendix，但该附录不在本 v1 文本层内，无法审读。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：球面观测的视觉信息编码在角域而 3D 世界以笛卡尔坐标组织，这一跨空间表示差异如何被系统性研究并弥合？具体地：(1) 建立真实世界球面图像-LiDAR 数据集与三任务基准以刻画现有 3D 感知方法在球面输入下的表现；(2) 提出弥合角域-笛卡尔差异的占据框架 SphereOcc（CSRR 球面几何建模 + SER 语义证据重查询）。",
+ "contributions": [
+  "Spheriverse 数据集：64,400 对时间对齐的球面图像-LiDAR 数据（644 条序列、13 个区域、五类场景 13 子类），DuxCam M4 球面相机（360°水平/136.7°垂直 FoV，5188×1979）+ Hesai OT128 128 线 LiDAR，覆盖 24 小时（夜间 11.34%/黎明 10.40%/白天 48.29%/黄昏 29.97%）与晴/雨天气，三级语义层级的手工 3D 标注。",
+  "三任务基准：语义占据预测（11 个相机方法）、BEV 语义制图（10 个方法）、3D 目标检测（9 个方法，nuScenes 协议），共 30+ 方法、总体+分场景双口径评测。",
+  "SphereOcc 占据框架：CSRR 把球面 range-azimuth 几何以区域级调制并入笛卡尔体素特征，SER 以 range-height-azimuth（RTZ）几何条件化体素查询并从源球面图像特征自适应重检索语义证据。",
+  "在 Spheriverse 占据基准上取得 SOTA：13.91% mIoU / 24.65% GeoIoU（超最强先前 +1.70/+2.10pp），五类场景双指标全第一，并保持方位角分区、垂直分层与缩减 FoV 设置下的一致优势。"
+ ],
+ "method": {
+  "summary": "数据侧：车载球面相机+128 线 LiDAR 同步采集，Zhang 法标内参、以 LiDAR 坐标系为参考标外参，PTP 时钟对齐，点云经外包流水线手工语义标注。方法侧（SphereOcc，纯相机推理）：球面 ERP 图像经 InternImage-T 编码器与 FPN 得多尺度特征，用可学习体素查询做尺度感知 2D→3D 提升得初始笛卡尔体素特征；CSRR 为每个体素构造 [x,y,sinθ,cosθ,z,ρ] 坐标描述子并嵌入，与提升特征拼接后经 3D 卷积显著性估计+区域级平均池化+Softmax 得场景条件门控，以空间门控通道残差方式注入球面几何；SER 把体素特征展平为内容查询，叠加 RTZ 位置描述子的 MLP 嵌入构成条件查询，预测可变形采样偏移与注意力权重，在初始提升缓存的 voxel-to-ERP 参考点周围重查询源球面图像特征（8 头、逐尺度 2/4/8 采样点），残差写回；最后 SurroundOcc 式占据解码器输出四级预测（训练全监督、推理取最高分辨率）。",
+  "assumptions": [
+   "输入为单帧球面 ERP 图像（评测时下采样至 2480×512）；相机内参与外参已对 LiDAR 坐标系标定。",
+   "监督依赖 LiDAR 点云的体素级语义标注；『camera-based』指推理时仅用相机。",
+   "占据目标为固定 200×200×16 体素网格（0.5m 分辨率）、九个主要语义类；垂直可观测域 φ∈[-46.70°,90°]。",
+   "球面-笛卡尔对应是非均匀的，需要显式几何先验（CSRR/SER）而非透视投影假设。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Spheriverse（自采）：89,674 张原始球面图 → 时间对齐过滤后 64,400 对图像-LiDAR、644 条序列（每条 20 秒 @5Hz）、13 区域/五类场景（城市核心、快速路及近郊、功能受限区、结构受限交通区、乡村自然环境）",
+   "对比引用的球面数据集（Table 1）：Matterport3D、WildPASS、DensePASS、HoliCity、SynPASS、Pano2Geo、360Loc、PAIR360、Dur360BEV、PanoCycle360"
+  ],
+  "tasks": [
+   "语义占据预测（3D semantic occupancy，200×200×16 体素 @0.5m、九类）",
+   "BEV 语义制图（200×200 网格、七类）",
+   "3D 目标检测（nuScenes 协议 mAP/NDS）"
+  ],
+  "embodiments": [
+   "车载移动平台（驾驶/robotaxi 场景）搭载 DuxCam M4 球面相机 + Hesai OT128 LiDAR + GNSS/INS",
+   "论文以 embodied agents/embodied intelligence 的空间感知需求为动机，但实验全部为感知基准，无运动控制闭环"
+  ],
+  "sample_or_scale": "30+ 方法三基准统一评测（占据 11、制图 10、检测 9）；统一 28 epochs、4×RTX 3090、输入 2480×512；数据覆盖 24 小时四个时段与晴/雨天气。"
+ },
+ "evaluation": {
+  "design": "统一实验协议：所有方法按官方配置复现、仅做最小数据集适配；统一训练日程（28 epochs）、输入尺寸（2480×512）与体素化，保留各方法核心表征/任务损失/超参；报告总体+五类场景双口径；SphereOcc 另做方位角/垂直分区与缩减 FoV（水平 360→120°、垂直 136.7→46.7°遮蔽）鲁棒性分析。",
+  "baselines": [
+   "占据：MonoScene、OccDepth（+Depth Anything）、COTR、BEVFormer、TPVFormer、SurroundOcc、ProtoOcc（+Depth Anything）、GaussianFormer、QuadricFormer（显式投影/查询/高斯三范式 11 方法）",
+   "制图：OneBEV、HDMapNet、PivotNet、VectorMapNet、MapTR、SparseBEV、BEVFormer、PETRv2、SeqBEV、TPVFormer",
+   "检测：SparseBEV、DenseBEV、BEVFormer、PolarBEVDet、SOLOFusion、DETR3D、CoIn3D、PD-BEV、GeoBEV",
+   "消融基线：SurroundOcc（ResNet）→+InternImage-T→+CSRR→+SER"
+  ],
+  "metrics": [
+   "mIoU / GeoIoU / class-wise IoU（占据）",
+   "mIoU（BEV 制图）",
+   "mAP / NDS（nuScenes 协议检测）"
+  ],
+  "ablations": [
+   "组件消融（Table 6）：骨干 12.05→12.14 mIoU，+CSRR→12.71/23.50，+SER→13.91/24.65（最大增量）",
+   "方位角×垂直分层分区评估（Table 7）：SphereOcc 全分区第一，但 top（12–15）/bottom（0–3）层全方法 mIoU≤3.85",
+   "缩减球面 FoV（Table 8）：水平 360→120° 全方法退化（SphereOcc 13.91→8.98 mIoU）；垂直 136.7→76.7° 近乎无损（13.91→13.80）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "占据预测：SphereOcc 13.91% mIoU / 24.65% GeoIoU，超最强先前 TPVFormer/SurroundOcc +1.70/+2.10pp（相对 13.9%/9.3%），五类场景双指标全第一、七/九类 class-wise IoU 最佳；消融显示 SER（球面证据重查询）是最大增量组件。",
+   "scope": "Spheriverse 占据基准，统一协议",
+   "locator": "page 9, Table 3; page 11, Section 6.1"
+  },
+  {
+   "finding": "BEV 语义制图：球面专用 OneBEV 22.66% mIoU 第一（超 HDMapNet +1.95pp），五场景全第一、结构受限场景优势最大（23.15% vs 20.28%）。",
+   "scope": "Spheriverse 制图基准，10 方法",
+   "locator": "page 10, Section 5.2 (Table 4)"
+  },
+  {
+   "finding": "3D 检测：最佳 SparseBEV mAP 0.1689 / NDS 0.1221，场景间差异大（Struc. 0.3175 vs Funct. 0.0531），作者结论为球面 3D 检测对场景结构与物体分布仍敏感、角域→度量 3D 定位困难仍是开放挑战。",
+   "scope": "Spheriverse 检测基准，9 方法",
+   "locator": "page 10, Section 5.2; page 12, Table 5"
+  },
+  {
+   "finding": "垂直体素分层：全方法 top（12–15）/bottom（0–3）层 mIoU≤3.85（中间层 13.57–14.18），垂直大 FoV 的顶/底稀疏观测区重建质量极低。",
+   "scope": "Spheriverse 占据，垂直分区",
+   "locator": "page 14, Table 7"
+  },
+  {
+   "finding": "缩减 FoV：水平覆盖收缩一致伤害所有方法（360→120°，SphereOcc 13.91→8.98 mIoU）；垂直截断 136.7→76.7° 几乎无损（13.91→13.80）且仍高于对比方法完整 FoV 结果。",
+   "scope": "Spheriverse 占据，遮蔽输入",
+   "locator": "page 12, Section 6.3 (Table 8 on page 14)"
+  },
+  {
+   "finding": "径向类先验：远距前景参与者骤减（vehicle 15.78%→0.60%、pedestrian 0.05%→0.01%），作者归因于远距更强遮挡与更低可观测性；Person/Bike 的 IoU 绝对水平低（3.02%/7.50%）。",
+   "scope": "Spheriverse 语义统计与 class-wise 结果",
+   "locator": "page 6, Section 3.2; page 9, Table 3"
+  },
+  {
+   "finding": "挑战场景（Fig. 8）：车辆伪装、乡村温室/牲畜等长尾内容、低光/高 ISO/局部曝光/镜头污染的复合退化，是球面感知在野外的代表性失效源。",
+   "scope": "Spheriverse 数据分析",
+   "locator": "page 13, Section 6.4"
+  },
+  {
+   "finding": "作者展望：向端到端具身驾驶延伸（占据表征→安全决策、语言接地空间推理、轨迹规划），以评估从 3D 理解到物理动作的全链路。",
+   "scope": "结论与未来工作",
+   "locator": "page 14, Section 7"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "球面 3D 目标检测：角域球面观测到度量笛卡尔 3D 的非均匀映射与投影外观畸变使图像-3D 对应复杂化，对比方法频繁漏检/定位不准，仍是对未来研究的重要挑战；检测对场景结构与物体分布敏感。",
+    "locator": "page 10-11, Section 5.2"
+   },
+   {
+    "limitation": "数据集中的复合挑战场景：车辆伪装、乡村长尾内容（温室/牲畜）、曲面/高架/多层结构、低光照/高 ISO/局部曝光变化/镜头污染，常同时出现并造成空间非均匀退化。",
+    "locator": "page 13, Section 6.4 and Fig. 8"
+   },
+   {
+    "limitation": "垂直分区的顶/底体素层为稀疏观测区（所有方法性能极低），与视角相关的鲁棒性仍是评测重点。",
+    "locator": "page 12, Section 6.2; page 14, Table 7"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "『具身』仅到感知层：全部实验为静态感知基准（占据/制图/检测），无动作、导航或操作闭环；引言的 embodied intelligence 对齐是动机声明，端到端具身驾驶被列为未来工作——综述引用时不应把本文当作具身控制任务证据。",
+    "basis": "page 1 Introduction 与 page 14 Section 7 future work 段（end-to-end embodied driving 为展望）；三基准实验均在 Sec 5/6，无控制任务"
+   },
+   {
+    "boundary": "场景与平台外部效度有限：仅户外车载驾驶平台（五类场景），无室内、腿足/机械臂/无人机等具身形态；结论不能直接迁移到桌面操作或室内导航。",
+    "basis": "page 5 Fig. 3 场景分类全部为驾驶环境；Sec 3.1 采集平台为车载 rig；全文无其他 embodiment 实验"
+   },
+   {
+    "boundary": "无统计不确定性报告：所有基准与消融均为单值结果，无种子/方差/显著性；1.70pp 的 mIoU 增益在无方差报告下应视为点估计。",
+    "basis": "page 9-14 全部表格为单值；Sec 5 统一协议描述无重复实验声明"
+   },
+   {
+    "boundary": "『camera-based』仅指推理：训练监督完全依赖 128 线 LiDAR 的体素级语义标注（外包流水线），无 LiDAR 平台无法复现该监督；标注质量的一致性检验未量化。",
+    "basis": "page 4 Sec 3.1（annotation pipeline）与 page 2 Sec 2.2（LiDAR-assisted 与 camera-based 的动机区分）；GT 构建细节未含质量抽检指标"
+   },
+   {
+    "boundary": "骨干与调参不对称风险有限但存在：SphereOcc 用 InternImage-T 大骨干，基线按官方配置复现；消融显示骨干单独仅 +0.09 mIoU，但各基线骨干未逐一披露，且方法作者同时是基准设计者（自建数据上自证 SOTA）。",
+    "basis": "page 8-9 Sec 5 统一协议声明、page 11 Sec 6.1 消融、page 13 Table 6"
+   },
+   {
+    "boundary": "ERP 分辨率损失未评估：原始 5188×1979 采集但评测统一缩到 2480×512，球面角分辨率（尤其垂直边缘与极点附近）对性能的影响未报告。",
+    "basis": "page 8 Sec 5 开头（resized to 2480 × 512）与 page 4 Sec 3.1（5188×1979）；全文无分辨率敏感性实验"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：户外车载/移动平台的球面（360°水平、~136.7°垂直 FoV）单相机感知；任务为稠密语义占据、BEV 语义制图与 3D 检测（nuScenes 协议）；监督需 LiDAR 同步与体素级语义标注；推理相机-only，输入 ERP 下采样 2480×512、体素 200×200×16@0.5m、4×RTX 3090×28 epochs 量级训练。证据支持：水平全向覆盖是占据/制图收益的来源（覆盖收缩一致退化）；垂直 FoV 上部区间冗余（136.7→76.7° 近无损）。未验证/不适用：室内与桌面操作、腿足/机械臂等其他 embodiment；动作与决策闭环；无 LiDAR 监督的自监督/弱监督设定；环形鱼眼（垂直 ~45°）输入直接复用本文结论；极点/垂直边缘的高分辨率成像影响；夜间/雨天的分天气定量对比（仅有占比统计）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "统一协议的 30+ 方法三任务基准（统一训练日程/输入尺寸/体素化，仅做最小适配），总体+分场景双口径，为球面输入下的任务难度对比提供了少有的大规模横断面。",
+   "消融链条完整：骨干/CSRR/SER 逐级归因（SER 最大增量），方位角×垂直×缩减 FoV 的多维分析把『哪些空间区域、哪种覆盖条件下获益』拆开验证。",
+   "数据多样性设计真实：24 小时四个时段（夜间 11.34%）、晴/雨、13 区域五类场景（城市/快速路/受限/结构/乡村），并诚实展示挑战场景（Fig. 8 复合退化）。",
+   "垂直 FoV 冗余发现（136.7→76.7° 近无损仍超对手完整 FoV）对全景相机硬件选型有直接参考价值。"
+  ],
+  "design_risks": [
+   "无方差/种子/显著性报告，全部单值；1.70pp mIoU 增益与分场景排名的统计稳健性未知。",
+   "基准与新方法同团队自建自证：SphereOcc 在自家数据上对比第三方基线，虽有统一协议与消融控制（骨干仅 +0.09），仍存在调参不对称的潜在偏置；各基线骨干/容量未逐一披露。",
+   "绝对性能低（最佳 mIoU 13.91%、检测 mAP 0.1689）：任务远未解决，SOTA 相对增益的解释力受低基数限制。",
+   "监督依赖 128 线 LiDAR + 外包标注；标注质量抽检、跨标注员一致性未量化；『camera-based』推理主张与 LiDAR 重监督的部署差距（无 LiDAR 时无法扩展）未讨论。",
+   "标注为静态单帧体素语义，无动态物体跟踪/运动状态，与真实驾驶决策需求仍有距离。"
+  ],
+  "baseline_fairness": "总体公平：基线从官方配置复现、统一 28 epochs/输入尺寸/体素化，保留各自核心表征与损失；SphereOcc 与最强基线 SurroundOcc 共享解码器设计且消融中控制了骨干差异（InternImage-T 单独仅 +0.09 mIoU，说明主要增益来自 CSRR/SER）。缺口：各基线骨干与容量未逐一披露；无环形鱼眼相机方法（OneOcc/PanoMMOcc）纳入同表对比，垂直 FoV 谱系的影响只能间接推断。",
+  "metric_validity": "mIoU/GeoIoU/class IoU 与 nuScenes mAP/NDS 均为社区标准指标，GeoIoU 区分类无关几何重建有效；但均为单值报告、无不确定性；低绝对值下相对增益（13.9%）的解释需谨慎；分场景口径有助于暴露结构敏感性。",
+  "reproducibility": "传感器型号（DuxCam M4/Hesai OT128）、标定方法（Zhang 内参、LiDAR 参考外参、PTP 对齐）、训练配置（4×RTX 3090、28 epochs、2480×512、200×200×16@0.5m）披露充分；承诺公开 benchmark 与源码（project homepage 占位）；缺口：数据许可、发布时间与标注 QA 流程未给；附录（类别层级/统计）不在提取文本内。",
+  "external_validity": "结论限于户外车载驾驶场景的球面单相机感知；对室内、其他具身形态（腿足/机械臂/无人机）、动作闭环、非 ERP 全景格式（双鱼眼拼接原图）、无 LiDAR 监督设定均未验证；夜间/雨天占比足够（11.34% 夜间）但未给分天气性能；垂直 FoV 冗余结论依赖驾驶场景的天空/地面构成，不可直接外推到室内高落差环境。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2609.09012-C01",
+   "claim": "Spheriverse 的采集平台由一台球面相机（DuxCam M4，图像分辨率 5188×1979）与一台 Hesai OT128 128 线 LiDAR 构成，以 LiDAR 坐标系为参考标定相机内参与外参；数据集含 644 条序列、覆盖 13 个地理与视觉多样的区域。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：以单台球面（360°水平/136.7°垂直 FoV）相机作为移动具身平台的全景感知输入源，配 LiDAR 提供逐帧 3D 监督——是鱼眼/全景相机进入具身 3D 感知数据管线的一种代表性配置。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 3.1 节数据采集披露传感器配置（DuxCam M4 5188×1979 + Hesai OT128 128 线 LiDAR、Zhang 内参标定、以 LiDAR 为参考标外参、PTP 时钟对齐）；第 3 节开头给出 644 序列/13 区域规模。",
+   "locator": "page 4, Section 3 and Section 3.1, Data Collection",
+   "source_context": "introduce Spheriverse, a real-world spherical dataset with\nrich semantic annotations, comprising 644 sequences from\n13 geographically and visually diverse regions. Equipped\nwith a high-quality spherical camera and a 128-beam Li-\nDAR, Spheriverse provides dense observations to support\nresearch on spherical 3D perception.\nTABLE 2\nData distribution across four daily time periods for 644 sequences:\nnight (20:00–05:00), dawn (05:00–07:00), daytime (07:00–18:00), and\nevening (18:00–20:00). Density denotes the number of samples per\nhour within each period, and proportion denotes the percentage of all\nsamples.\nTime Period \nDuration\n(h)\nSample Distribution\nCount Density Proportion (%)\nNight 9 7,300 811.11 11.34\nDawn 2 6,700 3,350.00 10.40\nDaytime 11 31,100 2,827.27 48.29\nEvening 2 19,300 9,650.00 29.97\n3.1 Data Acquisition and Processing\nData Collection: We integrated a DuxCam M4 spherical\ncamera [92] with an image resolution of 5188 × 1979 and\na Hesai OT128 LiDAR [93] as the primary data acquisition\nsensors.",
+   "evidence_type": "dataset-statistic",
+   "quantitative": {
+    "metric": "sensing rig configuration and dataset scale of Spheriverse",
+    "value_or_direction": "DuxCam M4 spherical camera (image resolution 5188 × 1979) + Hesai OT128 128-beam LiDAR; 644 sequences across 13 regions",
+    "comparator": "single spherical camera + single 128-beam LiDAR rig used for the whole Spheriverse collection",
+    "task_or_sample": "Spheriverse dataset collection platform (vehicle-mounted spherical perception)",
+    "locator": "page 4, Section 3 and Section 3.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 第 3 节逐字给出 comprising 644 sequences from 13 geographically and visually diverse regions 与 Equipped with a high-quality spherical camera and a 128-beam LiDAR；3.1 节逐字给出 We integrated a DuxCam M4 spherical camera [92] with an image resolution of 5188 × 1979 and a Hesai OT128 LiDAR [93]... The camera intrinsic parameters are calibrated using the Zhang calibration method 与 Using the LiDAR coordinate system as the reference, we further calibrate the camera extrinsic parameters；claim 的相机型号/分辨率/128 线/644 序列/13 区域均逐点对应，360°×136.7° FoV 数字未放入 claim（其逐字来源为 page 2）。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C02",
+   "claim": "作者把球面 3D 感知的核心挑战归结为跨空间表示差异：球面观测编码在角域而目标表征位于稠密度量体素空间，这一分歧引发物体外观、几何与空间关系上的一系列投影诱导畸变。",
+   "stance": "support",
+   "relation": "支持综述命题（动机/障碍）：全景/鱼眼类相机用于稠密 3D 场景理解（占据预测）时，角域成像与笛卡尔度量表征之间的跨空间差异及其投影畸变是必须专门建模的核心障碍。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言指出 angular observations 与 metric voxels 的分歧造成 cross-space representation gap 与 projection-induced distortions；SphereOcc 的 CSRR/SER 两模块即为弥合该差异而设计。",
+   "locator": "page 2, Section 1, Introduction",
+   "source_context": "This divergence creates\na cross-space representation gap between angular observa-\ntions and metric voxels, giving rise to a range of projection-\ninduced distortions in object appearance, geometry, and\nspatial relationships.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字给出 This divergence creates a cross-space representation gap between angular observa- tions and metric voxels, giving rise to a range of projection-induced distortions in object appearance, geometry, and spatial relationships；claim 仅复述该论断，角域/体素空间的表述与 page 1 摘要一致（已核对），未附加超出原文的断言。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C03",
+   "claim": "在 Spheriverse 语义占据预测基准上（Table 3，统一协议），SphereOcc 达 13.91% mIoU 与 24.65% GeoIoU，超过此前最强方法 TPVFormer（12.21% mIoU）与 SurroundOcc（22.55% GeoIoU），绝对增益 1.70 与 2.10 个百分点（相对提升 13.9% 与 9.3%）；并在全部五类场景子集的两个指标上均排名第一，九类语义中七类 class-wise IoU 最佳。",
+   "stance": "support",
+   "relation": "支持综述命题（效果）：对球面输入做球面几何感知建模（CSRR/SER）的占据框架在全景相机 3D 语义占据任务上取得当前最佳——稠密占据预测是获益任务面。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 总体结果与正文分析：SphereOcc 13.91/24.65 对 TPVFormer 12.21（mIoU 最强先前）与 SurroundOcc 22.55（GeoIoU 最强先前），+1.70/+2.10pp，五场景全第一、七类 IoU 最佳。",
+   "locator": "page 9, Table 3 and Section 5.1.1, Results and Analyses",
+   "source_context": "As shown in Table 3, SphereOcc\nachieves the best overall performance, reaching 13.91%\nmIoU and 24.65% GeoIoU. For mIoU, SphereOcc surpasses\nTPVFormer [18], the strongest prior method for this met-\nric (13.91% vs. 12.21%). For GeoIoU, it outperforms Sur-\nroundOcc [19], the strongest prior method for this metric\n(24.65% vs. 22.55%). These results correspond to absolute\ngains of 1.70 and 2.10 percentage points, or relative im-\nprovements of 13.9% and 9.3%, respectively. SphereOcc\nalso ranks first in both metrics across all five scene sub-\nsets and achieves the best class-wise IoU in seven of nine\nsemantic categories.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mIoU and GeoIoU (%) for semantic occupancy prediction on Spheriverse",
+    "value_or_direction": "SphereOcc 13.91% mIoU / 24.65% GeoIoU vs strongest prior TPVFormer 12.21% mIoU and SurroundOcc 22.55% GeoIoU; absolute gains 1.70 and 2.10 percentage points (relative 13.9% and 9.3%); first in both metrics across all five scenes and best class-wise IoU in 7 of 9 categories",
+    "comparator": "SphereOcc vs TPVFormer (best prior mIoU) and SurroundOcc (best prior GeoIoU) under unified protocol",
+    "task_or_sample": "semantic occupancy prediction benchmark on Spheriverse (9 primary classes, 200x200x16 voxel grid at 0.5 m)",
+    "locator": "page 9, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 13.91% mIoU and 24.65% GeoIoU、(13.91% vs. 12.21%)、(24.65% vs. 22.55%)、absolute gains of 1.70 and 2.10 percentage points, or relative improvements of 13.9% and 9.3%、ranks first in both metrics across all five scene subsets and achieves the best class-wise IoU in seven of nine semantic categories；Table 3 逐格数值一致（已核对）；体素网格 200×200×16@0.5m 在 page 9 Implementation Details 逐字给出（已核对）。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C04",
+   "claim": "在 class-wise IoU 上，SphereOcc 在 Person 与 Bike 两类不排名第一（Person 3.02%、Bike 7.50%），虽较 SurroundOcc（1.65%、5.16%）分别相对提升 83.0% 与 45.3%，但绝对 IoU 水平仍然很低。",
+   "stance": "limit",
+   "relation": "限定综述命题（受限任务面）：球面单相机占据预测中，行人/骑行者等小型稀疏前景交通参与者的语义 IoU 绝对水平低（≤7.5%），是全景感知尚未解决的困难类别。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 class-wise 结果：Person 最优为 TPVFormer 4.07、Bike 最优为 TPVFormer 8.54（表中数值），SphereOcc 3.02/7.50 未夺冠；正文明确 does not rank first for Person and Bike 并给出相对 SurroundOcc 的提升。",
+   "locator": "page 9, Table 3 and Section 5.1.1",
+   "source_context": "Although it does not rank first for\nPerson and Bike, it improves their IoUs over SurroundOcc\nby 83.0% (3.02% vs. 1.65%) and 45.3% (7.50% vs. 5.16%),\nrespectively.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "class-wise IoU (%) for Person and Bike in semantic occupancy prediction",
+    "value_or_direction": "SphereOcc Person 3.02% (vs SurroundOcc 1.65%, relative +83.0%) and Bike 7.50% (vs 5.16%, relative +45.3%); not ranked first for either class",
+    "comparator": "SphereOcc vs SurroundOcc and the best-performing method per class (TPVFormer leads Person and Bike in Table 3)",
+    "task_or_sample": "Spheriverse semantic occupancy prediction, 9-class class-wise IoU",
+    "locator": "page 9, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 逐字给出 Although it does not rank first for Person and Bike, it improves their IoUs over SurroundOcc by 83.0% (3.02% vs. 1.65%) and 45.3% (7.50% vs. 5.16%), respectively；Table 3 行内数值（Person 4.07/1.65/.../3.02、Bike 8.54/5.16/.../7.50，最优为 TPVFormer 列）与之一致（已核对）；claim 的『不排名第一』『绝对 IoU 低』均被该句与表格直接蕴含，未引用表外数字。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C05",
+   "claim": "组件消融（SurroundOcc 基线逐步加模块）：把 ResNet 换成预训练 InternImage-T 骨干使 mIoU 从 12.05% 升至 12.14%、GeoIoU 从 22.55% 升至 23.35%；再加 CSRR 升至 12.71%/23.50%（增益 0.57/0.15pp）；SER 贡献最大增量，把 mIoU 与 GeoIoU 提升至 13.91% 与 24.65%。",
+   "stance": "support",
+   "relation": "支持综述命题（机制归因）：球面几何证据重查询（SER，以 RTZ 几何条件化重查源球面图像特征）是收益最大组件——增益主要来自弥合角域-笛卡尔差异的建模，而非骨干升级。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 6 消融：骨干升级 +0.09 mIoU、CSRR +0.57、SER 最大增量至 13.91/24.65；作者明确 SER produces the largest incremental improvement。",
+   "locator": "page 11, Section 6.1 and Table 6 (page 13)",
+   "source_context": "As shown in Table 6,\nreplacing ResNet [105] with the pretrained InternImage-\nT [104] improves mIoU from 12.05% to 12.14% and GeoIoU\nfrom 22.55% to 23.35%, confirming the effectiveness of the\nstronger backbone. Adding CSRR further increases mIoU\nto 12.71% and GeoIoU to 23.50%, with gains of 0.57\nand 0.15 percentage points, respectively. By incorporating\nrange–azimuth relations into the lifted voxel features, CSRR\nstrengthens their correspondence with spherical geometry\nbefore occupancy decoding. Furthermore, SER produces\nthe largest incremental improvement, raising mIoU and\nGeoIoU to 13.91% and 24.65%, respectively.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mIoU / GeoIoU (%) component ablation on Spheriverse",
+    "value_or_direction": "ResNet->InternImage-T: mIoU 12.05%->12.14%, GeoIoU 22.55%->23.35%; +CSRR: 12.71%/23.50% (gains 0.57/0.15 pp); +SER: reaches 13.91%/24.65% (largest incremental improvement)",
+    "comparator": "SurroundOcc baseline vs +InternImage-T backbone vs +CSRR vs +SER",
+    "task_or_sample": "semantic occupancy prediction on Spheriverse, progressive component ablation",
+    "locator": "page 11, Section 6.1 (Table 6)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 11 逐字给出 improves mIoU from 12.05% to 12.14% and GeoIoU from 22.55% to 23.35%、Adding CSRR further increases mIoU to 12.71% and GeoIoU to 23.50%, with gains of 0.57 and 0.15 percentage points、SER produces the largest incremental improvement, raising mIoU and GeoIoU to 13.91% and 24.65%；Table 6（page 13）逐格数值一致（已核对）；claim 各分句逐点对应。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C06",
+   "claim": "在逐步遮蔽输入图像的球面 FoV 鲁棒性实验中：水平 FoV 缩减时所有方法都随可用角度覆盖减少而退化；在最受限的 120° 水平 FoV 下 SphereOcc 仍达 8.98% mIoU 与 17.42% GeoIoU，超过对应第二名（8.34% 与 17.09%）——但相对其 360° 完整 FoV 下的 13.91% mIoU 已大幅下降。",
+   "stance": "conditional",
+   "relation": "条件性命题：球面（全景）相机在占据预测上的收益以完整的水平角度覆盖为前提——水平 FoV 从 360° 收缩到 120° 时全部方法一致退化，全景覆盖本身是性能来源之一。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 8 水平 FoV 360/300/240/180/120 度扫描：所有方法随覆盖减少退化；120° 下 SphereOcc 8.98/17.42 仍为最佳但远低于其 360° 结果。",
+   "locator": "page 12, Section 6.3 and Table 8 (page 14)",
+   "source_context": "Under horizontal FoV reduction, all methods exhibit per-\nformance degradation as the available angular coverage\ndecreases. At the most restrictive 120\n◦ \nFoV, SphereOcc still\nachieves 8.98% mIoU and 17.42% GeoIoU, outperforming\nthe corresponding second-best results of 8.34% and 17.09%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mIoU / GeoIoU (%) under reduced horizontal spherical FoV",
+    "value_or_direction": "all methods degrade as angular coverage decreases; at the most restrictive 120 degree FoV SphereOcc 8.98% mIoU / 17.42% GeoIoU vs second-best 8.34% / 17.09% (SphereOcc full 360 degree FoV: 13.91% mIoU)",
+    "comparator": "SphereOcc vs second-best method at 120 degree horizontal FoV; vs its own full-FoV result",
+    "task_or_sample": "Spheriverse semantic occupancy prediction, horizontal FoV reduced symmetrically by masking (360/300/240/180/120 degrees)",
+    "locator": "page 12, Section 6.3 (Table 8)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 逐字给出 Under horizontal FoV reduction, all methods exhibit per- formance degradation as the available angular coverage decreases 与 At the most restrictive 120 ◦ FoV, SphereOcc still achieves 8.98% mIoU and 17.42% GeoIoU, outperforming the corresponding second-best results of 8.34% and 17.09%；13.91% 为 SphereOcc 完整 FoV 的 mIoU（page 12 同节及 Table 8 的 360° 行逐字给出，已核对）；claim 未引用表外数字。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C07",
+   "claim": "垂直 FoV 从 136.70° 缩到 76.70°（自上而下遮蔽、保留下半球面图像）时，SphereOcc 的 mIoU 仅从 13.91% 降至 13.80%、GeoIoU 从 24.65% 降至 24.48%，仍高于所有对比方法在完整 FoV 下的最佳结果（13.80% vs 12.21% mIoU、24.48% vs 22.55% GeoIoU）。",
+   "stance": "conditional",
+   "relation": "条件性命题：球面相机垂直 FoV 的上部区间对驾驶场景占据预测的信息增量有限——垂直方向从 136.7° 截到 76.7° 性能几乎不变，说明该任务的收益主要来自水平全向覆盖而非垂直超宽 FoV。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 8 垂直 FoV 扫描：136.70→76.70° 时 SphereOcc mIoU 13.91→13.80、GeoIoU 24.65→24.48，仍超对比方法完整 FoV 最佳（12.21/22.55）；作者称 greater stability under vertical FoV reduction。",
+   "locator": "page 12, Section 6.3 and Table 8 (page 14)",
+   "source_context": "SphereOcc exhibits greater stability under vertical FoV re-\nduction. When the vertical FoV is reduced from 136.70\n◦\nto 76.70\n◦\n, its mIoU decreases only from 13.91% to 13.80%,\nwhile its GeoIoU decreases from 24.65% to 24.48%. Notably,\nthese results remain higher than the best full-FoV results\nof all competing methods, with 13.80% versus 12.21%\nmIoU and 24.48% versus 22.55% GeoIoU.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mIoU / GeoIoU (%) under reduced vertical spherical FoV",
+    "value_or_direction": "vertical FoV 136.70 -> 76.70 degrees: mIoU 13.91% -> 13.80%, GeoIoU 24.65% -> 24.48%; still higher than best full-FoV results of all competing methods (13.80% vs 12.21% mIoU, 24.48% vs 22.55% GeoIoU)",
+    "comparator": "SphereOcc at reduced vertical FoV vs competing methods at full FoV",
+    "task_or_sample": "Spheriverse semantic occupancy prediction, vertical FoV reduced top-down keeping the lower portion (136.70/106.70/76.70/46.70 degrees)",
+    "locator": "page 12, Section 6.3 (Table 8)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 逐字给出 When the vertical FoV is reduced from 136.70 ◦ to 76.70 ◦ , its mIoU decreases only from 13.91% to 13.80%, while its GeoIoU decreases from 24.65% to 24.48%. Notably, these results remain higher than the best full-FoV results of all competing methods, with 13.80% versus 12.21% mIoU and 24.48% versus 22.55% GeoIoU；遮蔽方式（自上而下保留下部）在 Table 8 标题（page 14）逐字说明（已核对）；relation 中的解读为综述侧推断且措辞限定于该任务。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C08",
+   "claim": "按垂直体素高度分层的评估（Table 7）：全部方法在最上分层（12–15，top）与最下分层（0–3，bottom）的性能远低于中间层——SphereOcc 顶层 mIoU 3.20/GeoIoU 12.63、底层 mIoU 3.85/GeoIoU 6.99，而中间两层（8–11、4–7）mIoU 为 14.18 与 13.57；对比方法（TPVFormer/SurroundOcc/MonoScene/QuadricFormer）在顶层 mIoU 仅 2.49–2.97、底层 1.19–3.06。",
+   "stance": "limit",
+   "relation": "限定综述命题（受限面）：球面垂直超宽 FoV 的顶部/底部体素层是稀疏观测区域，所有方法的占据重建在该处性能极低——垂直方向的大 FoV 并未转化为高质量的顶/底空间重建。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 7 垂直分区：12–15（top）/8–11/4–7/0–3（bottom）四层五方法对比；top/bottom 层 mIoU 全部低于 3.2/3.9，与中间层差距一个数量级；page 12 Sec 6.2 称这些为 sparsely observed top and bottom regions。",
+   "locator": "page 14, Table 7",
+   "source_context": "Vertical\n12–15 \nmIoU 2.56 2.97 2.49 2.83 3.20\nGeoIoU 10.41 11.73 10.25 8.93 12.63\n8–11 \nmIoU 12.88 12.27 11.87 11.23 14.18\nGeoIoU 20.56 20.67 19.74 18.89 22.48\n4–7 \nmIoU 11.28 11.50 10.38 10.98 13.57\nGeoIoU 30.00 30.51 29.68 28.87 33.14\n0–3 \nmIoU 1.71 3.06 1.19 2.57 3.85\nGeoIoU 2.28 5.67 1.69 4.47 6.99",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mIoU / GeoIoU (%) per vertical voxel layer (Table 7)",
+    "value_or_direction": "SphereOcc: top layer (12-15) 3.20 mIoU / 12.63 GeoIoU, bottom layer (0-3) 3.85 / 6.99, middle layers 14.18 (8-11) and 13.57 (4-7); compared methods top 2.49-2.97 mIoU, bottom 1.19-3.06 mIoU",
+    "comparator": "top and bottom voxel layers vs upper-middle and lower-middle layers, SphereOcc vs TPVFormer/SurroundOcc/MonoScene/QuadricFormer",
+    "task_or_sample": "Spheriverse semantic occupancy prediction, vertical voxel-height partitions (z indices 12-15, 8-11, 4-7, 0-3)",
+    "locator": "page 14, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Table 7 垂直分区行逐格给出五方法数值（12–15: 2.56/2.97/2.49/2.83/3.20 mIoU 与 10.41/11.73/10.25/8.93/12.63 GeoIoU；8–11: .../14.18；4–7: .../13.57；0–3: 1.71/3.06/1.19/2.57/3.85 mIoU 与 2.28/5.67/1.69/4.47/6.99 GeoIoU）；分层含义（12–15=top、0–3=bottom）在 Table 7 标题逐字定义（已核对）；sparsely observed 表述逐字位于 page 12 Sec 6.2（已核对）；claim 数值全部来自所引表格行。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C09",
+   "claim": "在 BEV 语义制图基准上，专为球面观测设计的 OneBEV 取得最高整体 mIoU（22.66%），超过第二名 HDMapNet（20.71%）1.95 个百分点，并在全部五类场景子集排名第一，在结构受限场景优势最大（23.15% vs 20.28%）。",
+   "stance": "support",
+   "relation": "支持综述命题（获益任务面）：球面专用方法（OneBEV）在全景输入的 BEV 语义制图任务上整体领先未做球面适配的方法——BEV 制图是从全景相机获益的任务。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4 十方法对比：OneBEV 22.66% mIoU 第一、HDMapNet 20.71% 第二；OneBEV 五场景全第一、结构受限场景 23.15% vs 20.28% 优势最大。",
+   "locator": "page 10, Section 5.2 and Table 4 (page 11)",
+   "source_context": "For semantic mapping, Table 4\nshows that OneBEV [35], which is specifically designed for\nspherical observations, achieves the highest overall mIoU\nand outperforms the second-ranked HDMapNet [81] by\n1.95 percentage points (22.66% vs. 20.71%). OneBEV also\nranks first across all five scene subsets, with its largest ad-\nvantage observed in structurally constrained scenes (23.15%\nvs. 20.28%).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mIoU (%) for BEV semantic mapping on Spheriverse",
+    "value_or_direction": "OneBEV 22.66% overall mIoU, +1.95 percentage points over second-ranked HDMapNet 20.71%; first across all five scene subsets, largest advantage in structurally constrained scenes (23.15% vs 20.28%)",
+    "comparator": "OneBEV (designed for spherical observations) vs HDMapNet and other BEV mapping baselines",
+    "task_or_sample": "BEV semantic mapping benchmark on Spheriverse (200x200 dense grid, seven semantic categories, ten adapted methods)",
+    "locator": "page 10, Section 5.2 (Table 4)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 逐字给出 OneBEV [35], which is specifically designed for spherical observations, achieves the highest overall mIoU and outperforms the second-ranked HDMapNet [81] by 1.95 percentage points (22.66% vs. 20.71%). OneBEV also ranks first across all five scene subsets, with its largest ad- vantage observed in structurally constrained scenes (23.15% vs. 20.28%)；Table 4（page 11）逐格数值一致（已核对）；七类/200×200 设定在 page 10 Implementation Details 逐字给出（已核对）。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C10",
+   "claim": "在 3D 目标检测基准上，最优方法 SparseBEV 的整体 mAP 仅 0.1689、NDS 仅 0.1221；检测性能在五类场景间变化显著（结构受限场景更高、功能性与乡村场景更低），对比方法频繁出现漏检或定位不准；作者据此指出球面 3D 目标检测仍对场景结构与物体分布敏感，从角坐标球面观测恢复度量笛卡尔 3D 空间中的物体位置依然困难。",
+   "stance": "limit",
+   "relation": "限定综述命题（受限任务面）：3D 目标检测是从球面（全景）输入中获益有限的任务——绝对性能低（最佳 mAP 0.1689）且对场景结构高度敏感，角域-笛卡尔非均匀映射的定位困难仍未解决。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 5 九方法对比：SparseBEV mAP 0.1689/NDS 0.1221 最佳；场景间差异大（Struc. mAP 0.3175 vs Funct. 0.0531，Table 5/page 12）；正文结论 spherical 3D object detection remains sensitive to scene structure and object distribution。",
+   "locator": "page 10, Section 5.2 and Table 5 (page 12)",
+   "source_context": "For 3D object detec-\ntion, Table 5 shows that SparseBEV [91] achieves the best\noverall performance, with an mAP of 0.1689 and an NDS\nof 0.1221, followed by PolarBEVDet [99]. SparseBEV also\nperforms best in expressway, rural, structurally constrained,\nand urban scenes, whereas PD-BEV [101] performs best in\nfunctional scenes. Performance varies substantially across\nthe five scene categories, with higher detection accuracy\nin structurally constrained scenes and lower accuracy in\nfunctional and rural scenes. These results provide repro-\nducible baselines for spherical BEV perception and demon-\nstrate that spherical 3D object detection remains sensitive\nto scene structure and object distribution.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mAP and NDS (nuScenes protocol) for spherical 3D object detection on Spheriverse",
+    "value_or_direction": "best method SparseBEV: overall mAP 0.1689 and NDS 0.1221; performance varies substantially across the five scene categories (higher in structurally constrained scenes, lower in functional and rural scenes)",
+    "comparator": "nine representative 3D detection methods under unified protocol on spherical inputs",
+    "task_or_sample": "3D object detection benchmark on Spheriverse, nuScenes evaluation protocol, overall and scene-wise",
+    "locator": "page 10, Section 5.2 (Table 5)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 逐字给出 SparseBEV [91] achieves the best overall performance, with an mAP of 0.1689 and an NDS of 0.1221、Performance varies substantially across the five scene categories, with higher detection accuracy in structurally constrained scenes and lower accuracy in func- tional and rural scenes、spherical 3D object detection remains sensitive to scene structure and object distribution；漏检/定位困难与角坐标恢复困难的表述逐字位于 page 10-11 同段（frequently produce missed detections or inaccurate localization / the difficulty of recovering object locations in metric Cartesian 3D space from spherical observations represented in angular coordinates，已核对）；场景间具体数值（Struc 0.3175 vs Funct 0.0531）在 page 12 Table 5 逐格可核（已核对），未放入 source_context。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C11",
+   "claim": "作者给出纯相机球面感知的动机：引入 LiDAR 带来额外传感器负载、功耗与车载计算开销，对紧凑具身平台构成相当大约束；因此 SphereOcc 选择相机路线，以解决角域与笛卡尔体素空间之间的跨空间表示差异。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：在紧凑具身平台上，球面相机被视为 LiDAR 的低成本替代感知源——单相机球面 3D 感知的可行性论证直接关系到全景相机在具身硬件中的定位。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "相关工作节（Sec 2.2）指出 LiDAR-assisted 方法的传感器负载/功耗/算力代价对 compact embodied platforms 的约束，并据此提出 camera-based spherical 3D perception 路线。",
+   "locator": "page 4, Section 2.2, Semantic Occupancy Prediction",
+   "source_context": "LiDAR entails additional sensor payload, power consump-\ntion, and onboard computational overhead, imposing con-\nsiderable constraints on compact embodied platforms. In\nthis work, we propose SphereOcc for camera-based spher-\nical 3D perception to address a cross-space representation\ngap between the angular domain and Cartesian voxel space.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 introducing LiDAR entails additional sensor payload, power consump- tion, and onboard computational overhead, imposing consid- erable constraints on compact embodied platforms. In this work, we propose SphereOcc for camera-based spher- ical 3D perception to address a cross-space representation gap between the angular domain and Cartesian voxel space；claim 两个分句逐点对应原文，未附加量化。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C12",
+   "claim": "作者列举 Spheriverse 中的代表性挑战场景：车辆伪装与罕见乡村内容（温室、牲畜）引入语义歧义与长尾外观变化；曲面/高架/多层结构使角观测与度量 3D 空间的几何对应复杂化；低光照、高 ISO 增益、局部曝光变化与镜头污染在球面图像上造成空间非均匀退化——这些因素常同时出现，对语义识别与几何重建构成复合挑战。",
+   "stance": "limit",
+   "relation": "限定综述命题（局限）：球面相机在真实野外条件下的成像退化（低光/高 ISO/镜头污染）与长尾内容会同时出现并复合地损害全景 3D 感知——全景硬件在具身部署中的鲁棒性边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec 6.4 与 Fig. 8 归纳五类挑战（伪装、乡村温室/牲畜、低光高 ISO、复杂几何、局部光照与镜头污染），并强调 compound challenges。",
+   "locator": "page 13, Section 6.4 and Fig. 8",
+   "source_context": "First, vehicle camouflage and\nuncommon rural content, such as greenhouses and live-\nstock, introduce substantial semantic ambiguity and long-\ntail appearance variations. Second, curved, overhead, and\nmulti-level structures complicate the geometric correspon-\ndence between angular observations and metric 3D space.\nThird, low illumination, high ISO gain, local exposure\nvariations, and lens contamination cause spatially non-\nuniform degradation across spherical images. These factors\nfrequently occur together, creating compound challenges for\nsemantic recognition and geometric reconstruction.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 逐字给出 First, vehicle camouflage and uncommon rural content, such as greenhouses and live- stock, introduce substantial semantic ambiguity and long- tail appearance variations. Second, curved, overhead, and multi-level structures complicate the geometric correspon- dence... Third, low illumination, high ISO gain, local exposure variations, and lens contamination cause spatially non- uniform degradation across spherical images. These factors frequently occur together, creating compound challenges for semantic recognition and geometric reconstruction；claim 三类挑战逐点对应。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C13",
+   "claim": "数据集径向统计显示：随距自车距离增加，前景交通参与者占比递减——车辆从 15.78% 降至 0.60%、行人从 0.05% 降至 0.01%、骑行者从 0.20% 降至 0.08%；植被从 22.74% 升至 47.95%、建筑先升到约 29% 后保持稳定。作者将前景参与者的递减与远距更强的遮挡和更低的可观测性相关联。",
+   "stance": "conditional",
+   "relation": "条件性命题：单台球面相机在远距离的小目标可观测性受限（遮挡+分辨率下降），驾驶场景远距以植被/建筑等背景类为主——全景 FoV 的全局覆盖不等于远距前景物体的可靠观测。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec 3.2 语义统计（Fig. 4 右面板，0–70m 分七个 10m 径向仓）：前景类占比随距离骤降，作者解释为 stronger occlusion and reduced observability at longer ranges。",
+   "locator": "page 6, Section 3.2, Semantic Statistics and Fig. 4",
+   "source_context": "Across radial bins, foreground traffic\nparticipants become progressively less prevalent, consis-\ntent with stronger occlusion and reduced observability at\nlonger ranges. Specifically, the vehicle proportion decreases\nfrom 15.78% to 0.60%, while pedestrian and cyclist pro-\nportions show overall decreases from 0.05% to 0.01% and\nfrom 0.20% to 0.08%, respectively. Conversely, vegetation\nincreases from 22.74% to 47.95%, while buildings rise\nfrom 12.75% to approximately 29% and then remain sta-\nble at longer ranges.",
+   "evidence_type": "dataset-statistic",
+   "quantitative": {
+    "metric": "class proportion within radial bins (%) on Spheriverse (0-70 m, 10 m intervals)",
+    "value_or_direction": "vehicle 15.78% -> 0.60%, pedestrian 0.05% -> 0.01%, cyclist 0.20% -> 0.08% with increasing range; vegetation 22.74% -> 47.95%, buildings rise to approximately 29% then stable",
+    "comparator": "near-range (closest radial bin) vs far-range (70 m) class proportions",
+    "task_or_sample": "Spheriverse nine-class semantic annotations, radial bins centered on the ego vehicle",
+    "locator": "page 6, Section 3.2 (Fig. 4)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 Across radial bins, foreground traffic participants become progressively less prevalent, consis- tent with stronger occlusion and reduced observability at longer ranges. Specifically, the vehicle proportion decreases from 15.78% to 0.60%, while pedestrian and cyclist proportions show overall decreases from 0.05% to 0.01% and from 0.20% to 0.08%, respectively. Conversely, vegetation increases from 22.74% to 47.95%, while buildings rise from 12.75% to approximately 29% and then remain stable at longer ranges；径向仓定义（0–70m、七个 10m 仓）在 page 5 逐字给出（已核对）；claim 数值与作者解释均逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C14",
+   "claim": "作者定位研究空白：球面观测的全 FoV 覆盖特性与具身智能对整体 3D 空间感知的增长需求高度契合，但现有研究大多聚焦透视相机或 2D 球面场景理解，球面视觉用于 3D 空间感知的潜力基本未被探索。",
+   "stance": "gap",
+   "relation": "综述空白命题：全景/球面相机向具身 3D 空间感知的迁移仍是空白区——本文是该空白的代表性填补尝试（数据集+基准+方法）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言开头：spherical observations 的连续 360° 水平覆盖与具身智能需求高度对齐（引 [7][8][9]），但 3D 空间感知方向的球面视觉潜力 largely unexplored。",
+   "locator": "page 1, Section 1, Introduction",
+   "source_context": "property is highly aligned with the growing demand for em-\nbodied intelligence for holistic 3D spatial perception [7], [8],\n[9]. However, existing studies have largely focused on per-\nspective cameras or 2D spherical scene understanding [10],\n[11], [12], [13], leaving the potential of spherical vision for\n3D spatial perception largely unexplored.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 逐字给出 This property is highly aligned with the growing demand for em- bodied intelligence for holistic 3D spatial perception [7], [8], [9]. However, existing studies have largely focused on per- spective cameras or 2D spherical scene understanding [10], [11], [12], [13], leaving the potential of spherical vision for 3D spatial perception largely unexplored；claim 仅复述，未附加本文之外的证据声明。"
+   }
+  },
+  {
+   "card_id": "2609.09012-C15",
+   "claim": "全景环形相机（panoramic annular camera）的固有结构设计把垂直 FoV 限制在约 45°；已有占据预测工作（OneOcc、PanoMMOcc）基于此类相机，而宽 FoV 的球面占据预测在此前未被探索。",
+   "stance": "gap",
+   "relation": "综述空白/受限命题：环形鱼眼类全景相机的垂直 FoV（约 45°）是结构性短板，宽垂直 FoV 的球面（超广角/双鱼眼拼接）占据感知是本文新开的空白区——为鱼眼综述区分两类全景硬件提供依据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec 2.2 指出 OneOcc/PanoMMOcc 的环形相机垂直 FoV 约 45°（page 3 Sec 2.1 亦称其仅水平观测、限制可捕捉场景范围），wide-FoV spherical occupancy unexplored。",
+   "locator": "page 4, Section 2.2, Semantic Occupancy Prediction",
+   "source_context": "OneOcc [43] and PanoMMOcc [78] have studied semantic\noccupancy prediction from panoramic annular cameras [1],\ntheir vertical field of view is limited to approximately\n45\n◦\n, leaving wide-FoV spherical occupancy unexplored.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "vertical field of view of panoramic annular cameras used by prior occupancy works",
+    "value_or_direction": "approximately 45 degrees vertical FoV (structural limit of panoramic annular cameras)",
+    "comparator": "panoramic annular cameras (OneOcc, PanoMMOcc) vs wide-FoV spherical cameras (Spheriverse 136.7 degree vertical FoV)",
+    "task_or_sample": "semantic occupancy prediction literature on panoramic cameras (OneOcc, PanoMMOcc)",
+    "locator": "page 4, Section 2.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 While OneOcc [43] and PanoMMOcc [78] have studied semantic oc- cupancy prediction from panoramic annular cameras [1], their vertical field of view is limited to approximately 45 ◦ , leaving wide-FoV spherical occupancy unexplored；『固有结构设计』的表述逐字位于 page 3 Sec 2.1（inherent structural design often confines the vertical field of view to approximately 45°，已核对）；Spheriverse 自身 136.7° 垂直 FoV 逐字位于 page 2（已核对）。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "OneBEV: Using one panoramic image for bird's-eye-view semantic mapping",
+   "arxiv_id": null,
+   "reason": "球面专用 BEV 制图方法（引文 [35]）：其在 Spheriverse 制图基准全场景第一（22.66% mIoU）是全景相机在 BEV 任务获益的关键对照。"
+  },
+  {
+   "title": "OneOcc: Semantic occupancy prediction for legged robots with a single panoramic camera",
+   "arxiv_id": null,
+   "reason": "环形相机占据预测代表（引文 [43]，CVPR 2026）：其 ~45° 垂直 FoV 局限是区分环形鱼眼与宽 FoV 球面相机的谱系证据。"
+  },
+  {
+   "title": "Panoramic multimodal semantic occupancy prediction for quadruped robots (PanoMMOcc)",
+   "arxiv_id": "2603.13108",
+   "reason": "四足机器人环形相机多模态占据（引文 [78]）：同为具身环形相机占据路线，本 run 中另有其精读包。"
+  },
+  {
+   "title": "Dur360BEV: A Real-World 360-Degree single camera dataset and benchmark for bird-eye view mapping",
+   "arxiv_id": null,
+   "reason": "最接近的前作球面 BEV 数据集（引文 [28]，ICRA 2025）：Table 1 对比中的直接前驱。"
+  },
+  {
+   "title": "HumanoidPano: Hybrid spherical panoramic-LiDAR cross-modal perception for humanoid robots",
+   "arxiv_id": "2503.09010",
+   "reason": "人形机器人球面感知代表（引文 [30]）：支持『具身智能需要全 FoV 感知』动机的相邻证据。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：Spheriverse 是『宽 FoV 球面相机（360°×136.7°）用于具身/驾驶 3D 空间感知』的数据集+基准+方法三合一代表。应用方式=单台球面相机作全景输入源、LiDAR 只做监督（camera-based 推理），核心工程问题是角域-笛卡尔跨空间差异（CSRR/SER 为其解法）。效果=占据与 BEV 制图获益（SphereOcc +1.70 mIoU；OneBEV 制图第一），水平全向覆盖是收益来源；受限面=3D 检测（最佳 mAP 0.1689、场景敏感、角域定位困难）、小型前景类（Person 3.02%/Bike 7.50%）、顶/底垂直稀疏层（mIoU≤3.85）、远距可观测性（vehicle 15.78%→0.60%）、野外复合成像退化（低光/高 ISO/镜头污染）。硬件谱系证据：环形鱼眼垂直 ~45° vs 球面 136.7°。注意：(1) 『embodied』止于感知，无控制闭环；(2) 垂直 FoV 冗余结论（136.7→76.7° 无损）依赖驾驶场景天空构成，外推需谨慎；(3) 16 页 IEEE 双栏格式，正文到 page 14，附录不在 v1 文本层。alphaxiv 全文 API 提取（82,317 字符/16 页，非 OCR），extraction.method 按 pdf-text 口径登记。"
+}

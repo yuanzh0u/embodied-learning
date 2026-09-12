@@ -1,0 +1,862 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.00510",
+  "title": "OmniTrack++: Omnidirectional Multi-Object Tracking by Learning Large-FoV Trajectory Feedback",
+  "published": "2025-11",
+  "url": "https://arxiv.org/abs/2511.00510",
+  "authors": [
+   "Kai Luo",
+   "Hao Shi",
+   "Kunyu Peng",
+   "Fei Teng",
+   "Sheng Wu",
+   "Kaiwei Wang",
+   "Kailun Yang"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "_extraction_provenance": "alphaxiv-fulltext-api 镜像的 arXiv 文本层（非 OCR，页定位 page N），按 schema 允许值映射为 pdf-text。",
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是具身平台上全景相机多目标跟踪（MOT）的代表工作：在四足机器人（PAL 全景环形镜头）与轮腿机器人（Insta360 双鱼眼拼接）两类本体上采集 EmboTrack 基准，并提出 OmniTrack++ 框架（DynamicSSM 畸变缓解 + FlexiTrack 轨迹反馈 + ExpertTrack MoE 记忆 + E2E/TBD 自适应切换）。对鱼眼综述的价值：(1) 提供全景/双鱼眼成像在具身平台上的具体硬件规格与应用方式（全场景态势感知、减少多传感器负载）；(2) 提供量化的任务获益证据（QuadTrack HOTA +15.03、JRDB +3.94）与逐组件归因消融；(3) 提供明确局限证据（推理帧率 12-16 FPS、MOTA 权衡、密集人群/重度遮挡失败、反馈实例不能独立支撑训练）。综述按'全景/双鱼眼具身感知-跟踪'主线使用。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract + Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：全景 360° FoV 下的 MOT 面临畸变、大搜索空间、身份歧义；针孔 MOT 算法泛化失效（引用文献称 IDSW 最高增加 40%）；全景相机对小型移动平台（四足/轮腿机器人）的价值主张。"
+   },
+   {
+    "locator": "page 3-4, Section 1 引言末段 + 贡献清单",
+    "role": "relevant-core",
+    "purpose": "提取 EmboTrack 基准总览（QuadTrack/BipTrack 双子集、结果概览 34.90/36.08 HOTA、相对提升 43%/52%/35%/38%）与期刊版相对 CVPR 前作的五点扩展。"
+   },
+   {
+    "locator": "page 4-6, Section 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位全景场景理解（ERP/球面/SSM 路线）与具身全景感知（HumanoidPano、Avatar360、EmbodiedPlace）两条相关工作线，以及本文差异化定位（全景 FoV vs 针孔窄 FoV 线性运动）。"
+   },
+   {
+    "locator": "page 6-10, Section 3 OmniTrack++: Proposed Framework (3.1-3.5)",
+    "role": "method-or-design",
+    "purpose": "精读反馈机制（条件熵论证）、DynamicSSM Block（隐式畸变/光度校准四阶段）、FlexiTrack Instance（噪声正则化的轨迹反馈实例）、ExpertTrack Memory（SIM/DIM 分层记忆 + 共享 MoE + 门控融合）、Tracklets Management（Dual-Branch Adapter 推理期 E2E/TBD 切换，Algorithm 1）。"
+   },
+   {
+    "locator": "page 10-13, Section 4 EmboTrack Dataset (4.1-4.4)",
+    "role": "data-or-setting",
+    "purpose": "精读数据集构成：QuadTrack（四足 + PAL 360°×70°、2048×2048、40.5 FPS、32 序列/19K 帧/332 轨迹）与 BipTrack（轮腿 + Insta360 双鱼眼拼接、3840×1920、100 FPS、12 序列/7K 帧/278 轨迹）；Table 1 与既有数据集对比；平台运动扰动特性（步态俯仰/垂直振荡 vs 轮式平滑）。"
+   },
+   {
+    "locator": "page 13-15, Section 5.1-5.2 Setups + Benchmarking",
+    "role": "results-or-analysis",
+    "purpose": "提取评测协议（JRDB + EmboTrack，HOTA/IDF1/MOTA/OSPA，ResNet-50、1536×800、300 queries、4×A6000）与主结果：Table 3（EmboTrack test：QuadTrack 34.90/36.08 HOTA、BipTrack 44.63/44.96 HOTA）、Table 4（JRDB test：E2E 25.50/+3.94、TBD 27.03 但 IDF1/MOTA 回退）、Table 5（TBD 反馈增益 +0.48/+0.28 与 FPS）、Table 6（JRDB val E2E 30.84、参数 70.05M）。"
+   },
+   {
+    "locator": "page 15-17, Section 5.3 Ablation Studies (5.3.1-5.3.5)",
+    "role": "results-or-analysis",
+    "purpose": "提取组件消融 Table 7（DSSM +1.04、ETM +0.31、组合 +1.17、ETM 致 MOTA 27.34→22.20）、FlexiTrack 消融 Table 8（仅反馈实例 4.39 HOTA）、DynamicSSM 位置消融 Table 9/10（S4 最佳）、阈值敏感性与 epoch 曲线 Table 11。"
+   },
+   {
+    "locator": "page 17-19, Section 5.4 Visualization + 5.5 Failure Case Analysis",
+    "role": "results-or-analysis",
+    "purpose": "提取 ExpertTrack Memory 定位热图证据（Fig 10）、跨方法定性对比（Fig 11）与失败案例分析（Fig 12）：重度遮挡、密集人群、突然相机运动导致碎片轨迹与身份切换。"
+   },
+   {
+    "locator": "page 19, Section 6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "汇集作者总结与自述局限：密集人群与长期严重遮挡场景仍是挑战；未来工作指向显式遮挡感知建模与长期跟踪。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 20-23, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 本篇为期刊格式无独立附录，参考文献列表无正文证据价值，关键引文（Shen and Yang 2024、JRDB、OmniTrack CVPR 2025 前作）已摘录进 core_citations。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在 360° 全景（含鱼眼拼接与 PAL 成像）条件下实现可靠的多目标跟踪——即同时克服几何畸变、分辨率退化、大搜索空间与跨视角身份歧义，并在真实机器人平台的非平稳运动（步态俯仰振荡、轮腿俯仰波动）下维持长时程身份一致性？",
+ "contributions": [
+  "OmniTrack++ 框架：DynamicSSM Block 隐式校准全景畸变与光度不一致（不显式建模全景几何），FlexiTrack Instance 将轨迹反馈注入解码器实现短期关联，ExpertTrack Memory 以分层记忆（SIM/DIM）+ 共享 MoE 维持长时程身份，Tracklet Management 在推理期于 E2E 与 TBD 范式间自适应切换或集成。",
+  "EmboTrack 基准：44 条全景序列、26,400+ 标注帧、600+ 轨迹，跨两个城市五个校区；QuadTrack（四足 + PAL 单镜头 360°×70°）与 BipTrack（轮腿 + Insta360 双鱼眼拼接 360°）双子集，较前作 QuadTrack 扩容 37.5%。",
+  "系统评测与消融：在 JRDB 与 EmboTrack 上对比 E2E/TBD 两范式 11 个代表方法；逐组件消融归因（DSSM/ETM/FlexiTrack 实例构成/DynamicSSM 插入位置与内部组件）；反馈机制在第三方检测器+跟踪器组合上的增益验证。",
+  "期刊版新增：ExpertTrack Memory（MoE 长程记忆）、精细化 Tracklet 管理的范式切换、BipTrack 数据集、扩充实验与更详尽的方法/定性分析。"
+ ],
+ "method": {
+  "summary": "反馈驱动的全景 MOT 框架。感知层：ResNet-50 骨干 + DynamicSSM Block（畸变/尺度估计→畸变感知动态卷积→多向 SSM 长程光度一致性→残差融合）接入 DAB Transformer 编码器，隐式缓解全景畸变；解码器联合处理 Learnable Instances 与携带轨迹信息的 FlexiTrack Instances（训练时对特征与锚加随机噪声正则）。记忆层：ExpertTrack Memory 为每条轨迹维护 SIM（高置信关键帧、长程身份）+ DIM（近期帧、短期外观）双 FIFO 记忆，经 Hierarchical Memory Controller 与 Router 选 Top-K 特征送入共享 MoE（专家分别补偿光照/朝向/畸变类变化），门控融合个性化检索与专家响应。管理层：Tracklet Management 的 Dual-Branch Adapter 仅在推理期运行，依据轨迹关联状态在 E2E 阈值化分支与 TBD 数据关联分支间切换或集成输出（Algorithm 1），并管理轨迹初始化/更新/终止生命周期。评测基准 EmboTrack 用 PAL 单镜头全景（QuadTrack）与 Insta360 双鱼眼拼接（BipTrack）两种成像模态，平台为四足与轮腿机器人，平台运动扰动（俯仰振荡、垂直抖动）被设计为基准核心难点。",
+  "assumptions": [
+   "全景图像展开为等距柱状/统一投影后仍可由隐式特征校准（DynamicSSM 不显式建模全景几何）补偿畸变",
+   "轨迹反馈（历史帧中间结果回注检测器）在全景高不确定性条件下能单调降低检测/关联熵（作者以条件熵不等式论证）",
+   "推理期 E2E/TBD 范式切换依据关联状态即可获得互补收益，无需联合再训练",
+   "平台运动扰动（步态/轮腿俯仰）与真实部署条件同分布，训练/测试划分（按序列）足以评估泛化",
+   "标注质量足够支撑 HOTA/IDF1 等关联敏感指标的公平比较（自动线性传播 + 人工校验）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "JRDB（轮式平台、5 针孔多镜头拼接 360° 全景；10 训练/7 验证/27 测试序列）",
+   "QuadTrack（自建，四足机器人 + PAL 全景环形镜头，360°×70° FoV、2048×2048、40.5 FPS；32 序列、19K 帧、332 轨迹）",
+   "BipTrack（自建，轮腿机器人 + Insta360 双鱼眼拼接，360° FoV、3840×1920、100 FPS、~170° 单镜头 FoV；12 序列、7K 帧、278 轨迹）",
+   "EmboTrack = QuadTrack + BipTrack（44 序列、26,400 标注帧、600+ 轨迹、五校区两城市）"
+  ],
+  "tasks": [
+   "2D 全景多目标跟踪（MOT，行人等动态目标），E2E 与 TBD 两种范式",
+   "全景目标检测（OmniTrack++_Det 消融变体）"
+  ],
+  "embodiments": [
+   "四足机器人（QuadTrack 采集平台，PAL 相机顶部安装）",
+   "双足轮腿机器人（BipTrack 采集平台，Insta360 相机顶部安装）",
+   "轮式机器人（JRDB 采集平台，参照系）"
+  ],
+  "sample_or_scale": "EmboTrack：44 序列/26,400 标注帧/600+ 轨迹；JRDB：44 序列（10 train/7 val/27 test）。训练 20 epochs（消融 5 epochs），输入 1536×800，300 queries，batch size 1，4×NVIDIA A6000；FPS 测试用单张 RTX 3090 @4160×480。"
+ },
+ "evaluation": {
+  "design": "在 JRDB（外部轮式平台全景基准）与自建 EmboTrack（四足/轮腿具身平台全景基准）上分别独立训练与评测；E2E 与 TBD 两范式分别与对应范式的代表方法（TrackFormer/MOTRv2/MeMOTR；SORT/DeepSORT/ByteTrack/Bot-SORT/OC-SORT/HybridSORT/DiffMOT）对比；JRDB 验证集上做组件消融（Table 7）、FlexiTrack 实例构成消融（Table 8）、DynamicSSM 插入位置与内部组件消融（Table 9/10）、阈值敏感性（Fig 9）与 epoch 曲线（Table 11）；反馈机制在第三方 YOLO26+ByteTrack/HybridSORT 组合上验证可移植增益（Table 5）。",
+  "baselines": [
+   "E2E：TrackFormer、MOTRv2、MeMOTR（JRDB val 另有 MOTR）",
+   "TBD：SORT、DeepSORT、ByteTrack、Bot-SORT、OC-SORT、HybridSORT、DiffMOT",
+   "检测器基线：YOLO26（JRDB val TBD 分析）",
+   "前作：OmniTrack（CVPR 2025）E2E/DA 变体"
+  ],
+  "metrics": [
+   "HOTA（主指标）",
+   "IDF1",
+   "MOTA",
+   "OSPA",
+   "DetA/AssA（CLEAR MOT 组成）",
+   "FPS（单张 RTX 3090 @4160×480）",
+   "参数量（Table 6）"
+  ],
+  "ablations": [
+   "组件消融：DynamicSSM（DSSM）/ExpertTrack Memory（ETM）逐项与组合（Table 7，JRDB val 5 epochs）",
+   "FlexiTrack Instance 训练构成：I_dn（GT 去噪实例）/I_ft（反馈实例）四种组合（Table 8）",
+   "DynamicSSM 插入位置：S3/S4/S5 与 Conv/MLP 替换（Table 9）；内部组件 Dconv/SSM/Fusion（Table 10）",
+   "初始化/更新阈值敏感性（Fig 9，最优约 0.5/0.5）",
+   "训练 epoch 数 5-20（Table 11，峰值在 epoch 16 附近）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "QuadTrack（四足 PAL 全景）测试集上 OmniTrack++ E2E 达 34.90 HOTA / 41.21 IDF1（较前作 OmniTrack 的 19.87/19.47 提升 +15.03 HOTA/+11.74 IDF1，相对提升 43%/52%）；TBD 变体达 36.08 HOTA / 42.76 IDF1（相对提升 35%/38%）。",
+   "scope": "QuadTrack 测试集，E2E 与 TBD 两范式，对比前作 OmniTrack",
+   "locator": "page 14, Table 3；page 4, Section 1"
+  },
+  {
+   "finding": "BipTrack（轮腿双鱼眼拼接）上 OmniTrack++ E2E/TBD 达 44.63/44.96 HOTA，超过最强通用基线 ByteTrack（44.10）；但 MeMOTR（43.17）紧随其后，领先幅度明显小于 QuadTrack 上的差距。",
+   "scope": "BipTrack 测试集",
+   "locator": "page 14, Table 3"
+  },
+  {
+   "finding": "JRDB 测试集上 OmniTrack++ E2E 达 25.50 HOTA（较 OmniTrack 21.56 提升 +3.94）与 28.00 IDF1（+5.13）；TBD 变体 27.03 HOTA/0.81 OSPA 为表中最佳，但 IDF1（29.52 vs 30.26）与 MOTA（25.05 vs 26.60）较前作回退。",
+   "scope": "JRDB 测试集",
+   "locator": "page 14, Table 4 + Section 5.2.2"
+  },
+  {
+   "finding": "JRDB 验证集 E2E 对比中，OmniTrack++ 以 70.05M 参数（前作 63.13M，+11%）取得 30.84 HOTA / 35.66 IDF1（+5.72/+8.24），超过 MeMOTR（50.36M，29.51/33.64）。",
+   "scope": "JRDB 验证集 E2E 范式",
+   "locator": "page 15, Table 6"
+  },
+  {
+   "finding": "组件消融（JRDB val，5 epochs）：DynamicSSM 单独 +1.04 HOTA/+1.10 IDF1，ExpertTrack Memory 单独 +0.31 HOTA/+0.02 IDF1，组合 +1.17 HOTA/+1.49 IDF1；但引入 ETM 使 MOTA 从 27.34 降至 22.20（作者归因于记忆机制对假阳性更敏感）。",
+   "scope": "JRDB 验证集，5-epoch 消融设置",
+   "locator": "page 15, Table 7 + Section 5.3.1"
+  },
+  {
+   "finding": "FlexiTrack 实例训练构成消融：无实例 0.01 HOTA；仅反馈实例（I_ft）4.39 HOTA 且 MOTA 崩溃至 -1112.10；仅 GT 去噪实例（I_dn）14.64 HOTA；两者结合 28.47 HOTA——轨迹反馈需要 GT 去噪信号配合才能支撑 E2E 关联学习。",
+   "scope": "JRDB 验证集 E2E，训练期实例构成",
+   "locator": "page 16, Table 8 + Section 5.3.2"
+  },
+  {
+   "finding": "反馈机制移植到第三方 TBD 管线（YOLO26 检测 + ByteTrack/HybridSORT 跟踪）带来小幅一致增益：ByteTrack HOTA/IDF1 各 +0.48，HybridSORT HOTA +0.28/IDF1 +0.68；但系统帧率（12.2-16.6 FPS）远低于纯检测器基线（50.7-55.3 FPS）。",
+   "scope": "JRDB 验证集 TBD 范式，单张 RTX 3090 @4160×480",
+   "locator": "page 14-15, Section 5.2.3 + Table 5"
+  },
+  {
+   "finding": "DynamicSSM 插入在骨干 S4 层最佳（28.47 HOTA），全层替换或 Conv/MLP 替换（24.09/24.93/23.19 HOTA）反而劣于仅在 S4 插入。",
+   "scope": "JRDB 验证集消融",
+   "locator": "page 16, Table 9"
+  },
+  {
+   "finding": "失败模式集中于重度遮挡、密集人群、突然相机运动场景：跟踪器产生碎片轨迹与临时身份切换；作者承认这是残余挑战并指向显式遮挡感知建模。",
+   "scope": "JRDB 定性与失败案例分析",
+   "locator": "page 19, Section 5.5 + Fig. 12"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "密集人群与长期严重遮挡场景仍是挑战，未来需显式遮挡感知建模、闭环反馈内的时序推理强化与复杂真实机器人环境的长时程跟踪扩展。",
+    "locator": "page 19, Section 6 Conclusion"
+   },
+   {
+    "limitation": "OmniTrack++ 在 JRDB 测试集 TBD 范式上 IDF1 与 MOTA 较原 OmniTrack 略降，作者归因于设计主要优化 E2E 跟踪、数据关联集成受较少针对性优化。",
+    "locator": "page 14, Section 5.2.2"
+   },
+   {
+    "limitation": "引入 ExpertTrack Memory 后 MOTA 下降（27.34→22.20），作者说明记忆机制对假阳性更敏感，属于权衡而非纯增益。",
+    "locator": "page 15-16, Section 5.3.1"
+   },
+   {
+    "limitation": "失败案例分析：重度遮挡、密集人群或突然相机运动时会产生碎片轨迹或临时身份切换。",
+    "locator": "page 19, Section 5.5"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "推理效率证据显示全景感知闭环（检测+反馈）在单张 RTX 3090 @4160×480 下仅 12.2-16.6 FPS，低于检测器基线 50+ FPS；论文未报告四足/轮腿平台机载（嵌入式）算力上的运行时，实时性边界在移动本体上未经验证。",
+    "basis": "Table 5 FPS 列与正文（page 15）报告的桌面 GPU 帧率；平台端部署未在论文中出现。"
+   },
+   {
+    "boundary": "所有增益均以各数据集独立训练评测为条件（page 13，5.1.3 'train and evaluate all models independently on their respective datasets'），未验证跨数据集/跨平台的泛化或预训练迁移；QuadTrack 与 BipTrack 间亦无迁移实验。",
+    "basis": "实现细节原文与实验表结构；跨数据集实验在全文缺失。"
+   },
+   {
+    "boundary": "消融在 5-epoch 设置下进行而主表为 20 epochs，Table 7 的组件贡献幅度（+0.31~+1.17 HOTA）与主表增益（+15.03 HOTA）之间量级差距巨大，说明大部分 QuadTrack 增益未被消融表逐组件解释（可能来自训练配置、数据划分或检测质量差异），组件归因的外推需谨慎。",
+    "basis": "Table 7 表注（5 epochs）与 Table 3（20 epochs）的量级对比；Table 11 显示 epoch 数对 HOTA 影响可达 ±5 点。"
+   },
+   {
+    "boundary": "QuadTrack 用 PAL 成像、BipTrack 用双鱼眼拼接、JRDB 用 5 针孔拼接，三种'全景'模态的光学特性不同；跨模态结论（如 ExpertTrack Memory 对畸变的补偿作用）未分模态验证。",
+    "basis": "Table 2（page 13）列出的三种 panorama generation method；实验未按成像模态拆分分析。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：(1) 任务——展开为统一投影的全景/双鱼眼拼接 2D MOT（HOTA/IDF1 口径），不含 3D 跟踪、BEV 或深度任务；(2) 数据分布——大学校园户外场景（QuadTrack/BipTrack，长沙/杭州五校区）与 JRDB 的人群密集室内外场景，白天多时段，无夜间/极端天气证据；(3) 本体——四足（PAL 单镜头）与轮腿（Insta360 双鱼眼）平台的自监督标注数据，平台运动扰动以俯仰振荡/垂直抖动为主，不含高速运动或飞行平台；(4) 算力——4×A6000 训练、单张 RTX 3090 推理 12-16 FPS 的桌面级 GPU，机载嵌入式部署未验证；(5) 指标口径——HOTA/IDF1 为主，MOTA 因记忆机制引入假阳性敏感而下降是已声明的权衡；(6) 增益以每数据集独立训练为条件，跨数据集/模态迁移未测试。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "E2E 与 TBD 两范式分别建立基线并都给出对比，避免单一范式偏置；Dual-Branch Adapter 允许同框架内两范式切换，比较公平。",
+   "在第三方检测器+跟踪器组合（YOLO26+ByteTrack/HybridSORT）上验证反馈机制的移植增益（Table 5），部分剥离了'整体系统强'与'反馈机制有效'的混淆。",
+   "EmboTrack 填补了步态/轮腿运动扰动全景 MOT 数据空白：Table 1 显示此前全景/360° 基准（JRDB、nuScenes）均基于轮式平台；且训练/测试 bounding box 尺寸分布对齐（Fig 8）。",
+   "负面证据披露充分：JRDB TBD 的 IDF1/MOTA 回退、ETM 的 MOTA 下降、仅反馈实例训练崩溃、失败案例分析均有专门小节。"
+  ],
+  "design_risks": [
+   "主表增益（QuadTrack +15.03 HOTA）与消融归因（组件合计 +1.17 HOTA，5 epochs）量级严重不匹配，增益来源未被充分隔离；Table 11 显示 epoch 数本身可造成 ±5 HOTA 波动，而消融仅在 5 epochs 下进行。",
+   "JRDB val 的 E2E 对比（Table 6）与 JRDB test（Table 4）基准集合不同（val 上 TrackFormer/MOTR 数字与 test 不同），两表间不可直接互推。",
+   "BipTrack 上 MeMOTR（43.17）与 OmniTrack++（44.63）差距仅 1.46 HOTA，且 MeMOTR 为通用 E2E 跟踪器，'全景专用设计'在该子集的必要性证据较弱。",
+   "标注由自动线性传播 + 人工校验生成，全景畸变下小目标框质量未报告 IoU 复核统计，标注噪声对关联指标的影响未量化。",
+   "同一团队自建基准上自证 SOTA（自采数据、自定训练/测试划分），无第三方在该基准上的独立复现。"
+  ],
+  "baseline_fairness": "基线覆盖两范式主流方法（E2E 3-4 个、TBD 7 个）且均为各数据集上独立训练（作者声明 fair, dataset-specific comparisons）；但对比均为通用针孔跟踪器，缺少'全景适配版'基线（如 ERP 感知跟踪器）——即未验证通用方法经全景数据增广/畸变校正预处理后能追平多少差距；YOLO26 作为 2026 年检测器与 ResNet-50 骨干的 OmniTrack++_Det 的对比（Table 5）部分弥补了这一点。",
+  "metric_validity": "HOTA/IDF1/OSPA 聚焦关联质量，是 MOT 的有效代理；MOTA 对假阳性敏感（作者以此解释 ETM 的 MOTA 下降）；但所有指标均为图像平面 2D 口径，未连接到下游机器人任务效用（导航/预测收益），FPS 报告了分辨率与 GPU 条件，可复现口径清晰。",
+  "reproducibility": "实现细节完整（backbone、分辨率、queries、阈值、epochs、优化器、GPU 数、FPS 测量条件），数据集与代码承诺开源（github.com/xifen523/OmniTrack）；消融的 5-epoch 与主表 20-epoch 差异已声明；但训练/测试划分细节与标注协议的量化质检未完全公开。",
+  "external_validity": "结论绑定于校园户外场景与两类具身平台；夜间、高速运动、非结构化野外场景无证据；平台端机载实时性与跨数据集迁移未测试；'全景有利于机器人全场景感知'的动机性主张有文献支撑但本文未直接量化全景 vs 多相机阵列的对比实验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.00510-C01",
+   "claim": "OmniTrack++ 论文主张：对四足机器人与双足轮腿机器人等小型移动平台，全景（360°）成像提供了一种紧凑而有效的全场景态势感知手段，无需多传感器即可实现，从而降低负载。",
+   "stance": "support",
+   "relation": "应用方式命题：全景/超广角相机在具身平台上的部署动机——单台宽 FoV 相机替代多传感器实现全场景态势感知与负载削减，为综述'应用方式'维度提供动机证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者在引言中明确将全景成像定位为小型具身平台的传感器选型优势：紧凑、全场景覆盖、减少多传感器负载。",
+   "locator": "page 1, Section 1 Introduction",
+   "source_context": "In particular, for small-scale mobile platforms such as quadrupedal robots and bipedal wheel-legged robots, panoramic imaging offers a compact yet effective means to achieve full-scene situational awareness without the need for multiple sensors, thus reduc- ing payload",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应 page 1 引言中作者对全景成像在四足/轮腿平台上价值的主张（紧凑、全场景态势感知、免多传感器、降负载），无外推；该主张为动机陈述而非实验结果，claim 已按 author-claim 口径限定。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C02",
+   "claim": "现有主要面向针孔相机的 MOT 算法难以泛化到全景设置，根源是图像展开为等距柱状格式后的分辨率退化、几何畸变与非均匀光照；论文引用先前工作称这些因素可导致 IDSW 增加高达 40%。",
+   "stance": "support",
+   "relation": "任务受限命题：宽 FoV 成像对标准（针孔）感知管线的负面冲击——为综述'哪些任务受限/需要专门设计'提供问题界定证据。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "作者以引用文献（Shen and Yang 2024）支撑全景设置下 IDSW 最高增加 40% 的量化冲击；针孔 MOT 泛化失败由作者陈述，40% 数字本身依赖被引工作。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "Ex- isting MOT algorithms Chen et al (2024b); Lv et al (2024), primarily designed for pinhole camera inputs, often fail to generalize well to panoramic settings due to intrinsic chal- lenges, e.g., , resolution degradation, geometric distortions, and non-uniform illumination when the images are unfolded into an equirectangular format Lin et al (2025). These fac- tors frequently lead to degraded performance—for instance, causing up to a 40% increase in IDSWs Shen and Yang (2024)—thus constraining the applicability of standard MOT pipelines to 360° panoramic scenarios.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "IDSW increase",
+    "value_or_direction": "up to +40%",
+    "comparator": "pinhole MOT methods applied to panoramic imagery",
+    "task_or_sample": "panoramic MOT（引用文献口径，非本文实验）",
+    "locator": "page 2, Section 1 Introduction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 与 page 2 引言原文逐点对应（针孔算法、三类畸变来源、40% IDSW 与 Shen and Yang 2024 挂钩）；40% 数字按 citation-supported 口径标注，claim 明示'论文引用先前工作称'，未冒充本文实验结果。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C03",
+   "claim": "在四足机器人 PAL 全景数据 QuadTrack 测试集上，OmniTrack++ E2E 变体取得 34.90 HOTA 与 41.21 IDF1，较前作 OmniTrack E2E（19.87 HOTA / 19.47 IDF1）分别提升 +15.03 HOTA 与 +11.74 IDF1；TBD 变体达 36.08 HOTA / 42.76 IDF1。",
+   "stance": "support",
+   "relation": "效果命题：全景专用设计（轨迹反馈+MoE 记忆+畸变校准）在具身平台全景 MOT 上带来大幅量化收益——综述'任务获益'维度核心证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "QuadTrack 上对前作的绝对提升量级（+15 HOTA）远大于 JRDB 上（+3.94），说明具身运动扰动场景下专门组件收益更大。",
+   "locator": "page 14, Section 5.2.1 + Table 3",
+   "source_context": "On QuadTrack, OmniTrack++ E2E attains a HOTA of 34.90, yielding an absolute improvement of +15.03 points (from 19.87 to 34.90) compared to the orig- inal OmniTrack, while OmniTrack++ DA further elevates the score to 36.08.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "HOTA / IDF1",
+    "value_or_direction": "E2E: 19.87→34.90 HOTA (+15.03)、19.47→41.21 IDF1；TBD: 23.45→36.08 HOTA、26.41→42.76 IDF1",
+    "comparator": "OmniTrack（CVPR 2025 前作）同范式变体",
+    "task_or_sample": "QuadTrack 测试集（四足机器人 PAL 全景 MOT，EmboTrack 子集）",
+    "locator": "page 14, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 3（page 14）QuadTrack 段的四个数字（19.87/19.47、34.90/41.21、23.45/26.41、36.08/42.76）与摘要（page 1）+3.94/（19.87→34.90）+15.03 的口径交叉一致；claim 未超出表格蕴含范围。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C04",
+   "claim": "在 JRDB 测试集（轮式平台多镜头拼接全景）上，OmniTrack++ E2E 达 25.50 HOTA / 28.00 IDF1，较 OmniTrack E2E（21.56/22.87）提升 +3.94 HOTA / +5.13 IDF1；TBD 变体 27.03 HOTA 与 0.81 OSPA 为该表最佳。",
+   "stance": "support",
+   "relation": "效果命题（外部基准）：全景专用设计在外部轮式平台全景基准上同样带来增益但幅度显著小于具身扰动数据集——为综述'获益幅度依场景而变'提供对照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "JRDB 上 E2E 增益（+3.94）仅为 QuadTrack（+15.03）的四分之一，暗示运动扰动强度影响专门设计的边际收益。",
+   "locator": "page 14, Section 5.2.2 + Table 4",
+   "source_context": "Notably, OmniTrack++ E2E demonstrates substantial improvements over the original OmniTrack E2E , achieving a HOTA score of 25.50 and an IDF1 of 28.00, representing absolute improvements of +3.94 and +5.13 points, respectively.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "HOTA / IDF1 / OSPA",
+    "value_or_direction": "E2E: 21.56→25.50 HOTA (+3.94)、22.87→28.00 IDF1 (+5.13)；TBD: 27.03 HOTA、0.81 OSPA（表中最佳）",
+    "comparator": "OmniTrack E2E（前作）与 Table 4 全部 12 个方法",
+    "task_or_sample": "JRDB 测试集（轮式平台 5 针孔拼接 360° 全景 MOT）",
+    "locator": "page 14, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数字与 Table 4（page 14）及正文 5.2.2 完全一致：25.50/28.00/+3.94/+5.13、27.03/0.81；'表中最佳 HOTA/OSPA'由作者正文陈述且与表格数字相符（次高 TBD 为 OmniTrack DA 26.92）。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C05",
+   "claim": "在新建的轮腿机器人双鱼眼拼接基准 BipTrack 上，OmniTrack++ E2E/TBD 分别达 44.63/44.96 HOTA，超过最强通用基线 ByteTrack（44.10）与 MeMOTR（43.17），但相对 MeMOTR 的领先仅约 1.5 HOTA，远小于 QuadTrack 上的领先幅度。",
+   "stance": "conditional",
+   "relation": "效果命题的边界：在轮腿平台（双鱼眼拼接、较平滑的轮式+步态复合运动）上，全景专用设计相对通用 E2E 跟踪器（MeMOTR）的优势收窄——综述'获益依平台/运动模式而变'的条件性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "BipTrack 上 MeMOTR（43.17 HOTA）几乎追平 OmniTrack++（44.63），提示在运动扰动较温和的数据上通用方法即可接近专用框架。",
+   "locator": "page 14, Table 3",
+   "source_context": "BipTrack Dataset E2E MOTRv2 Zhang et al (2023) 39.29 0.78 38.60 2.72 MeMOTR Gao and Wang (2023) 43.17 0.82 46.22 27.85 OmniTrack E2E (ours) 35.70 0.89 33.91 -16.30 OmniTrack++ E2E (ours) 44.63 0.84 46.81 21.63 TBD SORT Bewley et al (2016) 42.67 0.86 44.96 28.27 DeepSORT Wojke et al (2017) 41.15 0.90 38.56 22.61 ByteTrack Zhang et al (2022) 44.10 0.84 46.25 20.61",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "HOTA",
+    "value_or_direction": "OmniTrack++ E2E 44.63 / DA 44.96，vs MeMOTR 43.17（+1.46）、vs ByteTrack 44.10（E2E +0.53 / DA +0.86）",
+    "comparator": "MeMOTR（通用 E2E 最强）与 ByteTrack（TBD 最强）",
+    "task_or_sample": "BipTrack 测试集（轮腿机器人 Insta360 双鱼眼拼接全景 MOT）",
+    "locator": "page 14, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "全部数字取自 Table 3 BipTrack 段（page 14）：MeMOTR 43.17、OmniTrack++ E2E 44.63、DA 44.96、ByteTrack 44.10；'领先幅度收窄'的对比（QuadTrack 上领先 MeMOTR 类差距更大）由两张表数字直接支撑，claim 已限定在该表范围内。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C06",
+   "claim": "EmboTrack 基准由两种具身平台的全景成像构成：QuadTrack 用四足机器人搭载 PAL 全景环形镜头（360°×70° FoV、2048×2048 分辨率、最高 40.5 FPS），BipTrack 用轮腿机器人搭载 Insta360 全景相机（双鱼眼拼接、最高 3840×1920、100 FPS、约 170° 单镜头 FoV）；合计 44 序列、26,400+ 标注帧、600+ 轨迹，跨两城市五校区采集。",
+   "stance": "support",
+   "relation": "应用方式命题（硬件形态）：综述所需的鱼眼/全景相机在具身平台的具体规格证据——PAL 单镜头全景与双鱼眼拼接两条硬件路线、以及具身平台运动特性被设计为基准难点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "数据集硬件规格完整覆盖两类宽 FoV 成像模态（PAL vs 双鱼眼拼接）与两类具身本体（四足 vs 轮腿），为综述硬件维度提供直接参照。",
+   "locator": "page 11, Sections 4.1-4.2",
+   "source_context": "The PAL camera provides a 360 ◦ ×70 ◦ panoramic FoV at 2048×2048 resolution and up to 40.5 FPS, ensuring wide- area scene coverage. Mounted at the top of the quadruped, the camera delivers an unobstructed perspective, enabling panoramic data acquisition in unconstrained outdoor envi- ronments. The dataset spans multiple times of day—from morning to evening—across five campuses in the cities of Changsha and Hangzhou",
+   "evidence_type": "benchmark-design",
+   "quantitative": {
+    "metric": "benchmark camera specification",
+    "value_or_direction": "PAL 360°×70° FoV @2048×2048 @40.5 FPS；Insta360 360° FoV @3840×1920 @100 FPS；>26,000 标注帧",
+    "comparator": "既有 360° MOT 基准（JRDB/nuScenes 轮式平台多镜头拼接）",
+    "task_or_sample": "EmboTrack 全景 MOT 基准（QuadTrack + BipTrack）",
+    "locator": "page 11, Sections 4.1-4.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "PAL 与 Insta360 规格逐字取自 page 11 Sec 4.1/4.2；44 序列/26,400 帧/37.5% 扩容取自 page 3-4；600+ 轨迹取自 page 19 结论；Table 1（page 12）的 32/19K/332 与 12/7K/278 分解亦一致；~170° 单镜头 FoV 取自 page 4 对 Insta360 X5 的描述。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C07",
+   "claim": "JRDB 验证集 5-epoch 组件消融显示：DynamicSSM Block（隐式畸变/光度校准）单独带来 +1.04 HOTA（27.30→28.34）与 +1.10 IDF1，是单独贡献最大的组件；与 ExpertTrack Memory 组合达 28.47 HOTA（+1.17）。",
+   "stance": "support",
+   "relation": "效果归因命题：全景畸变缓解组件（而非记忆模块）是性能增益的主要来源——综述'宽 FoV 畸变是需要专门处理的核心痛点'的组件级证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "消融表显示畸变校准组件（DSSM）贡献约为长期记忆组件（ETM +0.31）的 3 倍以上，指向畸变本身是全景 MOT 的主要瓶颈。",
+   "locator": "page 15, Table 7 + Section 5.3.1",
+   "source_context": "Exp. DSSM ETM HOTA↑ IDF1↑ OSPA↓ MOTA↑ 1 - - 27.30 31.19 0.8958 27.34 2 ✓ 27.61 31.21 0.8610 11.99 3 ✓ 28.34 32.29 0.8786 29.86 4 ✓ ✓ 28.47 32.68 0.8552 22.20",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "HOTA",
+    "value_or_direction": "baseline 27.30 → +DSSM 28.34 (+1.04) → +DSSM+ETM 28.47 (+1.17)；IDF1 31.19→32.29→32.68",
+    "comparator": "无 DSSM/无 ETM 的完整框架消融基线",
+    "task_or_sample": "JRDB 验证集，5-epoch 消融训练",
+    "locator": "page 15, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 7 四行数字（27.30/27.61/28.34/28.47）与正文 5.3.1 的 '+1.04/+0.31/+1.17' 陈述一致；claim 限定在 5-epoch 消融口径，未外推到 20-epoch 主表。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C08",
+   "claim": "引入 ExpertTrack Memory 使 MOTA 从 27.34（无组件基线）降至 22.20（完整模型），作者解释记忆机制对假阳性更敏感；该组件单独的 HOTA 增益仅 +0.31，且与 DSSM 组合时增益低于两者单独增益之和的叠加预期。",
+   "stance": "limit",
+   "relation": "负面/权衡证据：长期记忆组件在全景 MOT 上引入 MOTA 代价与有限边际收益——综述'效果'维度必须同时呈现的限制证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "MoE 记忆模块并非纯增益组件：MOTA 下降约 5 个点，HOTA 边际贡献小（+0.31），说明长时程身份保持与假阳性抑制存在张力。",
+   "locator": "page 15, Section 5.3.1 + Table 7",
+   "source_context": "When both com- ponents are combined, the improvements increase further to +1.17 points in HOTA and +1.49 points in IDF1, confirming that DSSM and ETM complement each other and jointly con- tribute to more robust and accurate temporal associations. It is worth noting that while the introduction of ETM leads to a decrease in the MOTA score (from 27.34 to 22.20 in the full model)—a common trade-off since memory mechanisms can",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MOTA / HOTA",
+    "value_or_direction": "MOTA 27.34→22.20（-5.14）；ETM 单独 HOTA +0.31",
+    "comparator": "无组件基线（Exp.1）与完整模型（Exp.4）",
+    "task_or_sample": "JRDB 验证集，5-epoch 消融训练",
+    "locator": "page 15, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "MOTA 数字（27.34→22.20）与正文'common trade-off'解释均出自 page 15-16 原文；ETM 单独 +0.31 出自正文（27.30→27.61 对应 Table 7 Exp.2）；claim 的措辞（'低于叠加预期'）表述为增益非简单可加，符合表格数字（0.31+1.04=1.35 > 1.17），未过度引申。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C09",
+   "claim": "FlexiTrack 实例训练构成消融显示：仅用反馈生成的 FlexiTrack 实例（I_ft）训练时 E2E 跟踪几乎失效（HOTA 4.39，MOTA 崩溃至 -1112.10）；仅用 GT 去噪实例（I_dn）为 14.64 HOTA；两者结合才达 28.47 HOTA——轨迹反馈信号自身不足以支撑端到端关联学习，必须依赖 GT 扰动信号的配合。",
+   "stance": "limit",
+   "relation": "局限证据（方法边界）：全景场景下'轨迹反馈'这一核心机制在训练期强依赖 GT 去噪监督——综述'应用方式的实现代价/依赖条件'维度证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "反馈机制并非自足：无 GT 去噪实例时训练崩溃级别的失败表明反馈线索需要监督信号锚定，限制了该方法在无标注场景的直接迁移。",
+   "locator": "page 16, Section 5.3.2 + Table 8",
+   "source_context": "In Exp. 2 , using only I f t during training yields a modest HOTA of 4.39, indicating that while feed- back provides some informative signals, establishing accurate associations remains challenging and prone to overfitting. In contrast, Exp. 3 , which utilizes only I dn in training, achieves a substantial improvement to 14.64 in HOTA, reflecting the strong association cues inherited from GT-based information that effectively guide the network in linking simple targets. Finally, incorporating both I dn and I f t during training in Exp. 4 further boosts performance to 28.47 in HOTA, demonstrat- ing that the addition of I f t significantly enhances the accuracy of instance association by complementing the denoised GT signals.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "HOTA / MOTA",
+    "value_or_direction": "仅 I_ft: 4.39 HOTA（MOTA -1112.10）；仅 I_dn: 14.64；两者: 28.47",
+    "comparator": "四种实例构成配置互比",
+    "task_or_sample": "JRDB 验证集 E2E 范式，训练期实例构成消融",
+    "locator": "page 16, Table 8"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "三个数字（4.39/14.64/28.47）与 MOTA -1112.10 均取自 Table 8 与正文 5.3.2 原文；claim 将其表述为训练构成依赖而非部署时依赖，与原文 'during training' 的限定一致。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C10",
+   "claim": "把跟踪输出反馈回检测器的机制移植到第三方 TBD 管线（OmniTrack++_Det 检测 + ByteTrack/HybridSORT 跟踪）时，JRDB 验证集上 ByteTrack 的 HOTA/IDF1 各提升 +0.48，HybridSORT 的 HOTA 提升 +0.28、IDF1 提升 +0.68——反馈机制的跨管线移植增益存在但幅度小（<1 点）。",
+   "stance": "conditional",
+   "relation": "条件性效果命题：轨迹反馈增益可移植到通用 TBD 管线，但量级为小几个十分点——综述'机制可复用性'维度的条件性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "反馈机制的外部有效性在小范围内成立（+0.28~+0.68），远小于框架整体的提升幅度，提示反馈只是全景 MOT 收益的一部分。",
+   "locator": "page 14-15, Section 5.2.3 + Table 5",
+   "source_context": "the com- parison between the third and fifth rows shows that incor- porating the feedback mechanism consistently improves tracking performance: within the OmniTrack++ framework, HOTA and IDF1 on ByteTrack increase by +0.48 and +0.48 points, respectively, while on HybridSORT, HOTA improves",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "HOTA / IDF1 提升",
+    "value_or_direction": "ByteTrack: +0.48 / +0.48；HybridSORT: +0.28 / +0.68",
+    "comparator": "同检测器+跟踪器无反馈的 vanilla TBD 配置",
+    "task_or_sample": "JRDB 验证集 TBD 范式（Table 5）",
+    "locator": "page 15, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四个增量数字逐字取自 page 14-15 正文（5.2.3），并与 Table 5 中 OmniTrack++_DA vs OmniTrack++_Det 的括号增量一致（31.12-30.84=0.28 等）；claim 限定'幅度小（<1 点）'由数字直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C11",
+   "claim": "推理效率对比：单张 RTX 3090、4160×480 输入下，YOLO26 检测器基线管线达 50.7-55.3 FPS，而 OmniTrack/OmniTrack++ 完整跟踪系统为 10.96-16.62 FPS——全景反馈式感知管线的推理成本约为纯检测器基线的 1/4~1/5。",
+   "stance": "limit",
+   "relation": "局限证据（计算成本）：全景感知闭环在桌面 GPU 上仅 12-16 FPS，实时性边界距机器人控制需求尚远——综述'应用局限'维度的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "反馈闭环+全景处理的代价是 4-5 倍的帧率损失，且论文未提供机载嵌入式平台上的运行数据，具身部署的实时性存疑。",
+   "locator": "page 15, Table 5",
+   "source_context": "The Baseline employs YOLO26 as the detector with a standard Tracking-By-Detection (TBD) pipeline. Vanilla TBD replaces the detector with our OmniTrack Det or OmniTrack++ Det , enabling panoramic-aware detection while keeping the same TBD tracker. OmniTrack++ DA builds upon OmniTrack++ Det by incorporating our proposed feedback mechanism, where tracking outputs are fed back to the detector to refine future predictions. The numbers represent the improvement relative to the baseline method. The FPS metric is measured on a single RTX 3090 GPU with an image resolution of 4160×480.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "FPS",
+    "value_or_direction": "YOLO26 基线 50.74-55.28 FPS vs OmniTrack/OmniTrack++ 系统 10.96-16.62 FPS",
+    "comparator": "YOLO26 检测器 + 标准 TBD 基线管线",
+    "task_or_sample": "JRDB 验证集 TBD 范式，单张 RTX 3090 @4160×480",
+    "locator": "page 15, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "FPS 列数字（55.28/50.74 与 12.24/16.62/11.83/13.54/11.65/15.37/10.96/12.77）与测量条件（单张 RTX 3090、4160×480）均取自 Table 5 及其表注（page 15）；'约为 1/4~1/5'的比值由数字直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C12",
+   "claim": "在 JRDB 测试集 TBD 范式上，OmniTrack++ DA 的 IDF1（29.52，前作 30.26）与 MOTA（25.05，前作 26.60）均较原 OmniTrack DA 回退；作者承认 OmniTrack++ 设计以 E2E 跟踪为主，数据关联集成仅受较少针对性优化。",
+   "stance": "limit",
+   "relation": "负面证据（范式依赖）：期刊版增强组件对 TBD 范式并非普遍增益——综述'获益条件性'维度证据，防止单向解读。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "长程记忆与反馈设计在 E2E 范式获益，但同一框架的 TBD 变体在关联与检测综合指标上反而回退，说明增益绑定于特定跟踪范式。",
+   "locator": "page 14, Section 5.2.2 + Table 4",
+   "source_context": "Under the TBD paradigm, while OmniTrack++ DA experiences a slight drop in IDF1 and MOTA compared to OmniTrack DA , it still achieves state-of- the-art HOTA (27.03) and OSPA (0.81) on the JRDB dataset. This minor trade-off in specific metrics is expected, as the de- sign of OmniTrack++ primarily focuses on optimizing E2E tracking; consequently, certain aspects of data-association in- tegration receive less targeted refinement.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "IDF1 / MOTA",
+    "value_or_direction": "IDF1 30.26→29.52（-0.74）；MOTA 26.60→25.05（-1.55）",
+    "comparator": "原 OmniTrack DA（前作 TBD 变体）",
+    "task_or_sample": "JRDB 测试集 TBD 范式",
+    "locator": "page 14, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 4 中 OmniTrack DA 26.92/30.26/26.60 与 OmniTrack++ DA 27.03/29.52/25.05 的差值与正文' slight drop in IDF1 and MOTA'陈述一致；作者归因（E2E 优先设计）为原文直引。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C13",
+   "claim": "作者自述失败模式：在重度遮挡、密集人群或突然相机运动的复杂场景中，OmniTrack++ 仍会产生碎片轨迹或临时身份切换，当多个行人重叠或近距离移动时尤其明显；作者据此指出显式时序推理与遮挡感知建模是未来方向。",
+   "stance": "limit",
+   "relation": "局限证据（场景边界）：全景 FoV 的核心卖点（消除出视野）不等于解决遮挡/密集问题——综述'哪些场景仍受限'维度证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "全景相机解决的是'目标出视野'，但密集人群的重叠遮挡与运动歧义仍破坏身份关联，是该方法明确声明的残余挑战。",
+   "locator": "page 19, Section 5.5 Failure Case Analysis",
+   "source_context": "As illustrated in Fig. 12, our method occasionally struggles in complex real-world scenarios involving heavy occlusion, dense crowds, or abrupt camera motion. Specifically, our tracker may produce fragmented trajectories or temporary identity switches when multiple pedestrians overlap or move in close proximity. These issues mainly arise from severe occlusion and motion ambiguity, which can disrupt stable target association.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 的三类触发场景、失效形态（碎片轨迹/临时身份切换）与未来方向均逐字对应 page 19 Section 5.5 原文；定性证据按 author-claim 口径标注，未添加量化。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C14",
+   "claim": "EmboTrack 的设计意图是捕捉具身平台特有的运动扰动：四足平台的周期性步态导致俯仰/横滚波动、垂直体振荡与速度突变，轮腿平台的复合运动引入俯仰波动、横向倾斜与间歇步态扰动；论文以图像平面归一化 Y 轴位移曲线（Fig. 7）显示 JRDB 轮式平台位移平滑、QuadTrack/BipTrack 振荡明显——平台运动扰动被作为基准的核心难度来源。",
+   "stance": "support",
+   "relation": "应用方式命题（平台-传感器耦合）：宽 FoV 相机搭载于具身本体后承受步态/俯仰扰动，与轮式平台的光滑运动形成本质差异——综述'具身场景特有挑战'维度证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "该基准首次把步态/轮腿运动扰动作为全景 MOT 的系统性变量（Table 1 显示既有 360° 基准均为轮式平台），界定了具身全景感知区别于自动驾驶的评测条件。",
+   "locator": "page 10, Section 4 EmboTrack",
+   "source_context": "(i) BipTrack: Recorded with a wheeled-legged robot equipped with an Insta360 panoramic camera (Fig. 6 (a)), it introduces hybrid loco- motion dynamics. This platform combines wheel-based mo- bility with articulated leg joints, producing distinctive motion characteristics such as pitch variations, lateral tilting, and oc- casional gait-like steps. These motions induce complex scene deformations and non-uniform perspective transitions, com- plicating object detection and association. (ii) QuadTrack: Collected using a quadruped robotic platform (Fig. 6 (b)), it captures panoramic sequences under gait-induced non- linear motion. The quadruped’s periodic stepping patterns lead to pronounced pitch and roll fluctuations, vertical body oscillations, and abrupt velocity changes.",
+   "evidence_type": "benchmark-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四足/轮腿扰动描述取自 page 10 Section 4 与 page 11 Sec 4.1/4.2 原文；JRDB vs QuadTrack 位移对比取自 page 12-13 Section 4.4 原文；'Table 1 显示既有 360° 基准均为轮式'由 page 12 Table 1 的 Movement 列（JRDB/nuScenes 均为轮式）支撑，claim 未超出原文蕴含。"
+   }
+  },
+  {
+   "card_id": "2511.00510-C15",
+   "claim": "JRDB 验证集 E2E 对比中，OmniTrack++ 以 70.05M 参数（前作 63.13M，约 +11% 增量）取得 30.84 HOTA / 35.66 IDF1（前作 25.12/27.42，+5.72/+8.24），超过参数量 50.36M 的 MeMOTR（29.51/33.64）与 TrackFormer、MOTR、MOTRv2。",
+   "stance": "support",
+   "relation": "效果命题（资源口径）：全景专用增强的参数-性能权衡——综述'效果与代价'维度证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "约 7M 参数的 MoE 记忆与畸变模块增量换来 JRDB 验证集上 +5.72 HOTA，同时压过更强的通用 E2E 基线。",
+   "locator": "page 15, Table 6 + Section 5.2.4",
+   "source_context": "MeMOTR Gao and Wang (2023) 50.36M 29.51 33.64 0.891 OmniTrack E2E (ours) 63.13M 25.12 27.42 0.925 OmniTrack++ E2E (ours) 70.05M 30.84 35.66 0.879",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "HOTA / IDF1 / 参数量",
+    "value_or_direction": "25.12→30.84 HOTA（+5.72）、27.42→35.66 IDF1（+8.24）；参数 63.13M→70.05M（+11%）；MeMOTR 29.51/33.64 @50.36M",
+    "comparator": "原 OmniTrack E2E 与 MeMOTR（JRDB val E2E）",
+    "task_or_sample": "JRDB 验证集 E2E 范式",
+    "locator": "page 15, Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "参数量（63.13M/70.05M/50.36M）与全部 HOTA/IDF1 数字取自 Table 6（page 15），正文 5.2.4 的 +5.72/+8.24/11% 与表格一致；claim 范围限于 JRDB 验证集 E2E 对比。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "OmniTrack: Omnidirectional Multi-Object Tracking for Mobile Robots in Dynamic Environments (CVPR 2025)",
+   "arxiv_id": "",
+   "reason": "本文前作与所有主要对比的参照系（QuadTrack 数据集原始版本、OmniTrack E2E/DA 基线）。"
+  },
+  {
+   "title": "JRDB: A dataset and benchmark of egocentric robot visual perception of humans in crowded and public spaces",
+   "arxiv_id": "",
+   "reason": "外部评测基准（轮式平台 5 针孔拼接 360° 全景），所有 JRDB 结果的口径来源。"
+  },
+  {
+   "title": "Shen and Yang (2024)（全景设置下 IDSW 增加高达 40% 的引用来源）",
+   "arxiv_id": "",
+   "reason": "C02 卡中 40% IDSW 量化声明的原始依据，综述若使用该数字需回溯此文。"
+  }
+ ],
+ "figures": [
+  {
+   "figure_id": "Fig. 2",
+   "caption": "Overview of the EmboTrack benchmark (BipTrack and QuadTrack) and MOT results on the QuadTrack test set.",
+   "section": "1 Introduction",
+   "usage": "作者用该图展示双子集采集平台与 QuadTrack 上 E2E/TBD 各方法 HOTA/IDF1 对比，凸显 OmniTrack++ 最高精度。"
+  },
+  {
+   "figure_id": "Fig. 5",
+   "caption": "ExpertTrack Memory framework. The module integrates long-term Stable Identity Memory (SIM) and short-term Dynamic Interaction Memory (DIM) ... A Router then selects the top-K features across both memories and forwards them to a Shared Mixture-of-Experts (MoE) module.",
+   "section": "3.4 ExpertTrack Memory",
+   "usage": "作者用该图说明分层记忆+MoE 如何在全景畸变下维持长时程身份一致性。"
+  },
+  {
+   "figure_id": "Fig. 12",
+   "caption": "Analysis of failure cases on JRDB, highlighting scenarios where OmniTrack++ struggles compared to ByteTrack.",
+   "section": "5.5 Failure Case Analysis",
+   "usage": "作者用该图披露失败案例：重度遮挡、密集人群、突然相机运动下的轨迹碎片与身份切换。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "Table 3",
+   "caption": "Comparison with state-of-the-art methods on the EmboTrack test set.",
+   "section": "5.2 Benchmarking and Comparative Analysis",
+   "rows": [
+    [
+     "Method",
+     "HOTA↑",
+     "OSPA↓",
+     "IDF1↑",
+     "MOTA↑"
+    ],
+    [
+     "QuadTrack E2E: TrackFormer",
+     "19.62",
+     "0.97",
+     "17.75",
+     "3.16"
+    ],
+    [
+     "QuadTrack E2E: OmniTrack++ (ours)",
+     "34.90",
+     "0.85",
+     "41.21",
+     "18.65"
+    ],
+    [
+     "QuadTrack TBD: OmniTrack++ DA (ours)",
+     "36.08",
+     "0.82",
+     "42.76",
+     "21.94"
+    ],
+    [
+     "BipTrack E2E: MeMOTR",
+     "43.17",
+     "0.82",
+     "46.22",
+     "27.85"
+    ],
+    [
+     "BipTrack E2E: OmniTrack++ (ours)",
+     "44.63",
+     "0.84",
+     "46.81",
+     "21.63"
+    ],
+    [
+     "BipTrack TBD: OmniTrack++ DA (ours)",
+     "44.96",
+     "0.76",
+     "47.41",
+     "21.50"
+    ]
+   ],
+   "usage": "作者用该表报告自建具身平台全景基准上的主结果：QuadTrack 大幅超越基线，BipTrack 上 MeMOTR/ByteTrack 紧追。"
+  },
+  {
+   "table_id": "Table 4",
+   "caption": "Comparison with state-of-the-art methods on the JRDB test set.",
+   "section": "5.2 Benchmarking and Comparative Analysis",
+   "rows": [
+    [
+     "Method",
+     "HOTA↑",
+     "OSPA↓",
+     "IDF1↑",
+     "MOTA↑"
+    ],
+    [
+     "E2E: OmniTrack (ours)",
+     "21.56",
+     "0.94",
+     "22.87",
+     "25.01"
+    ],
+    [
+     "E2E: OmniTrack++ (ours)",
+     "25.50",
+     "0.88",
+     "28.00",
+     "21.02"
+    ],
+    [
+     "TBD: OmniTrack DA (ours)",
+     "26.92",
+     "0.84",
+     "30.26",
+     "26.60"
+    ],
+    [
+     "TBD: OmniTrack++ DA (ours)",
+     "27.03",
+     "0.81",
+     "29.52",
+     "25.05"
+    ]
+   ],
+   "usage": "作者用该表报告外部基准 JRDB 上 E2E 增益与 TBD 变体 IDF1/MOTA 回退并存的格局。"
+  },
+  {
+   "table_id": "Table 5",
+   "caption": "Results on the JRDB validation set ... The Baseline employs YOLO26 as the detector with a standard Tracking-By-Detection (TBD) pipeline ... The FPS metric is measured on a single RTX 3090 GPU with an image resolution of 4160×480.",
+   "section": "5.2.3 Tracking on OmniTrack TBD with Feedback",
+   "rows": [
+    [
+     "Method",
+     "Feedback",
+     "Detector",
+     "Tracker",
+     "HOTA↑",
+     "IDF1↑",
+     "FPS↑"
+    ],
+    [
+     "baseline",
+     "-",
+     "YOLO26",
+     "ByteTrack",
+     "27.94",
+     "32.17",
+     "55.28"
+    ],
+    [
+     "vanilla TBD",
+     "-",
+     "OmniTrack++_Det",
+     "ByteTrack",
+     "29.23",
+     "33.74",
+     "16.62"
+    ],
+    [
+     "OmniTrack++_DA",
+     "✓",
+     "OmniTrack++_Det",
+     "-",
+     "29.71",
+     "34.22",
+     "13.54"
+    ],
+    [
+     "vanilla TBD",
+     "-",
+     "OmniTrack++_Det",
+     "HybridSORT",
+     "30.84",
+     "35.50",
+     "15.37"
+    ],
+    [
+     "OmniTrack++_DA",
+     "✓",
+     "OmniTrack++_Det",
+     "-",
+     "31.12",
+     "36.18",
+     "12.77"
+    ]
+   ],
+   "usage": "作者用该表分离反馈机制增益（+0.48/+0.28）与系统帧率代价（12-16 vs 50+ FPS）。"
+  },
+  {
+   "table_id": "Table 7",
+   "caption": "Analysis of Model Components: DSSM represents DynamicSSM, and ETM refers to an ExpertTrack Memory.",
+   "section": "5.3.1 Ablation Analysis of Model Components",
+   "rows": [
+    [
+     "Exp.",
+     "DSSM",
+     "ETM",
+     "HOTA↑",
+     "IDF1↑",
+     "OSPA↓",
+     "MOTA↑"
+    ],
+    [
+     "1",
+     "-",
+     "-",
+     "27.30",
+     "31.19",
+     "0.8958",
+     "27.34"
+    ],
+    [
+     "2",
+     "-",
+     "✓",
+     "27.61",
+     "31.21",
+     "0.8610",
+     "11.99"
+    ],
+    [
+     "3",
+     "✓",
+     "-",
+     "28.34",
+     "32.29",
+     "0.8786",
+     "29.86"
+    ],
+    [
+     "4",
+     "✓",
+     "✓",
+     "28.47",
+     "32.68",
+     "0.8552",
+     "22.20"
+    ]
+   ],
+   "usage": "作者用该表归因组件贡献：DSSM 主导增益，ETM 引入 MOTA 代价。"
+  }
+ ],
+ "notes": "六遍式精读完成（scoping 模式）。全 23 页正文与图表已读，参考文献部分略读。三处口径核对：(1) 摘要 +3.94（JRDB）/ +15.03（QuadTrack）与 Table 4/Table 3 一致；(2) 消融为 5-epoch 设置（Table 7 注），主表为 20 epochs，两口径数字不可互换；(3) Fig. 2 图注中的 43%/52%/35%/38% 为相对提升（HOTA 19.87→34.90 约 +75.9% 相对提升，故图注口径疑为相对 IDF1 或特定指标组合——按正文 page 4 'relative improvements of 43% and 52%' 的原文保留为作者口径，不自行换算）。OmniTrack++ DA 在 QuadTrack 36.08 HOTA 为全表最高单值。"
+}

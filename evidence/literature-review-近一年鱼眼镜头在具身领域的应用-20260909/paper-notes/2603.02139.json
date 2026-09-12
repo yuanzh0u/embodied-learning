@@ -1,0 +1,431 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.02139",
+  "title": "Rethinking Camera Choice: An Empirical Study on Fisheye Camera Properties in Robotic Manipulation",
+  "published": "2026-03",
+  "url": "https://arxiv.org/abs/2603.02139",
+  "authors": [
+   "Han Xue",
+   "Nan Min",
+   "Xiaotong Liu",
+   "Wendi Chen",
+   "Yuan Fang",
+   "Jun Lv",
+   "Cewu Lu",
+   "Chuan Wen"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "empirical",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接回答综述问题：这是首个系统研究腕戴鱼眼相机对机器人操作模仿学习策略性能影响的实证工作（CVPR 2026），覆盖空间定位、场景泛化、硬件泛化三个维度，模拟与真实世界双重验证，是本综述关于鱼眼在具身操作领域应用方式、效果与局限的核心证据来源。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction (page 1-2)",
+    "role": "problem",
+    "purpose": "确认研究动机（UMI/RDT2/GEN-0/π0.5 等系统采用腕戴鱼眼但缺乏系统理解）、三个研究问题（空间定位/场景泛化/硬件泛化）与三条结论预告。"
+   },
+   {
+    "locator": "2 Related Work (page 2-3)",
+    "role": "problem",
+    "purpose": "梳理鱼眼在自动驾驶/SLAM/监控/航空机器人中的既有应用与机器人操作领域的 benchmark 空白。"
+   },
+   {
+    "locator": "3.1-3.2 Study Design and Fisheye-centric components (page 3-4)",
+    "role": "method-or-design",
+    "purpose": "掌握因子化实验设计（相机模型/场景复杂度/场景多样性/相机参数四个自变量）、MuJoCo 两阶段鱼眼模拟管线与 Random Scale Augmentation (RSA) 的机制与假设。"
+   },
+   {
+    "locator": "3.3-3.6 Imitation Learning Framework, Setups, Evaluation Protocol (page 4-6)",
+    "role": "data-or-setting",
+    "purpose": "核对策略配置（Diffusion Policy、state-free、无第三视角相机）、模拟与真实的相机 FoV（90/235 vs 60/180）、任务清单（6 模拟任务+3 真实任务）、真实世界每条件 20 trials 的归一化多阶段评分协议。"
+   },
+   {
+    "locator": "4.1 RQ1 Spatial Localization (page 6-7)",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table 1（模拟六任务 SR）、Figure 6（真实世界 poor→rich 增益 +0.39 vs +0.18）与 Table 2（本体感觉预测探针）的定量结果。"
+   },
+   {
+    "locator": "4.2 RQ2 Scene Generalization (page 6-8)",
+    "role": "results-or-analysis",
+    "purpose": "核对场景多样性扩展实验：真实世界 8 场景零样本成功率超 95%、模拟扩展曲线较缓及作者归因。"
+   },
+   {
+    "locator": "4.3 RQ3 Hardware Generalization (page 7-8)",
+    "role": "results-or-analysis",
+    "purpose": "核对跨镜头零样本迁移的性能下降、绝对尺度过拟合假设与 RSA 的缓解效果（Figure 10，模拟六任务平均）。"
+   },
+   {
+    "locator": "5 Conclusion (page 8)",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者总结的三条发现与面向大规模鱼眼数据采集的指导。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Supplementary material",
+    "role": "appendix-or-supplement",
+    "reason": "not-included: 精读包未包含补充材料；正文引用其承载真实世界跨相机验证、未见场景细节与额外结果，相应证据边界已在卡片与限制中收紧。"
+   }
+  ]
+ },
+ "research_question": "腕戴鱼眼相机相对针孔相机对模仿学习策略的空间定位、场景泛化与跨硬件泛化有何影响？",
+ "contributions": [
+  "首个系统研究腕戴鱼眼相机特性对机器人操作模仿学习策略性能影响的实证工作（模拟+真实世界）。",
+  "在 MuJoCo 中实现两阶段（cubemap→等距柱状→鱼眼）鱼眼相机模拟管线，使 Robomimic/MimicGen 基准支持鱼眼渲染。",
+  "识别跨鱼眼镜头泛化失败的根因为绝对尺度过拟合，并提出 Random Scale Augmentation (RSA) 缓解。",
+  "给出面向大规模鱼眼数据采集的三条可操作指导（特征丰富环境、场景多样性、尺度增强）。"
+ ],
+ "method": {
+  "summary": "因子化受控实证研究：以相机模型（鱼眼 vs 针孔，均腕戴、无第三视角）为主对照维度，操纵场景复杂度（feature-poor vs feature-rich）、场景多样性（1..N 个训练背景，总数据量固定，评测零样本迁移到未见场景）与相机参数（未见内参/FoV/畸变）三个因子。策略为 state-free Diffusion Policy（U-Net + DDIM，无本体感觉输入），模拟用 ResNet-18 编码器（无预训练）、真实世界用 CLIP ViT 特征；动作空间模拟用 delta action、真实用 UMI 式 relative action。鱼眼模拟采用 OmniCV-Lib 启发的两阶段渲染。RQ1 另用本体感觉预测探针（在冻结编码器上微调轻量 MLP 头预测机器人本体状态）验证编码器隐式空间感知；RQ3 提出随机尺度增强 RSA（每张训练图像从 U(0.7,1.3) 采样尺度因子、中心裁剪后缩放，s>1 时以黑色 padding 实现 zoom-out）。",
+  "assumptions": [
+   "state-free 策略（省略本体感觉输入）可以分离视觉编码器的定位能力，鱼眼 FoV 优势因此被直接检验。",
+   "腕戴相机近距离观测会放大鱼眼与针孔差异，故结论以腕戴配置为中心。",
+   "鱼眼跨镜头失败主要由物体绝对像素尺度的变化驱动，故尺度增强可缓解。",
+   "两阶段渲染管线（球面 cubemap→等距柱状→鱼眼）可足够逼真地模拟真实鱼眼成像。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Robomimic（六任务中四个来源基准之一，MuJoCo）",
+   "MimicGen（同上）",
+   "自采真实世界演示（Flexiv Rizon 4 + DH AG-160-95 夹爪，Meta Quest 3 遥操作采集）"
+  ],
+  "tasks": [
+   "模拟六任务：Square、Tool Hang、Coffee、Threading、Assembly、Mug Cleanup（高精度操作/空间泛化/长时序）",
+   "真实三任务：Pick Cup（空间泛化）、Fold Towel（可变形物体）、Hang Chinese Knot（高精度旋转操作）"
+  ],
+  "embodiments": [
+   "模拟：MuJoCo 操作臂（Robomimic/MimicGen 环境）",
+   "真实：Flexiv Rizon 4 机械臂 + DH AG-160-95 电动夹爪"
+  ],
+  "sample_or_scale": "模拟每配置 50 rollouts 评成功率；真实世界每配置 N=20 trials 报多阶段归一化得分；相机配置：模拟针孔 90° FoV vs 鱼眼 235° FoV（单/双腕戴），真实针孔 60° FoV vs 鱼眼 180° FoV（单腕戴）。"
+ },
+ "evaluation": {
+  "design": "对照实验为主：相机模型 ×（场景复杂度 | 场景数量 N | 未见相机参数）的受控比较，训练数据量与评测协议在两相机间对齐；RQ1 附表征探针，RQ3 附失败案例分析。",
+  "baselines": [
+   "腕戴针孔相机（单/双，同策略与数据协议）——主对照",
+   "常规固定尺度 Random Crop Augmentation（作为 RSA 的对照，见图 3 对比）",
+   "标准增强训练的 baseline 策略（RQ3）"
+  ],
+  "metrics": [
+   "模拟：任务成功率 SR（50 rollouts）",
+   "真实：多阶段归一化得分（每任务 2-3 阶段，N=20 trials）",
+   "探针：本体状态预测平移误差(cm)/旋转误差(°)"
+  ],
+  "ablations": [
+   "场景复杂度（poor vs rich）× 相机模型 × 相机数量（模拟）",
+   "训练场景数 N（模拟 1/8/16/32；真实 1/2/4/6/8）",
+   "跨相机：Seen Param vs 5 个未见参数配置，标准增强 vs RSA",
+   "编码器探针（4 相机×场景组合 × 3 真实任务）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "模拟六任务平均成功率上单腕戴鱼眼（poor 0.57 / rich 0.66）高于单腕戴针孔（0.31 / 0.34），双鱼眼（0.72 / 0.75）亦高于双针孔（0.38 / 0.45）；单个鱼眼即可超过双针孔配置。",
+   "scope": "MuJoCo 六任务、state-free Diffusion Policy、无第三视角相机",
+   "locator": "page 7, Table 1"
+  },
+  {
+   "finding": "真实世界从 feature-poor 到 feature-rich 背景，鱼眼平均归一化得分增益 +0.39，大于针孔的 +0.18；鱼眼定位收益依赖环境视觉特征丰富度。",
+   "scope": "三个真实任务、N=20 trials/配置",
+   "locator": "page 6, Figure 6"
+  },
+  {
+   "finding": "本体感觉预测探针中，鱼眼+特征丰富编码器在三个真实任务上均取得最低平移/旋转误差（如 Pick Cup 2.362 cm / 3.394°，针孔+poor 为 12.309 cm / 15.345°）。",
+   "scope": "三个真实任务、冻结编码器+MLP 探针",
+   "locator": "page 7, Table 2"
+  },
+  {
+   "finding": "真实世界中仅用 8 个多样场景训练的鱼眼策略在未见场景上的零样本成功率迅速超过 95%；模拟中的扩展曲线较缓（作者归因于编码器差异与模拟背景复杂度低）。",
+   "scope": "真实 Pick Cup 与模拟 Coffee 任务",
+   "locator": "page 7, Section 4.2; page 8, Figure 8"
+  },
+  {
+   "finding": "常规增强下跨未见鱼眼镜头零样本迁移出现严重性能下降（如 Param 3/4）；RSA 在全部未见相机配置上保持更高成功率。",
+   "scope": "模拟六任务平均、5 个未见相机参数",
+   "locator": "page 8, Figure 10"
+  },
+  {
+   "finding": "作者指出现有鱼眼数据集缺乏机器人操作任务、主流机器人 benchmark 缺少鱼眼流，隔离鱼眼光学特性对策略学习定量影响的系统分析此前缺失。",
+   "scope": "领域格局陈述（Related Work）",
+   "locator": "page 2, Related Work"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "跨硬件泛化实验主要在模拟中进行，因为在真实世界评估众多硬件配置成本高；真实世界验证放在补充材料（未随正文发表）。",
+    "locator": "page 8, Section 4.3"
+   },
+   {
+    "limitation": "模拟中的场景多样性扩展曲线较缓，作者归因于（1）模拟用非预训练 ResNet-18 而真实世界用预训练 CLIP 编码器、（2）模拟背景图像的视觉复杂度相对更低。",
+    "locator": "page 7, Section 4.2"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论限定在 state-free（无本体感觉输入）、仅腕戴相机、无第三视角相机的 Diffusion Policy 模仿学习设置；对带本体感觉、第三视角相机或 VLA 大模型的系统，鱼眼/针孔差异可能改变。",
+    "basis": "Sec 3.3 明确以删除本体感觉输入作为分离视觉定位能力的设计决策，且排除第三视角相机以避免混杂；论文未提供这些替代设置的对照实验。"
+   },
+   {
+    "boundary": "模拟与真实的相机 FoV 对比幅度不同（模拟 90° vs 235°，真实 60° vs 180°），两套结论中'相机差距'的幅度不可直接互相推断。",
+    "basis": "Sec 3.4 与 3.5 的相机配置陈述。"
+   },
+   {
+    "boundary": "任务覆盖为 6 个模拟桌面操作任务与 3 个真实任务、单一机械臂（Flexiv Rizon 4）；导航、移动操作、双臂与长时序 VLA 任务未测试。",
+    "basis": "Sec 3.4/3.5 任务与硬件清单。"
+   },
+   {
+    "boundary": "真实世界每配置仅 20 trials 且未报告方差/置信区间；正文提及的'1.73 cm 平移误差'与 Table 2 中最低值 2.362 cm 不一致，定量细节需谨慎引用。",
+    "basis": "Sec 3.6（N=20）与 Sec 4.1 正文数字 vs Table 2 的核对。"
+   },
+   {
+    "boundary": "鱼眼模拟基于两阶段渲染管线，其与真实鱼眼镜头成像差异（如色散、模糊、畸变标定误差）未量化，模拟结论向真实镜头的迁移保真度未经实验验证。",
+    "basis": "Sec 3.2 方法描述；论文未提供模拟-真实鱼眼图像的保真度评估。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于腕戴鱼眼相机、state-free Diffusion Policy、无第三视角相机的操作模仿学习设置（6 个 MuJoCo 桌面任务 + 3 个真实任务、单臂 Flexiv Rizon 4、每配置 20 trials）：在该设置内，鱼眼的定位与场景泛化收益依赖特征丰富/多样化的训练环境，跨鱼眼镜头零样本迁移需要 RSA 类尺度增强。向本体感觉输入、第三视角相机、导航/移动操作、VLA 基础模型或大规模真机部署的外推由作者以数据采集指导形式提出，未经实验验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "因子化受控设计（相机模型×场景复杂度×场景多样性×相机参数）与固定总数据量，使各研究问题的归因相对干净。",
+   "模拟（50 rollouts、标准化基准）与真实世界（受控初始化、多阶段评分）双重验证，结论不完全依赖模拟。",
+   "RQ1 用本体感觉预测探针把任务性能与编码器空间表征质量联系起来，超出单纯端到端比较。",
+   "RQ3 有假设驱动的失败机制分析（绝对尺度过拟合）并给出对应干预（RSA），形成'诊断-干预-验证'闭环。"
+  ],
+  "design_risks": [
+   "无正式 Limitations 章节；真实世界跨相机（RQ3）证据完全依赖未随正文发布的补充材料，正文层面该结论仅有模拟支持。",
+   "真实世界每配置仅 20 trials，未报告方差、置信区间或显著性检验，+0.39 vs +0.18 等增益的不确定度未知。",
+   "正文'1.73 cm 平移误差'与 Table 2 最低值 2.362 cm 不一致，提示数值校对疏漏。",
+   "模拟（90° vs 235°）与真实（60° vs 180°）的 FoV 对比幅度不同，模拟与真实结论不可直接互推。",
+   "场景复杂度×相机交互未做统计检验，'增益更显著'为描述性对比。"
+  ],
+  "baseline_fairness": "针孔对照在相机数量（单/双）、训练数据量、rollout 数与评测协议上与鱼眼对齐，且排除第三视角相机避免混杂，对照设置公平；但真实世界针孔 60° 与鱼眼 180° 的 FoV 差距小于模拟（90° vs 235°），且未报告两相机在分辨率、曝光等其他成像属性上的对齐情况。",
+  "metric_validity": "模拟用基准标准成功率（50 rollouts）；真实世界用多阶段归一化得分，比二元成功率更细粒度但仍是代理指标；本体感觉预测误差是空间感知的代理而非任务因果证明——作者也只将其表述为'确认学得最准确空间表征'。",
+  "reproducibility": "论文给出鱼眼模拟管线、RSA 细节（U(0.7,1.3)）、任务与相机配置、评测协议及项目页（robo-fisheye.github.io），主干可复现；但未给完整训练超参、随机种子与多次运行方差，且正文与表格存在数值不一致（1.73 vs 2.362）。",
+  "external_validity": "外部效度受腕戴+state-free+单臂桌面任务设置限制；对 VLA/大规模数据采集的指导（特征丰富环境、场景多样性、尺度增强）是从该设置外推的作者建议，未在 VLA 规模上验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.02139-C01",
+   "claim": "在 MuJoCo 模拟的六个操作任务的平均成功率上，单个腕戴鱼眼相机训练的 state-free 策略在特征贫乏背景下为 0.57、特征丰富背景下为 0.66，均高于单个腕戴针孔相机的 0.31 与 0.34。",
+   "stance": "support",
+   "relation": "支持'腕戴鱼眼相机（宽 FoV）提升操作模仿学习策略的任务性能'这一综述命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 的单相机四行显示，鱼眼单相机在 poor/rich 两种背景下的六任务平均成功率（0.57/0.66）均高于针孔单相机（0.31/0.34）。",
+   "locator": "page 7, Table 1",
+   "source_context": "Pinhole(Single) Poor 0.40 0.52 0.36 0.04 0.14 0.40 0.31 Pinhole(Single) Rich 0.48(+0.08)0.56(+0.04)0.34(-0.02)0.18(+0.14)0.12(-0.02)0.38(-0.02)0.34(+0.03) Fisheye(Single) Poor 0.68 0.800.800.30 0.24 0.58 0.57 Fisheye(Single) Rich0.74(+0.06)0.84(+0.04)0.76(-0.04)0.56(+0.26)0.48(+0.24)0.60(+0.02)0.66(+0.09)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "six-task average success rate",
+    "value_or_direction": "fisheye single 0.57 (poor) / 0.66 (rich) vs pinhole single 0.31 / 0.34",
+    "comparator": "single wrist-mounted pinhole camera under identical training and evaluation protocol",
+    "task_or_sample": "six MuJoCo tasks from Robomimic and MimicGen, 50 rollouts per run",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "人工核对 page 7 Table 1：Fisheye(Single) Poor/Rich 行的 Average 列分别为 0.57 与 0.66，Pinhole(Single) Poor/Rich 为 0.31 与 0.34，与 claim 的数字、比较方向与任务范围（六任务平均、单相机设置）完全一致；claim 未超出表格报告的设置，未外推到双相机或其他任务。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C02",
+   "claim": "在真实世界三个操作任务上，将训练与评测背景从特征贫乏改为特征丰富带来的平均归一化得分增益，腕戴鱼眼相机为 +0.39，高于针孔相机的 +0.18，即鱼眼的定位收益以环境视觉复杂度为条件。",
+   "stance": "conditional",
+   "relation": "条件性支持'鱼眼宽 FoV 改善空间定位'：收益大小依赖场景特征丰富度，在特征贫乏环境中收益明显缩小。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "正文对 Figure 6 的解读直接给出真实世界平均增益 +0.39（鱼眼）vs +0.18（针孔），并把更强的场景复杂度依赖归因于 CLIP 编码器与真实纹理对宽 FoV 的利用。",
+   "locator": "page 6, Figure 6",
+   "source_context": "Crucially, Fig. 6\nshows this performance gain ismore significant for the\nfisheye camerain the real world (average gain+0.39vs.\n+0.18for pinhole) than in simulation. We attribute this to\nthe stronger CLIP [33] encoder and complex real-world tex-\ntures, which the fisheye’s FoV fully exploits.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average normalized score gain when switching from feature-poor to feature-rich background",
+    "value_or_direction": "+0.39 for fisheye vs +0.18 for pinhole",
+    "comparator": "wrist-mounted pinhole camera under the same scene-complexity change",
+    "task_or_sample": "three real-world tasks (Pick Cup, Fold Towel, Hang Chinese Knot), N=20 trials per setup",
+    "locator": "page 6, Figure 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 4.1 原文明确写有 average gain+0.39 vs +0.18 for pinhole，且 Figure 6 图注确认这是三个真实任务、poor vs rich 场景复杂度比较；claim 的数字、方向与条件性表述（增益依赖场景复杂度）与原文一致，未加入原文没有的任务级归因。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C03",
+   "claim": "以本体感觉预测为代理任务探测编码器隐式空间感知时，三个真实任务上特征丰富背景下鱼眼相机训练的编码器均取得最低平移与旋转误差（Pick Cup 2.362 cm / 3.394°，Fold Towel 2.908 cm / 2.952°，Hang Chinese Knot 5.143 cm / 4.887°），远低于针孔相机在特征贫乏背景下的误差（Pick Cup 12.309 cm / 15.345°）。",
+   "stance": "support",
+   "relation": "支持'鱼眼宽 FoV 帮助策略学得更准确的空间表征'这一综述命题（定位机制层面的证据）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 显示每个任务的 Fisheye-Rich 行都是该任务四行中平移/旋转误差最低的，而 Pinhole-Poor 行误差最高；探针方法在表注中说明。",
+   "locator": "page 7, Table 2",
+   "source_context": "Table 2. Quantitative probing of visual encoder spatial awareness\nusing proprioception prediction as a proxy task (RQ1). We eval-\nuate the quality of learned spatial representations by fine-tuning a\nlightweight MLP head on the pre-trained visual encoder to predict\nthe robot’s proprioceptive state in three real-world tasks.\nTask Camera Feature Trans. Err(cm)↓Rot. Err( ◦)↓\nPick Cup\nPinhole Poor 12.309 15.345\nPinhole Rich 5.367 7.612\nFisheye Poor 3.369 3.677\nFisheye Rich2.362 3.394\nFold Towel\nPinhole Poor 4.204 6.829\nPinhole Rich 5.329 6.434\nFisheye Poor 3.837 3.398\nFisheye Rich2.908 2.952\nHang Chinese Knot\nPinhole Poor 14.168 12.464\nPinhole Rich 7.683 9.377\nFisheye Poor 8.804 7.256\nFisheye Rich5.143 4.887",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "proprioception-prediction probe error (translation cm, rotation deg)",
+    "value_or_direction": "fisheye-rich lowest on all three tasks, e.g. 2.362 cm / 3.394 deg on Pick Cup, vs pinhole-poor 12.309 cm / 15.345 deg",
+    "comparator": "pinhole camera (feature-poor and feature-rich)",
+    "task_or_sample": "probe on three real-world tasks with fine-tuned MLP head on frozen encoders",
+    "locator": "page 7, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐行核对 page 7 Table 2：三个任务各自的 Fisheye Rich 行（2.362/3.394、2.908/2.952、5.143/4.887）均为该任务最低，Pinhole Poor 行（12.309/15.345 等）为最高，claim 中全部数字与表格一致；'均取得最低'由三组行序直接支撑，探针设置由表注支撑，未把代理误差外推为任务级因果。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C04",
+   "claim": "在真实世界场景多样性实验中，仅用 8 个不同背景场景训练的鱼眼策略在完全未见场景上的零样本成功率迅速超过 95%；同一实验观察到鱼眼相机比常规（针孔）相机显著更大的场景多样性扩展潜力。",
+   "stance": "support",
+   "relation": "支持'鱼眼宽 FoV 作为隐式数据增强，使操作策略能更好利用场景多样性实现跨场景泛化'的综述命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.2 报告真实世界设置下八个多样训练场景即可使鱼眼策略在未见环境的零样本成功率超过 95%，并观察到鱼眼相对常规相机更大的 scaling 潜力。",
+   "locator": "page 7, Section 4.2",
+   "source_context": "The results, presented in Fig. 8, strongly support our hy-\npothesis. We observe that the fisheye camera exhibits sig-\nnificantly greater scaling potential compared to the conven-\ntional camera. Notably, in the real-world setup, the fish-\neye policy’s zero-shot success rate on unseen environments\n(a) 5 unseen test scenes in simulation(b) 4 unseen test scenes in  the real-world\nFigure 7. The unseen scenes for evaluation in (a) simulation and\n(b) real-world experiments (RQ2).\nrapidly exceeds95%when trained with just eight diverse\nscenes.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "zero-shot success rate on unseen scenes",
+    "value_or_direction": "rapidly exceeds 95% with eight (8) diverse training scenes",
+    "comparator": "fisheye policy vs conventional (pinhole) camera scaling curve",
+    "task_or_sample": "real-world Pick Cup task, N in {1,2,4,6,8} training scenes, evaluation on 4 unseen scenes",
+    "locator": "page 7, Section 4.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Section 4.2 原文连续段落（含嵌入的 Figure 7 图注）逐字支撑：'rapidly exceeds95% when trained with just eight diverse scenes' 与 'the fisheye camera exhibits significantly greater scaling potential compared to the conventional camera'；claim 的数值（>95%、8 个场景）、比较对象与范围（真实世界、未见场景）均未超出原文，未将模拟中较缓的曲线并入此卡。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C05",
+   "claim": "模拟中的场景多样性扩展曲线明显较缓；作者将其归因于两点：模拟使用非预训练 ResNet-18 而真实世界使用预训练 CLIP 编码器，以及模拟背景图像的视觉复杂度相对更低。",
+   "stance": "conditional",
+   "relation": "限定'鱼眼提升场景泛化'证据的适用范围：该收益在非预训练编码器与低视觉复杂度背景下会减弱。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "作者明确指出模拟扩展曲线较缓并给出两点归因，说明鱼眼场景泛化收益依赖编码器预训练与背景视觉复杂度。",
+   "locator": "page 7, Section 4.2",
+   "source_context": "In contrast, the scaling curve in simulation is less steep. We attribute this discrepancy to two primary differ- ences: 1) the variation in visual encoders (a non-pre-trained ResNet-18 [16] in simulation vs. the pre-trained CLIP [33] in the real world), and 2) the comparatively lower visual complexity of simulated background imagery (see Fig. 5 and the supplementary file).",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Section 4.2 原文逐句支撑 claim 的两个归因（ResNet-18 无预训练 vs CLIP 预训练、模拟背景复杂度低）与'模拟扩展曲线较缓'的观察；claim 将其表述为作者归因而非独立验证的事实，与原文的 'We attribute' 措辞一致。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C06",
+   "claim": "在模拟六个任务的平均成功率上，使用常规增强训练的鱼眼策略零样本迁移到具有不同畸变与 FoV 参数的未见鱼眼镜头时出现严重性能下降（如 Param 3、Param 4 配置）；该实验主要在模拟中进行，真实世界验证被置于补充材料。",
+   "stance": "limit",
+   "relation": "限制'鱼眼策略可直接跨相机硬件部署'的命题：跨镜头零样本迁移是鱼眼在具身操作中的显著局限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.3 与 Figure 10 报告 baseline 策略在未见镜头上严重掉点；作者同时说明由于真实世界评估成本高，实验主要在模拟完成。",
+   "locator": "page 8, Figure 10",
+   "source_context": "To verify this hypothesis, we conduct extensive experi-\nments in simulation, as evaluating numerous hardware con-\nfigurations in the real world is costly (see supplementary\nfor real-world verification). We train policies on a sin-\ngle camera configuration (“Seen Param”) and evaluate their\nzero-shot transfer performance on fiveunseenconfigura-\ntions with varying distortion and FoV parameters (see sup-\nplementary for more details).\nThe results in Fig. 10 are conclusive. The baseline pol-\nicy, trained with normal augmentations, exhibits a severe\nperformance drop when deployed on unseen lenses (e.g.\n“Param 3”, “Param 4”).",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Section 4.3 连续段落逐字支撑：五个未见配置（varying distortion and FoV parameters）、baseline 严重性能下降（severe performance drop，如 Param 3/4）、实验主要在模拟且真实世界验证在补充材料；claim 的每个成分（设置、现象、范围限定）均被 context 直接陈述，Figure 10 图注确认这是六任务模拟平均。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C07",
+   "claim": "在同一跨相机设置中，加入 Random Scale Augmentation 训练的策略在全部五个未见相机配置上保持更高成功率，作者据此支持'学习相对尺度是跨相机鲁棒性关键'的假设。",
+   "stance": "support",
+   "relation": "支持'尺度导向的数据增强可缓解鱼眼跨相机硬件泛化失败'这一数据侧对策，为鱼眼数据规模化采集提供方法。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Figure 10 的对比显示 RSA 训练的策略在所有未见相机参数上保持更高成功率，正文将其解读为相对尺度学习的证据。",
+   "locator": "page 8, Figure 10",
+   "source_context": "In contrast, the policy trained with our RSA maintains higher success rates across all configu- rations, demonstrating robust generalization. This strongly supports our hypothesis that learning relative scale is the key to cross-camera robustness.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Section 4.3 原文逐字支撑：RSA 策略在全部配置保持更高成功率（maintains higher success rates across all configurations）且作者将其作为相对尺度假设的支持；claim 措辞与原文一致并保留'作者据此支持'的归因表述，未将机制性解释当作已证事实；具体增益数值在图上、正文未给出，故卡片保持定性。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C08",
+   "claim": "在模拟六任务平均成功率上，单个腕戴鱼眼相机的配置（特征贫乏 0.57、特征丰富 0.66）超过两个腕戴针孔相机的配置（0.38、0.45），即在 Table 1 的设置内更宽 FoV 的单相机优于双针孔。",
+   "stance": "support",
+   "relation": "支持'鱼眼相机可以更少的腕戴相机数量达到更高操作策略性能'的硬件选型命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 的单鱼眼行与双针孔行的 Average 列直接比较显示单鱼眼均值在两种背景复杂度下均更高。",
+   "locator": "page 7, Table 1",
+   "source_context": "Pinhole(Single) Poor 0.40 0.52 0.36 0.04 0.14 0.40 0.31 Pinhole(Single) Rich 0.48(+0.08)0.56(+0.04)0.34(-0.02)0.18(+0.14)0.12(-0.02)0.38(-0.02)0.34(+0.03) Fisheye(Single) Poor 0.68 0.800.800.30 0.24 0.58 0.57 Fisheye(Single) Rich0.74(+0.06)0.84(+0.04)0.76(-0.04)0.56(+0.26)0.48(+0.24)0.60(+0.02)0.66(+0.09) Pinhole(Double) Poor 0.50 0.44 0.26 0.22 0.44 0.40 0.38 Pinhole(Double) Rich 0.70(+0.20)0.34(-0.10)0.36(+0.10)0.38(+0.16)0.34(-0.10)0.56(+0.16)0.45(+0.07) Fisheye(Double) Poor 0.86 0.84 0.740.68 0.560.66 0.72 Fisheye(Double) Rich0.88(+0.02)0.88(+0.04)0.86(+0.12)0.66(-0.02)0.44(-0.12)0.80(+0.14)0.75(+0.03)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "six-task average success rate",
+    "value_or_direction": "fisheye single 0.57 (poor) / 0.66 (rich) vs pinhole double 0.38 / 0.45",
+    "comparator": "two wrist-mounted pinhole cameras in the same benchmark",
+    "task_or_sample": "six MuJoCo simulation tasks, 50 rollouts per run",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "人工核对 page 7 Table 1：Fisheye(Single) Poor/Rich 的 Average 列为 0.57/0.66，Pinhole(Double) Poor/Rich 为 0.38/0.45，数字与方向一致；claim 明确限定为'在该 Table 1 设置内'的单/双相机比较，未外推为普适的相机替代结论。"
+   }
+  },
+  {
+   "card_id": "2603.02139-C09",
+   "claim": "作者指出：隔离鱼眼特定光学特性对策略学习定量影响的系统分析此前缺失，且现有鱼眼数据集缺乏机器人操作任务、主流机器人 benchmark 缺少鱼眼视频流。",
+   "stance": "gap",
+   "relation": "指出鱼眼在具身操作领域的研究空白：缺少操作任务 benchmark 与系统性实证分析（本文定位为首个填补该空白的工作）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Related Work 中作者明确陈述该空白并以此定位本文贡献。",
+   "locator": "page 2, Related Work",
+   "source_context": "However, a systematic analysis isolating the quantitative\nimpact of specific optical properties on policy learning re-\nmains absent. This gap is reflected in the current bench-\nmarking landscape: existing fisheye datasets [42, 43, 56]\nlack robotic manipulation tasks, while popular robotics\nbenchmarks [19, 21, 28, 31] omit fisheye streams.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Related Work 原文逐字支撑 claim 的三个成分：系统分析缺失（remains absent）、鱼眼数据集缺乏操作任务、机器人 benchmark 缺少鱼眼流；claim 标注为作者立场（author-claim）而非独立核实的事实，与综述的 gap 证据用途一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2402.10329",
+  "2303.04137",
+  "2108.03298",
+  "2307.04533"
+ ],
+ "notes": "真实世界跨相机（RQ3）验证、未见场景细节与 1.73 cm 探针数字的完整证据位于未随正文提供的补充材料中，本 note 的卡片均不依赖补充材料内容。正文 4.1 提到的 1.73 cm 平移误差与 Table 2 最低值 2.362 cm 不一致，已在 critical_appraisal 记录。项目页：https://robo-fisheye.github.io/。"
+}

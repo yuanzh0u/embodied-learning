@@ -1,0 +1,563 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.15279",
+  "title": "Look, Zoom, Understand: The Robotic Eyeball for Embodied Perception",
+  "published": "2025-11",
+  "url": "https://arxiv.org/abs/2511.15279",
+  "authors": [
+   "Jiashu Yang",
+   "Yifan Han",
+   "Yucheng Xie",
+   "Ning Guo",
+   "Wenzhao Lian"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是鱼眼/宽 FoV 综述的\"互补路线/对照\"证据（非鱼眼应用本身，全文 0 次出现 fisheye/panoramic/广角）：(1) 任务层对照——系统论证固定宽域传感器（RGB-D/单目）+VLM \"根本无法兼顾宽域覆盖与细粒度细节获取\"，给出具体受限任务（药瓶小字、工具连接器、微型开关状态）与 locomotion 的时间/能量/规划代价，直接回答综述\"哪些任务受限\"；(2) 替代路线效果——语言引导 PTZ 主动感知（EyeVLA，Qwen2.5-VL 7B 底座+43 动作 token）在 50 真实场景×5 次运行达 96% CR，对照 RF 基线 36%（且 RF 有 GT bbox 输入优势）、现成 VLM 直接提示 12%、grounding+硬编码 70%，量化\"动眼睛\"路线收益；(3) 边界——PTZ 相机型号/FoV/内参未报告，只能提供任务层（细粒度获取）而非光学层的对比。以 EA-SENSOR/EA-HARDWARE 视角为综述补充\"宽 FoV 静态覆盖 vs 主动变焦\"权衡轴的对照端。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：固定 RGB-D/单目传感器+VLM 无法兼顾宽域覆盖与细粒度细节；locomotion 接近目标的时间/能量/规划代价；任务定义（单 RGB+指令→PTZ 三元组）；四项贡献主张。"
+   },
+   {
+    "locator": "page 2-3, II Related Work (Vision Language Models; Vision Language Action Models; Active Perception in Robotics)",
+    "role": "relevant-core",
+    "purpose": "定位本文在主动感知谱系的位置：Active-O3 软件级裁剪、Sripada 离散 NBV、VG-AVS/MTU3D 学习式 NBV；本文差异点=真实 PTZ 执行器+统一自回归闭环（无级联模块误差）。"
+   },
+   {
+    "locator": "page 3-4, III-A Overall Approach and Problem Formulation; III-B Hierarchical Action Encoding",
+    "role": "method-or-design",
+    "purpose": "精读系统构成（REB 两轴云台+变焦相机；Qwen2.5-VL 7B 适配）与问题形式化（argmax 信息增益）；层级编码：十进制位分解×基集 {5,2,1}、找零问题、Kozen-Zaks 贪心最优、O(1) 编解码；token 效率统计（98.6% ≤±29°、平均 2.3 vs 12.7）。"
+   },
+   {
+    "locator": "page 4-6, III-C Data Generation and Iterative Refinement; III-D Training Strategy (Iterative SFT and RL)",
+    "role": "method-or-design",
+    "purpose": "精读数据管线：人工演示采集→伪标签引擎（bbox 中心归一化 (−1,1) 建 pan/tilt、面积比 w1/w2 建 zoom；Rexverse-2M 选 5 万最小面积比样本；随机森林拟合映射）；迭代 SFT（SFT1→SFT2 IoU>0.7→SFT3 IoU>0.95，bbox CoT 引导，ViT/projector 冻结）；GRPO 目标与四子奖励（R_IoU+R_θ1+R_θ2+R_zoom，pan/tilt 1° 容差）。"
+   },
+   {
+    "locator": "page 6, IV-A Experimental Settings (Dataset; Baseline and Comparison Scope; Metrics; Action Token Vocabulary)",
+    "role": "data-or-setting",
+    "purpose": "核对数据切分（500 真实=450/50 无重叠；5 万合成仅 SFT、RL 仅 450 真实）；对比不可行性论证（OpenVLA 缺 PTZ 接口、Active-O3 纯软件）；指标定义（MAE 分维度、zoom 90≈1×；CR 5 次运行人工判据）；词表扩展 43 token 细节。"
+   },
+   {
+    "locator": "page 7-9, IV-B Main Results; IV-C Implementation Details; IV-D Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table 1（ML→RL3 全管线）、Table 2（VLM Direct/Grounding 基线）、连续回归失败消融、IoU 过滤消融、RL 消融与 Table 3（IoU 0.68→0.75/0.91→0.93）、RF 基线 GT bbox 优势（Figure 6）。"
+   },
+   {
+    "locator": "page 8-9, V Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论主张：VLA 模型+硬件执行器联合决策实现语言指定的开放世界感知；层级编码-解码+混合训练/数据过滤管线以少量真实数据生成大量可监督数据；确认结论未附自述局限小节（局限证据在 4.1 对比范围与引言合成数据论证中）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-10, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需核对核心引文（Qwen2.5-VL [3]、GRPO/DeepSeekMath [22]、OpenVLA [12]、Active-O3 [30]、Kozen-Zaks [14]、Vision in Action [28]）条目。"
+   }
+  ]
+ },
+ "research_question": "如何让具身系统在像素与空间预算约束下主动获取任务相关视觉信息：以语言引导的 PTZ（pan-tilt-zoom）主动感知替代静态固定传感器——把连续相机调整 (Δθ1, Δθ2, Δz) 离散为 VLM 词表内的层级 token（十进制位×基集 {5,2,1}），用 500 条真实演示+5 万伪标签的迭代 SFT/IoU 过滤/GRPO RL 管线，在真实云台执行器上以单次前向完成\"对准并放大目标\"的感知动作？",
+ "contributions": [
+  "任务定义：语言引导主动视觉感知——单 RGB+自然语言指令→真实 PTZ 相机的 pan/tilt/zoom 三元组，把感知从被动帧消费转为任务感知的主动信息获取（区别于操控型 VLA：\"动眼睛\"而非动身体）。",
+  "层级动作编码：十进制位×基集 {5,2,1} 的找零问题式分解，贪心策略 token 数最优（Kozen-Zaks 定理），平均 2.3 token 表示一个动作维度，直接嵌入 VLM 词表、无需独立控制头。",
+  "数据高效训练管线：grounding 数据集 bbox→模拟 PTZ 伪标签 + bbox CoT 空间推理引导 + 迭代 IoU 过滤（0.7→0.95）+ GRPO RL 真机对齐，仅用 500 条真实样本完成迁移。",
+  "真机验证：50 真实场景×5 次独立运行平均 96% CR（θ1/θ2/Zoom MAE 2.04°/1.68°/65.37），对照 RF 基线 36% 与现成 VLM 12%/70%。"
+ ],
+ "method": {
+  "summary": "EyeVLA = 硬件（Robotic EyeBall：两轴 pan-tilt 云台+变焦相机）+ 算法（Qwen2.5-VL-7B-Instruct 词表扩展 43 个动作 token：Δθ1/Δθ2 正负双向、Δz 仅正向，各维度十进制位×基集 {5,2,1} 层级编码）。推理：初始宽视场帧+指令→单次自回归前向输出 bbox CoT+动作 token→解码为 (Δθ1, Δθ2, Δz) 驱动执行器，无迭代搜索。训练：SFT1（5 万 Rexverse-2M 伪标签——bbox 中心归一化 (−1,1) 建 pan/tilt 角度、bbox 面积比 w1/w2 建 zoom，随机森林在 300 条最校准真实演示上拟合映射，优先选目标面积比最小的样本）→ SFT2（模型推理过滤 IoU>0.7，预测 bbox 替换为 GT）→ SFT3（IoU>0.95）；ViT 与 projector 冻结，仅更新 LM 主干+新动作 token 嵌入；RL 阶段仅用 450 真实演示，GRPO（式 5，组归一化优势+裁剪比率+KL 惩罚），奖励 =(R_IoU+R_θ1+R_θ2+R_zoom)/4，pan/tilt 1° 容差线性、zoom 更宽容差窗口。",
+  "assumptions": [
+   "输入初始帧来自 PTZ 相机默认位姿（\"initial wide-field image\"），但相机型号/FoV/分辨率/内参与执行器精度、延迟均未报告——硬件层黑盒。",
+   "伪标签映射假设 bbox 中心偏移与 pan/tilt 角度、bbox 面积比与 zoom 呈近似线性关系（随机森林拟合，作者称 Figure 6 显示 strong linear correspondence）。",
+   "任务为单步调整（单次前向预测一个动作三元组，无多步闭环重试）；abstract/related work 中的 \"closed-loop\" 指感知-动作统一自回归建模，非迭代执行闭环。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自建真实演示集：500 条（450 训练 / 50 held-out 测试，无场景重叠），跨物体类别与多室内环境，含 (instruction, initial frame, Δθ1, Δθ2, Δz, post-action frame) 六元组",
+   "Rexverse-2M grounding 数据集采样的 50,000 伪标签对（referring expression+图像+GT bbox，筛选单可用目标、优先目标面积比最小者=小/远/部分遮挡）"
+  ],
+  "tasks": [
+   "语言引导主动视觉感知：给定初始帧+指令预测 (Δθ1, Δθ2, Δz) 使目标居中放大（评测：三维度 MAE + 真机人工判据 CR）"
+  ],
+  "embodiments": [
+   "Robotic EyeBall (REB)：两轴 pan-tilt 云台+变焦相机（型号/FoV 未报告），固定观测点位安装"
+  ],
+  "sample_or_scale": "500 真实样本 + 50,000 伪标签；评测 50 held-out 场景 × 5 次独立运行"
+ },
+ "evaluation": {
+  "design": "两类对比：(1) 传统 ML 基线（随机森林，bbox 几何特征→动作，且被给予 GT bbox 输入优势）；(2) EyeVLA 消融变体（SFT1/SFT2(Y)/SFT2(N)/SFT3(Y)/SFT3(N)/RL2/RL3，隔离 IoU 过滤、bbox CoT、RL 的贡献）+ 两个 Qwen2.5-VL 基线（Direct 直接提示 / Grounding+硬编码几何映射）。指标：三动作维度 MAE（°/原始 zoom 单位，90≈1×）+ 真机 50 场景×5 runs 人工判据 CR。无外部同类系统可比（任务为本文新提，作者论证对比不可行）。",
+  "baselines": [
+   "Random Forest（含 GT bbox 输入优势）",
+   "Qwen2.5-VL (Direct)：直接提示预测 PTZ 动作",
+   "Qwen2.5-VL (Grounding)：grounding+硬编码几何映射",
+   "EyeVLA 消融：SFT1 / SFT2(Y) / SFT2(N) / SFT3(Y) / SFT3(N) / RL2 / RL3",
+   "连续回归变体（无离散化）"
+  ],
+  "metrics": [
+   "MAE：Δθ1/Δθ2（度）、Δz（原始 zoom 单位，90≈1×）",
+   "Task Completion Rate：5 次独立运行平均，人工判定目标清晰居中",
+   "预测 bbox 平均 IoU（Table 3，RL 前后对照）"
+  ],
+  "ablations": [
+   "IoU 过滤：SFT2(N) vs SFT2(Y) θ1 4.91° vs 3.97°、CR 56% vs 72%（SFT3 同型）",
+   "RL：SFT3→RL3 θ1 2.94°→2.04°、CR 92%→96%、IoU 0.91→0.93",
+   "连续回归 vs 层级离散：前者留出集近零完成率",
+   "bbox 替换策略（预测→GT）：IoU 分布与 MAE 双向对比（Figure 7）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "固定传感器（单目/RGB-D）+VLM 把\"信息冗余（大块低价值背景）\"与\"关键细节缺失\"固有交织：不牺牲宽域覆盖就无法解析远处文本/小结构，导致精度敏感任务系统性表现不佳——具体受限任务：药瓶小字、工具连接器、微型开关状态；\"走过去看\"有时间/能量/路径规划三类代价。",
+   "scope": "作者动机论证（Introduction，无实验隔离该权衡）",
+   "locator": "page 1-2, Abstract; I Introduction"
+  },
+  {
+   "finding": "EyeVLA(RL3) 在 50 真实场景×5 runs 达 96% 平均 CR，θ1/θ2/Zoom MAE 2.04°/1.68°/65.37，全面超过 RF 基线（36%）与全部 SFT-only 变体（56-92%）。",
+   "scope": "真机评测，50 held-out 场景",
+   "locator": "page 7, Table 1"
+  },
+  {
+   "finding": "现成 VLM 缺乏物理相机控制推理：Qwen2.5-VL 直接提示仅 12% CR；grounding+硬编码几何映射 70%；端到端学习 EyeVLA 96%。",
+   "scope": "同任务同评测协议",
+   "locator": "page 7, Table 2"
+  },
+  {
+   "finding": "离散层级编码是路线成立前提：连续回归严重过拟合、留出集近零完成率；层级编码平均 2.3 token/动作 vs 逐度离散 12.7，98.6% 真实动作在 ±29° 内两档位即可表示。",
+   "scope": "500 真实样本动作分布 + 留出集消融",
+   "locator": "page 4, III-B; page 8, IV-B"
+  },
+  {
+   "finding": "数据效率：500 真实演示（450 训练）+5 万伪标签即可把 VLM 开放世界理解迁移为真机感知策略；合成数据仅用于 SFT，RL 仅用 450 真实演示修正硬件容差偏差。",
+   "scope": "训练数据构成与阶段隔离",
+   "locator": "page 6, IV-A"
+  },
+  {
+   "finding": "训练管线组件必要性有定量支撑：去掉 IoU 过滤 CR 72%→56%（SFT3 阶段 92%→84%）；RL 把 CR 92%→96% 且预测 bbox 平均 IoU 0.91→0.93（RL2 阶段 0.68→0.75）。",
+   "scope": "消融实验",
+   "locator": "page 8, IV-D; page 9, Table 3"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "无法与既有模型直接对比：语言引导 PTZ 控制是本文新提任务，现有 VLA（如 OpenVLA）面向操控且缺 PTZ 控制接口，主动视觉搜索（如 Active-O3）纯软件裁剪无法接入物理执行器——只能以 ML 基线+自身消融评估。",
+    "locator": "page 6, IV-A Baseline and Comparison Scope"
+   },
+   {
+    "limitation": "合成数据无法完美捕捉真实硬件容差与场景相关几何（作者以此论证必须在 SFT 后追加 RL 对齐阶段）。",
+    "locator": "page 2, I Introduction"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "CR 判据为主观人工评价（\"clearly recognizable and centered, as judged by human evaluation\"），未报告评判者数量、一致性或客观阈值；50 场景×5 runs 未给方差/置信区间，96% 的统计强度不可评估。",
+    "basis": "page 6, IV-A Metrics。"
+   },
+   {
+    "boundary": "硬件黑盒：PTZ 相机型号、FoV、分辨率、内参、执行器精度/延迟均未报告；\"initial wide-field image\" 的\"宽\"具体多少度未知——无法在光学层与鱼眼/超广角路线比较，也无法量化 FOV-细节权衡的位置。",
+    "basis": "page 3, III-A 系统描述仅 \"two-axis pan-tilt mount and a zoomable camera\"；全文 0 次 fisheye/panoramic/FoV 缩写出现。"
+   },
+   {
+    "boundary": "场景与任务范围窄：500 样本与 50 测试场景均为室内静态、单步调整（单次前向预测一个动作三元组，无迭代重试）；无移动平台集成、动态场景、多步闭环搜索；执行形态与 abstract/related work 的 \"closed-loop\" 表述存在张力。",
+    "basis": "page 3, III-A \"in a single forward pass, without iterative search\"；page 6, IV-A 数据集描述。"
+   },
+   {
+    "boundary": "RL 奖励依赖 GT bbox（R_IoU 与动作误差均对真值计算），部署时无真值可用；伪标签映射假设 bbox 几何→PTZ 动作近似线性（随机森林拟合），跨硬件/跨镜头焦段的映射迁移未验证。",
+    "basis": "page 8, IV-C Reward Function；page 5, III-C Pseudo-Label Engine。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：室内固定/半固定观测点、语言引导的细粒度目标获取任务（读小字/辨连接器/查开关状态），Qwen2.5-VL 7B 级底座+43 token 词表扩展+约 500 真实演示预算下的单步 PTZ 主动感知。不适用/未验证：移动平台搭载、动态场景、多步闭环搜索、跨 PTZ 硬件迁移（内参/容差不同）、宽 FoV 静态覆盖需求本身——本文路线以\"放弃静态宽覆盖+主动变焦\"换取细粒度，与鱼眼全景构成 FOV-细节权衡轴两端而非替代关系；光学层与鱼眼的直接对比在本文缺失（无 FoV/型号数据）。对综述接口：本文是\"宽 FoV 静态传感受限任务（细粒度识别）+互补路线（PTZ 主动变焦）\"的对照证据——96% vs 12%/36%/70% 的对照同时刻画静态固定传感器、几何映射基线与现成 VLM 在该任务类上的失败程度。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "动机-方法-评估链条完整：固定传感器覆盖-细节权衡（Introduction）→层级编码+迭代 SFT/RL（III）→Table 1/2 全管线对照与逐组件消融（IV），每环有定量锚点。",
+   "消融覆盖每个组件：IoU 过滤（Y/N 双档）、bbox CoT、RL（SFT vs RL 两阶段）、连续回归 vs 离散（near-zero 反例），归因清楚。",
+   "基线设计强化结论：RF 基线被给予 EyeVLA 不可得的 GT bbox 输入优势仍仅 36%，\"不公平\"方向有利于对手，结论更稳健；Direct/Grounding 两个 VLM 基线隔离了\"端到端学习动作生成\"的独立贡献。",
+   "token 效率主张有定量支撑（2.3 vs 12.7）且有理论依据（Kozen-Zaks 贪心最优），非纯经验断言。"
+  ],
+  "design_risks": [
+   "CR 判据人工评价、无客观阈值/评判者协议/方差报告，50 场景规模小，96% 的统计强度与可复现性弱。",
+   "无外部同类系统可比（作者论证了不可行性），96% 的绝对水平在领域内无法定位。",
+   "\"closed-loop active perception\"（page 3）与 \"in a single forward pass, without iterative search\"（同页）表述张力：实际是单步开环预测，闭环性仅存在于感知-动作统一建模层面。",
+   "RL 奖励依赖 GT bbox（训练-部署不一致）；伪标签映射的线性假设跨硬件未验证。",
+   "硬件工程参数全缺：PTZ 型号/FoV/精度/延迟/功耗均未报告，工程可复现性低；500 样本数据集未承诺发布。"
+  ],
+  "baseline_fairness": "对比范围限于论文内基线（RF、Qwen2.5-VL Direct/Grounding、自身消融变体），共享数据与评测协议，内部效度好；RF 基线获 GT bbox 输入优势属\"对己不利\"的不公平，反向增强结论；但无外部主动感知系统对照（任务新提），96% 只能内部定位，不能外推为系统级领先。",
+  "metric_validity": "MAE 分维度客观且单位明确（°/zoom 原始单位，90≈1× 换算给定）；CR 依赖人工判定 \"clearly recognizable and centered\"，无 IoU/分辨率阈值等客观代理（尽管训练与 RL 奖励内部使用 IoU），存在评判者偏差风险；预测 bbox IoU（Table 3）是辅助的半客观指标。",
+  "reproducibility": "方法细节较全（编码基集与档位、SFT 三阶段与 IoU 阈值、GRPO 目标、四子奖励与容差、词表 43 token 构成），但缺硬件参数（PTZ 型号/FoV/精度/延迟）、提示模板、随机种子与代码/数据发布承诺；复现门槛中等偏高。",
+  "external_validity": "结论限于室内静态场景、单一 REB 平台、单步 PTZ 调整、Qwen2.5-VL 7B 单一底座；对移动平台集成、动态环境、其他 PTZ 硬件、多步搜索的迁移未验证；与宽 FoV/鱼眼路线的光学层对比因参数缺失不可进行。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.15279-C01",
+   "claim": "EyeVLA 作者断言：具身 AI 中视觉感知应当是主动的——系统必须决定看哪里、以什么尺度感知，才能在像素与空间预算约束下获取最大信息量；而现有视觉模型与固定 RGB-D 相机的组合\"根本无法兼顾宽域覆盖与细粒度细节获取\"，严重限制其在开放世界机器人应用中的效能。",
+   "stance": "limit",
+   "relation": "限制命题：静态固定宽域传感器（RGB-D/单目类）+VLM 存在根本性的覆盖-细节权衡——直接回答综述\"哪些任务受限\"：固定宽视场配置下细粒度识别类任务系统性失败，为\"动眼睛\"（主动变焦）路线提供动机。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 1 Abstract 原文：感知应主动（decide where to look and at what scale to sense under pixel and spatial budget constraints）+ 固定 RGB-D 相机与宽域覆盖/细粒度获取不可兼得（fundamentally fail to reconcile）。",
+   "locator": "page 1, Abstract",
+   "source_context": "In embodied AI, visual perception should be active rather than passive: the system must decide where to look and at what scale to sense to acquire maximally informative data under pixel and spatial budget constraints. Existing vision models coupled with fixed RGB-D cameras fundamentally fail to reconcile wide-area cov- erage with fine-grained detail acquisition, severely limiting their efficacy in open-world robotic applications.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 Abstract 逐字核对：\"should be active rather than passive\"、\"decide where to look and at what scale to sense\"、\"fundamentally fail to reconcile wide-area cov- erage with fine-grained detail acquisition\"（\"cov- erage\" 为 PDF 断行连字符）均为原文；claim 未附加论文未述的定量断言。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C02",
+   "claim": "具体受限任务与替代代价：机器人常需感知远处细粒度细节——读药瓶上的小字、识别特定工具连接器、确认微型拨动开关状态——才能做出决策；靠物理移动（locomotion）接近这些目标在时间、能量与路径规划开销上高度低效。",
+   "stance": "limit",
+   "relation": "回答综述\"哪些任务受限\"：细粒度远距识别（小字/连接器/开关状态）是固定传感器受限任务的具体实例，且\"走过去看\"的替代方案有时间/能量/规划三类代价（作者动机论证，无实验隔离）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 2 Introduction 第二段：三个任务实例（medicine bottle 小字 / tool connector / toggle switch）+ locomotion 三类代价（time, energy, and path planning overhead）。",
+   "locator": "page 2, I Introduction",
+   "source_context": "Robots frequently need to perceive distant, fine- grained details—such as reading small text on a medicine bottle, identifying a specific tool connector, or verifying the state of a tiny toggle switch—to make informed decisions. Relying on phys- ical locomotion to approach these targets is highly inefficient in terms of time, energy, and path planning overhead.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Introduction 逐字核对：三个任务实例与 \"highly inefficient in terms of time, energy, and path planning overhead\" 均在原文；断行连字符（fine- grained、phys- ical）已按折叠形式保留。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C03",
+   "claim": "固定单目/RGB-D 相机即使配强大 VLM 底座，也固有地把信息冗余（大块低价值背景区域）与关键细节缺失交织在一起：不牺牲宽域覆盖就无法解析远处文本或小型任务决定性结构；因此传统 VLM 管线在精度敏感任务上表现不佳，尽管擅长全局场景摘要。",
+   "stance": "limit",
+   "relation": "限制命题的机理表述：宽覆盖与细节在固定传感器上零和（redundancy 与 detail omission 交织）——鱼眼/超广角放大此权衡的一侧，本卡为综述提供该权衡的机理锚点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 2 Introduction：interleave information redundancy (large low-value background areas) with critical detail omissions；cannot resolve distant text or small task-decisive structures without sacrificing wide-area coverage；underperform on precision-sensitive tasks。",
+   "locator": "page 2, I Introduction",
+   "source_context": "Yet fixed monocular or RGB-D cameras—even when coupled with powerful VLM backbones—inherently interleave information redundancy (large low-value background areas) with critical detail omissions. They cannot resolve distant text or small task-decisive structures without sacrificing wide-area coverage. As a result, conventional VLM-based pipelines underperform on precision-sensitive tasks, despite excelling at global scene summarization.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Introduction 逐字核对：\"inherently interleave information redundancy...with critical detail omissions\"、\"without sacrificing wide-area coverage\"、\"precision-sensitive tasks\" 均为原文。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C04",
+   "claim": "路线主张与任务定义：作者主张\"机器人操控世界之前必须先掌握感知动作\"，与其移动整个机身，更优雅高效的方案是移动\"眼睛\"；据此定义语言引导主动视觉感知任务——给定 PTZ 相机拍的单张 RGB 图像与自然语言指令，预测 pan(Δθ1)/tilt(Δθ2)/zoom(Δz) 三值，重定位并重缩放视场使任务相关细节居中放大；与操控不同，该动作空间直接控制观测过程、作用于真实 PTZ 执行器。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 静态传感之外存在互补应用方式——\"动眼睛\"（PTZ 主动变焦）路线，把 FoV-细节权衡从光学层（鱼眼）转移到控制层（主动视角调整）；为综述的\"应用方式\"轴补充非鱼眼互补路线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 2 Introduction：move the \"eyes\" 主张 + 任务形式化（三元组定义、reposition and rescale the field of view、directly controls the observation process on real PTZ actuators）。",
+   "locator": "page 2, I Introduction",
+   "source_context": "In contrast, we argue that before a robot can manipulate the world, it must first master perceptual action. Instead of moving the entire robot body, a more elegant and efficient solution is to move the “eyes.” To this end, we define the task of language-guided active visual perception: given a single RGB image captured by a PTZ (pan-tilt- zoom) camera and a natural language instruction describing the information need (e.g., “What is the brand of the pen?”), the system must predict three values—pan (Δ𝜃 1 ), tilt (Δ𝜃 2 ), and zoom (Δ𝑧)—to reposition and rescale the field of view so that the task-relevant visual detail is centered and magnified. Unlike manipulation, our action space directly controls the observation process on real PTZ actuators.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Introduction 逐字核对：\"it must first master perceptual action\"、\"move the “eyes.”\"（弯引号按原文）、\"pan (Δ𝜃 1 ), tilt (Δ𝜃 2 ), and zoom (Δ𝑧)\" 三元组与 \"on real PTZ actuators\" 均为原文。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C05",
+   "claim": "EyeVLA 系统构成与推理形态：硬件平台 Robotic EyeBall（REB）= 两轴 pan-tilt 云台 + 变焦相机；算法管线适配 Qwen2.5-VL（7B）做感知与相机控制联合建模。推理时接收初始宽视场（wide-field）图像+指令，预测紧凑动作三元组，单次前向（single forward pass）驱动物理执行器获取放大后的任务相关视图，无需迭代搜索或人工干预。",
+   "stance": "support",
+   "relation": "支持命题：互补路线可落地为统一自回归系统且推理开销可控（单次前向无迭代搜索）；同时\"initial wide-field image\"未给 FoV 数值——相机光学参数黑盒，综述只能做任务层对比。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 3 Section 3.1 Overall Approach：系统构成（REB 硬件+Qwen2.5-VL 7B 适配）与推理流程（单次前向、无迭代搜索）。",
+   "locator": "page 3, III-A Overall Approach",
+   "source_context": "The system consists of a hardware platform, the Robotic EyeBall (REB) comprising a two-axis pan-tilt mount and a zoomable camera, and an algorithmic pipeline that adapts Qwen2.5-VL (7B) for joint perception and camera control (see Figure 2). At inference time, the system receives an initial wide-field image together with a natural language instruction, predicts a compact action triplet a, and drives the physical actuators to acquire a zoomed-in, task- relevant view in a single forward pass, without iterative search or manual intervention.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Section 3.1 逐字核对：REB 构成（two-axis pan-tilt mount and a zoomable camera）、Qwen2.5-VL (7B)、\"in a single forward pass, without iterative search or manual intervention\"（\"task- relevant\" 为断行连字符）均为原文。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C06",
+   "claim": "层级动作编码的 token 效率：设计三优势（每位内 token 数理论最优；常数时间编解码；高位对应粗调、低位对应细调的物理结构对齐）；500 真实样本经验分析显示 98.6% 的动作幅度落在 ±29° 内、最多两档十进制位即可表示，平均 token 长度 2.3，显著优于逐度均匀离散化（平均 12.7）。",
+   "stance": "support",
+   "relation": "支持命题：主动变焦路线的动作表示可压缩进 VLM 词表而不爆炸——编码效率（2.3 vs 12.7）是\"动眼睛\"路线在离散语言建模架构内可行的前提之一。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 4 Section 3.2 末段：三优势列表 + 经验统计（98.6% within ±29°、average token length 2.3 vs uniform discretization 12.7）。",
+   "locator": "page 4, III-B Hierarchical Action Encoding",
+   "source_context": "This design offers three key advantages: (1) theoretical optimality in token usage within each digit; (2) constant-time encoding and decoding; and (3) structural alignment with physical camera control, where higher digits correspond to coarse adjustments and lower digits to fine tuning. Empirical analysis on 500 real-world samples shows that 98.6% of actions fall within ±29 ◦ , requiring at most two digit levels and achieving an average token length of 2.3, which is significantly more efficient than uniform discretization (one token per degree, yielding an average length of 12.7).",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "动作 token 平均长度与动作幅度分布",
+    "value_or_direction": "98.6% 动作在 ±29° 内（最多两档位）；平均 token 长度 2.3",
+    "comparator": "逐度均匀离散化（one token per degree）平均 12.7 token",
+    "task_or_sample": "500 real-world 样本的 PTZ 动作分布经验分析",
+    "locator": "page 4, Section 3.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Section 3.2 逐字核对：\"98.6% of actions fall within ±29 ◦\"、\"average token length of 2.3\"、\"uniform discretization (one token per degree, yielding an average length of 12.7)\" 均为原文（\"±29 ◦\" 度符号独立断行为原文形态）。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C07",
+   "claim": "连续回归路线失败：把动作预测当作直接连续回归（输出原始 (Δθ1, Δθ2, Δz)、不做离散化）训练的模型严重过拟合训练分布，在留出测试集上任务完成率接近零——证实层级离散 token 表示对泛化是必要的。",
+   "stance": "conditional",
+   "relation": "条件命题：PTZ 主动感知路线成立的前提之一是离散层级动作编码——连续回归在离散语言建模架构内不可用（作者消融断言，方向性结论、未给具体数值）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 8 Section 4.2 Analysis of Action Encoding：direct continuous regression → severely overfit → near-zero task completion on held-out test set。",
+   "locator": "page 8, IV-B Analysis of Action Encoding",
+   "source_context": "We also experimented with treating action prediction as direct continuous regression, training the model to output raw (Δ𝜃 1 , Δ𝜃 2 , Δ𝑧) values without discretiza- tion. The resulting model severely overfit to the training distribution and achieved near-zero task completion on the held-out test set, confirming that the hierarchical discrete token representation is essential for generalization.",
+   "evidence_type": "ablation-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Section 4.2 逐字核对：\"severely overfit to the training distribution and achieved near-zero task completion on the held-out test set\" 为原文；claim 仅保留方向性表述（near-zero），未附加具体数字。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C08",
+   "claim": "数据效率设定：自建机器人眼系统共采集 500 条真实演示样本（跨物体类别与室内环境），切分为 450 训练 + 50 held-out 测试、无场景重叠；另补 5 万条来自 Rexverse-2M grounding 数据集的伪标签合成样本扩充训练数据——且合成数据仅用于 SFT 预训练阶段，RL 后训练只在 450 条真实演示上进行（任务完成奖励修正残余偏差、提升真机鲁棒性）。",
+   "stance": "support",
+   "relation": "支持命题：主动变焦路线的数据门槛低（500 条真实样本即可迁移 VLM 开放世界理解）——与鱼眼路线的标定/采集工程成本构成综述权衡轴上\"样本效率\"一侧的对照证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 6 Section 4.1 Dataset：500/450/50 切分、no scene overlap、50,000 pseudo-labeled from Rexverse-2M、synthetic 仅 SFT / RL 仅 450 真实演示的阶段隔离。",
+   "locator": "page 6, IV-A Dataset",
+   "source_context": "We have developed a robotic eye system comprising a two-axis pan-tilt mount and a zoomable camera. We collected a total of 500 real-world demonstration samples spanning diverse object categories and indoor environments. These are split into a training set of 450 scenes and a held-out test set of 50 scenes, with no scene overlap between splits. Each sample represents a complete task instance paired with a natural language instruction, recorded under varied spatial configurations and viewing conditions. To overcome the limited scale of real-world demonstrations, we supplement the training data with 50,000 pseudo-labeled syn- thetic samples generated from the Rexverse-2M grounding dataset (see Section 3 for details). Critically, this synthetic data is used exclusively for the SFT pre-training phase. The RL post-training stage operates solely on the 450 real-world demonstrations, using task-completion rewards to correct residual biases and improve real-world robustness.",
+   "evidence_type": "data-setting",
+   "quantitative": {
+    "metric": "真实演示样本量与合成伪标签量",
+    "value_or_direction": "500 条真实演示（450 训练 / 50 held-out 测试，无场景重叠）；50,000 条合成伪标签",
+    "comparator": "手工真实采集（作者称时间与人力成本极高、难以规模化，故以伪标签+RL 替代扩充）",
+    "task_or_sample": "EyeVLA 训练数据构成（真实演示 + Rexverse-2M grounding 伪标签）",
+    "locator": "page 6, Section 4.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 4.1 逐字核对：500/450/50、no scene overlap、50,000 pseudo-labeled synthetic from Rexverse-2M、synthetic exclusively for SFT、RL solely on 450 real-world demonstrations 均为原文；claim 的阶段隔离表述与原文一致。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C09",
+   "claim": "主结果：EyeVLA(RL3) 在三个动作维度全部取得最低 MAE（θ1: 2.04°、θ2: 1.68°、Zoom: 65.37）与最高平均任务完成率 96%，大幅超过 ML 基线（CR 36%）与全部 SFT-only 变体；且 SFT1 已在 θ2 与 Zoom 的 MAE 上超过 ML 基线，显示 VLM 底座的泛化能力。",
+   "stance": "support",
+   "relation": "支持命题：语言引导 PTZ 主动感知在真机细粒度目标获取任务上的核心效果证据（Table 1 全管线对照：ML→SFT1→SFT2/3→RL2/3）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 7 Table 1 及 4.2 正文：RL3 三维度最低 MAE + 96% CR；ML 基线 36%；SFT1 已超 ML（θ2/Zoom MAE）。",
+   "locator": "page 7, Table 1; IV-B Main Results",
+   "source_context": "As shown in Table 1, EyeVLA (RL3) achieves the lowest MAE across all three action dimensions (𝜃 1 : 2.04°, 𝜃 2 : 1.68°, Zoom: 65.37) and the highest average task completion rate (96%), substantially outperforming both the ML baseline (CR: 36%) and the SFT-only variants.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "三动作维度 MAE（θ1/θ2 单位度、Zoom 原始单位）与任务完成率 CR",
+    "value_or_direction": "RL3：θ1 2.04°、θ2 1.68°、Zoom 65.37、CR 96%（三维度 MAE 与 CR 全最优）",
+    "comparator": "ML 基线 θ1 6.44°/θ2 3.25°/Zoom 137.60/CR 36%；SFT3(Y) CR 92%、SFT2(Y) CR 72%、SFT1 CR 36%",
+    "task_or_sample": "50 held-out 真实场景 × 5 次独立运行平均（真机 PTZ 控制）",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 正文行逐字核对（ML 6.44°/3.25°/137.60/36% … RL3 2.04°/1.68°/65.37/96%）与 4.2 正文 \"achieves the lowest MAE across all three action dimensions...and the highest average task completion rate (96%)\" 均为原文；SFT1 超 ML 的表述见正文 \"even SFT1 already surpasses the ML baseline in terms of MAE on 𝜃2 and Zoom\"。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C10",
+   "claim": "现成 VLM 基线对照：直接提示 Qwen2.5-VL 预测 PTZ 动作（无 grounding）仅 12% CR——表明现成 VLM 缺乏物理相机控制推理能力；加 grounding+硬编码几何映射升到 70%，但仍显著低于端到端学习的 EyeVLA（96%）。",
+   "stance": "support",
+   "relation": "支持命题：\"动眼睛\"路线的收益主要来自端到端学习（VLM 底座+动作 token 联合训练），提示工程或 grounding+几何后处理不可得；12% 同时刻画静态使用现成 VLM 在该任务类上的失败程度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 7 Table 2 及正文：Direct 12%、Grounding 70%（θ1 3.87/θ2 2.34/Zoom 109.46）、EyeVLA(RL3) 96%。",
+   "locator": "page 7, Table 2; IV-B Main Results",
+   "source_context": "Directly prompting the VLM to predict PTZ actions without any grounding yields only 12% CR, indicating that off- the-shelf VLMs lack the ability to reason about physical camera control. When augmented with grounding followed by a hard- coded geometric mapping, the completion rate rises to 70%, but still falls significantly short of EyeVLA (96%), demonstrating the advantage of our end-to-end learned approach.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "任务完成率 CR（含三动作维度 MAE）",
+    "value_or_direction": "Qwen2.5-VL (Direct) CR 12%（MAE 未收敛到可用）；(Grounding) CR 70%（θ1 3.87°/θ2 2.34°/Zoom 109.46）；EyeVLA(RL3) CR 96%（2.04/1.68/65.37）",
+    "comparator": "Qwen2.5-VL Direct vs Qwen2.5-VL Grounding+硬编码几何映射 vs EyeVLA 端到端",
+    "task_or_sample": "PTZ 相机控制任务，50 held-out 真实场景",
+    "locator": "page 7, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 2 行（Direct –/–/– 12%；Grounding 3.87 2.34 109.46 70%；EyeVLA(RL3) 2.04 1.68 65.37 96%）与正文 12%/70%/96% 表述逐字核对一致；\"off- the-shelf VLMs lack the ability to reason about physical camera control\" 为原文。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C11",
+   "claim": "任务空白与对比不可行：语言引导 PTZ 相机控制是本文提出的任务，作者称据其所知没有既有模型直接解决；现有 VLA 模型（如 OpenVLA）面向机器人操控、缺 PTZ 控制接口，直接对比不可行；主动视觉搜索方法（如 Active-O3）纯软件运行、对静态图像裁剪区域，不能接入物理 PTZ 执行器或产生真机相机控制信号。",
+   "stance": "gap",
+   "relation": "空白命题：真实执行器上的语言引导视角/焦距控制在近一年具身文献中是新任务位——该轴上无同类系统可横向对比，96% 等绝对数字只能靠内部基线定位；为综述标注该路线的评估孤立性。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 6 Section 4.1 Baseline and Comparison Scope：no existing model directly addresses this problem；OpenVLA lacks PTZ control interfaces；Active-O3 purely software by cropping static images。",
+   "locator": "page 6, IV-A Baseline and Comparison Scope",
+   "source_context": "Language-guided PTZ camera control is a task introduced by this work; to our knowledge, no ex- isting model directly addresses this problem. Existing VLA models (e.g., OpenVLA [12]) target robotic manipulation and lack PTZ con- trol interfaces, making direct comparison infeasible. Active visual search methods (e.g., Active-O3 [30]) operate purely in software by cropping regions of a static image, and thus cannot interface with physical PTZ actuators or produce real-world camera control signals.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 4.1 逐字核对：\"to our knowledge, no ex- isting model directly addresses this problem\"、\"lack PTZ con- trol interfaces, making direct comparison infeasible\"、\"operate purely in software by cropping regions of a static image\" 均为原文（断行连字符按折叠形态保留）。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C12",
+   "claim": "IoU 过滤消融：去掉 IoU 过滤（SFT2(N) vs SFT2(Y)）导致全部指标急剧退化——θ1 MAE 从 3.97° 升至 4.91°、CR 从 72% 跌至 56%（SFT3 阶段同型），表明未过滤的低质量伪标签引入噪声损害训练；IoU 是伪标签质量的有效代理指标，滤掉低空间对齐样本是迭代精炼成功的关键。",
+   "stance": "support",
+   "relation": "支持命题：伪标签低成本扩充路线必须配质量门控才有效——主动变焦路线的\"500 样本数据效率\"是有条件的（组件级证据）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 8 Section 4.4 IoU-Controlled Data Filtering：SFT2(Y)→SFT2(N) θ1 3.97°→4.91°、CR 72%→56%；Table 1 同口径。",
+   "locator": "page 8, IV-D Ablation Study; page 7, Table 1",
+   "source_context": "As reported in Table 1, removing IoU filtering (SFT2(N) vs. SFT2(Y)) leads to a sharp degradation across all metrics: 𝜃 1 MAE rises from 3.97° to 4.91° and CR drops from 72% to 56%, indicating that low- quality pseudo-labels without IoU filtering introduce noise that harms training.",
+   "evidence_type": "ablation-result",
+   "quantitative": {
+    "metric": "θ1 MAE 与任务完成率 CR",
+    "value_or_direction": "去掉 IoU 过滤：θ1 3.97°→4.91°、CR 72%→56%（急剧退化；SFT3 阶段同型 2.94°/92% → 3.99°/84%）",
+    "comparator": "SFT2(Y) IoU>0.7 过滤 vs SFT2(N) 无过滤；SFT3(Y) IoU>0.95 vs SFT3(N)",
+    "task_or_sample": "PTZ 控制任务训练消融（Table 1 同口径评测）",
+    "locator": "page 8, Section 4.4; page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Section 4.4 逐字核对：\"removing IoU filtering (SFT2(N) vs. SFT2(Y)) leads to a sharp degradation across all metrics: 𝜃1 MAE rises from 3.97° to 4.91° and CR drops from 72% to 56%\" 为原文；SFT3 阶段数字（3.99°/84%）取自 page 7 Table 1 行（SFT3 (N) 列）。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C13",
+   "claim": "RL 消融：尽管 SFT3 已有竞争力 MAE，RL3 进一步把 θ1 误差从 2.94° 降至 2.04°、平均 CR 从 92% 提至 96%；RL 在两个阶段一致提升预测 bbox 的平均 IoU（SFT2→RL2：0.68→0.75；SFT3→RL3：0.91→0.93）。作者假设：SFT 令模型过拟合伪标签分布、动作预测偶尔塌缩到窄区间，RL 用真机奖励惩罚系统性偏差、产生更多样且物理落地的动作输出（zoom 轴尤为明显）。",
+   "stance": "support",
+   "relation": "支持命题：合成伪标签→真机策略的迁移需要真机 RL 对齐（硬件容差/场景几何偏差）——\"动眼睛\"路线效果证据链的最后一环，也是其数据效率的条件之二。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 8 Section 4.4 Reinforcement Learning + page 9 Table 3（SFT2/RL2/SFT3/RL3 平均 IoU 0.68/0.75/0.91/0.93）。",
+   "locator": "page 8, IV-D Ablation Study; page 9, Table 3",
+   "source_context": "Despite SFT3 already achieving competitive MAE scores, RL3 further re- duces 𝜃 1 error from 2.94° to 2.04° and improves the average CR from 92% to 96%. As shown in Table 3, RL consistently improves the mean IoU of predicted bounding boxes at both stages (SFT2→RL2: 0.68→0.75; SFT3→RL3: 0.91→0.93).",
+   "evidence_type": "ablation-result",
+   "quantitative": {
+    "metric": "θ1 MAE、平均 CR、预测 bbox 平均 IoU",
+    "value_or_direction": "SFT3→RL3：θ1 2.94°→2.04°、CR 92%→96%；预测 bbox 平均 IoU 0.91→0.93（SFT2→RL2：0.68→0.75）",
+    "comparator": "SFT3 vs RL3；SFT2 vs RL2（RL 一致提升）",
+    "task_or_sample": "真机 PTZ 控制任务消融（450 真实演示 RL 阶段）",
+    "locator": "page 8, Section 4.4; page 9, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Section 4.4 逐字核对：\"RL3 further re- duces 𝜃1 error from 2.94° to 2.04° and improves the average CR from 92% to 96%\"、\"(SFT2→RL2: 0.68→0.75; SFT3→RL3: 0.91→0.93)\" 与 page 9 Table 3 行（IoU 0.68 0.75 0.91 0.93）均为原文。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C14",
+   "claim": "评估协议边界：Zoom 误差以原始 zoom 单位计（约 90 单位≈1× zoom）；任务完成率 CR 在物理机器人眼系统上对 50 个 held-out 真实场景做 5 次独立运行，成功判据为目标物体占据结果帧中\"清晰可辨且居中\"的区域——由人工评价（human evaluation）判定，报告 5 次运行的平均完成率。",
+   "stance": "limit",
+   "relation": "限制命题：96% CR 的证据强度受判据主观性约束（人工判定、无客观阈值/评判者协议/方差报告）——综述引用该路线效果数字时应附带此协议边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 6 Section 4.1 Metrics：(A) MAE 定义含 zoom 原始单位换算（90≈1×）；(B) CR 定义含 5 次运行、人工判据。",
+   "locator": "page 6, IV-A Metrics",
+   "source_context": "For zoom (Δ𝑧), errors are measured in raw zoom units; a change of approximately 90 units corresponds to 1× zoom in the real-world scene. (B) Task Completion Rate (CR). We deploy each model on the physical robotic eye system and evaluate it over five independent runs on the 50 held-out real-world scenes. A trial is considered successful if the target object occupies a clearly recognizable and centered region of the resulting frame, as judged by human evalua- tion. We report the mean task completion rate averaged over the five runs.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 4.1 Metrics 逐字核对：\"a change of approximately 90 units corresponds to 1× zoom\"、\"five independent runs on the 50 held-out real-world scenes\"、\"as judged by human evalua- tion\"、\"averaged over the five runs\" 均为原文（断行连字符按折叠形态保留）。"
+   }
+  },
+  {
+   "card_id": "2511.15279-C15",
+   "claim": "ML 基线的\"不公平优势\"仍失败：随机森林基线以 GT bbox 作为输入特征（EyeVLA 不可得的优势）仍只达 36% CR——凸显学习式方法的必要性，即从 bbox 几何特征到相机动作的浅层映射不足以完成该任务。",
+   "stance": "support",
+   "relation": "支持命题：任务难度不在于几何映射本身（RF 拿到真值 bbox 仍 36%），而在于视觉-语言-动作联合推理——主动变焦路线需要端到端学习的补强证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 7-8 Section 4.2 与 Figure 6 标题：RF baseline provided with GT bounding boxes as input features（advantage not available to EyeVLA）yet only 36% CR。",
+   "locator": "page 7-8, IV-B Main Results; Figure 6",
+   "source_context": "We note that the ML 7 ## page 8 Figure 6: The fitting performance of the Random Forest baseline is provided with ground-truth bounding boxes as input features (an advantage not available to EyeVLA), yet it still achieves only 36% CR, highlighting the necessity of our learned approach.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "任务完成率 CR",
+    "value_or_direction": "RF 基线 36%（输入含 GT bbox 优势）",
+    "comparator": "EyeVLA(RL3) 96%（无 GT bbox 输入）",
+    "task_or_sample": "50 held-out 场景 PTZ 控制（同一评测协议）",
+    "locator": "page 7-8, Section 4.2; Figure 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 末句跨页至 page 8 Figure 6 标题逐字核对（折叠后含 \"## page 8\" 分页标记）：\"provided with ground-truth bounding boxes as input features (an advantage not available to EyeVLA), yet it still achieves only 36% CR\" 为原文；36% 与 Table 1 ML 列一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Qwen2.5-VL Technical Report",
+   "arxiv_id": "2502.13923",
+   "reason": "引文 [3]：EyeVLA 的 VLM 底座（7B-Instruct），ViT+projector 冻结、词表扩展动作 token 的适配对象。"
+  },
+  {
+   "title": "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models",
+   "arxiv_id": "2402.03300",
+   "reason": "引文 [22]：GRPO 算法来源，RL 阶段策略优化目标（式 5）的出处。"
+  },
+  {
+   "title": "OpenVLA: An Open-Source Vision-Language-Action Model",
+   "arxiv_id": "2406.09246",
+   "reason": "引文 [12]：操控型 VLA 代表，被作者引证为\"面向操控、缺 PTZ 控制接口\"，界定本文任务空白。"
+  },
+  {
+   "title": "Active-O3: Empowering Multimodal Large Language Models with Active Perception via GRPO",
+   "arxiv_id": "2505.21457",
+   "reason": "引文 [30]：软件级主动感知代表，被引证为\"纯软件裁剪静态图像、不能接物理 PTZ 执行器\"——主动感知谱系中本文最近的对照系。"
+  },
+  {
+   "title": "Optimal bounds for the change-making problem",
+   "arxiv_id": null,
+   "reason": "引文 [14]（Kozen & Zaks, Theoretical Computer Science 1994）：基集 {5,2,1} 贪心编码 token 数最优性的理论依据。"
+  },
+  {
+   "title": "Vision in Action: Learning Active Perception from Human Demonstrations",
+   "arxiv_id": "2506.15666",
+   "reason": "引文 [28]：主动视觉机器人硬件架构前作，本文 REB 所属硬件谱系。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文代表与鱼眼/全景路线互补的\"主动变焦（PTZ）\"应用范式，是综述 FOV-细节权衡轴的对照端。关键判断：(1) 应用方式——两轴云台+变焦相机（REB）+VLA 词表扩展 43 动作 token，语言指令驱动单次前向 PTZ 调整（层级编码平均 2.3 token）；(2) 获益任务——细粒度信息获取（小字/连接器/开关状态）：96% CR，对照现成 VLM 直接提示 12%、RF+GT bbox 36%、grounding+硬编码 70%；(3) 路线前提——离散层级动作编码（连续回归近零完成率）+迭代 IoU 过滤（去掉后 72%→56%）+真机 RL 对齐（92%→96%），数据预算 500 真实样本；(4) 对综述的边界——全文无 fisheye/panoramic 出现、相机光学参数黑盒，只能提供任务层对照：宽 FoV 静态传感在细粒度任务上受限、\"动眼睛\"是替代路径之一；光学层量化对比（全景+PTZ 混合、鱼眼+数字变焦）在本文缺失，是综述可指出的开放方向。批判要点：CR 人工判据+50 场景无方差；\"closed-loop\"表述与单步执行张力；RL 奖励依赖 GT bbox 的训练-部署不一致；硬件参数全缺导致工程不可复现。"
+}

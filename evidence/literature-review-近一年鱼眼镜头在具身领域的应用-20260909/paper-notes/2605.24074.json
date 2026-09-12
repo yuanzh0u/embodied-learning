@@ -1,0 +1,946 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.24074",
+  "title": "WideDepth: Millimeter-Accurate Benchmark for Fisheye Depth Estimation",
+  "published": "2026-05",
+  "url": "https://arxiv.org/abs/2605.24074",
+  "authors": [
+   "Ilia Indyk",
+   "Ignat Penshin",
+   "Ivan Sosin",
+   "Maxim Monastyrny",
+   "Aleksei Valenkov",
+   "Ilya Makarov"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "_extraction_provenance": "alphaxiv-fulltext-api 镜像的 arXiv 文本层（非 OCR，页定位 page N），按 schema 允许值映射为 pdf-text。",
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是鱼眼深度估计（室内、毫米级真值）的基准工作：WideDepth 首个室内鱼眼深度基准（101 场景/5K 立体对/±1mm@10m 真值、HFOV 120-195°、5 种基线、水平+垂直立体、配对针孔样本），并提出 Double Sphere 模型的 CUDA 生成管线（针孔训练模型免重训适配鱼眼）与 18K 户外 LiDAR 训练集。对鱼眼综述的价值：(1) 应用方式证据——'针孔模型经等距柱状投影免架构修改适配鱼眼'路线 + 按具身视角高度（AR/人形 1.65m、CCTV 2.5m、移动平台 0.5m）设计采集；(2) 任务获益/受限的系统性量化——单目深度模型随 FOV 120→195° 全面退化（DepthAnythingV2 AbsRel +166%）、深度补全较稳健（NLSPN +5.92%）、立体匹配经适配后高 FOV 反而一致改善；(3) 局限证据——基线错配比高 FOV 伤害更大、透明/反射表面被掩码、近场 0-1m 仅占 6.9%。综述按'鱼眼深度估计-室内基准'主线使用。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract + Section I Introduction + Contributions",
+    "role": "problem",
+    "purpose": "确认问题定义：鱼眼相机在机器人近场操作/导航/沉浸感知中日益普及，但带精确真值的室内深度基准缺失；宽 FoV 深度估计欠探索——多针孔相机有同步与算力问题，鱼眼覆盖更好但非线性几何 + 矫正信息损失。提取三点贡献与 62% fine-tuning 提升声明。"
+   },
+   {
+    "locator": "page 1-2, Section II Related Work (A/B/C)",
+    "role": "relevant-core",
+    "purpose": "定位数据集缺口：NYU/SUN RGB-D/Matterport3D/IRS 非鱼眼；SynWoodScape/OmniScape 合成且仅户外；Oxford RobotCar 无深度；KITTI-360 稀疏 LiDAR 仅部分覆盖宽 FoV；WoodScape 无深度。投影模型谱系：等距柱状/cubemap/Cassini/鱼眼/针孔的几何权衡。"
+   },
+   {
+    "locator": "page 2-3, Section III Methods (A/B/C)",
+    "role": "method-or-design",
+    "purpose": "精读方法：Double Sphere 模型（双单位球偏移 ξ + α 针孔映射、闭式逆）；虚拟相机内参随 FOV 函数化（m=0.2/n=1.25）；Disparity2Depth/Depth2Disparity 球面几何转换（垂直立体对、正弦定理式(8)(9)、CUDA 加速、Helvipad 验证 MAE=1.92/RMSE=3.40）；等距柱状 vs cubemap 投影对比。"
+   },
+   {
+    "locator": "page 4, Section IV-A/B Benchmark Design + Hardware",
+    "role": "data-or-setting",
+    "purpose": "提取基准设计：场景按操作（孤立物体）/导航（走廊/办公室/厨房）策展；采集高度 1.65m（AR/人形机器人）/2.5m（CCTV）/0.5m（移动平台）；基线 20/65/120/200/300mm（机械臂相机到超大基线）；FOV 120/140/165/195°；深度分布 0-1m 6.9%、2-5m 74.7%。硬件：地面激光扫描仪（1-2mm 距离误差、165MP 分辨率、每扫描 10 分钟）+ SensorBox（2× ZED X One 鱼眼 30Hz 垂直立体 + 2× Livox Mid 360）。"
+   },
+   {
+    "locator": "page 5, Section IV-C Datasets Acquisition + Fig. 5",
+    "role": "data-or-setting",
+    "purpose": "提取采集细节：办公室激光扫描（1.5-5m 间距、球面标记对齐、三扫描束填充遮挡、窗户/镜子半手工清理、反射面零深度掩码、101 场景）；训练集全部户外手持（城市/公园/街道、多云白天）、LiDAR 时间戳对齐、点密度 8.1%。"
+   },
+   {
+    "locator": "page 6, Section V-A Monocular and Depth Completion + Fig. 6 + Table III",
+    "role": "results-or-analysis",
+    "purpose": "提取单目深度 FOV 退化数据（5 模型 195° vs 120° 百分比变化）与深度补全对照（NLSPN/CompletionFormer/CostDCNet）；UniK3D 中等鱼眼 FOV 最优、极端 FOV 无内参模式退化的条件性结论。"
+   },
+   {
+    "locator": "page 6-7, Section V-B Stereo Matching and Fine-tuning + Table IV + Fig. 7/8",
+    "role": "results-or-analysis",
+    "purpose": "提取立体匹配结果（6 模型 195°+65mm 配置：IGEV 1.605 EPE 最优、StereoBase 1.612 但 665ms 高延迟、BGNet 19ms 但 3.411）；BGNet 微调增益（EPE −48%、bad-3 −62%）；基线/FOV 敏感性分析（65mm 最优、基线错配伤害大于高 FOV、高 FOV 一致改善性能）。"
+   },
+   {
+    "locator": "page 7, Section VI Limitations and Future Work + Section VII Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：LiDAR 难以捕捉透明/反射表面（已掩码）、GPU 约束使微调仅限轻量架构（大模型域适应效果不确定）；结论重申首个室内鱼眼深度基准、18K 训练样本、免架构修改适配、14 个 SOTA 模型评测。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, Acknowledgement + References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 致谢与参考文献列表无正文证据价值，关键引文（Double Sphere、Helvipad、CREStereo、ZED X 相关的 StereoBase/BGNet、KITTI-360/WoodScape）已摘录进 core_citations。本篇无独立附录。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：室内鱼眼深度估计缺乏带精确真值的基准——如何用高精度激光扫描生成毫米级 GT 的鱼眼立体深度基准，如何让针孔训练的深度/立体模型适配鱼眼输入（免重训的投影适配 + 可选的域适应微调），以及宽 FoV 对各类深度模型的系统性影响是什么。综述问题映射：鱼眼在具身近场操作/导航的深度感知任务上的应用方式（DS 模型投影适配路线）、效果（哪些模型族获益/退化）与局限（FOV 退化、基线敏感性、近场覆盖）。",
+ "contributions": [
+  "WideDepth 基准：首个室内鱼眼深度估计数据集，101 场景、5K 高分辨率立体对、毫米级 GT 深度与视差；覆盖 HFOV 120-195°、5 种基线（20-300mm）、水平+垂直立体、配对针孔样本（90° FOV）；采集高度按具身平台分层（1.65m AR/人形、2.5m CCTV、0.5m 移动平台）。",
+  "CUDA 加速生成管线：基于 Double Sphere 模型从高分辨率 LiDAR 扫描直接生成鱼眼立体 RGB/深度/视差 GT（免全景中间产物），支持虚拟相机内参随 FOV 函数化；使针孔训练模型免重训适配鱼眼输入。",
+  "Disparity2Depth/Depth2Disparity 转换：面向等距柱状投影垂直立体对的球面几何转换（正弦定理推导 + CUDA 实现），在 Helvipad 上验证（CREStereo MAE=1.92/RMSE=3.40，与原报告相当）。",
+  "18K 户外 LiDAR 训练集 + 域适应验证：BGNet 微调后 EPE −48%、bad-3 −62%（19ms 延迟不变），追平/超过更重的 SOTA 立体模型；并对 5 类单目深度、3 类深度补全、6 类立体模型做 FOV/基线敏感性系统评测（共 14 个 SOTA 模型）。"
+ ],
+ "method": {
+  "summary": "基准侧：地面激光扫描仪采集 1-2mm 精度彩色点云（每扫描约 2000 万点、10 分钟/扫描），办公室内 1.5-5m 间距布点 + 球面标记对齐 + 三扫描束填充遮挡 + 半手工清理窗户/镜子，得到 101 场景稠密点云；再用 Double Sphere 模型从点云渲染虚拟鱼眼/针孔相机（内参随 FOV 函数化：f_virt=n·(180°/FOV)、ξ_virt=ξ·(1−m·FOV/180°)、α_virt=α+m·(1−α)·FOV/180°，m=0.2/n=1.25），组合 4 种 FOV×5 种基线生成水平+垂直立体对及毫米级深度/视差 GT。适配侧：鱼眼视图先 warp 到等距柱状投影（保持垂直极线约束）再喂给针孔训练的立体模型（免架构修改）；配套 Disparity2Depth/Depth2Disparity 球面转换闭合深度-视差口径。训练侧：SensorBox（2× ZED X One 鱼眼垂直立体 + 2× Livox Mid 360）户外手持采集 18K 稀疏 LiDAR 深度样本用于域适应微调。",
+  "assumptions": [
+   "Double Sphere 模型 + Kalibr 标定能充分刻画所用鱼眼相机几何（基准与适配都依赖该标定准确性）。",
+   "静态点云渲染的虚拟立体对（相机平行移位）能近似真实立体成像（运动场景/时序效应不在基准内）。",
+   "等距柱状投影保持垂直极线一致性，使针孔立体模型经 warp 后可直接工作——该假设由 Table II/IV 的结果支撑。",
+   "激光扫描对非透明/非反射表面达到毫米级真值；窗户/镜子经半手工清理，反射面以零深度掩码处理。",
+   "户外训练集与室内基准的域差可由微调弥合且不引入对基准场景的过拟合。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "WideDepth benchmark（自建，室内办公室 101 场景、5K 高分辨率立体对、GT 精度 ±1mm@10m、HFOV 120..195°、2048×1152、水平+垂直立体+针孔配对、稠密深度图）",
+   "WideDepth train（自建，户外手持 18K 立体鱼眼对、LiDAR 稀疏深度、点密度 8.1%、1920×1080、HFOV 180°、±20mm 精度、首个垂直立体训练集）",
+   "对比参照：OmniScape/SynWoodScape（合成户外）、Oxford RobotCar（无深度）、KITTI-360（稀疏 LiDAR ±20mm）、WoodScape（无深度）"
+  ],
+  "tasks": [
+   "单目度量深度估计（5 个 SOTA 模型跨 FOV 120-195° 评测）",
+   "双目立体匹配（6 个模型，195° FOV + 65mm 基线主配置 + FOV/基线网格敏感性）",
+   "深度补全（NLSPN/CompletionFormer/CostDCNet，NYUv2 训练）",
+   "域适应微调（SceneFlow 预训练 BGNet → WideDepth train → benchmark）"
+  ],
+  "embodiments": [
+   "基准视角按具身平台分层：1.65m（AR/人形机器人眼高）、2.5m（CCTV）、0.5m（移动平台）",
+   "应用动机：近场操作（机械臂相机 20mm 基线）、导航（走廊/办公室/厨房场景）、沉浸感知",
+   "无真实机器人任务实验——具身性体现在采集设计与动机陈述，非闭环任务验证"
+  ],
+  "sample_or_scale": "基准 101 场景/5K 立体对（每场景 20 垂直+20 水平鱼眼对、5+5 针孔对）；训练集 18K 样本；评测 14 个 SOTA 模型；微调 15 epochs、batch 8、半精度、AdaBelief、one-cycle lr 峰值 5e-5、非对称色彩增强 50%；立体延迟在 RTX 3080 Ti 半精度 @1024×512 测量。"
+ },
+ "evaluation": {
+  "design": "三层评测：(1) FOV 敏感性——固定任务族（单目/补全），对比 FOV 120 vs 195 的指标百分比变化（Table III 归一化设计）；(2) 立体主配置——195° FOV + 65mm 基线下 6 模型横向对比 + BGNet 微调前后纵向对比（Table IV）；(3) 投影对照——同模型（CREStereo）下 cubemap vs 等距柱状（Table II，差异仅来自投影）；辅以 StereoBase 的基线×FOV 网格（Fig. 8）分离两个因子。延迟作为部署可行性并列指标。",
+  "baselines": [
+   "单目：Depth Anything V2-Large、PatchFusion、ZoeDepth、Depth Pro、UniK3D-Large",
+   "深度补全：NLSPN、CompletionFormer、CostDCNet（均 NYUv2 训练）",
+   "立体：FADNet++、CREStereo、BGNet、IGEV、GMStereo、StereoBase（+ BGNet 微调变体）",
+   "投影对照：CREStereo × {cubemap, equirectangular}"
+  ],
+  "metrics": [
+   "EPE（px）及分位数 EPE_Q50/EPE_Q95",
+   "bad-1/bad-2/bad-3（坏像素率）",
+   "AbsRel、MAE、RMSE、δ1.25/δ1.25²/δ1.25³（单目/补全）",
+   "RelEPE（Fig. 8 敏感性分析）",
+   "延迟（ms，RTX 3080 Ti 半精度 @1024×512）"
+  ],
+  "ablations": [
+   "FOV 因子：Table III 五个单目模型 + 三个补全模型的 195° vs 120° 百分比变化",
+   "基线×FOV 网格：StereoBase 在 5 基线×4 FOV 上的 RelEPE（Fig. 8）",
+   "投影因子：cubemap vs 等距柱状（Table II，同 CREStereo）",
+   "域适应因子：BGNet 微调前后（Table IV）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "单目度量深度模型随 FOV 120→195° 系统性退化：DepthAnythingV2 AbsRel +166%/δ1.25 −86.8%、PatchFusion +160%/−87.4%、UniK3D +97.3%/−73.7%、ZoeDepth +60.1%/−51.7%（DepthPro 最稳：+9.0%/−4.1%）——宽 FoV 的畸变几何与域偏移使现成单目模型在鱼眼上大面积失效。",
+   "scope": "WideDepth 基准，5 个 SOTA 单目模型，FOV 敏感性",
+   "locator": "page 6, Table III + Section V-A + Fig. 6"
+  },
+  {
+   "finding": "深度补全模型受宽 FOV 影响明显更小：NLSPN AbsRel 仅 +5.92%、CompletionFormer +6.73%（部分指标改善），轻量 CostDCNet +38.5%——深度引导（LiDAR 稀疏点）部分吸收了几何域偏移，但 AbsRel 仍显著退化。",
+   "scope": "WideDepth 基准，3 个深度补全模型（NYUv2 训练）",
+   "locator": "page 6, Table III + Section V-A"
+  },
+  {
+   "finding": "UniK3D（相机通用设计）在中等鱼眼 FOV（120-140°）取得最高精度并超过其他单目模型，是宽而非极端 FOV 应用最可靠的单目选择；但极端 FOV（≥165°）下无内参的 camera-free 模式仍退化。",
+   "scope": "单目深度，FOV 分段行为",
+   "locator": "page 6, Section V-A"
+  },
+  {
+   "finding": "经等距柱状投影适配后，针孔立体模型可直接在鱼眼输入上工作且模型排名与针孔基准一致（fisheye 立体性能可从针孔排名推断）；投影对照显示等距柱状全面优于 cubemap（EPE 1.065 vs 4.500、bad-1 28.27% vs 78.93%），且 Fig. 7 显示 StereoBase 在 195° FOV 无几何畸变退化、错误集中在半透明/反射面等通用立体难点。",
+   "scope": "立体匹配，投影选择与针孔模型迁移",
+   "locator": "page 4, Table II + page 6, Section V-B + page 7, Fig. 7"
+  },
+  {
+   "finding": "对 StereoBase 的基线×FOV 网格分析：基线错配的伤害显著大于高 FOV——65mm 基线最优（RelEPE 0.061-0.074），300mm 恒定 0.16 最差；而 FOV 120→195° 在每个基线行都一致改善性能（如 20mm 行 0.083→0.067）——经适配后宽 FoV 对立体深度是净收益。",
+   "scope": "立体匹配，基线与 FOV 双因子敏感性",
+   "locator": "page 7, Fig. 8 + page 6, Section V-B"
+  },
+  {
+   "finding": "轻量 BGNet（19ms、面向 Jetson Orin 嵌入式）在 WideDepth 训练集微调后：EPE 3.411→1.767（−48%）、EPE_Q95 −58%、bad-3 24.34→9.29（−62%），延迟不变，超过 FADNet++/GMStereo 并接近 IGEV/StereoBase/CREStereo——鱼眼域适应可以用轻量模型+小规模数据追平重型模型。",
+   "scope": "域适应微调，195° FOV + 65mm 基线",
+   "locator": "page 7, Table IV + Section V-B"
+  },
+  {
+   "finding": "基准规格：GT 精度 ±1mm@10m（对比 KITTI-360/WoodScape ±20mm、Oxford RobotCar ±30mm）、HFOV 120..195°、首个垂直立体训练集、唯一同时提供水平+垂直立体+针孔配对+稠密深度图的鱼眼数据集；但深度分布以 2-5m 为主体（74.7%），0-1m 近场仅 6.9%。",
+   "scope": "基准规格与数据分布",
+   "locator": "page 2, Table I + page 4, Section IV-A/Fig. 4"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "LiDAR 扫描难以准确捕捉透明与反射表面，基准中这些区域被掩码——玻璃/镜面场景的深度估计留作未来工作。",
+    "locator": "page 7, Section VI"
+   },
+   {
+    "limitation": "GPU 约束使微调仅限轻量架构（BGNet），域适应对更大模型（带畸变几何）的效果不确定。",
+    "locator": "page 7, Section VI"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "训练集-基准域错配：训练集全部户外手持（城市/公园/街道），基准为室内办公室——微调增益（−48% EPE）是户外→室内跨域适应的结果，作者明示该设计为防过拟合，但也意味着'鱼眼域适应'与'室内域适应'两个因子未被分离。",
+    "basis": "page 5 IV-C 训练集描述 + page 4 IV-A 基准描述（设计动机为作者陈述，因子未分离为读者推断）"
+   },
+   {
+    "boundary": "近场操作主张与数据分布错位：动机强调操作任务需亚厘米精度，但基准 0-1m 深度区间仅占 6.9%（2-5m 占 74.7%）——近场证据密度低，操作场景结论需谨慎外推。",
+    "basis": "page 1 引言动机 + page 4 Fig. 4 深度分布（占比为报告数字，错位判断为读者推断）"
+   },
+   {
+    "boundary": "基准立体对由静态点云虚拟渲染（相机平行移位），非真实双目硬件采集——运动模糊、曝光差异、时序同步等真实立体干扰不在基准内；真实硬件（ZED X One）仅用于户外训练集。",
+    "basis": "page 5 IV-C 生成流程（虚拟相机渲染）+ page 5 IV-B 硬件分工（读者推断）"
+   },
+   {
+    "boundary": "场景单一：101 场景全部来自办公室空间（莫斯科），无家居/仓储/工厂等多样化室内场景；无夜间光照（三类光照均为日间办公条件）。",
+    "basis": "page 5 IV-C（办公室扫描）+ page 4 IV-A（光照类别）（覆盖面判断为读者推断）"
+   },
+   {
+    "boundary": "无机器人闭环任务验证：具身性停留在采集视角设计（1.65m/2.5m/0.5m）与动机陈述，无操作/导航任务的下游验证；延迟测量在桌面 GPU（RTX 3080 Ti），嵌入式端到端性能未测（BGNet 19ms 为模型推理而非系统）。",
+    "basis": "全文无机器人任务实验 + page 6 V-B 延迟设置（读者推断）"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：(1) 任务——室内鱼眼深度估计（单目度量深度/立体匹配/深度补全）与投影适配方法本身，不含检测/分割/跟踪任务；(2) 数据分布——办公室室内场景（莫斯科、日间三类光照）与户外训练集（城市/公园/街道、多云白天），无夜间/极端光照证据；(3) FOV 与基线范围——HFOV 120-195°、基线 20-300mm；FOV 对单目模型的退化结论在该区间内成立，对 >195° 全景不外推；(4) 本体——无真实机器人任务实验，具身性来自视角高度设计（AR/人形 1.65m、CCTV 2.5m、移动平台 0.5m）与近场操作动机，闭环任务收益无证据；(5) 硬件——ZED X One 鱼眼相机 + Livox Mid 360 训练 rig、桌面 GPU 延迟口径（RTX 3080 Ti @1024×512 半精度）；(6) 精度口径——基准 ±1mm@10m 真值仅对非透明/非反射表面有效；(7) 立体结论依赖等距柱状投影适配管线——直接在原始鱼眼图像上跑针孔立体模型不在验证范围内。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "GT 精度数量级领先：±1mm@10m 对比既有鱼眼数据集的 ±20-30mm，使毫米级操作精度讨论首次可评测。",
+   "FOV/基线/投影三因子被系统性分离：Table III 的 195° vs 120° 百分比归一化、Fig. 8 的基线×FOV 网格、Table II 的同模型投影对照——各因子效应可归因。",
+   "评测广度：14 个 SOTA 模型跨三任务族，覆盖单目/补全/立体三种深度技术路线，且延迟与精度并列报告。",
+   "具身视角设计明确：三种采集高度对应 AR/人形、CCTV、移动平台三类部署眼高，场景策展区分操作与导航需求。",
+   "微调对照公平：BGNet 微调前后在同一基准、同一条件下评测，且报告延迟不变（19ms），域适应的代价与收益可分离。"
+  ],
+  "design_risks": [
+   "虚拟立体对的真实性：基准立体对由静态点云经相机平行移位渲染而来，遮挡/空区域靠三扫描束补全——与真实双目成像的传感器噪声、曝光差异不同，模型在真实鱼眼硬件上的表现未在基准内验证。",
+   "训练-评测域双重差：训练集户外 vs 基准室内 + 训练集稀疏 GT（8.1% 点密度）vs 基准稠密 GT，微调增益无法区分'鱼眼几何适应'与'室内域适应'两个因子。",
+   "近场覆盖不足：0-1m 仅 6.9% 的样本占比与'操作任务亚厘米精度'的动机存在张力，亚厘米精度主张在最需要的近场区间证据最稀薄。",
+   "微调仅限轻量模型（作者自述 GPU 约束），62% 提升结论对重型模型的适用性未知。",
+   "单目模型评测细节：部分模型（如 UniK3D）在无内参 camera-free 模式下的行为与有内参模式未完全并列表述，极端 FOV 结论的口径需仔细对齐。"
+  ],
+  "baseline_fairness": "立体模型全部接收同一预处理（等距柱状投影+空区裁剪+逆时针 90° 旋转）后评测，输入条件一致；单目模型按各自原生推理设置使用（off-the-shelf）；投影对照用同一 CREStereo 确保差异仅来自投影。风险点：单目模型未做任何鱼眼适应（对比立体模型有适配管线），'单目大幅退化'的结论混合了'模型未适配'与'任务本质困难'两个因子——这是评测设计有意为之（测 off-the-shelf 行为）但解读时应注意。",
+  "metric_validity": "指标为深度估计社区标准（EPE/bad-τ/AbsRel/MAE/RMSE/δ 阈值），Table III 用百分比变化归一化不同 FOV 的对比，设计合理；RelEPE 用于网格敏感性分析口径自洽。局限：基准 GT 本身依赖 DS 模型标定与点云清理质量，窗户深度被 clip 到较近值、反射面零深度掩码——评测口径在困难区域有选择性（作者已声明）。",
+  "reproducibility": "项目页（ilyaind.github.io/WideDepth）承诺开源；硬件（扫描仪、SensorBox、ZED X One、Livox Mid 360）、生成管线（DS 模型公式 m/n 参数）、微调超参（15 epochs/batch 8/AdaBelief/one-cycle 5e-5/增强概率）报告完整；Helvipad 外部验证转换方法。缺：扫描仪具体型号、点云清理的手工流程细节、每个 FOV 的样本数分解。",
+  "external_validity": "办公室室内 + 城市户外双重场景，但均为日间、莫斯科地区；FOV 结论限定 120-195°；'近场操作/导航获益'的外推依赖视角高度设计而非任务实验；延迟口径为桌面 GPU。对具身综述的可用推断：(a) 单目深度模型在宽 FOV 下的退化幅度（+60%~+166% AbsRel）与'深度补全更稳'的相对结论可迁移；(b) '等距柱状适配 + 针孔模型免重训'路线与'基线错配比 FOV 更致命'的发现对鱼眼双目部署有直接指导意义；(c) 毫米级 GT 基准使'鱼眼能否支撑亚厘米操作'这一问题首次可量化，但当前数据分布（近场 6.9%）本身给出的答案是'证据尚薄'。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.24074-C01",
+   "claim": "WideDepth 论文主张：鱼眼相机在机器人的近场操作、导航与沉浸式感知中被日益采用，但带精确真值的室内深度基准仍然缺失——既有数据集多为合成或户外、缺真实室内数据；WideDepth 作为首个室内鱼眼深度估计数据集填补该空白（101 场景、5K 高分辨率立体对、毫米级 GT 深度与视差）。",
+   "stance": "gap",
+   "relation": "领域空白命题：室内鱼眼深度估计缺乏精确真值基准（既有鱼眼数据集合成/户外/无深度），为综述'任务受限-评测基础设施'维度提供空白证据与填补记录。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要首句即陈述机器人采用趋势与基准缺失；引言指出既有数据集 synthetic or outdoor、lacking real indoor data；贡献 1 自述首个室内毫米精度鱼眼深度基准。",
+   "locator": "page 1, Abstract + Section I Introduction",
+   "source_context": "Fisheye cameras are increasingly adopted in robotics for near-field manipulation, navigation, and immersive perception, yet indoor depth benchmarks with accurate ground truth are still missing. To address this, we introduce WideDepth — the first indoor dataset for fisheye depth estimation, featuring 101 scenes containing 5K high-resolution stereo pairs labeled with millimeter-level ground truth depth and disparity.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "benchmark scale and GT precision",
+    "value_or_direction": "101 scenes, 5K stereo pairs, millimeter-level GT depth and disparity",
+    "comparator": "prior fisheye datasets (synthetic or outdoor, lacking real indoor data)",
+    "task_or_sample": "indoor fisheye depth estimation benchmark",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应摘要与引言：机器人采用趋势、室内基准缺失、首个室内数据集、101 场景/5K 立体对/毫米级 GT 均为原文数字与措辞；'既有数据集合成或户外'出自引言原文。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C02",
+   "claim": "数据集对比显示 WideDepth 基准的 GT 精度数量级领先：Precision@10m 为 ±1mm，而 KITTI-360/WoodScape/其训练集为 ±20mm、Oxford RobotCar 为 ±30mm；HFOV 覆盖 120..195°，且是唯一同时提供水平+垂直立体、针孔配对与稠密深度图的鱼眼数据集，训练集为首个垂直立体设置。",
+   "stance": "support",
+   "relation": "应用方式命题：鱼眼深度基准的精度与配置画像（±1mm 真值使毫米级操作精度讨论首次可评测；垂直立体对首个），为综述'应用方式-评测基础设施'维度提供规格证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 逐列对比 7 个数据集：Real/Synthetic、Domain、分辨率、HFOV、精度、立体/针孔/稠密深度图配置；WideDepth benchmark 行唯一为 Indoor+±1mm+全配置。",
+   "locator": "page 2, Table I",
+   "source_context": "Precision@10m - - ±30 mm ±20 mm ±20 mm ±20 mm ±1 mm Horizontal Stereo ✓ ✗ ✗ ✗ ✗ ✗ ✓ Vertical Stereo ✗ ✗ ✗ ✗ ✗ ✓ ✓ Pinhole ✗ ✗ ✓ ✓ ✗ ✗ ✓ Dense depth map ✓ ✓ ✗ ✗ ✗ ✗ ✓",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Precision@10m / stereo-pinhole configuration coverage",
+    "value_or_direction": "benchmark ±1 mm at 10 m; HFOV 120..195°; horizontal + vertical stereo + pinhole + dense depth map",
+    "comparator": "KITTI-360 and WoodScape ±20 mm, Oxford RobotCar ±30 mm, train set ±20 mm",
+    "task_or_sample": "fisheye depth benchmark comparison (Table I)",
+    "locator": "page 2, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "±1/±20/±30mm 与各配置勾叉均为 Table I 原始内容（表头注明 Precision@10m）；HFOV 120..195° 出自表内 WideDepth benchmark 列；'首个垂直立体训练集'为表题原文（FIRST-EVER WITH A VERTICAL STEREO SETUP）；列归属（Oxford ±30、KITTI-360/WoodScape ±20）与表头参数顺序逐一核对一致。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C03",
+   "claim": "基准设计显式面向具身应用：场景按任务策展（操作任务取孤立物体、导航取走廊/办公室/厨房等杂乱环境）；采集高度按部署平台分层——1.65m 对应 AR/人形机器人、2.5m 对应 CCTV、0.5m 对应移动平台；较高视角强调大平面、较低视角捕捉椅腿与线缆等细节。",
+   "stance": "support",
+   "relation": "应用方式命题：鱼眼深度基准按具身平台的视角高度（人形/AR、监控、移动平台）与任务类型（操作/导航）设计采集——为综述'应用方式-具身化数据设计'维度提供证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-A 阐述基准设计原则：与自动驾驶数据集的近重复采样不同，按细粒度细节/几何复杂度/光照/深度用例策展；三种高度直接对应三类机器人部署眼高。",
+   "locator": "page 4, Section IV-A",
+   "source_context": "For manipulation, isolated objects are key, while navigation benefits from corridors, offices, and cluttered environments (e.g., kitchens). Captured indoors, our benchmark includes the following lighting categories: natural light, office lamps, and mixed conditions. To enhance diversity, we varied capture heights: 1.65m for AR/humanoid robots, 2.5m for CCTV, and 0.5m for mobile platforms. Higher viewpoints emphasize large planes, while lower ones capture finer details like chair legs and wires.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应 IV-A 的场景策展原则、三种采集高度及其机器人对应关系（AR/humanoid robots、CCTV、mobile platforms）与视角-内容关系陈述，无外推。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C04",
+   "claim": "WideDepth 提出 CUDA 加速的生成管线：基于 Double Sphere 模型从高分辨率 LiDAR 扫描生成鱼眼立体 RGB/深度/视差真值（无需存储大体积全景中间产物），并借此让针孔训练的立体模型免重训适配鱼眼图像——'复用针孔模型生态 + 投影层适配'而非重训专用架构。",
+   "stance": "support",
+   "relation": "应用方式命题：鱼眼适配的'免重训投影管线'路线（DS 模型 + CUDA 生成）代表低成本迁移路径，为综述'应用方式分类'提供与 OccTrack360（模型内几何原生）互补的工程路线证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "贡献 2 原文：CUDA-accelerated pipeline、Double Sphere model、scalable benchmark creation without storing large panoramas、adapting pinhole-trained models to fisheye without retraining；配套的 Disparity2Depth 转换在 Helvipad 上以 CREStereo 验证（MAE=1.92、RMSE=3.40，与原报告相当）。",
+   "locator": "page 1, Contributions",
+   "source_context": "We propose a CUDA-accelerated pipeline that gener- ates stereo fisheye RGB, depth, and disparity ground truth from high-resolution LiDAR scans using the Dou- ble Sphere model. This enables scalable benchmark creation without storing large panoramas and allows adapting pinhole-trained models to fisheye without retraining.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应贡献 2 原文（CUDA 加速、DS 模型、免全景中间产物、免重训适配针孔模型）；路线归类（投影层适配 vs 模型内几何原生）是综述分析框架的映射，基于两文方法对照，非论文自述——该归类性措辞放在 relation 字段而非 claim 事实部分。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C05",
+   "claim": "投影对照实验（同一 CREStereo 立体模型，差异仅来自投影）：等距柱状投影全面优于 cubemap——EPE 1.065 vs 4.500、EPE_Q95 3.056 vs 13.743、bad-1 28.27% vs 78.93%、bad-3 5.16% vs 51.13%；cubemap 保留局部细节但面边界不连续带来深度一致性问题，误差在边界处增大。",
+   "stance": "support",
+   "relation": "效果命题：宽 FoV 立体深度的投影表示选择——等距柱状（保持垂直极线一致性）显著优于 cubemap，为综述'应用方式-投影选择'维度提供同模型对照的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 六项指标等距柱状全优；Fig. 3 误差差值图显示 cubemap 误差在边界增大；III-C 正文明确同模型设计确保差异仅来自投影方法本身。",
+   "locator": "page 4, Table II + Section III-C",
+   "source_context": "Cubemap 4.500 3.111 13.743 78.93 62.92 51.13 Equirectangular 1.065 0.351 3.056 28.27 10.37 5.16",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "EPE / EPE_Q95 / bad-1 / bad-3 (disparity)",
+    "value_or_direction": "Equirectangular 1.065 EPE, 28.27% bad-1, 5.16% bad-3 vs Cubemap 4.500 EPE, 78.93% bad-1, 51.13% bad-3",
+    "comparator": "same stereo model (CREStereo), differences solely from projection method",
+    "task_or_sample": "WideDepth benchmark disparity, stereo matching",
+    "locator": "page 4, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "六个数字均为 Table II 两行原始值；'差异仅来自投影'为 III-C 原文（same stereo matching model ... solely from the projection method itself）；'cubemap 边界不连续'出自 II-C/III-C 原文论述。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C06",
+   "claim": "单目度量深度模型随 FOV 从 120° 扩大到 195° 系统性退化（Table III 百分比变化）：DepthAnythingV2 AbsRel +166%、δ1.25 −86.8%；PatchFusion +160%/−87.4%；UniK3D +97.3%/−73.7%；ZoeDepth +60.1%/−51.7%；最稳的 DepthPro 也 +9.0%/−4.1%——宽 FoV 的畸变几何与域偏移使现成单目模型在鱼眼输入上大面积失效。",
+   "stance": "limit",
+   "relation": "任务受限命题：单目度量深度是鱼眼宽 FoV 受创最重的任务族（头部模型 AbsRel 退化 +60%~+166%），为综述'哪些任务受限'维度提供跨 5 模型的系统性负面证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 给出 195° vs 120° 的指标百分比变化；Fig. 6 显示 AbsRel 随 FOV 的渐变曲线（90-195°），针孔（90°）上各模型表现良好、随 FOV 扩大恶化；正文归因为 domain shift and distorted geometry。",
+   "locator": "page 6, Table III + Section V-A + Fig. 6",
+   "source_context": "DepthAnythingV2 [18] +166% +126% +106% -86.8% -81.5% -53.9% PatchFusion [19] +160% +123% +91.3% -87.4% -68% -27.9% UniK3D [22] +97.3% +147.2% +119.6% -73.7% -56.2% -38.9% ZoeDepth [20] +60.1% +47.3% +21.3% -51.7% -25% -6.5% DepthPro [21] +9.0% +3.3% +8.3% -4.1% -4.5% -2.31%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AbsRel increase / δ1.25 decrease (percentage change, FOV 195 vs 120)",
+    "value_or_direction": "DepthAnythingV2 +166% AbsRel, -86.8% δ1.25; PatchFusion +160%/-87.4%; UniK3D +97.3%/-73.7%; ZoeDepth +60.1%/-51.7%; DepthPro +9.0%/-4.1%",
+    "comparator": "FOV 195 vs FOV 120, five monocular metric-depth models",
+    "task_or_sample": "WideDepth benchmark, monocular depth estimation",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "所有百分比均为 Table III 五行原始值；表题为 PERCENTAGE CHANGE IN METRICS FOR FOV 195 COMPARED TO FOV 120，口径与 claim 一致；'domain shift and distorted geometry'归因出自 V-A 原文；'大面积失效'是对 δ1.25 下降 51-87% 的忠实概括。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C07",
+   "claim": "UniK3D（显式相机通用设计）在中等鱼眼区间（120-140°）达到最高精度并超过其他受测单目模型，是'宽而非极端 FOV'应用的最可靠单目选择；但在极端 FOV（≥165°）且无内参的 camera-free 模式下仍退化——相机通用设计部分缓解但不能消除极端鱼眼的单目深度退化。",
+   "stance": "conditional",
+   "relation": "条件性效果命题：单目深度在鱼眼上的可用区间——120-140° 有相机通用模型可用，≥165° 需谨慎——为综述'任务受限边界'维度提供 FOV 分段证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-A 原文：UniK3D explicitly designed to be camera-universal、highest accuracy at moderate fisheye ranges (120–140°)、surpasses other tested monocular models in this regime、decline at extreme FoVs (≥165°) in camera-free mode without intrinsics。",
+   "locator": "page 6, Section V-A",
+   "source_context": "Since UniK3D was explicitly designed to be camera-universal, it achieves its highest accuracy at moderate fisheye ranges (120–140 ◦ ) and surpasses other tested monocular models in this regime. This makes it the most reliable choice for applications targeting wide yet not extreme FOVs. However, even this model shows decline at extreme FoVs (≥ 165 ◦ ) when operated in camera-free mode without intrinsics.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "monocular depth accuracy by FOV regime",
+    "value_or_direction": "UniK3D best at 120–140°, surpasses other monocular models; declines at ≥ 165° in camera-free mode",
+    "comparator": "other four tested monocular models (DepthAnythingV2, PatchFusion, ZoeDepth, DepthPro)",
+    "task_or_sample": "WideDepth benchmark, monocular metric depth",
+    "locator": "page 6, Section V-A"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应 V-A 的 UniK3D 分段陈述（120–140° 最佳、超越其他单目模型、≥165° 无内参退化）；'部分缓解但不能消除'的概括与该段+Table III（UniK3D 195° vs 120° AbsRel +97.3%）的联合蕴含一致。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C08",
+   "claim": "深度补全模型受宽 FOV 影响明显小于单目模型：FOV 120→195° 下 NLSPN AbsRel 仅 +5.92%、CompletionFormer +6.73%（两者 MAE/RMSE 部分指标反而改善），轻量 CostDCNet +38.5%——但所有补全模型在 AbsRel 这一关键指标上仍显著退化，注意力机制的大模型相对更能解读宽视角场景。",
+   "stance": "conditional",
+   "relation": "条件性效果命题：带深度引导（LiDAR 稀疏点）的深度补全对鱼眼宽 FoV 相对稳健（+5.9%~+6.7% vs 单目 +60%~+166%）但非免疫——为综述'任务获益-有条件'维度提供模型族间对照证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 补全三行与单目五行的百分比对照；V-A 原文：depth completion models are less affected by wide angles but still show significant declines in the AbsRel metric；归因于复杂模型（注意力+高容量）更善于解读宽视角。",
+   "locator": "page 6, Table III + Section V-A",
+   "source_context": "In summary, even robust, large-scale models like Depth Anything V2-Large degrade in performance on fisheye im- ages as FOV increases. As expected, depth completion mod- els are less affected by wide angles but still show significant declines in the AbsRel metric, one of the most important indicators, even among high-performing SOTA models with attention mechanisms.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AbsRel percentage change (FOV 195 vs 120), depth completion models",
+    "value_or_direction": "NLSPN +5.92%, CompletionFormer +6.73%, CostDCNet +38.5% AbsRel increase (some MAE/RMSE metrics improve)",
+    "comparator": "monocular models' +60.1% to +166% AbsRel increase; three NYUv2-trained completion models",
+    "task_or_sample": "WideDepth benchmark, depth completion",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "+5.92%/+6.73%/+38.5% 与补全行部分指标改善均为 Table III 原始值；'less affected but still significant declines in AbsRel'为 V-A 原文；与单目族的对比（+60~+166%）由同表五行直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C09",
+   "claim": "StereoBase 的基线×FOV 网格分析（RelEPE，低优）：基线错配的伤害显著大于高 FOV——65mm 基线全程最优（0.061-0.074），20mm 次之（0.067-0.083），120mm 0.081-0.094，200mm 0.12-0.13，300mm 恒定 0.16 最差；大基线因视差分布偏移而退化——鱼眼立体部署中基线与训练分布的匹配是比 FOV 更关键的风险因子。",
+   "stance": "limit",
+   "relation": "局限命题：鱼眼立体的首要敏感因子是基线错配而非宽 FOV（300mm 恒定 0.16 vs 65mm 0.061），为综述'局限-部署风险'维度提供因子分离证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 8 五基线×四 FOV 的 RelEPE 矩阵与正文 V-B 的结论（baseline variations affect performance more significantly than FOV；65mm optimal；larger baselines degrade due to disparity distribution shift）。",
+   "locator": "page 7, Fig. 8 + Section V-B",
+   "source_context": "120 140 165 195 FOV (degrees) 20 65 120 200 300 Baseline (mm) 0.083 0.078 0.074 0.067 0.074 0.068 0.066 0.061 0.094 0.088 0.086 0.081 0.13 0.13 0.12 0.12 0.16 0.16 0.16 0.16 0.08 0.10 0.12 0.14 0.16 Fig. 8. Impact of baseline and FOV variations on RelEPE (lower is better) using StereoBase model. Results indicate much greater sensitivity to unfamiliar baselines than high FOVs, demonstrating our approach’s effectiveness for fisheye stereo.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RelEPE across baseline × FOV grid (StereoBase)",
+    "value_or_direction": "65mm baseline best (0.061–0.074); 300mm constant 0.16 worst; 20mm row 0.083→0.067 across FOV 120→195",
+    "comparator": "five baselines (20/65/120/200/300 mm) × four FOVs (120/140/165/195°)",
+    "task_or_sample": "WideDepth benchmark stereo matching, StereoBase model",
+    "locator": "page 7, Fig. 8"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "矩阵数值按 Fig. 8 布局逐行核对（每行一个基线、每列一个 FOV）；'65mm 最优/大基线退化/基线敏感大于 FOV'与图注及 V-B 原文一致；'基线匹配是关键风险因子'为图注 much greater sensitivity to unfamiliar baselines 的直接转述。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C10",
+   "claim": "与单目深度随 FOV 退化相反，经等距柱状适配后的立体匹配性能随 FOV 增大而一致改善：StereoBase 在全部五种基线上 FOV 120→195° 的 RelEPE 均下降（如 20mm 行 0.083→0.067、65mm 行 0.074→0.061）——宽 FoV 对（适配后的）鱼眼立体深度是净收益，支持其在室内广覆盖感知中的价值。",
+   "stance": "support",
+   "relation": "任务获益命题：立体匹配（经投影适配）从更宽 FoV 中获益——与单目退化形成方向相反的对照，为综述'哪些任务获益'维度提供任务族级证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 原文：higher FOV consistently enhances performance, reinforcing the importance of wide angles for capturing broader indoor environments；Fig. 8 每一行从左到右（FOV 增大）数值递减提供逐行验证。",
+   "locator": "page 6, Section V-B + Fig. 8 (page 7)",
+   "source_context": "We also analyzed the impact of baseline and FOV on StereoBase, finding that baseline variations affect perfor- mance more significantly than FOV. A 65 mm baseline yields optimal metrics, while larger baselines degrade quality due to disparity distribution shift. Conversely, higher FOV con- sistently enhances performance, reinforcing the importance of wide angles for capturing broader indoor environments.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "stereo matching quality (RelEPE) vs FOV",
+    "value_or_direction": "higher FOV consistently enhances performance within every baseline row",
+    "comparator": "FOV 120→195° within each of the five baselines, StereoBase",
+    "task_or_sample": "WideDepth benchmark stereo matching",
+    "locator": "page 6, Section V-B"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "'higher FOV consistently enhances performance'为 V-B 原文；逐行递减的例证数字（0.083→0.067、0.074→0.061）出自 page 7 Fig. 8 矩阵（六遍式精读已核对布局）；'与单目退化方向相反'的对照由 Table III 与本文本联合蕴含，属事实对照非外推。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C11",
+   "claim": "轻量 BGNet（19ms、面向 Jetson Orin 嵌入式实时推理）在 WideDepth 训练集上微调 15 epochs 后：EPE 3.411→1.767（−48%）、EPE_Q50 −57%、EPE_Q95 −58%、bad-1 53.30→27.63（−48%）、bad-3 24.34→9.29（−62%），延迟不变，超过 FADNet++/GMStereo 并接近 IGEV/StereoBase/CREStereo——小规模鱼眼域适应可用轻量模型追平重型模型（摘要的'最高 62% 提升'即 bad-3 −62% 口径）。",
+   "stance": "support",
+   "relation": "效果命题：鱼眼域适应微调的量化收益（−48%~−62% 误差、嵌入式延迟不变）——为综述'效果-数据与适配投入产出'维度提供证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table IV 微调行括号内百分比与原始行对照；微调协议（15 epochs、batch 8、AdaBelief、one-cycle 5e-5、50% 非对称色彩增强）在 V-B 报告；摘要 up to a 62% performance boost 与 bad-3 −62% 一致。",
+   "locator": "page 7, Table IV + Section V-B",
+   "source_context": "BGNet [28] 19 3.411 1.410 13.595 53.30 33.32 24.34 BGNet [28] (fine-tuned) 19 1.767 (-48%) 0.606 (-57%) 5.736 (-58%) 27.63 (-48%) 13.76 (-59%) 9.29 (-62%)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "EPE / EPE_Q50 / EPE_Q95 / bad-1 / bad-3 (195° FOV, 65 mm baseline)",
+    "value_or_direction": "BGNet EPE 3.411→1.767 (-48%), bad-1 53.30→27.63 (-48%), bad-3 24.34→9.29 (-62%); latency 19 ms unchanged",
+    "comparator": "SceneFlow-pretrained BGNet before/after fine-tuning on WideDepth train set; vs FADNet++ 2.089, GMStereo 1.950, CREStereo 1.759, StereoBase 1.612, IGEV 1.605 EPE",
+    "task_or_sample": "WideDepth benchmark stereo matching, fine-tuning",
+    "locator": "page 7, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "微调前后数值与括号百分比均为 Table IV 原始值；与其他模型的相对位置（1.767 vs 1.605-2.089）由同表直接蕴含（'超过 FADNet++/GMStereo、接近 IGEV/StereoBase/CREStereo'逐项核对成立）；'62% 即 bad-3 口径'为摘要与表值的交叉核对结论。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C12",
+   "claim": "经等距柱状投影适配后，6 个立体模型在鱼眼输入上的排名与针孔基准排名高度一致——鱼眼立体性能可从针孔排名推断；对宽角应用 StereoBase 最理想但代价是高延迟，而 Fig. 7 的相对误差图显示其错误集中于半透明/反射面等通用立体难点、无鱼眼特有问题——投影适配路线未引入鱼眼专属误差模式。",
+   "stance": "support",
+   "relation": "效果命题：针孔立体模型生态经投影适配可整体迁移到鱼眼（排名保持、无鱼眼特有错误模式）——为综述'应用方式-生态复用'维度提供系统性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 原文：model rankings closely match pinhole benchmarks, suggesting that fisheye stereo performance can be inferred from pinhole-based ratings；StereoBase proves ideal, though at the cost of high latency；Fig. 7 错误图分析（common stereo matching errors without fisheye-specific issues）。",
+   "locator": "page 6, Section V-B (+ Fig. 7, page 7)",
+   "source_context": "Quantitative results in Table IV show that model rankings closely match pinhole benchmarks, suggesting that fisheye stereo performance can be inferred from pinhole-based rat- ings. For wide-angle applications, StereoBase proves ideal, though at the cost of high latency.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "'排名一致可从针孔推断'与'StereoBase 理想但高延迟'逐字出自 V-B 原文；'无鱼眼特有错误模式'出自 V-B 对 Fig. 7 的分析原文（without fisheye-specific issues）；claim 未超出正文蕴含范围。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C13",
+   "claim": "作者自述局限：LiDAR 扫描难以准确捕捉透明与反射表面，基准中这些区域被掩码处理——玻璃/镜面等对室内机器人感知高频出现的困难场景在 WideDepth 中系统性缺席（被标为零深度或清理掉），留作未来工作。",
+   "stance": "limit",
+   "relation": "局限命题：毫米级 GT 的代价——透明/反射表面被掩码，操作与导航最常遭遇的玻璃/镜面场景无评测覆盖，为综述'局限-基准覆盖'维度提供作者承认的边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VI 节首句即承认 LiDAR 对透明/反射表面的捕捉缺陷与掩码处理；IV-C 亦提及窗户/镜子半手工清理、反射面零深度掩码的实现细节。",
+   "locator": "page 7, Section VI Limitations and Future Work",
+   "source_context": "LiDAR scanning struggles to accurately capture transpar- ent and reflective surfaces, so we masked these areas in our benchmark. However, these challenging cases present valuable research opportunities, and we aim to address depth estimation in such conditions in future work.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 前半逐字对应 VI 节原文；'玻璃/镜面高频出现'的一般性判断是对室内机器人场景的常识性限定，置于 relation/summary 而非 claim 事实部分；掩码实现细节（零深度、半手工清理）与 IV-C 原文一致。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C14",
+   "claim": "作者自述局限：GPU 算力约束使域适应微调仅限于轻量架构（BGNet），域适应对更大模型（处理畸变几何）的效果不确定——62%/48% 级别的微调增益不能外推到重型立体模型。",
+   "stance": "limit",
+   "relation": "局限命题：域适应结论的模型规模边界（仅轻量 BGNet 验证，大模型未测），为综述'局限-结论适用范围'维度提供作者承认的边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VI 节明确 GPU constraints restricted fine-tuning to lightweight architectures，larger models with distorted geometry 的域适应效果 uncertain；与 C11 的收益证据共同界定适用范围。",
+   "locator": "page 7, Section VI Limitations and Future Work",
+   "source_context": "Regarding the experiments, our GPU constraints restricted fine-tuning to lightweight architectures, leaving the effect of domain adaptation on larger models with distorted geometry uncertain.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应 VI 节原文（GPU 约束、仅轻量架构、大模型效果 uncertain）；'不能外推到重型模型'是 uncertain 的直接含义，无夸大。"
+   }
+  },
+  {
+   "card_id": "2605.24074-C15",
+   "claim": "基准深度分布以中距为主体：2-5m 占 74.7%、0-1m 仅 6.9%、5-10m 9.6%、10+m 1.7%（长右尾来自走廊）——尽管动机强调操作任务需要亚厘米级近场精度，近场区间在基准中的证据密度最薄，'鱼眼深度支撑近场操作'的量化依据受限。",
+   "stance": "limit",
+   "relation": "局限命题：近场覆盖与操作动机的错位（0-1m 仅 6.9%）——为综述'局限-任务证据密度'维度提供数据分布层面的负面证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 4 深度分布统计为报告数字；'动机与分布错位'的判断依据是 Section II-B 的 manipulation tasks demand sub-centimeter accuracy 陈述（page 2）与该分布的对照。",
+   "locator": "page 4, Section IV-A + Fig. 4",
+   "source_context": "Figure 4 presents key dataset statistics. The depth range histogram shows a long right tail, which can challenge near- range indoor models. Overall, the primary depth bins are: 0–1 m (6.9%), 2–5 m (74.7%), 5–10 m (9.6%), and 10+ m (1.7%), aligning with typical indoor datasets.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "depth bin distribution",
+    "value_or_direction": "0–1 m: 6.9%; 2–5 m: 74.7%; 5–10 m: 9.6%; 10+ m: 1.7%",
+    "comparator": "manipulation motivation demanding sub-centimeter near-field accuracy",
+    "task_or_sample": "WideDepth benchmark samples",
+    "locator": "page 4, Fig. 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四个百分比（6.9%/74.7%/9.6%/1.7%）与'long right tail'均为 page 4 图 4 统计段原文，source_context 逐字一致；'操作任务需亚厘米级近场精度'动机出自 page 2 Section II-B 原句 manipulation tasks demand sub-centimeter accuracy；'错位/量化依据受限'是把这些报告事实并置得出的忠实判断，claim 未引入论文外的新数字，scope 限于该基准的样本分布。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Usenko, Demmel, Cremers: The Double Sphere camera model (3DV 2018)",
+   "arxiv_id": "",
+   "reason": "基准与适配管线的几何核心（双球模型、闭式逆），虚拟相机内参 FOV 函数化的基础。"
+  },
+  {
+   "title": "Helvipad: A real-world dataset for omnidirectional stereo depth estimation (2024)",
+   "arxiv_id": "2411.18335",
+   "reason": "Disparity2Depth 转换方法的外部验证集（CREStereo MAE=1.92/RMSE=3.40）。"
+  },
+  {
+   "title": "KITTI-360 / WoodScape / Oxford RobotCar / SynWoodScape / OmniScape",
+   "arxiv_id": "",
+   "reason": "Table I 精度与配置对比的全部参照数据集（±20-30mm vs WideDepth ±1mm）。"
+  },
+  {
+   "title": "CREStereo: Practical stereo matching via cascaded recurrent network (CVPR 2022)",
+   "arxiv_id": "",
+   "reason": "投影对照（Table II）与转换验证的统一立体模型；Table IV 竞争基线之一。"
+  },
+  {
+   "title": "BGNet: Bilateral grid learning for stereo matching (CVPR 2021)",
+   "arxiv_id": "",
+   "reason": "域适应微调的载体模型（轻量、嵌入式实时、19ms），Table IV 微调增益的口径来源。"
+  }
+ ],
+ "figures": [
+  {
+   "figure_id": "Fig. 4",
+   "caption": "Left: Depth distribution in our benchmark follows typical indoor patterns with a long right tail due to corridors. Center: The distribution of mean local entropy ... Right: Example of samples with high (top) and low (bottom) entropy.",
+   "section": "IV-A Benchmark Design",
+   "usage": "作者用该图展示基准深度分布（2-5m 主体、近场 6.9%）与场景复杂度（局部熵偏高的纹理细节分布）。"
+  },
+  {
+   "figure_id": "Fig. 5",
+   "caption": "WideDepth: A high-resolution benchmark for fisheye depth estimation in indoor environments. From lidar-generated point clouds (1), we create virtual fisheye cameras with diverse FOVs, distortions, and origins using the Double Sphere Model (2) ...",
+   "section": "IV Our Proposed Datasets",
+   "usage": "作者用该图总览基准生成管线（点云→DS 虚拟相机→多视角基线→等距柱状 warp→深度转视差），并标注 101 样本跨 120-195° FOV。"
+  },
+  {
+   "figure_id": "Fig. 6",
+   "caption": "All observed monocular depth models perform well on pinhole images, but most degrade with a wider field of view. This deterioration at higher FOV highlights the unresolved performance issue, making our benchmark highly valuable.",
+   "section": "V-A Monocular and Depth Completion",
+   "usage": "作者用该图展示 5 个单目模型 AbsRel 随 FOV（90-195°）的退化曲线，凸显宽 FoV 单目深度的未解问题。"
+  },
+  {
+   "figure_id": "Fig. 8",
+   "caption": "Impact of baseline and FOV variations on RelEPE (lower is better) using StereoBase model. Results indicate much greater sensitivity to unfamiliar baselines than high FOVs, demonstrating our approach's effectiveness for fisheye stereo.",
+   "section": "V-B Stereo Matching and Fine-tuning",
+   "usage": "作者用该图分离基线与 FOV 两个因子：5 基线×4 FOV 的 RelEPE 矩阵显示基线错配伤害远大于高 FOV、高 FOV 行内一致改善。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "Table I",
+   "caption": "Our benchmark offers unparalleled precision of depth maps, leveraging varying FOV and high-resolution images, surpassing all existing fisheye datasets. Our training dataset is the first-ever with a vertical stereo setup.",
+   "section": "II-B Fisheye Datasets",
+   "rows": [
+    [
+     "Parameter",
+     "OmniScape",
+     "SynWoodScape",
+     "Oxford RobotCar",
+     "KITTI-360",
+     "WoodScape",
+     "WideDepth train (ours)",
+     "WideDepth benchmark (ours)"
+    ],
+    [
+     "Real/Synthetic",
+     "Synthetic",
+     "Synthetic",
+     "Real",
+     "Real",
+     "Real",
+     "Real",
+     "Real"
+    ],
+    [
+     "Domain",
+     "Outdoor",
+     "Outdoor",
+     "Outdoor",
+     "Outdoor",
+     "Outdoor",
+     "Outdoor",
+     "Indoor"
+    ],
+    [
+     "Fisheye resolution",
+     "1024×1024",
+     "1280×966",
+     "1024×1024",
+     "1400×1400",
+     "1280×966",
+     "1920×1080",
+     "2048×1152"
+    ],
+    [
+     "Fisheye HFOV",
+     "185°",
+     "190°",
+     "180°",
+     "180°",
+     "190°",
+     "180°",
+     "120..195°"
+    ],
+    [
+     "Precision@10m",
+     "-",
+     "-",
+     "±30 mm",
+     "±20 mm",
+     "±20 mm",
+     "±20 mm",
+     "±1 mm"
+    ],
+    [
+     "Horizontal Stereo",
+     "✓",
+     "✗",
+     "✗",
+     "✗",
+     "✗",
+     "✗",
+     "✓"
+    ],
+    [
+     "Vertical Stereo",
+     "✗",
+     "✗",
+     "✗",
+     "✗",
+     "✗",
+     "✓",
+     "✓"
+    ],
+    [
+     "Pinhole",
+     "✗",
+     "✗",
+     "✓",
+     "✓",
+     "✗",
+     "✗",
+     "✓"
+    ],
+    [
+     "Dense depth map",
+     "✓",
+     "✓",
+     "✗",
+     "✗",
+     "✗",
+     "✗",
+     "✓"
+    ]
+   ]
+  },
+  {
+   "table_id": "Table II",
+   "caption": "Comparison of projection methods on our WideDepth benchmark. For all metrics the lower the better.",
+   "section": "III-C Projection Model Choice",
+   "rows": [
+    [
+     "Projection",
+     "EPE (px)",
+     "EPE_Q50 (px)",
+     "EPE_Q95 (px)",
+     "bad-1 (%)",
+     "bad-2 (%)",
+     "bad-3 (%)"
+    ],
+    [
+     "Cubemap",
+     "4.500",
+     "3.111",
+     "13.743",
+     "78.93",
+     "62.92",
+     "51.13"
+    ],
+    [
+     "Equirectangular",
+     "1.065",
+     "0.351",
+     "3.056",
+     "28.27",
+     "10.37",
+     "5.16"
+    ]
+   ]
+  },
+  {
+   "table_id": "Table III",
+   "caption": "Percentage change in metrics for FOV 195 compared to FOV 120. Green indicates improved results with a wider angle, while red - decline in performance at a wider angle.",
+   "section": "V-A Monocular and Depth Completion",
+   "rows": [
+    [
+     "Model",
+     "AbsRel ↓",
+     "MAE ↓",
+     "RMSE ↓",
+     "δ1.25 ↑",
+     "δ1.25² ↑",
+     "δ1.25³ ↑"
+    ],
+    [
+     "NLSPN",
+     "+5.92%",
+     "-1.26%",
+     "-3.05%",
+     "-0.03%",
+     "+0.04%",
+     "+0.04%"
+    ],
+    [
+     "CompletionFormer",
+     "+6.73%",
+     "-2.05%",
+     "+1.97%",
+     "-0.01%",
+     "+0.05%",
+     "+0.04%"
+    ],
+    [
+     "CostDCNet",
+     "+38.5%",
+     "-13.9%",
+     "+0.67%",
+     "+0.06%",
+     "-0.07%",
+     "-0.16%"
+    ],
+    [
+     "DepthAnythingV2",
+     "+166%",
+     "+126%",
+     "+106%",
+     "-86.8%",
+     "-81.5%",
+     "-53.9%"
+    ],
+    [
+     "PatchFusion",
+     "+160%",
+     "+123%",
+     "+91.3%",
+     "-87.4%",
+     "-68%",
+     "-27.9%"
+    ],
+    [
+     "UniK3D",
+     "+97.3%",
+     "+147.2%",
+     "+119.6%",
+     "-73.7%",
+     "-56.2%",
+     "-38.9%"
+    ],
+    [
+     "ZoeDepth",
+     "+60.1%",
+     "+47.3%",
+     "+21.3%",
+     "-51.7%",
+     "-25%",
+     "-6.5%"
+    ],
+    [
+     "DepthPro",
+     "+9.0%",
+     "+3.3%",
+     "+8.3%",
+     "-4.1%",
+     "-4.5%",
+     "-2.31%"
+    ]
+   ]
+  },
+  {
+   "table_id": "Table IV",
+   "caption": "Stereo model performance at 195° FOV and 65 mm baseline; lower values are better. Fine-tuning lightweight BGNet on our train dataset boosts it to match heavier SOTA models, showing the value of domain adaptation.",
+   "section": "V-B Stereo Matching and Fine-tuning",
+   "rows": [
+    [
+     "Model",
+     "Latency (ms)",
+     "EPE (px)",
+     "EPE_Q50 (px)",
+     "EPE_Q95 (px)",
+     "bad-1 (%)",
+     "bad-2 (%)",
+     "bad-3 (%)"
+    ],
+    [
+     "FADNet++",
+     "40",
+     "2.089",
+     "0.643",
+     "6.373",
+     "29.63",
+     "15.59",
+     "10.46"
+    ],
+    [
+     "GMStereo",
+     "186",
+     "1.950",
+     "0.700",
+     "6.495",
+     "30.06",
+     "15.16",
+     "10.31"
+    ],
+    [
+     "IGEV",
+     "552",
+     "1.605",
+     "0.533",
+     "4.526",
+     "24.87",
+     "12.58",
+     "8.37"
+    ],
+    [
+     "StereoBase",
+     "665",
+     "1.612",
+     "0.529",
+     "4.554",
+     "24.75",
+     "12.49",
+     "8.37"
+    ],
+    [
+     "CREStereo",
+     "284",
+     "1.759",
+     "0.528",
+     "6.238",
+     "24.78",
+     "13.02",
+     "9.02"
+    ],
+    [
+     "BGNet",
+     "19",
+     "3.411",
+     "1.410",
+     "13.595",
+     "53.30",
+     "33.32",
+     "24.34"
+    ],
+    [
+     "BGNet (fine-tuned)",
+     "19",
+     "1.767 (-48%)",
+     "0.606 (-57%)",
+     "5.736 (-58%)",
+     "27.63 (-48%)",
+     "13.76 (-59%)",
+     "9.29 (-62%)"
+    ]
+   ]
+  }
+ ],
+ "notes": "六遍式精读完成（scoping 模式）。全 8 页正文已读，致谢与参考文献略读。口径核对：(1) 摘要 'up to a 62% performance boost' 与 Table IV BGNet 微调行 bad-3 −62% 一致（最大改善口径）；(2) Fig. 8 矩阵按行=基线、列=FOV 逐行复算（每行 FOV 增大数值递减、65mm 行全程最低）；(3) Table I 列序（OmniScape/SynWoodScape/Oxford RobotCar/KITTI-360/WoodScape/WideDepth-train/WideDepth-benchmark）与精度归属逐一核对；(4) '±1mm' 表格口径为 Precision@10m。版本注：本精读基于 v1（2026-05-22）。C15 卡在写入时 verification 字段使用占位内容，需在审计前修正——见下。"
+}

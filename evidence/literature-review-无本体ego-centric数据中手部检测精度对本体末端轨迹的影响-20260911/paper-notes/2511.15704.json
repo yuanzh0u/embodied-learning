@@ -1,0 +1,312 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.15704",
+  "title": "In-N-On: Scaling Egocentric Manipulation with in-the-wild and on-task Data",
+  "published": "2025-11-19",
+  "url": "https://arxiv.org/abs/2511.15704",
+  "authors": [
+   "Xiongyi Cai",
+   "Ri-Zhao Qiu",
+   "Geng Chen",
+   "Lai Wei",
+   "I. Liu",
+   "Tianshu Huang",
+   "Xu-Xin Cheng",
+   "Xiaolong Wang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "以人为中心的状态-动作空间(指尖 3×5 关键点+腕相对头姿+IK/FK 套件)界定了手部追踪误差进入动作标签的传播入口；on-task 数据刻意选用 Vision Pro/Aria Glass 商用设备'确保高质量手部姿态'是采集端缓解证据；GRL 域适应消融(15%→25%)量化了追踪质量之外的表征鸿沟。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "问题：in-the-wild 与 on-task 两类 ego-centric 人类数据的配方化使用。"
+   },
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "动机：人类数据异构性、预训练-微调遗忘、on-task 对齐。"
+   },
+   {
+    "locator": "3.1. PH",
+    "role": "data-or-setting",
+    "purpose": "核心节：以人为中心状态-动作空间定义、Pinocchio IK/FK 重定向套件、EgoDex/ActionNet/PH2D 预训练数据与商用设备 on-task 采集。"
+   },
+   {
+    "locator": "3.2. Human",
+    "role": "method-or-design",
+    "purpose": "flow matching 架构、预训练/后训练混合比例、线性探测 100% 区分人/机与 GRL 域适应。"
+   },
+   {
+    "locator": "4.2. Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "主结果表、零样本语言跟随、1-shot pouring、域适应消融 Tab. 2、机器人数据规模曲线。"
+   },
+   {
+    "locator": "5. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与未来方向。"
+   },
+   {
+    "locator": "6.2. Post-training data",
+    "role": "appendix-or-supplement",
+    "purpose": "后训练人/机演示数量表(如 single grasp 120 机器人 vs 2545 人类)。"
+   },
+   {
+    "locator": "6.5. Failure analysis",
+    "role": "appendix-or-supplement",
+    "purpose": "失败模式：早期抓取小误差滚雪球、关节极限与接触富集场景残余问题。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2. Related Work",
+    "role": "relevant-core",
+    "reason": "背景综述，无直接误差机制证据。"
+   },
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "reason": "参考文献列表。"
+   },
+   {
+    "locator": "6.1. Object visualization",
+    "role": "appendix-or-supplement",
+    "reason": "物体图示，无文字证据。"
+   },
+   {
+    "locator": "6.3. Background Ablation",
+    "role": "appendix-or-supplement",
+    "reason": "背景泛化消融，与手部追踪精度无关。"
+   },
+   {
+    "locator": "6.4. Multi-target language following",
+    "role": "appendix-or-supplement",
+    "reason": "语言跟随补充评测，与追踪误差传播无关。"
+   }
+  ]
+ },
+ "research_question": "如何把大规模异构 in-the-wild ego-centric 人类数据与小规模 on-task 人类/机器人数据配方化地用于预训练与后训练，得到可迁移到人形机器人的语言条件操作策略？",
+ "contributions": [
+  "PHSD 数据集：1000+ 小时 in-the-wild 人类/人形数据(EgoDex+ActionNet+PH2D)加 20+ 小时任务对齐 on-task 数据，承诺开源。",
+  "Human0 基座模型：语言条件 flow matching 策略，统一以人为中心状态-动作空间，配 Pinocchio IK/FK 重定向软件套件。",
+  "域适应方案：线性探测揭示朴素混合下隐层 100% 可区分人/机，GRL 域判别器使表征域不变并提升 few-shot 执行。"
+ ],
+ "method": {
+  "summary": "预训练混合 EgoDex(800+h, Vision Pro 采集)、ActionNet(100+h Fourier GR1T1 人形)、PH2D，统一映射到以人为中心状态-动作空间(头姿 SE(3) 为基、腕姿相对头、指尖 3×5 关键点、夹爪=拇指-食指距离)；后训练只用 on-task 人+机数据(约 70% 人类采样比)；π0 初始化的 SigLIP+flow matching 骨干，GRL 域对抗判别器作用于视觉 token 与姿态 latent 的拼接特征以强迫域不变表征。",
+  "assumptions": [
+   "商用设备(Vision Pro/Aria Glass)的手部追踪质量足以直接作为 on-task 动作监督",
+   "以人为中心动作空间可经确定性 IK/FK 无损往返映射到人形机器人关节空间",
+   "人与人形采集者的体型差可随数据规模被忽略",
+   "域对抗训练可在不损失任务语义的前提下去除人/机表征差异"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "PHSD(1000+h in-the-wild: EgoDex 800+h / ActionNet 100+h / PH2D)",
+   "on-task 后训练数据(四任务合计机器人约 381 条+人类约 4038 条演示)"
+  ],
+  "tasks": [
+   "Single object grasping",
+   "Multi object grasping",
+   "Burger assembly",
+   "Pouring(1-shot)"
+  ],
+  "embodiments": [
+   "Unitree H1 + Inspire 五指灵巧手",
+   "Unitree G1 + Inspire 五指灵巧手(主力)"
+  ],
+  "sample_or_scale": "预训练 1000+ 小时；后训练 20+ 小时；每任务 12-30 次真机试验(I.D./O.O.D.)"
+ },
+ "evaluation": {
+  "design": "四个人形操作任务 I.D./O.O.D. 对比 4 个基线；域适应消融用 pouring 单演示 few-shot；机器人数据量规模曲线；背景与多目标语言补充消融",
+  "baselines": [
+   "π0(同为初始化)",
+   "GR00T N1",
+   "HAT w/ human",
+   "Human0 w/o human(纯机器人数据同流程)"
+  ],
+  "metrics": [
+   "任务成功率(N/trials)",
+   "pouring 分阶段组合成功率",
+   "线性探测人/机分类成功率"
+  ],
+  "ablations": [
+   "去域判别器",
+   "去人类数据",
+   "机器人数据规模(25/50/100%)",
+   "背景变化",
+   "多目标语言"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Human0 在四任务 I.D./O.O.D. 全面领先：multi-object grasping O.O.D. 30/30(π0 16/30),burger assembly I.D. 8/12(π0 5/12)。",
+   "scope": "四任务真机评测",
+   "locator": "4.2. Evaluation, Tab. 1"
+  },
+  {
+   "finding": "朴素混合模型中间特征可被简单 MLP 以 100% 成功率区分人/机；加 GRL 后探测降至约 50% 随机水平，pouring few-shot 组合成功率 15%→25%。",
+   "scope": "pouring 1-shot 消融",
+   "locator": "3.2. Human; 4.2. Evaluation, Tab. 2"
+  },
+  {
+   "finding": "on-task 采集明确选择商用级设备(Vision Pro/Aria Glass)以确保高质量手部姿态，两设备均提供头姿、腕姿与稠密指尖关键点。",
+   "scope": "PHSD 后训练数据采集",
+   "locator": "3.1. PH"
+  },
+  {
+   "finding": "失败分析：早期抓取的小不准会滚雪球为下游放置失败；关节极限附近运动与接触富集场景的不稳抓取表明表征对本体细节仍不完全不变。",
+   "scope": "附录失败模式归纳",
+   "locator": "6.5. Failure analysis"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前训练规模下无法仅从人类数据学会全新行为(需至少 1 条机器人演示)，few-shot 非 zero-shot。",
+    "locator": "4.2. Evaluation"
+   },
+   {
+    "limitation": "域适应后仍存在本体特定的残余问题：关节极限附近运动与接触富集场景的不稳抓取。",
+    "locator": "6.5. Failure analysis"
+   },
+   {
+    "limitation": "结论限人形机器人本体，未在其他形态上验证。",
+    "locator": "5. Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全文未量化商用设备手部追踪的绝对误差，'高质量手部姿态'是设计声明而非测量结论；追踪精度对末端轨迹的敏感性未被消融。",
+    "basis": "3.1 节仅有设备选择声明，无任何关键点误差数值。"
+   },
+   {
+    "boundary": "统一空间的双向 IK/FK 转换被当作无损；人-人形指尖/腕部定义差异引入的系统性重定向偏差未评估。",
+    "basis": "3.1 节称体型差'可随数据规模被忽略'，未给验证。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：Vision Pro/Aria Glass 级商用追踪设备采集的 ego-centric 人形操作数据，人形双臂本体(G1/H1)，任务以抓取/放置/倾倒为主；未覆盖：单目 in-the-wild 手部估计的误差容忍度、非人形本体、接触富集高精度操作。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "线性探测诊断(100%→50%)给出表征鸿沟的直接证据而非仅端点成功率",
+   "域适应消融用组合成功率拆分阶段，定位收益来源",
+   "后训练数据量人/机分列(附录 Tab. 3)，规模透明"
+  ],
+  "design_risks": [
+   "成功率样本量小(12-30 次/格)，未报告置信区间或显著性检验",
+   "GRL 权重 λ=0.1 等超参未给敏感性分析",
+   "商用设备追踪质量未量化，无法区分'追踪够准'与'方法容错'"
+  ],
+  "baseline_fairness": "π0 即初始化模型、HAT/GR00T 同任务评测，且设 Human0 w/o human 纯机器人对照，公平性较好；HAT 不支持语言条件而缺测部分格。",
+  "metric_validity": "成功率为二值判据，I.D./O.O.D. 划分清晰；pouring 组合成功率可定位阶段瓶颈；无线索表明评测者盲化。",
+  "reproducibility": "训练步数/GPU/批量、采样比例、λ 均报告，数据与权重承诺开源；但商用设备追踪管线(Vision Pro/Aria)为闭源，关键点不可复算。",
+  "external_validity": "限于人形双臂与商用头显采集；向手机/单目 in-the-wild 视频或非人形本体推广缺乏证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.15704-C01",
+   "claim": "In-N-On 的 on-task 数据采集刻意选用商用级设备(Apple Vision Pro 与 Meta Aria Glass)，明确理由是'确保 on-task 数据集中的高质量手部姿态'；两款设备均提供头姿、腕姿与稠密指尖关键点预测。",
+   "stance": "conditional",
+   "relation": "直接回答'缓解手段'：在任务对齐数据上，作者用商用头显内建追踪替代单目估计，把手部姿态质量作为数据配方的显式设计目标——隐含判断是 in-the-wild 单目手部估计的精度不足以支撑 on-task 动作监督，故追踪精度门槛在采集端被硬件化解决。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.1 节 Data for Post-training 段直述设备选择动机与三款信号(头/腕/指尖)。",
+   "locator": "3.1. PH",
+   "source_context": "To ensure high-quality hand poses in our on-task datasets, we use commercial-grade data collection devices, including Apple Vision Pro and the Meta Aria Glass. Both Vision Pro and Meta Aria glass provide head poses, wrist poses and dense fingertip key- point predictions.",
+   "evidence_type": "method-design",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 3.1 节 Data for Post-training 段；claim 仅限设备选择声明与信号清单，未断言任何误差数值(原文未报告)。"
+   }
+  },
+  {
+   "card_id": "2511.15704-C02",
+   "claim": "In-N-On 把人类与机器人数据统一映射到以人为中心的状态-动作空间：头姿 SE(3) 为基变换、双腕姿相对头姿、手指运动建模为 3×5 指尖关键点(优化式手指重定向算法的直接输入)、夹爪开合映射为拇指-食指指尖距离；配套 Pinocchio IK/FK 套件在机器人关节空间与该空间之间双向转换。",
+   "stance": "support",
+   "relation": "界定误差传播路径的入口：指尖关键点与腕姿的追踪误差经确定性 IK/FK 重定向直接进入动作标签，论文未报告任何中间滤波/不确定度处理——在此类以人为中心动作空间路线中，手部检测精度即动作标签精度，是末端轨迹精度的上游约束。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.1 节统一空间四条定义与套件功能声明，逐字支撑。",
+   "locator": "3.1. PH",
+   "source_context": "we model finger motions as fingertip keypoints, as all well-established optimization- based finger retargeting algorithms [11, 21, 41] directly use fingertip keypoints with scaling factors.",
+   "evidence_type": "method-design",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "指尖关键点/夹爪距离/腕相对头/套件 IK/FK 四项均逐字核对于 3.1 节(含断字归一化)；'无滤波环节'为对原文沉默的限定陈述，未夸大。"
+   }
+  },
+  {
+   "card_id": "2511.15704-C03",
+   "claim": "朴素人-机数据混合训练的中间特征可被简单 MLP 探针以 100% 成功率区分人类/机器人来源(模型'作弊'式过拟合本体线索)；引入 GRL 域对抗判别器后线性探测降至约 50% 随机水平，且单条机器人演示的 pouring few-shot 组合成功率从 15% 升至 25%。",
+   "stance": "conditional",
+   "relation": "说明即使手部追踪质量由商用设备保障，人-机表征鸿沟仍独立于追踪噪声阻碍迁移；缓解发生在表征层(GRL)而非追踪层——提示'手部检测精度达标'是必要非充分条件，末端轨迹可用性还取决于域不变表示。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2.4 节探针 100% 声明与 Fig. 7 约 50% 结果；Tab. 2 给出 15%/25% 组合成功率。",
+   "locator": "3.2. Human; 4.2. Evaluation",
+   "source_context": "Tab. 2 demonstrates improved few-shot learning capability. Without a domain discriminator, the model quickly overfits to the single humanoid demonstra- tion.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "pouring 1-shot compositional success rate",
+    "value_or_direction": "15% (w/o discriminator) → 25% (w/ discriminator); linear probing 100% → ~50%",
+    "comparator": "same Human0 training procedure without domain discriminator",
+    "task_or_sample": "bimanual pouring, 单条机器人演示 few-shot, 分阶段 20 trials 组合",
+    "locator": "4.2. Evaluation, Tab. 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "100% 探针、~50% 随机水平、15%→25% 与'overfits to the single humanoid demonstration'均逐字核对于 3.2.4 与 4.2.2；claim 未推广到其他任务。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Hoque et al., EgoDex: Learning dexterous manipulation from large-scale egocentric video, arXiv:2505.11709, 2025",
+   "role": "预训练人类数据来源(800+h, Vision Pro)"
+  },
+  {
+   "citation": "Qiu et al., Humanoid policy ~ human policy (PH2D), arXiv:2503.13441, 2025",
+   "role": "以人为中心动作空间与 on-task 共训练范式来源"
+  },
+  {
+   "citation": "Black et al., π0: A vision-language-action flow model, arXiv:2410.24164, 2024",
+   "role": "初始化与基线"
+  },
+  {
+   "citation": "Ganin et al., Domain-adversarial training of neural networks, JMLR 2016",
+   "role": "GRL 域适应方法来源"
+  }
+ ],
+ "notes": "ID 预算约束：本篇投影 3 卡(0370-0372)。失败分析中'早期抓取小误差滚雪球为下游放置失败'(6.5 节)为执行级误差传播定性证据，因预算留给 2606.06627 未单独成卡。"
+}

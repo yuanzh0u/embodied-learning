@@ -1,0 +1,414 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.10743",
+  "title": "Hand-centric Human-to-Robot Trajectory Transfer from Video Demonstrations via Open-World Contact Localization",
+  "published": "2026-06-09",
+  "url": "https://arxiv.org/abs/2606.10743",
+  "authors": [
+   "Yitian Shi",
+   "Di Wen",
+   "Zhengqi Han",
+   "Zicheng Guo",
+   "Yu Hu",
+   "Edgar Welte",
+   "Kunyu Peng",
+   "Rainer Stiefelhagen",
+   "Rania Rayyes"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "标题即'轨迹迁移'且给出完整的检测误差→轨迹误差链条：明确识别 WiLoR 单帧预测对噪声/遮挡敏感、严格双目三角化在缺检时失败、基础手部重建器无法准确估计全局腕部变换三类检测层误差来源；刚体耦合传播方程使腕部残余漂移被放大为 PJ 末端轨迹误差与 onset 错位；缓解手段覆盖 DLT 三角化、缺失帧插值、SE(3) IEKF-RTS 平滑（含 Q/R 参数）、LTE 接触对齐与碰撞增广；并以接触定位 MAE/SR、86% 回放成功率、失败归因附录量化下游可用性。覆盖综述的误差来源、传播路径、缓解手段三维度，阈值维度仅能确认存在缺口。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认视频示教迁移的三大挑战（带噪 HOI、未见物体部分观测、跨本体差异）与手部中心轨迹蒸馏的问题定义。"
+   },
+   {
+    "locator": "2.1 Transferring Manipulation from Human Videos",
+    "role": "relevant-core",
+    "purpose": "定位 EasyMimic/ZeroMimic/YOTO/WARPED 等相邻视频迁移路线与本文的显式轨迹迁移定位。"
+   },
+   {
+    "locator": "2.2 Contact-Aware Retargeting and Trajectory Generation",
+    "role": "relevant-core",
+    "purpose": "确认接触感知重定向文献与 HOGraspFlow 的上游依赖关系。"
+   },
+   {
+    "locator": "3.1 Hand Trajectory Reconstruction",
+    "role": "method-or-design",
+    "purpose": "提取 WiLoR+MANO 双目融合、DLT 三角化、缺失帧插值与 IEKF-RTS 平滑的检测噪声吸收设计。"
+   },
+   {
+    "locator": "3.2 Open-World Contact Localization",
+    "role": "method-or-design",
+    "purpose": "理解手部中心线索、SAM3 类别无关胶囊、DA3 几何证据的证据门控融合机制。"
+   },
+   {
+    "locator": "3.3 Cross-Embodiment Trajectory Retargeting",
+    "role": "method-or-design",
+    "purpose": "提取刚体耦合传播方程、接触 onset 关键帧、HOGraspFlow 多模态抓取与 LTE 接触对齐细化。"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "data-or-setting",
+    "purpose": "确认 110 视频 × 11 任务基准、手工标注接触真值与 Table 1 总体接触定位结果的位置。"
+   },
+   {
+    "locator": "4.1 Temporal Contact Localization",
+    "role": "results-or-analysis",
+    "purpose": "提取接触定位 SR/MAE/IoU 指标与 Threshold/EgoLoc 基线对照及拇指-食指闭合不可靠的论断。"
+   },
+   {
+    "locator": "4.2 Trajectory Reconstruction Quality",
+    "role": "results-or-analysis",
+    "purpose": "提取 86% 回放成功率、模板基线对照、长时程任务性能下降与盲测偏好研究结果。"
+   },
+   {
+    "locator": "5 Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者对框架有效性的总结性陈述。"
+   },
+   {
+    "locator": "6 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：仅 PJ 末端、无指法灵巧操作、碰撞增广靠局部间隙启发式。"
+   },
+   {
+    "locator": "Appendix A Robust hand motion recovery",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 DLT 三角化替代 WiLoR 全局根、旋转平均融合、IEKF-RTS 噪声协方差（Q=1e-5, R=1e-2）与首尾锚定。"
+   },
+   {
+    "locator": "Appendix D Trajectory refinement and augmentation",
+    "role": "appendix-or-supplement",
+    "purpose": "核对'手部位姿估计残余漂移经分段抓取传播被放大'的陈述与 LTE 目标函数、碰撞拒绝参数（0.05 m, N_max=30）。"
+   },
+   {
+    "locator": "Appendix F Task descriptions; Appendix G Failure analysis",
+    "role": "appendix-or-supplement",
+    "purpose": "核对硬件设置（双 RealSense D435i 标定、Quest 3 遥操作对照）与失败模式分类归因。"
+   },
+   {
+    "locator": "I Preference Study; Appendix J Imitation learning policy evaluation",
+    "role": "appendix-or-supplement",
+    "purpose": "核对偏好研究设计（10 名被试、每视频至少 7 人）与下游 ACT/DP/DP3 策略成功率表。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "如何从低成本双目人类操作视频中恢复时间一致的 3D 手部运动、在开放世界中定位任务相关接触段，并将人类抓取意图重定向为平行夹爪可执行且多样的机器人轨迹？",
+ "contributions": [
+  "提出 HOWTransfer：手部中心的轨迹蒸馏框架，从单个人类示教视频提取接触感知、分类法感知、多样的平行夹爪末端轨迹，无需物体几何或状态重建。",
+  "提出开放世界接触定位器：无语义先验与接触监督，通过类别无关掩码轨迹与多族 HOI 证据融合发现被操作物体并定位接触段，作为抓取重定向的时间锚。",
+  "提出分类法感知的轨迹细化与增广：基于 HOGraspFlow 多模态抓取 + LTE waypoint 编辑，从单视频生成多个保持形状且碰撞感知的可执行轨迹变体。"
+ ],
+ "method": {
+  "summary": "双目标定视频每视图经冻结手部检测器 + WiLoR 预测腕部位姿与 MANO 参数；不直接信任 WiLoR 全局根，而是把 MANO 关节重投影到两视图做 DLT 三角化获得米制腕部位置、旋转平均融合朝向；缺失帧做线性/球面插值，再以 SE(3) 上的 IEKF-RTS 平滑器（Q=1e-5 I6、R=1e-2 I6，首尾有效位姿锚定）抑制逐帧噪声与高频抖动。接触定位阶段用手部中心线索（闭合度 κ、可见性 ν、接近度 α）+ SAM3 类别无关物体胶囊 + 可选 DA3 深度几何证据，经训练-free 证据门 χ_t 与迟滞解码器输出接触段 [s_k, e_k]。重定向阶段以接触 onset 帧为关键帧调 HOGraspFlow 生成分类法感知多模态 PJ 抓取（DBSCAN 聚类为代表抓取，平移/旋转归一化因子 ε_t=0.02、ε_r=0.45），在刚体耦合假设下以 g_t = T_w(t) T_w(s_k)^{-1} g_0 沿腕部轨迹传播；最后用 LTE 做接触对齐细化（平移校正量来自 HOGraspFlow 接触图 + DA3 首帧点云，仅编辑起始控制位姿、固定段终点）与碰撞感知增广（间隙半径 0.05 m、N_max=30）。",
+  "assumptions": [
+   "接触建立后手与被抓取物之间的腕部相对变换在同一段内保持恒定（刚体耦合假设）。",
+   "WiLoR 单帧噪声、遮挡与缺检可经双目三角化 + 插值 + IEKF-RTS 平滑恢复到可供重定向使用的水平。",
+   "人类抓取意图可经分类法先验映射为平行夹爪抓取，无需显式物体位姿/状态追踪。",
+   "实验设置限定单手、单被操作物体、标定双目输入。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采集 110 个人类示教视频（11 任务 × 10 视频，覆盖日常与工业操作），手工标注接触/分离时间戳作真值",
+   "HOGraspFlow 训练语料：HOGraspNet + OakInk + HO3D"
+  ],
+  "tasks": [
+   "Ball Pick-and-Place",
+   "Knife Cutting",
+   "Pour Water into a Bowl",
+   "Watering",
+   "Throw Pen into a Cup",
+   "Lying the Box Down",
+   "Erase Whiteboard",
+   "Angle Grinder Pickup",
+   "Pot Cooking",
+   "Breakfast Preparation",
+   "Detergent and Whiteboard Erasing"
+  ],
+  "embodiments": [
+   "平行夹爪（PJ）机器人真机回放",
+   "录制端：两台 Intel RealSense D435i（标定外参）",
+   "遥操作对照：Meta Quest 3 + VR 手柄"
+  ],
+  "sample_or_scale": "110 视频基准；每条示教生成 10 个机器人回放 episode；偏好研究 10 名参与者、每视频至少 7 人评分、每视频独立随机三次配对；下游策略每任务 50 条示教、20 次评估 trial"
+ },
+ "evaluation": {
+  "design": "三层评估：(i) 接触时序定位对手工标注真值（SR(3/5/10)、MAE、MoF、IoU、Precision、F1），基线为 Threshold（拇指-食指闭合启发式）与 EgoLoc，含 w/o DA3 消融；(ii) 真机回放成功率，对照共享同一接触段但用固定拇指-食指模板的抓取匹配基线；(iii) 盲测两两偏好研究对照遥操作轨迹；外加下游 ACT/DP/DP3 策略训练成功率。",
+  "baselines": [
+   "Threshold（拇指-食指闭合接触启发式）",
+   "EgoLoc（ego-centric 接触-分离时间定位）",
+   "模板抓取匹配基线（同接触段 + 固定 thumb-index 抓取模板）",
+   "Teleop（Quest 3 遥操作轨迹）"
+  ],
+  "metrics": [
+   "SR(3)/SR(5)/SR(10) 时间戳命中率",
+   "MAE（帧）",
+   "MoF",
+   "IoU",
+   "Precision",
+   "F1",
+   "回放成功率",
+   "偏好分数（[-100,100]、归一化 [0,100]、非平胜率）",
+   "下游策略成功率（20 trial）"
+  ],
+  "ablations": [
+   "Ours vs Ours (w/o DA3)（隔离深度几何证据贡献）",
+   "每任务 per-task 接触定位分解（Table 4）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "接触时序定位：Ours 总体 SR(3)=0.491、SR(5)=0.581、SR(10)=0.736、MAE=11.787 帧、MoF=0.872、IoU=0.816、F1=0.891，多数指标最优；w/o DA3 变体 SR(3)=0.495 但 MoF/IoU 更低；EgoLoc（SR(3)=0.075）与 Threshold（0.364）显著落后。",
+   "scope": "110 视频 × 11 任务，手工标注接触真值",
+   "locator": "4 Experiments, Table 1; 4.1 Temporal Contact Localization"
+  },
+  {
+   "finding": "作者明确判定拇指-食指闭合是真实接触的不可靠代理（Threshold 高 MoF=0.784 但低 Precision=0.508/IoU=0.465），EgoLoc 的 ego 时间戳定位形式不适合非 ego、多阶段设置。",
+   "scope": "同上基准",
+   "locator": "4.1 Temporal Contact Localization"
+  },
+  {
+   "finding": "真机回放总体成功率 86%，超模板基线 23 个百分点；任务相关抓取选择与接触对齐要求高的任务差距最大（water 92% vs 30%、disassemble 78% vs 0%）；长时程任务（Pot Cooking、Breakfast）因多接触转移与累积执行误差成功率下降。",
+   "scope": "每条示教 10 个回放 episode",
+   "locator": "4.2 Trajectory Reconstruction Quality"
+  },
+  {
+   "finding": "盲测偏好研究总体偏好 HOWTransfer 而非遥操作：均值 19.21/[-100,100]、归一化 59.61/100、非平胜率 80.40%。",
+   "scope": "10 名参与者、每视频至少 7 人、随机左右顺序",
+   "locator": "4.2 Trajectory Reconstruction Quality; I Preference Study"
+  },
+  {
+   "finding": "失败归因：大多数失败源于手部重定向或轨迹增广误差在物理执行中累积——擦拭类因轨迹略低或抓取过深碰撞白板，工具类对抓取朝向与功能对齐敏感（刀具/锅铲/盖子抓取不准会撞目标物），倾倒类源于杯/壶口方向未对准目标。",
+   "scope": "回放失败的代表性案例",
+   "locator": "Appendix G Failure analysis; References"
+  },
+  {
+   "finding": "下游策略训练：DP3 111/160、ACT 107/160、DP 105/160，迁移示教可直接作为 IL 监督。",
+   "scope": "每任务 50 示教、20 评估 trial",
+   "locator": "I Preference Study, Table 5"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仅限于平行夹爪末端轨迹重定向，排除灵巧手内操作、手指步态与持续手内重定向。",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "碰撞感知增广依赖局部间隙启发式而非完整物理或闭环重规划，对复杂动态的鲁棒性留作未来工作。",
+    "locator": "6 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部/腕部轨迹重建的空间精度从未被直接定量评估：全文无对真值的平移/旋转误差、无 MPJPE 类指标，轨迹质量仅经接触时序指标、回放成功率与盲测偏好间接验证；因此无法从本文推出手部检测精度到末端轨迹误差的可接受阈值。",
+    "basis": "4.2 的评估设计仅含成功率与偏好研究；附录 A-J 均无重建精度实验；唯一的手部位姿质量陈述是定性的（'sensitive to noise and occlusions'、'residual drift'）。"
+   },
+   {
+    "boundary": "误差吸收链依赖标定双目与重基础模型栈（SAM3、DA3、WiLoR）：单目 ego-centric 无标定场景（头移动、自我遮挡）下 DLT 三角化与跨视图晚绑定不可用，适用性未验证；EgoLoc 在该设置下的失效恰说明 ego/非 ego 差距。",
+    "basis": "3.1 与 Appendix F 要求两台标定 RealSense D435i；Appendix B 的跨视图晚绑定以双目同步输入为前提。"
+   },
+   {
+    "boundary": "86% 成功率基于自采集单平台基准（110 视频、单手单物），未报置信区间，也未按视频难度/检测质量分层报告，无法分离检测质量与任务难度对成功率的贡献。",
+    "basis": "4 Experiments 与 Appendix F 的基准描述；Table 4 仅按任务分解接触定位，无按检测质量的分层。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：标定双目人类视频→平行夹爪轨迹迁移场景；其'单帧手部重建噪声/缺检→双目 DLT 三角化+插值+IEKF-RTS 平滑→残余漂移经刚体耦合传播放大为末端误差→LTE 接触对齐吸收'的完整误差链，以及'接触段时序定位精度作为抓取重定向时间锚'的机制，可直接迁移为 ego-centric 手部检测精度影响的分析框架。不直接适用于：手内灵巧操作/指法重定向、无标定单目视频、需要手部检测精度定量阈值（mm/度级）的场景——本文未提供该层测量。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "接触真值为人工标注时间戳，接触定位评估独立于算法内部状态。",
+   "模板基线共享同一接触段、仅替换抓取重定向模块，干净隔离了分类法感知抓取对成功率的贡献。",
+   "偏好研究盲测、随机化左右顺序、每视频至少 7 名独立评分者，降低方法与位置偏差。",
+   "失败分析按任务类型归类到具体误差模式（轨迹偏低/抓取过深/功能对齐），而非只报 aggregate 成功率。"
+  ],
+  "design_risks": [
+   "手部轨迹重建精度无真值对照（无 mocap/标记基准），'噪声吸收'效果全部经下游指标间接体现。",
+   "基准为自采集单平台 110 视频，任务成功率未报置信区间或统计检验。",
+   "接触定位指标波动大（per-task MAE 2.45-42.45 帧），部分任务（Erase Whiteboard）全方法 SR(3) ≤ 0.35，提示长时程/弱纹理场景的脆弱性。"
+  ],
+  "baseline_fairness": "Threshold 与 EgoLoc 是接触定位的公开协议基线且复用 EgoLoc 协议；模板抓取基线公平隔离抓取模块；但未与 YOTO/WARPED 等端到端视频迁移管线做同基准回放对照，仅在 Related Work 定性区分。",
+  "metric_validity": "回放成功率是'轨迹可用性'的直接二元度量；接触 MAE（帧）是时间锚误差度量；偏好分数是主观质量代理；全文缺少末端轨迹空间误差（mm/deg）度量，故'轨迹精度'维度只能以成功率与失败模式间接刻画。",
+  "reproducibility": "检测器（WiLoR）、分割（SAM3）、深度（DA3）、抓取生成（HOGraspFlow）、平滑器噪声协方差（Q=1e-5 I6, R=1e-2 I6）、DBSCAN 归一化因子（ε_t=0.02, ε_r=0.45）、碰撞间隙参数（0.05 m, N_max=30）均写明；但完整证据门权重散落附录 B，代码是否公开未在正文声明。",
+  "external_validity": "限于标定双目、单手单物、平行夹爪、11 任务自采集基准；对 ego-centric 头戴视角（相机运动、手部自遮挡）的外推需谨慎——本文证据来自第三人称固定双目平台。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.10743-C01",
+   "claim": "手部轨迹重建环节的检测层误差来源被作者明确识别为三类：(i) 单帧 WiLoR 预测对噪声与遮挡敏感；(ii) 严格双目三角化在任一视图缺检时失败；(iii) 现有基础手部重建器不能准确估计全局腕部变换。对应的缓解设计是：不直接使用 WiLoR 全局根，而把重建的 MANO 关节重投影到两个像平面做 DLT 三角化获得标定世界系下的米制 3D 腕部位置、旋转平均融合双视图朝向；对缺失帧做平移线性插值与旋转球面插值；再在 SE(3) 李群上以 IEKF-RTS 平滑器（过程噪声 Q=1e-5 I6、量测噪声 R=1e-2 I6，首尾有效位姿固定为锚）抑制逐帧噪声与高频抖动，得到时间一致的腕部轨迹。",
+   "stance": "support",
+   "relation": "支持综述命题'误差来源与缓解：手部检测/追踪层的单帧噪声、遮挡缺检、全局根估计不准是视频侧三大误差来源；多视图三角化替代单目全局根 + 缺失帧插值 + SE(3) 滤波平滑是常用的检测噪声吸收组合'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.1 陈述 WiLoR 单帧噪声/遮挡敏感与双目三角化缺检失败，并给出插值+IEKF-RTS 平滑方案；Appendix A 进一步声明基础重建器全局腕部变换不准、改用 MANO 关节 DLT 三角化，并给出 Q/R 协方差与首尾锚定细节。",
+   "locator": "3.1 Hand Trajectory Reconstruction; Appendix A Robust hand motion recovery; References",
+   "source_context": "Since single-frame WiLoR predictions are sensitive to noise\nand occlusions [4], and strict stereo triangulation fails when either view lacks a valid detection, we\ncomplete missing frames by temporal interpolation and further refine the wrist trajectory using an\nSE(3) Iterative Extended Kalman Filter with a Rauch–Tung–Striebel smoother (IEKF–RTS) [46].",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 3.1 原文逐字一致；Appendix A 的 'existing foundational hand reconstructors are not capable of accurate estimation on global hand wrist transformations'、DLT 三角化段落与 'Q = 10−5 I6 and R = 10−2 I6'、'keeping the first and last valid poses fixed as anchors' 均逐条核对一致；claim 将三处分散陈述按误差来源归类，未超出作者表述范围。"
+   }
+  },
+  {
+   "card_id": "2606.10743-C02",
+   "claim": "重定向的传播路径：接触建立后采用刚体耦合假设，腕部相对抓取变换在同一段内保持恒定（g_t = T_w(t) T_w(s_k)^{-1} g_0），因此腕部轨迹的残余误差会被原样传导为平行夹爪末端轨迹误差；作者明确承认 3.1 的手部位姿估计仍含残余漂移、经分段抓取传播后会被放大，且抓取传播会因手部位姿估计误差引入小的 onset 错位。缓解手段是 LTE 接触对齐细化：从 HOGraspFlow 抓取条件接触图与 DA3 首帧双目点云估计平移校正量，只编辑抓取起始控制位姿、固定段终点，在不改变示教运动趋势的前提下改善接触对齐，并借同一 LTE 机制做碰撞感知增广（间隙半径 0.05 m、N_max=30）。",
+   "stance": "support",
+   "relation": "支持综述命题'传播路径与缓解：腕部检测残差经刚体耦合传播一对一进入末端轨迹（误差放大点），接触对齐类后处理（LTE 编辑起始位姿、固定终点）是吸收 onset 错位的有效手段'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.3 给出刚体耦合传播方程与 onset 错位陈述及 LTE 细化方案；Appendix D 补充'手部位姿估计残余漂移经分段抓取传播被放大'与 LTE 目标函数（四项：拉普拉斯形状保持、起始位姿校正、终点固定、轨迹贴近）及碰撞拒绝参数。",
+   "locator": "3.3 Cross-Embodiment Trajectory Retargeting; Appendix D Trajectory refinement and augmentation; References",
+   "source_context": "Since grasp propagation may introduce small onset\nmisalignments due to hand pose estimation errors, we apply Laplacian Trajectory Editing (LTE) [45]\nto the propagated segment-wise PJ trajectories for contact-aware refinement.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 3.3 原文逐字一致；传播方程 g_t = T_w(t) T_w(s_k)^{-1} g_0 与 'the relative transformation between the wrist poses and the retargeted end-effector grasp is kept constant within the same segment'、Appendix D 的 'residual drift, which can be amplified after segment-wise grasp propagation' 及 LTE 细化描述逐项核对一致；claim 未断言误差被完全消除，符合作者'small onset misalignments'的有限表述。"
+   }
+  },
+  {
+   "card_id": "2606.10743-C03",
+   "claim": "下游可用性量化与失败归因：HOWTransfer 真机回放总体成功率 86%，比共享同一接触段的模板抓取基线高 23 个百分点（water 92% vs 30%、disassemble 78% vs 0%）；长时程任务（Pot Cooking、Breakfast）因多接触转移与累积执行误差成功率下降。失败分析进一步将大多数失败归因于手部重定向或轨迹增广误差在物理执行中累积：擦拭类任务失败主要因轨迹略低或抓取过深导致与白板碰撞；工具/受约束物体任务对抓取朝向与功能对齐敏感，不准确的刀具/锅铲/盖子抓取会使被操作物撞上目标或周围结构；倾倒类失败源于杯/壶口方向未对准目标。",
+   "stance": "support",
+   "relation": "支持综述命题'检测-重定向残差的下游表现：残余误差最终以任务级失败（碰撞、功能错位、长时程累积失效）形式显现，且失败模式按任务类型分层'；也显示抓取语义（分类法感知）吸收比几何模板更重要。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 报告 86% 总体回放成功率与 23pp 差距及 per-task 对照；Appendix G 给出失败模式的任务分类归因；模板基线与本文共享接触段，隔离抓取重定向贡献。",
+   "locator": "4.2 Trajectory Reconstruction Quality; Appendix G Failure analysis; References",
+   "source_context": "HOWTransfer achieves an overall replay success rate of 86%,\noutperforming the template-based baseline by 23 percentage points. The gains are especially clear\non tasks requiring task-specific grasp selection and contact alignment, such as water (92% vs. 30%)\nand disassemble (78% vs. 0%).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-robot replay success rate of transferred trajectories",
+    "value_or_direction": "86% overall, 23 percentage points above template baseline; water 92% vs 30%, disassemble 78% vs 0%",
+    "comparator": "template-based grasp matching baseline sharing the same localized contact segments but using fixed thumb-index grasp templates",
+    "task_or_sample": "11 manipulation tasks, 110 human demonstration videos, 10 robot replay episodes generated per demonstration",
+    "locator": "4.2 Trajectory Reconstruction Quality, Fig. 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "86%、23pp、water 92% vs 30%、disassemble 78% vs 0% 与 4.2 原文逐项一致；Appendix G 的三类失败归因（轨迹略低/抓取过深碰撞、工具抓取朝向敏感、倾倒功能错位）与原文逐句核对一致；claim 注明基线共享接触段这一对照设计，未将成功率差距误归于接触定位差异。"
+   }
+  },
+  {
+   "card_id": "2606.10743-C04",
+   "claim": "接触时序定位精度是抓取重定向时间锚的上游质量瓶颈：在 110 视频基准上本文方法总体 MAE 11.787 帧、SR(3)=0.491、SR(10)=0.736、IoU=0.816，远优于 EgoLoc（MAE 27.264、SR(3)=0.075）与拇指-食指闭合阈值基线（SR(3)=0.364）；作者明确判定拇指-食指闭合是真实接触的不可靠代理（高 MoF=0.784 但 Precision 仅 0.508、IoU 仅 0.465），且接触段正是 PJ 抓取初始化与轨迹传播的时间锚（onset 帧作抓取重定向关键帧）。",
+   "stance": "support",
+   "relation": "支持综述命题'误差来源：手部信号派生的接触/闭合启发式（thumb-index closure）噪声大，直接把接触边界定错会使抓取锚在错误帧；多线索证据融合比单一手部启发式显著提高时间锚精度'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 报告四方法八指标总体接触定位结果；4.1 正文给出拇指-食指闭合不可靠与 EgoLoc 不适合非 ego 多阶段设置的判定；3.3 明确 onset 帧作为抓取重定向关键帧。",
+   "locator": "4 Experiments, Table 1; 4.1 Temporal Contact Localization",
+   "source_context": "Threshold 0.364 0.423 0.508 30.195 0.784 0.465 0.508 0.584\nEgoLoc 0.075 0.127 0.207 27.264 0.456 0.382 0.653 0.495\nOurs (w/o DA3) 0.495 0.579 0.687 11.805 0.790 0.766 0.963 0.851\nOurs 0.491 0.581 0.736 11.787 0.872 0.816 0.932 0.891",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "temporal contact localization: MAE (frames), SR(3)/SR(10), IoU against manually annotated contact/separation timestamps",
+    "value_or_direction": "Ours MAE 11.787 frames, SR(3) 0.491, SR(10) 0.736, IoU 0.816; EgoLoc MAE 27.264 / SR(3) 0.075; Threshold SR(3) 0.364",
+    "comparator": "EgoLoc egocentric contact-separation localization and thumb-index closure Threshold heuristic under the EgoLoc protocol",
+    "task_or_sample": "110 human demonstration videos across 11 manipulation tasks with manually annotated contact/separation ground truth",
+    "locator": "4 Experiments, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 四行数值与原文逐字一致；4.1 的 'thumb–index closure is an unreliable proxy for true object contact' 与 3.3 的 onset 帧关键帧陈述核对一致；claim 中'时间锚瓶颈'的措辞由 4 Experiments 中 'contact segments provide temporal anchors for grasp retargeting and downstream trajectory generation' 支撑，未超出作者表述。"
+   }
+  },
+  {
+   "card_id": "2606.10743-C05",
+   "claim": "缺口：本文从未对手部/腕部轨迹重建的空间精度做直接定量评估——全文没有对真值的平移/旋转误差、没有 MPJPE 类指标，轨迹质量的验证设计只包含任务成功率与盲测偏好两项下游代理；因此无法从本文推出手部检测/追踪精度到重定向末端轨迹误差的可接受阈值，其'噪声吸收'证据全部停留在任务层面。",
+   "stance": "gap",
+   "relation": "标记综述的阈值维度缺口：即便是标题即'轨迹迁移'、且显式处理检测噪声的论文，也普遍缺少检测精度→末端轨迹误差的直接量化链条，阈值证据需从他处补充。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "4.2 的评估设计仅列 (i) 任务成功率与 (ii) 盲测偏好研究；通读全文（含附录 A-J）未发现任何腕部/手部轨迹对真值的空间误差测量，唯一的空间度量是接触定位的帧级 MAE 与碰撞增广的间隙参数。",
+   "locator": "4.2 Trajectory Reconstruction Quality",
+   "source_context": "To validate the fidelity of our transferred trajectories, we conducted a series of qualitative and quan-\ntitative experiments, including: (i) an evaluation of retargeting task success rates on our hardware\nsetups and (ii) a blinded pairwise-comparison preference study comparing trajectories generated by\nHOWTransfer against those collected through teleoperation.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 4.2 原文逐字一致；该缺口判断基于对全文评估节（4.1/4.2/Table 1/Table 4/Table 5/Fig. 4）与全部附录的完整通读：指标族仅含接触时序（帧）、回放成功率、偏好分数、下游策略成功率四类，均非手部轨迹空间精度；此推论性质的缺口卡已标注 reader-inference，不作为作者观点陈述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "paper_id": "wilor-ref",
+   "title": "WiLoR: End-to-end 3D hand localization and reconstruction in-the-wild",
+   "authors": [
+    "R. A. Potamias",
+    "J. Zhang",
+    "J. Deng",
+    "S. Zafeiriou"
+   ],
+   "year": 2025,
+   "url": "https://arxiv.org/abs/2502.01974",
+   "relation": "本文的手部检测/重建器：逐视图预测腕部位姿与 MANO 参数；其单帧噪声、遮挡敏感与全局根不准即本文误差链的起点。"
+  },
+  {
+   "paper_id": "hograspflow-ref",
+   "title": "HOGraspFlow: Taxonomy-aware hand-object retargeting for multi-modal SE(3) grasp generation",
+   "authors": [
+    "Y. Shi",
+    "Z. Guo",
+    "R. Wolf",
+    "E. Welte",
+    "R. Rayyes"
+   ],
+   "year": 2026,
+   "url": "https://arxiv.org/abs/2509.16871",
+   "relation": "接触 onset 帧的抓取重定向模块：从 HOI 视觉特征 + MANO 状态 + 分类法先生成分类法感知多模态 PJ 抓取假设。"
+  },
+  {
+   "paper_id": "egoloc-ref",
+   "title": "EgoLoc: A generalizable solution for temporal interaction localization in egocentric videos",
+   "authors": [
+    "J. Ma",
+    "E. Zhang",
+    "Y.-D. Zheng",
+    "Y. Xie",
+    "Y. Zhou",
+    "H. Wang"
+   ],
+   "year": 2025,
+   "url": "https://arxiv.org/abs/2508.12349",
+   "relation": "接触时序定位基线与评测协议来源；其在非 ego 多阶段设置下的失效（SR(3)=0.075）支撑'接触锚精度依赖设置匹配'的论断。"
+  }
+ ],
+ "notes": "对综述的核心价值：给出了从视频侧手部检测噪声到机器人末端轨迹失效的完整显性链条——单帧 WiLoR 噪声/遮挡/缺检（来源）→ 双目 DLT+插值+IEKF-RTS 平滑（上游吸收）→ 残余漂移经刚体耦合 g_t=T_w(t)T_w(s_k)^{-1}g_0 放大为末端误差与 onset 错位（传播）→ LTE 接触对齐+碰撞增广（下游吸收）→ 任务级失败模式分类（显现）。量化证据集中在接触时序（MAE 11.787 帧）与回放成功率（86% vs 63%），阈值维度为缺口（无任何手部轨迹空间精度测量）。注意本文为标定双目第三人称平台，非 ego-centric 头戴视角。"
+}

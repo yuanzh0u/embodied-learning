@@ -1,0 +1,310 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.10809",
+  "title": "WARPED: Wrist-Aligned Rendering for Robot Policy Learning from Egocentric Human Demonstrations",
+  "published": "2026-04-12",
+  "url": "https://arxiv.org/abs/2604.10809",
+  "authors": [
+   "Harry Freeman",
+   "Chung Hee Kim",
+   "George Kantor"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "单目 RGB ego 视频 -> 手-物联合优化 -> 手腕对齐渲染 -> 扩散策略，误差传播路径（手部初始化噪声->重定向->渲染->策略输入分布）刻画清晰，且有手部/物体跟踪质量到策略成功率的直接消融（FoundationPose 对照）。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题与贡献"
+   },
+   {
+    "locator": "III. METHODOLOGY",
+    "role": "method-or-design",
+    "purpose": "手部/物体初始化、手-物联合优化、重定向与手腕对齐渲染"
+   },
+   {
+    "locator": "IV. EXPERIMENTS AND RESULTS",
+    "role": "results-or-analysis",
+    "purpose": "与 teleop/Alter/UMI 对比、FoundationPose 跟踪消融"
+   },
+   {
+    "locator": "V. DISCUSSION AND LIMITATIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限"
+   },
+   {
+    "locator": "APPENDIX C/E/F",
+    "role": "appendix-or-supplement",
+    "purpose": "手部姿态初始化噪声处理、接触帧估计、手到末端映射细节"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "背景综述，与证据提取关系弱"
+   }
+  ]
+ },
+ "research_question": "能否只用单目 RGB 头戴 ego 视频（无深度/多视角/定制硬件），合成手腕视角的机器人观测与动作数据，并训练出与遥操作数据相当性能的 visuomotor 策略？",
+ "contributions": [
+  "从 ego 人类视频生成机器人对齐的手腕视角观测与轨迹的管线",
+  "纯单目 RGB 方案：视觉基础模型 + Gaussian Splatting 合成手腕视角观测",
+  "五个桌面任务上与遥操作相当的性能，数据采集快 5-8 倍"
+ ],
+ "method": {
+  "summary": "SfM+LightGlue 场景重建与尺度对齐 -> HAMER 手部初始化 + 两阶段时序/深度细化 -> GroundingDINO/SAM2/SAM3D/MegaPose 物体初始化 -> 手-物联合优化（mask/depth/DINOv2/接触/碰撞/稳定抓握损失） -> 手到末端重定向（拇指-食指映射 TCP，接触期 EE 刚性跟随物体） -> Gaussian Splatting 手腕视角渲染 -> 扩散策略训练（图像加噪 + 增广）。",
+  "assumptions": [
+   "刚体物体、桌面场景、准静态环境",
+   "每任务 30 条演示、单物体",
+   "物体在接触前后静止",
+   "渲染图像与真实手腕相机间存在 sim-to-real 差异，用高斯噪声与增广缓解"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采：每任务 30 条 GoPro Hero9 头戴 ego 演示 (30Hz)，增广 10 倍"
+  ],
+  "tasks": [
+   "Rotate Box",
+   "Pour Mug",
+   "Take Bottle out of Dish Rack",
+   "Wipe Plate with Brush",
+   "Pick and Place Can on Plate"
+  ],
+  "embodiments": [
+   "UFactory xArm7 + xArm G1 Gripper",
+   "对照: Meta Quest 2 遥操作, UR5+UMI"
+  ],
+  "sample_or_scale": "每任务 20 trial 评估；OOD 场景 50 演示/20 场景训练、4 场景 20 trial 测试"
+ },
+ "evaluation": {
+  "design": "真机 rollout 成功率（20 trial/任务）；与遥操作、Alter 基线、UMI 对比；新物体与 OOD 场景泛化；增广消融；手-物优化 vs FoundationPose 跟踪消融",
+  "baselines": [
+   "Teleoperation (Meta Quest 2)",
+   "Alter (Heng et al.)",
+   "UMI",
+   "FoundationPose (物体跟踪消融)"
+  ],
+  "metrics": [
+   "成功率 (n/20)",
+   "数据采集时间 (MM:SS)",
+   "处理时间 (Table VII)"
+  ],
+  "ablations": [
+   "no augmentation",
+   "background distractors",
+   "co-training with teleop",
+   "hand-object optimization vs FoundationPose"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "WARPED 在 5 任务上达 20/18/17/11/17（/20），与遥操作 16/19/16/15/19 相当；Alter（无准确手-物几何）全面失败",
+   "scope": "5 桌面任务真机",
+   "locator": "IV-D Results, Table I"
+  },
+  {
+   "finding": "手-物联合优化比 FoundationPose 跟踪的成功率更高（17/20 vs 11/20 与 2/20）；FoundationPose 在小且被手遮挡的物体上出现不可恢复跟踪失败",
+   "scope": "Rotate Box 与 Can on Plate",
+   "locator": "IV-D Results"
+  },
+  {
+   "finding": "接触期间 EE 位姿由物体相对运动刚性推出，物体跟踪误差直接 1:1 传入末端轨迹",
+   "scope": "方法设计",
+   "locator": "III-E Retargeting and Rendering"
+  },
+  {
+   "finding": "HAMER 手部初始化噪声大且时序不一致，需两阶段 2D 关键点+深度+平滑细化",
+   "scope": "方法设计",
+   "locator": "Appendix C"
+  },
+  {
+   "finding": "Wipe Brush 因物体小且贴面导致位姿估计与重定向困难而逊于遥操作；物体完全遮挡时管线失败",
+   "scope": "作者自述局限",
+   "locator": "IV-D Results; V. DISCUSSION AND LIMITATIONS"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仅支持刚体；假设准静态场景；物体完全遮挡时管线失败",
+    "locator": "V. DISCUSSION AND LIMITATIONS"
+   },
+   {
+    "limitation": "Wipe Brush 上小且平贴桌面的物体使位姿估计与重定向更困难，性能低于遥操作",
+    "locator": "IV-D Results"
+   },
+   {
+    "limitation": "Can on Plate 上物体位姿跟踪噪声给演示引入轻微不一致，可能解释其略低于 UMI 的成功率",
+    "locator": "IV-D Results"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "所有定量误差均以任务成功率呈现，没有手部/腕部轨迹的厘米级误差测量；手部检测精度对轨迹的影响只能通过跟踪方法消融间接推断",
+    "basis": "全文无轨迹级误差表"
+   },
+   {
+    "boundary": "接触期 EE 刚性跟随物体意味着手部轨迹误差在接触前主导、物体误差在接触后主导；该划分是设计假设而非验证结论",
+    "basis": "III-E 公式 (15)"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：单目 RGB ego 视频、刚体桌面单物体任务、xArm7 平行夹爪、224x224 CLIP 扩散策略；迁移到灵巧手/多手指接触、关节或柔性物体、动态场景、无 SfM 可重建纹理环境时，手腕对齐渲染与手-物联合优化的误差吸收能力需重新验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "纯单目 RGB 达成与遥操作相当的真机成功率，硬件门槛低",
+   "Alter 基线隔离了准确手-物几何的贡献；FoundationPose 消融隔离了跟踪方法贡献",
+   "增广消融（no augmentation 三任务全失败）显示渲染增广对弥合 sim-to-real 的必要性"
+  ],
+  "design_risks": [
+   "无轨迹级误差度量，检测精度->轨迹误差链条只能从成功率间接推断",
+   "每任务仅 20 trial，二项波动大（11/20 与 15/20 差异不显著）",
+   "评估物体与训练物体同实例（Table I），新物体在 Table II 样本更小"
+  ],
+  "baseline_fairness": "遥操作基线用 VR 设备采集、同策略架构；UMI 在不同机器人(UR5)上评估，平台不完全对齐；Alter 复现未经原作者验证。",
+  "metric_validity": "成功率是部署级终点指标，符合综述关心的可用性；但缺少轨迹精度代理指标。",
+  "reproducibility": "附录给出完整损失定义、超参（Table V/VI）与处理时间；未提及代码发布。",
+  "external_validity": "OOD 场景与背景干扰有初步证据；灵巧操作、长时程、动态场景不适用。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.10809-C01",
+   "claim": "仅用单目 RGB ego 人类视频，经手-物联合优化与手腕对齐渲染训练的扩散策略在 5 个桌面任务上达到与遥操作相当的成功率（如 Rotate Box 20/20 vs 16/20），而没有准确手-物几何的 Alter 基线全面失败（0-8/20），说明手-物轨迹/几何重建精度是此类管线政策可用性的决定因素。",
+   "stance": "conditional",
+   "relation": "支持综述命题：手部/物体轨迹重建质量决定重定向后末端轨迹的可用性；粗略渲染（无准确几何）不可用。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 真机成功率；正文明确指出 Alter 失败是因为缺少准确手-物几何。",
+   "locator": "D. Results (Table I)",
+   "source_context": "Teleoperation 16/20 19/20 16/20 15/20 19/20\nAlter (Heng et al.) 7/20 3/20 0/20 0/20 8/20\nWARPED (no augmentation) 0/20 17/20 0/20 0/20 8/20\nWARPED (background distractors) 18/20 15/20 17/20 9/20 17/20\nWARPED 20/20 18/20 17/20 11/20 17/20\nTeleoperation + WARPED 19/20 20/20 17/20 11/20 20/20",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (n/20)",
+    "value_or_direction": "WARPED 20/18/17/11/17, Teleoperation 16/19/16/15/19, Alter 7/3/0/0/8",
+    "comparator": "Teleoperation vs Alter (Heng et al.) vs WARPED",
+    "task_or_sample": "5 个桌面任务真机各 20 trial",
+    "locator": "D. Results (Table I)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table I 数值逐字核对；正文 'The Alter baseline performs poorly across all tasks, demonstrating that naively rendering wrist-view images without accurate hand-object geometry is insufficient for policy learning' 支撑归因；claim 限定真机 5 任务设定。"
+   }
+  },
+  {
+   "card_id": "2604.10809-C02",
+   "claim": "在 Can on Plate 任务上，作者将 WARPED 略低于 UMI 的成功率归因于物体位姿跟踪噪声给演示引入的轻微不一致，说明即使整体管线可用，跟踪噪声仍会作为残余误差进入重定向后的末端轨迹数据。",
+   "stance": "limit",
+   "relation": "限制综述命题：跟踪噪声不会被渲染/训练完全吸收，会以演示间不一致的形式残留并反映到成功率上。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 中 WARPED 与 UMI 对比段的作者归因。",
+   "locator": "D. Results",
+   "source_context": "In\ncontrast, WARPED exhibits a slightly lower success, possibly\nas a result of the noise in object pose tracking which introduces\nminor variability in the demonstrations.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文逐句对应；作者用 'possibly' 表达不确定归因，claim 保留了这一不确定性（'归因于...可能'），未将其强化为因果结论，范围限于 Can on Plate 任务。"
+   }
+  },
+  {
+   "card_id": "2604.10809-C03",
+   "claim": "WARPED 的重定向把误差来源按时相分流：接触前末端位姿由拇指-食指关节映射（手部姿态质量主导），接触期间 EE 位姿由物体相对接触帧的运动刚性推出（物体位姿跟踪质量 1:1 主导末端轨迹）。",
+   "stance": "support",
+   "relation": "回答综述问题中的传播路径：手部检测误差与物体跟踪误差分别在不同时相进入末端轨迹。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-E 与公式 (15)：接触前 hand-pose 映射，接触期 EE 刚性跟随物体。",
+   "locator": "E. Retargeting and Rendering",
+   "source_context": "the end-effector\npose is mapped from the human-hand pose using the thumb\nand index joints, as shown in Fig. 4(b) and discussed in more\ndetail in Appendix F. Following Pan et al. [70], we apply pre-\ncontact trajectory optimization to prevent unintended gripper-\nobject collisions. The optimization is formulated as\nmin\nT\nee\nt<ts\nλ\nfunnel\nL\nfunnel \n+ λ\ncol\nL\ncol \n+ λ\nsmooth\nL\nsmooth \n(14)\nwhere L\nfunnel \nconstrains trajectories to remain close to the orig-\ninal motion, L\ncol \nprevents gripper-object collision by applying\nthe same TSDF-based loss as Eq. 11, and L\nsmooth \nencourages\ntemporally smooth motion.\nAt the contact start frame (t = t\ns\n), the end-effector pose\nT\nee\nt\ns \nand gripper width are refined to ensure a physically\nplausible grasp (Fig. 4(c-f)). For both the thumb and index\nfinger tips, 50 contact points are identified based on mesh\nvertex proximity. Using these contact points, the end-effector\nposition and gripper width are optimized to align the grasp\nwith the hand-held object. Additional details are provided in\nAppendix F.\nDuring contact (t\ns \n≤ t ≤ t\ne\n), the pose of the gripper\nand object are assumed to be relatively fixed. For subsequent\nframes, the end-effector pose is updated by applying the\nrelative object motion with respect to the contact frame,\nT\nee\nt \n= T\nee\nt\ns\n\u0010\nT\nobj\nt\ns\n\u0011\n−1\nT\nobj\nt \n(15)\nensuring that the end-effector rigidly follows the object motion\nwhile preserving the established grasp",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两段均位于 III-E 节内，contact-follow 公式 (15) 逐字支持 '刚性跟随物体运动'；claim 的时相分流是对该节设计的同义归纳，未添加未陈述的定量结论。"
+   }
+  },
+  {
+   "card_id": "2604.10809-C04",
+   "claim": "HAMER 单帧手部姿态估计被作者明确指出噪声大且时序不一致（无帧间时序信息），WARPED 用两阶段优化（先固定关节只优化全局旋转/平移/形状的 2D 重投影+时序平滑，再加入深度监督细化关节）作为手部检测误差的吸收手段。",
+   "stance": "support",
+   "relation": "回答综述问题中的误差来源与缓解：现成单目手部检测器的噪声需时序与深度细化才能进入重定向管线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Appendix C 描述 HAMER 噪声与两阶段细化。",
+   "locator": "C. Hand Pose Initialization",
+   "source_context": "The 3D hand pose estimates (Sec. III-C2) produced by\nHAMER [74] are often noisy and temporally inconsistent, as\nHAMER does not use temporal information between frames",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文逐字 'often noisy and temporally inconsistent'；两阶段设计在同一附录节内随后给出；claim 未声称细化后的定量精度。"
+   }
+  },
+  {
+   "card_id": "2604.10809-C05",
+   "claim": "WARPED 在两个失效模式上暴露了估计精度的下限：小且平贴桌面的物体使位姿估计与重定向更困难（Wipe Brush 11/20，低于遥操作 15/20），物体被完全遮挡时管线直接失败。",
+   "stance": "limit",
+   "relation": "限制综述命题：当手部/物体估计低于可用精度（小物体、全遮挡）时，缓解手段无法挽救，末端轨迹不可用。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 结果与 V 局限分别给出两个失效条件。",
+   "locator": "D. Results; V. DISCUSSION AND LIMITATIONS",
+   "source_context": "Additionally, the pipeline fails when\nthe manipulated object becomes fully occluded, which is also\na limitation of state-of-the-art object tracking methods",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "全遮挡失败逐字见于 V 节；Wipe Brush 归因（small and level to the table, pose estimation and retargeting more difficult）见于 IV-D 且与 Table I 数值一致；claim 合并两点但未超出各自原文范围。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[74] HAMER",
+   "role": "手部姿态初始化器；其噪声是管线手部误差源头"
+  },
+  {
+   "ref": "[96] FoundationPose",
+   "role": "物体跟踪对照消融"
+  },
+  {
+   "ref": "[17] UMI (Chi et al., RSS 2024)",
+   "role": "数据采集范式对照"
+  }
+ ],
+ "notes": "本文无轨迹级误差度量。补充：IV-D 还报告手-物联合优化 vs FoundationPose 的成功率消融（17/20 vs 11/20 与 2/20，小且被遮挡物体上不可恢复跟踪失败），但该段落在提取文本中落入一个标题为 'Method' 的表格残余节（与前一 'Method' 节同标题），定位器无法解析到该节表面，故未形成证据卡；详情见 reading.findings。"
+}

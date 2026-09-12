@@ -1,0 +1,524 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.12989",
+  "title": "PANORAMA: The Rise of Omnidirectional Vision in the Embodied AI Era",
+  "published": "2025-09",
+  "url": "https://arxiv.org/abs/2509.12989",
+  "authors": [
+   "Xu Zheng",
+   "Chenfei Liao",
+   "Ziqiao Weng",
+   "Kaiyu Lei",
+   "Zihao Dongfang",
+   "Haocong He",
+   "Yuanhuiyi Lyu",
+   "Lutao Jiang",
+   "Lu Qi",
+   "Li Chen",
+   "Danda Pani Paudel",
+   "Kailun Yang",
+   "Linfeng Zhang",
+   "Luc Van Gool",
+   "Xuming Hu"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "survey",
+  "relevance": {
+   "decision": "include",
+   "reason": "对综述问题最直接的领域级框架证据（AAAI 2026 talk 论文，学术+Insta360 工业双背景）：(1) 应用方式——PANORAMA 四子系统架构（ERP/multi-fisheye rigs 采集→ERP↔Cubemap 格式转换→Spherical CNN/共享骨干感知→导航/SLAM/HRI/数字孪生应用→量化剪枝+Jetson/SOPHGO 边缘部署）+生成/感知/理解三技术线（Dream360/PanoDiffusion/OmniDrag；GoodSAM/OmniSAM/360SFUDA++ 域适应；OSR-Bench/OmniVQA/ERP-RoPE）+23 数据集版图（Table 1）；(2) 效果——跨社区获益面定性论断（消盲点导航更安全、HRI 同时追踪多人、认知 AI 稠密 ego 感知流）；(3) 局限——三差距问题空间（ERP 畸变标注成本/针孔归纳偏置性能下降/应用空白）、任务特定+投影歧义+缺预训练、四开放挑战（跨投影泛化、动态畸变、行动感知、统一架构）；'哪些任务获益（导航/HRI/认知）哪些受限（模型迁移、标注、长尾场景、多模态同步数据）'两端框架齐全——是综述引言/结论/分类骨架的立场与结构来源。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract + Motivation & Problem Space",
+    "role": "problem",
+    "purpose": "确认问题空间：针孔窄视场 vs 具身任务需 360° 环境理解；三差距框架（数据瓶颈：ERP 畸变+高分辨率标注贵、自动工具失效；模型能力：卷积/池化平移不变性归纳偏置不适配全景畸变、直接迁移性能显著下降；应用空白：场景特异性子领域缺探索）。"
+   },
+   {
+    "locator": "page 2, Recent Technical Advances（Generation/Perception/Understanding）",
+    "role": "relevant-core",
+    "purpose": "精读三技术线：GAN→扩散的生成（Dream360/PanoDiffusion/OmniDrag）、三类域适应感知（对抗/伪标签/原型：GoodSAM/OmniSAM/360SFUDA++）、MLLM 理解的数据与模型路线（OSR-Bench/OmniVQA/GRPO/ERP-RoPE）。"
+   },
+   {
+    "locator": "page 3, Table 1 与总结段",
+    "role": "data-or-setting",
+    "purpose": "核对 23 个代表性数据集的 Indoor/Outdoor/UAV × Real/Synthetic 分类与规模（ZInD 71K/StreetLearn 143K/360VOT 113K 帧/Dense360 160K+5M/OSR-Bench 153K QA/UAV-ERP 2.3K）；识别多传感器同步采集罕见与 QA 基准初生两个缺口。"
+   },
+   {
+    "locator": "page 4, PANORAMA System Architecture: Key Subsystems 与 Workflow（Fig. 2）",
+    "role": "method-or-design",
+    "purpose": "精读理想架构：采集与预处理（multi-fisheye rigs/ERP 相机、格式转换、同步标定）→感知（Spherical CNN/Transformer、共享骨干多任务）→应用（导航 SLAM/HRI/数字孪生）→加速部署（量化剪枝、Jetson/SOPHGO SE9）。"
+   },
+   {
+    "locator": "page 4-6, Emerging Trends & Future Roadmap（Fig. 3, Stages 1-6）",
+    "role": "results-or-analysis",
+    "purpose": "核对现状判断（任务特定/投影歧义/缺大规模多模态预训练）与六阶段路线图（数据集整合→多模态扩展→推理与具身数据→统一预训练→评测基准→部署泛化）的各阶段交付物。"
+   },
+   {
+    "locator": "page 6, Cross-Community Impacts & Open Challenges + Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取获益面（导航消盲点/HRI 多人追踪/认知 AI ego 感知流）、四个开放挑战（泛化鲁棒/动态畸变/行动感知/统一架构）、三方分工与范式转移终局主张。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 7-9, References",
+    "role": "appendix-or-supplement",
+    "reason": "纯参考文献列表（~百条）；scoping 模式下仅按需核对被引工作名称（Dream360/PanoDiffusion/OmniDrag/GoodSAM/OmniSAM/360SFUDA++/OSR-Bench/OmniVQA/ERP-RoPE/Dense360/360VOT 等）用于 core_citations，无需逐条精读。"
+   }
+  ]
+ },
+ "research_question": "本论文问题：全向视觉如何在具身 AI 时代从落后于针孔的基础研究状态走向系统性崛起——其三差距问题空间（数据/模型/应用）、三技术线（生成/感知/理解）现状、理想系统架构（PANORAMA 四子系统）与发展路线图（六阶段）是什么。综述问题映射：该文是综述问题的领域级总框架——'应用方式'对应架构+三技术线+数据集版图，'效果'对应跨社区获益论断（定性），'局限'对应三差距+任务特定短板+四开放挑战；本身不含实验，为其余实证论文提供归类骨架与立场锚点。",
+ "contributions": [
+  "三差距问题空间框架：把全景×具身的挑战结构化为数据瓶颈（ERP 畸变+高分辨率→标注贵、自动工具失效）、模型能力（针孔归纳偏置→直接迁移性能显著下降）、应用空白（场景特异性子领域缺探索）。",
+  "三技术线综述：生成（GAN→扩散：Dream360/PanoDiffusion/OmniDrag）、感知（对抗/伪标签/原型三类域适应：GoodSAM/OmniSAM/360SFUDA++）、理解（MLLM 数据与模型路线：OSR-Bench/OmniVQA/GRPO/ERP-RoPE）。",
+  "23 数据集结构化盘点（Table 1）：Indoor/Outdoor/UAV × Real/Synthetic 六类的规模/模态/标注对比，并指出多传感器同步全景采集罕见与 QA 推理基准初生两个缺口。",
+  "PANORAMA 理想系统架构（四子系统：采集预处理/感知/应用/加速部署）与六阶段路线图（数据集整合→多模态扩展→推理与具身数据→统一预训练→评测基准→部署泛化）。",
+  "跨社区获益面与开放挑战的立场综合：导航消盲点/HRI 多人交互/认知 ego 感知流三类获益 + 泛化鲁棒/动态畸变/行动感知/统一架构四挑战 + 三方分工呼吁与'具身 AI 的未来是全向的'范式转移主张。"
+ ],
+ "method": {
+  "summary": "论文性质：AAAI 2026 talk 扩展立场/综述论文（非实证），方法为文献综合+架构设想+路线图规划。论证结构：(1) 问题空间以'三差距'框架组织（数据/模型/应用），每类差距以代表性引用支撑；(2) 技术进展按生成/感知/理解三线梳理，每线给出早期方法→主流范式的演化与代表工作（Dream360 两阶段外扩、PanoDiffusion 双分支 RGB-D 条件扩散、OmniDrag 轨迹控制；GoodSAM/OmniSAM 伪标签、360SFUDA++ 原型对齐；OSR-Bench 认知地图分块标注、OmniVQA agent 协作、ERP-RoPE 位置编码）；(3) 数据集以 Table 1 六类×六列结构化盘点 23 个代表集并总结模态/粒度/时间性观察；(4) 提出四子系统理想架构（multi-fisheye rigs 或 ERP 相机采集→ERP↔Cubemap 动态格式转换→同步标定；Spherical CNN/Transformer 共享骨干做分割/检测/深度；导航 SLAM/HRI/数字孪生应用；量化剪枝+Jetson/SOPHGO SE9 边缘部署）与一体化 Workflow；(5) 六阶段路线图给出各阶段交付物（统一划分与重投影工具、公共多传感器语料、推理增强数据集、统一多任务编码器、投影感知指标与 OOD 协议、部署套件）；(6) 以跨社区影响（定性）与四个开放挑战收束，最后给三方分工呼吁与范式转移终局主张。",
+  "assumptions": [
+   "全向视觉对具身任务的必要性命题（'comprehensive, thorough perception 需要 360° 理解'）为立场性前提，论文未实验验证。",
+   "跨社区获益断言（导航更安全、HRI 更自然）以引用支撑的定性判断为据，不涉及受控对比。",
+   "Table 1 的 23 个数据集为作者选定的代表性子集，选择标准未显式声明。",
+   "PANORAMA 架构与六阶段路线图为理想化设计，假设各子系统技术可按路线图成熟衔接。",
+   "工业视角（Insta360 作者）默认全景硬件供给与成本趋势支持普及。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Table 1 盘点的 23 个代表性数据集：室内真实（PanoContext 700、Stanford 2D-3D-S 70K、Matterport3D 10.8K/90 栋、ZInD 71K/1.5K 住宅、HM3D 1000 场景、ToF-360 207）；室内合成（3D60、Structured3D 3.5K、DeepPanoContext、SynPASS 9K、HM3DSem 142,646 实例、VLN-RAM 90 场景、OSR-Bench 153,000+ QA）；户外真实（StreetLearn 143K、CVIP360 16 视频、360VOT 120 序列/113K 帧、360 in the Wild 25K、360Loc 多设备、Dense360 160K+5M caption）；户外合成（OmniScape 10K、OmniHorizon 24,335）；UAV（UAV-ERP 2.3K 真实、AirSim-360 合成）",
+   "文中转述的代表方法语料：Dream360/PanoDiffusion/OmniDrag（生成）、GoodSAM/OmniSAM/360SFUDA++（域适应）、OSR-Bench/OmniVQA/ERP-RoPE（理解）"
+  ],
+  "tasks": [
+   "全向生成（全景图像外扩/扩散生成、轨迹控制）",
+   "全向感知（分割/检测/深度等任务的域适应迁移）",
+   "全向理解（MLLM 全景 VQA/空间推理/基准评测）",
+   "具身任务（导航与 SLAM、人机交互、数字孪生与 3D 重建、抓取、指令跟随）"
+  ],
+  "embodiments": [
+   "移动机器人与自主车辆（导航/态势感知）",
+   "社交机器人（HRI：多人追踪/群组对话/任意方向社会线索）",
+   "认知 AI 与虚拟代理（空间推理/长程规划/常识物理）",
+   "全向系统管线（panoramic cameras+IMU/深度/LiDAR/音频，边缘平台 Jetson/SOPHGO SE9）"
+  ],
+  "sample_or_scale": "9 页立场/综述论文（正文 6 页+参考文献 3 页）；Table 1 盘点 23 个数据集；引用网络覆盖生成/感知/理解/数据集四线约百篇文献；无实验、无指标数值（除数据集规模统计）"
+ },
+ "evaluation": {
+  "design": "n/a（立场/综述论文，无对比实验）：论证方式为文献综合+结构化分类（三差距问题空间、三技术线、Table 1 六类盘点）+架构与路线图设想；证据形态为引用支撑的定性论断与数据集规模统计。",
+  "baselines": [],
+  "metrics": [],
+  "ablations": []
+ },
+ "findings": [
+  {
+   "finding": "三差距问题空间：数据瓶颈（ERP 畸变+高分辨率→人工标注贵、针孔自动标注工具失效）、模型能力（卷积/池化平移不变性偏置→全景直接迁移性能显著下降）、应用空白（巡检/火情等场景特异性子领域缺探索）——全景×具身的挑战被结构化为三轴。",
+   "scope": "问题空间论证（引用支撑的定性框架）",
+   "locator": "page 1-2, Motivation & Problem Space"
+  },
+  {
+   "finding": "数据集版图偏斜：23 个代表集中室内侧密语义（ZInD 71K/Matterport3D 10.8K/HM3DSem 142,646 实例）、户外侧重空间覆盖（StreetLearn 143K/360VOT 113K 帧/Dense360 160K+5M caption）、UAV 侧最薄（真实仅 UAV-ERP 2.3K）；完全同步多传感器全景采集罕见、QA 推理基准初生。",
+   "scope": "Table 1 六类盘点与其后总结段",
+   "locator": "page 3, Table 1"
+  },
+  {
+   "finding": "PANORAMA 四子系统给出全景×具身的完整应用方式骨架：multi-fisheye rigs 或 ERP 相机+IMU/深度采集、ERP↔Cubemap 动态格式转换与同步标定、Spherical CNN/Transformer 共享骨干多任务感知、导航 SLAM/HRI/数字孪生应用、量化剪枝+Jetson/SOPHGO SE9 边缘部署。",
+   "scope": "理想架构设想（非实现）",
+   "locator": "page 4, PANORAMA System Architecture"
+  },
+  {
+   "finding": "六阶段路线图：数据集整合（统一投影/划分/重投影工具）→多模态扩展（RGB/深度/LiDAR/音频/IMU 同步+real-synthetic 混合）→推理与具身数据（grounded VQA/导航/抓取）→统一模型预训练（跨投影/多目标/域混合课程）→评测基准（投影一致指标+OOD+校准/不确定性/效率）→部署泛化（跨域迁移/持续学习/压力测试套件）。",
+   "scope": "路线图规划（各阶段交付物设想）",
+   "locator": "page 5, Stages 1-6（Fig. 3）"
+  },
+  {
+   "finding": "获益面（定性）与四开放挑战：导航消盲点更安全、HRI 同时追踪多人理解任意方向线索、认知 AI 获近人类 ego 的稠密感知流；挑战为跨投影泛化、动态畸变（现有方法当静态帧独立问题）、行动感知表示（感知收益未接行动收益）、统一全向基础模型。",
+   "scope": "跨社区影响与开放挑战（引用支撑的定性论断）",
+   "locator": "page 6, Cross-Community Impacts & Open Challenges"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "数据瓶颈：ERP 畸变+高分辨率使人工标注成本高于针孔图像，常规自动标注工具失效，阻碍大规模高质量数据集。",
+    "locator": "page 1, Motivation & Problem Space（Data Bottlenecks）"
+   },
+   {
+    "limitation": "模型能力差距：预训练模型的针孔归纳偏置（平移不变性）无法理解全景畸变特性，直接迁移性能显著下降。",
+    "locator": "page 2, Motivation & Problem Space（Model Capabilities，句起 page 1）"
+   },
+   {
+    "limitation": "现状短板：多数方法任务特定、在投影歧义上挣扎、缺大规模多模态预训练资源，阻碍泛化。",
+    "locator": "page 4, Emerging Trends 引言段"
+   },
+   {
+    "limitation": "四个开放挑战：跨传感器/场景/投影泛化非平凡；畸变被当帧独立静态问题而真实为动态；行动感知表示缺失（观察更好≠行动更有效）；统一多任务全向基础模型尚未出现。",
+    "locator": "page 6, Open Challenges 四 bullet"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无实证验证：PANORAMA 四子系统架构与六阶段路线图均为设想（ideal/staged roadmap），论文未给出任何原型实现或量化验证——引用其架构时应标注为设计蓝图而非已验证系统。",
+    "basis": "page 1 摘要（we propose an ideal panoramic system architecture）与 page 4-6 全文（无实验节、无指标）对照；paper 性质为 talk/立场论文。"
+   },
+   {
+    "boundary": "获益断言均为定性：'导航更准确更安全''HRI 更自然可信'等跨社区影响无受控对比或量化数据支撑，仅以引用佐证存在性——不能作为效果证据引用，只能作为方向性论断。",
+    "basis": "page 6 三 bullet 的表述（more accurate and safer/more natural, seamless, and trustworthy）均为比较级形容词且无数字；全文除 Table 1 规模统计外无性能数值。"
+   },
+   {
+    "boundary": "数据集盘点非穷举且标准未声明：23 个'代表性'数据集的选择口径未说明，UAV/工业等薄覆盖可能被低估或高估；2025 年后新数据集（如文中 Dense360/OSR-Bench 之后出现的）不在盘点内。",
+    "basis": "page 3 we identify 23 representative datasets 的措辞与 Table 1 内容对照；论文提交于 2025-09（arXiv v1），盘点时效截至当时。"
+   },
+   {
+    "boundary": "立场与利益关联：作者含 Insta360（全景相机厂商）且动机段强调 industrial demand，'具身 AI 的未来是全向的'这一终局命题存在产业推广倾向的可能——综述引用其结论时应保留作者背景披露。",
+    "basis": "page 1 作者单位列表（7 Insta360）与摘要 driven by growing industrial demand and academic interest 表述对照。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论可迁移范围：领域级定性判断与结构框架——三差距问题空间（数据/模型/应用）、三技术线路线（生成/感知/理解）、四子系统应用方式骨架（采集→格式转换→球面感知→具身任务→边缘部署）、六阶段路线图、23 数据集版图与两类基础设施缺口（多传感器同步采集罕见、QA 基准初生）、获益任务族（导航/HRI/认知 AI）与受限任务族（需跨投影泛化、视频级动态畸变、行动闭环的）。不可迁移/不可引用为证据：任何效果量级（论文无实验无指标）、架构可行性（未实现）、'更安全/更自然'类比较级获益断言（仅定性）；且盘点与判断时效截至 2025-09，作为综述背景框架需与实证论文的量化结果分开表述。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三差距问题空间框架清晰且互斥性强（数据/模型/应用三层），为领域挑战提供可操作的分类骨架。",
+   "三技术线综述覆盖早期→主流演化（GAN→扩散；三类域适应；数据+模型双路线），代表工作选取有代表性。",
+   "Table 1 以统一六列（Scene/Source/Dataset/Year/Annotations/Scale）结构化盘点 23 数据集，跨室内/户外/UAV 可比性好。",
+   "架构与路线图具体到可核对的技术项（ERP↔Cubemap 转换、Spherical CNN、量化剪枝、Jetson/SOPHGO SE9、OOD 协议、部署套件），非空泛愿景。",
+   "开放挑战的自我批判准确（畸变静态化处理、观察≠行动的证据断层），与领域实证现状吻合。"
+  ],
+  "design_risks": [
+   "立场论文无实证：所有获益断言（消盲点更安全、HRI 更自然、认知流更近人类）均无受控对比支撑，存在确认偏误风险（选择支持全向必要性的引用）。",
+   "数据集盘点选择标准未声明，23 个代表集的覆盖面判断（UAV 最薄等）依赖作者口径。",
+   "产业关联（Insta360 作者+industrial demand 动机）与'未来是全向的'终局主张存在利益一致性，宜视为愿景而非中立结论。",
+   "无附录/补充材料支撑 Table 1 数字与引用对应关系，个别规模口径（如 70,000 vs 71K 全景）需按原数据集核对。",
+   "对'多相机拼接 vs 单相机全景 vs 超广角 rig'等硬件路线差异不做区分讨论，全向被当成单一类别——与实证文献中路线分歧（拼接 vs 不拼接）的粒度不匹配。"
+  ],
+  "baseline_fairness": "n/a（立场/综述论文，无基线对比实验）；内部一致性靠引用网络支撑，但引用选取无系统性检索协议声明（非系统综述），存在引用偏倚空间。",
+  "metric_validity": "n/a（无评测指标）；唯一量化内容为 Table 1 数据集规模统计，其口径为各原数据集自报（帧数/全景数/实例数/QA 对数），跨行可比性受原数据集定义差异影响。",
+  "reproducibility": "低（对立场论文属正常）：无代码/数据/实验可复现；架构与路线图为设想。引用的 23 数据集与代表方法均给出文献条目，可循迹核对；文中主张的核查成本主要为文献定位而非计算复现。",
+  "external_validity": "高（作为框架）：三差距/三技术线/获益-受限任务族的划分与本综述五篇实证论文的现实（拼接系统、非拼接渲染、数据基础设施、pano-native MLLM）高度吻合，框架可容纳各路线；但作为效果证据的外部效度为零（无实验），且时间效期截至 2025-09（'近一年'窗口的前沿部分需由实证论文补充）。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.12989-C01",
+   "claim": "领域定位与核心主张：全向视觉（以 360° 视觉理解环境）在机器人、工业巡检、环境监测等域的重要性持续上升；相对传统针孔视觉提供整体环境感知、显著提升场景感知完整性与决策可靠性；其基础研究历史上落后于针孔视觉，当前在具身 AI 时代因工业需求与学术兴趣而快速发展——本文（AAAI 2026 talk 论文，作者含 Insta360 工业方）提出由四个子系统构成的全景系统架构 PANORAMA。",
+   "stance": "support",
+   "relation": "支持命题：确立'全景/环视视觉在具身 AI 时代崛起'的领域级命题与本文的立场来源（学术+工业双驱动），是综述引言与问题空间定性的直接依据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要陈述：omnidirectional vision 跨域重要性、相对 pinhole 的整体感知优势、历史滞后、具身 AI 时代快速发展、生成/感知/理解/数据集四线突破、PANORAMA 四子系统架构。",
+   "locator": "page 1, Abstract",
+   "source_context": "has become increasingly critical across do-\nmains like robotics, industrial inspection, and environmental\nmonitoring. Compared to traditional pinhole vision, omnidi-\nrectional vision provides holistic environmental awareness,\nsignificantly enhancing the completeness of scene perception\nand the reliability of decision-making. However, foundational\nresearch in this area has historically lagged behind traditional\npinhole vision. This talk presents an emerging trend in the\nembodied AI era: the rapid development of omnidirectional\nvision, driven by growing industrial demand and academic in-\nterest. We highlight recent breakthroughs in omnidirectional\ngeneration, omnidirectional perception, omnidirectional un-\nderstanding, and related datasets. Drawing on insights from\nboth academia and industry, we propose an ideal panoramic\nsystem architecture in the embodied AI era: PANORAMA,\nwhich consists of four key subsystems.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字核对：has become increasingly critical across domains like robotics, industrial inspection, and environmental monitoring；provides holistic environmental awareness, significantly enhancing the completeness of scene perception and the reliability of decision-making；foundational research in this area has historically lagged behind traditional pinhole vision；the rapid development of omnidirectional vision, driven by growing industrial demand and academic interest；an ideal panoramic system architecture in the embodied AI era: PANORAMA, which consists of four key subsystems；Insta360 作者单位在 page 1 作者脚注逐字核对；claim 为摘要的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C02",
+   "claim": "模型能力差距（核心局限）：多数预训练模型通过卷积/池化等操作编码针孔图像适用的归纳偏置（如平移不变性），无法理解全景图像的畸变特性，直接迁移到全景图像时性能显著下降——如何在模型层面高效弥合数据域差距是全景视觉研究的关键问题。",
+   "stance": "limit",
+   "relation": "限制命题：全景输入对现有模型生态的结构性不兼容（针孔归纳偏置失效、直接迁移性能显著下降）——综述回答'哪些受限'的第一性约束，也是 2604.13476/2609.02319/2608.11051 各自绕行（视图合成/区域化裁剪/非全景原生基线）的共同根因。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "问题空间'模型能力'段：预训练模型的针孔归纳偏置（translation invariance via convolution/pooling）、对全景畸变特性不理解、直接迁移性能显著下降、域差距弥合为关键问题。",
+   "locator": "page 2, Motivation & Problem Space（Model Capabilities 段，句子起点在 page 1 末）",
+   "source_context": "tion characteristics of panoramic images, leading to a signif-\nicant decline in performance when the models are directly\ntransferred to deal with panoramic images. Thus, how to ef-\nficiently bridge the domain gap of data at the model level\nhas become a key issue in the research on panoramic vi-\nsion (Coors, Condurache, and Geiger 2018; Shen et al. 2022;\nSu and Grauman 2019; Yun et al. 2023), especially in the era\nof embodied AI.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字核对：tion characteristics of panoramic images, leading to a significant decline in performance when the models are directly transferred to deal with panoramic images 与 how to efficiently bridge the domain gap of data at the model level has become a key issue；句子起点 most existing pre-trained models encode inductive biases (e.g., translation invariance) through operations like convolution and pooling, which are applicable for pinhole images 在 page 1 末逐字核对（However, these models are incapable of understanding the distor-）；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C03",
+   "claim": "数据瓶颈（核心局限）：全景图像因 ERP 投影畸变且典型以高分辨率采集，人工标注成本高于针孔等图像类型；投影固有的几何畸变使常规为针孔图像设计的自动标注工具失效——二者显著阻碍大规模高质量数据集的发展，构成全向视觉在具身 AI 领域推进的数据瓶颈。",
+   "stance": "limit",
+   "relation": "限制命题：全景数据的标注成本结构（畸变+高分辨率→人工贵、自动工具失效）是'哪些受限'的另一第一性约束——解释为何 2608.11051 需自建自动管线、2605.13169 需自建 ERP 语料、OSR-Bench/OmniVQA 需分块/协作标注等绕行方案。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "问题空间'数据瓶颈'段：ERP 畸变+高分辨率→人工标注贵、自动标注工具失效、阻碍大规模高质量数据集。",
+   "locator": "page 1, Motivation & Problem Space（Data Bottlenecks 段）",
+   "source_context": "Data Bottlenecks: Panoramic images, which are often dis-\ntorted due to equirectangular projection (ERP) and typically\ncaptured at high resolutions, are more costly to annotate\nmanually compared to other image types, such as pinhole\nimages. The geometric distortions inherent in these projec-\ntions make conventional automated annotation tools, typi-\ncally designed for pinhole images, ineffective. These chal-\nlenges significantly hinder the development of large-scale,\nhigh-quality datasets (Li et al. 2024b; Zhang, Ye, and Zheng\n2025; Jiang et al. 2025; Huang et al. 2024; Park et al. 2024;\nLiu et al. 2025), creating a data bottleneck that impedes the\nadvancement of omnidirectional vision",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 逐字核对：Panoramic images, which are often distorted due to equirectangular projection (ERP) and typically captured at high resolutions, are more costly to annotate manually compared to other image types, such as pinhole images；The geometric distortions inherent in these projections make conventional automated annotation tools, typically designed for pinhole images, ineffective；These challenges significantly hinder the development of large-scale, high-quality datasets... creating a data bottleneck；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C04",
+   "claim": "应用空白：新传感器（360 相机）遇上新时代（具身 AI），工业等原场景将迎来技术迭代，但不同场景特性与优先级各异、催生大量场景特异性子领域；因跨学科人才缺乏与既有全景数据/模型不足，全景生产安全巡检、全景森林火情检测等子领域目前缺乏充分探索。",
+   "stance": "gap",
+   "relation": "缺口命题：全景+具身的场景级应用（巡检、火情监测等）尚属空白地带——综述'应用方式'的版图证据：已探索集中于导航/HRI/理解，长尾工业场景未被覆盖。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "问题空间'应用空白'段：场景特异性子领域、跨学科人才缺乏、全景生产安全巡检与森林火情检测缺乏探索。",
+   "locator": "page 2, Motivation & Problem Space（Application Blanks 段）",
+   "source_context": "Application Blanks: When new sensors (360 cameras)\nmeet a new era (embodied AI), many original scenarios,\nsuch as industrial scenarios, are likely to experience new\ntechnological iterations. However, different application sce-\nnarios exhibit distinct characteristics and priorities, which\nhave spawned numerous scenario-specific research sub-\nfields. This has given rise to numerous sub-fields of re-\nsearch that are scenario-specific. Due to the lack of interdis-\nciplinary talents and the insufficiency of existing panoramic\ndata and models, these sub-fields, such as panoramic pro-\nduction safety inspection, panoramic forest fire detection,\nand so on, currently lack sufficient exploration",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字核对：When new sensors (360 cameras) meet a new era (embodied AI), many original scenarios...are likely to experience new technological iterations；Due to the lack of interdisciplinary talents and the insufficiency of existing panoramic data and models, these sub-fields, such as panoramic production safety inspection, panoramic forest fire detection, and so on, currently lack sufficient exploration；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C05",
+   "claim": "生成侧进展：早期以 GAN 方法为主（Dream360 以两阶段策略——codebook 全景外扩+频率感知细化——从选定 viewport 生成高质量高分辨率全景）；扩散模型成为主流后相关研究渐起：PanoDiffusion 以双分支扩散结构允许训练时输入 RGB-D 数据、向生成模型注入更多空间信息以提升全景质量，OmniDrag 以轨迹控制全景生成、增强用户友好性。",
+   "stance": "support",
+   "relation": "支持命题：全景内容生成（具身环境的合成数据来源）的技术路线图（GAN→扩散、RGB-D 条件、轨迹控制）——综述'应用方式'中'仿真/合成数据'一路的领域级依据。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "Recent Technical Advances 生成节：Dream360 两阶段外扩、PanoDiffusion 双分支 RGB-D 条件扩散、OmniDrag 轨迹控制。",
+   "locator": "page 2, Recent Technical Advances: Omnidirectional Generation",
+   "source_context": "Researchers focus on the generative adversarial network-\nbased methods for omnidirectional generation at the early\nstage (Ai et al. 2024; Chen, Wang, and Liu 2022; Cheng\net al. 2022; Wang et al. 2022; Oh et al. 2022). Typically,\nthrough a two-stage strategy, including both codebook-\nbased panorama outpainting and frequency-aware refine-\nment, Dream360 (Ai et al. 2024) successfully generates\nhigh-quality and high-resolution panorama images based on\nselected viewports. As diffusion models have become the\nmainstream method in the field of generation recently, re-\nlated research has gradually emerged (Li and Bansal 2023;\nLi et al. 2024a; Wang et al. 2024b, 2023, 2024a; Ye et al.\n2024; Li et al. 2024c; Wu, Zheng, and Cham 2023). Among\nthese works, PanoDiffusion (Wu, Zheng, and Cham 2023)\ngenerates panorama images through a two-branch diffusion\nstructure, which allows RGB-D data as inputs during train-\ning. Thus, more spatial information can be injected into the\ngeneration model, improving the quality of the generated\npanoramic images. Meanwhile, OmniDrag (Li et al. 2024c)\ncontrols the generation of panoramic images based on trajec-\ntories, further enhancing the user-friendliness of panoramic\nimage generation.",
+   "evidence_type": "cited-work",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字核对：through a two-stage strategy, including both codebook-based panorama outpainting and frequency-aware refinement, Dream360... successfully generates high-quality and high-resolution panorama images based on selected viewports；PanoDiffusion generates panorama images through a two-branch diffusion structure, which allows RGB-D data as inputs during training. Thus, more spatial information can be injected into the generation model；OmniDrag controls the generation of panoramic images based on trajectories, further enhancing the user-friendliness；claim 为对被引工作（转述层）的忠实复述，未加论文外断言。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C06",
+   "claim": "感知侧域适应路线：针对全景数据瓶颈，域适应成为让模型用无标注全景数据的主流方案，现有策略分三类——对抗学习（判别器迫使跨域难区分特征）、伪标签（GoodSAM/GoodSAM++ 用 SAM 精化伪标签、OmniSAM 动态伪标签更新提升可信度）、原型对齐（360SFUDA++/OmniSAM 以畸变匹配+原型语义抽象对齐源/目标域中心，yielding significant improvements）。",
+   "stance": "support",
+   "relation": "支持命题：让针孔预训练模型吃全景数据的三条域适应路线是'感知任务迁移到 360 输入'的主流解法——与 C02 的模型能力局限构成'问题-解法'对，综述'应用方式'（模型适配层）的领域级依据。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "Recent Technical Advances 感知节：三类域适应策略与代表工作（GoodSAM/GoodSAM++/OmniSAM/360SFUDA++）。",
+   "locator": "page 2, Recent Technical Advances: Omnidirectional Perception",
+   "source_context": "Considering the data bottleneck problems of omnidirec-\ntional vision, the domain adaptation technique has become a\npopular solution that enables models to deal with panoramic\nimages with unlabeled data (Zheng et al. 2024). The existing\nstrategies can be primarily classified into three types: ad-\nversarial learning-based strategy, pseudo-label-based strat-\negy, and prototype-based strategy (Zhong et al. 2025). Ad-\nversarial learning-based strategies introduce a discrimina-\ntor to force the model to generate features that are difficult\nto distinguish between domains, thereby capturing domain-\ninvariant representations. Pseudo-label-based strategies train\nmodels by generating self-supervised labels for the target\ndomain data, where GoodSAM (Zhang et al. 2024b) and\nGoodSAM++ (Zhang et al. 2024b) refine pseudo-labels us-\ning the Segment Anything Model (SAM) (Kirillov et al.\n2023) to provide more reliable pseudo-labels for the target\nmodel. Meanwhile, OmniSAM (Zhong et al. 2025) proposes\na dynamic pseudo-label updating mechanism to improve the\ncredibility of the pseudo-label. Prototype alignment strate-\ngies aim to align the centers of high-level features between\nthe source and target domains to reduce domain discrepan-\ncies. Previous works, such as 360SFUDA++ (Zheng et al.\n2024) and OmniSAM (Zhong et al. 2025), center on match-\ning the distortion and abstracting the semantics with proto-\ntypes, yielding significant improvements.",
+   "evidence_type": "cited-work",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字核对：the domain adaptation technique has become a popular solution that enables models to deal with panoramic images with unlabeled data；adversarial learning-based strategy, pseudo-label-based strategy, and prototype-based strategy；GoodSAM and GoodSAM++ refine pseudo-labels using the Segment Anything Model (SAM)；OmniSAM proposes a dynamic pseudo-label updating mechanism；360SFUDA++ and OmniSAM, center on matching the distortion and abstracting the semantics with prototypes, yielding significant improvements；claim 为对被引工作（转述层）的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C07",
+   "claim": "理解侧进展与瓶颈：现有多模态大模型经普通（尤其针孔）图像训练、从未见过全景图像故难以理解；数据侧以构建全景理解数据集/基准为主（OSR-bench 提出认知地图概念分块标注、OmniVQA 以 agent 协作高效标注）；模型侧多用 GRPO 等技术在既有 VQA 数据上直接微调，而 ERP-RoPE 尝试探索全景图像内部特征以进一步增强理解。",
+   "stance": "support",
+   "relation": "支持命题：MLLM×全景的当前适配方式（数据集/基准建设+VQA 微调+RoPE 类位置编码探索）——与 2605.13169（PanoWorld 的 pano-native MLLM 训练）正面衔接，综述'应用方式'（理解/推理层）的领域级依据。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "Recent Technical Advances 理解节：MLLM 针孔训练局限、OSR-bench/OmniVQA 数据路线、GRPO 微调与 ERP-RoPE 模型路线。",
+   "locator": "page 2, Recent Technical Advances: Omnidirectional Understanding",
+   "source_context": "Current multi-modal large language models tend to be\ntrained through normal images, especially the pinhole im-\nages. Consequently, these models struggle to understand\npanoramic images, having never encountered them be-\nfore. From the perspective of data, recent works focus on\nbuilding omnidirectional understanding datasets and bench-\nmarks (Dongfang et al. 2025; Zhang, Ye, and Zheng 2025;\nSong et al. 2024; Zhou et al. 2025; Chou et al. 2020). Es-\npecially, OSR-bench (Dongfang et al. 2025) creates a con-\ncept of cognitive maps, dividing the whole panoramic image\ninto patches and labeling patches by the objects within them.\nThrough this hierarchical approach, OSR-Bench achieves\nfast and effective data labeling and benchmarking. Mean-\nwhile, OmniVQA (Zhang, Ye, and Zheng 2025) achieves\nefficient data labeling through agent collaboration. While\nfrom the perspective of models, current methods tend to\napply the GRPO techniques (Zhang, Ye, and Zheng 2025;\nZhou et al. 2025). However, the existing works prefer to\ndirectly fine-tune the multi-modal large language models\nbased on the existing VQA datasets. Thus, works like ERP-\nRoPE (Zhou et al. 2025) attempt to explore the internal\nfeatures of panoramic images, which further enhance the\nmodel’s understanding of panoramic images.",
+   "evidence_type": "cited-work",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字核对：Current multi-modal large language models tend to be trained through normal images, especially the pinhole images. Consequently, these models struggle to understand panoramic images, having never encountered them before；OSR-bench creates a concept of cognitive maps, dividing the whole panoramic image into patches；OmniVQA achieves efficient data labeling through agent collaboration；current methods tend to apply the GRPO techniques；ERP-RoPE attempt to explore the internal features of panoramic images, which further enhance the model's understanding of panoramic images；claim 为对被引工作（转述层）的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C08",
+   "claim": "数据集版图（Table 1）：按 Indoor/Outdoor/UAV（Flight）× Real/Synthetic 分类盘点 23 个代表性数据集——室内真实侧 ZInD 71K 全景/1.5K 住宅、Matterport3D 10.8K 图像/90 栋、Stanford 2D-3D-S 70K 图像；户外真实侧 StreetLearn 143K 图像、360VOT 120 序列/113K 帧、Dense360 160K 全景+5M 实体级 caption、360Loc 多设备定位测试床；QA 侧 OSR-Bench 153,000+ 问答对；UAV 侧最薄（真实仅 UAV-ERP 2.3K 已标注图像，合成仅 AirSim-360）——室内数据密语义、户外/飞行数据重空间覆盖。",
+   "stance": "support",
+   "relation": "支持命题：全景数据基础设施的规模/模态/标注版图与结构性偏斜（室内厚、UAV 薄、实体级 caption 与 QA 基准 2025 年才出现）——综述'应用方式（数据层）'与'哪些任务受限（缺数据的任务）'的量化依据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Table 1 以 Scene/Source/Dataset/Year/Annotations/Scale 六列盘点 23 个数据集；正文总结 common modalities、granularity 差异（室内密语义 vs 户外重覆盖）与 identify 23 representative datasets 的口径。",
+   "locator": "page 3, Table 1 与其后总结段",
+   "source_context": "Scene Source Dataset Year Annotations Scale\nIndoor\nReal\nPanoContext (Dong et al. 2024) 2014 Layouts, object 3D bounding boxes 700 full-view panoramas\nStanford 2D-3D-S (Armeni et al. 2017) 2017 RGB, depth, semantics 70,000 images\nMatterport3D (Chang et al. 2017) 2017 RGB-D panoramas, 2D/3D semantics & poses 10.8 K images, 90 buildings\nZInD (Cruz et al. 2021) 2021 360\n◦ \npanoramas, 3D layouts, floorplans 71 K panoramas, 1.5 K homes\nHM3D (Ramakrishnan et al. 2021) 2021 Textured 3D mesh reconstructions of interiors 1000 building-scale scenes\nToF-360 (Kanayama et al. 2025) 2025 2D/3D Segmentation, Layout Estimation 207 total panoramas\nSynthetic\n3D60 (Zioulis et al. 2018) 2018 Rendered panoramas + depth 60 real-world scenes\nStructured3D (Zheng et al. 2020) 2020 CAD-rendered panoramas + geometry/semantics 3.5 K layouts\nDeepPanoContext (Zhang et al. 2021) 2021 Synthetic panoramas with layout, object shape, pose Rich 3D annotations\nSynPASS (Zhang et al. 2024a) 2024 22-class semantic synthetic panoramas 9 K images\nHM3DSem (Yadav et al. 2023) 2022 Dense object instance semantic annotations 142,646 object instances\nVLN-RAM (Wei et al. 2025) 2024 Human-aware visual language navigation 90 scenes, 145 human activity descriptions\nOSR-Bench (Dongfang et al. 2025) 2025 QA of omnidirectional spatial reasoning 153,000+ diverse question-answer pairs\nOutdoor\nReal\nStreetLearn (Mirowski et al. 2019) 2019 StreetView panoramas + connectivity graph 143 K images\nCVIP360 (Mazzola et al. 2021) 2021 360\n◦ \nvideo + pedestrian bounding boxes 16 videos\n360VOT (Huang et al. 2023) 2023 360\n◦ \nvideo, tracking + segmentation labels 120 sequences, 113 K frames\n360 in the Wild (Park et al. 2024) 2024 360\n◦ \nimages + poses + depth 25 K real scenes\n360Loc (Huang et al. 2024) 2024 360\n◦ \nimages + 6DoF poses, cross-device Multi-device localization testbed\nDense360 (Zhou et al. 2025) 2025 Entity-grounded panoramic scene descriptions 160K panoramas + 5M entity-level captions\nSynthetic \nOmniScape (Sekkat et al. 2020) 2020 Multiple projection panoramas + semantics 10,000 captures\nOmniHorizon (Bhanushali, Muniyandi, and Chakravarthula 2024) 2023 Synthetic outdoor panoramas + depth/normal 24,335 images\nUAV (Flight)\nReal \nUAV-ERP (Zhang et al. 2022b) 2022 ERP panoramas captured 2.3 K images annotated\nSynthetic \nAirSim-360 (Shah et al. 2017) 2018 Unreal-simulated panoramas + depth Configurable generation via API\nTable 1: Overview of representative omnidirectional datasets.\nDataset\nMoreover, datasets also serve as the solid foundation of the\nthree above tasks. We categorize omnidirectional datasets\ninto three domains: Indoor, Outdoor, and UAV/Flight, each\nfurther divided into real or synthetic sources. From this tax-\nonomy, which is shown in Table 1, we identify 23 represen-\ntative datasets, providing a structured basis for comparing\nscale, modalities, and annotations.",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "representative datasets 数量与各项 Scale（Table 1）",
+    "value_or_direction": "23 representative datasets；ZInD 71 K panoramas, 1.5 K homes；Matterport3D 10.8 K images, 90 buildings；StreetLearn 143 K images；360VOT 120 sequences, 113 K frames；Dense360 160K panoramas, 5M entity-level captions；OSR-Bench 153,000+ QA pairs；UAV-ERP 2.3 K images",
+    "comparator": "Indoor/Outdoor/UAV × Real/Synthetic 六类划分；UAV real 仅 UAV-ERP 2.3 K images、synthetic 仅 AirSim-360 vs 室内密语义 vs 户外 spatial coverage",
+    "task_or_sample": "综述对全景数据集版图的代表性盘点（select 23，非穷举）",
+    "locator": "page 3, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Table 1 逐行核对：ZInD (Cruz et al. 2021) 2021 ... 71 K panoramas, 1.5 K homes；Matterport3D 10.8 K images, 90 buildings；Stanford 2D-3D-S 70,000 images；StreetLearn 143 K images；360VOT 120 sequences, 113 K frames；Dense360 (Zhou et al. 2025) 160K panoramas + 5M entity-level captions；OSR-Bench 153,000+ diverse question-answer pairs；UAV-ERP (Zhang et al. 2022b) 2.3 K images annotated；AirSim-360 Configurable generation via API；we identify 23 representative datasets 与 indoor resources often offer dense semantics, while outdoor or aerial captures prioritize spatial coverage 同页逐字核对；claim 为表数据的忠实复述（23 为作者自述口径）。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C09",
+   "claim": "数据集层面的两个缺口：近期数据集渐把几何真值与下游任务结合（Matterport3D/ReplicaPano/HM3D 配实例或任务级标签），时间性与具身采集也在变多；但完全同步的多传感器全景采集（全景 RGB+LiDAR+空间音频+行为轨迹）仍然罕见；QA 式全景推理基准刚开始出现（OSR-Bench/OmniVQA），推理导向的全景评测资源仍处初生阶段——同时社区已开始关注投影诱导畸变并用畸变感知方法/损失缓解纬度/极点伪影。",
+   "stance": "gap",
+   "relation": "缺口命题：多模态同步全景数据与推理导向评测两大基础设施缺口——直接界定制约哪些具身任务（多模态融合类、推理评测类）暂难以全景化开展；为综述'哪些受限'提供数据基础结构层依据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Table 1 后总结段：几何真值+下游任务结合、时间/具身采集渐多、多传感器同步全景采集罕见、畸变感知方法出现、QA 式基准初生（nascent）。",
+   "locator": "page 3, Table 1 后总结段",
+   "source_context": "Recent datasets increasingly combine geometric ground\ntruth with downstream tasks. For example, Matter-\nport3D (Chang et al. 2017), ReplicaPano (Dong et al.\n2024), and HM3D (Ramakrishnan et al. 2021) illustrate\ndatasets that pair panoramas/depth/layouts with instance or\ntask-level labels. Temporal and embodied captures are be-\ncoming more common (Xia et al. 2018). However, fully\nsynchronized multi-sensor panoptic collections that com-\nbine panoramic RGB, LiDAR, spatial audio, and behav-\nioral traces remain rare (Kim et al. 2024). Researchers are\npaying more attention to projection-induced distortions and\nadopting distortion-aware methods or losses to mitigate lat-\nitude or pole artifacts (Zhang et al. 2022a). Finally, QA-\nstyle panoramic reasoning benchmarks have begun to ap-\npear (e.g., OSR-Bench (Dongfang et al. 2025) and Om-\nniVQA (Zhang, Ye, and Zheng 2025)), indicating early\ninterest in reasoning-oriented panoramic evaluation even\nthough these resources are still nascent.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字核对：Recent datasets increasingly combine geometric ground truth with downstream tasks；Temporal and embodied captures are becoming more common；fully synchronized multi-sensor panoptic collections that combine panoramic RGB, LiDAR, spatial audio, and behavioral traces remain rare；Researchers are paying more attention to projection-induced distortions and adopting distortion-aware methods or losses to mitigate latitude or pole artifacts；QA-style panoramic reasoning benchmarks have begun to appear... even though these resources are still nascent；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C10",
+   "claim": "PANORAMA 理想系统架构（应用方式蓝图）：四子系统——(1) 数据采集与预处理：ERP 或 multi-fisheye lens rigs 相机+IMU/深度等互补传感器，负责数据采集、格式转换（ERP↔Cubemap 按下游需求动态切换）、多/多模态传感器同步与标定；(2) 感知：面向球面几何适配的深度模型（Spherical CNN/Transformer）提取特征，共享骨干同时做语义分割/目标检测/深度估计；(3) 应用：消费结构化感知输出服务导航与 SLAM、人机交互、数字孪生与 3D 重建等具身任务；(4) 加速与部署：量化/剪枝平衡精度-延迟-功耗，边缘平台（NVIDIA Jetson、SOPHGO SE9）落地——四者构成从原始传感器到具身应用的一体化管线。",
+   "stance": "support",
+   "relation": "支持命题：全景视觉在具身智能的完整'应用方式'骨架（传感 rig→格式转换→球面感知→具身任务→边缘部署），且明确把 multi-fisheye lens rigs 与 ERP 相机并列为全景获取硬件——是综述组织'应用方式'维度的直接参照框架。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "PANORAMA System Architecture 节给出四子系统（数据采集与预处理/感知/应用/加速与部署）的职责、硬件与代表技术，及一体化 Workflow。",
+   "locator": "page 4, PANORAMA System Architecture: Key Subsystems 与 Workflow（Fig. 2）",
+   "source_context": "data and converting it into a format suitable for compu-\ntational processing. It primarily consists of hardware like\ncameras (e.g., those utilizing equirectangular projection or\nmulti-fisheye lens rigs) and complementary sensors (e.g.,\nIMUs, depth sensors). Its core functions include:\n• Data Capture: Acquiring high-resolution omnidirec-\ntional images and videos.\n• Format Conversion: Dynamically transforming data be-\ntween different representations (e.g., ERP, Cubemap) to\nsuit the needs of downstream processing tasks.\n• Synchronization & Calibration: Ensuring tem-\nporal alignment and spatial coordination between\nmultiple/multi-modal sensors for accurate data fusion.\nSubsystem 2: Perception This subsystem performs fun-\ndamental scene perception on the preprocessed panoramic\ndata. It employs deep learning models adapted for spheri-\ncal geometry to extract rich, structured information from the\nomnidirectional input. Its key capabilities include:\n• Feature Extraction: Utilizing specialized architectures\n(e.g., Spherical CNNs, Transformers) to understand the\nomnidirectional context.\n• Environmental Perception: Simultaneously performing\ncore perception tasks such as semantic segmentation, ob-\nject detection, and depth estimation from a shared feature\nbackbone for efficiency.\nSubsystem 3: Application This subsystem translates the\nperceptual insights into actions for embodied AI agents. It\nconsumes the structured data (e.g., semantic maps, object\nlists, depth information) to serve specific downstream tasks.\nExample applications include:\n• Navigation & SLAM: Enabling autonomous movement\nand real-time spatial mapping in indoor and outdoor en-\nvironments.\n• Human-Robot Interaction: Providing agents with full-\nscene awareness for more natural and context-aware in-\nteractions.\n• Digital Twin & 3D Reconstruction: Creating immer-\nsive and accurate virtual models of real-world spaces for\nsimulation, planning, and monitoring.\nSubsystem 4: Acceleration & Employment This sub-\nsystem addresses the computational challenges of process-\ning high-resolution panoramic data in real-world, often\nresource-constrained settings. It focuses on the practical im-\nplementation of the entire pipeline.\n• Software Acceleration: Optimizing the entire stack\nthrough techniques like model quantization and pruning\nto balance accuracy, latency, and power consumption for\ndeployment on edge devices.\n• Hardware Employment: Employing edge computing\nplatforms (e.g., NVIDIA Jetson, SOPHGO SE9) to\nachieve real-world applications.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字核对：It primarily consists of hardware like cameras (e.g., those utilizing equirectangular projection or multi-fisheye lens rigs) and complementary sensors (e.g., IMUs, depth sensors)；Format Conversion: Dynamically transforming data between different representations (e.g., ERP, Cubemap)；Synchronization & Calibration；Utilizing specialized architectures (e.g., Spherical CNNs, Transformers)；Simultaneously performing core perception tasks such as semantic segmentation, object detection, and depth estimation from a shared feature backbone；Navigation & SLAM；Human-Robot Interaction；Digital Twin & 3D Reconstruction；model quantization and pruning to balance accuracy, latency, and power consumption；edge computing platforms (e.g., NVIDIA Jetson, SOPHGO SE9)；句子起点（subsystem is responsible for capturing raw omnidirectional data and converting it into a format suitable for computational processing）跨 page 3-4 断行处已核对；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C11",
+   "claim": "六阶段路线图：Stage 1 数据集整合（统一投影/标准划分/一致重标注/灵活重投影工具保证 ERP 与 cubemap 公平比较）；Stage 2 多模态扩展（同步 RGB/深度/LiDAR/音频/IMU、标准化 rig 与标定协议、公共多传感器语料、real-synthetic 混合采集控成本）；Stage 3 推理与具身数据（grounded VQA/指令跟随/导航/抓取，模板+LLM+人验的混合问题生成，仿真环境供动态场景）；Stage 4 统一模型预训练（联合 360° 几何+语义+同步传感器流的多任务编码器，跨投影表示/多目标损失/域混合课程）；Stage 5 评测与基准（标准划分、投影一致重投影工具、逐任务精度+跨投影一致性+具身任务成功率、OOD 划分/校准/不确定性/效率目标）；Stage 6 部署与泛化（跨域迁移/持续学习/真实条件鲁棒性、部署套件与压力测试数据集）。",
+   "stance": "support",
+   "relation": "支持命题：全景×具身的可操作发展路径（从数据整合到边缘部署的全链条里程碑），为综述'未来方向/缺口'一节提供结构化参照。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Emerging Trends & Future Roadmap 节与 Fig. 3 给出六阶段（Dataset Integration/Multi-Modal Expansion/Reasoning and Embodied Data/Unified Model Pretraining/Evaluation and Benchmarking/Deployment and Generalization）及各阶段关键交付物。",
+   "locator": "page 5, Stages 1-5（Stage 6 起于 page 5 末、续于 page 6；Fig. 3 同页）",
+   "source_context": "Stage 1: Dataset Integration In the first stage, the focus\nis on bringing together existing datasets into a single, consis-\ntent framework for projections, along with standardized test\nsplits. The data will be re-annotated with consistent labels,\nand flexible re-projection tools will help ensure fair compar-\nisons of model performance across different formats, like\nERP and cubemap. This stage will result in a well-organized\nbenchmark suite, with careful human checks to reduce errors\nin the annotations and improve label accuracy.\nStage 2: Multi-Modal Expansion Next, the focus shifts\nto synchronizing signals from RGB, depth, LiDAR, audio,\nand IMU sensors, enabling multi-modal and multi-task pre-\ntraining tailored for panoramic vision. Standardized rigs\nand calibration protocols will facilitate richer sensor fu-\nsion, enhancing the modeling of environments captured by\npanoramic cameras. A key milestone in this phase would be\nthe creation of a public multi-sensor corpus with harmonized\nsplits, enabling more effective benchmarking. To offset the\ncost of large-scale data collection, hybrid real–synthetic\npipelines will be utilized, combining both real-world and\nsimulated data for more robust sensor training.\nStage 3: Reasoning and Embodied Data The third stage\nfocuses on advancing reasoning capabilities in interactive,\nembodied tasks such as grounded visual question answer-\ning (VQA), instruction-following, navigation, and grasping.\nThese tasks require robust spatial reasoning to understand\nand interact with the environment. To facilitate this, hybrid\nquestion generation methods—combining templates, large\nlanguage models (LLMs), and human validation—will be\nemployed to ensure both scale and diversity in the train-\ning data. Simulation environments will play a crucial role in\nproviding varied and dynamic scenarios for tasks like nav-\nigation and grasping, where precise spatial awareness and\ndecision-making are essential. The release of a reasoning-\naugmented dataset and a benchmark designed specifically\nfor evaluating spatial reasoning, navigation, and grasping\nperformance will establish standardized protocols for mea-\nsuring the success rates of models in real-world interactive\nenvironments.\nStage 4: Unified Model Pretraining Building on the\nintegrated multi-modal corpora from earlier stages, this\nphase focuses on pretraining unified, multi-task encoders for\npanoramic models. These models jointly process 360\n◦ \nge-\nometry, semantic labels, and synchronized sensor streams\n(RGB, depth, LiDAR, audio, and IMU). Based on weights\nfrom established 2D or 3D architectures, the key inno-\nvation is fine-tuning and post-training using panoramic-\nspecific datasets and task objectives. Training incorporates\ncross-projection representations, multi-objective losses, and\ndomain-mixing curricula (real–synthetic) to ensure trans-\nferability. This stage adapts traditional models to the chal-\nlenges of panoramic vision and enhances generalization in\nreal-world scenarios like navigation, grasping, and embod-\nied tasks. Fine-tuning on tailored datasets ensures efficient\nlearning for both structured and unstructured data in dy-\nnamic environments.\nStage 5: Evaluation and Benchmarking This stage es-\ntablishes a rigorous evaluation infrastructure consisting of\nstandardized dataset splits, projection-consistent reprojec-\ntion tools, and a harmonized metric suite covering per-task\naccuracy, cross-projection consistency, and success rates\nof reasoning and embodiment tasks. Protocols include ex-\nplicit out-of-distribution splits, calibration and uncertainty\nmeasures, efficiency targets, and human-verified evaluation\nfor critical tasks; together, these components enable repro-\nducible comparison, ablation studies, and operational readi-\nness assessments.\nStage 6: Deployment and Generalization In the final\nstage, the focus is on preparing models for real-world de-\nployment through cross-domain transfer, continual learn-\ning, and testing their robustness. Models are tested un-\nder real-world conditions, including changes in data distri",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字核对六阶段标题与内容：Stage 1: Dataset Integration...flexible re-projection tools...like ERP and cubemap；Stage 2: Multi-Modal Expansion...RGB, depth, LiDAR, audio, and IMU sensors...hybrid real–synthetic pipelines；Stage 3: Reasoning and Embodied Data...grounded visual question answering (VQA), instruction-following, navigation, and grasping...combining templates, large language models (LLMs), and human validation；Stage 4: Unified Model Pretraining...cross-projection representations, multi-objective losses, and domain-mixing curricula；Stage 5: Evaluation and Benchmarking...out-of-distribution splits, calibration and uncertainty measures, efficiency targets；Stage 6: Deployment and Generalization...cross-domain transfer, continual learn-ing, and testing their robustness...including changes in data distri-（跨页续于 page 6 的 butions, using out-of-distribution (OOD) splits 与 delivering a deployment kit with stress-test datasets）；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C12",
+   "claim": "跨社区获益面（定性）：(1) 机器人与自主导航——全向感知是完整态势感知的基石，消除盲点使密集动态环境（如拥挤公共场所）导航更准确更安全，并提供多角度上下文；(2) 人机交互——配全向相机的机器人可同时追踪多个个体、解读群组对话、理解来自任意方向的社会线索，促成更自然无缝可信的 HRI；(3) 认知 AI 与虚拟代理——全向视觉提供本质上更接近人类 ego 视觉的稠密信息流，支撑空间推理、长程任务规划与环境物理常识等高级认知能力。",
+   "stance": "support",
+   "relation": "支持命题：全景视觉的'哪些任务获益'领域级答案（导航安全、HRI 多人交互、认知/规划三类），与四篇实证论文的任务级数字（检测覆盖、HRI 数据、MLLM 理解）互为宏观-微观印证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Cross-Community Impacts 节列出三类社区的获益机制（均以引用支撑的定性论断）。",
+   "locator": "page 6, Cross-Community Impacts & Open Challenges（前三 bullet）",
+   "source_context": "In today’s era of embodied AI, the maturity of omnidirec-\ntional vision no longer merely refers to the gradual up-\ndate of technology but rather its emergence as a fundamen-\ntal enabling technology, promoting cross-community break-\nthroughs in practical application domains. The impact of\nomnidirectional vision, especially the PANORAMA system,\nin the current era extends far beyond a single community,\nproviding cross-community impacts for researchers from di-\nverse fields:\n• Robotics & Autonomous Navigation: For mobile\nrobots and autonomous vehicles, omnidirectional percep-\ntion is the cornerstone of complete situational aware-\nness. It eliminates blind spots, making navigation in\ndense and dynamic environments—such as crowded pub-\nlic places—more accurate and safer (Ran et al. 2017;\nHuang et al. 2024), enhancing the robot’s perception abil-\nity by providing contextual information from different\nangles (Park et al. 2024).\n• Human-Robot Interaction: Omnidirectional vision en-\nables robots to understand social and spatial informa-\ntion like humans. A robot equipped with an omnidirec-\ntional camera can simultaneously track multiple individ-\nuals (Huang et al. 2024; Li et al. 2024b), interpret group\nconversations, and comprehend social cues from any di-\nrection (Rai, Guti´errez, and Le Callet 2017; Martin et al.\n2022), thereby facilitating more natural, seamless, and\ntrustworthy human-robot interaction.\n• Cognitive AI & Virtual Agents: Omnidirectional vision\nprovides a dense, information-rich perceptual stream that\nis fundamentally closer to a human’s egocentric vision of\nthe world (Xia et al. 2018; Zhou et al. 2025). This high-\nfidelity input is crucial for developing the foundation of\nhigh-level, human-like cognitive abilities, including spa-\ntial reasoning, long-horizon task planning, and common-\nsense understanding of environmental physics.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字核对：omnidirectional perception is the cornerstone of complete situational awareness. It eliminates blind spots, making navigation in dense and dynamic environments—such as crowded public places—more accurate and safer；A robot equipped with an omnidirectional camera can simultaneously track multiple individuals, interpret group conversations, and comprehend social cues from any direction；provides a dense, information-rich perceptual stream that is fundamentally closer to a human's egocentric vision of the world...spatial reasoning, long-horizon task planning, and common- sense understanding of environmental physics；claim 为原文的忠实复述（获益断言均为作者定性陈述）。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C13",
+   "claim": "开放挑战（作者明示的局限）：(1) 泛化与鲁棒性——多数模型仍聚焦特定场景或投影方法，跨全景传感器规格/场景/投影的泛化仍非平凡，需投影无关表示与自监督学习；(2) 动态畸变处理——现有方法把畸变当帧独立的静态几何问题，而真实场景中畸变本质是动态的，需显式考虑全景视频序列中畸变的时间一致性与演化；(3) 行动感知表示学习——终极目标不止'看得更好'而是'行动更有效'，需把全景视觉特征整合进下游控制策略；(4) 可扩展统一架构——超越任务特定模型的低效，需要预训练于大规模全景数据、可快速特化到多任务的全向基础模型。",
+   "stance": "limit",
+   "relation": "限制命题：全景×具身的四个方法级未解难题（跨投影泛化、视频级动态畸变、表示-控制耦合、统一基础模型）——综述'哪些受限'的方法层归纳，且'行动感知'挑战直接点出感知收益到行动收益的证据断层。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Open Challenges 节四 bullet：Generalization and Robustness、Dynamic Distortion Handling、Action-Aware Representation Learning、Scalable and Unified Architectures。",
+   "locator": "page 6, Cross-Community Impacts & Open Challenges（Open Challenges 四 bullet）",
+   "source_context": "Despite the positive cross-community impacts of omnidirec-\ntional vision in the embodied AI era, several open challenges\nremain, providing new directions for future research.\n• Generalization and Robustness: Most current models\nstill focus on specific scenarios or projection methods (Ai\net al. 2022). Developing models that generalize across\ndiverse panoramic sensor specifications, application sce-\nnarios, and projection methods remains non-trivial (Ai,\nCao, and Wang 2025). It is necessary for future works\nto focus on projection-agnostic representations and self-\nsupervised learning techniques that can learn invariant\nfeatures from unlabeled omnidirectional information, in-\ncluding both images and video streams.\n• Dynamic Distortion Handling: While current ap-\nproaches have made significant progress in handling\nthe static distortion of panoramic images (Zhang et al.\n2022a), they treat it as a frame-independent geometric\nproblem. This represents a critical limitation, as the dis-\ntortion is fundamentally dynamic in real-world scenar-\nios. Future research should further explicitly consider the\ntemporal consistency and evolution of distortions across\nomnidirectional video sequences.\n• Action-Aware Representation Learning: The ultimate\ngoal of omnidirectional vision in the era of embodied\nAI is not merely to enable robots to observe better, but\nto empower them to take action more effectively (Xu\net al. 2024, 2025). A key direction is to allow models\nto learn action-oriented representations within panoramic\nimages (Mu et al. 2023; Fu, Lou, and Yu 2025). By in-\ntegrating the unique advantages of omnidirectional vi-\nsual features into downstream control strategies, we can\nachieve more effective and efficient decision-making in\nrobotic behavior.\n• Scalable and Unified Architectures: An important\nchallenge is the creation of unified, multi-task founda-\ntion models specifically designed for omnidirectional vi-\nsion (Dong et al. 2024; Shen et al. 2022). Moving be-\nyond the inefficiency of task-specific models, these mod-\nels would be pre-trained on extensive panoramic data to\ncapture a fundamental understanding of omnidirectional\ngeometry and semantics (Sun, Sun, and Chen 2021; Jiang\net al. 2021). This would yield a powerful visual backbone\nthat could be rapidly specialized for numerous applica-\ntions, improving performance and generalization while\nreducing",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字核对：Most current models still focus on specific scenarios or projection methods；projection-agnostic representations and self-supervised learning；they treat it as a frame-independent geometric problem. This represents a critical limitation, as the distortion is fundamentally dynamic in real-world scenarios...temporal consistency and evolution of distortions across omnidirectional video sequences；not merely to enable robots to observe better, but to empower them to take action more effectively...integrating the unique advantages of omnidirectional visual features into downstream control strategies；creation of unified, multi-task foundation models specifically designed for omnidirectional vision；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C14",
+   "claim": "当前方法现状短板：尽管近期进展（含早期视觉-语言多模态模型），多数方法仍任务特定、在投影歧义上挣扎、缺乏大规模多模态预训练资源——这些局限阻碍模型泛化并对具身 AI 的更广发展构成显著挑战（作者以此为由提出 PANORAMA 与分阶段路线图）。",
+   "stance": "limit",
+   "relation": "限制命题：任务特定+投影歧义+缺大规模预训练三短板是当前全景方法的领域级通病——解释为何四篇实证论文均为单任务系统/数据集而非通用全景基座，为综述'方法层受限'提供口径。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Emerging Trends 段：recent advancements 后的转折——task-specific、projection ambiguities、lack of large-scale multi-modal pretraining resources、hinder model generalization。",
+   "locator": "page 4, Emerging Trends & Future Roadmap 引言段",
+   "source_context": "Additionally, early multi-modal models have\nemerged that integrate vision and language for more com-\nprehensive task understanding. Despite these advancements,\nmany approaches remain task-specific, struggle with projec-\ntion ambiguities, and lack large-scale multi-modal pretrain-\ning resources. These limitations hinder model generaliza-\ntion and pose significant challenges to the broader develop-\nment of embodied AI (He et al. 2022",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字核对：Additionally, early multi-modal models have emerged that integrate vision and language for more comprehensive task understanding. Despite these advancements, many approaches remain task-specific, struggle with projection ambiguities, and lack large-scale multi-modal pretraining resources. These limitations hinder model generalization and pose significant challenges to the broader development of embodied AI；claim 为原文的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.12989-C15",
+   "claim": "终局主张与三方分工：具身智能时代要求从'狭窄前视'到'球面理解世界'的范式转移，拥抱全向视觉可共同解锁具身 AI 下一前沿（造出不仅看见而且理解并与环境整体交互的 agent）——'具身 AI 的未来是全向的'；并呼吁三方分工：数据集创建者发布覆盖室内外/通用/具身场景的大规模多任务全景数据集、算法研究者超越针孔模型的简单适配创造带全向信息的新架构与动态学习范式、应用工程师在真实机器人与交互系统中展示全向感知收益以弥合实验室与实践。",
+   "stance": "support",
+   "relation": "支持命题：综述结论层的领域共识候选（范式转移命题+三方分工路线）——为综述'共同结论'与未来方向段落提供立场锚点；注意其为立场性论断而非实证结论。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论段：范式转移表述、三方呼吁（Dataset Creators/Algorithm Researchers/Application Engineers）与终局句 The embodied AI's future is omnidirectional。",
+   "locator": "page 6, Conclusion（In summary 段）",
+   "source_context": "In summary, the process towards achieving truly embodied\nintelligence is a collective effort. In the field of omnidirec-\ntional vision, we call upon researchers to:\n• For Dataset Creators: Plan and publish large-scale\nmulti-task omnidirectional datasets that encompass the\ncomplexity of real-world scenes, including both indoor\nand outdoor scenarios, general scenarios, and embodied\nintelligent scenarios.\n• For Algorithm Researchers: Go beyond simple adapta-\ntions based on pinhole models and create novel architec-\ntures and dynamic learning paradigms that possess om-\nnidirectional information, which is the key to embracing\nthe unique challenges of omnidirectional vision.\n• For Application Engineers: Explore and demonstrate\nthe benefits of omnidirectional perception in real-world\nrobotics and interactive systems, as it bridges the gap be-\ntween laboratory research and practical applications.\nThe era of embodied intelligence demands a paradigm shift\nfrom a narrow, forward-looking view to a comprehensive,\nspherical understanding of our world. By embracing omni-\ndirectional vision, we can collectively unlock the next fron-\ntier of embodied AI, creating agents that not only see but\nalso understand and interact with the entirety of their envi-\nronment. The embodied AI’s future is omnidirectional.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字核对：The era of embodied intelligence demands a paradigm shift from a narrow, forward-looking view to a comprehensive, spherical understanding of our world；creating agents that not only see but also understand and interact with the entirety of their environment；The embodied AI's future is omnidirectional；三方 bullet（For Dataset Creators/Algorithm Researchers/Application Engineers）逐字核对（Plan and publish large-scale multi-task omnidirectional datasets...；Go beyond simple adaptations based on pinhole models...；Explore and demonstrate the benefits of omnidirectional perception in real-world robotics and interactive systems）；claim 为原文的忠实复述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "Ai et al. 2024. Dream360: transformer-based 360 image outpainting (IEEE TVCG)",
+   "reason": "生成线早期代表（两阶段 codebook 外扩+频率感知细化），综述'全景内容生成'一节的锚点。"
+  },
+  {
+   "ref": "Wu, Zheng, and Cham 2023. PanoDiffusion: 360-degree panorama diffusion",
+   "reason": "扩散生成代表（双分支+RGB-D 条件注入空间信息），与具身仿真数据合成路线直接相关。"
+  },
+  {
+   "ref": "Zhong et al. 2025. OmniSAM（与 Zheng et al. 2024 360SFUDA++）",
+   "reason": "感知线域适应代表（伪标签动态更新/原型畸变匹配），是'针孔模型吃全景数据'的主流适配路线。"
+  },
+  {
+   "ref": "Dongfang et al. 2025. OSR-Bench；Zhang, Ye, and Zheng 2025. OmniVQA；Zhou et al. 2025. ERP-RoPE",
+   "reason": "理解线三个支点（认知地图分块基准/agent 协作标注/全景位置编码），与 2605.13169 PanoWorld 的 pano-native 训练正面衔接。"
+  },
+  {
+   "ref": "Zhou et al. 2025. Dense360（160K 全景+5M 实体级 caption）",
+   "reason": "2025 年户外理解数据的规模化代表，标志实体级全景 caption 的出现。"
+  },
+  {
+   "ref": "Kim et al. 2024（多传感器同步全景采集）",
+   "reason": "被引以支撑'完全同步多传感器全景采集罕见'的缺口判断——综述数据基础设施缺口一节的支点。"
+  }
+ ],
+ "notes": "alphaxiv 文本层提取（extraction method 记为 pdf-text；来源 alphaxiv-fulltext-api 非 OCR 文本层），9 页 AAAI 2026 talk/立场综述（正文 6 页+参考文献 3 页，AAAI 双栏排版，弯引号’需在锚点中转义）。证据卡以作者立场陈述（author-claim/direct）为主、三张技术线卡为转述被引工作（cited-work/citation-supported）；因论文无实验，quantitative 仅 C08 一张（Table 1 数据集规模统计）。与四篇实证论文的关系：本文提供综述的问题空间骨架（三差距）、应用方式骨架（四子系统）、获益/受限任务族与开放挑战——所有效果量级必须回溯到 2604.13476/2609.02319/2605.13169/2608.11051 的实证卡，本卡组不承担效果证据。定位器统一用 page N；跨页断句（page 1 末 Model Capabilities 句、page 3 末 Subsystem 1 句、page 5 末 Stage 6 句）已在 verification rationale 中双页核对。"
+}

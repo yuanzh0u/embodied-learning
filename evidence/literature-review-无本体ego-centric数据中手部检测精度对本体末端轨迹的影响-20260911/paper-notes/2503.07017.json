@@ -1,0 +1,285 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2503.07017",
+  "title": "How to Train Your Robots? The Impact of Demonstration Modality on Imitation Learning",
+  "published": "2025-03-10",
+  "url": "https://arxiv.org/abs/2503.07017",
+  "authors": [
+   "Haozhuo Li",
+   "Yuchen Cui",
+   "Dorsa Sadigh"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "empirical",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接控制变量的示教模态对比实验：同一示教者、同一策略架构（diffusion policy）下比较动觉示教/VR/空间鼠三种采集链路对下游模仿学习成功率与数据质量（动作一致性、状态多样性）的影响，为'采集/追踪链路质量如何传播到末端轨迹与策略可用性'提供核心评测证据，并提供混合模态缓解手段的量化结果。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble",
+    "role": "problem",
+    "purpose": "摘要与贡献列表，确认研究问题为示教模态对模仿学习性能/数据质量/用户体验的影响"
+   },
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "研究动机、三类低成本示教模态定义、关键发现列表"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "示教模态分类（teleoperation vs shadowing）、数据质量文献定位"
+   },
+   {
+    "locator": "III. PRELIMINARIES",
+    "role": "method-or-design",
+    "purpose": "模仿学习形式化、模态修正子 phi_x 的偏差建模、动作一致性/状态多样性度量定义"
+   },
+   {
+    "locator": "IV. EXPERIMENTAL DESIGN",
+    "role": "data-or-setting",
+    "purpose": "Franka Panda 平台、三任务设计、各模态采集管线（含动觉示教 replay 与接触力误差补偿启发式）、用户研究设计"
+   },
+   {
+    "locator": "V. RESULTS",
+    "role": "results-or-analysis",
+    "purpose": "策略成功率、用户研究、数据质量分析、混合模态实验"
+   },
+   {
+    "locator": "VI. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与未来工作（自动确定模态混合比例）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "relevant-core",
+    "reason": "参考文献列表，仅按需回查引用编号"
+   }
+  ]
+ },
+ "research_question": "不同示教模态（动觉示教、VR 遥操作、空间鼠遥操作）如何影响模仿学习的下游策略性能、数据质量与用户体验？",
+ "contributions": [
+  "在单一熟练示教者、三个运动约束各异的桌面任务上系统比较动觉示教、VR、空间鼠三种低成本示教模态对 diffusion policy 下游性能的影响",
+  "用动作一致性（KNN 动作方差）与状态多样性刻画各模态数据质量：动觉示教动作一致性高，遥操作状态多样性高",
+  "提出混合模态数据采集方案（少量动觉示教+VR 遥操作），平均成功率比单一模态高 20%"
+ ],
+ "method": {
+  "summary": "控制变量实验：同一示教者在每个任务上用三种模态各采 100 条轨迹（共 3 任务），统一为末端 delta 位姿+夹爪动作的表示，训练 diffusion policy（800K 步），以 20 次试验（一半 ID 一半 OOD）的成功率评测；12 名被试用户研究（NASA-TLX）评估体验；用 KNN 动作方差近似动作一致性、状态方差近似状态多样性。",
+  "assumptions": [
+   "数据质量是下游学习算法的函数，因此固定策略架构为 diffusion policy",
+   "初始状态分布在各模态间一致，故状态/动作方差估计偏差对各模态相同",
+   "动觉示教记录的末端位姿经 replay 可恢复动作（接触力存在时该假设失败，需启发式误差补偿）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采数据：3 任务 x 3 模态 x 100 轨迹（单一示教者）；用户研究 12 名被试每人每模态 5 条成功示教"
+  ],
+  "tasks": [
+   "Open Drawer（约束线性运动）",
+   "Flip Glass（大旋转、近关节极限）",
+   "Push Sanitizer（需接触力按压）"
+  ],
+  "embodiments": [
+   "7-DoF Franka Emika Panda 臂 + 腕部与外部 RGB 相机"
+  ],
+  "sample_or_scale": "900 条专家轨迹（3x3x100）+ 12 名被试用户研究；每配置 20 次策略评估试验"
+ },
+ "evaluation": {
+  "design": "单一示教者控制示教风格混淆；每模态每任务 100 条轨迹；选 5 个末段 checkpoint 中 ID 测试最优者做全量评测（10 ID + 10 OOD）；用户研究被试内三模态对比，模态顺序随机化",
+  "baselines": [
+   "三模态互为基线（kinesthetic / VR / spacemouse）",
+   "混合模态与单模态对比"
+  ],
+  "metrics": [
+   "任务成功率（20 次试验）",
+   "动作方差（KNN, K=200 专家 / K=50 用户）",
+   "状态方差",
+   "动作 jerkiness（二阶导）",
+   "NASA-TLX 7 点量表",
+   "练习时长"
+  ],
+  "ablations": [
+   "VR 与 spacemouse 无统计显著差异后合并为 teleoperation 类",
+   "混合比例未系统扫描（结论指出留作未来工作）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "动觉示教数据在 Open Drawer 与 Flip Glass 上训练出最优策略，但在需接触力的 Push Sanitizer 上不如遥操作，因为 replay 记录的末端位姿无法恢复动作，误差补偿启发式引入高 jerkiness",
+   "scope": "三个桌面任务、单一示教者、diffusion policy",
+   "locator": "V. RESULTS"
+  },
+  {
+   "finding": "动觉示教数据动作方差低、最大 jerkiness 低（除接触力任务），遥操作数据状态多样性更高；动作一致性与状态多样性均与高质量数据相关",
+   "scope": "专家与自评 Expert 用户数据",
+   "locator": "V. RESULTS"
+  },
+  {
+   "finding": "混合少量动觉示教与 VR 遥操作数据的策略平均成功率比单一模态高 20%；Flip Glass 上 100 条混合数据达 75%，比 100 条纯动觉示教的最优模型高 5 个百分点",
+   "scope": "Open Drawer 与 Flip Glass",
+   "locator": "V. RESULTS"
+  },
+  {
+   "finding": "用户评为动觉示教最直观（练习时间显著更短, p=0.038；心智需求与挫败感显著更低），但多数用户为大规模采集仍选遥操作（体力负担与 replay 时间）",
+   "scope": "12 名被试",
+   "locator": "V. RESULTS"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "接触力任务中 replay 末端位姿无法恢复动作；无力传感器，只能用补偿上一轮 replay 误差的启发式，导致动作 jerky 且 replay 时间翻倍",
+    "locator": "IV. EXPERIMENTAL DESIGN"
+   },
+   {
+    "limitation": "数据质量指标不考虑视觉状态（仅在本体感受状态空间计算）",
+    "locator": "III. PRELIMINARIES"
+   },
+   {
+    "limitation": "自动确定各模态数据的最优混合比例留作未来工作",
+    "locator": "VI. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论仅覆盖机器人在环的示教模态；VR 链路用手柄 IMU 位姿而非视觉手部检测，不能直接回答无本体 ego-centric 视频中视觉手部检测误差的传播问题",
+    "basis": "IV. EXPERIMENTAL DESIGN 描述 VR 用 Oculus 手柄位姿；全文无视觉手部追踪管线"
+   },
+   {
+    "boundary": "单一示教者、单一臂、三个桌面任务、每配置 20 次试验，效应量估计的统计功效有限；成功率数字不能外推到长时程或灵巧手任务",
+    "basis": "IV. EXPERIMENTAL DESIGN 与 V. RESULTS 的设计描述"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于 7-DoF 机械臂桌面操作、diffusion policy、短时程任务下的模态选择；'动作一致性/状态多样性->策略性能'的链路与'replay 接触力误差->动作 jerky->性能下降'的机制可类比迁移到无本体视频管线的误差传播分析，但具体成功率与阈值不可直接迁移到视觉手部检测场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "单一示教者+统一状态/动作表示严格控制示教风格与接口混淆变量",
+   "闭环评估：不仅评采集体验，还训练下游策略评学习性能",
+   "包含接触力任务暴露了 replay 类（shadowing）模态的失效模式"
+  ],
+  "design_risks": [
+   "单一专家示教者，风格结论可能不泛化；用户研究中非专家数据因噪声被丢弃",
+   "成功率基于 20 次试验且按 ID 测试选 checkpoint，存在选择偏倚",
+   "混合模态实验只试了一种混合方案，未扫描比例"
+  ],
+  "baseline_fairness": "三模态使用相同任务、相同状态/动作表示、相同策略架构与训练预算，示教者在各模态上练习程度相当，基线公平。",
+  "metric_validity": "成功率是部署相关指标；动作一致性/状态多样性是数据质量的代理指标（作者自承不含视觉状态），其与'高质量'的相关性在本文内得到经验支持但非因果证明。",
+  "reproducibility": "任务、控制频率、训练步数、评测协议均有描述；但未提及代码/数据发布，接触力补偿启发式需自行复现。",
+  "external_validity": "限于 Franka 单臂桌面任务与 19-29 岁工程专业被试；对移动操作、双手灵巧操作、非机器人背景用户的泛化未知。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2503.07017-C01",
+   "claim": "接触力存在时，replay 记录的末端位姿无法恢复示教动作；作者采用的误差补偿启发式虽能在第二次 replay 完成任务，但引入高 jerkiness，导致动觉示教数据在需强接触力的 Push Sanitizer 任务上训练的扩散策略性能不及遥操作数据。",
+   "stance": "conditional",
+   "relation": "限定'动觉示教数据质量最高'的成立条件；对综述问题而言，它示范了采集/恢复链路中的轨迹-动作不一致（误差源）如何经 replay 传播为动作抖动并降低下游策略可用性——与视觉手部检测误差经重定向传播到末端轨迹属同类机制。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "结果节明确报告 Push Sanitizer 中 replay 首次失败、误差项导致动作高 jerkiness；图 5 显示该任务上动觉示教策略欠优；设计节描述无力传感器时只能用补偿启发式。",
+   "locator": "V. RESULTS",
+   "source_context": "However, in Push Sanitizer (requiring high contact force), kinesthetic teaching falls short since replaying recorded end-effector poses did not succeed at this task in the first try. The error term we introduced in Section IV induces high jerkiness in actions despite successfully completing the task on the second iteration.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "V. RESULTS 原文逐句支持'replay 首次失败->误差项->高 jerkiness'的因果叙述；IV 节给出补偿公式；图 5 配文说明 Push Sanitizer 上动觉示教 underperform。卡断言未超出三任务范围。"
+   }
+  },
+  {
+   "card_id": "2503.07017-C02",
+   "claim": "将少量动觉示教数据与 VR 遥操作数据混合训练，最优模型平均成功率比任一单模态数据高 20%；在 Flip Glass 上 100 条混合示教达 75% 成功率，比 100 条纯动觉示教的最优模型高 5 个百分点。",
+   "stance": "support",
+   "relation": "支持'混合高精度/低负担数据可作为缓解手段'：对无本体视频管线，暗示可用少量高精度轨迹数据（如遥操作/动觉）混合大规模视频重定向数据来恢复末端轨迹可用性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "结果节直接给出 20% 平均提升与 Flip Glass 75%（+5%）两个数字，对应图 10 与图 11。",
+   "locator": "V. RESULTS",
+   "source_context": "We see that the best-performing models with mixed data outperform single-modality baseline by 20% on average. In Flip Glass, the model trained with a total of 100 mixed demonstrations achieves 75% success rate, outperforming (+5%) the best model using all 100 kinesthetic demonstrations (Fig. 5).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate",
+    "value_or_direction": "+20% on average; Flip Glass 75% (+5 points)",
+    "comparator": "best model trained on single-modality data (kinesthetic or VR)",
+    "task_or_sample": "Open Drawer 与 Flip Glass，各 100 条混合示教，20 次评估试验",
+    "locator": "V. RESULTS"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "V. RESULTS 末段原文包含 20%、75%、+5% 三个数字与对照对象；摘要与结论亦复述 20% 平均提升。卡断言严格限定在两个任务上。"
+   }
+  },
+  {
+   "card_id": "2503.07017-C03",
+   "claim": "采集模态决定数据的轨迹统计特征：动觉示教在无接触力任务上动作方差与最大 jerkiness 最低，而遥操作数据空间散布更广、状态多样性更高；Push Sanitizer 上动觉示教反而动作方差与 jerkiness 最高。",
+   "stance": "support",
+   "relation": "支持'轨迹级噪声特征由采集/追踪链路决定并影响数据质量'：为手部检测精度->重定向轨迹质量的分析提供度量框架（动作方差/jerkiness/状态多样性）与模态-噪声耦合的证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "结果节数据分析段直接报告各模态轨迹散布与动作方差/jerkiness 的相对关系；图 9 配文总结动觉示教动作方差与最大 jerkiness 更低（除接触力任务）。",
+   "locator": "V. RESULTS",
+   "source_context": "We observe that kinesthetic teaching leads to data with relatively low action variance in the two tasks without contact force, but high action variance and jerkiness in the Push Sanitizer task.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "V. RESULTS 数据分析段与图 9 配文均支持；'遥操作散布更广'见同段'data collected through teleoperation spreads out in space and covers more diverse states'。卡断言的方向与任务条件与原文一致。"
+   }
+  },
+  {
+   "card_id": "2503.07017-C04",
+   "claim": "该模态对比中即便是最接近'手到机器人'映射的 VR 遥操作，其手部轨迹也来自 Oculus 手柄 IMU 位姿而非视觉手部检测；因此本研究不能量化视觉手部检测误差的传播，无本体 ego-centric 视频模态不在其评测空间内。",
+   "stance": "gap",
+   "relation": "指出核心评测证据的边界：模态-质量排序成立，但'视觉手部检测精度->末端轨迹'这一链路需要专门评测，本文仅提供间接类比。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "前提：引言描述 VR 遥操作手柄轨迹直接映射为机器人轨迹；相关工作指出 VR 手柄由 IMU 追踪；实验节确认用 Oculus Quest 手柄位姿。推断：全文无视觉手部估计环节，故对综述问题的核心链路无直接测量。削弱条件：若其手柄位姿被视为手部检测的上界替代，则结论仅提供乐观边界。",
+   "locator": "I. INTRODUCTION",
+   "source_context": "With VR teleoperation, the demonstrator only needs to have a rough estimate of how their motion scales to the robot’s motion and their hand trajectory can then directly translate to robot trajectory.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "I. INTRODUCTION 与 II. RELATED WORK('VR controller tracks hand motion with an IMU sensor')及 IV('we use Oculus Quest’s controller and access the controller’s pose change')三处互证 VR 链路无视觉手部检测；推断已标注并给出削弱条件。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref_key": "2",
+   "citation": "S. Belkhale, Y. Cui, and D. Sadigh, Data quality in imitation learning, NeurIPS 2024",
+   "reason": "动作一致性/状态多样性度量框架的来源，支撑本文数据质量分析链路"
+  }
+ ],
+ "notes": "核心评测证据。VR 手柄轨迹->机器人轨迹的'直接映射'链路是无本体视频管线的最近邻对照；接触力 replay 失效是'轨迹恢复误差'的典型案例。"
+}

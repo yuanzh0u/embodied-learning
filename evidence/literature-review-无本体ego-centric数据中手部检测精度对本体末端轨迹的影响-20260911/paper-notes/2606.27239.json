@@ -1,0 +1,265 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.27239",
+  "title": "HumanoidUMI: Bridging Robot-Free Demonstrations and Humanoid Whole-Body Manipulation",
+  "published": "2026-06-25",
+  "url": "https://arxiv.org/abs/2606.27239",
+  "authors": [
+   "Hongwu Wang",
+   "Chenhao Yu",
+   "Youhao Hu",
+   "Jiachen Zhang",
+   "Yuanyuan Li",
+   "Shaqi Luo"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "HumanoidUMI 把 UMI 范式扩展到人形全身：PICO VR 控制器 6-DoF 追踪提供夹爪 TCP 关键点，经 pelvis 帧相对化标签、SKR 形态学重定向与延迟匹配三级处理后才成为机器人可执行轨迹——是观察'手部追踪误差沿 采集→标签→重定向→控制 传播并被逐级缓解'的完整链路样本。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "问题定义：人形全身技能的 robot-free 采集缺口；五关键点表示（pelvis+双 TCP+双足）与三层级框架。"
+   },
+   {
+    "locator": "A. Robot-free Data Collection System",
+    "role": "method-or-design",
+    "purpose": "PICO 融合追踪硬件、记录模态、在线 SKR、延迟匹配协议。"
+   },
+   {
+    "locator": "B. High-Level: Diffusion Policy",
+    "role": "method-or-design",
+    "purpose": "47 维稀疏关键点动作空间、pelvis 帧相对位姿标签（式 1-2）、观测与推理解码。"
+   },
+   {
+    "locator": "C. Bridge: Keypoint Retargeting System",
+    "role": "method-or-design",
+    "purpose": "SKR 形态感知调整（λ_leg=0.75）、固定标定偏移、两阶段约束加权 IK。"
+   },
+   {
+    "locator": "D. Low-Level: Whole-Body Controller",
+    "role": "method-or-design",
+    "purpose": "MJLab 学习的运动追踪控制器、50Hz 残差关节位置动作。"
+   },
+   {
+    "locator": "IV. EXPERIMENTS; A. Effectiveness of the robot-free data collection and train-",
+    "role": "results-or-analysis",
+    "purpose": "三任务部署验证与 SKR/延迟匹配消融（Fig. 6，每变体 20 次试验）。"
+   },
+   {
+    "locator": "C. Efficiency of robot-free data collection",
+    "role": "results-or-analysis",
+    "purpose": "Table I 有效演示吞吐对比（vs TWIST2，新手/熟练操作者）。"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与边界陈述。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II. RELATED WORKS",
+    "reason": "背景综述，无独立证据。"
+   },
+   {
+    "locator": "REFERENCES",
+    "reason": "参考文献列表。"
+   }
+  ]
+ },
+ "research_question": "如何在不使用目标机器人的前提下采集可部署的人形机器人全身操作演示，并把稀疏人体关键点轨迹经形态学重定向转换为全身可执行行为？",
+ "contributions": [
+  "便携 VR-UMI 采集系统：PICO 4 头显+双手柄+三下肢追踪器提供全身运动估计，自研 UMI 式手持夹爪（鱼眼腕视相机+电机齿轮齿条+磁编码器夹爪宽度+PICO 控制器安装槽）。",
+  "稀疏空间关键点重定向接口：默认五关键点（pelvis、双 TCP、双足），下肢密集任务扩展七关键点（加双膝），pelvis 帧相对位姿标签。",
+  "SKR 形态感知重定向：仅对腿相关关键点做垂直各向异性缩放（λ_leg=0.75），固定标定偏移补偿人体追踪点与机器人连杆帧差异，两阶段约束加权 IK 输出 36 维机器人原生参考。",
+  "三层级策略框架：扩散高层策略→SKR 桥→MJLab 学习的全身控制器（50Hz），在 Unitree G1 上完成五类真实任务。",
+  "效率证据：有效演示吞吐相对 TWIST2 遥操作平均提速约 2.2×（非移动任务），walking coffee delivery 新手 61 vs 1 条/10 分钟。"
+ ],
+ "method": {
+  "summary": "采集端：PICO 追踪管线融合惯性、地磁与主动红外传感输出 SMPL 格式身体表示，双手柄 6-DoF 位姿取自 PICO SDK，经坐标变换对齐机器人关键点帧后存为五点（可扩七点）全身关键点；SKR 在线运行产生下肢关节位置作为高层策略 proprioceptive 条件。策略端：Diffusion Policy 扩展版在 pelvis 帧内预测 H=48 的相对关键点动作块（5×9+2=47 维）；部署时按式 2 用当前机器人 FK 解码为 pelvis 参考目标，经 SKR 重定向与全身控制器闭环执行。",
+  "assumptions": [
+   "PICO 融合追踪的 6-DoF 身体/手柄位姿估计足够稳定（全文未给定量精度指标）。",
+   "演示者与 G1 的形态差异可由腿部垂直缩放 λ_leg=0.75 与固定标定偏移充分补偿。",
+   "pelvis 帧相对化表示下，采集-部署的全局帧差异不影响标签有效性。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HumanoidUMI 自采 robot-free 演示（腕视鱼眼图像 + 夹爪宽度 + 五/七关键点轨迹，经 XRobotoolkit 流式记录）"
+  ],
+  "tasks": [
+   "cluttered tabletop pick-and-place",
+   "bimanual vegetable collection",
+   "dynamic ball throwing",
+   "under-table waste disposal",
+   "walking coffee delivery"
+  ],
+  "embodiments": [
+   "Unitree G1 人形机器人（29 关节输出 + 根位姿）"
+  ],
+  "sample_or_scale": "消融与任务评估每变体 20 次独立试验（Fig. 6/7 柱状图）；吞吐对比为 2 名操作者 × 3 任务 × 10 分钟"
+ },
+ "evaluation": {
+  "design": "五真实任务定性+柱状图成功率（20 次试验/变体）；SKR 消融（替换为 GMR）与延迟匹配消融；吞吐对照 TWIST2。",
+  "baselines": [
+   "GMR 重定向（替换 SKR）",
+   "无延迟匹配变体",
+   "TWIST2 遥操作采集"
+  ],
+  "metrics": [
+   "任务成功率",
+   "有效演示吞吐（条/10 分钟）",
+   "吞吐加速比"
+  ],
+  "ablations": [
+   "SKR vs GMR",
+   "有无 latency matching",
+   "五关键点 vs 七关键点"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "策略监督标签为 pelvis 帧相对位姿：所有关键点以 query 时刻 pelvis 帧表示，未来位姿相对其 query 时刻位姿（式 1），部署时经式 2 用当前机器人 FK 解码。",
+   "scope": "HumanoidUMI 高层策略标签设计",
+   "locator": "B. High-Level: Diffusion Policy"
+  },
+  {
+   "finding": "SKR 仅对腿相关关键点施加垂直缩放 λ_leg=0.75，其余关键点坐标不变；固定标定偏移补偿追踪人体关键点与机器人连杆帧差异；两阶段 IK 先保足支撑再精修 pelvis/TCP。",
+   "scope": "SKR 重定向桥",
+   "locator": "C. Bridge: Keypoint Retargeting System"
+  },
+  {
+   "finding": "动态投球任务对释放时机高度敏感，需要跨相机观测、夹爪信号与机器人执行的延迟匹配；去除延迟匹配的消融使性能下降。",
+   "scope": "timing-sensitive 任务的同步精度",
+   "locator": "A. Effectiveness of the robot-free data collection and train-"
+  },
+  {
+   "finding": "robot-free 采集有效演示吞吐高于 TWIST2 遥操作（非移动任务约 2.2×，移动操作任务新手差距 61 vs 1 条/10 分钟）。",
+   "scope": "Table I，2 操作者 × 3 任务",
+   "locator": "C. Efficiency of robot-free data collection"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "PICO 追踪的绝对精度、漂移与失效模式（快速运动、磁干扰、追踪丢失）全文无定量报告；'stable 6-DoF body-motion estimates' 仅为定性声明。",
+    "basis": "III-A 仅描述融合传感管线与 SMPL 输出，无任何追踪误差测量实验。"
+   },
+   {
+    "boundary": "成功率结果仅以柱状图呈现，抽取文本中无逐任务数值；SKR/延迟匹配消融的效应量无法从文本核实。",
+    "basis": "Fig. 6/7 说明文字称 'success rates over 20 independent trials'，但 bar 数值未进入扁平文本。"
+   },
+   {
+    "boundary": "λ_leg=0.75 针对 G1 与演示者身高差设定，对其他身高段演示者或其他人形平台的泛化未验证；固定标定偏移的标定协议与残差未描述。",
+    "basis": "III-C 仅给出 λ_leg 单点取值与 'Fixed calibrated offsets are applied' 一句，无标定流程细节。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论绑定 PICO 4 追踪管线、Unitree G1 形态与 MJLab 学习的控制器；五/七关键点表示对其他关键部位（如肩、肘）主导的任务不覆盖；λ_leg 与固定偏移需按平台重标定；无追踪精度定量数据，不能据此推断 PICO 路径相对其他手部追踪方案的精度优劣。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "稀疏关键点+pelvis 相对化标签从表示层面降低对全局追踪帧精度的依赖",
+   "SKR 把形态误差显式隔离在腿部垂直缩放与固定偏移两处，传播路径清晰",
+   "覆盖 timing-sensitive 动态任务并消融延迟匹配，触碰了 UMI 族较少检验的同步精度维度"
+  ],
+  "design_risks": [
+   "无任何追踪/重定向精度的定量测量，链路保真度只能由任务成功率间接推断",
+   "消融数值只在柱状图中，文本不可核实",
+   "单平台（G1）单控制器后端"
+  ],
+  "baseline_fairness": "SKR 对照 GMR、延迟匹配消融为同系统内变体，较公平；TWIST2 吞吐对照含操作者熟练度分层，设计合理。",
+  "metric_validity": "成功率与吞吐为直接操作度量；但成功率数值未入文本，可审计性弱。",
+  "reproducibility": "硬件组成与软件栈（PICO SDK、XRobotoolkit、MJLab）写明；λ_leg、47 维动作空间、H=48 等超参齐全；固定标定偏移协议未公开细节。",
+  "external_validity": "五任务跨度较好（含动态与移动操作）；跨平台、跨演示者体型的外部效度未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.27239-C01",
+   "claim": "HumanoidUMI 的高层策略以稀疏关键点（默认 pelvis+双 TCP+双足，下肢密集任务加双膝）为动作空间，且所有关键点以 query 时刻 pelvis 帧表示、未来位姿相对其 query 时刻位姿构造相对标签（式 1），部署时再用当前机器人前向运动学解码（式 2）——手部（TCP）追踪误差经此相对化与根帧绑定被部分隔离，而非直接进入全局帧绝对轨迹标签。",
+   "stance": "conditional",
+   "relation": "回答'追踪精度要求如何被表示设计调节'：与 RealDexUMI 的 hand-frame 相对标签同族，pelvis 帧+相对位姿标签把全局追踪帧误差/采集-部署坐标差异从标签中消去，追踪精度只需保证关键点间局部几何保真；但相对化不能消除关键点本身的测量噪声，该噪声仍随式 2 解码进入机器人参考。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-B 明确动作空间构造（5×9+2=47 维）、pelvis 帧表示与式 1-2 的编码/解码；III-A 说明关键点来自 PICO SDK 手柄位姿与 SMPL 身体表示的坐标变换。",
+   "locator": "B. High-Level: Diffusion Policy",
+   "source_context": "All keypoint poses are expressed in the pelvis frame at the query time t.",
+   "evidence_type": "system-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 III-B；式 1（T_rel=(T_pel_{k,t})^{-1}T_pel_{k,τ}）与式 2 解码同节可查；卡面限于设计声明与传播路径分析，未声称精度收益数值。"
+   }
+  },
+  {
+   "card_id": "2606.27239-C02",
+   "claim": "SKR 把人体-机器人形态差异的补偿显式集中在两处：对腿相关关键点仅施加 pelvis 局部垂直缩放（λ_leg=0.75，其余关键点坐标不变），以及对所有关键点施加固定标定偏移以吸收追踪人体关键点与机器人连杆帧之间的差异；随后两阶段约束加权 IK（先足支撑一致性、后 pelvis/TCP 精修）生成时间连贯的机器人原生参考。",
+   "stance": "conditional",
+   "relation": "回答'传播路径与缓解手段'：采集端手部/身体追踪误差进入系统后，重定向桥是第一道显式处理环节——形态错配与追踪点-连杆帧偏差在 SKR 被参数化吸收，避免直接污染 IK 目标；但固定偏移的标定协议与残差未报告，缓解充分性不可考。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-C 给出 λ_leg=0.75 的取值与动机（演示者与 G1 腿长差）、'Fixed calibrated offsets are applied...' 的偏移声明、式 5 的加权 IK 与两阶段流程；Fig. 5 说明 SKR 保留关键点间度量空间关系。",
+   "locator": "C. Bridge: Keypoint Retargeting System",
+   "source_context": "Fixed calibrated offsets are applied to account for differences between the tracked human keypoints and robot link frames.",
+   "evidence_type": "system-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 III-C；λ_leg=0.75 与两阶段 IK 描述同节可查；卡面如实标注偏移标定协议未报告，未把设计声明当作实测精度证据。"
+   }
+  },
+  {
+   "card_id": "2606.27239-C03",
+   "claim": "对 timing-sensitive 任务，HumanoidUMI 遵循 UMI 的延迟匹配协议校准并补偿腕视观测、夹爪状态、高层策略推理与机器人控制之间的相对延迟；动态投球消融显示去除延迟匹配会使性能下降，说明传感-控制同步精度是动态任务中独立于空间追踪精度的轨迹可用性决定因素。",
+   "stance": "support",
+   "relation": "回答'误差来源'的时间维度：无本体采集的末端轨迹误差不仅有空间分量（追踪精度），还有时间分量（多模态流相对延迟）；后者在快速动态任务中直接决定动作时机正确性，延迟匹配是沿用 UMI 的标准缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-A 'Latency matching' 段声明沿用 UMI[9] 协议校准补偿；IV-A 报告动态投球任务对释放时机高度敏感、去除延迟匹配的消融性能下降（Fig. 6 柱状图，20 次试验/变体，文本无数值）。",
+   "locator": "A. Robot-free Data Collection System; A. Effectiveness of the robot-free data collection and train-",
+   "source_context": "For timing-sensitive tasks, we follow the latency-matching procedure of UMI [9] to calibrate and compensate for the relative delays among wrist-view observations, gripper-state measurements, high-level policy inference, and robot control.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 III-A；消融降级结论出自 IV-A 'removing latency matching also degrades performance'（抽取文本中 'synchro- nization' 断词故未用作引文）；Fig. 6 数值未入文本，卡面保持定性。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Chi et al., Universal Manipulation Interface (UMI), RSS 2024 [9]（手持夹爪设计原则与延迟匹配协议来源）",
+  "TWIST2 [2]（吞吐对照的遥操作采集系统）",
+  "GMR [25]（SKR 的重定向对照）",
+  "XRobotoolkit [21]（全身运动流式记录）"
+ ],
+ "notes": "HumanoidUMI 对本综述的价值在于展示'手部追踪误差传播链'的全身版：PICO 手柄 TCP 关键点→pelvis 帧相对标签→SKR 形态补偿→IK→WBC，每一级都有显式或隐式的误差隔离设计。与 RealDexUMI（共享硬件零差距）和 ActiveUMI（VR 追踪+RPE 定量）对照，HumanoidUMI 处于'表示级+重定向级缓解充分但硬件精度未量化'的位置——全文无任何追踪误差测量，精度论证完全依赖端到端成功率。Fig. 6/7 柱状图数值未进入抽取文本，引用消融效应量时需回看原图。吞吐 Table I（2.2×/61 vs 1）与本综述问题相关性弱，未单独设卡。"
+}

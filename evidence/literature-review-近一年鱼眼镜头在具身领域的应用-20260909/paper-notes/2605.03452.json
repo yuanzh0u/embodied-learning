@@ -1,0 +1,456 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.03452",
+  "title": "BifrostUMI: Bridging Robot-Free Demonstrations and Humanoid Whole-Body Manipulation",
+  "published": "2026-05",
+  "url": "https://arxiv.org/abs/2605.03452",
+  "authors": [
+   "Hongwu Wang",
+   "Chenhao Yu",
+   "Youhao Hu",
+   "Jiachen Zhang",
+   "Yuanyuan Li",
+   "Shaqi Luo"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文在具身智能数据采集硬件层直接使用鱼眼相机：每个 UMI 式手持夹爪集成一个鱼眼相机，作为腕视图视觉通道记录同步观测（Fig. 2、Sec. III.A），并以此训练可部署到 Unitree G1 人形的全身 visuomotor 策略（224×224 左右腕视图 RGB 直接进 DINOv2 编码的 diffusion policy）。它为综述问题提供『鱼眼腕视图 + 免机器人人类演示 → 人形全身技能』的完整应用链证据：应用方式（UMI 式夹爪内置鱼眼）、效果（五类真机任务可部署 + 采集吞吐量较遥操作平均 ~2.2×、行走任务 61:1）、局限（鱼眼型号/FoV/畸变处理均未披露；唯一视觉输入是腕部双视图；时序敏感任务依赖显式延迟匹配）。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：人形全身技能演示采集依赖遥操作（硬件可达性、操作员技能、效率受限），提出 VR–UMI 免机器人采集框架。"
+   },
+   {
+    "locator": "page 2, II Related Works (A Humanoid Data Collection, B Whole-Body Visuomotor Policies)",
+    "role": "relevant-core",
+    "purpose": "定位与 HuMI/HoMMI/EgoHumanoid/TWIST2 等人形数据采集与全身策略工作的差异：便携、低成本、免机器人、显式重定向接口。"
+   },
+   {
+    "locator": "page 3, III.A Robot-free Data Collection System (hardware, modalities, latency matching)",
+    "role": "method-or-design",
+    "purpose": "精读数据采集硬件：PICO 全身动捕 + 两个手持夹爪（各集成鱼眼相机与电机驱动夹爪）、五关键点表示、在线 SKR、延迟匹配流程。"
+   },
+   {
+    "locator": "page 4, III.B High-Level: Diffusion Policy (action space, observation, inference)",
+    "role": "method-or-design",
+    "purpose": "精读策略观测与动作接口：一对同步 224×224 左右腕视图 RGB（唯一视觉输入）+ 15 维下肢本体感知三帧历史；47/65 维关键点动作块；DINOv2 编码。"
+   },
+   {
+    "locator": "page 4-5, III.C Bridge: Keypoint Retargeting System and III.D Low-Level: Whole-Body Controller",
+    "role": "method-or-design",
+    "purpose": "精读 SKR 形态学感知重定向（λ_leg=0.75 各向异性调整、两阶段加权 IK）与 50Hz 全身控制器（MJLab 训练、29 维残差关节动作）。"
+   },
+   {
+    "locator": "page 5-6, IV Experiments and IV.A Effectiveness (Fig. 6 three tasks)",
+    "role": "results-or-analysis",
+    "purpose": "核对三个真机任务（杂乱桌面抓放、双臂蔬菜收集、动态投掷）定性结果与消融（SKR→GMR、延迟匹配移除）的方向性结论。"
+   },
+   {
+    "locator": "page 6-8, IV.B Whole-body manipulation capability (Fig. 7) and IV.C Efficiency (Table I)",
+    "role": "results-or-analysis",
+    "purpose": "核对两个全身任务（桌下垃圾处理、行走咖啡递送）、膝关键点消融与 10 分钟有效演示吞吐量对比（novice/expert × 3 任务 × TWIST2 基线）。"
+   },
+   {
+    "locator": "page 8, V Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者结论与隐含边界：论文无独立 Limitations 小节，结论仅声明五任务部署与吞吐量优势。"
+   },
+   {
+    "locator": "page 8, References",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 UMI [9]、HuMI [17]、TWIST2 [2]、Diffusion Policy [22] 等关键引文与本文在 UMI 系列中的位置。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "如何在不接触目标机器人的前提下，采集可部署到人形机器人的全身操作演示？具体地：能否用便携 VR 全身动捕 + UMI 式手持夹爪（各带鱼眼腕视图相机）采集稀疏关键点轨迹与腕视图观测，经关键点重定向与全身控制器，在真实 Unitree G1 上产生协调的全身操作行为，且采集效率优于遥操作？",
+ "contributions": [
+  "BifrostUMI 便携免机器人数据采集系统：PICO 4 VR 全身动捕（头显+手持控制器+三下肢 tracker，惯性/地磁/主动红外融合出 SMPL 格式全身运动）+ 两个 UMI 式手持夹爪（各集成鱼眼相机与电机驱动 rack-and-pinion 夹爪，手柄带 PICO 控制器卡槽）。",
+  "稀疏空间关键点接口：五关键点（骨盆、双夹爪 TCP、双脚）+ 可扩展七关键点（双膝）表示人类全身意图，作为人到人形重定向的显式几何接口；在线运行 SKR 使操作员采集时即可可视化重定向后的人形运动。",
+  "三层级策略框架：diffusion 高层策略从腕视图 RGB + 下肢本体感知预测 48 步关键点动作块（47/65 维）→ SKR 形态学感知重定向（λ_leg=0.75 垂直各向异性 + 两阶段加权 IK）→ 50Hz 学习型全身控制器闭环执行。",
+  "在 Unitree G1 上跨五类真实任务（单臂、双臂、动态投掷、全身弯腰、行走-操作）验证可部署性，并给出相对 TWIST2 遥操作的采集吞吐量对比。"
+ ],
+ "method": {
+  "summary": "BifrostUMI 把人形全身演示采集拆为三层：(1) 采集层——操作员佩戴 PICO 4 VR 系统并手持两个 UMI 式夹爪；系统同步记录鱼眼腕视图图像、五（或七）全身关键点 6-DoF 位姿（PICO SDK 从 SMPL 表示提取骨盆/双脚，夹爪 TCP 取自控制器位姿）与磁编码器夹爪开度；SKR 在线把关键点重定向为机器人参考并记录下肢关节角作为本体感知条件。(2) 策略层——diffusion policy（DINOv2 编码 224×224 左右腕视图 RGB + 15 维下肢本体感知三帧历史）预测以查询时刻骨盆坐标系表示的相对关键点动作块（H=48，5×9+2=47 维；七关键点变体 7×9+2=65 维）。(3) 执行层——SKR 先做骨盆局部各向异性调整（仅腿相关关键点垂直位移乘 λ_leg=0.75）再解两阶段加权约束 IK 得到 36 维机器人原生参考（根位姿+关节角），由 MJLab 训练的 50Hz 全身控制器以 29 维残差关节位置动作闭环跟踪。时序敏感任务沿用 UMI 的延迟匹配流程校准腕视图观测、夹爪状态、策略推理与机器人控制间的相对延迟。",
+  "assumptions": [
+   "鱼眼腕视图图像经 224×224 缩放与 DINOv2 编码后已携带足够的任务相关视觉信息，无需（也未报告）显式畸变校正。",
+   "稀疏关键点几何（骨盆/TCP/脚/膝）足以承载全身任务意图，上肢关节角可由 SKR 与控制器在下游解析。",
+   "PICO VR 全身动捕在采集域内的 6-DoF 估计足够稳定，人-机器人身高差可通过单一的垂直缩放系数 λ_leg 补偿。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采 BifrostUMI 演示数据（VR–UMI 采集，含鱼眼腕视图图像、五/七关键点轨迹、夹爪开度、SKR 重定向下肢关节角；规模未披露条数/小时数）"
+  ],
+  "tasks": [
+   "杂乱桌面抓取放置（bread→plate，单臂视觉 grounding）",
+   "双臂蔬菜收集（右手放茄子、左手放黄瓜，双臂顺序协调）",
+   "动态投掷（wind-up-释放-命中，时序敏感）",
+   "桌下垃圾处置（抓纸团-后退-屈膝弯腰-投入桌下垃圾桶）",
+   "行走咖啡递送（前进-稳定停止-伸手递出，loco-manipulation）"
+  ],
+  "embodiments": [
+   "Unitree G1 人形机器人（部署平台）",
+   "人类操作员（PICO 4 VR + 双手持 UMI 式夹爪采集）",
+   "TWIST2 遥操作系统（效率基线）"
+  ],
+  "sample_or_scale": "五任务各 20 独立 trials 评测；消融（SKR→GMR、延迟匹配移除、膝关键点、五 vs 七关键点）同样以 20 trials 报告（数值仅见图 6/7 条形图，正文未给具体百分比）；效率对比为 2 名操作员（novice/expert）× 3 任务 × 10 分钟窗口的有效轨迹计数。"
+ },
+ "evaluation": {
+  "design": "单平台（Unitree G1）五任务真机验证 + 模块消融（图 6/7 条形图，20 trials/配置）+ 采集效率对比（Table I：BifrostUMI vs TWIST2 遥操作，2 操作员 × 3 任务 × 10 分钟有效轨迹数，speedup 按操作员-任务对计算）。无仿真基准、无外部数据集评测。",
+  "baselines": [
+   "TWIST2（state-of-the-art 人形遥操作采集，效率基线，Table I）",
+   "GMR [25]（替换 SKR 的重定向消融基线，Fig. 6）",
+   "完整 BifrostUMI vs 去延迟匹配 / 五 vs 七关键点变体（自消融，Fig. 6/7）"
+  ],
+  "metrics": [
+   "任务成功率（20 trials，数值仅呈现于图中）",
+   "10 分钟内有效演示轨迹数与相对 speedup（Table I）"
+  ],
+  "ablations": [
+   "SKR vs GMR：前两任务成功率大幅下降（Fig. 6，方向性结论，无正文数值）",
+   "移除延迟匹配：动态投掷退化（Fig. 6）",
+   "膝关键点消融：强腰腿参与任务下下肢姿态欠约束、可靠性下降（Fig. 7）",
+   "七关键点 vs 五关键点变体：下半身密集任务获益（Fig. 7）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "免机器人 VR–UMI 演示可转化为物理人形上的可部署策略：杂乱桌面抓放、双臂蔬菜收集、动态投掷三任务全部完成视觉定位-抓取-转移-放置/释放闭环（Fig. 6 定性，20 trials/任务）。",
+   "scope": "Unitree G1 真机，三任务，鱼眼腕视图为唯一视觉输入",
+   "locator": "page 6, Section IV.A and Fig. 6"
+  },
+  {
+   "finding": "鱼眼腕视图观测要支撑时序敏感任务（动态投掷）需显式延迟匹配：移除后性能退化，感知/夹爪状态/机器人执行间的精确同步对定时释放至关重要。",
+   "scope": "动态投掷任务消融（Fig. 6）",
+   "locator": "page 6, Section IV.A"
+  },
+  {
+   "finding": "全身任务（桌下垃圾处置、行走咖啡递送）在七关键点变体下完成：稀疏关键点可编码到达臂外工作区所需的全身姿态变化，行走-操作作为耦合行为而非两个独立阶段涌现。",
+   "scope": "Unitree G1 真机，两任务，膝关键点扩展配置（Fig. 7）",
+   "locator": "page 7, Section IV.B and Fig. 7"
+  },
+  {
+   "finding": "采集效率：10 分钟窗口内 BifrostUMI 有效演示吞吐量在全部操作员×任务组合上超过 TWIST2，非行走任务平均 ~2.2×，行走咖啡递送上 novice 61 vs 1（61.0×）、expert 62 vs 5（12.4×）；novice 吞吐量接近 expert，操作门槛更低。",
+   "scope": "2 操作员 × 3 任务 × 10 分钟，Table I",
+   "locator": "page 7, Table I"
+  },
+  {
+   "finding": "重定向接口是硬依赖：把 SKR 换成 GMR 大幅降低前两任务成功率，上层视觉策略偶尔可通过闭环视觉反馈恢复但补偿脆弱不稳定。",
+   "scope": "SKR vs GMR 消融（Fig. 6）",
+   "locator": "page 6, Section IV.A"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "鱼眼相机核心参数与处理链路完全不透明：型号、FoV 度数、分辨率、是否做畸变校正/去畸变均未披露；策略直接消费 224×224 腕视图 RGB，径向畸变对视觉 grounding 精度的影响未被隔离评估，『鱼眼可用』的结论无法与『任意等效分辨率针孔腕相机也可用』区分。",
+    "basis": "全文 fisheye 仅两处（page 3 Fig. 2 caption 与 Sec. III.A hardware 段），无 rectification/distortion/FoV 数值；Observation 段仅给出 224×224 输入与 DINOv2 编码（page 4）。"
+   },
+   {
+    "boundary": "视觉输入仅限腕部双视图，无全局/环视/第三人称视野：任务空间定位依赖腕视图局部 grounding + 关键点几何接口，桌面范围外的场景感知（避障、目标搜索、大空间导航-操作）不在该视觉配置的验证域内。",
+    "basis": "Observation 段明确唯一视觉条件是一对同步左右腕视图 RGB（page 4）；五任务均为桌面/近场范围（page 6-7）。"
+   },
+   {
+    "boundary": "定量成功率只存在于图中（Fig. 6/7 条形图），正文未报告任何具体百分比；任务成功率、每任务演示数量、训练细节（数据量/训练步数）与统计显著性均无法从文本核验，结论强度限于定性+吞吐量计数。",
+    "basis": "正文仅描述『success rates over 20 independent trials』（Fig. 6/7 caption）与『substantially reduces success』等定性表述（page 6）；唯一文本化数字是 Table I 吞吐量（page 7）。"
+   },
+   {
+    "boundary": "单平台（Unitree G1）单场景族验证、遥操作基线仅 TWIST2 一家、操作员仅两人；吞吐量对比未控制演示质量分布（『valid』判据未定义于文本），跨本体/跨任务族的效率优势外推有限。",
+    "basis": "实验节仅报告 G1 与 TWIST2/2 操作员（page 5-8）；valid demonstration 判定标准未在正文给出。"
+   }
+  ]
+ },
+ "transfer_boundary": "对综述的迁移边界：本文验证的是『鱼眼相机作为 UMI 式腕视图传感器』这一硬件配置在人形全身演示采集-学习-部署全链路上的可行性，验证域为单台 Unitree G1 上的 5 个桌面/室内任务（20 trials/任务，成功率数值仅在图中）。鱼眼相机型号、FoV 度数、畸变校正策略均未披露，策略直接消费 224×224 腕视图 RGB；因此该证据支持『腕装鱼眼可作为免机器人演示采集的视觉通道』，但不能外推为『任意鱼眼配置下视觉 grounding 均无损』——畸变对精细视觉定位的影响未被隔离测量。此外腕视图是唯一视觉输入，不含环视/全景配置，任务空间定位依赖关键点几何接口而非全局场景感知。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "免机器人采集 → 重定向 → 全身控制的三层解耦使任务意图、运动学对应与低层执行分离，重定向接口（SKR）可被独立消融验证。",
+   "效率对比覆盖操作员经验维度（novice vs expert）并逐任务-操作员对报告 speedup，行走任务上 61:1 的差距直观呈现遥操作对 loco-manipulation 的不适配。",
+   "在线 SKR 使采集时即可可视化重定向结果，操作员能即时发现运动学不可行的演示，是数据质量的前置控制。"
+  ],
+  "design_risks": [
+   "核心定量结果（成功率）仅以条形图呈现且无正文数值、无置信区间，文本层面不可复核算验。",
+   "SKR 的 λ_leg=0.75 是针对单一身高差的人工常数，跨操作员身高变化的稳健性未评估。",
+   "鱼眼图像的几何处理（畸变、内参、去畸变）零披露，视觉管线的可复现性受限。"
+  ],
+  "baseline_fairness": "效率基线仅 TWIST2 一家 SOTA 遥操作系统且对比的是吞吐量而非策略性能；策略侧无外部基线（无 HuMI/HoMMI 数字对比），消融基线（GMR）合理但同为重定向方法，未对比『不重定向直接用人类关节角』的下界。总体为自证式评估，公平性可接受但外推弱。",
+  "metric_validity": "吞吐量指标（10 分钟有效轨迹数）对『采集效率』构念直接有效且文本化；成功率指标以 20 trials 二值判定，对『可部署性』合理但无统计区间；『valid』轨迹判据未定义，效率数字的解释依赖该未披露判据。",
+  "reproducibility": "硬件（PICO 4 + 自研夹爪）、关键点定义、SKR 公式（式 4/5）、控制器接口（式 6/7）均有文本描述，但鱼眼相机型号/参数、演示数据规模、训练超参缺失，项目页仅给链接；独立复现需要大量补全。",
+  "external_validity": "结论域为单台 Unitree G1 + 5 个室内/桌面任务 + 2 名操作员；对其他本体（臂展/腿长比不同）、高动态任务、野外场景、其他鱼眼配置的有效性未测；对综述问题的证据力集中在『UMI 式腕装鱼眼作为演示采集视觉通道可行且高效』这一窄命题上。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.03452-C01",
+   "claim": "BifrostUMI 的每个手持操作接口都集成一个鱼眼相机与电机驱动 rack-and-pinion 夹爪机构，手柄带 PICO 控制器专用卡槽，使稳定抓取与腕视图视觉观测、夹爪开度测量同步进行。",
+   "stance": "support",
+   "relation": "支持『应用方式』层命题：腕装鱼眼相机是 UMI 式免机器人演示采集硬件的标准视觉通道，直接内嵌于夹爪本体。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. III.A hardware 段逐字描述每个接口集成鱼眼相机+电机驱动夹爪+控制器卡槽的设计，鱼眼与夹爪机构物理一体化。",
+   "locator": "page 3, Section III.A Robot-free Data Collection System, Data-collection hardware",
+   "source_context": "Each interface integrates a fisheye camera and a motor-driven rack- and-pinion gripper mechanism, together with a handle that includes a dedicated mounting slot for a PICO controller. This design enables stable grasping while simultaneously capturing wrist-view visual observations and gripper width measurements.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Sec. III.A 逐字给出『Each interface integrates a fisheye camera and a motor-driven rack-and-pinion gripper mechanism』与『simultaneously capturing wrist-view visual observations and gripper width measurements』，claim 仅为该句的中文转述，无外推。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C02",
+   "claim": "采集平台由 PICO 动捕（双脚+腰部 tracker）与两个各带一个鱼眼相机的仪表化夹爪组成，系统同步记录鱼眼腕视图图像、PICO SDK 人体关键点状态与电机编码器夹爪开度三路多模态观测。",
+   "stance": "support",
+   "relation": "支持『应用方式』层命题：鱼眼腕视图与全身动捕、夹爪状态在免机器人采集系统中硬件级同步融合，构成策略训练的多模态观测。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Fig. 2 caption 明确两个仪表化夹爪各配一个鱼眼相机，且系统同步记录腕视图图像（来自鱼眼相机）、关键点状态（PICO SDK）与夹爪开度（电机编码器）。",
+   "locator": "page 3, Fig. 2 BifrostUMI Data Acquisition System caption",
+   "source_context": "The data acquisition platform consists of a PICO-based motion capture setup, including two foot-mounted trackers and one waist-mounted tracker, together with two instrumented grippers, each equipped with a fisheye camera. The system synchronously records multimodal observations, including wrist-view images from the fisheye cameras, human keypoint states obtained via the PICO SDK, and gripper aperture measurements derived from motor encoder readings.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Fig. 2 caption（page 3）逐字描述『two instrumented grippers, each equipped with a fisheye camera』与『synchronously records multimodal observations, including wrist-view images from the fisheye cameras』，claim 是忠实转述。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C03",
+   "claim": "高层策略的唯一视觉条件是一对同步的 224×224 左右腕视图 RGB 图像，辅以 15 维下肢本体感知向量（12 腿关节+3 腰关节）的三帧历史；腕视图（鱼眼采集）是策略全部视觉输入。",
+   "stance": "support",
+   "relation": "支持『应用方式与效果』层命题：鱼眼腕视图图像经 224×224 缩放后直接作为人形全身策略的视觉条件，无需其他相机。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. III.B Observation 段明确策略条件为一对同步 224×224 左右腕视图 RGB + 15 维下肢本体感知三帧历史；上肢关节被省略因操作意图由 TCP 关键点表达。",
+   "locator": "page 4, Section III.B High-Level: Diffusion Policy, Observation",
+   "source_context": "The policy is conditioned on one synchro- nized pair of 224×224 left/right wrist-view RGB images and a three-frame history of a 15-D lower-body proprioceptive vector, including 12 leg joints and 3 waist joints.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Observation 段逐字给出 224×224 左右腕视图 RGB 对与 15-D（12 腿+3 腰）三帧历史，claim 收紧为对原文的直接转述。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C04",
+   "claim": "腕视图 RGB 图像由 DINOv2 编码，与下肢本体感知及 diffusion 步数融合为全局条件，diffusion 模型据此预测 TCP 与身体支撑关键点的动作轨迹。",
+   "stance": "support",
+   "relation": "支持『应用方式』层命题：鱼眼腕视图经通用视觉基础模型（DINOv2）编码即可进入动作生成，未报告针对鱼眼畸变的专门处理。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Fig. 4 caption 描述条件 diffusion 策略架构：腕视图 RGB→DINOv2→与本体感知/diffusion 步融合→预测关键点动作轨迹。",
+   "locator": "page 4, Fig. 4 Conditional diffusion policy architecture caption",
+   "source_context": "Wrist-view RGB images are encoded by DINOv2 and fused with lower-body proprioception and the diffusion step as the global condition. The diffusion model predicts action trajectories for TCPs and body-support keypoints.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Fig. 4 caption（page 4）逐字给出 DINOv2 编码腕视图 RGB 与融合条件、预测 TCP/支撑关键点轨迹，claim 无外推。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C05",
+   "claim": "对时序敏感任务，BifrostUMI 沿用 UMI 的延迟匹配流程，校准并补偿腕视图观测、夹爪状态测量、高层策略推理与机器人控制之间的相对延迟——鱼眼腕视图要支撑定时敏感行为需显式时序校准。",
+   "stance": "conditional",
+   "relation": "界定『获益条件』：腕装鱼眼观测在时序敏感任务上的可用性以显式延迟匹配为前提条件，未经校准的相机-执行链路会限制此类任务。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. III.A Latency matching 段声明遵循 UMI [9] 的延迟匹配程序校准四路延迟；与 C10 消融（移除后动态投掷退化）互证。",
+   "locator": "page 3, Section III.A, Latency matching",
+   "source_context": "For timing-sensitive tasks, we follow the latency-matching procedure of UMI [9] to calibrate and compensate for the relative delays among wrist-view observations, gripper-state measurements, high-level policy inference, and robot control.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Latency matching 段逐字给出遵循 UMI 流程校准腕视图/夹爪状态/策略推理/控制四路延迟，conditional 判定来自与 page 6 消融（移除延迟匹配退化）的关联，claim 本身无外推。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C06",
+   "claim": "10 分钟窗口内 BifrostUMI 的有效演示吞吐量在全部操作员×任务组合上高于 TWIST2 遥操作：非行走任务平均加速约 2.2×，行走咖啡递送上差距悬殊（novice 61 vs 1，61.0×）。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：腕装鱼眼的免机器人采集在人形（尤其 loco-manipulation）演示获取效率上显著优于遥操作，数据获取是该配置的主要获益任务。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 报告六组操作员-任务对的 10 分钟有效轨迹数与 speedup（2.2×/2.5×/61.0×/1.8×/2.3×/12.4×），正文总结非行走任务平均 ~2.2×。",
+   "locator": "page 7, Table I and Section IV.C",
+   "source_context": "As shown in Table I, BifrostUMI consistently achieves higher valid demonstration throughput than TWIST2 across all operators and tasks, yielding an average speedup of approximately 2.2× on the two non-locomotion tasks and a much larger gain on walking coffee delivery.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "10 分钟内有效演示轨迹数 / 相对遥操作加速倍数",
+    "value_or_direction": "非行走任务平均 ~2.2×；novice 行走递送 61 条 vs TWIST2 1 条（61.0×），expert 62 vs 5（12.4×）",
+    "comparator": "TWIST2 遥操作采集基线",
+    "task_or_sample": "2 操作员（novice/expert）× 3 任务（bimanual/throw trash/walk+coffee）× 10 分钟",
+    "locator": "page 7, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 正文总结句与 Table I 六行数字（55/25, 43/17, 61/1, 55/30, 53/23, 62/5 及 speedup 列 2.2×–61.0×）逐项对应，claim 数字全部来自表格与总结句。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C07",
+   "claim": "基于鱼眼腕视图观测训练的策略在三个真实任务（杂乱桌面抓放、双臂蔬菜收集、动态投掷）上把免机器人人类演示迁移为物理人形执行：完成视觉定位、抓取、转移与放置/释放，说明学习到的策略超出慢速末端到达。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：仅以腕装鱼眼为视觉输入即可支撑单臂抓放、双臂协调与定时释放三类可部署操作技能。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. IV.A 定性结论：Fig. 6 显示三任务全部完成闭环；具体成功率数值仅在图中，正文为定性表述。",
+   "locator": "page 6, Section IV.A, Fig. 6",
+   "source_context": "The qualitative results in Fig. 6 show that BifrostUMI transfers robot-free human demonstrations to physical hu- manoid execution across all three tasks. The robot completes visual localization, grasping, transfer, and placement in the cluttered scene; switches between two arms for sequential bimanual collection; and generates a coordinated wind-up and release motion for dynamic ball throwing, indicating that the learned policy extends beyond slow end-effector reaching.",
+   "evidence_type": "qualitative-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Sec. IV.A 逐字给出三任务定性结论与『extends beyond slow end-effector reaching』表述；claim 收紧为定性主张，不引用图中未文本化的具体百分比。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C08",
+   "claim": "把空间关键点重定向（SKR）替换为 GMR 会大幅降低前两个操作任务的成功率：人形部署需要 SKR 做尺度自适应同时保留任务相关关键点的空间结构，无空间锚定的重定向下上层视觉策略仅能偶尔靠闭环视觉反馈恢复且补偿脆弱。",
+   "stance": "support",
+   "relation": "支持『机制』层命题：腕视图视觉策略的可用性依赖其下的几何重定向接口——鱼眼视觉与关键点几何链路是耦合系统，视觉单独不足以补偿重定向误差。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. IV.A 消融结论：SKR→GMR 替换大幅降低成功率；闭环视觉反馈的补偿被描述为 brittle and unstable。",
+   "locator": "page 6, Section IV.A, Fig. 6 ablation",
+   "source_context": "For the first two tasks, replacing Spatial Keypoint Retargeting with GMR [25] substantially reduces success. This confirms that humanoid deployment requires SKR to perform scale adaptation while preserving the spatial structure of task-relevant keypoints. Without this spatially grounded retargeting, the upper-level visual policy may occasionally recover through closed-loop visual feedback, but such compensation is brittle and unsta- ble.",
+   "evidence_type": "ablation-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Sec. IV.A 逐字给出 SKR→GMR 大幅降低成功率与脆弱补偿的表述，claim 为直接转述，幅度具体值文中未给故不引用数字。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C09",
+   "claim": "强腰腿参与的任务需要膝关键点：膝关键点消融显示其对恢复正确下肢运动（尤其屈膝与降低身体）至关重要，缺少时下肢姿态欠约束、全身执行可靠性下降；全身任务（桌下垃圾处置、行走咖啡递送）在七关键点变体下于物理 G1 上完成。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：腕装鱼眼+稀疏全身关键点接口可支撑需要弯腰、屈膝、行走的全身 loco-manipulation 技能。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. IV.B 报告 Fig. 7 两全身任务定性完成与膝关键点消融结论（欠约束→可靠性下降）。",
+   "locator": "page 7, Section IV.B and Fig. 7",
+   "source_context": "The qualitative results in Fig. 7 show that BifrostUMI completes both task sequences on the physical Unitree G1 robot. Under-table waste disposal demonstrates that sparse keypoints can encode whole-body posture changes needed to reach targets outside the arm-only workspace, while walking coffee delivery shows that the same framework supports locomotion-manipulation",
+   "evidence_type": "ablation-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Sec. IV.B 逐字给出两任务完成与稀疏关键点编码全身姿态变化、locomotion-manipulation 支持的表述；膝关键点结论在同页『knee keypoints are critical for recovering correct lower-body motion』句。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C10",
+   "claim": "移除延迟匹配会降低动态投掷任务性能：感知、夹爪状态与机器人执行间的精确同步对定时敏感释放至关重要——鱼眼腕视图链路的时序校准是该类任务的必要组件而非可选优化。",
+   "stance": "limit",
+   "relation": "界定『受限任务』：未经延迟匹配的腕视图观测链路直接限制时间敏感任务（动态释放）的性能上限。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. IV.A 消融：移除延迟匹配→动态投掷退化；同步被表述为 timing-sensitive release 的关键。",
+   "locator": "page 6, Section IV.A, Fig. 6 ablation",
+   "source_context": "For dynamic ball throwing, removing latency matching also degrades performance, showing that precise synchro- nization among sensing, gripper state, and robot actuation is critical for timing-sensitive release.",
+   "evidence_type": "ablation-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Sec. IV.A 逐字给出移除延迟匹配退化与同步关键的结论，claim 为直接转述。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C11",
+   "claim": "（读者推断）论文未披露鱼眼相机型号、FoV 度数与畸变校正策略，策略以 224×224 原始腕视图 RGB 直接消费鱼眼图像；『鱼眼腕视图足以支撑人形全身技能』的结论不能区分鱼眼大 FoV 的具体贡献与等效针孔腕相机的贡献，径向畸变对精细视觉定位的影响未被隔离测量。",
+   "stance": "limit",
+   "relation": "界定证据边界：本篇支持『腕装鱼眼可行且高效』，但作为传感器对比证据其内部效度为零——无 FoV 数值、无畸变处理、无针孔对照。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "全文 fisheye 仅 Fig. 2 caption 与 Sec. III.A hardware 两处，均为配置描述；无任何 FoV/型号/校正/对照实验信息，故该边界为读者基于文本缺失的推断。",
+   "locator": "page 3, Section III.A (fisheye mentions) and page 4, Section III.B Observation",
+   "source_context": "In parallel, the handheld grippers record synchronized wrist- view images using fisheye cameras. The gripper width is measured by the magnetic encoder of the motor drive, providing gripper-state annotations for policy learning.",
+   "evidence_type": "critical-appraisal",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "推断依据：全文检索 fisheye 仅命中 page 3 两处配置描述（本卡 context 为其一），Observation 段（page 4）只给 224×224 输入；『无 FoV/校正/对照』是文本缺失的直接观察，推断部分已标注为读者推断。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C12",
+   "claim": "（读者推断）策略视觉输入仅腕部双视图，无全局/环视视野：任务空间定位依赖腕视图局部 grounding 与关键点几何接口，本框架的验证域不含需要场景级感知（避障、桌面外目标搜索、大空间导航）的任务。",
+   "stance": "limit",
+   "relation": "界定『受限任务』：腕装鱼眼的窄基线双视图配置不覆盖场景级感知任务；该限制由观测设计决定而非鱼眼本身，但限定了本篇证据可外推的任务族。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "Observation 段明确唯一视觉条件是左右腕视图对+下肢本体感知；五任务均为桌面/近场操作，无场景级感知任务。",
+   "locator": "page 4, Section III.B Observation",
+   "source_context": "The policy is conditioned on one synchro- nized pair of 224×224 left/right wrist-view RGB images and a three-frame history of a 15-D lower-body proprioceptive vector, including 12 leg joints and 3 waist joints. Upper-body joints are omitted because the policy expresses manipulation intent through task-space TCP keypoints, with joint config- urations resolved downstream by SKR and control.",
+   "evidence_type": "critical-appraisal",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Observation 段逐字给出唯一视觉条件为腕视图对（context 原文），五任务清单见 page 6-7 均为桌面/近场；『验证域不含场景级感知任务』是对实验章节任务清单的直接观察归纳。"
+   }
+  },
+  {
+   "card_id": "2605.03452-C13",
+   "claim": "（读者推断）全部任务成功率为 20-trial 条形图数值、正文零百分比数字：BifrostUMI 操作效果的定量强度不可从文本核验，其『可部署』结论在文本层面仅为定性主张，仅吞吐量（Table I）可复算。",
+   "stance": "limit",
+   "relation": "界定证据强度：本篇对『效果』的贡献主要是定性可行性+效率计数，不能为综述提供可引用的成功率量化对比。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "Fig. 6/7 caption 声明 20 trials 成功率条形图，正文以『substantially reduces』『degrades』等定性词描述消融，无任何百分比；Table I 是唯一文本化数字表。",
+   "locator": "page 6, Fig. 6 caption and page 7, Fig. 7 caption, Table I",
+   "source_context": "The left-side bar plots report success rates over 20 independent trials for the corresponding ablations: the first two tasks evaluate the effect of spatial keypoint retargeting (SKR), while the dynamic ball-throwing task evaluates latency matching.",
+   "evidence_type": "critical-appraisal",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Fig. 6 caption 逐字声明成功率以 20-trial 条形图报告（context 原文）；正文消融描述均为定性词，『正文零百分比』是对 page 5-8 实验章节的直接文本观察。"
+   }
+  }
+ ],
+ "core_citations": [
+  "UMI (Chi et al., RSS 2024) [9]——腕装 155° 鱼眼 + 侧镜的原始 UMI 设计，本文硬件与延迟匹配的直接前身",
+  "HuMI (Nai et al., arXiv 2602.06643) [17]——最接近的前作：Vive 追踪+UMI 式夹爪的人形数据采集，本文批评其硬件成本/标定复杂度与重定向耦合",
+  "TWIST2 (Ze et al., ICRA 2026) [2]——效率对比基线（遥操作）",
+  "Diffusion Policy (Chi et al., RSS 2023) [22]——高层策略骨架",
+  "GMR (Araujo et al., ICRA 2026) [25]——重定向消融基线"
+ ],
+ "notes": "作者署名 Beijing Academy of Artificial Intelligence；arXiv:2605.03452v2（2026-07-07 更新），8 页会议格式。论文无独立 Limitations 小节，全部限制由读者推断标注。"
+}

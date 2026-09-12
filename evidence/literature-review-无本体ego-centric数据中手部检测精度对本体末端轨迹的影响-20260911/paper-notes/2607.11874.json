@@ -1,0 +1,283 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.11874",
+  "title": "A Minimalist Retargeting-Guided Reinforcement Learning Recipe for Dexterous Manipulation",
+  "published": "2026-07-13",
+  "url": "https://arxiv.org/abs/2607.11874",
+  "authors": [
+   "Yunhai Feng",
+   "Natalie Leung",
+   "Jiaxuan Wang",
+   "Lujie Yang",
+   "Haozhi Qi",
+   "Preston Culbertson",
+   "Lu-Jie Yang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "以单条人类演示（MANO 关键点，来自 HaMeR 视觉估计+多目三角化或 ARCTIC）经交互保持重定向+残差 RL 获得真机可用策略，直接给出重定向质量→RL 可用性的传播证据（IK 穿透毒害训练）与真机迁移边界，命中综述的误差传播与缓解子问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认核心假设：纯运动学重定向忽略手-物交互而产生物理不可行轨迹，是否损害下游 RL"
+   },
+   {
+    "locator": "3.2 Interaction-Aware Motion Retargeting",
+    "role": "method-or-design",
+    "purpose": "精读交互网格/SQP 重定向目标与可行集约束"
+   },
+   {
+    "locator": "3.3 Reference Motion-Guided Policy Learning",
+    "role": "method-or-design",
+    "purpose": "精读残差动作空间、观测设计（避免速度等噪声量）、数据增广与域随机化"
+   },
+   {
+    "locator": "4.1 Experiment Setup",
+    "role": "data-or-setting",
+    "purpose": "确认任务、本体（LEAP/WUJI+UR5e）、mocap 物体位姿防感知混杂的设计"
+   },
+   {
+    "locator": "4.2 Results",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table 1 仿真追踪误差/成功率、Q1 穿透机理、Q3 真机迁移结论"
+   },
+   {
+    "locator": "5 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者所述 mocap 依赖与系统辨识依赖"
+   },
+   {
+    "locator": "References (含附录 A-E)",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 HaMeR 多目三角化采集、观测噪声 ±2mm/±0.02rad、时延 0-2 步、系统辨识 1-2 步延迟等细节"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "在灵巧操作中，保留手-物交互关系的重定向是否比纯运动学重定向更能支撑下游 RL 训练并实现真机零样本迁移？",
+ "contributions": [
+  "提出 REGRIND：单条人类演示→交互保持重定向（交互网格 Laplacian 形变最小化 + SQP）→残差 RL（RSI+关键点跟踪奖励）→真机零样本迁移的极简管线",
+  "对重定向参考做 SE(3) 扰动增广（±5cm/±30°）而不重解重定向优化，提升策略空间泛化",
+  "在 LEAP 与 WUJI 两种手的剪刀/螺丝刀接触丰富任务上系统量化仿真与真机物体关键点追踪误差与成功率"
+ ],
+ "method": {
+  "summary": "演示由 MANO 手部关键点与物体 6D 位姿组成；以交互网格形变能 + 时序平滑为目标、关节限位/速度界/非穿透为硬约束逐帧 SQP 求解机器人轨迹；RL 策略学习在参考轨迹上的残差动作，观测只取可可靠获取的量（物体位姿来自 mocap、关节位置），奖励以物体关键点距离为主；训练期对初始物体位姿做轨迹扭曲增广并加物理域随机化与观测噪声（位置 ±2mm、旋转/关节 ±0.02rad、时延 0-2 控制步）。",
+  "assumptions": [
+   "部署时物体位姿由动捕系统提供（明确排除感知误差作为混杂因素）",
+   "演示手部关键点来自 HaMeR 视觉估计 + 四目三角化或 ARCTIC 数据集，假定其精度足以支撑重定向",
+   "残差 RL 无法从大偏差中恢复，故用紧的物体偏差阈值（0.15m）提前终止"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "ARCTIC（剪刀任务演示）",
+   "自采集螺丝刀演示（HaMeR 21 个 MANO 关键点 + 四目标定三角化）"
+  ],
+  "tasks": [
+   "剪刀开合操作",
+   "螺丝刀持续旋转"
+  ],
+  "embodiments": [
+   "16-DoF LEAP Hand + UR5e",
+   "20-DoF WUJI Hand + UR5e"
+  ],
+  "sample_or_scale": "每任务单条人类演示；仿真 3 种子×1024 rollouts；真机每任务 10 trials"
+ },
+ "evaluation": {
+  "design": "仿真与真机分别报告物体关键点追踪误差（mm）与成功率；与 SPIDER、DexMachina、Mink IK+RL 对比；Q4 测初始位姿扰动泛化",
+  "baselines": [
+   "SPIDER（物理可行重定向开环回放）",
+   "DexMachina（无交互语义的 IK 重定向+RL，作者复现）",
+   "Mink IK + RL"
+  ],
+  "metrics": [
+   "Object keypoint tracking error (mm)",
+   "Success rate"
+  ],
+  "ablations": [
+   "重定向策略对比（交互保持 vs 纯 IK）",
+   "数据增广带来的初始位姿泛化（Table 3）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仿真中 REGRIND 物体关键点追踪误差 5.3-6.5mm、成功率 98.7-99.8%；SPIDER 全面 0%，DexMachina 在剪刀任务上 22.3%/0%，Mink IK+RL 最高 3.1%",
+   "scope": "4 个手-任务组合，仿真",
+   "locator": "4.2 Results / Method, Table 1"
+  },
+  {
+   "finding": "真机 Table 2：LEAP-Scissors 27.9±2.0mm 9/10，LEAP-Screwdriver 16.0±2.9mm 10/10，WUJI-Screwdriver 9.6±2.5mm 9/10；WUJI-Scissors 65.2±21.6mm 0/10（归因于 WUJI 非回驱电机与剪刀网格不准）；注：该表在抽取文本中落于第二个同名 '## Method' 标题下，section 级定位不可达，故仅作 note 级 finding 不进证据卡",
+   "scope": "真机，每任务 10 trials",
+   "locator": "4.2 Results, Table 2"
+  },
+  {
+   "finding": "纯 IK 重定向（Mink IK、DexMachina）产生显著手-物穿透，穿透状态在 RL 初始化时造成不稳定并毒害训练",
+   "scope": "WUJI-Scissors 定性对比",
+   "locator": "4.2 Results"
+  },
+  {
+   "finding": "作者在部署时直接喂入动捕物体位姿以最小化感知误差、避免其成为混杂因素；局限性中承认对动捕的依赖",
+   "scope": "实验设计选择",
+   "locator": "4.1 Experiment Setup; 5 Limitations"
+  },
+  {
+   "finding": "迁移配方含观测噪声注入（位置 ±2mm、旋转/关节 ±0.02rad）与 0-2 控制步观测时延；系统辨识测得真机响应延迟约 1-2 步（30-60ms）",
+   "scope": "训练配方与系统辨识",
+   "locator": "References / App. B.4, App. E"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "部署时依赖动捕获取物体状态；蒸馏为视觉策略是未来工作",
+    "locator": "5 Limitations"
+   },
+   {
+    "limitation": "仍需仔细系统辨识才能 sim-to-real；WUJI-Scissors 因非回驱电机与不准的剪刀网格导致所有方法迁移失败",
+    "locator": "4.2 Results; 5 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "演示侧手部关键点精度（HaMeR 单目估计经四目三角化）未做扰动分析；管线对 ego-centric 单目视频中更差的手部估计精度的容忍度未知",
+    "basis": "附录 C 仅描述采集管线，全文无对演示关键点加噪的敏感性实验；且作者主动用 mocap 排除部署侧感知误差"
+   },
+   {
+    "boundary": "结论限于状态-based 策略 + 接触丰富的双臂-工具任务；视觉策略、长时序多阶段任务未覆盖",
+    "basis": "5 Limitations 与观测空间设计（3.3）"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：有（近似）MANO 关键点级演示、部署时可获得较准确物体状态、类人手本体（LEAP/WUJI）上的单任务接触丰富操作；不适用于：纯 ego-centric 单目视频直接驱动、无物体状态估计的部署、或对演示关键点噪声水平的定量容忍度结论。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "用 mocap 物体位姿隔离感知混杂，因果归因干净",
+   "仿真-真机双侧报告误差与成功率，含失败任务（WUJI-Scissors 0/10）的负结果",
+   "附录给出观测噪声与时延随机化的具体量级（±2mm/±0.02rad/0-2 步）"
+  ],
+  "design_risks": [
+   "每任务仅单条演示，结论对演示质量的稳健性未测",
+   "DexMachina 为作者自实现而非官方结果",
+   "真机每任务仅 10 trials，无置信区间",
+   "观测噪声/时延注入未做单独消融，其对迁移的贡献无法归因"
+  ],
+  "baseline_fairness": "基线共享相同 RL 设置，但 DexMachina 为复现版、SPIDER 为官方实现跨超参调试，公平性中等",
+  "metric_validity": "物体关键点追踪误差是任务相关实体指标（非纯姿态相似度代理），对本综述价值高",
+  "reproducibility": "代码与数据声明开放；附录超参、奖励权重、DR 表完整",
+  "external_validity": "对其它手部估计器精度、其它本体的外推未验证；WUJI 失败案例提示电机特性是迁移边界"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.11874-C01",
+   "claim": "以单条人类演示经交互保持重定向 + 残差 RL 训练的策略可零样本迁移到真机：作者报告其方法在四个手-任务设置中的三个（LEAP-Scissors、LEAP-Screwdriver、WUJI-Screwdriver）上可靠迁移，而第四个（WUJI-Scissors）未成功。",
+   "stance": "conditional",
+   "relation": "为“视觉估计的手部演示经合适重定向+RL 后可得到真机可用轨迹”提供存在性证据；同时标定边界：迁移成功依赖本体电机特性与物体模型精度（WUJI-Scissors 失败），且演示关键点来自四目三角化的高质量估计而非 ego-centric 单目。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 (Q3) 原文明确列出三个可靠迁移任务；第四任务 WUJI-Scissors 的失败由同段后文与 limitations 归因于非回驱电机与不准的剪刀网格。",
+   "locator": "4.2 Results / Method",
+   "source_context": "(Q3) Sim-to-real transfer. We deploy the RL policies that achieve reasonable performance in simu-\nlation to the real world and show the performance in Table 2. Our method transfers reliably on three\nof the four tasks: LEAP-Scissors, LEAP-Screwdriver, and WUJI-Screwdriver.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对；“三/四任务”表述直接蕴含 WUJI-Scissors 未可靠迁移；Table 2 的具体毫米级数值因抽取文本的同名 '## Method' 标题遮蔽无法通过 section 级审计，故本卡仅承载定性迁移结论，数值保留在 note findings。"
+   }
+  },
+  {
+   "card_id": "2607.11874-C02",
+   "claim": "在相同 RL 设置下，重定向参考质量的差异直接决定下游策略可用性：交互保持重定向使仿真成功率达 98.7-99.8%（物体关键点误差 5.3-6.5mm），而纯运动学 IK 重定向基线（Mink IK+RL、DexMachina、SPIDER）因手-物穿透等物理不可行参考在多数任务上成功率为 0-22.3%。",
+   "stance": "conditional",
+   "relation": "支持综述中“上游轨迹误差经重定向传播为不可用策略”的命题，并将传播机理具体化为物理不可行性（穿透）而非仅关键点偏差；条件在于该证据来自仿真、以 RL 成功率为可用性代理。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 行给出四方法在四任务上的误差与成功率对比；4.2 (Q1) 原文说明 IK 基线产生大量手-物穿透并导致 RL 初始化不稳定。",
+   "locator": "4.2 Results / Method, Table 1",
+   "source_context": "REGRIND (Ours) 5.6±6.4 99.8±0.3% 5.4±5.8 99.7±0.0% 5.3±13.1 98.7±1.3% 6.5±15.5 98.8±1.3%\nSPIDER 176.2±1.6 0.0±0.0% 134.5±78.9 0.0±0.0% 119.0±32.7 0.0±0.0% 116.9±16.1 0.0±0.0%\nDexMachina 10.1±9.5 22.3±17.7% 8.3±6.7 99.7±0.1% 67.2±31.8 0.0±0.0% 5.9±9.7 99.3±0.1%\nMink IK + RL 12.6±21.4 2.0±2.9% 17.5±4.5 0.0±0.0% 38.9±29.1 0.0±0.0% 10.0±12.0 3.1±1.3%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "simulation object keypoint tracking error (mm) and success rate",
+    "value_or_direction": "REGRIND 5.3-6.5 mm, 98.7-99.8% SR across 4 tasks",
+    "comparator": "SPIDER 116.9-176.2 mm, 0% SR; DexMachina 5.9-67.2 mm, 0-99.7% SR; Mink IK+RL 10.0-38.9 mm, 0-3.1% SR",
+    "task_or_sample": "4 hand-task settings in simulation, 3 seeds x 1024 rollouts",
+    "locator": "4.2 Results, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 四行数值逐字核对；穿透机理引用 4.2 (Q1) 原文“produce large robot-object penetrations in the IK solutions ... lead to instability when initializing the simulator”；声明限定于仿真与所比较基线。"
+   }
+  },
+  {
+   "card_id": "2607.11874-C03",
+   "claim": "作者在部署时刻意绕过感知误差：直接向策略喂入动捕物体位姿“以最小化感知误差、防止其成为混杂因素”，并在局限性中承认对动捕的依赖；因此该管线对（如 ego-centric 视频中）噪声化手部/物体位姿估计的容忍度未被表征。",
+   "stance": "gap",
+   "relation": "对综述问题的误差来源清单提供反面证据：即便是 retargeting+RL 管线的代表性工作，也将感知/检测精度作为需要实验设计排除的混杂，而非被量化研究的变量。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.1 原文明确以 mocap 排除感知混杂；5 Limitations 承认部署依赖动捕；全文（含附录）无对演示或部署感知噪声的敏感性实验。",
+   "locator": "4.1 Experiment Setup; 5 Limitations",
+   "source_context": "To isolate\nthe dynamics gap in sim-to-real transfer, we feed object poses from a motion capture system directly\nto the policy at deployment time, which minimizes perception errors and prevents them from acting\nas a confounder.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.1 引文逐字核对；局限性第一条“relies on motion capture”与之一致；“未表征容忍度”为全文结构核查后的缺席性陈述，故标为 gap。"
+   }
+  },
+  {
+   "card_id": "2607.11874-C04",
+   "claim": "REGRIND 的迁移配方在 RL 训练中对策略观测注入均匀噪声（位置 ±2mm、旋转 ±0.02rad、关节 ±0.02rad），并施加 0-2 控制步的连续观测时延以建模真机系统延迟（系统辨识测得真机响应滞后约 1-2 步、30-60ms）。",
+   "stance": "conditional",
+   "relation": "为综述的“缓解手段”提供策略级噪声/时延注入的具体量级参考（±2mm 位置观测噪声、0-2 步时延）；但作者未对该成分做单独消融，其对检测误差鲁棒性的贡献不能单独归因。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 B.4 原文给出观测噪声与时延注入量级；附录 E 系统辨识给出 1-2 步（30-60ms）实测延迟，二者共同定义了该管线所针对的感知噪声包络。",
+   "locator": "References / App. B.4",
+   "source_context": "Observation noise. We apply uniform noise on policy observations at every timestep (position\n±2, mm, orientation ±0.02, rad, joints ±0.02, rad). We also apply continuous observation lag to\nmodel the delay in the real-world system (uniformly sampled in [0, 2] control steps per reset, with\nshared lag within object state, wrist pose, and hand joints).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "observation noise / lag injected during RL training",
+    "value_or_direction": "position +/-2 mm, orientation +/-0.02 rad, joints +/-0.02 rad, lag 0-2 control steps",
+    "comparator": "measured real-robot response delay 1-2 timesteps (approx. 30-60 ms) from system identification",
+    "task_or_sample": "LEAP/WUJI dexterous tool-use policy training (PPO, IsaacSim)",
+    "locator": "App. B.4 and App. E (extracted under 'References' heading)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "附录 B.4 引文逐字核对（噪声与时延量级）；30-60ms 来自附录 E 系统辨识段“slightly delayed by 1-2 timesteps (≈ 30 − 60 ms)”；该成分为配方组成部分但未单独消融，故 stance 取 conditional。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "表格在抽取文本中落于两个同名 '## Method' 标题下：Table 1（仿真）可经 section 定位，Table 2（真机）因重名标题遮蔽仅作 note 级 finding；真机毫米级误差（9.6-27.9mm）与成功率（9-10/10、WUJI-Scissors 0/10）见 findings。观测噪声注入针对 sim-to-real 感知噪声而非演示检测误差，综述引用时需区分。"
+}

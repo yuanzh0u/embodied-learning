@@ -1,0 +1,287 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.16272",
+  "title": "TopoRetarget: Interaction-Preserving Retargeting for Dexterous Manipulation",
+  "published": "2026-06-19",
+  "url": "https://arxiv.org/abs/2606.16272",
+  "authors": [
+   "Jielin Wu",
+   "Shenzhe Yao",
+   "Guanqi He",
+   "Xiaohan Liu",
+   "Zhaoqing Zeng",
+   "Xiangrui Jiang",
+   "Han Yang",
+   "Wentao Zhang",
+   "Hang Zhao"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "以 MediaPipe 21 关键点为输入的交互保持型重定向方法，明确承认依赖上游人类参考运动质量（virtual contact 失效），并给出重定向质量→下游 RL 成功率的定量传播证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题：仅匹配手姿不足以保证接触丰富的策略学习，需保持局部手-物交互"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位 hand-centric 目标与交互保持目标的谱系，确认 reference quality 依赖性论述"
+   },
+   {
+    "locator": "3 TopoRetarget; 3.1 Notation Definition; 3.2 Relative Bone-Direction Initialization; 3.3 Interaction Mesh Construction; 3.4 Topology-Aware Laplacian Optimization",
+    "role": "method-or-design",
+    "purpose": "理解输入假设（MediaPipe 21 关键点+物体位姿+mesh）、交互图与 Laplacian 优化、穿透约束"
+   },
+   {
+    "locator": "4 Minimal RL Tracking Controller",
+    "role": "method-or-design",
+    "purpose": "下游 PPO 参考跟踪设置与基座坐标系相对化设计"
+   },
+   {
+    "locator": "5 Experiments; 5.1; 5.2; 5.3",
+    "role": "results-or-analysis",
+    "purpose": "提取接触精度/穿透/耗时（Table 1）与下游成功率（Table 2）及泛化结论"
+   },
+   {
+    "locator": "6 Conclusion; 7 Limitations and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者结论与对上游参考质量依赖的局限性声明"
+   },
+   {
+    "locator": "A Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "参数表（穿透容差等）、指标定义、RL 训练与域随机化细节"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表不逐条精读"
+   },
+   {
+    "locator": "Acknowledgments",
+    "role": "appendix-or-supplement",
+    "reason": "致谢不含技术内容"
+   }
+  ]
+ },
+ "research_question": "如何将人手-物体演示重定向为保持局部手-物交互结构的机器人参考轨迹，以支持基于参考跟踪的 RL 灵巧操作学习？",
+ "contributions": [
+  "提出 TopoRetarget：在共享手-物交互图上做距离加权 Laplacian 变形优化，带方向一致性、运动学约束与穿透处理",
+  "提出轻量参考跟踪 RL 管线，实现 pen spinning 与 cube reorientation 的零样本 sim-to-real",
+  "发布灵巧手-物交互数据集（重定向轨迹、任务参考、训练策略）"
+ ],
+ "method": {
+  "summary": "输入为 MediaPipe 21×3 手部关键点轨迹、物体位姿轨迹与物体 mesh；先以相对骨骼方向匹配做初始化，再对源关键点+物体表面采样点做 Delaunay 四面体化构建共享交互图，以源配置的距离衰减权重计算加权 Laplacian 坐标并优化交互网格能量，辅以骨骼方向先验、时序正则与穿透软/硬约束（slack 变量）；全部实验使用单一固定参数集。",
+  "assumptions": [
+   "输入手部观测为 MediaPipe 21×3 关键点序列",
+   "物体位姿轨迹 q^o 与物体 mesh 已知",
+   "同一套固定参数跨任务/手型/物体尺度使用",
+   "穿透约束设软容差 τ=0.001 m、硬界 b=0.030 m"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "ContactPose（25/28 抓取，排除 3 个深凹物体）",
+   "Ho-cap（32 条抓取为主的片段）",
+   "自采 MoCap Pen-Spin 数据集（32 条、平均 12.4 s、动作捕捉+Wuji Glove）"
+  ],
+  "tasks": [
+   "接触保持重定向质量评估",
+   "下游 RL 跟踪（仿真）",
+   "Wuji Hand 零样本真机：cube reorientation 与 pen spinning"
+  ],
+  "embodiments": [
+   "Wuji Hand（真机）",
+   "多种灵巧手（仿真泛化）"
+  ],
+  "sample_or_scale": "ContactPose 25 抓取；Ho-cap 32 clips；Pen-Spin 32 clips；每方法单独训练策略"
+ },
+ "evaluation": {
+  "design": "同一人类参考与物体几何下比较 4 个基线的参考级指标，并用相同 PPO 设置训练下游跟踪策略比较成功率与物体跟踪误差",
+  "baselines": [
+   "OmniRetarget（手部适配版）",
+   "Mink",
+   "DexPilot",
+   "GeoRT"
+  ],
+  "metrics": [
+   "contact precision (mm)",
+   "contact alignment (deg)",
+   "max penetration (mm)",
+   "% frames penetration>2mm",
+   "solve time (ms/frame)",
+   "RL success rate",
+   "object position/rotation tracking error"
+  ],
+  "ablations": [
+   "5.3 节跨物体尺度与手型的固定参数泛化展示（非消融）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "TopoRetarget 在 ContactPose 上接触精度 7.71 mm、接触对齐 15.67°、最大穿透 1.07 mm，均优于 4 个基线；残差归因于人手-灵巧手形态差距与源侧 ContactPose 穿透",
+   "scope": "ContactPose 25 抓取",
+   "locator": "5.1 Interaction-Preserving Retargeting Quality"
+  },
+  {
+   "finding": "下游 RL 成功率：Ho-cap 84.4%（最优基线 75.0%）；Pen-Spin 87.5%，比全部基线高 40 个百分点以上，说明参考质量直接决定策略可学性",
+   "scope": "相同 PPO 设置下的 32+32 clips",
+   "locator": "5.2 Downstream Tracking Policy Performance"
+  },
+  {
+   "finding": "参考轨迹中物体与手部连杆均表达在机器人基座坐标系，使控制器聚焦相对手-物交互而非全局运动",
+   "scope": "RL 跟踪控制器设计",
+   "locator": "4 Minimal RL Tracking Controller"
+  },
+  {
+   "finding": "训练时对本体感知与物体位姿观测加小噪声并做域随机化（质量、摩擦、执行器增益、编码器偏置、观测延迟 0-2 步等）",
+   "scope": "策略训练鲁棒化",
+   "locator": "A Appendix"
+  },
+  {
+   "finding": "方法承认对 virtual contact（手指应接触但未接触物体表面）效果差，需源运动预处理纠正缺失接触",
+   "scope": "上游参考质量边界",
+   "locator": "7 Limitations and Future Work"
+  },
+  {
+   "finding": "方法输入定义为 MediaPipe 21×3 手部关键点轨迹+物体位姿轨迹+物体 mesh，输出机器人基座位姿与关节轨迹（3.1）；穿透约束参数为软容差 τ=0.001 m、硬界 b=0.030 m、slack 权重 1.0×10^5（附录 Table 3）",
+   "scope": "全部实验共用固定参数",
+   "locator": "3.1 Notation Definition; A Appendix"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "TopoRetarget 依赖上游人类参考运动的质量；能处理源运动穿透造成的接触失真，但对 virtual contact（手指意图接触但未实际触碰物体表面）效果差",
+    "locator": "7 Limitations and Future Work"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "方法假设已知物体 6D 位姿轨迹与 mesh；robot-free ego-centric 视频中物体位姿估计本身含误差，其对交互图构建与接触保持的影响未评估",
+    "basis": "3.1 输入定义为 MediaPipe 关键点+物体位姿轨迹+mesh，全文无物体位姿噪声实验"
+   },
+   {
+    "boundary": "实验中上游参考为 mocap 手套/ContactPose/Ho-cap 级干净数据，7.71 mm 接触精度是在高质量输入下取得；对手部检测噪声更大的 ego-centric 单目视频输入，接触保持水平未知",
+    "basis": "A.4 数据集描述与 5.1 结果"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于具备较准确手部关键点（MediaPipe 格式）与已知物体 mesh/位姿轨迹的离线重定向，输出供 RL 参考跟踪或真机零样本迁移；对手部检测噪声大、物体位姿不稳的 robot-free ego-centric 视频，接触保持与下游成功率结论不可直接外推。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "单一固定参数集跨任务/手型/物体尺度，避免逐例调参",
+   "接触级指标与下游 RL 成功率双层评估，直接检验参考可用性",
+   "基线共享同一人类参考与物体几何"
+  ],
+  "design_risks": [
+   "Pen-Spin 为自采数据集，缺外部基准",
+   "32 clips/方法的成功率未报告置信区间",
+   "未做输入手部关键点/物体位姿的受控噪声注入，对上游检测误差的敏感性仅定性承认",
+   "ContactPose 评估排除 3 个深凹物体"
+  ],
+  "baseline_fairness": "基线同输入同几何；OmniRetarget 经两处手部适配改造（合理但非原版）；DexPilot/GeoRT 为 hand-centric 目标，在接触指标上天然劣势",
+  "metric_validity": "接触精度/对齐/穿透直接刻画交互保持；RL 成功率为部署相关指标；E_prec 依赖 ContactPose 接触标注归因规则（每连杆≥10 接触顶点）",
+  "reproducibility": "参数（Table 3-6）、指标定义、RL 设置齐全；项目页与数据集承诺开放",
+  "external_validity": "输入假设 MediaPipe 21 关键点+物体 mesh/位姿；真机验证仅 Wuji Hand 两个任务"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.16272-C01",
+   "claim": "TopoRetarget 依赖上游人类参考运动的质量：它能处理源运动穿透造成的接触失真，但对 virtual contact（手指意图与物体交互但未实际触碰物体表面）效果差，作者将纠正此类缺失接触列为未来工作。",
+   "stance": "limit",
+   "relation": "限定综述命题的边界条件：当上游手部检测/重建误差使真实接触在观测中缺失（virtual contact）时，交互保持型重定向无法修复，误差会直接传入机器人参考轨迹。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "局限性节明确承认方法依赖上游参考质量，并区分两类源误差：穿透型接触失真可处理，而 virtual contact（缺失接触）不可处理。",
+   "locator": "7 Limitations and Future Work",
+   "source_context": "TopoRetarget depends on the quality of the upstream human reference motion. Our method can\nhandle contact distortion caused by penetration in the source motion, but it is less effective for\nvirtual contacts, where the source finger is intended to interact with the object but does not actually\ntouch the object surface.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自第 7 节；claim 的两类误差区分与'效果差'表述与原文一致，未扩展到其它误差类型。"
+   }
+  },
+  {
+   "card_id": "2606.16272-C02",
+   "claim": "在 ContactPose 25 个抓取上，TopoRetarget 取得最低接触精度误差 7.71 mm 与接触对齐误差 15.67°，最大穿透 1.07 mm，平均求解低于 5 ms/帧；作者将残差归因于人手-灵巧手形态差距与源侧 ContactPose 穿透。",
+   "stance": "support",
+   "relation": "支持'目标函数设计可压缩上游误差向末端接触误差的转化'：交互保持优化把接触位置残差压到 7.71 mm 量级，且作者明确指出残差部分来自源数据本身的穿透（即上游噪声会残留）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节报告 Table 1 结果：接触精度/对齐/穿透全面优于 OmniRetarget、Mink、DexPilot、GeoRT，并说明残差来源包括源侧 ContactPose 穿透。",
+   "locator": "5.1 Interaction-Preserving Retargeting Quality",
+   "source_context": "Table 1 shows that TopoRetarget achieves the lowest contact precision and contact alignment er-\nrors, with 7.71 mm and 15.67\n◦\n, respectively. The residual is attributable to the human-dexterous\nembodiment gap and source-side ContactPose interpenetration. TopoRetarget also keeps penetra-\ntion small, with a maximum penetration of 1.07 mm, and avoids the severe interpenetration observed\nin several baselines, indicating that the method better preserves local contact geometry. Moreover,\nthe average solve time is below 5 ms per frame, enabling real-time retargeting.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "contact precision (mm) on ContactPose",
+    "value_or_direction": "7.71 mm (contact alignment 15.67 deg; max penetration 1.07 mm)",
+    "comparator": "OmniRetarget 14.15 mm, Mink 14.12 mm, DexPilot 14.13 mm, GeoRT 26.77 mm",
+    "task_or_sample": "25 ContactPose grasps (excluding 3 deeply concave objects)",
+    "locator": "5.1 Interaction-Preserving Retargeting Quality"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值与 5.1 节文字及 Table 1 各行（7.71/14.15/14.12/14.13/26.77）逐一核对一致；claim 限定在 ContactPose 25 抓取，未外推。"
+   }
+  },
+  {
+   "card_id": "2606.16272-C03",
+   "claim": "在相同 PPO 设置下，TopoRetarget 生成的参考使下游 RL 跟踪策略在 MoCap Pen-Spin 数据集上取得 87.5% (28/32) 成功率，比所有基线高 40 个百分点以上（最优基线 46.9%），Ho-cap 上 84.4% 对最优基线 75.0%。",
+   "stance": "support",
+   "relation": "支持'重定向误差/伪影沿参考→策略传播为任务成功率损失'的路径：接触保持差的重定向参考直接把 RL 成功率拉低到 21.9%-46.9%，而交互保持参考可达 87.5%。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节与 Table 2 报告：Pen-Spin 上 TopoRetarget 87.5% 对 OmniRetarget 46.9%、Mink 21.9%、DexPilot 40.6%、GeoRT 31.2%，且位置/旋转误差最低；作者指出快速运动与频繁非指尖接触转换要求高质量参考。",
+   "locator": "5.2 Downstream Tracking Policy Performance",
+   "source_context": "As shown in Table 2, TopoRetarget achieves the highest success rate at 84.4% and the lowest po-\nsition error at 0.87 cm on the Ho-cap Dataset, while rotation errors remain comparable across meth-\nods because the trajectories are primarily grasp-centric. On the MoCap Pen-Spin Dataset, rapid\nmotion and frequent non-tip contact transitions demand high-quality reference motion; TopoRetar-\nget reaches 87.5% success, over 40 percentage points above all baselines, with the lowest position\nand rotation errors.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "downstream RL tracking success rate",
+    "value_or_direction": "87.5% (28/32) on Pen-Spin, over 40 percentage points above all baselines; 84.4% on Ho-cap",
+    "comparator": "OmniRetarget 46.9%, Mink 21.9%, DexPilot 40.6%, GeoRT 31.2% (Pen-Spin)",
+    "task_or_sample": "32 Pen-Spin clips and 32 Ho-cap clips, identical PPO tracking setup",
+    "locator": "5.2 Downstream Tracking Policy Performance"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "成功率数值与 Table 2 行（87.5% (28/32) 46.9% 21.9% 40.6% 31.2%）及正文'over 40 percentage points'一致；claim 未超出两个数据集范围。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "Extraction 的 sections 列表不含 Appendix 标题（'A Appendix' 在原文中为纯文本行），附录内容被审计脚本并入 References surface；C05 的 locator 以 'A Appendix; References' 双片段解析。摘要声称 Pen-Spin 提升 40.6 个百分点，与 Table 2（87.5% vs 46.9%）一致。 因 ID 段预算（6 篇共 15 个事件 ID），本 note 仅投影 C01-C03 三张核心卡；输入假设与穿透容差阈值保留在 findings 中，如编排方追加 ID 可补投影。"
+}

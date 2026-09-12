@@ -1,0 +1,295 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2506.09384",
+  "title": "Analyzing Key Objectives in Human-to-Robot Retargeting for Dexterous Manipulation",
+  "published": "2025-06-11",
+  "url": "https://arxiv.org/abs/2506.09384",
+  "authors": [
+   "Xin, Chendong",
+   "Mingrui Yu",
+   "Yongpeng Jiang",
+   "Zhefeng Zhang",
+   "Xiang Li"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "empirical",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接研究 retargeting 目标函数设计如何吸收/放大上游手部追踪误差：pinch 项的距离重缩放与截断是面向追踪噪声的鲁棒化设计，手腕-指尖精度权衡回答 wrist 误差与指间误差的不同影响，A1-A8 消融给出目标项缺失导致任务失败的证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认问题：人手到机器人手重定向无法完全复现，各目标重要性未知"
+   },
+   {
+    "locator": "II. METHOD",
+    "role": "method-or-design",
+    "purpose": "理解综合目标函数各项（thumb 位置、手腕旋转正则、指尖位置/方向、pinch 重缩放、关节正则）及其对输入误差的假设"
+   },
+   {
+    "locator": "III. EVALUATIONS AND RESULTS; A. Evaluation Setup",
+    "role": "data-or-setting",
+    "purpose": "确认手部检测输入（Apple Vision Pro）、20 Hz 回路、任务与评价指标"
+   },
+   {
+    "locator": "B. Analysis of Results",
+    "role": "results-or-analysis",
+    "purpose": "提取各目标消融对运动学误差与真实任务成功率的影响"
+   },
+   {
+    "locator": "C. Comparison with Existing Retargeting Approaches",
+    "role": "results-or-analysis",
+    "purpose": "与 DexMV/DexPilot 的公平对比及连续 pinch 权重带来的平滑性结论"
+   },
+   {
+    "locator": "IV. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者总结的五条结论与未来工作（更多操作者/任务）"
+   },
+   {
+    "locator": "APPENDIX; RESULTS",
+    "role": "appendix-or-supplement",
+    "purpose": "附加运动学结果、关节速度正则的平滑作用、超参与实现细节、延迟与鲁棒性讨论"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅用于定位核心引用，不逐条精读"
+   }
+  ]
+ },
+ "research_question": "人手到机器人手重定向中，哪些目标函数项对哪类灵巧操作任务关键、各项目标之间是否存在冲突？",
+ "contributions": [
+  "提出整合指尖 pinch、指尖方向、全局手姿、整体手形与关节正则的综合重定向目标函数",
+  "通过运动学姿态重定向与三个真实世界遥操作任务对 A1-A8 消融做系统实验分析",
+  "与 DexMV、DexPilot 按原始目标函数复现并进行公平对比",
+  "开放代码、Vision Pro 录制的人手轨迹数据集与 CAD 文件"
+ ],
+ "method": {
+  "summary": "任务空间 IK 重定向：以拇指尖位置项替代手腕位置项确定全局手姿，手腕旋转仅小权重正则；指尖位置（腕到指尖向量）、指尖方向（DIP 到指尖向量）、pinch 项（拇指到主指向量，sigmoid 连续切换权重 + [ε2,ε1] 线性距离重缩放、低于 ε2 截断为 0）；加关节位置/速度正则；NLopt SLSQP 实时优化，20 Hz 输出关节目标并上采样到 100 Hz。",
+  "assumptions": [
+   "人手关键点由 Apple Vision Pro 提供（曾对比单 RGB 相机，精度更差）",
+   "人手尺寸按 1.5（Leap）/1.0（Shadow）缩放以补偿形态差异",
+   "精确追踪全局手腕位姿并非必要，允许牺牲手腕精度换指尖精度",
+   "EMA(α=0.3) 与关节速度正则用于平滑关节轨迹"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "作者用 Apple Vision Pro 录制的人手运动轨迹（3 条拇指-食/中/无名指 pinch 轨迹，另加 finger-crossing 轨迹，已开放）"
+  ],
+  "tasks": [
+   "离线运动学 pinch 姿态重定向",
+   "真实遥操作 Task1 抓起盒子旋转 90 度放下",
+   "Task2 用弯曲拇指勾拖马克杯",
+   "Task3 捏取 5 个直立螺钉并竖直放置"
+  ],
+  "embodiments": [
+   "Leap Hand + Franka Panda",
+   "Shadow Hand + Franka Panda"
+  ],
+  "sample_or_scale": "运动学：3 条 pinch 轨迹 × 9 种目标配置；真实任务：2 名 pilot × 每个配置 3 次重复"
+ },
+ "evaluation": {
+  "design": "对完整目标与 A1-A8 消融做运动学姿态误差评估（4 指标）与真实遥操作任务评估（Task1/2 用完成时间，Task3 用成功率），并与 DexMV/DexPilot 复现版对比",
+  "baselines": [
+   "DexMV（按原目标函数复现）",
+   "DexPilot（按 dex-retargeting 仓库复现）"
+  ],
+  "metrics": [
+   "指尖全局位置误差",
+   "指尖相对手腕位置误差",
+   "指尖相对拇指位置误差",
+   "指尖方向误差",
+   "任务完成时间",
+   "任务成功率"
+  ],
+  "ablations": [
+   "A1 移除 pinch 项",
+   "A2 pinch 项用真实距离不重缩放",
+   "A3 移除指尖方向项",
+   "A4 方向向量改为手腕到 DIP",
+   "A5 拇指位置项改为手腕位置项",
+   "A6=A5 且移除 pinch 与方向项",
+   "A7 移除关节位置正则",
+   "A8=A6 且移除关节正则"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "移除 pinch 项（A1）显著抬高指尖位置与相对拇指位置误差，并在真实捏取任务中失败；仅用真实 pinch 距离而不重缩放（A2）运动学误差很小，但因易受手指追踪不准影响而在真实任务中成功率低",
+   "scope": "Leap/Shadow 手 + Vision Pro 输入的 pinch 类任务",
+   "locator": "B. Analysis of Results"
+  },
+  {
+   "finding": "用拇指尖位置项代替手腕位置项显著降低指尖全局位置误差；但在真实任务中两者差别不大，因为人类 pilot 可在线调整全局手位补偿指尖全局位置不准",
+   "scope": "闭环遥操作场景",
+   "locator": "B. Analysis of Results"
+  },
+  {
+   "finding": "作者观察到当拇指与食指尖已接触时，Vision Pro 估计的指尖距离仍为小的正值并随时间抖动；为此将 [ε2,ε1]=[1cm,10cm] 内距离重缩放、低于 ε2 截断为 0，使足够小的估计距离被视为闭合捏取",
+   "scope": "Vision Pro 手部追踪 + 精细捏取",
+   "locator": "APPENDIX, Discussion on Runtime, Latency, and Robustness"
+  },
+  {
+   "finding": "严重遮挡下 Vision Pro 可能产生不准确的手部位姿估计，作者认为此类场景下手套式追踪更鲁棒",
+   "scope": "视觉手部追踪前端",
+   "locator": "APPENDIX, Discussion on Runtime, Latency, and Robustness"
+  },
+  {
+   "finding": "系统端到端延迟约 0.15-0.25 s（重定向优化约 33 ms，Vision Pro 流式传输约 50 ms），作者经验上认为对所有真实任务足够",
+   "scope": "20 Hz 遥操作系统",
+   "locator": "APPENDIX, Discussion on Runtime, Latency, and Robustness"
+  },
+  {
+   "finding": "完整目标在三项真实任务上取得最短或相当的任务时间与最高成功率；DexMV 因无 pinch 项在 Task3 每次试验均失败",
+   "scope": "2 名 pilot 的三项遥操作任务",
+   "locator": "C. Comparison with Existing Retargeting Approaches"
+  },
+  {
+   "finding": "相比 DexPilot 的离散权重与固定阈值硬截断，连续切换权重+连续距离重缩放的 pinch 项在真实遥操作精细捏取中带来更平滑稳定的运动；DexMV 因无 pinch 项在 Task 3 每次试验均失败",
+   "scope": "与 DexPilot/DexMV 的对比实验",
+   "locator": "C. Comparison with Existing Retargeting Approaches"
+  },
+  {
+   "finding": "关节速度正则项 L_vel 在真实遥操作轨迹上抑制高频变化、减少加速度尖峰，提升重定向关节轨迹平滑性",
+   "scope": "Leap Hand 食指 finger-crossing 轨迹消融",
+   "locator": "APPENDIX, EXPLANATION OF JOINT VELOCITY REGULARIZATION TERM"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "Vision Pro 仍存在追踪噪声，尤其在 pinch 等精细动作中：手指已接触时估计指尖距离仍为小的正值并抖动；严重遮挡下估计可能不准确",
+    "locator": "APPENDIX, Discussion on Runtime, Latency, and Robustness"
+   },
+   {
+    "limitation": "真实世界评估仅覆盖有限的操作者与任务，作者计划扩展以捕获用户差异性并验证通用性",
+    "locator": "IV. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "所有实验的手部姿态输入均来自 Apple Vision Pro；对 robot-free ego-centric 视频中的单目手部检测器（噪声更大、遮挡更频繁），pinch 阈值 ε1/ε2 与 EMA 平滑参数需重新标定，结论不可直接外推",
+    "basis": "A. Evaluation Setup 明确输入为 Vision Pro，附录指出单 RGB 相机精度更差"
+   },
+   {
+    "boundary": "真实任务结论来自 2 名 pilot 的闭环遥操作，操作者可在线补偿全局位置误差；robot-free 离线数据重定向无此人在环补偿，wrist/指尖误差的影响会更直接地传入轨迹",
+    "basis": "B. Analysis of Results 中关于 pilot 补偿的陈述"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于以 Apple Vision Pro 级手部追踪为输入、20 Hz 实时任务空间重定向到 Leap/Shadow 灵巧手的遥操作场景；迁移到 robot-free ego-centric 视频的离线重定向时，检测噪声量级更大且无人在环补偿，pinch 截断阈值、平滑系数与手腕-指尖权重需重新验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "A1-A8 消融系统覆盖 pinch、方向、全局手姿、关节正则四类设计",
+   "运动学误差与真实任务成功率/耗时双重评估",
+   "DexMV/DexPilot 按原始目标函数与超参严格复现后集成进同一管线对比"
+  ],
+  "design_risks": [
+   "真实任务仅 2 名 pilot × 3 次重复，无统计显著性检验",
+   "成功率与耗时的具体数值仅见于条形图，正文未给精确值",
+   "追踪噪声的影响仅作定性观察与工程设计应对，未做受控噪声注入的量级实验"
+  ],
+  "baseline_fairness": "基线按其原目标函数与超参复现并集成进同一 arm-hand 管线，公平性较好；但仅 DexMV、DexPilot 两个基线",
+  "metric_validity": "四个运动学误差指标直接对应目标函数各项；任务耗时与成功率是部署相关指标；运动学误差在 0-数 cm 量级",
+  "reproducibility": "代码、数据集、CAD、超参表全部开放，控制频率与平滑参数明确",
+  "external_validity": "限于 Leap/Shadow 手 + Franka 臂 + Vision Pro 输入与 3 个任务；作者自认需更多操作者与任务验证通用性"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2506.09384-C01",
+   "claim": "作者主张在多数灵巧操作任务中精确跟踪全局手腕位姿并非必要、且可能降低指尖位置精度；其重定向目标因此允许调整手腕位姿以换取更高的指尖精度。",
+   "stance": "conditional",
+   "relation": "支持综述命题'wrist 位姿误差与指间/指尖误差对末端轨迹的影响不同'：目标函数可主动降低手腕位姿权重来吸收 wrist 误差，但代价是全局手姿保真度；该设计以闭环遥操作为前提。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "方法节明确给出设计动机：形态差异下精确手腕追踪会与指尖相对位置/方向冲突，因此用拇指尖位置项替代手腕位置项，仅对手腕旋转加小权重正则；消融 A5（正文 B 节）报告该选择显著降低指尖全局位置误差。",
+   "locator": "II. METHOD",
+   "source_context": "However, accurate tracking of global\nwrist pose is not necessary in most dexterous manipulation\ntasks and may reduce accuracy in fingertip positions. Due to\ndifferent hand morphologies between the human and robot, the\nfingertip positions relative to the wrist may conflict with the\nrelative positions between fingertips and fingertip orientations.\nAs a result, it can be better to allow adjustment of the wrist\npose in exchange for higher fingertip accuracy.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 II. METHOD 全局手姿一段；claim 限于作者的设计主张与该段陈述的权衡，未扩展到数值结论。"
+   }
+  },
+  {
+   "card_id": "2506.09384-C02",
+   "claim": "重定向目标的 pinch 项将估计的拇指-主指尖距离在 [ε2, ε1] = [1×10^-2 m, 1×10^-1 m] 区间内线性重缩放到 [0, ε1]，并把低于 ε2 的距离截断为 0，使足够小的估计指尖距离被当作已闭合的捏取。",
+   "stance": "conditional",
+   "relation": "给出'可接受阈值/缓解手段'侧的具体机制：对手部检测给出的指尖距离做阈值化截断与连续重缩放，可在目标函数层吸收小于 1 cm 量级的指尖距离残差/抖动。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "方法节给出 pinch 项的连续切换权重与分段线性距离重缩放公式，并明确 ε1=1×10^-1 m、ε2=1×10^-2 m；附录说明该设计针对 Vision Pro 在手指接触时仍输出小的正距离并抖动的现象（该段位于 extraction 图表碎片标题之后，故此处仅按方法节表述设计本身）。",
+   "locator": "II. METHOD",
+   "source_context": "fingertip distance within pinching range [ϵ\n2\n, ϵ\n1\n] is lin-\nearly rescaled into [0, ϵ\n1\n]. This ensures a continuous transition\nin the pinching range and avoids sudden changes around\nthe threshold ϵ\n1\n. In practice we set ϵ\n1 \n= 1 × 10\n−1 \nm and\nϵ\n2 \n= 1 × 10\n−2 \nm.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "pinch distance rescaling threshold",
+    "value_or_direction": "epsilon1 = 1e-1 m, epsilon2 = 1e-2 m; distances below epsilon2 clamped to zero",
+    "comparator": "continuous weight and rescaling instead of discrete weights (DexPilot)",
+    "task_or_sample": "real-world teleoperated precise pinching (Leap Hand, 20 Hz)",
+    "locator": "II. METHOD"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "公式说明与 ε1/ε2 数值逐字核对自 II. METHOD pinch 项段落；claim 仅复述设计与数值，未声称其噪声鲁棒性动机（该动机位于审计不可达的附录尾部，已在 summary 注明）。"
+   }
+  },
+  {
+   "card_id": "2506.09384-C03",
+   "claim": "移除指尖 pinch 目标项（A1）后，机器人手无法在真实捏取任务中闭合拇指与食指尖间隙，导致涉及 pinch 的任务失败。",
+   "stance": "support",
+   "relation": "支持'指间（指尖相对）误差经目标函数放大为任务级失败'的传播路径：缺少显式指尖相对位置目标时，形态差异造成的指尖间隙残差直接导致精细捏取失败。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "B 节结果分析报告：A1 在真实世界操作中导致 pinch 类任务失败，原因是无法闭合拇指与食指尖间隙；运动学上 A1 同时显著抬高指尖位置与相对拇指位置误差。",
+   "locator": "B. Analysis of Results",
+   "source_context": "in real-world manipulations, removing the pinch term in A1\nleads to failure in tasks involving pinch motions, as it cannot\nclose the gap between thumb and index fingertips (A1 in Task\n3, Fig. 4).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-world task success (Task 3 precise pinch)",
+    "value_or_direction": "failure when pinch term removed",
+    "comparator": "full objective",
+    "task_or_sample": "Task 3 pick and place 5 upright screws, 2 pilots x 3 repeats",
+    "locator": "B. Analysis of Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 B 节 Fingertip pinch 段；claim 的'任务失败'与'无法闭合拇指食指间隙'与原文一致，范围限于 pinch 类任务，具体成功率数值仅在 Fig. 4 中，未在 claim 中引用。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "Extraction 结构限制：Fig.2-7 的图表坐标轴文本被识别为多个同名 'Ablations' 章节，审计 surface 取首个同名标题，导致附录尾部 'Discussion on Runtime, Latency, and Robustness'（Vision Pro 指尖距离抖动观察、遮挡限制、端到端延迟 0.15-0.25 s、EMA α=0.3）与 B 节跨图段落（A2 追踪不准致低成功率、A5 手腕消融数值）不在任何可解析 surface 内；这些证据以 findings/limitations 形式保留在本 note 中，未投影为证据卡。 因 ID 段预算（6 篇共 15 个事件 ID），本 note 仅投影 C01-C03 三张核心卡；C04（连续 pinch 权重的平滑性）、C05（DexMV Task3 零成功）、C06（L_vel 平滑）的内容保留在 findings 中，如编排方追加 ID 可补投影。"
+}

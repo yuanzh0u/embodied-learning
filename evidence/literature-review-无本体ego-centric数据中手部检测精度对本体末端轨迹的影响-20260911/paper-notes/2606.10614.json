@@ -1,0 +1,404 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.10614",
+  "title": "Dexterous Point Policy: Learning Point-based Dexterous Hand Policies from Human Demonstrations",
+  "published": "2026-06-09",
+  "url": "https://arxiv.org/abs/2606.10614",
+  "authors": [
+   "Beomjun Kim",
+   "Seong Hyeon Park",
+   "Seunghoon Sim",
+   "Seungjun Moon",
+   "Sanghyeok Lee",
+   "Jinwoo Shin"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文直接在约 1M 条 ego-centric 人类视频（VITRA 语料：Ego4D/Ego-Exo4D/SSv2/EPIC-KITCHENS）上用 HaWoR 手部追踪提取六关键点（腕+五指尖）作为统一观测-动作表征，并明确量化 egocentric 手部追踪的尺度-深度歧义误差及其缓解（scale-consistent HaWoR），同时报告零机器人示教下的真机成功率与 IK 误差局限，与综述问题高度对口。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题（零机器人示教的灵巧操作、embodiment gap）与三项贡献及摘要级定量声明。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位 Point Policy/Point Bridge/VITRA/Phantom 等相关路线的差异。"
+   },
+   {
+    "locator": "3 Dexterous Point Policy",
+    "role": "method-or-design",
+    "purpose": "理解点提取管线（VLM+SAM3+深度+HaWoR 手部追踪）、六关键点抽象、接触点标注与预训练/微调/部署（IK）流程。"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table 1（8 任务成功率）、Table 2（泛化）、Table 3（消融）与失败模式陈述。"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者陈述的四条局限（IK 误差、无力信息、继承视觉模型失败模式、场景上下文丢失）。"
+   },
+   {
+    "locator": "Appendix F Scale-Consistent HaWoR (extraction heading 'References' 之后的附录区)",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 HaWoR 尺度-深度歧义的定量描述（Figure 6：>10% 尺度不一致、深度轴噪声）与修改方案；同时浏览附录 A-E 的训练/评测细节与附录 G 的辅助残差 RL 实验。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Appendix G Auxiliary Residual RL (细读公式部分)",
+    "role": "appendix-or-supplement",
+    "reason": "辅助仿真残差 RL 实验与综述的手部检测精度问题关系弱，仅记录其成功率结论（52.2%→74.7%）备查，未逐式核对。"
+   }
+  ]
+ },
+ "research_question": "能否仅用人类演示视频（零机器人示教）训练多指灵巧手的操作策略？其核心假设是腕部+五指尖的六关键点 3D 表征在人手与机器人手之间行为足够对齐，可直接迁移。",
+ "contributions": [
+  "六关键点手部抽象（腕+五指尖）作为人-机共享的统一 3D 关键点表征，使策略可从人类视频直接迁移到灵巧手，无需运动重定向。",
+  "轻量接触点预测机制（每指尖二值接触标注，约 10 秒/条），弥补纯点表征缺失的力模态。",
+  "互联网规模 ego-centric 人类视频预训练（VITRA 语料约 1M 集、240 小时），并改造 HaWoR 为尺度一致版本以消除尺度-深度歧义。"
+ ],
+ "method": {
+  "summary": "数据管线：VLM（Qwen3.5-VL）按任务描述选出任务相关物体，SAM3 分割并跨帧传播掩码、每物体采 128 个 2D 点后用深度提升为 3D（预训练用单目 Depth-Anything-3，微调/部署用 ZED 立体深度）；手部用 HaWoR 提取腕+五指尖六关键点，并改为尺度一致推理（以 HaMeR 平均形状参数 β 为输入）消除尺度-深度歧义；微调集另加指尖接触标注。策略为自回归 transformer，预训练于 VITRA 语料，按任务用约 100-500 条人类演示微调；部署时预测关键点经位置型阻尼最小二乘 IK 转为关节目标，接触标志驱动指尖关节偏移注入接触力。",
+  "assumptions": [
+   "腕与五指尖级别的 3D 轨迹在人手与机器人手之间足够对齐，可跳过显式运动重定向。",
+   "部署时使用静止 ego 视角立体相机（ZED 2i），世界系固定于相机系。",
+   "HaWoR 的手部姿态追踪本身准确，问题在于形状/尺度推理不一致（尺度-深度歧义），可用固定形状参数消除。",
+   "接触可由指尖-物体邻近关系近似，低维标注即可学习。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "VITRA 预训练语料（聚合 Ego4D、Ego-Exo4D、Something-Something v2、EPIC-KITCHENS，约 1M ego-centric 集、240 小时，附 HaWoR 预计算手部关键点）",
+   "每任务 100 条（Pick and Place 共 500 条）自采 ego 视角人类演示"
+  ],
+  "tasks": [
+   "Pick and Place（bottle/box/ball/towel/teddy 5 物体）",
+   "Manipulation & Tool Use（Open 微波炉、Brush 扫刷、Spray 喷壶）"
+  ],
+  "embodiments": [
+   "OpenArm 双臂 + Inspire RH56F1 灵巧手",
+   "ZED 2i 立体相机（ego 视角安装，1280x720@30fps）"
+  ],
+  "sample_or_scale": "预训练约 1M 集；微调每任务 100 条人类演示（单工人约 200 条/小时采集）；评测每任务 24 次试验。"
+ },
+ "evaluation": {
+  "design": "真机 8 任务单次成功率（24 次/任务，人工实时判定），基线为同样仅用人数据训练的 Point Policy 与 VITRA；泛化测试多物体与新物体；消融去掉自回归（w/o AR）与预训练（w/o Pretrain）。",
+  "baselines": [
+   "Point Policy（同六关键点表征、无预训练/无接触/非自回归）",
+   "VITRA（同语料预训练，动作经同一 IK 转为关节轨迹监督）"
+  ],
+  "metrics": [
+   "单次成功率（%）",
+   "附录 F：手部尺度方差与深度轴噪声幅度（Figure 6，定性可视化+阈值陈述）"
+  ],
+  "ablations": [
+   "w/o AR（37.5% vs 81.7% on P&P）",
+   "w/o Pretrain（67.5% vs 81.7% on P&P）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "DPP 在 8 个真机灵巧任务上平均成功率 75.0%（P&P 81.7%、Manipulation&Tool Use 63.9%），Point Policy 3.7%、VITRA 1.0%。",
+   "scope": "OpenArm+Inspire RH56F1，每任务 24 次试验，零机器人示教。",
+   "locator": "4.2 Dexterous Manipulation, Table 1"
+  },
+  {
+   "finding": "原始 HaWoR 在单条 egocentric 视频内手部尺度不一致超过 10%（附录文字称尺度变化 >10cm），并伴随更高深度轴噪声（>30Hz 信号）；尺度一致化修改后关键点轨迹稳定性明显改善。",
+   "scope": "Appendix F 与 Figure 6，单条 egocentric 视频的对比可视化。",
+   "locator": "Appendix F Scale-Consistent HaWoR (extraction heading 'References'), Figure 6"
+  },
+  {
+   "finding": "作者明确区分精度需求：预训练可容忍 VITRA 预计算的较低精度关键点（'benign for training'），而微调集关键点直接刻画任务操作过程、必须准确。",
+   "scope": "3.2 Data 节的手部点提取论述。",
+   "locator": "3.2 Data"
+  },
+  {
+   "finding": "剩余失败以低层运动问题为主（动作定位不精确、接触力不足）；部分预测轨迹在部署机器人上运动学不可行并引入非平凡 IK 误差。",
+   "scope": "4.2 失败观察与 5 节 Limitations。",
+   "locator": "5 Conclusion"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "部分预测轨迹在部署机器人上运动学不可行，引起非平凡 IK 误差。",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "点表征不含力信息，指尖接触标注只是简单代理。",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "DPP 继承其依赖的 VLM 与其他视觉模型的失败模式。",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "点抽象丢弃场景上下文，在杂乱环境中可能受限。",
+    "locator": "5 Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "尺度一致化仅在单个 egocentric 视频上演示（Figure 6），未给出全数据集尺度的轨迹误差量化（如毫米级端点误差），'明显改善'缺乏跨数据分布的定量证据。",
+    "basis": "Appendix F 全文仅报告单视频对比可视化与定性结论。"
+   },
+   {
+    "boundary": "部署假设静止 ego 相机与立体深度；在运动 ego 相机或单目条件下，深度噪声与外参时变会叠加到手部追踪误差上，本文未评估。",
+    "basis": "3.4 节 'Because we use a static camera for all downstream tasks, we place the world frame at the camera frame'；3.2 节微调/部署用 ZED 立体深度因其比单目深度噪声小。"
+   },
+   {
+    "boundary": "成功率报告未区分失败中由手部追踪误差与由策略/IK 引起的比例，无法从本文直接读出'手部检测精度的可接受阈值'。",
+    "basis": "4.2 节仅定性描述失败以低层运动问题为主；全文无追踪误差与成功率的敏感性分析。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：ego 视角（或近似 ego 视角）静止立体相机、桌面级灵巧操作（抓取放置/简单工具使用）、每任务约 100-500 条人类演示微调、部署端可运行 VLM+分割+深度+手部追踪管线的场景。不适用于：单目运动 ego 相机的在线部署、需要精确力/触觉闭环的任务、长时程多阶段任务，以及无法获得可靠手部追踪（严重遮挡/出画）的视频源。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "明确指出并量化了 egocentric 手部追踪的尺度-深度歧义（>10% 尺度不一致、深度轴高频噪声），并给出工程上可复现的修复（固定形状参数）。",
+   "基线设计隔离信息内容：VITRA 用同一 IK 管线转换监督、Point Policy 用同一六关键点表征，较公平。",
+   "训练阶段-精度需求的区分（预训练容忍低精度标签、微调需准确）为综述的阈值问题提供了罕见的定性证据。"
+  ],
+  "design_risks": [
+   "尺度一致化的收益仅在单视频可视化层面展示，无定量轨迹误差对比（如 ADE/端点误差）。",
+   "预训练关键点来自 VITRA 预计算标签，其误差未审计；'benign' 论断无消融直接验证（w/o Pretrain 只证明预训练有用，不证明标签噪声无害）。",
+   "每任务 24 次试验、人工实时判定成功，存在评估者主观性与有限统计功效。"
+  ],
+  "baseline_fairness": "两个基线均用相同人类演示数据训练；Point Policy 同时缺少预训练、自回归与接触头，因此 75.0% vs 3.7% 的差距是三贡献合并效应，不能单独归因于表征选择；VITRA 经同一 IK 适配，信息内容对齐，公平性尚可。",
+  "metric_validity": "成功率为二值人工判定，未报告关键点轨迹或末端位姿的连续误差；Figure 6 的尺度/噪声可视化未配合跨样本定量指标，'手部检测精度'只能间接推断。",
+  "reproducibility": "管线组件（Qwen3.5-VL、SAM3、Depth-Anything-3、ZED、HaWoR/HaMeR、阻尼最小二乘 IK）与训练超参（附录 A：100k 步、batch 256、A100 约 36 GPU 时）披露充分；接触标注成本（约 10 秒/条）明确。",
+  "external_validity": "微调与部署均为静止 ego 视角+立体深度的受控桌面场景；向运动相机、单目深度、强遮挡的 in-the-wild ego-centric 视频迁移时，手部追踪误差与深度噪声的耦合效应未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.10614-C01",
+   "claim": "在 ego-centric 视频上，现成手部追踪器 HaWoR 虽能准确追踪手部姿态，但对形状/尺度的逐帧推理不一致——单条视频内手部尺度变化超过 10%（正文附录称 >10cm），并在深度轴引入 >30Hz 的高频噪声（尺度-深度歧义：大手被推断为更远、小手更近）；将形状参数改为以 HaMeR 平均 β 为输入的尺度一致推理后，关键点轨迹稳定性明显改善。",
+   "stance": "conditional",
+   "relation": "直接回答综述的误差来源问题：ego-centric 手部追踪的尺度-深度歧义会污染腕部/指尖 3D 轨迹（尤其是深度轴），而固定手部形状参数是有效的低成本缓解；这是把'追踪精度'具体化为可测误差的少见证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix F 逐字报告单条 egocentric 视频内 >10cm 尺度变化、>30Hz 深度噪声与成因解释，Figure 6 caption 报告 >10% 尺度不一致；3.2 节声明修改后 'noticeable improvement in the stability of the keypoint trajectory'。改善幅度未定量，claim 保持定性。",
+   "locator": "Appendix F Scale-Consistent HaWoR (extraction heading 'References'), Figure 6",
+   "source_context": "However, as shown in Figure 6a, even within a single egocentric video, the hand scale varies notably, i.e., > 10cm. In other words, the model inconsistently infers that larger hands are farther away and smaller hands are closer than the ground truth. To verify this, in Figure 6b, we visualize the depth noise amplitude, i.e., > 30Hz signal which is definitely noise from the human action within a single sequence.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "hand scale variance within a single egocentric video（单序列内手部尺度变化）与 depth axis noise amplitude（深度轴噪声幅度）",
+    "value_or_direction": "original HaWoR: scale varies >10cm（Figure 6 caption 称 more than 10% scale inconsistency）且 depth axis 存在 >30Hz noise；scale-consistent 版本明显更稳",
+    "comparator": "scale-consistent HaWoR（shape parameter 固定为 HaMeR mean β 的修改版）",
+    "task_or_sample": "单条 egocentric video 的逐帧推理对比（Figure 6a/6b）",
+    "locator": "Appendix F Scale-Consistent HaWoR (extraction heading 'References'), Figure 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Appendix F 与 Figure 6 caption 的原文逐字支持 >10cm/>10% 与 >30Hz 的数值及因果解释（尺度-深度歧义）；'明显改善'来自 3.2 节原文；claim 未声称跨数据集定量收益，边界一致。"
+   }
+  },
+  {
+   "card_id": "2606.10614-C02",
+   "claim": "对手部关键点标注的精度需求随训练阶段不同：互联网规模预训练可直接使用 VITRA 语料中精度较低的 HaWoR 预计算关键点（作者称 'the less accurate keypoint labels are benign for training'），而任务微调集的关键点直接刻画任务操作过程、必须准确（'need to be accurate to successfully represent the process of the task'），因此微调集额外做了尺度一致化处理。",
+   "stance": "conditional",
+   "relation": "回答综述的可接受阈值问题：手部追踪精度的可接受水平不是单一阈值——大规模预训练对标签噪声鲁棒，任务相关微调则要求准确轨迹；精度的边际价值集中在微调阶段。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.2 Data 节逐字给出两阶段精度需求的对比陈述，并说明这是引入尺度一致 HaWoR 的动机；该论断为作者经验性主张，无单独消融，故 stance 取 conditional。",
+   "locator": "3.2 Data",
+   "source_context": "For the pretraining corpus we use VITRA’s pre-computed HaWoR [37] hand keypoints directly. Since the purpose of the pretraining is to coarsely train general dexterous hand manipulation, the less accurate keypoint labels are benign for training. On the other hand, keypoints of the fine-tuning dataset are directly related to the task manipulation, which need to be accurate to successfully represent the process of the task.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.2 节原文逐字支持两个阶段精度需求的对比；claim 已注明这是作者主张而非消融验证的结论，未夸大证据强度。"
+   }
+  },
+  {
+   "card_id": "2606.10614-C03",
+   "claim": "以腕+五指尖六关键点为统一观测-动作表征，Dexterous Point Policy 仅用人类视频训练（零机器人示教）即在 8 个真机灵巧任务上达 75.0% 平均成功率，远高于同样仅用人类数据的 Point Policy（3.7%）与 VITRA（1.0%）；去掉互联网规模预训练降至 67.5%（Pick and Place），去掉自回归降至 37.5%。",
+   "stance": "support",
+   "relation": "支持综述命题：将手部抽象为少量 3D 关键点（而非完整姿态/网格重定向）并结合大规模 ego-centric 视频预训练，可使手部追踪衍生的轨迹在真实灵巧手上直接可用；同时量化显示该可用性依赖预训练与自回归解码。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 给出 8 任务逐任务成功率与三方法对比；Table 3 给出 w/o AR（37.5%）与 w/o Pretrain（67.5%）消融；所有方法共享人类演示数据与（对 VITRA）同一 IK 管线。",
+   "locator": "4.1 Experimental Setup, Table 1 (Dexterous manipulation results; float 在抽取文本中位于 4.1 标题之下)",
+   "source_context": "Method Bottle Box Ball Towel Teddy Open Brush Spray Avg. Point Policy 0.0 0.0 4.2 12.5 4.2 8.4 0.0 0.0 3.7 VITRA 0.0 0.0 0.0 4.2 0.0 4.2 0.0 0.0 1.0 DPP (Ours) 95.8 75.0 70.8 87.5 79.2 87.5 62.5 41.7 75.0",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "真机单次成功率（%，24 次/任务，人工判定）",
+    "value_or_direction": "DPP 平均 75.0%（P&P 81.7%，Manipulation&Tool Use 63.9%）；消融 w/o Pretrain 67.5%、w/o AR 37.5%（P&P 平均）",
+    "comparator": "Point Policy 3.7%、VITRA 1.0%（同为人视频训练、零机器人示教）",
+    "task_or_sample": "8 个真机灵巧任务（5 物体 Pick and Place + Open/Brush/Spray），OpenArm+Inspire RH56F1",
+    "locator": "4.1 Experimental Setup, Table 1; 4.4 Ablation Study, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 数值逐字核实，81.7%/63.9% 分项平均值见 4.2 正文，消融数值见 4.4 与 Table 3；claim 限于该真机评测设定，并已在 apprisal 中指出基线差距为三贡献合并效应。"
+   }
+  },
+  {
+   "card_id": "2606.10614-C04",
+   "claim": "即使关键点表征松弛了人-机耦合，预测的腕/指尖轨迹仍有一部分在部署机器人上运动学不可行并引入非平凡 IK 误差；真机剩余失败以低层运动问题为主（动作定位不精确与接触力不足），且整条管线继承 VLM、分割、深度与手部追踪模型的失败模式。",
+   "stance": "limit",
+   "relation": "限制综述命题：关键点级人-机对齐并不能完全消除重定向误差——轨迹经由位置型 IK 映射到关节时仍有不可行解与误差；手部检测/追踪精度只是末端轨迹误差的来源之一，执行端运动学与力控同样构成瓶颈。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "5 节 Limitations 逐字给出 IK 误差与继承视觉模型失败模式两条；4.2 节逐字给出剩余失败以低层运动问题为主的观察。",
+   "locator": "5 Conclusion",
+   "source_context": "Limitations. Several limitations remain. First, although the keypoint representation loosens the coupling between human and robot hand actions, some predicted trajectories are still kinematically infeasible on the deployment robot and induce non-trivial IK error.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "5 节 Limitations 第一、三条与 4.2 节失败观察逐字核实；claim 未给出 IK 误差的数值（原文亦未给出），表述与原文强度一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "reference": "Zhang et al., HaWoR: World-space hand motion reconstruction from egocentric videos (CVPR 2025)",
+   "why_core": "全部手部关键点的来源；其尺度-深度歧义是本文量化并缓解的核心误差源。"
+  },
+  {
+   "reference": "Li et al., VITRA (ICRA 2026)",
+   "why_core": "预训练语料与预计算手部关键点来源；其标签噪声被作者声明对预训练无害。"
+  },
+  {
+   "reference": "Haldar & Pinto, Point Policy (CoRL 2025)",
+   "why_core": "六关键点统一表征所扩展的两指夹爪版本与主要基线。"
+  }
+ ],
+ "notes": "本篇是五篇中与综述问题耦合最深的一篇：直接量化 egocentric 手部追踪的尺度-深度歧义（>10%/>10cm、>30Hz 深度噪声），并给出按训练阶段差异化的精度要求。未提供手部追踪误差→成功率 的剂量-反应曲线（gap）；抽取的附录区在 'References' 标题之后，locator 已标注。",
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Dexterous manipulation results: success rate (%) over 24 trials per task.",
+   "section": "4.2 Dexterous Manipulation",
+   "rows": [
+    [
+     "Method",
+     "Bottle",
+     "Box",
+     "Ball",
+     "Towel",
+     "Teddy",
+     "Open",
+     "Brush",
+     "Spray",
+     "Avg."
+    ],
+    [
+     "Point Policy",
+     "0.0",
+     "0.0",
+     "4.2",
+     "12.5",
+     "4.2",
+     "8.4",
+     "0.0",
+     "0.0",
+     "3.7"
+    ],
+    [
+     "VITRA",
+     "0.0",
+     "0.0",
+     "0.0",
+     "4.2",
+     "0.0",
+     "4.2",
+     "0.0",
+     "0.0",
+     "1.0"
+    ],
+    [
+     "DPP (Ours)",
+     "95.8",
+     "75.0",
+     "70.8",
+     "87.5",
+     "79.2",
+     "87.5",
+     "62.5",
+     "41.7",
+     "75.0"
+    ]
+   ],
+   "usage": "作者用该表展示零机器人示教下的真机成功率；本笔记用于 C03。"
+  },
+  {
+   "table_id": "T3",
+   "caption": "Ablation study on Pick and Place (success rate %).",
+   "section": "4.4 Ablation Study",
+   "rows": [
+    [
+     "Method",
+     "Bottle",
+     "Box",
+     "Ball",
+     "Towel",
+     "Teddy",
+     "Avg."
+    ],
+    [
+     "w/o AR",
+     "45.8",
+     "33.3",
+     "29.2",
+     "37.5",
+     "41.7",
+     "37.5"
+    ],
+    [
+     "w/o Pretrain",
+     "91.7",
+     "54.2",
+     "58.3",
+     "70.8",
+     "62.5",
+     "67.5"
+    ],
+    [
+     "DPP (Full)",
+     "95.8",
+     "75.0",
+     "70.8",
+     "87.5",
+     "79.2",
+     "81.7"
+    ]
+   ],
+   "usage": "作者用该表消融自回归与预训练；本笔记用于 C03 的消融部分。"
+  }
+ ]
+}

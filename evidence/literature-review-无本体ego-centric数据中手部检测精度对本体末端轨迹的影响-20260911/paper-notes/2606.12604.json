@@ -1,0 +1,284 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.12604",
+  "title": "EgoEngine: From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations",
+  "published": "2026-06-10",
+  "url": "https://arxiv.org/abs/2606.12604",
+  "authors": [
+   "Yangcen Liu",
+   "Shuo Cheng",
+   "Xi Yin",
+   "Woo-Chul Shin",
+   "A. Cueva",
+   "Yiran Yang",
+   "Zhenyang Chen",
+   "Chuye Zhang",
+   "Danfei Xu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "核心系统：Aria Gen2 21 关键点手部追踪→MINK 指尖/手腕重定向→物体中心仿真优化→真机灵巧策略零样本蒸馏；显式区分纯重定向的失败模式，并对含噪感知参考给出具体容差阈值与缓解设定，直接命中误差来源/阈值/缓解三问。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble",
+    "role": "problem",
+    "purpose": "摘要与图 1：两支数据引擎（动作+视觉）总览"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "视觉差与动作差双缺口的动机、贡献清单"
+   },
+   {
+    "locator": "3 EgoEngine Framework",
+    "role": "method-or-design",
+    "purpose": "框架总览"
+   },
+   {
+    "locator": "3.1 Human Video to Simulation",
+    "role": "data-or-setting",
+    "purpose": "手部轨迹来源（Aria Gen2 21 关键点）、深度/掩码/物体 6D 轨迹的数字孪生管线"
+   },
+   {
+    "locator": "3.2 Action Generation",
+    "role": "method-or-design",
+    "purpose": "MINK 重定向目标函数、纯重定向失败的两点归因、物体中心奖励与 MCTS 式模式切换"
+   },
+   {
+    "locator": "3.3 Visual Generation",
+    "role": "method-or-design",
+    "purpose": "人体移除与遮挡感知混合"
+   },
+   {
+    "locator": "3.4 Policy Distillation",
+    "role": "method-or-design",
+    "purpose": "HPT 策略蒸馏目标"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "视觉保真、动作保真（Table 2）、真机策略（Table 3）与分支消融（Table 4）"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论"
+   },
+   {
+    "locator": "6 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述三轴局限"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "A 硬件/标定链、C 奖励与阈值细节（含含噪参考的容差设定）、D 策略架构、E 数据质量与失败模式分析"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "背景定位，无直接证据，略读"
+   },
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "purpose": "引文列表，略读"
+   }
+  ]
+ },
+ "research_question": "如何把无本体 ego-centric 人类操作视频转换为高保真、物理可执行的灵巧手机器人演示（配对的机器人观测与动作），从而在不使用任何真机遥操作数据的情况下零样本训练灵巧操作策略？",
+ "contributions": [
+  "EgoEngine 两支数据引擎：动作分支（MINK 重定向 + 物体中心仿真优化 + MCTS 式 Replay/MPC/RL 自适应切换）与视觉分支（人体移除 + 数字孪生渲染 + 遮挡感知混合）",
+  "从 ego 视频构建物体中心数字孪生的管线（Aria Gen2 手部追踪 + FoundationStereo 深度 + SAM2 掩码 + FoundationPose 物体 6D 轨迹 + AprilTag 坐标对齐）",
+  "首个（作者声称）完全不用真机演示、从 ego 人类视频零样本学习的灵巧操作策略（HPT + flow matching，4 个真机任务）"
+ ],
+ "method": {
+  "summary": "Aria Gen2 眼镜提供同步 RGB 与每帧 21 关键点 3D 手部位姿；FoundationStereo 估绝对深度，SAM2 以手部关键点提示出手臂掩码并追踪任务物体掩码，FoundationPose 结合物体 mesh 估 6D 物体轨迹，共同构成数字孪生。动作分支先用 MINK 以五指指尖位姿+手腕朝向为 L2 目标解 IK 得参考轨迹，再以视频中物体运动为任务级目标做物体中心轨迹优化（物体位姿跟踪误差超阈值 C 即早停），并按 chunk 用 MCTS 式策略在 Replay/MPC/RL 间自适应升级求解器。视觉分支移除人体后将机器人渲染混合回 ego 视角。生成的观测-动作对蒸馏进 HPT 策略。",
+  "assumptions": [
+   "Aria Gen2 的 21 关键点手部追踪与 FoundationPose 物体 6D 轨迹精度足以作为重定向参考与优化目标（全文未量化手部追踪误差）",
+   "物体 6D 运动是任务成功的充分代理指标，可替代对手部轨迹本身的精确复现",
+   "仿真接触动力学经域随机化后可迁移到真机",
+   "AprilTag 标定链能准确对齐 Aria 人侧坐标系与机器人基座系"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "TACO：2,500 序列（仿真评估取 16 对与机器人本体/重建管线兼容的演示）",
+   "自采 Aria 数据集：200 条真实 ego 人类视频，覆盖 4 任务；另采 200 条真机遥操作演示仅作对照"
+  ],
+  "tasks": [
+   "Mustard（抓取放置芥末瓶）",
+   "Drawer（开抽屉放方块）",
+   "Hammer（抓锤敲钉）",
+   "Flower（持水瓶对准花盆）"
+  ],
+  "embodiments": [
+   "仿真：双臂 RB-Y1（2×7-DoF 臂 + 2×12-DoF XHand）",
+   "真机：单臂 RB-Y1 + 单 XHand；人侧与机器人侧均佩戴 Aria Gen2"
+  ],
+  "sample_or_scale": "动作保真：TACO 16 对 + Aria 4 任务；策略蒸馏：4 任务固定次数真机 rollout；效率：单卡 RTX 4090 上 2.36→2.88 demos/hour"
+ },
+ "evaluation": {
+  "design": "三层评估：视觉保真（ResNet18/VGG16/DINOv2 特征 FD 对比真实机器人观测）；动作保真（仿真内 SR/Step/Reward/Cost 对比 Mink/Spider/H2S2R）；下游策略（真机 SR 对比 Human Video/Phantom/真机遥操作，并做视觉/动作分支消融）",
+  "baselines": [
+   "视觉：原人类视频、EgoMimic、VACE、Phantom",
+   "动作：Mink(Replay)、Spider(MPC)、H2S2R(RL)",
+   "策略：Human Video 直接重定向、Phantom、真机遥操作演示"
+  ],
+  "metrics": [
+   "Fréchet Distance (FD)",
+   "Success Rate / Step / Reward ratio / Cost",
+   "真机任务成功率"
+  ],
+  "ablations": [
+   "分支消融（Table 4）：Human Videos 0.03 → +Visual branch 0.05 → +Action branch 0.43 → EgoEngine 全量 0.51"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "纯重定向（Mink Replay）在仿真中成功率仅 0.17（TACO）/0.10（Aria）；作者归因于两类误差：人-机器人本体差距（运动学不匹配+接触动力学差异）与 proprio-to-action gap（视频只给可观测位姿而非力/接触指令）。物体中心优化后 EgoEngine 达 0.83/0.90，与全程 RL（H2S2R 0.83/0.90）持平但成本约减半。",
+   "scope": "TACO 16 对与 Aria 4 任务仿真动作保真评估",
+   "locator": "3.2 Action Generation; 4.3 Action Fidelity of Generated Robot Trajectories"
+  },
+  {
+   "finding": "分支消融显示可执行动作生成是下游性能主因：仅视觉转换成功率 0.05，仅动作分支即达 0.43；无动作细化时重定向轨迹'无法施加足够接触力完成抓取，或抓取后物体朝向错误'。",
+   "scope": "4 个 Aria 真机任务的平均成功率",
+   "locator": "4.4 Downstream Policy Distillation"
+  },
+  {
+   "finding": "真机 4 任务 EgoEngine 成功率 0.40/0.35/0.70/0.60，对比真机遥操作 0.80/0.80/0.70/0.25；Hammer 任务超过遥操作（优化器发现转腕预抓策略）。",
+   "scope": "Aria 4 任务真机评估",
+   "locator": "4.4 Downstream Policy Distillation"
+  },
+  {
+   "finding": "对含噪感知参考的缓解：Aria 真机任务的物体轨迹来自 ego 视频（含重建/追踪/标定误差），优化采用放宽的可行阈值（物体位置 0.08 m、旋转 2.5 rad）、human-mimic 关节奖励权重置 0.0（避免过度约束含噪重定向手指运动）、动作平滑 0.8 与 8 组域随机化扰动。",
+   "scope": "Aria 真机 4 任务的动作优化配置",
+   "locator": "Appendix"
+  },
+  {
+   "finding": "生成数据平滑度优于遥操作（SPARC 全任务均值 -4.81 vs -6.60）；作者指出视觉遥操作受手部检测误差、感知时延与间歇纠正动作影响，引入高频动作变化。",
+   "scope": "4 任务生成数据 vs 遥操作数据",
+   "locator": "Appendix"
+  },
+  {
+   "finding": "残余失败模式集中在动作侧：捏取任务（Mustard/Drawer）中拾取时刻手腕朝向小偏移导致手指接触不稳；Drawer 接触时机错位（接触奖励鼓励过早接触/过晚释放）。",
+   "scope": "真机策略失败分析",
+   "locator": "4.4 Downstream Policy Distillation; Appendix"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "动作生成仍受接触建模误差与 sim-to-real gap 影响；视觉分支是混合式合成而非全学习的光照真实感",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "数字孪生构建是瓶颈：高质量物体资产获取、严重遮挡下物体状态估计、可变形物体处理仍具挑战",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "仿真轨迹优化在超大规模下仍慢",
+    "locator": "6 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "Aria Gen2 21 关键点手部追踪的绝对精度全文无量化报告，重定向参考轨迹的误差量级未知，只能经下游 SR 与'含噪手指运动'措辞间接推断",
+    "basis": "3.1 与附录 A 只描述追踪来源与标定链，无任何精度标定实验"
+   },
+   {
+    "boundary": "物体中心目标把手部轨迹从'必须精确复现的对象'降级为软先验，但代价是依赖物体 mesh 与 FoundationPose 追踪质量——误差从手部追踪转移到物体追踪",
+    "basis": "C.2 奖励设计需 ground-truth object mesh（A.3），阈值按参考物体运动手工设定"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于 Aria Gen2 腕/指尖级追踪 + 物体 mesh 可用 + 桌面刚体灵巧任务；0.08 m/2.5 rad 阈值是面向含噪 ego 视频估计的工程设定而非普适安全界；不覆盖可变形物体、严重遮挡与无 mesh 场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同一数字孪生为视觉/动作两支提供共同几何基础，减少分支间不一致",
+   "动作保真评估将成功率、物体跟踪奖励与生成成本同报，且评估只用物体跟踪项（辅助奖励不参与评估），避免自评偏差",
+   "分支消融（Table 4）直接分离动作/视觉贡献，与真机遥操作同架构同演示数对照"
+  ],
+  "design_risks": [
+   "手部追踪完全继承 Aria Gen2 黑盒精度，无独立标定或误差报告",
+   "可行阈值按各任务参考物体运动手工设定（0.9-1.5 rad 等），跨任务可比性有限",
+   "TACO 无 AprilTag，用固定 0.6 m 偏移的伪基座启发式对齐，引入额外坐标系误差"
+  ],
+  "baseline_fairness": "动作基线（Mink/Spider/H2S2R）在相同数字孪生与相同物体跟踪评估下比较；策略对照共享架构、演示数与评估协议；对照公平。",
+  "metric_validity": "SR/Step/Reward 均为物体轨迹层面指标；全文无末端轨迹位置误差（mm 级）报告，手部轨迹保真度只能间接推断。",
+  "reproducibility": "奖励公式、阈值、域随机化参数、chunk 长度（H=20）、策略架构与推理步数均在附录给出；项目主页承诺开源。",
+  "external_validity": "单一 RB-Y1+XHand 平台与 4 个真机任务；TACO 仅 16 对；对无 mesh、可变形、严重遮挡场景外推未知。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.12604-C01",
+   "claim": "EgoEngine 在真机 Aria 任务的动作优化中显式把 ego 视频估计的参考信号视为含噪并给出具体容差：因物体轨迹取自第一视角视频（含重建、追踪与标定误差）而非仿真真值，优化采用放宽的物体轨迹可行阈值（位置 0.08 m、旋转 2.5 rad）以避免过拟合噪声参考，同时将 human-mimic 关节奖励权重设为 0.0，避免被含噪的重定向手指运动过度约束。",
+   "stance": "support",
+   "relation": "可接受阈值与缓解手段：面对 ego 视频感知噪声（物体追踪误差+手部重定向误差），该系统不复现参考轨迹而是设定显式容差（0.08 m/2.5 rad）并将噪声最大的手指关节通道的模仿权重清零——'以宽容差+软先验替代精确复现'是缓解手部/感知估计误差的可复用范式。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 C.2 说明 Aria 真机任务的物体轨迹来自 ego 视频、含重建/追踪/标定误差，因此采用放宽阈值（位置 0.08 m、旋转 2.5 rad）防止过拟合噪声参考；同段给出关节奖励权重 0.0 以避免过度约束含噪重定向手指运动。",
+   "locator": "Appendix",
+   "source_context": "we use looser feasibility thresholds, including an object position thresh- old of 0.08 m and an object rotation threshold of 2.5 rad, so that the optimizer can tolerate imperfect object-trajectory estimates instead of overfitting to noisy references",
+   "evidence_type": "reported-finding",
+   "quantitative": {
+    "metric": "object-trajectory feasibility thresholds and human-mimic joint reward scale under noisy ego-video estimates",
+    "value_or_direction": "position threshold 0.08 m, rotation threshold 2.5 rad, joint reward scale 0.0",
+    "comparator": "simulation-only TACO setting, where object trajectories come from simulator ground truth and tighter task-specific thresholds apply",
+    "task_or_sample": "four Aria real-robot tasks (Mustard, Drawer, Hammer, Flower)",
+    "locator": "Appendix (C.2 Reward Design, Domain randomization)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "附录 C.2 两段原文核对：'the object trajectories are extracted from egocentric human videos rather than ground-truth simulator states, and therefore contain reconstruction, tracking, and calibration errors' 紧接放宽阈值句（含 0.08 m/2.5 rad，source_context 逐字命中，'thresh- old'为抽取断行连字符原样保留）；同段落后续句 'while setting the joint reward scale to 0.0 to avoid over-constraining noisy retargeted finger motions' 支撑 claim 后半句。claim 未声称这些阈值保证任何末端轨迹精度界，仅限该系统设定。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Engel et al., Project Aria / Aria Gen2",
+   "reason": "手部 21 关键点追踪与 SLAM 来源，全部手部精度特性继承自该黑盒"
+  },
+  {
+   "citation": "Zakka et al., MINK [49]",
+   "reason": "指尖+手腕 L2 目标的 IK 重定向求解器"
+  },
+  {
+   "citation": "Wen et al., FoundationPose [48]",
+   "reason": "物体 6D 轨迹来源，物体中心优化的任务目标由其提供"
+  },
+  {
+   "citation": "Zhao et al., HPT [59]",
+   "reason": "下游策略蒸馏主干"
+  }
+ ],
+ "notes": "六遍式完成；scoping 深度。本文对综述的核心贡献：(1) 纯重定向失败的显式归因（embodiment gap + proprio-to-action gap，Replay SR 0.17/0.10）；(2) 唯一的显式含噪感知容差设定（0.08 m/2.5 rad + 关节模仿权重清零）——直接回答'可接受阈值与缓解手段'；(3) 手部追踪精度未量化是主要证据缺口，物体中心目标实质是把精确复现负担从手部转移到物体追踪。受 B06 批次 ID 段（76-90）余量限制只投影 1 卡，关键定量结果（Table 2/3/4、SPARC）保留在 findings 供综述定性引用。"
+}

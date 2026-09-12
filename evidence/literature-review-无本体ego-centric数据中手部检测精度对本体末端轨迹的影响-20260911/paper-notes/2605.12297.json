@@ -1,0 +1,355 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.12297",
+  "title": "EgoEV-HandPose: Egocentric 3D Hand Pose Estimation and Gesture Recognition with Stereo Event Cameras",
+  "published": "2026-05-12",
+  "url": "https://arxiv.org/abs/2605.12297",
+  "authors": [
+   "Luming Wang",
+   "Hao Shi",
+   "Jiajun Zhai",
+   "Kailun Yang",
+   "Kaiwei Wang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "双目事件相机 ego 手部 3D 姿态估计：给出绝对 3D 精度数字（MPJPE 22.03mm HOMO / 30.54mm HETER），并直接量化传感模态误差源（RGB 双目基线低光下 82.43mm vs 事件流 29.50mm）与 2D→3D lifting 策略误差放大（朴素三角化 79.21mm vs 几何感知 BEV 融合 30.54mm），是综述问题中误差来源（运动模糊/低光/深度歧义）与缓解手段（事件传感、立体几何约束、迭代精化）的核心证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble / Abstract",
+    "role": "problem",
+    "purpose": "确认问题定位：帧相机运动模糊与动态范围、事件单目深度歧义、缺真实双目数据集"
+   },
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "识别传感/维度/场景三类约束与贡献列表"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "定位帧式 ego 手部感知、事件手部感知与立体融合三条脉络"
+   },
+   {
+    "locator": "III. EGOEVHANDS: ESTABLISHED DATASET",
+    "role": "data-or-setting",
+    "purpose": "核对数据集规模（5419 序列、38 类、10 被试）与标注管线（RealSense D435 锚定 + MediaPipe + 人工筛选 + 深度反投影）"
+   },
+   {
+    "locator": "IV. METHODOLOGY",
+    "role": "method-or-design",
+    "purpose": "理解 LNES+EgoBlaze 自我运动抑制与 KeypointBEV 双目融合总体设计"
+   },
+   {
+    "locator": "IV-B. KeypointBEV: Iterative 3D Refinement",
+    "role": "method-or-design",
+    "purpose": "理解三角化初始化+重投影引导迭代精化（N=3）机制"
+   },
+   {
+    "locator": "V. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "提取指标定义（MPJPE 绝对 / PA-MPJPE 结构 / PCK AUC 0-50mm）与两种数据划分"
+   },
+   {
+    "locator": "V-C. Main Results and Scenario Analysis",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table II 主结果与光照/遮挡分场景数字"
+   },
+   {
+    "locator": "V-D. Comparison with State-of-the-Art Methods",
+    "role": "results-or-analysis",
+    "purpose": "提取与 HandMvNet/Ev2Hands 等基线的定量差距与 lifting 模块对比"
+   },
+   {
+    "locator": "V-F. Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "提取融合策略消融（Table III）与迭代精化曲线（Fig 9/10）"
+   },
+   {
+    "locator": "V-G/H. Model Complexity & Cross-Architecture",
+    "role": "results-or-analysis",
+    "purpose": "提取 8.44M/19.86GFLOPs/13.6FPS 与 DHP19 泛化（55.53→47.88mm）"
+   },
+   {
+    "locator": "V-I. Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：算力开销与单手冗余建模偏置"
+   },
+   {
+    "locator": "VI. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认结论边界"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "IV-C/D. Temporal Action Classification / Multi-Stage Joint Optimization",
+    "role": "method-or-design",
+    "purpose": "手势识别分支与训练策略细节，与手部精度证据关系间接，按 scoping 深度略读"
+   },
+   {
+    "locator": "V-E. Gesture Recognition and Confusion Matrix",
+    "role": "results-or-analysis",
+    "purpose": "手势分类混淆矩阵非轨迹精度证据"
+   },
+   {
+    "locator": "REFERENCES",
+    "role": "relevant-core",
+    "purpose": "参考文献列表不含新证据，按需回溯"
+   }
+  ]
+ },
+ "research_question": "如何用双目事件相机（stereo event streams）在 ego-centric 视角下联合完成双手 3D 关键点估计（解决单目深度歧义、自我运动干扰、运动模糊与低光失效）与手势识别？",
+ "contributions": [
+  "将 ego 事件手部感知重新表述为立体问题，提出端到端框架 EgoEV-HandPose：EgoBlaze 双view骨干抑制自我运动干扰 + KeypointBEV 双目融合模块（BEV 空间 + 重投影引导迭代精化）",
+  "建立 EgoEVHands：首个大规模真实双目事件 ego 手部数据集（5419 标注序列、38 手势类、双手稠密 2D/3D 关键点、正常/低光场景）",
+  "EgoEVHands 上 SOTA：MPJPE 30.54mm（HETER）/ 22.03mm（HOMO），Top-1 手势识别 86.87%；较 RGB 双目基线 HandMvNet 误差降低 57.5%，较事件双手基线 Ev2Hands 降低 73.5%",
+  "KeypointBEV 即插即用泛化：接入 DEV-Pose 后 DHP19 MPJPE 从 55.53mm 降至 47.88mm"
+ ],
+ "method": {
+  "summary": "双目事件流经 LNES 表征与权重共享的 EgoBlaze 骨干提取 2D heatmap/分割/特征；KeypointBEV 先用标定内外参三角化得粗 3D，再将融合特征提升到 BEV 空间，经 3 轮重投影引导的 Transformer 解码迭代精化（每轮把当前 3D 重投影回双目平面采样视觉特征，并注入门控位置编码的运动学空间描述符）；腕部归一化的时序 Transformer 分支做 38 类手势分类；不使用 MANO 参数模型。",
+  "assumptions": [
+   "双目事件相机已标定（内外参已知，三角化与重投影依赖标定）",
+   "训练依赖 EgoEVHands 的稠密 3D 标注（半自动管线：RealSense D435 深度锚定 + MediaPipe 初检 + 人工筛选）",
+   "对称双手建模以双手交互为主要优化目标",
+   "手势协议化采集（38 类预定义动作），非自由操作场景"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EgoEVHands（自建，ego 双目事件+RealSense 红外/深度）",
+   "DHP19（第三人称事件人体姿态，泛化测试）"
+  ],
+  "tasks": [
+   "ego 双手 3D 关键点估计（绝对 MPJPE）",
+   "38 类手势识别",
+   "跨架构泛化（DHP19 人体姿态）"
+  ],
+  "embodiments": [
+   "人头戴双目事件相机；双手交互；无机器人本体实验"
+  ],
+  "sample_or_scale": "EgoEVHands 5419 序列、38 手势类、10 被试、正常/低光两种照明；HOMO/HETER 两种划分"
+ },
+ "evaluation": {
+  "design": "EgoEVHands 上 HOMO（同人同分布）与 HETER（被试 1/2/9 为测试集）双协议评测；与重实现的 HandMvNet（RGB 双目）、Ev2Hands（事件单目双手）、EvHandPose（事件单手）、EventEgo3D（事件单目）对比；融合策略消融固定 2D 骨干隔离 lifting 贡献；DHP19 跨架构泛化",
+  "baselines": [
+   "HandMvNet",
+   "Ev2Hands",
+   "EvHandPose",
+   "EventEgo3D",
+   "BEVFormer (lifting 对比)",
+   "DEV-Pose (DHP19)"
+  ],
+  "metrics": [
+   "M-2D (px)",
+   "MPJPE / M-3D (mm, 绝对)",
+   "PA-MPJPE (mm, 结构)",
+   "PCK AUC (0-50mm)",
+   "Top-1 手势准确率 (%)",
+   "Params/GFLOPs/FPS"
+  ],
+  "ablations": [
+   "融合策略（Table III：三角化/Direct-3D/Coarse-3D(H)/(F)/Fine-2D/Cross-attn/KeypointBEV）",
+   "迭代精化轮次（Fig 9：Init 52.72→Iter2 30.54mm）",
+   "lifting 模块互换（Table II 下半：EventEgo3D/BEVFormer/KeypointBEV）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "绝对 3D 手部姿态精度：HOMO 22.03mm、HETER 30.54mm MPJPE；光照退化几乎免疫（HETER 正常光 31.49mm vs 低光 29.50mm），双手互遮挡下 31.02mm（HETER）/22.13mm（HOMO），与总体水平基本持平",
+   "scope": "EgoEVHands 双协议",
+   "locator": "V-C, Table II"
+  },
+  {
+   "finding": "传感模态决定低光/运动模糊下的误差量级：RGB 双目 HandMvNet 低光 82.43mm，事件流方法 29.50mm；事件单目双手 Ev2Hands 整体 115.13mm",
+   "scope": "EgoEVHands HETER",
+   "locator": "V-D 及 Table II"
+  },
+  {
+   "finding": "2D→3D 融合策略是独立误差放大环节：固定同一 2D 骨干，朴素三角化 79.21mm、参数调制类 53.49-121.74mm、跨view匹配 42.98mm、几何感知 BEV 融合 30.54mm",
+   "scope": "EgoEVHands HETER 消融",
+   "locator": "V-F, Table III"
+  },
+  {
+   "finding": "迭代重投影精化把三角化初始的 52.72mm 压到 30.54mm（首轮降 26.1%），PCK AUC 从 0.436 升至 0.589，主要削减遮挡区域的大误差离群点",
+   "scope": "EgoEVHands",
+   "locator": "V-F (Fig 9/10)"
+  },
+  {
+   "finding": "单目深度歧义难以用 2D 域融合弥补：即便引入相机内外参做特征调制（PM），最好变体 Fine-2D 仍 53.49mm；EventEgo3D 单目 lifting 模块 51.27mm",
+   "scope": "EgoEVHands HETER 消融",
+   "locator": "V-F 及 Table II 下半"
+  },
+  {
+   "finding": "效率：8.44M 参数、19.86 GFLOPs、13.6 FPS；KeypointBEV 占 4.48M/8.84G",
+   "scope": "A800 单卡",
+   "locator": "V-C/V-G, Table IV"
+  },
+  {
+   "finding": "跨架构泛化：KeypointBEV 接入 DEV-Pose 后 DHP19 人体姿态 MPJPE 55.53→47.88mm（-13.8%）",
+   "scope": "DHP19",
+   "locator": "V-H, Table V"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "双目+双手对称结构带来 19.86 GFLOPs 算力开销，超低功耗可穿戴部署需模型压缩/量化",
+    "locator": "V-I. Limitations"
+   },
+   {
+    "limitation": "对称双手结构在纯单手场景引入冗余建模偏置，单手手势理解有轻微性能差",
+    "locator": "V-I. Limitations"
+   },
+   {
+    "limitation": "计划以关键帧+追踪范式替代逐帧独立 3D 精化以降低冗余计算（当前尚未实现）",
+    "locator": "V-I. Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "MPJPE 为相机系绝对 3D 关节误差（立体三角化给出绝对尺度），非世界系轨迹误差；数据集为 38 类协议化手势而非自由操作，向无本体操作视频迁移时误差分布可能不同",
+    "basis": "V-A 指标定义与 III-B 数据集统计"
+   },
+   {
+    "boundary": "3D 真值来自 RealSense 深度+MediaPipe 初检的半自动管线（人工筛选修正），真值本身存在毫米级以上噪声地板，30mm 级 MPJPE 数字含真值噪声成分",
+    "basis": "III-A. Annotation Pipeline"
+   },
+   {
+    "boundary": "事件相机方案需要专用双目事件硬件与标定，不能直接用于现有大规模 RGB ego 视频语料（Ego4D/EPIC-KITCHENS 等）的轨迹提取",
+    "basis": "全文硬件设定"
+   }
+  ]
+ },
+ "transfer_boundary": "精度数字适用于已标定双目事件相机 ego 采集；对综述问题的价值在于量化两个误差源（传感模态：RGB 低光/模糊下 70-115mm 级 vs 事件流 22-31mm 级；lifting 策略：79→30mm 的 2.6 倍差距）而非提供可直接套用的轨迹误差阈值；13.6 FPS 低于实时视频帧率，且方案不适用于存量 RGB 视频。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "HOMO/HETER 双协议显式区分同人适应与跨被试泛化，HETER 更接近真实部署",
+   "固定 2D 骨干的 lifting 消融干净隔离了融合策略对 3D 误差的贡献",
+   "分场景报告光照与遮挡分级（互遮挡/自遮挡/无遮挡），对应遮挡鲁棒性主张可核验"
+  ],
+  "design_risks": [
+   "全部基线为作者重实现版（†标注），与原论文报告值的差距无法区分‘方法差距’与‘重实现差距’",
+   "真值依赖 MediaPipe+RealSense 半自动管线，绝对精度地板受真值噪声限制",
+   "38 类协议化手势分布与真实操作视频的动作分布差距大，HETER 数字可能是乐观上界"
+  ],
+  "baseline_fairness": "基线均在 EgoEVHands 上重训练且统一去掉 MANO 先验以保证公平（作者明确说明），但重实现质量未经第三方验证；HandMvNet 用灰度累积帧模拟事件输入，对 RGB 方法存在一定代表性折损。",
+  "metric_validity": "MPJPE（绝对）与 PA-MPJPE（结构）分离，PCK AUC 覆盖 0-50mm 阈值，对轨迹任务的输入噪声评估效度中等偏高；缺手腕专项误差与下游任务指标。",
+  "reproducibility": "实现细节（优化器/学习率/epoch/梯度裁剪）完整，数据集与代码承诺公开（GitHub 链接）；事件相机硬件门槛高。",
+  "external_validity": "结论限于标定双目事件相机与协议化手势；对 RGB ego 视频、自由操作、非双手场景的外推未验证；无机器人下游实验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.12297-C01",
+   "claim": "在自建 ego 双目事件数据集 EgoEVHands 上，EgoEV-HandPose 的绝对 3D 手部姿态误差为 MPJPE 22.03mm（HOMO 同分布）/ 30.54mm（HETER 跨被试）；传感模态是低光与运动模糊场景的误差量级决定因素——RGB 双目基线 HandMvNet 低光下 82.43mm，而事件流方法 29.50mm，事件单目双手基线 Ev2Hands 整体达 115.13mm。",
+   "stance": "support",
+   "relation": "为综述提供传感侧误差源量化：ego 采集的绝对手部 3D 误差在事件双目下约 22-31mm，而 RGB 传感在低光/运动模糊下退化到 82-115mm 量级；该输入噪声量级直接决定无本体 ego 视频可提取的末端轨迹精度地板。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 正文给出 22.03/30.54mm 双协议数字；V-D 正文给出低光 82.43→29.50mm 与 Ev2Hands 115.1mm 对比，均与 Table II 行值一致。",
+   "locator": "V-C. Main Results and Scenario Analysis (Table II)",
+   "source_context": "Ours (KeypointBEV) w/o action cls. – E-B-1 11.48 22.03 18.96 22.31 21.90 22.04 21.99 21.65 22.09 22.13 5.88 19.86\nHETER (Heterogeneous Distribution)\nHandMvNet\n† \n[13] VISAPP’25 F-B-1/3 38.41 71.87 34.83 62.16 82.43 68.31 72.62 69.98 73.97 73.64 85.9 87.7\nEv2Hands\n† \n[12] CVPR’24 E-M-3 68.90 115.13 82.30 118.39 111.66 120.46 114.05 115.34 112.69 114.30 4.50 21.50\nEvHandPose\n† \n[11] CVPR’24 E-M-3 28.15 60.20 26.00 58.49 62.06 60.20 – – – – 47.4 3.69\nEventEgo3D\n† \n[9] CVPR’23 E-M-1 42.10 72.76 36.50 70.49 75.21 61.51 75.05 67.34 73.06 84.35 1.38 5.53\nLifting Module Analysis (Using our fixed 2D Backbone)\nEventEgo3D\n† \n[9] CVPR’23 E-M-1 16.64 51.27 23.40 48.31 54.47 45.29 52.49 48.67 51.63 56.97 2.31 12.00\nBEVFormer\n† \n[45] ECCV’22 F-B-3 16.64 32.03 22.85 31.58 32.52 34.41 31.55 31.12 31.35 32.16 18.14 374.14\nOurs (KeypointBEV) – E-B-1 16.64 30.54 21.08 31.49 29.50 33.88 29.86 27.43 30.89 31.02 5.88 19.86",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MPJPE (mm, 绝对 3D)",
+    "value_or_direction": "EgoEV-HandPose 22.03mm (HOMO) / 30.54mm (HETER)；低光场景 29.50mm vs HandMvNet 82.43mm；Ev2Hands 115.13mm (HETER 整体)",
+    "comparator": "HandMvNet（RGB 双目）、Ev2Hands（事件单目双手）、EvHandPose、EventEgo3D 重实现基线",
+    "task_or_sample": "EgoEVHands 5419 序列、38 手势、HOMO/HETER 双协议",
+    "locator": "V-C/V-D, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "V-C 正文 22.03/30.54mm、V-D 正文 82.43→29.50mm 与 115.1mm 均逐字核对，且与 Table II HETER 行（HandMvNet 71.87 整体、低光列 82.43；Ev2Hands 115.13；Ours 30.54、低光列 29.50）一致；claim 未外推到 RGB 方法的整体上限。"
+   }
+  },
+  {
+   "card_id": "2605.12297-C02",
+   "claim": "固定同一 2D 骨干时，2D 检测到 3D 姿态的融合/提升（lifting）策略独立决定最终 3D 误差：朴素三角化 79.21mm，引入相机内外参的参数调制类方法 53.49-121.74mm，跨视角交叉注意力匹配 42.98mm，几何感知 BEV 融合（KeypointBEV）30.54mm——最好与最差策略相差 4 倍，且任何仅在 2D 域融合的方法都无法突破 42.98mm。",
+   "stance": "conditional",
+   "relation": "标识传播路径中的独立误差放大环节：检测/lifting 策略选择可使同一前端检测的 3D 误差相差数倍；显式立体几何约束（BEV 融合+内外参）是已验证的缓解手段，而 2D 域融合存在结构性天花板。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 七种融合实现同表对比；V-F 正文解释 PM 类受深度歧义约束、CM 类缺几何约束的失效机制。",
+   "locator": "V-F. Ablation Study, Table III",
+   "source_context": "Method Input Implementation M-3D↓\nBaseline 2D Coord. Triangulation 79.21\nDirect-3D Heat. + I/E Params. PM → Absolute 3D 121.74\nCoarse-3D (H) Heat. + I/E Params. PM → Relative 3D 112.62\nCoarse-3D (F) Feat. + I/E Params. PM → Relative 3D 87.68\nFine-2D Feat. + I/E Params. PM → 2D Residual 53.49\nFine-2D Cross-attn. Feat. (Stereo) CM (No Params.) 42.98\nKeypointBEV BEV Feat. Geo-aware Fusion 30.54",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MPJPE / M-3D (mm)",
+    "value_or_direction": "Triangulation 79.21 / Direct-3D 121.74 / Coarse-3D(H) 112.62 / Coarse-3D(F) 87.68 / Fine-2D 53.49 / Cross-attn 42.98 / KeypointBEV 30.54",
+    "comparator": "同一固定 2D 骨干下七种融合实现（消融）",
+    "task_or_sample": "EgoEVHands HETER 协议",
+    "locator": "V-F, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table III 七行数值逐字核对一致；‘4 倍’为 121.74/30.54 的算术描述；‘2D 域融合无法突破 42.98mm’限定在表内 PM/CM 变体，与 V-F 正文‘operating fusion within the 2D domain poses intrinsic limitations’一致。"
+   }
+  },
+  {
+   "card_id": "2605.12297-C03",
+   "claim": "重投影引导的迭代精化显著压缩 3D 误差与离群点：三角化初始化为 52.72mm，首轮迭代即降 26.1%，最终（Iter 2）达 30.54mm；PCK 曲线下面积从初始三角化的 0.436 提升到融合模型的 0.589（阈值 0-50mm），作者将收益归因于遮挡区域大误差离群点的削减。",
+   "stance": "support",
+   "relation": "提供后处理缓解证据：对检测初始值做几何一致性迭代精化可消除约 42% 的 3D 误差并显著减少离群跳变——这类离群点正是轨迹重定向中最有害的输入（造成轨迹跳变），迭代精化是低成本缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-F 正文给出 52.72→30.54mm 与 26.1% 首轮降幅；Fig 10 说明文字给出 AUC 0.589 vs 0.436，正文明确‘particularly in occluded regions’。",
+   "locator": "V-F. Ablation Study (Fig 9 / Fig 10)",
+   "source_context": "To isolate the contributions of the proposed components,\nspecifically the KeypointBEV module, we analyze the per-\nformance evolution from the initial coarse stage to the final\niteration (see Fig. 9). The initial coarse stage (heatmap +\ntriangulation) yields higher errors (an MPJPE of 52.72 mm),\nwhile the final refined output (Iter 2) achieves the best MPJPE.\nBy applying reprojection-guided visual feedback, the MPJPE\ndrops by 26.1% after the first iteration and reaches 30.54 mm\nfinally. This progressive refinement, with the largest single-\nstep improvement occurring between Init and Iter0, under-\nscores the efficacy of the stereo fusion strategy embodied\nin the KeypointBEV module and verifies that KeypointBEV\neffectively resolves depth ambiguities where simple geometric\ntriangulation struggles.\nFig. 10 further illustrates the overall robustness: the fused\n\n12\nTABLE III: Ablation study on different fusion implementation\non the EgoEVHands dataset. Heat. and Feat. denote heatmap\nand feature-based representations, respectively; I/E Params.\nrefers to the explicit inclusion of camera intrinsics and extrin-\nsics. The methods are categorized into Parameter-Modulated\nstrategies (PM), Cross-view Matching (CM) without camera\npriors, and our proposed geometry-aware BEV fusion. M-3D\nrefers to mean per joint position error (mm). Bold indicates\nthe best performance.\nMethod Input Implementation M-3D↓\nBaseline 2D Coord. Triangulation 79.21\nDirect-3D Heat. + I/E Params. PM → Absolute 3D 121.74\nCoarse-3D (H) Heat. + I/E Params. PM → Relative 3D 112.62\nCoarse-3D (F) Feat. + I/E Params. PM → Relative 3D 87.68\nFine-2D Feat. + I/E Params. PM → 2D Residual 53.49\nFine-2D Cross-attn. Feat. (Stereo) CM (No Params.) 42.98\nKeypointBEV BEV Feat. Geo-aware Fusion 30.54\nmodel achieves a PCK AUC of 0.589 across all thresholds\n(0 ∼ 50 mm), substantially outperforming the initial triangula-\ntion baseline (AUC 0.436), verifying that iterative refinement\nsignificantly reduces large-scale errors (outliers), particularly\nin occluded regions.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MPJPE (mm) / PCK AUC (0-50mm)",
+    "value_or_direction": "Init 52.72mm → Iter2 30.54mm（首轮 -26.1%）；AUC 0.436 → 0.589",
+    "comparator": "同一管线内初始三角化 vs 迭代精化输出",
+    "task_or_sample": "EgoEVHands 全测试集",
+    "locator": "V-F, Fig 9/10"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "52.72/30.54/26.1% 与 AUC 0.589/0.436 均逐字核对；‘约 42%’为 (52.72-30.54)/52.72 的算术描述；离群点削减归因采用作者原文表述（verifying that iterative refinement significantly reduces large-scale errors (outliers)）。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Ev2Hands [12] (CVPR'24)",
+   "reason": "事件单目双手基线，HETER 115.13mm 的对比锚点"
+  },
+  {
+   "citation": "HandMvNet [13] (VISAPP'25)",
+   "reason": "RGB 双目基线，低光 82.43mm 的传感模态对比锚点"
+  },
+  {
+   "citation": "DEV-Pose [14] / DHP19 [15]",
+   "reason": "跨架构泛化实验的宿主方法与基准"
+  }
+ ],
+ "notes": "scoping 模式完成六遍阅读；Table II 分场景行列值（正常光/低光/单手/双手分级）已记入 findings 供写作期取用；真值半自动管线的噪声地板为读者推断边界，引用精度数字时需注意。"
+}

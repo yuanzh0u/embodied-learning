@@ -1,0 +1,361 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.06627",
+  "title": "What Matters When Cotraining Robot Manipulation Policies on Everyday Human Videos?",
+  "published": "2026-06-04",
+  "url": "https://arxiv.org/abs/2606.06627",
+  "authors": [
+   "Richard Li",
+   "Aditya Prakash",
+   "Andrew Wen",
+   "Saurabh Gupta",
+   "Yilun Du",
+   "Pulkit Agrawal"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "empirical",
+  "relevance": {
+   "decision": "include",
+   "reason": "本批最直接的核心证据：在保留 Internet 视频关键挑战(ego 视角、自然动作、相机/任务失配)的代理设置中，用三角测量真值对照 SOTA 单目手部估计器(HaWoR)并做标定噪声注入，给出手部姿态质量→共训练迁移的剂量-响应曲线；同时量化图像空间尺度失配与自然动作鸿沟两个独立误差源，及其架构/预处理缓解手段。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "问题界定：Internet 视频共训练的两个关键难点——3D 手姿质量与自然动作鸿沟。"
+   },
+   {
+    "locator": "3 TriHands Dataset",
+    "role": "data-or-setting",
+    "purpose": "532 视频/28 小时三角测量手部标签数据集构建：2D 关键点瓶颈、重投影微调、DLT 三角测量。"
+   },
+   {
+    "locator": "4.1 Data streams",
+    "role": "data-or-setting",
+    "purpose": "人/机数据流与机器人 TCP+三元夹爪动作空间定义。"
+   },
+   {
+    "locator": "4.2 Image-space scale alignment",
+    "role": "method-or-design",
+    "purpose": "针孔方程推导的图像空间尺度对齐(鱼眼去畸变+机器人相机景深/朝向调整)。"
+   },
+   {
+    "locator": "4.3 Action space alignment",
+    "role": "method-or-design",
+    "purpose": "MANO 中指近端关节映射为 TCP 代理、头系稳定化、逐数据集均值归一+1-99 百分位截断。"
+   },
+   {
+    "locator": "4.4 Cross-embodiment architecture",
+    "role": "method-or-design",
+    "purpose": "token 级融合+本体专属动作/本体感编解码器；论证大动作鸿沟下共享确定性解码必然失败。"
+   },
+   {
+    "locator": "4.5 Cotraining algorithm and weighted loss",
+    "role": "method-or-design",
+    "purpose": "逐本体等批采样隐式上调机器人损失权重。"
+   },
+   {
+    "locator": "5 Experimental Design",
+    "role": "data-or-setting",
+    "purpose": "H1-H4 假设、六任务、3/5/10 环境×50 演示、4 测试环境×15 rollout、噪声注入设计与基线定义。"
+   },
+   {
+    "locator": "6 Results",
+    "role": "results-or-analysis",
+    "purpose": "核心结果：HC vs RO 三档数据、Table 3 HaWoR 误差、Table 4 噪声剂量-响应、Table 5 尺度消融、架构消融。"
+   },
+   {
+    "locator": "7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论：手部质量实验显示现代估计器开始可迁移，进一步提升估计质量可解锁更多迁移。"
+   },
+   {
+    "locator": "I Architecture details",
+    "role": "appendix-or-supplement",
+    "purpose": "附录通读：A 人评 76.3% 胜率、B 三角测量管线(Hands23 换检测器/HaWoR 初始化 MANO IK)、D 相机规格、E 相机消融内参、G 动作边际分布、H 加权损失推导、I-J 架构与推理超参。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "reason": "背景综述，无独立证据。"
+   },
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "reason": "参考文献列表。"
+   },
+   {
+    "locator": "Acknowledgments",
+    "role": "appendix-or-supplement",
+    "reason": "致谢。"
+   },
+   {
+    "locator": "Supp. K/L 任务与环境表格",
+    "role": "appendix-or-supplement",
+    "reason": "逐环境物体/桌布定义，主结果数值已在 Table 10/11 覆盖。"
+   }
+  ]
+ },
+ "research_question": "从日常(自然动作、非策划)ego-centric 人类视频到机器人操作策略的端到端共训练，哪些因素决定迁移成败——特别是 3D 手部姿态质量与自然动作/任务鸿沟各自的影响与缓解？",
+ "contributions": [
+  "TriHands 数据集：532 条 EgoExo4D 烹饪视频经多视角三角测量得到 28 小时/3,042,406 帧高质量右手 3D 标签，人评胜率 76.3% 优于 EgoExo4D 官方 2D 关键点。",
+  "手部质量因果证据：标定高斯噪声注入显示迁移随噪声单调退化；HaWoR 单目估计手部仍有净迁移但显著低于三角测量手部。",
+  "图像空间尺度对齐：相机内参/FOV 失配是被忽视的误差源，重度失配使人类数据收益归零。",
+  "共训练配方：token 级融合+本体专属动作编解码器+逐本体等批采样，在低机器人数据档绝对提升 29.7%。"
+ ],
+ "method": {
+  "summary": "代理设置：用 EgoExo4D 外视角三角测量产生手部真值(WiLoR 单视估计→DLT 多视三角+重投影阈值筛选→0.4s 插值→HaWoR 初始化 MANO IK)，保留 ego 视角/自然动作/相机失配三大挑战；人类动作经 MANO 中指近端关节映射为机器人 TCP 代理，逐时间步变换到当前头系消除头动多模态，逐数据集均值归一+1-99 百分位截断+±1 缩放；图像侧做针孔尺度对齐(鱼眼去畸变，机器人相机移至匹配景深并旋转 90°)；Transfusion 式共享注意力 token 融合 + 本体专属 3 层 MLP 动作/本体感编解码器；每 minibatch 两本体等量采样隐式上调机器人损失。",
+  "assumptions": [
+   "三角测量手部标签足够接近真值，可作为评估单目估计器的上界基准",
+   "MANO 中指近端关节比腕系更对齐接触，可作为机器人 TCP 的有效代理",
+   "头系( ego 相机系)可作为动作块表达的稳定参照",
+   "逐数据集独立归一化可吸收人/机动作边际分布的系统性偏差"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "TriHands(532 视频/28h/3,042,406 帧右手@30fps)",
+   "机器人数据: 六任务×{3,5,10} 环境×50 演示",
+   "对照数据集: EgoDex 145h 实验室数据"
+  ],
+  "tasks": [
+   "Pick",
+   "Stack",
+   "Pull",
+   "Reorient",
+   "Book",
+   "Pour"
+  ],
+  "embodiments": [
+   "6-DOF AgileX Piper 臂 + 平行夹爪",
+   "人类(EgoExo4D ego 鱼眼相机)"
+  ],
+  "sample_or_scale": "共 3,480 次真机 rollout；每设置 4 个未见测试环境×15 rollout"
+ },
+ "evaluation": {
+  "design": "四假设(H1 泛化/H2 动作迁移/H3 手部质量/H4 本体特化)；六任务跨 3 档机器人数据；HaWoR 单目 vs 三角测量手部对照；0.5×/1.0× 标定高斯噪声注入；CLS-token/PiZero 共享编解码/EgoBridge/EgoDex 消融；针孔尺度三档消融",
+  "baselines": [
+   "Robot Only",
+   "HaWoR 单目手部共训练",
+   "EgoDex 数据集共训练",
+   "CLS-token 图像瓶颈",
+   "PiZero 共享动作编解码",
+   "EgoBridge(OT 动作相似性对齐)"
+  ],
+  "metrics": [
+   "未见环境任务成功率(95% Clopper-Pearson/Gaussian CI)",
+   "手部姿态误差 MPJPE/PA-MPJPE/W-MPJPE/WA-MPJPE(mm)",
+   "失败分类(全局 servo 失败 vs 局部数 cm 失败)"
+  ],
+  "ablations": [
+   "手部标签来源(三角测量/HaWoR/噪声注入)",
+   "图像空间尺度对齐三档",
+   "token 融合 vs CLS 瓶颈",
+   "本体专属 vs 共享动作编解码",
+   "数据集(TriHands vs EgoDex)",
+   "机器人数据规模"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "手部噪声剂量-响应：0.0×/0.5×/1.0× 标定噪声下迁移成功率 48.3±19.6%→30.0±13.1%→20.0±6.5%；HaWoR 对三角测量真值 W-MPJPE 161.85mm，深度噪声可主导 1 秒视界的手部关节平移。",
+   "scope": "Reorient/Pick bowl 等任务，同 532 视频",
+   "locator": "6 Results, Tab. 3-4"
+  },
+  {
+   "finding": "HaWoR 单目手部共训练 24.7±16.9% 仍高于 Robot Only 11.9%，但低于三角测量手部 41.5±12.1%(均 3-env 均值)。",
+   "scope": "六任务 3-env 档",
+   "locator": "6 Results, Tab. 1-2"
+  },
+  {
+   "finding": "本体特化必要性：CLS-token 瓶颈 14.7±18.6%、PiZero 共享动作编解码 17.5±6.0%、EgoBridge 16.6±10.7%，均远低于本配方 41.5±12.1%；自然动作鸿沟下实验室配方近乎无迁移。",
+   "scope": "六任务 3-env 档",
+   "locator": "6 Results, Tab. 1"
+  },
+  {
+   "finding": "图像空间尺度消融：范围匹配针孔 51.2% vs 中度失配 40.0% vs 重度失配 25.0%(≤Robot Only 26.2%，收益归零)。",
+   "scope": "pick spatula 任务相机消融",
+   "locator": "6 Results, Tab. 5"
+  },
+  {
+   "finding": "5/6 任务上 Robot Only 的失败 100% 为局部(数 cm)误差，HC 在这些任务 82.8±11.4% vs 29.2±13.7%，支持细粒度动作迁移；最复杂任务 Pour 上结论不确定。",
+   "scope": "HC/RO 各 90 rollout 失败分析",
+   "locator": "6 Results"
+  },
+  {
+   "finding": "TriHands 28h 自然场景数据全面优于 EgoDex 145h 实验室数据，场景多样性比规模更重要。",
+   "scope": "六任务 3-env 档",
+   "locator": "6 Results, Tab. 1"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "最复杂任务(Pour)上动作迁移结论不确定；配方对复杂任务可能因依赖运动学重定向+更大动作鸿沟而效果减弱。",
+    "locator": "6 Results"
+   },
+   {
+    "limitation": "目标是理解迁移因素而非产出可直接用于今日 Internet 视频的方法(代理设置依赖外视角三角测量)。",
+    "locator": "1 Introduction"
+   },
+   {
+    "limitation": "需寻找新的表征对齐与动作重定向技术以应对日常视频复杂度。",
+    "locator": "7 Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "噪声注入用各向同性高斯近似 HaWoR 误差分布，未建模单目估计的系统性偏差(遮挡驱动的结构化误差、 chirality 翻转)，真实估计误差的下游影响可能比高斯模型更恶劣。",
+    "basis": "5 节自述噪声'fit to the TriHands–HaWoR error distribution'；Supp. B 显示检测器存在 chirality 错误等结构化失败。"
+   },
+   {
+    "boundary": "噪声/手部质量消融仅在最多两个任务(Reorient、Pick bowl)上分任务报告，均值跨任务聚合，任务级敏感性未知；Table 4 仅 3 个噪声档，无法拟合完整剂量-响应曲线形态。",
+    "basis": "Table 4 仅列 Mean/Reorient/Pick bowl 三列。"
+   },
+   {
+    "boundary": "三角测量标签本身受 2D 关键点质量、检测器换人(Hands23 替代 YOLO)与 bbox 平移模型影响，其绝对精度未与动捕级真值核对。",
+    "basis": "Supp. A 仅与 EgoExo4D 官方 2D 关键点做人评对比(76.3% 胜率)。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于： ego-centric 自然动作人类视频共训练到单臂(6-DOF+平行夹爪)桌面操作的迁移分析；手部质量结论以三角测量为基准、以 HaWoR 为代表性单目估计器；架构结论在自然动作鸿沟下成立(实验室对齐动作场景文献相反)。不外推：双手/灵巧手、无结够化外视角的纯 Internet 视频直接训练、接触富集高精度任务。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "代理设置设计精巧：三角测量真值使手部质量成为可控变量，同时保留 Internet 视频的自然动作与相机失配",
+   "标定噪声注入提供手部质量→迁移的因果剂量-响应，而非仅相关对比",
+   "失败分类(全局/局部)为'动作迁移 vs 视觉迁移'提供机制性判别",
+   "3,480 次真机 rollout、多档机器人数据、95% CI，统计规模大"
+  ],
+  "design_risks": [
+   "噪声模型为高斯近似，真实单目误差含结构化成分",
+   "三角测量'真值'未经动捕级外部校验",
+   "架构消融与手部质量消融都在 3-env 档，高数据档下结论可能变化",
+   "每格 60 rollout(4 环境×15)，per-task 置信区间仍宽(±10-20pp)"
+  ],
+  "baseline_fairness": "HaWoR 用同一批 532 视频仅换标签来源，变量隔离干净；EgoDex 对照混入场景多样性差异(作者明示);EgoBridge 受其 OT 形式约束只能用 CLS 架构，属实现继承的公平折中。",
+  "metric_validity": "成功判据逐任务定义(Supp. K.2)且全部未见环境评测；手部误差报告四种 MPJPE 变体，W-MPJPE(世界系)最贴近下游动作误差。",
+  "reproducibility": "管线算法(Alg. 1-2)、相机消融内参、超参表(Table 6)、数据规模全部公开；TriHands 依托 EgoExo4D 许可，可视化与视频开放。",
+  "external_validity": "结论限单臂桌面操作与自然动作烹饪视频；向灵巧手、双臂、移动操作或真正无标定 Internet 视频推广需谨慎。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.06627-C01",
+   "claim": "手部姿态质量对共训练迁移呈因果剂量-响应：以三角测量手部为基准注入拟合 TriHands-HaWoR 误差分布的标定高斯噪声，迁移成功率从 0.0× 噪声的 48.3±19.6% 单调降至 0.5× 的 30.0±13.1% 与 1.0× 的 20.0±6.5%；参照系中 SOTA 单目估计器 HaWoR 相对三角测量真值的世界系误差 W-MPJPE 达 161.85mm，且 1 秒预测视界内的手部关节平移常被深度值噪声主导。",
+   "stance": "support",
+   "relation": "直接回答综述问题的核心因果链：手部检测/追踪误差→动作标签噪声→迁移后机器人末端轨迹可用性下降，且退化是单调的、半量噪声即损失约 18pp；深度方向噪声是主导机制——为'可接受阈值'讨论提供了首个定量锚点(HaWoR 级噪声约砍掉一半迁移收益)。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6 Results 手部质量段 + Tab. 3(HaWoR 四误差指标) + Tab. 4(三档噪声成功率) + 深度噪声主导机制句。",
+   "locator": "6 Results",
+   "source_context": "Given the metrics in Table 3, it is unsur- prising the monocular transfer is worse — the hand joint translations in our 1-second prediction horizon can often be dominated by the noise in the depth val- ues. Table 4 shows that transfer degrades monotoni- cally with noise level, further confirming that higher quality hands lead to greater transfer.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean success rate under calibrated hand-pose noise injection",
+    "value_or_direction": "0.0x: 48.3±19.6%; 0.5x: 30.0±13.1%; 1.0x: 20.0±6.5% (monotonic degradation); HaWoR vs triangulated: W-MPJPE 161.85mm, MPJPE 185.67mm",
+    "comparator": "same 532 TriHands videos, triangulated hands + Gaussian noise fit to the TriHands-HaWoR error distribution",
+    "task_or_sample": "六任务均值(Reorient/Pick bowl 分列), 3-env 档, 未见环境 rollout",
+    "locator": "6 Results, Tab. 3-4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Tab. 4 三档数值(48.3/30.0/20.0 与 CI)、Tab. 3 四项误差(185.67/15.72/161.85/77.86mm)、'monotonically'与'depth values dominated'机制句均逐字核对；claim 限定在 3-env 档与该代理设置，未外推到所有 Internet 视频。"
+   }
+  },
+  {
+   "card_id": "2606.06627-C02",
+   "claim": "当前 SOTA 单目手部估计器(HaWoR)的标签虽已越过'有迁移'门槛但远未追平高质量标签：同 532 条视频上 HaWoR 单目手部共训练均值 24.7±16.9%，仍高于纯机器人训练 11.9%，却显著低于三角测量手部的 41.5±12.1%——手部质量差距在该设置下对应约 17pp 的成功率差。",
+   "stance": "conditional",
+   "relation": "界定'可接受阈值'的当前位置：HaWoR 级(W-MPJPE≈162mm)单目追踪在自然动作 ego 视频上可用但不优——手部检测精度是迁移量的单调决定因素而非开关；提升估计器质量被作者明列为解锁更大迁移的杠杆(对应'规模化手部估计训练数据'的建议)。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6 Results 'Hand quality matters' 段逐字给出 24.7% vs 11.9% 对比与'even noisy hand labels provide some benefit'判断；41.5% 来自 Tab. 1 Ours 行。",
+   "locator": "6 Results",
+   "source_context": "However, the mean success rate for HaWoR is still higher than Robot Only (24.7% vs 11.9%) (Table 2). This indicates even noisy hand labels provide some benefit across certain tasks but greater improvements in hand pose estimation quality will unlock better transfer across other tasks.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean success rate (3 envs, six tasks)",
+    "value_or_direction": "HaWoR monocular 24.7±16.9% vs triangulated (Ours) 41.5±12.1% vs Robot Only 11.9%",
+    "comparator": "same 532 videos with triangulated labels; robot-only training",
+    "task_or_sample": "六任务 3-env 档, 每格 4 未见环境×15 rollouts",
+    "locator": "6 Results, Tab. 1-2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "24.7/11.9 逐字出自正文(与 Tab. 2 的 12.0±8.2% 为同一数据的正文舍入), 41.5±12.1 逐字出自 Tab. 1；'约 17pp 差距'为两报告值的算术差, 未添加额外解释。"
+   }
+  },
+  {
+   "card_id": "2606.06627-C03",
+   "claim": "即使手部标签达到三角测量级质量，自然动作鸿沟下实验室共训练设计仍失效：CLS-token 图像瓶颈均值仅 14.7±18.6%、PiZero 式共享动作编解码器 17.5±6.0%、EgoBridge 动作相似性对齐 16.6±10.7%，而 token 级融合+本体专属动作编解码器配方达 41.5±12.1%；作者论证大动作鸿沟下共享确定性解码器'必然失败'，本体特化权重是必要条件。",
+   "stance": "conditional",
+   "relation": "给手部精度收益划定边界条件：检测/追踪精度提高的边际价值以实现本体特化的架构为条件——否则自然动作鸿沟使迁移归零；这界定了误差传播的第二路径(动作分布鸿沟经共享解码器直接污染机器人动作预测)，并给出架构层缓解(token 融合+专属编解码+逐本体等批采样)。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.4 节'guaranteed to fail'论证 + 6 Results 架构消融段与 Tab. 1(CLS 14.7/PiZero 17.5/EgoBridge 16.6 vs Ours 41.5)。",
+   "locator": "6 Results",
+   "source_context": "Additionally, untying the action encoders and decoders leads to large improvements in 5 out of 6 tasks, for a similar reason.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean success rate (3 envs, six tasks)",
+    "value_or_direction": "token fusion + separate action enc/dec 41.5±12.1% vs CLS-token bottleneck 14.7±18.6% vs PiZero shared enc/dec 17.5±6.0% vs EgoBridge 16.6±10.7%",
+    "comparator": "CLS-token image-bottleneck, PiZero shared action encoder/decoder, EgoBridge OT alignment — all cotrained on the same TriHands data",
+    "task_or_sample": "六任务 3-env 档, 95% Gaussian CI",
+    "locator": "6 Results, Tab. 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四个均值与 CI 逐字核对于 Tab. 1；'5 out of 6 tasks'与'guaranteed to fail'逐字核对；claim 未否认实验室对齐动作场景下共享解码的既有有效性(原文亦作此限定)。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Grauman et al., Ego-Exo4D, CVPR 2024",
+   "role": "TriHands 的源视频与外视角三角测量基础"
+  },
+  {
+   "citation": "Zhang et al., HaWoR: World-space hand motion reconstruction from egocentric videos, arXiv:2501.02973, 2025",
+   "role": "代表性 SOTA 单目手部估计器(误差基准与初始化)"
+  },
+  {
+   "citation": "Hoque et al., EgoDex, arXiv:2505.11709, 2025",
+   "role": "实验室规模对照数据集(145h, 场景多样性不足)"
+  },
+  {
+   "citation": "Punamiya et al., EgoBridge, H2R Workshop 2025",
+   "role": "实验室配方代表(OT 动作相似性对齐), 自然动作下失效"
+  },
+  {
+   "citation": "Black et al., π0, arXiv:2410.24164, 2024",
+   "role": "共享动作编解码设计(PiZero 消融)来源"
+  }
+ ],
+ "notes": "本批最核心论文。ID 预算(0373-0375)限制为 3 卡；图像空间尺度消融(Tab. 5: 重度失配 25.0%≤Robot Only 26.2%，收益归零)与 H2 局部误差分析(5/6 任务 RO 失败 100% 为局部误差, HC 82.8% vs 29.2%)已录入 findings 但未单独成卡。Table 5 的'失配阈值使人类数据收益归零'是尺度误差源的硬阈值证据，若后续补充 ID 建议优先补投。"
+}

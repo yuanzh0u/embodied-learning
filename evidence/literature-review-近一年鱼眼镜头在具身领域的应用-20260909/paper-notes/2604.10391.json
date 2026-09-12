@@ -1,0 +1,420 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.10391",
+  "title": "FishRoPE: Projective Rotary Position Embeddings for Omnidirectional Visual Perception",
+  "published": "2026-04",
+  "url": "https://arxiv.org/abs/2604.10391",
+  "authors": [
+   "Rahul Ahuja",
+   "Mudit Jain",
+   "Bala Murali Manoghar Sai Sudhakar",
+   "Venkatraman Narayanan",
+   "Pratik Likhar",
+   "Varun Ravi Kumar",
+   "Senthil Yogamani"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "综述问题的'环视/全景相机感知'分支的核心方法学证据：FishRoPE 提出在鱼眼球面坐标系 (θ,φ) 中参数化 RoPE 的几何适配层，使冻结视觉基础模型可直接在原生鱼眼图像上做 2D 检测与 BEV 分割。虽然评估在车载环视鱼眼（WoodScape/SynWoodScapes）上完成而非机器人平台，但其'原生鱼眼 + 位置编码几何适配 + VLM/VFM 复用'的路线与具身系统的环视感知、全向 VLA 输入编码直接相关，且作者明示公式化适用于任何已知投影模型的相机。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction (page 1-2)",
+    "role": "problem",
+    "purpose": "确认问题定位：VFM/BEV 生态以针孔几何为中心，鱼眼被锁在外；标注稀缺使重训不可行；位置编码在径向畸变下几何失真（中心 vs 边缘同像素偏移对应 3-5 倍角差异）。"
+   },
+   {
+    "locator": "2 Related Work (page 2-3)",
+    "role": "problem",
+    "purpose": "梳理鱼眼检测、BEV 提升范式、鱼眼 BEV 分割（F2BEV/FishBEV/DaF-BEVSeg）与 RoPE 家族，确认 FishRoPE 填补'Cartesian 位置编码 vs 鱼眼投影'的几何缺口。"
+   },
+   {
+    "locator": "3 Methodology / 3.1-3.3 (page 3-4)",
+    "role": "method-or-design",
+    "purpose": "掌握核心设计：原生鱼眼操作动机（矫正有损）、冻结 DINOv2 ViT-B/14 + LoRA (rank 16, ~3M 可训练参数)、FishRoPE 用逆 Kannala-Brandt 投影把 patch 映射到 (θ,φ) 并按 RoPE 旋转 query/key，保持相对角位置性质并在近轴退化为 2D RoPE。"
+   },
+   {
+    "locator": "3.4-3.5 Task Heads and Training Objectives (page 4-5)",
+    "role": "method-or-design",
+    "purpose": "掌握检测头（CenterNet 式 anchor-free）与 BEV 提升（KB 前向投影 + deformable cross-attention，FishRoPE 同时作用于 BEV query 与图像 key）、损失设计与平地假设。"
+   },
+   {
+    "locator": "4.1 Experimental Setup (page 5)",
+    "role": "data-or-setting",
+    "purpose": "核对数据集（WoodScape 8.2K 真实环视、SynWoodScapes 合成环视、各 190° FoV 四相机）、指标（mAP@0.5 / 前景类 mIoU）与实现（4×A100、24 epochs、可训练 ~14M）。"
+   },
+   {
+    "locator": "4.2-4.5 Results, Ablations, Qualitative (page 5-6)",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table 1-4：检测 54.2 mAP、BEV 65.1 mIoU、位置编码消融（learned/sinusoidal/2D RoPE/θ-only/(θ,φ)）与 backbone 消融（Swin-T/DINOv2-S/B）。"
+   },
+   {
+    "locator": "5 Conclusion and Limitations (page 6)",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者总结、评估范围声明与明确的两条限制（已知内参、平地假设）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Supplementary Material (derivation of 3-5x angular extent; KB inversion details)",
+    "role": "appendix-or-supplement",
+    "reason": "not-included: 精读包未包含补充材料；正文声明 3-5× 角差异推导在补充材料中，相应数字在卡片中以作者陈述方式引用。"
+   }
+  ]
+ },
+ "research_question": "如何让以针孔几何为中心的视觉基础模型与 BEV 感知范式在原生鱼眼图像上几何一致地工作，而不依赖有损矫正或从头重训？",
+ "contributions": [
+  "提出 FishRoPE：在鱼眼球面坐标系 (θ,φ) 中参数化的投影式 RoPE，同时作用于编码器自注意力与 BEVFormer 式 cross-attention，使注意力以角分离而非像素距离为相对位置。",
+  "冻结 DINOv2 ViT-B/14 + LoRA（约 3M 可训练参数）的轻量适配方案，把 VFM 表征迁移到鱼眼域而无需任务特定预训练。",
+  "在 WoodScape 2D 检测（54.2 mAP）与 SynWoodScapes BEV 分割（65.1 mIoU）上取得所比基准上的最优结果，并用受控消融分离位置编码与 backbone 的贡献。"
+ ],
+ "method": {
+  "summary": "FishRoPE 框架三部分：(1) 冻结 DINOv2 ViT-B/14 backbone，在 Q/V 投影注入 rank-16 LoRA（约 3M 参数），从第 3/6/9/12 层取中间激活经 FPN 融合成多尺度特征；(2) FishRoPE 位置编码——对每个 patch 像素坐标 (u,v) 用逆 Kannala-Brandt 投影（Newton 迭代 5 次、按相机模型预计算缓存 LUT）求球面角 (θ,φ)，把 embedding 维度对半分给 θ 和 φ 子空间并施加 RoPE 旋转，注意力内积只依赖相对角分离 Δθ、Δφ；近轴区（θ→0）退化为缩放版 2D RoPE；(3) 任务头——anchor-free CenterNet 式检测头（WoodScape 5 类）与 KB 前向投影的 BEV deformable cross-attention 分割头（BEV query 用其投影 (θbev,φbev) 参数化，图像 key 用 patch (θ,φ)）。设计原则是位置编码应尊重成像模型几何，避免对宽角相机有损的矫正预处理。",
+  "assumptions": [
+   "相机内参已知且可用 KB 多项式描述（逆投影与 BEV 前向投影都依赖标定）。",
+   "BEV 提升假设平坦地面平面，道路场景成立但对高架结构与非平面地形退化。",
+   "VFM 的自监督表征在鱼眼域仍具迁移价值，仅需 LoRA 级别适配而非重训。",
+   "角空间相对位置是鱼眼图像中几何有意义的注意力关系表征，可从有限标注数据学到利用它的头。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "WoodScape（真实车载环视鱼眼，8.2K 图像、4 相机各 190° FoV、KB 标定、60/10/30 划分，2D 检测 5 类）",
+   "SynWoodScapes（CARLA 合成环视鱼眼，4 相机各 190° FoV，BEV 语义分割）"
+  ],
+  "tasks": [
+   "2D 鱼眼目标检测（车辆/行人/骑行者/交通灯/交通标志）",
+   "BEV 语义分割（100×100 m 网格、0.2 m/像素）"
+  ],
+  "embodiments": [
+   "量产自动驾驶车辆的环视鱼眼相机系统（非机器人操作平台）"
+  ],
+  "sample_or_scale": "训练：AdamW、batch 16、24 epochs、4×A100，可训练参数约 14M（backbone 冻结）；评估在 WoodScape 测试集与 SynWoodScapes 上与已发表 baseline 对比。"
+ },
+ "evaluation": {
+  "design": "与已发表方法的表格对比 + 两组受控消融（同 backbone 下五种位置编码；同 FishRoPE 下三种 backbone），另有跨镜头边缘检测的定性对比。",
+  "baselines": [
+   "FisheyeYOLO（R-18，多边形框，44.65 mAP，原协议）",
+   "FisheyeDetNet（R-18，49.5 mAP，原协议）",
+   "F2BEV（R-18，53.39 mIoU）与 FishBEV（DINOv2-L，64.22 mIoU）",
+   "受控消融：learned absolute PE / sinusoidal 2D PE / 2D Axial RoPE / FishRoPE θ-only（同 DINOv2-B backbone）",
+   "backbone 消融：Swin-T / DINOv2-S / DINOv2-B（同 FishRoPE）"
+  ],
+  "metrics": [
+   "WoodScape 检测 mAP@IoU=0.5",
+   "SynWoodScapes BEV 前景类 mIoU"
+  ],
+  "ablations": [
+   "位置编码消融（Table 3）：learned 51.8/59.2、sinusoidal 52.1/59.6、2D RoPE 52.5/61.4、θ-only 53.6/64.7、(θ,φ) 54.2/65.1",
+   "backbone 消融（Table 4）：Swin-T 52.9/59.8、DINOv2-S 53.4/62.7、DINOv2-B 54.2/65.1",
+   "R-18 + FishRoPE 变体（51.4 mAP / 56.8 mIoU）分离位置编码贡献与 backbone 贡献"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "同冻结 DINOv2-B backbone 下，FishRoPE (θ,φ) 位置编码在 WoodScape 检测 54.2 mAP、SynWoodScapes BEV 65.1 mIoU，均优于 learned/sinusoidal/2D RoPE 编码（检测最多 +2.4 mAP、BEV 最多 +5.5 mIoU）。",
+   "scope": "同 backbone 受控消融，两个环视鱼眼基准",
+   "locator": "page 6, Table 3"
+  },
+  {
+   "finding": "BEV 分割上 FishRoPE (DINOv2-B) 达 65.1 mIoU，超过 FishBEV 用更大 DINOv2-L 的 64.22 mIoU，也超过同 backbone 2D RoPE 的 61.4 mIoU。",
+   "scope": "SynWoodScapes BEV 分割",
+   "locator": "page 6, Table 2"
+  },
+  {
+   "finding": "θ-only 变体已捕获大部分径向结构（64.7 mIoU），加方位角 φ 再带来 +0.6 mAP / +0.4 mIoU。",
+   "scope": "位置编码消融",
+   "locator": "page 6, Section 4.4"
+  },
+  {
+   "finding": "同 FishRoPE 配置下冻结 DINOv2-B（12.4M 可训练参数）在两任务上均超过 Swin-T（29M）：54.2 vs 52.9 mAP、65.1 vs 59.8 mIoU。",
+   "scope": "backbone 消融",
+   "locator": "page 6, Table 4"
+  },
+  {
+   "finding": "作者论证对 FoV>180° 相机，矫正为针孔视图本质有损（丢弃边缘内容、重采样伪影降低有效分辨率），据此选择在原生鱼眼图像上操作并以位置编码适配几何。",
+   "scope": "方法动机（引先前工作）",
+   "locator": "page 3, Section 3.1"
+  },
+  {
+   "finding": "作者声明的限制：FishRoPE 需要已知相机内参做逆投影（端到端内参估计是未来工作）；BEV 模块假设平坦地面，对高架结构与非平面地形退化。",
+   "scope": "Limitations 与 Sec 3.4",
+   "locator": "page 6, Limitations; page 5, Section 3.4"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "FishRoPE 需要已知相机内参进行逆投影，端到端内参估计留作未来工作。",
+    "locator": "page 6, Limitations"
+   },
+   {
+    "limitation": "BEV 提升模块假设平坦地面作为世界-相机对应；该假设适合典型道路场景，但对高架结构（如天桥标志、立交桥上的车辆）与非平面地形退化，多平面表示留作扩展。",
+    "locator": "page 5, Section 3.4"
+   },
+   {
+    "limitation": "评估仅覆盖环视车载鱼眼上的两个任务；公式化虽声称对任何已知投影模型的相机通用，但 catadioptric 与 360° 镜头的扩展是未来工作。",
+    "locator": "page 6, Section 5"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全部定量结论来自车载环视鱼眼（WoodScape 真实 + SynWoodScapes 合成）的 2D 检测与 BEV 分割；未在机器人平台、腕戴相机、移动具身智能体或 VLA 动作模型上验证，'适用于任何已知投影模型相机'是作者声明而非实验结论。",
+    "basis": "Sec 4.1 数据集设置与 Sec 5 的评估范围声明。"
+   },
+   {
+    "boundary": "Table 1/2 与已发表方法的对比沿用各方法原始协议（脚注 † ‡ § 区分），跨方法数字不构成严格同协议比较；只有 Table 3/4 的自控消融是同协议受控证据。",
+    "basis": "Sec 4.2 协议说明（'we keep their original published numbers and explicitly annotate the protocol in footnotes'）与表格脚注。"
+   },
+   {
+    "boundary": "近轴一致性只在 paraxial 区域成立（KB 线性化），大入射角下不保证与针孔行为等价；依赖该性质做 pinhole 兼容的系统仅在光轴附近受益。",
+    "basis": "Sec 3.3 Properties (c) 作者自述 'provides compatibility only in the paraxial regime and does not extend to large incidence angles'。"
+   },
+   {
+    "boundary": "未报告多随机种子运行方差或显著性检验；abstract 中 54.3 mAP 与 Table 1 的 54.2 mAP 存在不一致，最优数字应以表格为准。",
+    "basis": "abstract 与 page 6 Table 1 的数字核对。"
+   },
+   {
+    "boundary": "每相机模型的 KB 逆投影需预计算并缓存，隐含静态内参与逐相机标定假设；未知或时变内参、异构多相机 rig 场景需额外标定流程。",
+    "basis": "Sec 3.3 Formulation（precomputed per camera model and cached）与 Limitations 的内参声明。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于具备 Kannala-Brandt 标定内参、190° 级环视车载鱼眼相机的静态感知任务（2D 检测与平地假设下的 BEV 分割），以冻结 DINOv2 ViT-B + LoRA（~3M 参数）实现；对机器人平台、腕戴/移动相机、非平面地形、未知或时变内参、catadioptric 与 360° 镜头的适用性是作者声明的通用性主张，未经实验验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同 backbone 的位置编码消融（Table 3）与同位置编码的 backbone 消融（Table 4）构成受控归因，能把几何适配收益与 VFM 表征收益分离。",
+   "R-18 + FishRoPE 变体（51.4 mAP / 56.8 mIoU）进一步把位置编码贡献与 backbone 贡献解耦。",
+   "方案参数效率高（backbone 冻结、~3M LoRA 参数 + 头共 ~14M 可训练），与'标注稀缺不可重训'的问题设定自洽。",
+   "退化性质（pinhole 下退化为标准 2D RoPE）使方法可增量部署于既有系统。"
+  ],
+  "design_risks": [
+   "与已发表 baseline 的主表对比沿用原始协议（† ‡ §），非同协议复测，跨方法差距的解释力有限。",
+   "WoodScape 仅 8.2K 图像且 SynWoodScapes 为合成数据，真实场景的 BEV 结论（65.1 mIoU）实际来自合成基准，真实环视 BEV 上未评测。",
+   "未报告方差/多种子/显著性，0.6-1.7 mAP 级别的消融差异的统计稳健性未知。",
+   "abstract 报告 54.3 mAP 与 Table 1 的 54.2 mAP 不一致，提示数值校对疏漏。",
+   "3-5× 角差异的量化推导放在未随正文发布的补充材料中。"
+  ],
+  "baseline_fairness": "自控消融（Table 3/4）完全公平（同 backbone/同位置编码切换单因子）；对外部 baseline（FisheyeYOLO/FisheyeDetNet/F2BEV/FishBEV）沿用其原始协议数字并用脚注标注协议差异，作者对此有披露，但读者不能把主表差距当作同协议严格比较；FishRoPE 用更强的冻结 VFM backbone 对 R-18 系 baseline 有明显资源优势，作者通过 R-18+FishRoPE 变体部分弥补了这一归因缺口。",
+  "metric_validity": "mAP@0.5 与前景类 mIoU 是各自基准的标准指标，度量的是感知精度而非下游驾驶/机器人决策效用；BEV mIoU 在合成数据上度量，与真实部署效用之间有 sim-to-real 差距。",
+  "reproducibility": "给出了较完整的实现细节（LoRA rank/α、层数抽取、训练超参、BEV 网格分辨率、数据划分），复现路径清晰；但 KB 逆投影推导与部分细节在补充材料，且 abstract 与 Table 1 数字不一致（54.3 vs 54.2）。",
+  "external_validity": "车载环视域内部效度较好；对具身智能的迁移（腕戴鱼眼操作、移动机器人环视、VLA 视觉编码器）只是作者的通用性声明——公式化理论上适用于任何已知投影模型，但机器人视角下高频近距离目标、非平面地面、动态内参等条件均未测试。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.10391-C01",
+   "claim": "在同一冻结 DINOv2-B backbone 的受控消融中，把位置编码换为 FishRoPE (θ,φ) 使 WoodScape 鱼眼 2D 检测达到 54.2 mAP，高于 2D Axial RoPE 的 52.5 mAP 与学习式绝对 PE 的 51.8 mAP。",
+   "stance": "support",
+   "relation": "支持'对鱼眼几何做位置编码适配能直接提升环视鱼眼感知精度'的综述命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 在同 backbone 下对比五种位置编码，FishRoPE (θ,φ) 在检测列取得最高 mAP，几何适配的增益独立于 backbone 选择。",
+   "locator": "page 6, Table 3",
+   "source_context": "Learned absolute PE 51.8 59.2 Sinusoidal 2D PE 52.1 59.6 2D Axial RoPE [5] 52.5 61.4 FishRoPE (θonly) 53.6 64.7 FishRoPE (θ, ϕ)54.2 65.1",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "WoodScape 2D detection mAP at IoU=0.5",
+    "value_or_direction": "54.2 with FishRoPE (θ,φ) vs 52.5 with 2D axial RoPE and 51.8 with learned absolute PE",
+    "comparator": "same frozen DINOv2-B backbone with alternative position encodings",
+    "task_or_sample": "WoodScape surround-view fisheye 2D detection, 5 classes",
+    "locator": "page 6, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "人工核对 page 6 Table 3：同一 DINOv2-B backbone 下各位置编码的检测 mAP 分别为 51.8（learned）、52.1（sinusoidal）、52.5（2D RoPE）、53.6（θ-only）、54.2（(θ,φ)），claim 的三个数字与排序与表格一致；claim 限定为该受控消融设置，未引用表中未出现的对比。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C02",
+   "claim": "在 SynWoodScapes BEV 语义分割上，FishRoPE (DINOv2-B + FishRoPE) 达到 65.1 mIoU，高于同 backbone 下 2D RoPE 变体的 61.4 mIoU，也超过使用更大 DINOv2-L backbone 的 FishBEV 的 64.22 mIoU。",
+   "stance": "support",
+   "relation": "支持'鱼眼几何适配提升环视 BEV 感知并达到基准最优'的综述命题（车载环视鱼眼感知效果证据）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 显示 FishRoPE 完整方法在 SynWoodScapes 上为 65.1 mIoU，对比同表内 F2BEV 53.39、FishBEV 64.22 与自身 2D RoPE 变体 61.4。",
+   "locator": "page 6, Table 2",
+   "source_context": "F2BEV [20] R-18 53.39 † FishBEV [1] DINOv2-L 64.22 § FishRoPE (R-18 + FishRoPE) R-18 56.8 FishRoPE (DINOv2-B + 2D RoPE) DINOv2-B 61.4 FishRoPE (DINOv2-B + FishRoPE) DINOv2-B65.1",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SynWoodScapes BEV semantic segmentation mIoU",
+    "value_or_direction": "65.1 vs 61.4 (2D RoPE, same backbone) and 64.22 (FishBEV, DINOv2-L)",
+    "comparator": "2D RoPE variant and published FishBEV baseline",
+    "task_or_sample": "BEV semantic segmentation on SynWoodScapes synthetic surround-view fisheye",
+    "locator": "page 6, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "人工核对 page 6 Table 2：FishRoPE (DINOv2-B + FishRoPE) 行为 65.1，DINOv2-B + 2D RoPE 行为 61.4，FishBEV (DINOv2-L) 行为 64.22，数字与方向一致；同 backbone 对比为受控证据，对 FishBEV 的对比按表格原样报告（其协议以脚注 § 标注），claim 未把跨协议差距表述为严格同协议结论。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C03",
+   "claim": "消融显示 θ-only 变体已捕获鱼眼径向结构的绝大部分，加入方位角 φ 通过编码方位关系再带来 +0.6 mAP（检测）与 +0.4 mIoU（BEV 分割）的增益。",
+   "stance": "support",
+   "relation": "支持'鱼眼位置编码的角坐标分解（径向 θ 为主、方位 φ 补充）是收益来源'的机制解释。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.4 正文对 Table 3 的解读：θ-only 捕获大部分径向结构，加 φ 带来进一步小幅增益。",
+   "locator": "page 6, Section 4.4",
+   "source_context": "The θ-only variant captures most of the radial structure; adding ϕ provides a further +0.6 mAP / +0.4 mIoU by encoding azimuthal relationships.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mAP (detection) and mIoU (BEV segmentation) gain from adding azimuthal angle",
+    "value_or_direction": "+0.6 mAP / +0.4 mIoU over the θ-only variant",
+    "comparator": "FishRoPE θ-only position encoding",
+    "task_or_sample": "WoodScape detection and SynWoodScapes BEV segmentation ablations",
+    "locator": "page 6, Section 4.4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 4.4 原文逐字给出 +0.6 mAP / +0.4 mIoU 与 θ-only 捕获大部分径向结构的表述；与 Table 3 中 (θ,φ) 54.2/65.1 对 θ-only 53.6/64.7 的差值一致（54.2-53.6=0.6，65.1-64.7=0.4），claim 的数字、比较对象与两任务范围均被支撑。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C04",
+   "claim": "同用 FishRoPE 时，冻结 DINOv2-B（可训练 LoRA+头约 12.4M 参数）在两个任务上均超过常规训练的 Swin-T（29M 参数）：检测 54.2 vs 52.9 mAP，BEV 分割 65.1 vs 59.8 mIoU，作者据此认为冻结 VFM + LoRA 为鱼眼感知提供强于常规 backbone 的特征。",
+   "stance": "support",
+   "relation": "支持'冻结视觉基础模型经 LoRA 轻量适配即可迁移到鱼眼域'的综述命题（VFM 复用路线证据）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4 的 backbone 消融显示 DINOv2-B 在两任务上均为最优，且以更少可训练参数超过 Swin-T。",
+   "locator": "page 6, Table 4",
+   "source_context": "Backbone Params mAP↑mIoU↑ Swin-T [15] 29M 52.9 59.8 DINOv2-S ∗ [16] 8.1M 53.4 62.7 DINOv2-B ∗ [16] 12.4M54.2 65.1 ∗Frozen; params = trainable LoRA + head only.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "WoodScape detection mAP and SynWoodScapes BEV mIoU",
+    "value_or_direction": "DINOv2-B 54.2 mAP / 65.1 mIoU vs Swin-T 52.9 / 59.8",
+    "comparator": "Swin-T backbone with the same FishRoPE encoding",
+    "task_or_sample": "both fisheye benchmarks with FishRoPE position encoding",
+    "locator": "page 6, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "人工核对 page 6 Table 4：Swin-T 29M 为 52.9/59.8，DINOv2-B（冻结，12.4M 可训练）为 54.2/65.1，数字与方向一致；'冻结+LoRA 提供更强特征'的解读与 Section 4.4 正文表述一致，claim 保留了作者归因的措辞。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C05",
+   "claim": "作者论证：对 FoV 超过 180° 的宽角相机，把鱼眼图像矫正为针孔等效视图本质上有损——丢弃针孔 FoV 之外不可恢复的边缘内容，且重映射压缩边缘区域所需的重采样会引入插值伪影、降低目标本已很小的有效分辨率；这是选择在原生鱼眼图像上操作并让模型几何表征适配非线性投影的理由。",
+   "stance": "limit",
+   "relation": "限制'先把鱼眼矫正为针孔图像再复用标准模型'这条替代应用路线，支撑原生鱼眼 + 模型侧几何适配的路线选择。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.1 以矫正的有损性论证原生鱼眼操作动机：边缘内容丢失与插值伪影两级代价。",
+   "locator": "page 3, Section 3.1",
+   "source_context": "However, rectification is fundamentally lossy\nfor wide-angle cameras (FOV>180 ◦): it discards periph-\neral content beyond the recoverable pinhole FOV , and the\nresampling required to remap compressed peripheral regions\nintroduces interpolation artifacts that degrade effective reso-\nlution where objects are already small [10, 28].",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Section 3.1 原文逐字支撑 claim 的两级论证（丢弃不可恢复的边缘内容、重采样插值伪影降低有效分辨率）与 FOV>180° 的适用范围；claim 明确标注为作者论证并保留其引用先前工作的语境，未添加原文之外的量化断言。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C06",
+   "claim": "BEV 提升模块假设平坦地面作为世界-相机对应；该假设适合典型驾驶场景的道路表面，但对高架结构（如天桥标志、立交桥上的车辆）与非平面地形会退化，作者提出多平面表示作为讨论过的扩展方向。",
+   "stance": "limit",
+   "relation": "限制鱼眼 BEV 感知在非平面环境（含多数机器人操作/移动场景）中的直接适用性。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.4 明确写出平地假设及其在高架结构/非平面地形下的退化。",
+   "locator": "page 5, Section 3.4",
+   "source_context": "We note that the BEV lifting module assumes a flat\nground plane for the world-to-camera correspondence.\nWhile this assumption is well-suited to road surfaces in typ-\nical driving scenarios, it degrades for elevated structures\n(e.g., overhead signs, overpass vehicles) and non-planar ter-\nrain.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section 3.4 原文逐字支撑平地假设、适用道路场景、对高架结构（overhead signs、overpass vehicles）与非平面地形退化这三个成分；claim 未超出原文，把多平面扩展表述为作者讨论的方向与原文 'We discuss extensions to multi-plane representations in Sec. 5' 一致。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C07",
+   "claim": "作者声明的限制：FishRoPE 的逆投影需要已知的相机内参，端到端内参估计被列为未来工作。",
+   "stance": "limit",
+   "relation": "限制鱼眼几何适配方法在未知/未标定相机硬件上的即插即用性（具身平台频繁更换镜头时的部署成本）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论后明确给出 Limitations 段：需要已知内参做逆投影。",
+   "locator": "page 6, Limitations",
+   "source_context": "Limitations.FishRoPE requires known camera intrinsics for the inverse projection; end-to-end intrinsic estimation is future work.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Limitations 段逐字给出该限制陈述；claim 与原文一字对应（需已知内参做逆投影、端到端内参估计是未来工作），括注为应用含义时已在 relation 而非 claim 中，未超出原文事实范围。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C08",
+   "claim": "评估范围被作者明确限定为环视车载鱼眼上的两个任务；公式化对任何已知投影模型的相机的通用性是作者声明，catadioptric 与 360° 镜头的扩展被列为有前景的未来工作。",
+   "stance": "gap",
+   "relation": "指出鱼眼全向感知方法学向非车载镜头类型（折反射、360° 镜头）与机器人平台的外推是未验证空白。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论部分明确区分'已评估的两个车载任务'与'声称通用但未验证的公式化范围'。",
+   "locator": "page 6, Section 5",
+   "source_context": "While our evaluation covers two tasks on surround-view automotive fisheye, the formulation is general to any camera with a known projection model, and we see extension to catadioptric and360 ◦ lenses as promising future work.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 5 原文逐字支撑：评估覆盖两个环视车载鱼眼任务、公式化声称对任何已知投影模型相机通用、catadioptric 与 360° 镜头是 future work；claim 精确区分了'已验证'与'作者声明未验证'两个层次，与原文措辞一致。"
+   }
+  },
+  {
+   "card_id": "2604.10391-C09",
+   "claim": "作者指出：大规模鱼眼标注比 nuScenes/KITTI 等透视基准稀缺多个数量级，使从头重训基础模型不现实；现有鱼眼方法因此依赖 ImageNet 预训练 ResNet，放弃了视觉基础模型可泛化、抗畸变的表征。",
+   "stance": "gap",
+   "relation": "指出鱼眼在（广义）视觉智能领域应用的结构性约束：标注稀缺 + VFM 生态针孔中心，构成本文'冻结 VFM + 几何适配'路线的动机。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 中作者把鱼眼方法学落后的原因总结为标注稀缺与几何失配的双重障碍。",
+   "locator": "page 1, Introduction",
+   "source_context": "The barrier is twofold.First, large-scale fisheye annota-\ntions are orders of magnitude scarce than perspective bench-\nmarks like nuScenes or KITTI, making it impractical to re-\ntrain foundation models from scratch. Existing fisheye meth-\nods [9, 18, 20, 26] therefore rely on ImageNet-pretrained\nResNet, forfeiting the generalizable, distortion-robust repre-\nsentations that VFMs provide.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 Introduction 原文逐字支撑三个成分：标注比 nuScenes/KITTI 稀缺数量级、重训基础模型不现实、现有方法依赖 ImageNet 预训练 ResNet 而放弃 VFM 表征；claim 标注为作者立场，未把'orders of magnitude scarce'转化为独立核实的数据断言。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2304.07193",
+  "2211.10439",
+  "2509.13681",
+  "1708.02502"
+ ],
+ "notes": "core_citations 依次为 DINOv2 (2304.07193)、BEVFormer (2211.10439)、FishBEV (2509.13681)、Lift-Splat-Shoot (1708.02502)。WoodScape 为 ICCV 2019 会议论文（无 arXiv 版本，未列入）。abstract 报告的 54.3 mAP 与 Table 1 的 54.2 mAP 不一致，卡片一律采用表格值；3-5× 角差异的推导在未随正文发布的补充材料中，卡片将其按作者陈述处理。本论文评估域为车载环视鱼眼，对具身机器人平台的适用性见 transfer_boundary 与 reader_inferred。"
+}

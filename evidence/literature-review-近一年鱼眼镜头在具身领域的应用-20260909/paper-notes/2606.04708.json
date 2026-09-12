@@ -1,0 +1,604 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.04708",
+  "title": "VISTA: Vision-Grounded and Physics-Validated Adaptation of UMI data for VLA Training",
+  "published": "2026-05",
+  "url": "https://arxiv.org/abs/2606.04708",
+  "authors": [
+   "Siyuan Yang",
+   "Linzheng Guo",
+   "Ouyang Lu",
+   "Zhaxizhuoma",
+   "Daoran Zhang",
+   "Xinmiao Wang",
+   "Ting Xiao",
+   "Fangzheng Yan",
+   "Zhijun Chen",
+   "Yan Ding",
+   "Chao Yu",
+   "Chenjia Bai",
+   "Xuelong Li"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是'腕装鱼眼相机（UMI/FastUMI，≈180° 对角 FoV）数据采集→VLA 训练'的直接正面核心证据：完整回答综述问题三个子问——应用方式（FastUMI Pro 四目鱼眼采集硬件 + UMI-VQA 8M 鱼眼域 VQA 对齐 + 物理验证流水线 + 两阶段协同训练）、效果（UMI-VQA 协同训练 45.0%→55.0%；VISTA 仿真 avg 0.813 超 π0.5 5.5pp、真机 20 任务 0.598 超 7.0pp）、局限（鱼眼使强 VLA 掉 13.4-15.7pp、VLM 空间推理掉 4.0 点/8.6% 相对、宽角鱼眼 59.4% 仍低于标准视图 82.0%、真机逐任务非均匀获益）。其对照实验（窄视场 13.1% vs 鱼眼 59.4% vs 标准 82.0%）是'哪些任务获益、哪些受限'的最直接定量证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-3, 1 Introduction",
+    "role": "problem",
+    "purpose": "确认双重失配定义：腕装鱼眼视图对预训练 VLM 的视觉接地失配（径向畸变+非均匀分辨率+自遮挡）与人采轨迹的物理不可行性（运动学/碰撞/控制带宽）。"
+   },
+   {
+    "locator": "page 4, 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位与 FastUMI 伪深度后处理、先验 UMI 系统硬过滤的差异：VISTA 用软验证逐轨迹打分 + 鱼眼域 VQA 对齐。"
+   },
+   {
+    "locator": "page 4-5, 3 Method and 3.1 UMI Hardware",
+    "role": "method-or-design",
+    "purpose": "精读 FastUMI Pro 传感套件（主鱼眼 ≈180° 对角 FoV + 双辅助鱼眼 + 深度 + Vive/VI-SLAM ~3mm）、纯 gripper-centric 观测与三平台同配置部署。"
+   },
+   {
+    "locator": "page 6-8, 3.2 UMI-VQA for Perception Alignment",
+    "role": "data-or-setting",
+    "purpose": "精读 UMI-VQA 构成（3M 真实 UMI 帧 5 能力子集 + 5M FLUX.2 鱼眼化 RefSpatial 补充）与经典几何 warp 不可行的论证。"
+   },
+   {
+    "locator": "page 8-10, 3.3 A Trajectory Scoring Framework for Physical Validation",
+    "role": "method-or-design",
+    "purpose": "精读三轴打分（轨迹连续性/自碰撞风险/执行保真）与跨本体重放系统（MuJoCo+Mink）。"
+   },
+   {
+    "locator": "page 10-11, 3.4 Model Training and Deployment",
+    "role": "method-or-design",
+    "purpose": "精读两阶段训练（VQA+离散动作自回归协同 → 冻结骨干+流匹配动作专家）与多机异构臂部署系统。"
+   },
+   {
+    "locator": "page 12-17, 4 Experiments (4.1-4.4)",
+    "role": "results-or-analysis",
+    "purpose": "精读诊断实验（Table 1 策略退化、Table 2 VLM 退化、窄视场 13.1% 对照）、数据级验证（Table 3/4/5）、模型级（Table 6/7）与消融（Table 8）。"
+   },
+   {
+    "locator": "page 17-18, 5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "核对结论声明；确认全文无作者自述方法限制小节（limitation 讨论集中在 UMI 数据问题而非 VISTA 自身）。"
+   },
+   {
+    "locator": "page 22, A Multi-robot deployment details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 Zenoh 部署架构与 UMI 端执行器/相机安装规范兼容性。"
+   },
+   {
+    "locator": "page 26-31, C UMI-VQA Construction Pipeline and D Implementation Details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 UMI-VQA 标注流水线（Qwen3-VL-235B 生成+人工轻校验）与仿真鱼眼数据合成细节（150° vFoV、s=1.8 remap）。"
+   },
+   {
+    "locator": "page 32-33, Tables 9-11 per-task results",
+    "role": "results-or-analysis",
+    "purpose": "精读逐任务结果：RoboTwin-UMI 20 任务、LIBERO-UMI 四套件、真机 20 任务逐任务对比（识别 VISTA 落后任务）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 19-21, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需检索 UMI/FastUMI/π0.5 核心引文条目。"
+   },
+   {
+    "locator": "page 23-25, B Detailed pose trajectories",
+    "role": "appendix-or-supplement",
+    "reason": "逐轨迹位姿曲线图（图 12-15），其定量结论已由正文 Fig. 6/8 承载，仅核对图注。"
+   }
+  ]
+ },
+ "research_question": "如何把 UMI/FastUMI 手持夹爪（腕装鱼眼相机）采集的大规模真实演示数据有效用于 VLA 训练？两个关键失配——腕装鱼眼视图（强径向畸变、非均匀分辨率、gripper-centric 局部视角）对预训练 VLM 的视觉接地失配，与人采轨迹对目标机器人本体的物理不可行（运动学越限、自碰撞、超控制带宽）——如何被系统性识别、量化与弥合？",
+ "contributions": [
+  "识别并实证量化 UMI→VLA 的双重失配：腕装鱼眼观测使 π0.5/LingBot-VLA 平均成功率掉 13.4/15.7 点，使 5 个 VLM 在 4 个空间基准平均掉 4.0 点（8.6% 相对）；原始 UMI 轨迹在目标本体上不可直接重放。",
+  "UMI-VQA：首个面向腕装鱼眼观测的大规模 VQA 数据集（8M 问答对 = 3M 真实 UMI 帧[5 能力子集：物体接地 842K/场景理解 406K/描述 103K/交互接地 894K/空间推理 824K] + 5M FLUX.2 鱼眼化 RefSpatial 空间补充）。",
+  "轨迹级物理验证流水线：数据完整性预检 + 三轴打分（轨迹连续性[embodiment 无关]、自碰撞风险、执行保真[embodiment 条件化]），基于 MuJoCo+Mink 跨本体重放，软验证（连续分数）而非二元过滤，支持预训练宽松阈值/微调收紧阈值的两段策展。",
+  "两阶段协同训练配方：VQA+离散动作 token 自回归协同训练对齐鱼眼域，再以冻结骨干+流匹配动作专家精化连续控制；从 π0.5 检查点初始化，预训练于 8M UMI-VQA + 100K 过验证真实 UMI 轨迹。",
+  "三层实验体系（诊断/数据级/模型级）+ Zenoh 多机异构臂部署系统；开源验证流水线、UMI-VQA、验证轨迹与预训练模型。"
+ ],
+ "method": {
+  "summary": "VISTA 针对 UMI 数据的视觉接地与物理可行性双重失配提出三组件方案。(1) 感知对齐：UMI-VQA 由两个互补来源构成——真实 UMI 腕装鱼眼帧（保留全部畸变/自遮挡/局部视角特性，Qwen3-VL-235B 半自动标注+人工轻校验，分 5 个能力子集）与 RefSpatial 透视图像的鱼眼化补充；因 ≈180° FoV 超出原始视锥、经典几何 warp 无法合成可信周边内容，改用 FLUX.2-dev 扩散图像编辑做语义感知的透视→鱼眼风格转换。(2) 物理验证：每条轨迹先过完整性预检，再在 MuJoCo+Mink 跨本体重放系统中按三轴打分——轨迹连续性（位移/角位移三段分段函数，translation d_min=5mm/d_max=45mm/d_scale=100mm）、自碰撞风险（最小碰撞对距离）、执行保真（期望 vs 实际末端位姿偏差），加权积聚合为 S(ξ,e)；预训练对 N 个候选本体取平均分排序，微调时对目标本体收紧阈值。(3) 两阶段训练：Stage 1 在 UMI-VQA + FAST 离散动作 token 上自回归协同训练；Stage 2 冻结骨干、训练知识隔离的流匹配动作专家；微调时解冻全模型端到端特化。部署侧在三台双臂平台（RealMan/AC one/Galaxea R1 Pro）复用与手持设备相同的腕装相机配置与相机外参，使部署观测分布匹配训练分布。",
+  "assumptions": [
+   "腕装鱼眼（≈180° 对角 FoV）是 UMI 数据范式的固有属性，且部署侧可用相同相机配置+外参复现训练分布。",
+   "VLM 对鱼眼域的失配可通过同域 VQA 辅助监督对齐，无需从头微调视觉骨干。",
+   "物理可行性可由运动学重放（Mink IK/FK + MuJoCo）近似评分；预训练时目标本体未知，用多候选本体平均分近似跨本体兼容性。",
+   "扩散模型（FLUX.2-dev）合成的鱼眼风格图像能足够近似真实鱼眼光学特性以提供有效监督。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "100K 真实 UMI 轨迹（通过物理验证）",
+   "UMI-VQA 8M（3M 真实腕装鱼眼帧 + 5M RefSpatial 鱼眼化补充）",
+   "RefSpatial（空间多样性补充的透视源图像）",
+   "RoboTwin-UMI / LIBERO-UMI（重采集腕装鱼眼仿真演示）"
+  ],
+  "tasks": [
+   "仿真：RoboTwin-UMI 20 任务、LIBERO-UMI 四套件",
+   "真机：20 个 UMI 采集桌面操作任务（叠立方/纸杯/笔筒、取放面包、开合抽屉/微波炉/电饭煲、挂马克杯、倒薯片、整理玩偶等）",
+   "诊断：胶棒传递/拉抽屉/放订书机（RealMan 可行性审计）；订书机放置（分数控制实验）"
+  ],
+  "embodiments": [
+   "采集：FastUMI Pro 手持夹爪（~600g，主鱼眼+双辅助鱼眼+深度+Vive Tracker）",
+   "部署：RealMan、AC one、Galaxea R1 Pro 三台双臂平台（同腕装相机配置）"
+  ],
+  "sample_or_scale": "预训练 8M UMI-VQA + 100K 验证轨迹；真机每任务 20 trials×20 任务；分数控制实验每子集 50 demos×20 trials；VLM 退化诊断 5 模型×4 基准。"
+ },
+ "evaluation": {
+  "design": "三层实验隔离验证每个设计：(1) 诊断层——VLM/VLA 在鱼眼观测下的退化量化 + 原始 UMI 轨迹在 RealMan 上的可执行性审计；(2) 数据层——同数据预算下辅助 VQA 源对照（action-only/标准视图 VQA/UMI-VQA）与物理分数控制子集（低分 vs 高分，同数量 50 demos）部署对比 + 跨本体重打分；(3) 模型层——RoboTwin-UMI/LIBERO-UMI 同数据对比（VISTA vs π0.5/LingBot-VLA/Wall-X）+ 20 真机任务 + 组件消融。",
+  "baselines": [
+   "π0.5（最强基线，亦是 VISTA 初始化检查点）",
+   "LingBot-VLA",
+   "Wall-X",
+   "VLM 退化诊断：Qwen2.5VL-3B、Qwen3VL-4B、Embodied-R1-3B-v1、RoboBrain2.5-4B、VLASER-2B",
+   "消融变体：scratch expert、π0.5 expert、w/o state、w/o delta action"
+  ],
+  "metrics": [
+   "成功率（仿真 [0,1]，真机 [0,1] 或 %）",
+   "GSR（抓取成功率）/ OSR（总成功率）/ PSR（抓取条件完成率=OSR/GSR）",
+   "VLM 空间基准分数（Where2Place/RefSpatial/ERQA/EmbSpatial，原始 vs 鱼眼变换）",
+   "物理验证分数（连续性/碰撞/保真/总分 S(ξ,e)）",
+   "Avg. Drop（标准视图 vs 腕装鱼眼的平均性能下降）"
+  ],
+  "ablations": [
+   "Stage-2 动作专家：full 68.3% vs scratch expert 52.4% vs π0.5 expert 60.2%（Table 8）",
+   "去掉状态条件：61.9%；去掉 delta 动作预测：53.1%（Table 8）",
+   "辅助 VQA 源：action-only 45.0% vs 标准视图 VQA 31.7% vs UMI-VQA 55.0%（Table 3）",
+   "分数控制子集：低分 OSR 0.00 vs 高分 OSR 0.65（Table 4/5）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "腕装鱼眼观测使强 VLA 策略显著退化：π0.5 在 LIBERO/RoboTwin 上从 96.3/82.0 降到 92.2/59.4（Avg. Drop 13.4 点），LingBot-VLA 降 15.7 点，Wall-X 降 2.2 点。",
+   "scope": "UMI 式腕装鱼眼 vs 标准视图策略训练（Table 1，三模型两基准）",
+   "locator": "page 12, Table 1"
+  },
+  {
+   "finding": "鱼眼变换使 5 个 VLM 在 4 个空间推理基准平均绝对掉 4.0 点（8.6% 相对），单模型降幅 4.5%-13.7%——预训练 VLM 不会自动保持鱼眼畸变下的物体与空间理解。",
+   "scope": "VLM 感知退化诊断（Where2Place/RefSpatial/ERQA/EmbSpatial）",
+   "locator": "page 13, Table 2"
+  },
+  {
+   "finding": "视场对照：窄视场腕装透视相机使 π0.5 RoboTwin 成功率掉到 13.1%；换成 UMI 式广角鱼眼恢复部分上下文（59.4%）但仍低于标准视图（82.0%）——广角鱼眼优于窄视场腕相机，但局部 gripper-centric 视角+径向畸变仍留差距。",
+   "scope": "窄视场 vs 腕装鱼眼 vs 标准视图三方对照（RoboTwin）",
+   "locator": "page 12, Section 4.1"
+  },
+  {
+   "finding": "鱼眼域 VQA 协同训练有效且方向敏感：UMI-VQA 把真机聚合成功率从 45.0% 提到 55.0%（+10.0pp），而标准视图 VQA 反而降到 31.7%（-13.3pp）——辅助监督的视角域必须与动作数据的观测域匹配。",
+   "scope": "π0.5 + 受控 UMI 子集，3 任务×20 trials（Table 3）",
+   "locator": "page 14, Table 3"
+  },
+  {
+   "finding": "物理验证分数强预测部署成功：同规模低分子集（均分 35.50）OSR 0.00（PSR 0.00），高分子集（均分 99.21）OSR 0.65（PSR 1.00）；且同一数据对不同本体分数不同——RealMan 低分子集在 R1Pro 上 OSR 0.80/PSR 1.00。",
+   "scope": "RealMan/R1Pro/AC one 订书机放置任务，50 demos/子集×20 trials（Table 4/5）",
+   "locator": "page 15, Table 4; page 17, Table 5"
+  },
+  {
+   "finding": "完整 VISTA 系统性超越基线：仿真 RoboTwin-UMI 0.683 vs π0.5 0.594、LIBERO-UMI 0.943 vs 0.922（avg 0.813，超 π0.5 5.5pp）；真机 20 任务平均 0.598 vs π0.5 0.528（+7.0pp）vs LingBot-VLA 0.313——但逐任务非均匀（Pick Target Fruits 0.25<π0.5 0.35、Pour Chips 0.70<0.85）。",
+   "scope": "同数据仿真对比 + 真机 20 任务×20 trials（Table 6/7/11）",
+   "locator": "page 15, Table 6; page 16, Table 7; page 33, Table 11"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "仿真基准的'鱼眼'是合成畸变而非真实鱼眼光学：RoboTwin 用 150° 垂直 FoV 宽角渲染+固定 remap（fisheye strength s=1.8），LIBERO 单腕相机 700×700 同参数——色差、渐晕、真实镜头畸变模型未建模，仿真结论对真鱼眼部署的外推有限。",
+    "basis": "page 31 Appendix D 'wide-angle wrist cameras whose vertical field of view is 150 ◦'、'With fisheye strength s = 1.8' 与 remap 公式。"
+   },
+   {
+    "boundary": "UMI-VQA 标注由 Qwen3-VL-235B-A22B 生成 + 轻量人工校验，存在'用 VLM 生成数据再对齐 VLM'的自偏与标注噪声风险，论文未报告标注错误率或对下游增益的标注质量敏感性。",
+    "basis": "page 6 'a large-scale VLM (Bai et al., 2025) is prompted to generate structured descriptions ... followed by lightweight human verification'；page 26 C.1 给出同一流程。"
+   },
+   {
+    "boundary": "FLUX.2-dev 鱼眼化图像的周边内容是扩散模型幻觉生成的'物理可信'内容，其几何保真度（真实空间关系是否被保持）未被定量验证；RefSpatial 原始空间关系标注在生成变换后的正确性依赖生成模型的忠实性。",
+    "basis": "page 7 'hallucinates physically plausible peripheral content'——作者自述为 hallucinate，且未提供几何保真度评估。"
+   },
+   {
+    "boundary": "真机增益小于仿真增益（+7.0pp vs +5.5pp avg，但真机绝对成功率仅 0.598）且逐任务非均匀：VISTA 在 Pick Target Fruits from Bowl（0.25 vs 0.35）、Pour Chips（0.70 vs 0.85）落后于 π0.5，20 trials/任务的置信区间宽；评估集中在桌面双臂任务，无移动/长程/室外任务。",
+    "basis": "page 16 Table 7、page 33 Table 11 逐任务数字；page 15 仿真 avg 0.813 对比。"
+   },
+   {
+    "boundary": "物理验证的打分依赖目标本体运动学模型（Mink IK/FK + MuJoCo），未建模接触动力学、柔性或标定误差；分数对部署成功的预测力只在订书机放置单任务上做了受控验证。",
+    "basis": "page 8-10 打分机制描述；page 14-15 分数控制实验仅用 stapler-placement 一个 case study。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：UMI/FastUMI 类腕装鱼眼（≈180° 对角 FoV）手持采集数据的大规模 VLA 预训练与跨本体部署；观测为纯 gripper-centric 双腕鱼眼视图、部署侧可复现相同相机配置与外参的桌面双臂任务（RealMan/AC one/Galaxea R1 Pro）；鱼眼域失配可通过同域 VQA 协同训练对齐（+10.0pp），物理可行性可用运动学重放评分策展。不适用/未验证：真实鱼眼光学特性（仿真鱼眼为合成 remap）；标注质量敏感性（VLM 自生成标注）；FLUX.2 合成图像的几何保真度；移动操作/长程/室外任务；单臂或非 UMI 安装规范平台；窄统计置信度下的逐任务结论（20 trials/任务）；物理分数预测力仅在单一受控任务验证。对综述的接口：本文给出腕装鱼眼数据范式的完整'应用方式-效果-局限'链条，其中窄视场 13.1% vs 鱼眼 59.4% vs 标准 82.0% 三方对照与 UMI-VQA/标准 VQA 的正负双效（+10.0/-13.3pp）是任务获益/受限判断的最直接依据。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "诊断→数据级→模型级三层实验逐层隔离验证设计选择，因果链清晰。",
+   "分数控制实验同数据数量、同模型、同训练流程，只变验证分数，干净隔离数据质量变量；且跨本体重打分揭示同一数据的本体条件性。",
+   "辅助 VQA 源对照包含'标准视图 VQA 反而有害'的负对照，强化'视角域匹配'结论。",
+   "仿真对比全部在同批重采集腕装鱼眼演示上训练，隔离模型差异而非数据差异。",
+   "开源验证流水线、UMI-VQA、验证轨迹与预训练模型，可复现性承诺强。"
+  ],
+  "design_risks": [
+   "仿真'鱼眼'为合成 remap（150° vFoV、s=1.8），非真实鱼眼镜头，仿真-真机的光学域差不小。",
+   "UMI-VQA 标注为 VLM 生成+轻量人工校验，存在自偏与噪声，未量化。",
+   "物理分数的部署预测力仅在订书机放置单任务上受控验证，泛化性未知。",
+   "真机 20 trials/任务，逐任务结论统计置信度有限；VISTA 逐任务有输有赢，平均增益掩盖非均匀性。",
+   "基线 Wall-X 在 UMI 式观测下接近崩溃（0.152/0.700），部分对比的差距可能主要反映基线对该观测域的脆弱性。"
+  ],
+  "baseline_fairness": "仿真与真机对比中所有方法在同批数据、同训练步数下训练（page 31），条件一致；π0.5 同时是初始化检查点与最强基线，对比存在'站在基线上'的结构优势，但这也使增益归因（VQA 对齐+物理验证+两阶段训练）在消融中可拆解；Wall-X 基线在鱼眼域接近崩溃，平均分对比对其不利。",
+  "metric_validity": "成功率/GSR/OSR/PSR 口径清晰（PSR=OSR/GSR 度量抓取条件完成率，隔离抓取与放置阶段）；Avg. Drop 与相对降幅（8.6%）报告规范；VLM 退化用同题同协议的原始/鱼眼变换对照，内部效度好。",
+  "reproducibility": "开源承诺完整（验证流水线、UMI-VQA、验证轨迹、预训练模型、GitHub tele-umi-vista）；硬件为商用 FastUMI Pro（Lumos Robotics），打分超参与标注 prompt 在附录 C/D 给出；FLUX.2-dev 与 Qwen3-VL-235B 为外部依赖，版本可得。",
+  "external_validity": "结论限 UMI 式腕装鱼眼双臂桌面操作与可复现相同相机配置的部署平台；真实鱼眼光学、移动操作、长程任务、非 UMI 规范平台均未覆盖；诊断层（VLM 退化）跨 5 模型×4 基准，外推面较宽。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.04708-C01",
+   "claim": "FastUMI Pro 手持采集平台的视觉核心是腕装鱼眼：主鱼眼相机居中安装在夹爪爪面上方，提供约 180° 对角视场的宽角 RGB 局部工作空间观测；两侧辅以两台辅助鱼眼相机与机载深度相机构成四目视觉系统，在中央视图被爪指遮挡或弱纹理时保持鲁棒跟踪；末端位姿由 Vive Tracker 与机载视觉惯性 SLAM 双流融合恢复，精度约 3mm。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼（≈180° 对角 FoV）是 UMI 类具身数据采集的应用方式核心——以单夹爪携带的广角局部传感实现无机器人平台的数据采集，多鱼眼冗余对抗自遮挡。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.1 描述 FastUMI Pro 传感套件：主鱼眼相机 + 双辅助鱼眼 + 深度相机构成 quad-ocular 系统；Vive Tracker 6-DoF + VI-SLAM 双流融合位姿达亚厘米精度（~3mm）；观测为左右两腕装鱼眼视图、无外部主视图或第三人称相机。",
+   "locator": "page 5, Section 3.1 UMI Hardware for Cross-embodiment Data Collection",
+   "source_context": "main fisheye camera is mounted centrally above the gripper jaws, providing a wide-angle (≈180 ◦ diagonal field of view) RGB observation of the local workspace. Flanking the main camera are two auxiliary fisheye cameras that together with an onboard depth camera constitute a quad-ocular visual system; this redundancy maintains robust visual tracking even when the central view is occluded by the gripper fingers or suffers from texture-poor regions. End-effector pose is recovered by fusing two independent tracking streams: a Vive Tracker that provides 6-DoF pose via an external lighthouse system, and a real-time visual-inertial SLAM pipeline running on the onboard camera array. The fused pose estimate achieves sub-centimeter accuracy (∼3 mm) and is robust to transient occlusion, which is critical for maintaining data quality during contact-rich manipulation.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section 3.1 逐字给出主鱼眼相机安装位置（centrally above the gripper jaws）、≈180° 对角 FoV、双辅助鱼眼+深度相机构成 quad-ocular、Vive Tracker+VI-SLAM 双流融合与 ~3mm 精度；'无外部主视图'由同页后文 'with no external main-view or third-person camera'（已核对）支撑；claim 未附加性能断言。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C02",
+   "claim": "作者论证鱼眼投影对 VLM 接地的双重伤害：鱼眼引入强径向畸变与高度非均匀空间分辨率（图像中心保留细节、周边区域被重度压缩），叠加腕装位置带来的夹爪/手臂频繁自遮挡——几何扭曲+gripper-centric 视角偏移使 UMI 观测偏离 VLM 预训练与 VLA 协同训练中常见的视觉分布，对现有视觉表征构成事实上的分布外（out-of-distribution）。",
+   "stance": "limit",
+   "relation": "限定命题：腕装鱼眼在具身数据采集中的核心局限——畸变与局部视角使其对预训练 VLM/VLA 构成分布外输入，直接约束鱼眼数据在 VLA 训练中的可用性。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 双失配框架的第一轴（visual grounding）：UMI/FastUMI 用腕装鱼眼（如 180° FoV 相机）采集，观测局部、gripper-centric、与全局/主视图监督根本不同；鱼眼投影的几何扭曲+腕装视角偏移共同把 UMI 观测推出 VLM 预训练分布。",
+   "locator": "page 2, Section 1 Introduction, visual grounding mismatch",
+   "source_context": "fisheye projection introduces severe radial distortion and highly non-uniform spatial resolution: the image center preserves fine detail while peripheral regions are heavily compressed. Moreover, wrist-mounted placement introduces frequent self- occlusion from the gripper or robot arm. Together, the geometric warping induced by fisheye projection and the wrist-only, gripper-centric viewpoint shift UMI observations away from the visual distributions commonly seen during VLM pretraining and VLA co-training, rendering them effectively out-of-distribution for existing visual representations",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字给出 severe radial distortion、highly non-uniform spatial resolution（center fine / periphery compressed）、self- occlusion、geometric warping + wrist-only gripper-centric viewpoint → effectively out-of-distribution；claim 是该段论证的忠实复述，量化数字由 C03/C04 单独承载。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C03",
+   "claim": "从标准视图训练切换到腕装鱼眼训练使三个强 VLA 的平均成功率一致下降：π0.5 在 LIBERO 96.3→92.2、RoboTwin 82.0→59.4（平均降 13.4 点），LingBot-VLA 平均降 15.7 点，Wall-X 平均降 2.2 点——腕装鱼眼观测对 VLA 策略学习构成真实感知瓶颈。",
+   "stance": "limit",
+   "relation": "限定命题：腕装鱼眼观测域对强 VLA 策略的效果代价（13-16 点级平均下降），界定鱼眼数据在 VLA 训练中的直接性能损失基线。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 报告三模型在 LIBERO/RoboTwin 上标准视图 vs 腕装鱼眼（分别微调）的成功率与 Avg. Drop；正文说明切换观测域使三模型平均性能全部下降，π0.5 与 LingBot-VLA 降幅尤深（13.4/15.7 点，page 13）。",
+   "locator": "page 12, Table 1",
+   "source_context": "Model LIBERO RoboTwin Avg. Drop Standard View Wrist-Fisheye Standard View Wrist-Fisheye π 0.5 96.3 92.2 82.0 59.4 13.4 Wall-X 74.6 70.0 14.9 15.2 2.2 LingBot-VLA 85.3 81.7 77.6 49.9 15.7",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "policy success rate under standard-view vs wrist-fisheye training",
+    "value_or_direction": "π 0.5 : LIBERO 96.3→92.2, RoboTwin 82.0→59.4 (Avg. Drop 13.4); LingBot-VLA Avg. Drop 15.7; Wall-X Avg. Drop 2.2",
+    "comparator": "separately fine-tuned standard-view policy vs wrist-only fisheye policy, same benchmarks",
+    "task_or_sample": "LIBERO and RoboTwin benchmarks, three VLA models (π 0.5 , Wall-X, LingBot-VLA)",
+    "locator": "page 12, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 Table 1 逐字给出三模型两域全部数字（96.3/92.2、82.0/59.4、13.4；74.6/70.0、14.9/15.2、2.2；85.3/81.7、77.6/49.9、15.7），表头 Standard View/Wrist-Fisheye 与 Avg. Drop 口径与 claim 一致；'平均降 13.4/15.7 点'的叙述出自 page 13（已核对）；claim 未超出该表。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C04",
+   "claim": "鱼眼变换使 5 个通用与机器人专用 VLM 在 4 个空间推理基准上一致退化：平均绝对降 4.0 点（8.6% 相对降幅），单模型降幅 4.5%-13.7%——预训练 VLM 不会在畸变、局部、腕装鱼眼域下自动保持物体与空间理解。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼畸变对 VLM 空间推理的感知代价（可量化基线），是鱼眼数据进入 VLA 前必须做感知对齐的直接依据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 报告 Qwen2.5VL-3B/Qwen3VL-4B/Embodied-R1/RoboBrain2.5/VLASER 在 Where2Place/RefSpatial/ERQA/EmbSpatial 上原始 vs 鱼眼变换图像的分数；正文给出平均绝对降 4.0 点（8.6% 相对）与单模型 4.5%-13.7% 区间，并确认该结果直接动机化感知对齐 VQA。",
+   "locator": "page 13, Section 4.1, Table 2",
+   "source_context": "fisheye transformation causes a consistent mean absolute drop of 4.0 points (8.6% relative degradation) across all models, with individual model drops ranging from 4.5% to 13.7%. This confirms that pretrained VLMs do not automatically preserve object and spatial understanding under the distorted, local, wrist-mounted fisheye regime, directly motivating the need for perception-aligned VQA.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "VLM spatial-reasoning benchmark score on fisheye-transformed images",
+    "value_or_direction": "mean absolute drop 4.0 points (8.6% relative); per-model 4.5% to 13.7%",
+    "comparator": "original resized images vs fisheye-transformed images, identical questions and protocols",
+    "task_or_sample": "five VLMs (Qwen2.5VL-3B, Qwen3VL-4B, Embodied-R1-3B, RoboBrain2.5-4B, VLASER-2B) on four benchmarks (Where2Place, RefSpatial, ERQA, EmbSpatial)",
+    "locator": "page 13, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 逐字给出 mean absolute drop of 4.0 points、8.6% relative degradation、4.5% to 13.7%；五个模型与四个基准的逐格数字在同页前文 Table 2（page 12-13 交界，page 12 表格部分已核对：Qwen2.5VL-3B 0.343/0.303 (↓11.8%) 等）；'identical questions and evaluation protocols' 出自 page 13（已核对）；claim 与论文数字一致。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C05",
+   "claim": "视场三方对照（RoboTwin，π0.5）：把标准'主视图+腕视图'换成窄视场腕装透视相机使成功率暴跌至 13.1%；换成 UMI 式广角鱼眼恢复部分丢失的上下文（59.4%），但仍明显低于标准视图（82.0%）——广角鱼眼信息量优于窄视场腕相机，但策略仍须依赖带径向畸变的局部 gripper-centric 视图而非全局组织的主视图。",
+   "stance": "conditional",
+   "relation": "条件化命题：腕装广角鱼眼的获益是相对的——相对窄视场腕相机大幅获益（+46.3pp），相对标准全局视图仍受限（-22.6pp）；'哪些任务获益、哪些受限'的视场维度直接证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.1 第一个诊断实验：RoboTwin 上把标准观测换成 wrist-only 透视相机使 π0.5 掉到 13.1%（窄视场上下文不足）；扩展为 UMI 式广角鱼眼恢复部分上下文但仍留差距（Table 1：RoboTwin 腕装鱼眼 59.4 vs 标准 82.0）。",
+   "locator": "page 12, Section 4.1 Diagnostic Validation",
+   "source_context": "On RoboTwin (Chen et al., 2025), replacing the standard main-view-plus-wrist observation setup with wrist-only perspective cameras causes a severe drop in π 0.5 success rate to 13.1%, indicating that narrow-FOV wrist views alone provide insufficient scene context. Expanding the wrist cameras to UMI-style wide-angle fisheye observations recovers part of this lost context, but still leaves a clear gap to the standard-view setting, as shown in Table 1. This suggests that UMI-style wrist-fisheye observations are more informative than narrow wrist views, yet remain challenging because the policy must rely on local, gripper-centric views with radial distortion rather than globally organized main-view observations.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "π 0.5 success rate on RoboTwin under three observation regimes",
+    "value_or_direction": "narrow-FOV wrist-only perspective 13.1%; UMI-style wide-angle fisheye 59.4%; standard main-view-plus-wrist 82.0%",
+    "comparator": "wrist-only perspective cameras vs UMI-style wide-angle fisheye vs standard view",
+    "task_or_sample": "RoboTwin benchmark, π 0.5 policy",
+    "locator": "page 12, Section 4.1 and Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 逐字给出 13.1%（wrist-only perspective cameras）、recovers part of this lost context、still leaves a clear gap to the standard-view setting 与 'more informative than narrow wrist views, yet remain challenging'；59.4/82.0 出自同页 Table 1 π0.5 RoboTwin 行（已核对）；claim 的三方数字与论文解释一致，未额外外推。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C06",
+   "claim": "为对齐鱼眼域，作者构建 UMI-VQA——据其所知首个面向腕装鱼眼观测的大规模视觉-语言数据集：8M 问答对基于同一鱼眼视觉域，覆盖场景理解、交互接地与空间推理；通过与动作数据协同训练 VLM 骨干，把视觉表征对齐到腕装鱼眼固有的畸变几何与局部第一人称视角，而非强制从头微调。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼数据接入 VLA 的应用方式之一——同域（鱼眼域）VQA 辅助监督对齐 VLM 表征，规避从头微调成本。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 与 Method 3.2：UMI-VQA 由真实 UMI 腕装鱼眼帧（5 能力子集，page 7 Figure 3：物体接地 842K/场景理解 406K/描述 103K/交互接地 894K/空间推理 824K，共 3M）与 RefSpatial 鱼眼化补充（5M）构成 8M 样本。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "we construct UMI-VQA, which is, to our knowledge, the first large-scale vision-language dataset tailored to wrist-mounted fisheye observations. UMI-VQA contains 8M question-answer pairs grounded in the same fisheye visual regime, covering scene understanding, interaction grounding, and spatial reasoning. By co-training the VLM backbone on UMI-VQA alongside action data, we align its visual representations to the distorted geometry and local first-person perspective inherent in wrist-mounted fisheye views, rather than forcing costly fine-tuning from scratch.",
+   "evidence_type": "dataset-construction",
+   "quantitative": {
+    "metric": "question-answer pair count of the fisheye-domain VQA dataset",
+    "value_or_direction": "8M question-answer pairs grounded in the same fisheye visual regime",
+    "comparator": "first large-scale vision-language dataset tailored to wrist-mounted fisheye observations",
+    "task_or_sample": "scene understanding, interaction grounding, and spatial reasoning (five capability subsets, page 7 Figure 3)",
+    "locator": "page 2, Section 1; page 7, Figure 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字给出 first large-scale vision-language dataset tailored to wrist-mounted fisheye observations、8M question-answer pairs、same fisheye visual regime 与 co-training 对齐机制；五个能力子集计数出自 page 7 Figure 3（已核对：Object Grounding 842K 27.5%、Scene Understanding 406K 13.2%、Captioning 103K 3.3%、Interaction Grounding 894K 29.1%、Spatial Reasoning 824K 26.9%，real 3M + supplement 5M = 8M）；claim 与两处来源一致。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C07",
+   "claim": "透视→鱼眼数据合成的边界条件：当目标鱼眼 FoV 超出原始图像可见范围（≈180° 对角 FoV 镜头正是如此），经典几何 warp（纯像素重映射）不可避免产生拉伸边界、非自然外推或周边内容缺失，因为几何变换无法合成原始视锥之外的可信场景结构；作者改用扩散图像编辑模型 FLUX.2-dev 做语义感知的图像到图像翻译——不仅施加几何畸变，还以全局场景语义为条件幻觉出物理可信的周边内容，得到带自然压缩边缘的鱼眼风格视图。",
+   "stance": "conditional",
+   "relation": "条件化命题：合成鱼眼训练数据的方法边界——几何 warp 不适用于 >原始 FoV 的鱼眼化，扩散式语义合成是当前可行替代，但其'幻觉周边内容'的几何保真度未验证（读者推断边界）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.2 论证 RefSpatial 透视图像必须带入鱼眼域时，经典多项式畸变 warp 的失效机理（视锥外内容无法几何合成），以及 FLUX.2-dev 语义感知翻译的替代方案与'更接近真实鱼眼镜头光学特性'的主张。",
+   "locator": "page 7, Section 3.2 UMI-VQA for Perception Alignment",
+   "source_context": "produces stretched boundaries, unnatural extrapolation, or missing content in the periphery, because geometric transforms cannot synthesize plausible scene structure beyond the original viewing frustum. In contrast, we employ a diffusion-based image-editing model (i.e., FLUX.2-dev (Labs, 2025)) to perform semantic-aware image-to-image translation. The model not only applies geometric distortion but also hallucinates physically plausible peripheral content conditioned on global scene semantics, yielding fisheye-style views with naturally compressed edges and coherent wide-angle perspective that more closely mimic the optical characteristics of real fisheye lenses.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出几何 warp 失效三症状（stretched boundaries、unnatural extrapolation、missing content in the periphery）与原因（cannot synthesize plausible scene structure beyond the original viewing frustum）、FLUX.2-dev 语义感知翻译与 hallucinates physically plausible peripheral content；'≈180° FoV 超出原始范围'的触发条件出自 page 6 末句（已核对）；claim 忠实复述该论证，未附加保真度断言。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C08",
+   "claim": "辅助 VQA 监督的视角域必须与动作数据观测域匹配：在 π0.5 + 受控 UMI 子集上（同动作数据/观测/训练预算），鱼眼域 UMI-VQA 协同训练把三任务聚合成功率从 45.0% 提到 55.0%（+10.0pp），而标准视图 VQA 反而降到 31.7%（比 action-only 低 13.3pp）——全局规则透视观测下的 VQA 监督会把共享骨干的表征学习带离腕装鱼眼动作预测所需的视觉线索。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼域对齐 VQA 是腕装鱼眼数据 VLA 训练的有效增益组件（+10.0pp），同时负对照证明视角域错配的辅助监督有害——'应用方式'层的方向性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 报告三种训练设定的真机成功率（每任务 20 trials，三任务：Center Cube 上叠方块/叠纸杯/叠笔筒）；正文解释标准视图 VQA 有害的机理假设（分布失配偏置表征学习）与 UMI-VQA 最优的结果。",
+   "locator": "page 14, Section 4.2, Table 3",
+   "source_context": "As shown in Table 3, standard-view VQA achieves a lower aggregate success rate than action-only training. This result suggests that auxiliary VQA supervision is not universally beneficial in co-training.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-robot aggregate success rate with different auxiliary VQA supervision",
+    "value_or_direction": "action-only 45.0% → UMI-VQA 55.0% (+10.0pp); standard-view VQA 31.7% (below action-only)",
+    "comparator": "action-only vs π 0.5 + standard-view VQA vs π 0.5 + UMI-VQA, same UMI action data and training budget",
+    "task_or_sample": "three real-robot stacking tasks (Stack Side Cubes on Center Cube, Stack Paper Cups, Stack Pen Holders), 20 trials per task, 60 trials total",
+    "locator": "page 14, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Table 3 逐字给出三设定逐任务与聚合数字（27/60 45.0%、19/60 31.7%、33/60 55.0%）；正文逐字给出 'UMI-VQA improves the aggregate success rate from 45.0% to 55.0%' 与 'standard-view VQA achieves a lower aggregate success rate than action-only training'（已核对）；机理假设以 'One possible explanation' 措辞出现，claim 中相应部分保留为作者解释而非定论；三任务名称与 20 trials 口径出自同页（已核对）。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C09",
+   "claim": "物理验证分数强预测部署成功：同规模（各 50 demos）的低分子集（平均分 35.50，主要由执行保真 39.35 拖累）训练的策略在 RealMan 订书机放置上 OSR 0.00（能抓 0.55 但放置全败），高分子集（平均分 99.21）OSR 0.65、PSR 1.00——低分数据教出'语义合理但物理上难以执行'的动作模式。",
+   "stance": "limit",
+   "relation": "限定命题：腕装鱼眼手持采集自由的代价——人采轨迹不受目标本体运动学/碰撞/控制带宽约束，未验证数据会把物理不可行模式注入策略；物理验证分数是 UMI 数据可用性的必要门控。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4 报告分数控制子集的打分（连续性 100/100、碰撞 94.69/100、保真 39.35/99.21）与部署结果（GSR 0.55/0.65，OSR 0.00/0.65，PSR 0.00/1.00）；Fig. 8/9（page 16）显示低分策略抓取后大位姿偏差导致放置失败。",
+   "locator": "page 15, Section 4.2, Table 4",
+   "source_context": "Traj. Type #Traj. Continuity Collision Fidelity Avg. Score GSR OSR PSR Low-score subset 50 100.00 94.69 39.35 35.50 0.55 0.00 0.00 High-score subset 50 100.00 100.00 99.21 99.21 0.65 0.65 1.00",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-robot GSR/OSR/PSR on stapler placement (RealMan)",
+    "value_or_direction": "low-score subset (Avg. Score 35.50): OSR 0.00, PSR 0.00; high-score subset (Avg. Score 99.21): OSR 0.65, PSR 1.00",
+    "comparator": "low-score vs high-score RealMan-conditioned subsets, same 50 demonstrations each, same model and training",
+    "task_or_sample": "stapler-placement task on RealMan, 20 trials, scores dominated by execution fidelity (39.35 vs 99.21)",
+    "locator": "page 15, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 15 Table 4 逐字给出两子集全部打分与 GSR/OSR/PSR 数字（35.50、39.35、99.21、0.55/0.00/0.00、0.65/0.65/1.00）；'低分策略抓取后放置失败'与'语义合理但物理难执行'出自 page 14 Failure analysis 与 page 16 Fig. 8（已核对：'produce motions that are semantically plausible but physically hard for the target robot to execute'）；PSR=OSR/GSR 口径出自 page 14（已核对）；claim 与来源一致。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C10",
+   "claim": "轨迹可执行性是本体条件化的：同一批在 RealMan 上低分的数据在 R1Pro 上获得更高分数并可成功部署——RealMan 低分子集策略在 R1Pro 上 OSR 0.80、PSR 1.00（在 RealMan/AC one 上 OSR 0.00），支持按目标本体条件化过滤：同一 UMI 数据对一台机器人危险、对另一台合适。",
+   "stance": "conditional",
+   "relation": "条件化命题：腕装鱼眼采集数据的物理可用性不能脱离目标本体单独评价——数据策展必须按部署本体条件化打分，这约束 UMI 数据跨本体复用的方式。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 7 显示同一子集在三本体上分数分布不同；Table 5 报告跨本体部署：低分子集策略在 RealMan/ACone 上 OSR 0.00/0.00，在 R1Pro 上 GSR 0.80、OSR 0.80、PSR 1.00；正文据此支持 embodiment-conditioned filtering。",
+   "locator": "page 17, Table 5",
+   "source_context": "Training Data #Demos RealMan ACone R1Pro GSR OSR PSR GSR OSR PSR GSR OSR PSR Low-score subset 50 0.55 0.00 0.00 0.60 0.00 0.00 0.80 0.80 1.00 High-score subset 50 0.65 0.65 1.00 0.60 0.55 0.92 0.75 0.75 1.00",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "cross-embodiment GSR/OSR/PSR for score-controlled subsets",
+    "value_or_direction": "low-score subset on R1Pro: OSR 0.80, PSR 1.00 (vs OSR 0.00 on RealMan and ACone)",
+    "comparator": "same low-score/high-score subsets re-scored and deployed on RealMan, ACone, R1Pro",
+    "task_or_sample": "stapler-placement task, 50 demonstrations per subset, 20 trials per embodiment",
+    "locator": "page 17, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 17 Table 5 逐字给出三本体全部 GSR/OSR/PSR 数字（RealMan 0.55/0.00/0.00、ACone 0.60/0.00/0.00、R1Pro 0.80/0.80/1.00）；'low-score subset on RealMan receives higher scores on R1Pro' 与 'the same UMI data can be risky for one robot but suitable for another' 出自 page 15（已核对）；claim 与两处来源一致。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C11",
+   "claim": "在同批重采集腕装鱼眼演示上训练的仿真对比中，VISTA 系统性最强：RoboTwin-UMI 0.683 vs 最强基线 π0.5 的 0.594（+8.9pp），LIBERO-UMI 0.943 vs 0.922，平均 0.813——超 π0.5 5.5 点、LingBot-VLA 15.5 点、Wall-X 38.7 点，证明显式鱼眼域适配+物理验证数据的有效性。",
+   "stance": "support",
+   "relation": "支持命题：对腕装鱼眼观测域做显式适配（UMI-VQA 对齐+物理验证）能在同数据条件下显著提升策略学习——鱼眼数据 VLA 训练方案的效果证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 6 报告四方法在 RoboTwin-UMI/LIBERO-UMI 的成功率（LingBot-VLA 0.499/0.817/0.658、Wall-X 0.152/0.700/0.426、π0.5 0.594/0.922/0.758、VISTA 0.683/0.943/0.813）；全部方法同批腕装鱼眼演示训练，隔离模型差异。",
+   "locator": "page 15, Section 4.3, Table 6",
+   "source_context": "On RoboTwin-UMI, VISTA improves the success rate from 0.594 to 0.683 over the strongest baseline π 0.5 . On LIBERO-UMI, VISTA further improves from 0.922 to 0.943. Overall, VISTA obtains an average success rate of 0.813, outperforming π 0.5 by 5.5 points, LingBot-VLA by 15.5 points, and Wall-X by 38.7 points.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate on UMI-style simulation benchmarks",
+    "value_or_direction": "VISTA: RoboTwin-UMI 0.683, LIBERO-UMI 0.943, average 0.813 (+5.5 points over π 0.5 )",
+    "comparator": "π 0.5 0.594/0.922/0.758; LingBot-VLA 0.658 average; Wall-X 0.426 average; all trained on the same recollected wrist-fisheye demonstrations",
+    "task_or_sample": "RoboTwin-UMI and LIBERO-UMI benchmarks",
+    "locator": "page 15, Section 4.3; page 17, Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 15 逐字给出 0.594→0.683、0.922→0.943、平均 0.813 与三个领先幅度（5.5/15.5/38.7 点）；Table 6 全部数字在 page 17（已核对：LingBot-VLA 0.499 0.817 0.658、Wall-X 0.152 0.700 0.426、π0.5 0.594 0.922 0.758、VISTA 0.683 0.943 0.813）；'trained on the same recollected wrist-fisheye demonstrations' 出自 page 15（已核对）；claim 与来源一致。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C12",
+   "claim": "真机 20 个 UMI 采集操作任务（同验证数据集、同平台与物体配置，每任务 20 trials）上，VISTA 平均成功率 0.598，超 π0.5 的 0.528（+7.0pp 绝对增益），大幅超 LingBot-VLA 的 0.313（+28.5pp）——鱼眼域感知对齐、局部交互理解与物理可执行监督的收益迁移到真机部署。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼数据的 VLA 适配方案在真机部署上产生净增益（+7.0pp）——鱼眼范式在桌面操作任务族上的效果证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 7 报告三方法 20 任务平均成功率（LingBot-VLA 0.313、π0.5 0.528、VISTA 0.598）；正文给出 7.0 点绝对增益与 28.5 点领先；逐任务结果在 Table 11（page 33）。",
+   "locator": "page 16, Section 4.3, Table 7",
+   "source_context": "Policy Avg. Success Rate LingBot-VLA 0.313 π 0.5 0.528 VISTA 0.598",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average real-robot success rate over 20 UMI-collected tasks",
+    "value_or_direction": "VISTA 0.598 vs π 0.5 0.528 (+7.0-point absolute gain)",
+    "comparator": "LingBot-VLA 0.313; all trained on the same validated UMI dataset, 20 trials per task",
+    "task_or_sample": "20 real-world UMI-collected manipulation tasks, 20 trials each",
+    "locator": "page 16, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 16 Table 7 逐字给出 0.313/0.528/0.598；同页正文逐字给出 'improves over π 0.5 from 0.528 to 0.598, corresponding to a 7.0-point absolute gain' 与 'outperforms LingBot-VLA by 28.5 points'（已核对）；20 任务与 20 trials 口径出自同页与 page 33 Table 11 表注（已核对）；claim 与来源一致。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C13",
+   "claim": "真机逐任务收益非均匀：VISTA 在部分任务上落后于 π0.5——Pick Target Fruits from Bowl 0.25 vs 0.35、Pour Chips from Bowl to Plate 0.70 vs 0.85；多数任务领先（如叠碗 0.92 vs 0.25、开微波炉 0.62 vs 0.40），整体 0.598 vs 0.528——平均增益掩盖了任务级波动（VISTA 自身任务间 0.25-0.85）。",
+   "stance": "limit",
+   "relation": "限定命题：腕装鱼眼适配的获益任务有边界——精细视觉辨别/目标选择类任务（从碗中挑目标水果）与依赖倒注动力学的任务上 VISTA 未获益甚至倒退；20 trials/任务的统计置信度有限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 11 报告 20 任务逐任务成功率（LingBot-VLA/π0.5/VISTA 三列）：VISTA 在 Pick Target Fruits（0.25 vs 0.35）与 Pour Chips（0.70 vs 0.85）落后，在 stack_bowls_two（0.92 vs 0.25）、open_microwave（0.62 vs 0.40）等大幅领先，Overall 0.313/0.528/0.598。",
+   "locator": "page 33, Table 11",
+   "source_context": "Pick Target Fruits from Bowl 0.35 0.35 0.25 Put Doll into Drawer and Close 0.45 0.90 0.80 Open Drawer 0.00 0.40 0.55 Organize Dolls 0.55 0.80 0.80 Place Bun into Rice Cooker and Close 0.35 0.60 0.65 Arrange Flowers 0.55 0.75 0.55 Place Drink into Box 0.00 0.25 0.40 Hang Mug on Rack 0.00 0.60 0.50 Stack Pen Holders 0.00 0.40 0.55 Pour Chips from Bowl to Plate 0.80 0.85 0.70 Pick Plum from Cluttered Fruits 0.00 0.65 0.85 Stack Paper Cups 0.10 0.35 0.45 Place Fruits 0.60 0.40 0.65 Overall 0.313 0.528 0.598",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "per-task real-robot success rate (20 trials per task)",
+    "value_or_direction": "VISTA trails π 0.5 on Pick Target Fruits from Bowl (0.25 vs 0.35) and Pour Chips from Bowl to Plate (0.70 vs 0.85)",
+    "comparator": "π 0.5 per-task results in the same table; overall 0.598 vs 0.528",
+    "task_or_sample": "20 UMI-collected real-robot tasks, 20 trials each (LingBot-VLA / π 0.5 / VISTA)",
+    "locator": "page 33, Table 11"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 33 Table 11 逐字给出 Pick Target Fruits from Bowl 0.35 0.35 0.25（第三列为 VISTA）与 Pour Chips 0.80 0.85 0.70，及 Overall 0.313 0.528 0.598；表头 'Task LingBot-VLA π 0.5 VISTA'（已核对）确认列序；领先任务数字（stack_bowls_two 0.92 vs 0.25 等）出自 page 32 Table 9（已核对）；claim 的任务级比较与表一致。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C14",
+   "claim": "跨本体部署以相机配置匹配为前提：作者在三台双臂平台（RealMan、AC one、Galaxea R1 Pro）上安装与手持设备相同的腕装相机配置与末端执行器，末端相机与手持设备完全相同以保证部署观测分布匹配训练分布；各平台机械适配夹爪爪件但保持相同指尖几何与相机外参，使手持数据训练的策略无需重新标定视觉系即可迁移。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼范式的部署方式——通过'同相机+同外参'的机械规范把训练-部署视觉分布对齐，鱼眼相机外参一致性是 UMI 数据跨本体迁移免重标定的关键设计。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.1 末段说明部署侧方案：三平台安装同款腕装相机与末端执行器，机械适配爪件但保持 fingertip geometry 与 camera extrinsics 一致，实现免视觉系重标定的迁移；配合任何满足 UMI 端执行器安装规范的新臂只需实现笛卡尔空间控制接口（page 22 附录 A）。",
+   "locator": "page 5, Section 3.1 UMI Hardware",
+   "source_context": "For downstream policy execution we mount the same wrist-camera configuration and end-effectors on distinct dual-arm embodiments: RealMan, AC one, and Galaxea R1 Pro (Fig. 2, right). The end-effector cameras are identical to those on the handheld device, ensuring that the visual observation distribution at deployment matches the training distribution. The gripper jaws on the robot side are mechanically adapted to each platform while preserving the same fingertip geometry and camera extrinsics, so that policies trained on handheld data can be transferred without recalibrating the visual frame.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字给出三平台名称、same wrist-camera configuration、end-effector cameras are identical、preserving the same fingertip geometry and camera extrinsics 与 without recalibrating the visual frame；'新臂只需笛卡尔控制接口'出自 page 22 附录 A（已核对）；claim 是该部署设计的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2606.04708-C15",
+   "claim": "仿真基准的'腕装鱼眼'数据是合成畸变而非真实鱼眼镜头：RoboTwin 用垂直 FoV 150° 的宽角腕相机（渲染分辨率 680×680）采集后，在 HDF5→LeRobot 转换时对每帧施加固定重映射网格的鱼眼风格变换（fisheye strength s=1.8，源半径 ρ_src=tan(ρ·arctan(s))/s，单位圆外像素填黑边），再缩放到 224×224；LIBERO 保留单腕相机（700×700）共享同一畸变参数。",
+   "stance": "conditional",
+   "relation": "条件化命题：本文仿真层鱼眼证据的外推边界——RoboTwin-UMI/LIBERO-UMI 的'鱼眼'是 remap 合成畸变，未建模真实鱼眼镜头的光学特性（色差/渐晕/镜头畸变模型），仿真结论向真鱼眼部署外推需谨慎。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Appendix D 说明仿真腕装鱼眼数据生成两段式流水线：宽角相机采集（150° vFoV）+ 转换期固定 remap 网格鱼眼化（s=1.8、双线性插值、黑边填充）；这是理解 Table 6 仿真结果光学保真度的关键边界条件。",
+   "locator": "page 31, Appendix D, Implementation Details",
+   "source_context": "For RoboTwin, we first collect demonstrations using wide-angle wrist cameras whose vertical field of view is 150 ◦ and whose rendered resolution is 680 × 680.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 31 逐字给出 150° 垂直 FoV 与 680×680 渲染分辨率；remap 公式（fisheye strength s = 1.8、ρ_src = tan(ρ arctan(s))/s）、单位圆外黑边填充与 LIBERO 单腕 700×700 共享畸变参数出自同页后文（已核对）；'合成而非真实镜头光学'是基于该流水线的直接推论（remap 是纯几何变换），未超出论文描述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Universal Manipulation Interface: In-the-wild Robot Teaching Without In-the-wild Robots",
+   "arxiv_id": "2402.10329",
+   "reason": "腕装鱼眼手持采集范式的源头（Chi et al., 2024）：本文全部问题定义（鱼眼视图 OOD + 人采轨迹物理不可行）都建立在 UMI 数据假设之上。"
+  },
+  {
+   "title": "FastUMI: A scalable and hardware-independent universal manipulation interface with dataset",
+   "arxiv_id": "2409.19499",
+   "reason": "UMI 后继硬件（Liu et al., 2024）：本文采集平台 FastUMI Pro 的直系前身；其伪深度后处理被本文论证为'未对齐骨干视觉接地'的对照方案（page 4）。"
+  },
+  {
+   "title": "pi0.5: a vision-language-action model with open-world generalization",
+   "arxiv_id": "2504.16054",
+   "reason": "VISTA 的初始化检查点、最强基线与全部消融的参照系（Black et al., 2025）；其知识隔离双专家设计被 Stage-2 流匹配专家继承（Driess et al., 2026 策略）。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是'鱼眼腕装相机（UMI 数据范式）→ VLA 训练'最完整的正面证据。关键判断：(1) 应用方式——FastUMI Pro 四目鱼眼采集（主鱼眼 ≈180° 对角 FoV）+ UMI-VQA 8M 同域 VQA 对齐 + 物理验证三轴打分 + 两阶段协同训练，部署侧三平台复用相同腕装鱼眼配置与外参免重标定；(2) 获益任务——需要局部 gripper-centric 交互理解的桌面任务（真机 20 任务平均 +7.0pp；叠碗 92 vs 25、开微波炉 62 vs 40）；广角鱼眼相对窄视场腕相机大幅恢复上下文（59.4% vs 13.1%）；(3) 受限任务——依赖全局场景理解或精细视觉辨别的任务（Pick Target Fruits 0.25 输给 π0.5 0.35、Pour Chips 0.70 输给 0.85）；鱼眼相对标准主视图仍差 22.6pp（59.4 vs 82.0）；(4) 边界——仿真鱼眼是合成畸变，UMI-VQA 标注有 VLM 自偏，物理分数预测力仅单任务验证。"
+}

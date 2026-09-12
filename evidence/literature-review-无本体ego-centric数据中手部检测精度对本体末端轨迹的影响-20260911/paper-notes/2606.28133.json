@@ -1,0 +1,397 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.28133",
+  "title": "Translation as a Bridging Action: Transferring Manipulation Skills from Humans to Robots",
+  "published": "2026-06-26",
+  "url": "https://arxiv.org/abs/2606.28133",
+  "authors": [
+   "Sijin Chen",
+   "Kaixuan Jiang",
+   "Haixin Shi",
+   "Yanhui Wang",
+   "Weiheng Zhong",
+   "Haosheng Li",
+   "Bo Jiang",
+   "Yuxiao Liu",
+   "Xihui Liu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "正面命中综述问题：作者明确论证手部姿态估计器产出'不可避免地带噪'的动作、腕部旋转因预测器误差尤其不可靠，且直接把提取的 6DoF 人类腕部动作回放到机器人会产生扭曲行为；其缓解手段是把共享动作空间降维为头相机系下的相对腕部平移（translation-only bridging action），并用从头共训对照（6DoF vs 3DoF：总体成功率 12.50% vs 22.50%）与'机器人数据伪装人类数据'的上界实验（55.83% vs 38.33%）量化了动作噪声+观测 gap 的代价。覆盖误差来源、传播（扭曲末端行为）、缓解（动作空间降维+绑定训练）三维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认'人类动作来自手部姿态估计器、不可避免地带噪'与'旋转+接触模式失配'的问题陈述。"
+   },
+   {
+    "locator": "2 Related Works",
+    "role": "relevant-core",
+    "purpose": "定位 wrist pose/参数化手/潜动作三类人类动作表示与跨本体学习文献。"
+   },
+   {
+    "locator": "3 Hardware and Platform",
+    "role": "data-or-setting",
+    "purpose": "确认 ByteMini 双臂平台、PICO 4 Ultra Enterprise 采集与'手姿模仿夹爪、保持头相机视野内'的采集约束。"
+   },
+   {
+    "locator": "4.1 Motion Bridging Action Representation",
+    "role": "method-or-design",
+    "purpose": "提取为何不用 6DoF 的两条理由、相对腕部平移定义（头相机系、k 步窗、双臂 R^{k×6}）与按数据源分量监督表。"
+   },
+   {
+    "locator": "4.2 VLA Model with Interleaved Action Sequence",
+    "role": "method-or-design",
+    "purpose": "理解交错动作 token、注意力掩码与 flow matching 目标。"
+   },
+   {
+    "locator": "4.3 Training Strategies",
+    "role": "method-or-design",
+    "purpose": "核对三阶段训练、600h 人类数据构成与机器人端 bridging 绑定策略（随机替换 a_3D-wrist 为预测目标）。"
+   },
+   {
+    "locator": "5.1 Evaluation Setups",
+    "role": "data-or-setting",
+    "purpose": "确认 15 任务、双场景 × 4 次 rollout、细粒度进度评分协议。"
+   },
+   {
+    "locator": "5.2 The bridging action is scalable and essential for manipulation skill transfer",
+    "role": "results-or-analysis",
+    "purpose": "提取有无人类数据共训与大规模人类预训练的主结果对照。"
+   },
+   {
+    "locator": "5.3 Why translation-only instead of 6DoF human wrist actions?",
+    "role": "results-or-analysis",
+    "purpose": "提取 6DoF vs 3DoF 人类动作共训的定量（Tab.2）与定性（扭曲腕部位姿）对照。"
+   },
+   {
+    "locator": "5.4 Human-only pre-training improves post-training data efficiency",
+    "role": "results-or-analysis",
+    "purpose": "提取 Stage I+III vs Stage III 的少样本后训效率对照（Tab.3）。"
+   },
+   {
+    "locator": "5.5 Training bridging actions for robot data is essential for manipulation transfer",
+    "role": "results-or-analysis",
+    "purpose": "提取机器人端 bridging 目标消融（38.33%→12.50%）。"
+   },
+   {
+    "locator": "5.6 Human-only pre-training aligns with the executable robot action space; 5.7 The bridging action aligns with the executable robot actions",
+    "role": "results-or-analysis",
+    "purpose": "核对损失层与动作层的一致性证据。"
+   },
+   {
+    "locator": "5.8 The upper bound of the bridging objective",
+    "role": "results-or-analysis",
+    "purpose": "提取上界实验设计（机器人数据伪装人类数据）与 Tab.5 数值。"
+   },
+   {
+    "locator": "5.9 Failure Case Analysis",
+    "role": "results-or-analysis",
+    "purpose": "提取旋转需求任务的失败模式与设计代价归因。"
+   },
+   {
+    "locator": "6 Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限（旋转受限、薄物体抓取困难归因）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "无附录",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: no appendix or supplement"
+   }
+  ]
+ },
+ "research_question": "能否用人类与机器人共享的腕部平移动作表示（而非带噪的 6DoF 腕部动作），把 ego-centric 人类操作技能高效迁移到双臂平行夹爪机器人，并随人类数据规模扩展？",
+ "contributions": [
+  "提出基于头相机系相对腕部平移的 bridging action 表示：人机共享、对带噪旋转估计鲁棒、构造上本体无关。",
+  "设计 π0-like VLA 的交错动作序列与注意力掩码，统一处理不同数据源缺失的动作分量，并支持大规模人类动作预训练。",
+  "通过上界实验刻画 bridging 表示的迁移效率随视觉 gap 与动作噪声减小而提升，指向更广跨本体学习的扩展方向。"
+ ],
+ "method": {
+  "summary": "动作表示层：不直接采用手部姿态估计器输出的 6DoF 腕部动作，而是把腕部位姿投影到头相机系，取 k 步未来窗的相对平移 a_3D-wrist（双臂拼接 R^{k×6}）作为人机共享 bridging 信号；机器人侧另有相对初始末端位姿的 6DoF 动作 a_6D-eef（R^{k×12}）与二值夹爪信号。模型层：π0-like 4B VLA（VLM 预训练初始化 + Action Transformer flow matching），动作 token 按 3D-wrist→6D-eef→gripper 交错排列，缺失分量以注意力掩码屏蔽且不计损失。训练层：Stage I 在 ~600h 人类动作（EgoDex 选 70h + 外包 500h + 实验室 45h，均 PICO 4 Ultra Enterprise）上只监督 bridging 信号；Stage II 用 ~72h 通用机器人 pick-and-place（100 物体）+ 每任务 ~3h 任务人类数据共训，并在机器人数据上随机添加/替换 bridging 动作为预测目标以绑定两个动作空间；Stage III 每任务 10 条机器人轨迹少样本后训。",
+  "assumptions": [
+   "人与机器人都作用于其所见，头相机系下的腕部平移是物理上有意义的共享信号。",
+   "对平行夹爪而言，腕部旋转对操作语义的贡献小于其估计噪声的损害，可以整体丢弃。",
+   "机器人 6DoF 末端动作可以经由交错序列中的注意力与绑定训练从平移 bridging 信号获益。",
+   "实验室采集时操作者以手姿模仿夹爪并保持手部在头相机视野内。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EgoDex 选取任务 ~70h（in-the-wild）",
+   "外包自由家庭操作 ~500h（PICO 4 Ultra Enterprise）",
+   "实验室任务人类数据每任务 ~3h × 15 任务（~45h）",
+   "机器人通用 pick-and-place ~72h（100 物体）",
+   "每任务 100 条遥操作机器人轨迹（后训仅用 10 条）"
+  ],
+  "tasks": [
+   "15 个双臂任务：微波炉开/关门、取碗/放碗、左右擦拭，抽屉开/关，挂左/右杯，叠左/右杯，插吸管，取吐司，拔充电器"
+  ],
+  "embodiments": [
+   "ByteMini 双臂移动操作平台（2×7-DoF 臂 + 平行夹爪，头部与双腕 RGB-D）",
+   "人类端：PICO 4 Ultra Enterprise（in-lab 与外包），EgoDex（in-the-wild）"
+  ],
+  "sample_or_scale": "600h 人类预训练 + 72h 机器人共训 + 每任务 10 条后训；评估每任务 2 场景 × 4 次 = 8 次 rollout；模型约 4B 参数，Stage I 400k 迭代（batch 1024）、Stage II 120k（256）、Stage III 25k（256）"
+ },
+ "evaluation": {
+  "design": "真机评估，同时报告成功率与细粒度平均进度（每任务 0-1 分档细则）；四组训练设置对照（仅机器人 pick-and-place、共训、预训练+共训、+少样本后训）；动作表示对照（6DoF vs 3DoF 人类动作，从头共训）；上界实验（任务机器人轨迹按人类目标伪装成人类数据，无观测 gap、低动作噪声）；损失层对齐分析。",
+  "baselines": [
+   "w/o human（仅机器人 pick-and-place 数据）",
+   "6DoF 人类腕部动作共训（主流做法）",
+   "w/o a_3D-wrist（机器人端不加 bridging 目标）",
+   "Stage III（无人类预训练的少样本后训）"
+  ],
+  "metrics": [
+   "任务成功率",
+   "平均进度（per-task 0-1 分档）",
+   "flow matching 训练损失（按动作分量）"
+  ],
+  "ablations": [
+   "6DoF vs 3D-wrist 人类动作（Tab.2）",
+   "±人类预训练（Tab.3）",
+   "±机器人端 bridging 目标（Tab.4）",
+   "默认人类数据 vs 上界机器人数据（Tab.5）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仅用机器人通用 pick-and-place 数据几乎无法解决 15 个评估任务；与任务人类动作共训后任务进度与成功率大幅提升；大规模人类预训练进一步增强。",
+   "scope": "每任务 8 次 rollout，双场景",
+   "locator": "5.2 The bridging action is scalable and essential for manipulation skill transfer"
+  },
+  {
+   "finding": "从头共训对照：6DoF 人类动作总体成功率 12.50%/进度 34.67%，平移 bridging 22.50%/44.58%；定性上 6DoF 共训产生扭曲、偏离目标的腕部位姿，bridging 产生自然对齐把手的位姿。",
+   "scope": "同架构同数据从头训练，仅人类动作表示不同",
+   "locator": "5.3 Why translation-only instead of 6DoF human wrist actions?, Table 2"
+  },
+  {
+   "finding": "少样本后训（10 轨迹/任务）：有人类预训练总体成功率 55.00% vs 无预训练 35.83%。",
+   "scope": "Stage III vs Stage I+III",
+   "locator": "5.4 Human-only pre-training improves post-training data efficiency, Table 3"
+  },
+  {
+   "finding": "机器人端移除 bridging 训练目标，总体成功率从 38.33% 跌至 12.50%（全任务组一致退化）。",
+   "scope": "同预训练初始化，仅绑定策略不同",
+   "locator": "5.5 Training bridging actions for robot data is essential for manipulation transfer, Table 4"
+  },
+  {
+   "finding": "上界实验：把任务机器人轨迹按人类目标转为 translation-only（无观测 gap、远少动作噪声），总体成功率 55.83% vs 默认人类数据 38.33%，作者据此判断迁移效率随视觉 gap 与动作噪声减小而提升。",
+   "scope": "15 任务，同训练目标",
+   "locator": "5.8 The upper bound of the bridging objective, Table 5"
+  },
+  {
+   "finding": "失败集中于需要接触中精确末端构型的任务（插吸管、开抽屉的转腕建立拉拽接触），与丢弃人类旋转监督的设计选择一致；作者还报告共训后薄物体抓取困难，归因于观测/本体 gap 与人类动作噪声。",
+   "scope": "代表性失败轨迹可视化",
+   "locator": "5.9 Failure Case Analysis; 6 Conclusions"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仅采用腕部平移作为 bridging action，限制了需要精细旋转调整任务的迁移（对应 5.9 失败案例）。",
+    "locator": "6 Conclusions"
+   },
+   {
+    "limitation": "共训后机器人难以抓取薄物体，作者归因于观测与本体差距以及人类动作中不可避免的噪声。",
+    "locator": "6 Conclusions"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部姿态估计噪声从未被直接量化：全文未命名具体估计器、未报告腕部平移/旋转误差幅度或分布，'noisy'仅由下游行为对照（6DoF 扭曲 vs 3DoF 稳定）与上界差距间接支撑；无法推出任何可接受阈值。",
+    "basis": "4.1 的两条定性理由与 5.3 的对照实验均不含误差幅值变量；References 中估计器仅以引用号出现。"
+   },
+   {
+    "boundary": "6DoF vs 3DoF 对照把两个机制捆绑：旋转估计噪声与手指-夹爪接触模式失配在同一实验中同时被移除，22.50% 对 12.50% 的差距无法分解到单一机制。",
+    "basis": "4.1 明确并列两条 sub-optimal 理由（predictor errors 与 contact patterns），而 Tab.2 只变化动作表示一个变量。"
+   },
+   {
+    "boundary": "实验室人类数据要求操作者模仿夹爪手姿并保持手部在头相机视野内，系统性削弱了真实 ego-centric 场景的遮挡与出框噪声；in-the-wild 数据（EgoDex+外包）只进入预训练，迁移评估全部基于 in-lab 人类数据。",
+    "basis": "3 Hardware and Platform 的采集约束；4.3 Stage I/II 的数据构成；Tab.1 中 in-the-wild 数据无 gripper 标注。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：ego-centric 人类数据向双臂平行夹爪 VLA 的共训/预训练迁移；其'旋转估计噪声大 + 接触模式失配 → 只共享平移'的动作空间降维决策、以及'机器人数据伪装人类数据'的上界实验，为综述提供了量化动作噪声代价的范式。不适用于：需要精细旋转或手内操作的任务、灵巧手本体、以及需要检测误差定量阈值（mm/deg）的场景——本文无此测量。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "6DoF vs 3DoF 从头共训对照直接命中'检测噪声如何影响迁移'，两模型共享架构/数据/训练量，仅人类动作表示不同。",
+   "上界实验（同目标、同机器人数据、无观测 gap、低噪声）创造性地量化了动作噪声+视觉 gap 对迁移的代价。",
+   "每任务细粒度进度评分 + 双场景 × 4 次 rollout，比纯成功率更敏感。",
+   "失败分析（5.9）与设计选择（丢弃旋转）自洽，作者主动标明旋转需求任务的天花板。"
+  ],
+  "design_risks": [
+   "每任务仅 8 次 rollout，成功率未报置信区间，12.50% vs 22.50% 的差距对应个位数 trial 差异。",
+   "6DoF 基线把旋转噪声与接触失配两个机制捆绑，无法分离贡献。",
+   "主结果（Fig.5/6）以散点图给出，无对应数值表，精确复核困难。",
+   "手部姿态提取管线（估计器型号、滤波、异常剔除）完全未描述，无法评估噪声处理链的强弱。"
+  ],
+  "baseline_fairness": "6DoF 基线代表主流实践且与本文同设置训练，公平隔离动作表示变量；但未与参数化手（MANO 类）或重定向类人类动作表示做同设置对照，结论限定在'6DoF 腕部动作'这一种基线。",
+  "metric_validity": "成功率+进度分是任务级可用性度量；上界差距（55.83% vs 38.33%，约 17.5pp）是动作噪声+观测 gap 的间接量化；无手部轨迹空间误差（mm/deg）度量，'精度'维度仅由定性扭曲现象与任务结果刻画。",
+  "reproducibility": "模型规模（4B）、三阶段迭代数与批量（400k/1024、120k/256、25k/256）、数据配比（600h/72h/3h/10 轨迹）均写明；但手部姿态估计与腕部轨迹后处理管线缺失，项目页面已给出（论文标注 project page）。",
+  "external_validity": "限于 PICO/EgoDex 系头显手部追踪数据与双臂平行夹爪平台；对纯视觉手部估计器噪声量级、单臂或灵巧手设置的外推需重新验证；ego-centric 噪声场景被 in-lab 采集约束弱化。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.28133-C01",
+   "claim": "作者明确把手部估计噪声识别为人类数据迁移的核心误差来源：人类动作通常由手部姿态估计器提取，即使经参数化约束或重定向，提取的动作仍不可避免地带噪；其中腕部旋转因预测器误差尤其不可靠，且手指与平行夹爪接触模式的本质差异使腕部旋转与操作语义解耦；直接把提取的人类 6DoF 腕部动作回放到机器人经常产生扭曲行为。据此作者提出动作空间降维的缓解手段：只共享头相机系下的相对腕部平移（translation-only bridging action），该表示被声称对带噪旋转估计鲁棒、构造上本体无关。",
+   "stance": "support",
+   "relation": "支持综述命题'误差来源与缓解：手部姿态估计的旋转分量噪声最大、与末端本体语义失配叠加后使 6DoF 直接迁移不可行；把共享动作空间降维到平移是丢弃高噪自由度的代表性缓解策略'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "1 Introduction 给出'提取动作不可避免地带噪'的总述；4.1 列出两条 sub-optimal 理由（旋转噪声、接触模式解耦）与直接回放扭曲的经验观察，并给出 bridging action 定义与其鲁棒/本体无关的三条性质。",
+   "locator": "4.1 Motion Bridging Action Representation; 1 Introduction",
+   "source_context": "we argue this is sub-optimal: 1) the wrist rotations for human data are noisy due to predictor errors [54],\nand 2) the distinct contact patterns between fingers and parallel grippers decouple wrist rotation from the\nsemantic manipulation behavior. Empirically, we find that directly replaying the extracted human 6DoF wrist\nactions on robots often leads to distorted behaviors.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 4.1 原文逐字一致；1 Introduction 的 'the extracted actions are inevitably noisy' 与 4.1 的 bridging action 三条性质（physically meaningful / robust to noisy rotation estimates / embodiment-agnostic by construction）逐项核对一致；claim 将'鲁棒'标注为作者声称，其经验支撑由 C02 的对照实验提供，未夸大为独立验证结论。"
+   }
+  },
+  {
+   "card_id": "2606.28133-C02",
+   "claim": "检测噪声对迁移的下游量化对照：从头共训时，用 6DoF 人类腕部动作（含带噪旋转）总体成功率仅 12.50%、平均进度 34.67%，而用 translation-only bridging 动作达 22.50% 与 44.58%；定性上 6DoF 共训使机器人产生扭曲、偏离目标的腕部位姿，bridging 动作产生与微波炉把手自然对齐的位姿。两组模型共享架构、数据与训练量，唯一变量是人类动作表示。",
+   "stance": "support",
+   "relation": "支持综述命题'传播路径：手部估计噪声（尤其旋转）经共训监督通道传导为策略输出的扭曲末端行为，任务成功率近乎减半；移除高噪自由度可显著恢复可用性'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.3 正文报告 6DoF 共训导致 noisy and twisted behaviors、bridging 共训更稳定；Tab.2 报告两种人类动作表示在四任务组与总体的进度/成功率（12.50% vs 22.50% overall success）。",
+   "locator": "5.3 Why translation-only instead of 6DoF human wrist actions?, Table 2",
+   "source_context": "25.00 4.17 55.00 31.25 28.13 0.00 49.17 33.33 34.67 12.50\na\n3D-wrist \n38.02 25.00 49.06 31.25 48.13 3.13 50.00 37.50 44.58 22.50",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "overall task success rate and average progress (%) on 15 bi-manual manipulation tasks",
+    "value_or_direction": "translation-only bridging 22.50% success / 44.58% progress vs 6DoF human wrist actions 12.50% / 34.67%",
+    "comparator": "same VLA architecture and data co-trained from scratch, only the human action representation differs (6DoF wrist vs 3DoF translation)",
+    "task_or_sample": "15 real-world tasks (microwave/drawer/mug-cup/other), 2 scenes x 4 rollouts per task",
+    "locator": "5.3 Why translation-only instead of 6DoF human wrist actions?, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Tab.2 两行数值（a_6D-eef 行 34.67/12.50，a_3D-wrist 行 44.58/22.50）与原文逐字一致；定性结论与 5.3 正文 'noisy and twisted behaviors' vs 'more stable behaviors' 及 Fig.7 描述核对一致；claim 明确标注两模型仅人类动作表示不同，未将该差距单独归因于旋转噪声（接触失配亦被同时移除）。"
+   }
+  },
+  {
+   "card_id": "2606.28133-C03",
+   "claim": "上界实验提供了动作噪声代价的间接量化：把任务机器人示教（100 轨迹/任务）按人类目标转成 translation-only 动作——此时无观测 gap 且动作噪声远低——总体成功率 55.83%、进度 73.54%，显著高于默认人类数据共训的 38.33%/59.75%；作者据此判断迁移效率随视觉 gap 与动作噪声的减小而提升，bridging 表示本身是有效的迁移媒介。",
+   "stance": "support",
+   "relation": "支持综述命题'误差代价量化：在固定表示下，观测 gap 与动作噪声的消除可带来约 17.5 个百分点的成功率空间——这是检测/追踪精度不足的机会成本的稀缺量化证据'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.8 描述上界实验设计（机器人数据伪装人类数据，no observation gap and far less action noise）；Tab.5 报告 Default 38.33% vs Upper Bound 55.83% 总体成功率；正文据此判断迁移效率随 gap 与噪声减小而提升。",
+   "locator": "5.8 The upper bound of the bridging objective, Table 5",
+   "source_context": "Default (Ours) 64.58 45.83 56.88 43.75 52.50 15.63 61.67 50.00 59.75 38.33\nUpper Bound 68.75 54.17 75.94 62.50 81.25 53.13 71.25 58.33 73.54 55.83",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "overall success rate and average progress (%) under the same translation-only training objective",
+    "value_or_direction": "Upper Bound (robot data as human data, no observation gap, far less action noise) 55.83% success vs Default (human data) 38.33%",
+    "comparator": "default co-training with real human action data under identical objective",
+    "task_or_sample": "15 bi-manual tasks, task-specific robot demonstrations (100 traj/task) transformed into translation-only wrist actions",
+    "locator": "5.8 The upper bound of the bridging objective, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Tab.5 两行数值与原文逐字一致；5.8 正文 'no observation gap (wrist cameras are available) and far less action noise' 与 'the transfer becomes increasingly efficient as the visual gap and action noise diminish' 核对一致；claim 保留作者'视觉 gap 与动作噪声'双因素表述，未将其单独归因于检测噪声。"
+   }
+  },
+  {
+   "card_id": "2606.28133-C04",
+   "claim": "缓解手段的代价边界：丢弃人类旋转监督使失败集中于接触中需要精确末端构型的任务——'插吸管'与'开抽屉'中策略表现出明确任务意图，但在抓稳吸管或转动腕部建立有效拉拽接触等关键步骤失败；作者明确承认这些失败与丢弃旋转监督的设计选择一致，并指出引入有限但可靠的旋转线索是未来方向；此外共训后机器人难以抓取薄物体，归因于观测/本体 gap 与人类动作中不可避免的噪声。",
+   "stance": "limit",
+   "relation": "限定综述命题'缓解手段的边界：动作空间降维（丢弃旋转）在吸收检测噪声的同时引入系统性能力缺口，旋转依赖型接触任务成为该策略的已知失败域'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "5.9 报告失败集中于插吸管/开抽屉的精确末端构型步骤，并明示与丢弃旋转监督一致；6 Conclusions 自述局限并报告薄物体抓取困难的双因素归因。",
+   "locator": "5.9 Failure Case Analysis; 6 Conclusions",
+   "source_context": "These failures are consistent with our design choice of discarding\nrotational supervision from human data, and point to incorporating limited, reliable rotation cues as a\npromising direction for future work.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 5.9 原文逐字一致；失败任务（insert the straw into the cup / open the drawer）与关键步骤描述（grasping the straw securely / rotating the wrist to establish a valid pulling contact）、6 Conclusions 的薄物体归因（observation and embodiment gap + inevitable noise in human actions）逐项核对一致；claim 未超出作者自述范围。"
+   }
+  },
+  {
+   "card_id": "2606.28133-C05",
+   "claim": "缺口：本文把'手部姿态估计噪声'作为核心立论却全程未量化它——未命名具体估计器、未报告腕部平移/旋转的误差幅度或分布、未描述任何滤波/异常剔除管线；'noisy'的全部证据是下游行为对照（6DoF 扭曲 vs 3DoF 稳定）与上界差距，且 6DoF 基线把旋转噪声与接触模式失配捆绑在同一变量中；因此从本文无法推出手部检测/追踪误差的可接受阈值或噪声-误差的传递函数。",
+   "stance": "gap",
+   "relation": "标记综述的阈值维度缺口：即使以'手部动作噪声'为核心动机的论文，也把噪声当作未经测量的既有条件而非受控变量；阈值与传递函数证据需从他处补充。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "1 Introduction 与 4.1 对噪声仅有定性陈述（inevitably noisy / noisy due to predictor errors）；通读全文（含全部实验节）未发现估计器名称、误差幅值或噪声处理管线；Tab.2 的对照同时移除旋转噪声与接触失配两个机制。",
+   "locator": "1 Introduction; 4.1 Motion Bridging Action Representation",
+   "source_context": "Human actions are typically derived from hand pose estimators [13, 26, 27, 62]. Though human\nhands can be constrained by parameterization [37, 38, 41, 45, 62] or re-targeting [66], the extracted actions are\ninevitably noisy.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与 1 Introduction 原文逐字一致；缺口判断基于对全文（1-6 节，无附录）的完整通读：手部姿态来源仅表述为 hand-pose estimators + PICO 4 Ultra Enterprise 平台，无型号/误差/后处理细节；Tab.2 变量捆绑问题与 4.1 双理由并列的结构核对一致；此卡为 reader-inference，不作为作者观点。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "paper_id": "egodex-ref",
+   "title": "EgoDex: Learning dexterous manipulation from large-scale egocentric video",
+   "authors": [
+    "Ryan Hoque",
+    "Peide Huang",
+    "David J Yoon",
+    "Mouli Sivapurapu",
+    "Jian Zhang"
+   ],
+   "year": 2025,
+   "url": "https://arxiv.org/abs/2505.11709",
+   "relation": "in-the-wild 人类动作数据来源（预训练 70h）：ego-centric 视频及其手部动作标注即本文所指噪声动作的主要外部来源。"
+  },
+  {
+   "paper_id": "pi0-ref",
+   "title": "π0: A vision-language-action flow model for general robot control",
+   "authors": [
+    "Kevin Black",
+    "Noah Brown",
+    "Danny Driess",
+    "Adnan Esmail",
+    "Michael Equi",
+    "Chelsea Finn",
+    "et al."
+   ],
+   "year": 2024,
+   "url": "https://arxiv.org/abs/2410.24164",
+   "relation": "基础 VLA 架构与 flow matching 动作生成范式来源；本文在其上加交错动作序列与注意力掩码。"
+  }
+ ],
+ "notes": "对综述的核心价值：这是'检测噪声→动作空间设计'路线的代表——不做滤波/建模去吸收噪声，而是直接把共享动作空间砍掉旋转自由度。提供三组稀缺量化：6DoF vs 3DoF 共训（12.50% vs 22.50%）、上界实验（55.83% vs 38.33%，噪声+观测 gap 的机会成本）、机器人端 bridging 消融（38.33%→12.50%）。局限同样关键：旋转依赖任务（插吸管/开抽屉）系统性失败、薄物体抓取困难。阈值维度为缺口：噪声从未被直接测量，估计器未命名。数据采集为 PICO 4 Ultra Enterprise（头显手部追踪）+ EgoDex，非纯视觉 ego 估计。"
+}

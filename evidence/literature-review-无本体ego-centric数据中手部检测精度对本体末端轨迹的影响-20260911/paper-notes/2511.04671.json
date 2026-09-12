@@ -1,0 +1,228 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.04671",
+  "title": "X-Diffusion: Training Diffusion Policies on Cross-Embodiment Human Demonstrations",
+  "published": "2025-11-06",
+  "url": "https://arxiv.org/abs/2511.04671",
+  "authors": [
+   "Maximus A. Pace",
+   "Prithwish Dan",
+   "Chuanruo Ning",
+   "Atiksh Bhardwaj",
+   "Audrey Du",
+   "Edward W. Duan",
+   "Wei-Chiu Ma",
+   "Kushal Kedia"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "提供手部检测→重定向→策略链路负迁移的直接定量证据：HaMeR 双目三角化得到的人手末端位姿虽统一了动作表征，但动力学不可行使朴素协同训练退化甚至低于纯机器人基线；IK 重放约 50% 人演示失败被丢弃；以扩散加噪后人-机动作不可区分步 k* 作为选择机制，5 任务平均成功率较基线高 16% 且超过人工过滤，命中综述问题的误差传播路径与缓解手段维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "人-机本体鸿沟问题、naive co-training 退化动机与 +16% 头条结果"
+   },
+   {
+    "locator": "III. PROBLEM FORMULATION AND BACKGROUND",
+    "role": "method-or-design",
+    "purpose": "HaMeR 双目手部关键点三角化→抓取点/朝向/夹爪状态的末端位姿获取链路"
+   },
+   {
+    "locator": "IV. APPROACH",
+    "role": "method-or-design",
+    "purpose": "最小不可区分步 k* 定义、分类器训练与选择性集成进扩散策略损失"
+   },
+   {
+    "locator": "V. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "五任务真实评测、naive co-training 负迁移、IK 重放 50% 失败过滤、跨任务迁移差异"
+   },
+   {
+    "locator": "VI. DISCUSSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：标定多相机环境、小规模演示"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II. RELATED WORK",
+    "reason": "相关工作定位，无独立证据价值"
+   }
+  ]
+ },
+ "research_question": "人演示与机器人本体差异巨大、动作不可直接执行时，如何在不牺牲机器人动力学可行性的前提下利用大规模人视频训练扩散策略？",
+ "contributions": [
+  "将人动作视为机器人动作的含噪对应：前向扩散加噪后本体差异消退而任务结构保留",
+  "训练人-机动作分类器确定每条人动作的最小不可区分步 k*（分类器给出≥50% 机器人概率的最早扩散步）",
+  "仅在 k ≥ k* 时把人动作纳入扩散策略去噪损失：可行动作提供低噪声精细监督，不可行动作只提供高噪声粗指导",
+  "5 个真实任务上较朴素协同训练与人工过滤平均成功率提升 16%"
+ ],
+ "method": {
+  "summary": "状态-动作统一：状态为 Grounded SAM 2 分割的任务相关物体 mask + 末端执行器关键点渲染，动作为下一时刻本体位姿 q_{t+1}（末端 3D 位置+旋转+夹爪状态）。人数据侧：两个标定 RGB 相机下用 HaMeR 检测 2D 手关键点并三角化到 3D 机器人坐标系，抓取点取拇指与食指指尖均值，朝向由局部手坐标系拟合重定向到末端执行器，夹爪状态由拇指-食指间距推断。核心机制：训练分类器 c_θ(k, A_t^k, s_t) 判别加噪动作来源本体，定义最小不可区分步 k*(A_t)=min{k: c_θ≥0.5}，扩散策略损失只对人动作在 k≥k* 时计入。",
+  "assumptions": [
+   "人演示为单手且以张开抓取开始",
+   "有两个标定 RGB 相机可用于三角化手部关键点",
+   "人-机动作分布在足够加噪后可近似（ε-merged）",
+   "分类器能可靠判别加噪动作的本体来源"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "每任务 5 条机器人演示 + 100 条人演示（自采）",
+   "FILTERED 消融：人演示经 IK 重放后人工过滤出的可行子集 D_H^+"
+  ],
+  "tasks": [
+   "Close Drawer",
+   "Pan On Plate",
+   "Push Plate",
+   "Mug On Rack",
+   "Bottle Upright"
+  ],
+  "embodiments": [
+   "7-DOF Franka Emika Panda 臂（平行夹爪）",
+   "人单手演示"
+  ],
+  "sample_or_scale": "每方法每任务 10 次真实世界 rollout；共 5 任务"
+ },
+ "evaluation": {
+  "design": "真实世界成功率对照：robot-only Diffusion Policy、Point Policy、Motion Tracks、DemoDiffusion 四类基线；系统性数据消融 ROBOT ONLY / NAIVE / FILTERED / X-DIFFUSION；跨任务迁移量化（人数据使用比例 vs 性能增益）。",
+  "baselines": [
+   "Diffusion Policy（仅 5 条机器人演示）",
+   "Point Policy（全部人+机数据协同训练，物体关键点+手关键点状态）",
+   "Motion Tracks（全部人+机数据协同训练，手关键点动作+原始图像）",
+   "DemoDiffusion（前 60% 步用人策略、后 40% 用机器人策略的反向扩散）",
+   "FILTERED（IK 重放人工过滤后的 feasible 人演示协同训练）"
+  ],
+  "metrics": [
+   "真实世界任务成功率（10 rollouts/任务）",
+   "人数据在不同扩散步的使用比例",
+   "相对 robot-only 的正迁移增益"
+  ],
+  "ablations": [
+   "ROBOT ONLY / NAIVE / FILTERED / X-DIFFUSION 数据选择消融",
+   "跨任务人数据整合比例与迁移增益相关性"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "朴素协同训练未筛选的人演示几乎无提升（Motion Tracks、DemoDiffusion）甚至退化（Point Policy 低于 robot-only）；共同失败模式是执行人演示中机器人不可行的动作（如侧向抓取）",
+   "scope": "5 任务、每任务 10 次真实 rollout；Fig. 4/Fig. 5",
+   "locator": "V. EXPERIMENTS"
+  },
+  {
+   "finding": "IK 重放人演示后约 50% 因运动学或动力学失败被人工丢弃（FILTERED）；FILTERED 优于 NAIVE 证实不可行人演示会退化策略；X-DIFFUSION 在所有任务上超过 FILTERED，能从不可行演示中仍提取信号",
+   "scope": "同一架构仅变数据的消融；Fig. 6",
+   "locator": "V. EXPERIMENTS"
+  },
+  {
+   "finding": "X-DIFFUSION 在 5 个真实任务上平均成功率较一系列跨本体学习基线高 16%，且超过人工过滤；人数据整合比例越高的任务（Mug On Rack）迁移增益越大，越少（Bottle Upright）增益越小",
+   "scope": "摘要/引言头条数字与 Fig. 7 跨任务量化",
+   "locator": "I. INTRODUCTION; V. EXPERIMENTS"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "在标定多相机环境中用有限数量的机器人与人演示训练；未来工作才面向大规模数据集与非结构化互联网视频",
+    "locator": "VI. DISCUSSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "依赖双目标定相机三角化手部关键点，不是单目 in-the-wild 设定；HaMeR 检测精度对手末端位姿的影响未被独立量化，论文把'不可行'归因于动力学失配而非检测噪声",
+    "basis": "III 明确假设两个标定 RGB 相机；全文无 HaMeR 精度消融"
+   },
+   {
+    "boundary": "选择机制依赖分类器判别力：若分类器在低噪声步即被人动作欺骗，不可行动作会泄漏进精细监督；该失败模式未被分析",
+    "basis": "IV.B 以 c_θ≥0.5 定义 k*，无分类器精度/校准分析"
+   },
+   {
+    "boundary": "仅评测平行夹爪单臂与短时任务，灵巧手与高维多指动作的 k* 分布形态未知",
+    "basis": "V 全部任务在 7-DOF Franka 平行夹爪上评测"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于平行夹爪单臂、双目标定相机、每任务百级人演示的扩散策略协同训练场景；'人动作=含噪机器人动作'的选择机制针对的是动力学可行性失配，不直接处理单目手部检测噪声，其 16% 增益不能读作检测精度容限。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "ROBOT ONLY/NAIVE/FILTERED/X-DIFFUSION 四臂数据消融直接隔离'可行性选择'的贡献",
+   "FILTERED 用 IK 重放+人工验证构造可行性真值，是昂贵但可信的对照",
+   "跨任务人数据整合比例与迁移增益的相关分析连接了机制与结果"
+  ],
+  "design_risks": [
+   "每方法每任务仅 10 次 rollout，成功率置信区间宽",
+   "k* 依赖分类器判别力，分类器质量未消融",
+   "HaMeR 三角化的手部检测误差与动力学失配纠缠，无法分别归因"
+  ],
+  "baseline_fairness": "基线复用已发表方法（Point Policy/Motion Tracks/DemoDiffusion）且共享数据划分；FILTERED 消融同架构仅变数据，公平。",
+  "metric_validity": "真实成功率为标准任务级指标；k* 比例是机制性指标；未报告轨迹级位置/朝向误差。",
+  "reproducibility": "管线组件（HaMeR/Grounded SAM 2/扩散策略）均命名，k* 定义与损失公式明确；有项目页面。",
+  "external_validity": "5 任务覆盖推/放/插/翻等技能，但全部平行夹爪单臂、双目标定环境，向灵巧手与单目 in-the-wild 视频的外推未验证（作者自述为未来工作）。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.04671-C01",
+   "claim": "在双目标定相机下用 HaMeR 检测 2D 手关键点并三角化为末端位姿（抓取点=拇指食指指尖均值）的人演示，朴素协同训练会使扩散策略学到机器人动力学不可行的动作（如侧向抓取），几乎无提升甚至低于纯机器人基线；IK 重放后约 50% 人演示因运动学/动力学失败被人工丢弃；X-DIFFUSION 仅在加噪后人-机动作不可区分的扩散步（分类器判机器人概率≥50% 的最早步 k*）纳入人动作，在 5 个真实任务上平均成功率较跨本体基线高 16% 且超过人工过滤。",
+   "stance": "conditional",
+   "relation": "为'检测/重定向后的人手末端轨迹直接进策略会造成负迁移'提供定量证据，并给出一条按噪声水平门控的选择性吸收机制：可行部分给精细监督、不可行部分只给粗指导",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III 描述 HaMeR 双目三角化与抓取点定义；V 报告 naive co-training 退化（Point Policy 低于 robot-only）、约 50% 人演示 IK 重放失败被丢弃、FILTERED 优于 NAIVE 而 X-DIFFUSION 全面超过 FILTERED；I 报告较跨本体基线平均 +16%。",
+   "locator": "I. INTRODUCTION; III. PROBLEM FORMULATION AND BACKGROUND; V. EXPERIMENTS",
+   "source_context": "While prior approaches that naively co-train on human data may generate infeasible robot actions, selectively training on human actions at high-noise levels improves upon naive co-training and even surpasses manual data filtering. X-DIFFUSION outperforms a range of cross-embodiment learning baselines by an average of 16% in task success.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average task success",
+    "value_or_direction": "improves by an average of 16% in task success",
+    "comparator": "naive co-training and manual data filtering",
+    "task_or_sample": "5 个真实任务（Close Drawer/Pan On Plate/Push Plate/Mug On Rack/Bottle Upright），每方法每任务 10 次 rollout",
+    "locator": "I. INTRODUCTION; V. EXPERIMENTS"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 I. INTRODUCTION 末段；+16% 与'surpasses manual data filtering'在该段可查；HaMeR 三角化与抓取点定义出自 III 'Unifying State and Action Spaces'；约 50% 丢弃与 FILTERED/NAIVE 对照出自 V.B；claim 各要素均限定在该标定双臂（人单手→Franka 夹爪）5 任务设定内，未外推至单目 in-the-wild 或灵巧手。"
+   }
+  }
+ ],
+ "core_citations": [
+  "G. Pavlakos et al., Reconstructing hands in 3D with transformers (HaMeR), CVPR 2024 — 手部关键点检测来源",
+  "G. Daras et al., Ambient Diffusion, NeurIPS 2023 — 含噪数据选择性集成的方法基础",
+  "C. Chi et al., Diffusion Policy, IJRR 2024 — 策略框架"
+ ],
+ "figures": [
+  {
+   "figure_id": "SV.F6",
+   "caption": "Performance vs. Human Data Usage: comparison of X-DIFFUSION with FILTERED (robot-feasible verified), NAIVE (all human data), and ROBOT ONLY policies.",
+   "section": "V. EXPERIMENTS",
+   "usage": "作者用该图展示数据选择消融：FILTERED 优于 NAIVE 证实不可行人演示退化策略，X-DIFFUSION 一致优于全部对照。"
+  }
+ ],
+ "notes": "B10 批次第 6 篇，ID 段内仅剩 0400 一个名额，故只投影 1 张最高价值卡。该篇为双目标定 exocentric 设定（非单目 ego），其价值在于量化'重定向人动作直接进策略'的负迁移风险与噪声门控缓解机制；reader_inferred 已标注 HaMeR 检测精度未独立量化、非单目设定两条边界。"
+}

@@ -1,0 +1,317 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2510.01607",
+  "title": "ActiveUMI: Robotic Manipulation with Active Perception from Robot-Free Human Demonstrations",
+  "published": "2025-10-02",
+  "url": "https://arxiv.org/abs/2510.01607",
+  "authors": [
+   "Qiyuan Zeng",
+   "Chengmeng Li",
+   "J Drummond John",
+   "Zhongyi Zhou",
+   "Junjie Wen",
+   "Guorui Feng",
+   "Yichen Zhu",
+   "Yidong Xu",
+   "Jude St. John",
+   "Yi Xu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "ActiveUMI 用 Meta Quest 3s inside-out IR 追踪替代 UMI 的 GoPro+视觉 SLAM 路径，并在 4.5 给出采集-回放相对位姿误差（RPE）的直接定量对比（4.0mm vs 10.1mm），是 UMI 族中唯一量化'采集接口位姿精度→机器人末端回放轨迹误差'的证据；3.3 的标定三件套与统一世界坐标系直接对应误差来源控制；主动感知实验提供遮挡失效模式的策略级缓解数据。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract; 1. Introduction",
+    "role": "problem",
+    "purpose": "问题定义：wrist-centric 视角服务操作而非感知，主动 ego 感知缺失；系统两原则（embodiment 对齐 + 主动感知）。"
+   },
+   {
+    "locator": "3.1. Data Collection System for ActiveUMI",
+    "role": "method-or-design",
+    "purpose": "VR 控制器追踪硬件、夹爪驱动、HMD 双重角色（定位枢纽+顶视相机）、可穿戴计算单元。"
+   },
+   {
+    "locator": "3.2. Active Perception for Policy Learning",
+    "role": "method-or-design",
+    "purpose": "HMD 6-DoF 作为策略额外输入、部署时预测机器人头部位姿的机制。"
+   },
+   {
+    "locator": "3.3. Calibrating End-Effector for Precise Data Collection",
+    "role": "method-or-design",
+    "purpose": "统一世界坐标系绝对坐标记录 + 三种标定技术（零点重置/夹爪坞站/触觉反馈）。"
+   },
+   {
+    "locator": "4.1. Implementation Details and Task Descriptions",
+    "role": "results-or-analysis",
+    "purpose": "3 台 ARX R5 臂测试台、30Hz、pi0 后端、六任务定义、10 次试验协议。"
+   },
+   {
+    "locator": "4.2. How Important is the Egocentric Active Perception? (Table 1)",
+    "role": "results-or-analysis",
+    "purpose": "相机配置三变体消融：ActiveUMI 70% vs 固定头 42% vs 纯腕摄 UMI 26%。"
+   },
+   {
+    "locator": "4.3. Mixed Training with Teleoperated Data (Table 3)",
+    "role": "results-or-analysis",
+    "purpose": "遥操作数据混合比例消融 0%/1%/10% → 80%/95%/90%。"
+   },
+   {
+    "locator": "4.4. Generalization Capability of ActiveUMI (Table 2)",
+    "role": "results-or-analysis",
+    "purpose": "新环境泛化：56% vs 16% vs 6%。"
+   },
+   {
+    "locator": "4.5. Data Collection Throughput and Accuracy (Fig. 6)",
+    "role": "results-or-analysis",
+    "purpose": "吞吐对比与 RPE 卷尺回放协议及定量结果（ActiveUMI 4.0mm vs UMI 10.1mm）。"
+   },
+   {
+    "locator": "5. CONCLUSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与作者自述边界。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2. Related Work",
+    "reason": "背景综述，对本综述问题无独立证据。"
+   },
+   {
+    "locator": "References",
+    "reason": "参考文献列表。"
+   }
+  ]
+ },
+ "research_question": "如何把 in-the-wild 人类演示高效、保真地迁移为双臂机器人可执行的 visuomotor 策略，并通过主动 ego 感知（可控制视点）克服遮挡、长程与精密任务中的观测不足？",
+ "contributions": [
+  "便携 VR 采集套件：改装 Meta Quest 3s 控制器刚性挂载机器人同款夹爪副本，利用头显 inside-out 追踪直接获得代表末端执行器的 6-DoF 位姿。",
+  "主动感知数据与策略接口：记录 HMD 6-DoF 位姿作为策略输入，部署时由第三条机械臂执行预测的头部视点。",
+  "面向精密采集的标定技术组合：B 键 in-situ 零点重置、夹爪 placeholder 坞站、3cm 触觉反馈，配合统一世界坐标系的绝对坐标记录。",
+  "采集-回放相对位姿误差（RPE）的卷尺定量协议，并给出 ActiveUMI 4.0mm vs UMI 10.1mm 的对比。",
+  "六任务真实机器人评估：纯 ActiveUMI 数据训练的策略 in-domain 平均成功率 70%，新环境保持 56%。"
+ ],
+ "method": {
+  "summary": "系统由改装 Meta Quest 3s 控制器（微电机驱动机器人同款夹爪副本+腕部鱼眼相机）、Quest 3s HMD（inside-out SLAM 提供统一世界坐标系并同时追踪头部与控制器 6-DoF）与背负式计算单元构成；数据以绝对坐标记录于初始标定建立的世界帧，30Hz 采样；策略为 pi0 VLA，额外输入 HMD 位姿并预测机器人头部 6-DoF 动作；标定依赖零点重置、坞站与触觉反馈三件套保证每次采集初始位姿一致。",
+  "assumptions": [
+   "Quest inside-out 追踪在采集空间内精度足够稳定（误差分析委托给 4.5 的 RPE 协议）。",
+   "控制器与机器人夹爪刚性连接后其位姿可直接代表机器人末端位姿。",
+   "初始标定建立的世界帧在整个采集会话中保持一致。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "ActiveUMI 自采 in-the-wild 双臂演示（头部 HMD 6-DoF + 双控制器 6-DoF + 双腕鱼眼 + 顶视，30Hz）"
+  ],
+  "tasks": [
+   "Block disassembly（精密）",
+   "Shirt folding（可变形）",
+   "Rope boxing（长程）",
+   "Toolbox cleaning（铰接）",
+   "Bottle placing（位置随机化）",
+   "Take Drink from Bag"
+  ],
+  "embodiments": [
+   "3× ARX R5 6-DoF 机械臂（双臂操作 + 第三臂主动头部视角）"
+  ],
+  "sample_or_scale": "策略评估每任务 10 次试验（数据混合实验每配置 20 次）；RPE 协议为 100→10cm 共 10 个标称距离、10 次试验取平均"
+ },
+ "evaluation": {
+  "design": "真实机器人双臂任务成功率（in-domain 与新环境两组）；采集-回放 RPE 卷尺协议（式 1-2 定义绝对/相对误差）；采集吞吐时间对比（ActiveUMI vs 遥操作 vs 纯人手）。",
+  "baselines": [
+   "UMI 纯腕摄配置",
+   "Fixed Head Camera（固定顶视）",
+   "VR 套件遥操作真实机器人",
+   "纯人手演示"
+  ],
+  "metrics": [
+   "任务成功率",
+   "Relative Pose Error (RPE)",
+   "采集时间倍数"
+  ],
+  "ablations": [
+   "相机配置三变体（主动头部/固定头部/纯腕摄）",
+   "遥操作数据混合比例 0%/1%/10%"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "采集-回放相对位姿误差：ActiveUMI 4.0mm，UMI 10.1mm（Fig. 6(e) 标注；正文称 RPE 小 2.5 倍并将其归因于 VR 系统优势）。",
+   "scope": "卷尺回放协议（10 个标称距离、10 次试验平均）",
+   "locator": "4.5. Data Collection Throughput and Accuracy, Fig. 6(e)"
+  },
+  {
+   "finding": "数据以绝对坐标记录于初始标定建立的统一世界坐标系，配合零点重置/坞站/触觉反馈三标定手段保证每次采集从一致初始位姿开始，实现操作者控制与真实机器人运动学的一对一映射。",
+   "scope": "ActiveUMI 标定设计",
+   "locator": "3.3. Calibrating End-Effector for Precise Data Collection"
+  },
+  {
+   "finding": "Quest 3s 头显通过 onboard 相机追踪控制器 IR LED 图案实时三角测量 6-DoF 位姿，HMD 的 SLAM 同时提供稳定世界坐标系并追踪头部与控制器。",
+   "scope": "VR inside-out 追踪硬件路径",
+   "locator": "3.1. Data Collection System for ActiveUMI"
+  },
+  {
+   "finding": "主动感知消融：in-domain 平均成功率 ActiveUMI 70% vs 固定头 42% vs 纯腕摄 UMI 26%；新环境 56% vs 16% vs 6%。",
+   "scope": "六任务 pi0 策略、每任务 10 次试验",
+   "locator": "4.2. How Important is the Egocentric Active Perception? (Table 1); 4.4 (Table 2)"
+  },
+  {
+   "finding": "衬衫折叠任务混入 1% 遥操作数据将成功率从 80% 提至 95%（优于混 10% 的 90%）。",
+   "scope": "Table 3，每配置 20 次试验",
+   "locator": "4.3. Mixed Training with Teleoperated Data (Table 3)"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "RPE 协议是静态双点距离回放测量，未报告动态快速运动、头显-控制器遮挡等失效模式下的追踪误差统计。",
+    "basis": "4.5 协议仅描述操作者将夹爪置于卷尺两端的静态放置与回放，全文无动态追踪误差实验。"
+   },
+   {
+    "boundary": "4.5 正文存在笔误（'the RPE of UMI is 2.5x smaller than UMI'，按图 6(e) 数据应为 ActiveUMI 比 UMI 小约 2.5 倍），且式 2 将 RPE 定义为百分比而图 6(e) 以 mm 标注，定量结论实际依赖图注数字。",
+    "basis": "4.5 式 1-2 与 Fig. 6(e) 标注文本逐字比对可得。"
+   },
+   {
+    "boundary": "三种标定手段的残差量级未量化，标定精度只能经由 RPE 间接反映。",
+    "basis": "3.3 仅描述标定操作流程，无任何标定重复性/残差数据。"
+   },
+   {
+    "boundary": "UMI 对照的 10.1mm 未说明是否在同一协议下复测，跨系统对比的测量条件一致性不可考。",
+    "basis": "4.5 仅称 'compares with the UMI'，未描述 UMI 侧测量设置。"
+   }
+  ]
+ },
+ "transfer_boundary": "4.0mm RPE 绑定 Quest 3s inside-out 追踪与静态卷尺回放协议，不能直接外推到快速运动/遮挡场景；其相对 UMI（GoPro+视觉 SLAM）的精度优势是硬件路径级结论，对其他追踪方案（动捕、ArUco、腕部 SLAM）不可直接迁移；标定三件套解决的是'采集-执行初始一致性'，不覆盖会话内漂移。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "RPE 卷尺回放协议直接度量采集-执行链路的末端轨迹保真度，是 UMI 族中少见的定量精度评估",
+   "相机配置消融用同一 pi0 后端与相同训练流程，分离出主动感知贡献",
+   "六任务覆盖精密/可变形/长程/铰接/泛化五类难点"
+  ],
+  "design_risks": [
+   "RPE 测静态双点距离而非动态轨迹跟踪误差，低估了运动中的追踪失效",
+   "正文笔误与单位混用（%定义 vs mm 标注）削弱定量表述严谨性",
+   "UMI 的 RPE 数字来源与测量条件未交代"
+  ],
+  "baseline_fairness": "策略对比（Table 1/2）同后端同数据较公平；RPE 对比的 UMI 数字测量条件未说明，公平性不可考。",
+  "metric_validity": "RPE 式 2 定义为 |L_replay − L_measure|/L_measure×100%（相对量），图 6(e) 却以 RPE(mm) 标注绝对值，两者不一致；成功率为二值任务完成度量，协议透明。",
+  "reproducibility": "硬件基于商用 Quest 3s 改造、协议步骤描述较细（标称距离序列、10 次试验）；文中未声明数据或代码开源。",
+  "external_validity": "新环境泛化测试（56% 保持率）支持一定外部效度；精度结论绑定特定 VR 硬件代际。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2510.01607-C01",
+   "claim": "在卷尺回放协议（标称距离 100→10cm 共 10 点、10 次试验取平均）下，ActiveUMI 采集轨迹经真实机器人回放的相对位姿误差为 4.0mm，显著低于 UMI 的 10.1mm（约 2.5 倍），作者把该差距归因于 VR 追踪系统优势——为'采集接口位姿追踪精度→机器人末端回放轨迹精度'提供直接定量证据。",
+   "stance": "support",
+   "relation": "直接回答'追踪精度如何影响重定向后末端轨迹精度'：UMI 族两条硬件路径（VR inside-out vs GoPro+视觉 SLAM）的采集-回放末端误差被量化对比，4.0mm vs 10.1mm 给出该族内'可接受精度'的当前参考点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.5 定义 RPE 协议（式 1-2：以标称距离为真值计算回放距离的绝对/相对误差）并报告十次试验平均；数值逐字取自 Fig. 6(e) 图块标注文本（'RPE(mm) UMI 10.1 / ActiveUMI (Ours) 4.0'，该图块在抽取文本中物理位于 4.3 与 4.5 之间）；正文 '2.5x smaller' 与 10.1/4.0≈2.53 一致。注意正文存在笔误：'the RPE of UMI is 2.5x smaller than UMI' 按图注数据主语应为 ActiveUMI；且式 2 将 RPE 定义为百分比而图注以 mm 标注。",
+   "locator": "4.5. Data Collection Throughput and Accuracy, Fig. 6(e)",
+   "source_context": "We can observe that the RPE of UMI is 2.5x smaller than UMI. This low error is naturally comes from the advantange of the VR system",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Relative Pose Error (RPE), Fig. 6(e) 标注值 (mm)",
+    "value_or_direction": "ActiveUMI 4.0mm vs UMI 10.1mm（约 2.5 倍差距）",
+    "comparator": "ActiveUMI（Quest 3s inside-out 追踪）vs UMI（GoPro+视觉 SLAM）",
+    "task_or_sample": "卷尺回放协议：标称距离 100/90/.../10cm 共 10 点，记录 6-DoF 位姿序列后在真实机器人上回放，10 次试验平均",
+    "locator": "4.5. Data Collection Throughput and Accuracy, Fig. 6(e)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字出自 4.5（含原文拼写 'advantange'）；数值 4.0/10.1 逐字取自 Fig. 6(e) 图块标注文本，与正文 '2.5x smaller' 自洽（10.1/4.0≈2.53）；卡面已如实标注正文笔误与单位不一致，结论限于该静态回放协议。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C02",
+   "claim": "ActiveUMI 以初始标定建立的统一世界坐标系记录绝对坐标位姿，并用三种操作化标定手段保证每次采集的一致初始状态：B 键 in-situ 零点重置（头显内实时渲染坐标轴对齐物理工作区）、夹爪 placeholder 坞站（就位时相对距离与位姿固定为预定义状态，按键即时标定虚拟坐标系原点与朝向）、以及 3cm 零点触觉反馈（接近基座原点时高频振动提示）。",
+   "stance": "conditional",
+   "relation": "回答'误差来源与缓解手段'：绝对坐标+统一世界帧意味着初始标定误差/零点偏置会系统性进入全部轨迹标签，三件套是把'采集-执行坐标对齐'操作化的标定级缓解；但论文未报告标定残差量级，缓解效果仅经 RPE 间接体现。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.3 陈述绝对坐标记录与统一世界坐标系（'All data is recorded in absolute co- ordinates relative to a unified world coordinate system that is established during an initial calibration phase'，该句含抽取断词故未用作引文），并依次描述零点重置、坞站与触觉反馈三手段；4.5 的 RPE 结果为其间接效果证据。",
+   "locator": "3.3. Calibrating End-Effector for Precise Data Col-",
+   "source_context": "This jig can be placed anywhere in the workspace to establish a consistent starting point.",
+   "evidence_type": "system-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 3.3（跨越抽取断词 'rel- ative'，按连续语义引用）；零点重置与 3cm 触觉反馈细节同节可查（'B' button、'within 3cm of the zero-point'）；卡面限于设计声明，未声称标定残差数值。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C03",
+   "claim": "ActiveUMI 的追踪硬件路径是 Quest 3s 头显 inside-out 追踪：头显 onboard 相机通过追踪控制器集成的红外 LED 图案实时三角测量其 6-DoF 位姿，HMD 的 SLAM 系统同时提供稳定世界坐标系并追踪头部与控制器；控制器刚性挂载到机器人同款夹爪后其位姿直接代表机器人末端位姿，无需 UMI 式的视觉 SLAM 离线重建。",
+   "stance": "conditional",
+   "relation": "回答'误差来源'：把采集端追踪误差来源从 UMI 路径的单目/鱼眼 SLAM（弱纹理、快速运动、漂移敏感）换成 VR inside-out 路径（头显-控制器间遮挡、追踪范围、IR 图案可见性），误差来源谱系改变但论文未量化对比两者的失效模式。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.1 'VR gripper controller' 段描述 inside-out 三角测量与刚性挂载代表机器人位姿，并声明误差分析见 4.5；'Head-mounted display (HMD)' 段声明 SLAM 提供稳定世界坐标系并同时追踪头部与控制器（该句在抽取文本中被图 3 文本插断，故未并入引文）。",
+   "locator": "3.1. Data Collection System for ActiveUMI",
+   "source_context": "The headset’s onboard cameras continuously triangulate the controller’s pose in real-time by tracking a unique pattern of integrated infrared (IR) LEDs.",
+   "evidence_type": "system-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 3.1；'rigidly mounting this controller onto our target robot, its pose becomes directly representative of the robot's pose' 同节可查；卡面将 HMD SLAM 句放入 summary 并说明图块插断原因，未虚构连续引文。"
+   }
+  },
+  {
+   "card_id": "2510.01607-C04",
+   "claim": "在相同 pi0 后端与相同训练流程下，具备主动 ego 感知的 ActiveUMI 策略在六个双臂任务上平均成功率 70%，显著高于固定顶视相机变体（42%）与纯腕摄 UMI 配置（26%）；在新环境中三者分别为 56%、16%、6%——头部视点可控性对遮挡与视角变化场景的鲁棒性贡献大于单纯增加固定第三视角。",
+   "stance": "support",
+   "relation": "回答'缓解手段'的观测层面分支：对 ego 采集中的遮挡失效模式，ActiveUMI 不提高手部/末端追踪精度，而是让策略学习主动选择视点以按需获取任务关键信息，从观测策略上降低遮蔽导致的可用性损失；该缓解与追踪精度正交。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 给出 in-domain 五任务逐任务与平均成功率（UMI 26% / 固定头 42% / ActiveUMI 70%）；Table 2 给出新环境对应数字（6% / 16% / 56%），其图块文本在抽取中物理位于 4.3 节内，4.4 正文复述 56%/16%/6%；4.2 正文给出两驱动假设（补偿演示者头体运动、按需获取任务关键信息）。",
+   "locator": "4.2. How Important is the Egocentric Active Per-; 4.3. Mixed Training with Teleoperated Data, Table 1",
+   "source_context": "UMI 60% 20% 10% 0% 40% 26% UMI w/ Fixed Head Camera 60% 40% 40% 20% 50% 42% ActiveUMI 90% 70% 80% 30% 80% 70%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均任务成功率（Table 1，每任务 10 次试验）",
+    "value_or_direction": "in-domain 平均 70% vs 42% vs 26%",
+    "comparator": "ActiveUMI vs Fixed Head Camera vs UMI",
+    "task_or_sample": "Bottle placing / Rope boxing / Shirt folding / Block disassembly / Take Drink from Bag（Table 1 五任务平均）；新环境对应 56%/16%/6% 见 Table 2",
+    "locator": "4.2. How Important is the Egocentric Active Per-, Table 1; 4.4 (Table 2)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 Table 1 三行扁平文本逐字拼接（抽取中文本连续）；新环境 56%/16%/6% 与 4.4 正文陈述一致；卡面未采用 Abstract 中 '44%/38%' 的相对表述以避免与表内原始数字的口径混淆。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Chi et al., Universal Manipulation Interface (UMI), RSS 2024（3.1 中作为对照系统：UMI 围绕特定不可互换夹爪构建；4.5 RPE 对比对象）",
+  "Black et al., pi0 (VLA), 2024（4.1 策略后端）"
+ ],
+ "notes": "ActiveUMI 对本综述的核心价值是 UMI 族内唯一的采集-回放末端轨迹误差定量对比（4.0mm vs 10.1mm），并展示误差来源随追踪硬件路径切换（视觉 SLAM→VR inside-out）而改变的实例。阅读时注意三处表述瑕疵：4.5 正文笔误（'RPE of UMI is 2.5x smaller than UMI'，按图 6(e) 应为 ActiveUMI）、式 2 的百分比定义与图注 mm 单位不一致、Abstract 的 44%/38% 提升与 Table 1 原始数字口径不一（绝对 pp vs 相对）。标定三件套与 DexUMI 的标定流程、FastUMI 的动捕标定形成'初始一致性'方法谱系，但其残差未量化。主动感知证据（C04）属观测层面缓解，与手部追踪精度正交，写作时勿混为一谈。"
+}

@@ -1,0 +1,351 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.23893",
+  "title": "AoE: Always-on Egocentric Human Video Collection for Embodied AI",
+  "published": "2026-02-27",
+  "url": "https://arxiv.org/abs/2602.23893",
+  "authors": [
+   "Bowen Yang",
+   "Zishuo Li",
+   "Yang Sun",
+   "Changtao Miao",
+   "Yifan Yang",
+   "Man Luo",
+   "Xiaotong Yan",
+   "Feng Jiang",
+   "Jinchuan Shi",
+   "Yankai Fu",
+   "Ning Chen",
+   "Junkai Zhao"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本批唯一给出视觉手部重建与相机轨迹定量精度的系统论文：PA-MPJPE 3.7-7.4mm、ATE<5mm、标定偏差<1%，并给出明确的质量门限（>3σ 关节速度、>5px 重投影误差）与失效模式（运动模糊、弱纹理、错位），直接覆盖精度声明、误差来源与可接受阈值三个维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "数据稀缺动机与采集范式对比（Table 1 成本/质量评级）"
+   },
+   {
+    "locator": "3.1. Hardware & Mobile Application",
+    "role": "method-or-design",
+    "purpose": "颈挂手机硬件、端侧手部检测触发录制"
+   },
+   {
+    "locator": "3.2. Automated Annotation and Quality Filtering Pipeline",
+    "role": "method-or-design",
+    "purpose": "HaWoR 重建、SLAM 位姿变换、滑窗运动学一致性、质量控制阈值"
+   },
+   {
+    "locator": "4.1. Precision of the AoE System",
+    "role": "results-or-analysis",
+    "purpose": "标定偏差、手部重建 PA-MPJPE/MPJPE/AUC、相机轨迹 ATE/ATE-S/RPE 定量结果"
+   },
+   {
+    "locator": "4.2. Real-to-Sim Transferability",
+    "role": "results-or-analysis",
+    "purpose": "AGILE 重建穿透深度 <2mm"
+   },
+   {
+    "locator": "4.3. Real-World Evaluation on Humanoid Hardware",
+    "role": "results-or-analysis",
+    "purpose": "50 Teleop + 200 AoE 下游策略增益与 Fold Scarf 失败归因"
+   },
+   {
+    "locator": "7.4. Experiment Setups",
+    "role": "method-or-design",
+    "purpose": "FLARE 未来潜变量对齐，不使用动作标签"
+   },
+   {
+    "locator": "6. Conclusion and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与局限"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2. Related Works",
+    "role": "relevant-core",
+    "purpose": "背景定位，无独立证据"
+   },
+   {
+    "locator": "3.3. Distributed System Implementation",
+    "role": "method-or-design",
+    "purpose": "工程架构，与精度问题无关"
+   },
+   {
+    "locator": "5. Ethics Statement",
+    "role": "appendix-or-supplement",
+    "purpose": "伦理声明，与证据无关"
+   },
+   {
+    "locator": "7.5. User Consent Forms and Privacy Protocols",
+    "role": "appendix-or-supplement",
+    "purpose": "隐私协议文本，与证据无关"
+   },
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表，不影响证据判定"
+   }
+  ]
+ },
+ "research_question": "如何用消费级手机与颈挂支架构建 always-on 的第一视角人类视频采集系统，并通过端云协同的自动标注与质量过滤管线把原始视频转化为可用于具身策略训练的高质量数据？",
+ "contributions": [
+  "AoE 系统：颈挂手机（<20 美元）+ 端侧手部检测触发录制 + 云端六段式自动标注管线，支持任何人任何时间任何地点的分布式采集",
+  "自动标注管线：Qwen3-VL 原子动作切分、MegaSAM 相机轨迹、HaWoR 手部 3D 重建经深度重标定与 SLAM 位姿变换到世界系、滑窗运动学一致性优化、Masquerade 式手部替换增广",
+  "定量精度验收（标定偏差 <1%、手部 PA-MPJPE 3.7-7.4mm、相机 ATE <5mm）与下游人形机器人策略增益（Close Laptop 45%→95%）"
+ ],
+ "method": {
+  "summary": "端侧轻量模型做手部检测/运动追踪/开放集识别，仅在手-物交互时触发录制并丢弃时长不足片段；云端管线：Camera2 工厂内参 → Qwen3-VL 原子动作切分（人工校验边界）→ Lingbot-Depth 深度优化 + MegaSAM 相机轨迹（针对运动模糊调鲁棒核）→ HaWoR 3D 关节重建经深度重标定，MANO 输出经 SLAM 位姿变换到世界系并用滑窗优化强制运动学一致 → Masquerade 式手部替换与背景替换增广；质量控制自动过滤运动学离群（>3σ 关节速度）与高重投影误差（>5px），5% 人工抽检 + 难负样本池回注重标注。下游用 FLARE 未来潜变量对齐从无动作标签的人类视频学习，GR00T N1.5 上跨本体微调。",
+  "assumptions": [
+   "手机工厂内参足够稳定（与离线标定偏差 <1%），可免除逐设备标定",
+   "HaWoR+MegaSAM 组合在ego视频上的厘米级重建精度足以支撑标注资产与潜变量监督",
+   "端侧触发过滤不会在源头系统性地丢失高价值交互片段"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EgoDex 测试集（约 7 小时）",
+   "Ego4D 测试集（约 6.5 小时，VITRA 标注）",
+   "自建 10 小时 RealSense L515 采集",
+   "小规模 AR 眼镜-手机配对集"
+  ],
+  "tasks": [
+   "Pick and Place",
+   "Close Laptop",
+   "Fold Scarf",
+   "Push Bowl & Pour Seeds"
+  ],
+  "embodiments": [
+   "Unitree G1 人形 + Inspire 五指手（下游评测）",
+   "采集端：颈挂智能手机（超广角后置）"
+  ],
+  "sample_or_scale": "下游每任务 50 遥操作 + 200 AoE 人类视频；精度评测跨四个数据集"
+ },
+ "evaluation": {
+  "design": "精度三轴评测（标定/手部位姿/相机轨迹）+ real-to-sim 穿透深度 + 人形真机四任务 SR/PSR 对比与 Close Laptop 数据配比消融",
+  "baselines": [
+   "50 Teleop（机器人-only）",
+   "10 teleop 稀疏基线"
+  ],
+  "metrics": [
+   "PA-MPJPE / MPJPE (mm) / AUC",
+   "ATE / ATE-S / RPE-Trans (mm) / RPE-Rot (deg)",
+   "标定偏差 (%)",
+   "穿透深度 (mm)",
+   "SR / PSR (%)"
+  ],
+  "ablations": [
+   "AoE 数据量 0/50/200 × 遥操作 10/50 配比"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "手部重建 PA-MPJPE 3.7-7.4mm、MPJPE 8.9-11.9mm、AUC 0.90-0.93；EgoDex 上较大误差归因于数据集固有的运动模糊与错位",
+   "scope": "Ego4D/EgoDex 测试集，含 w/o 与 w/ depth 两行",
+   "locator": "4.1. Precision of the AoE System, Figure 5f Table 1"
+  },
+  {
+   "finding": "相机轨迹 7-DoF 对齐后 ATE <5mm（所有数据集）；弱纹理背景使 EgoDex 的 ATE-S 退化到 16.2mm；工厂内参与离线标定偏差均值 0.64%",
+   "scope": "四数据集",
+   "locator": "4.1. Precision of the AoE System"
+  },
+  {
+   "finding": "质量控制自动过滤 >3σ 关节速度离群与 >5px 重投影误差，5% 人工抽检，失败样本进入难负样本池重标注",
+   "scope": "云端管线",
+   "locator": "3.2. Automated Annotation and Quality Filtering Pipeline"
+  },
+  {
+   "finding": "50 Teleop + 200 AoE 使 Close Laptop SR 45%→95%、Pick&Place 45%→75%、Push Bowl 0%→20%（PSR 30%→48%）；Fold Scarf 维持 10% 归因于硬件时延",
+   "scope": "Unitree G1 真机四任务",
+   "locator": "4.3. Real-World Evaluation on Humanoid Hardware, Table 2"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "Fold Scarf 上 AoE 增益未体现（维持 10% SR），作者归因于硬件时延约束阻碍了可形变物体所需的高频反应控制",
+    "locator": "4.3.1. Main Results and Comparative Analysis"
+   },
+   {
+    "limitation": "EgoDex 上的较大手部重建误差归因于数据集固有的运动模糊与错位；弱纹理背景退化 ATE-S",
+    "locator": "4.1. Precision of the AoE System"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部重建精度表的两行（w/o 与 w/ depth）在扁平化文本中与数据集的对应关系不完全明确，3.7/7.4 的归属存在解释空间",
+    "basis": "Figure 5f Table 1 的扁平文本为『3.77.4 PA-MPJPE』"
+   },
+   {
+    "boundary": "精度评测的『真值』来自数据集标注与 AR 眼镜硬件追踪，非光学动捕级真值；>3σ/>5px 门限的通过率（废片率）未报告",
+    "basis": "4.1 节评测协议描述"
+   },
+   {
+    "boundary": "下游增益来自 FLARE 潜变量对齐（不用动作标签），因此论文没有检验重建轨迹作为显式动作监督时的精度敏感性；轨迹标注的下游价值未被直接验证",
+    "basis": "7.4 Experiment Setups 的 FLARE 训练描述"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：颈挂手机第一视角视频 + HaWoR/MegaSAM 类重建栈、以潜变量对齐为下游用法的策略增强场景；精度数字依赖各数据集的成像质量（运动模糊/弱纹理会退化），且真实值基准为数据集标注/AR 眼镜而非动捕级；未验证重建轨迹直接重定向为机器人动作标签的可行性。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "本批唯一同时报告手部重建（PA-MPJPE/MPJPE/AUC）与相机轨迹（ATE/ATE-S/RPE）定量精度的系统",
+   "质量控制给出显式数值门限与闭环重标注机制",
+   "下游评测含数据配比消融与失败任务的归因讨论"
+  ],
+  "design_risks": [
+   "精度真值基准偏弱（数据集标注、AR 眼镜硬件追踪），无动捕级参照",
+   "质量门限（3σ/5px）的选取依据与废片率未报告，精度-产率权衡不可见",
+   "Table 1 的范式评级（含自身 Data Quality ★★★★✩）为主观评分"
+  ],
+  "baseline_fairness": "下游对比控制变量干净（同任务同遥操作基数）；手部重建未与 HaWoR 原版或其他 SOTA 在同协议下对比，仅与自身配置比较。",
+  "metric_validity": "PA-MPJPE/ATE 为标准指标且定义清晰；但 EgoDex 高误差归因于『数据集固有模糊与错位』意味着数字不完全反映管线本身精度。",
+  "reproducibility": "管线组件（Qwen3-VL、MegaSAM、HaWoR、Lingbot-Depth、FLARE、GR00T N1.5）均为公开模型，但组合参数与门限实现细节有限；承诺未来开源数据集。",
+  "external_validity": "评测跨 Ego4D/EgoDex/自建/AR 配对四数据集，覆盖度较好；下游限于单一人形平台四任务。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.23893-C01",
+   "claim": "AoE 云端管线的手部重建精度报告为 PA-MPJPE 3.7-7.4mm、MPJPE 8.9-11.9mm、AUC 0.90-0.93（Ego4D/EgoDex 测试集，含 w/o 与 w/ depth 配置）；EgoDex 上的较大误差被归因于数据集固有的运动模糊与错位，作者用 AR 眼镜硬件追踪做配对验证以支持其管线精度。",
+   "stance": "support",
+   "relation": "直接回答『采集端追踪方案的精度声明与失效模式』：这是视觉手部重建在 ego 视频上的罕见定量精度锚点，并明确指出运动模糊与错位是主要退化源——误差来源不在管线本身而在输入数据质量。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Figure 5f Table 1 给出两数据集 PA-MPJPE/MPJPE/AUC 数值（扁平文本为 3.7/7.4 与 8.9/11.9）；4.1 正文给出运动模糊与错位的归因及 AR 眼镜配对验证。",
+   "locator": "4.1. Precision of the AoE System",
+   "source_context": "While larger errors on EgoDex stem primarily from dataset-inherent motion blur and misalignment (Figure 5 d), validation against hardware-tracked AR glasses confirms our model’s precision (Figure 5 c).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "hand reconstruction PA-MPJPE / MPJPE (mm); keypoint AUC（手部重建误差/关键点曲线下面积）",
+    "value_or_direction": "PA-MPJPE 3.7-7.4 mm; MPJPE 8.9-11.9 mm; AUC 0.90-0.93",
+    "comparator": "Ego4D vs EgoDex test sets, w/o and w/ depth configurations",
+    "task_or_sample": "EgoDex ~7h and Ego4D ~6.5h test sets with VITRA annotations",
+    "locator": "4.1. Precision of the AoE System, Figure 5f Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值取自 Figure 5f Table 1 的扁平化文本（3.77.4 / 8.911.9 / 0.930.90 按两数据集两行解读为区间），归因语句与 4.1 正文逐字一致；claim 以区间形式给出以避免对单行归属过度解读。"
+   }
+  },
+  {
+   "card_id": "2602.23893-C02",
+   "claim": "AoE 报告相机轨迹在 7-DoF 对齐后 ATE 全数据集 <5mm，但弱纹理背景使 EgoDex 的尺度无关 ATE-S 退化至 16.2mm；手机工厂内参（Camera2 API）与离线靶标标定的偏差 <1%（均值 0.64%、标准差 0.21%），作者据此免除逐设备标定。",
+   "stance": "support",
+   "relation": "回答误差来源与传播路径：相机轨迹与内参是手部轨迹换算到世界系的上游，弱纹理场景使轨迹误差放大一个量级（<5mm→16.2mm），该误差会经 SLAM 位姿变换传播到手部世界系轨迹。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1 给出 ATE<5mm、ATE-S 16.2mm（EgoDex 弱纹理）与标定偏差 <1%（0.64%±0.21%）；3.2 说明手部 MANO 输出经 SLAM 位姿变换到世界系。",
+   "locator": "4.1. Precision of the AoE System",
+   "source_context": "Post 7-DoF alignment, the Absolute Trajectory Error (ATE) remains < 5 mm across all datasets (Table 2 of Figure 5 f). Although texture-less backgrounds in EgoDex degrade ATE-S (16.2 mm), our method maintains centimeter-level accuracy even with monocular RGB input",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "camera trajectory ATE (mm); scale-free ATE-S (mm); factory-intrinsic deviation (%)（相机轨迹绝对误差/尺度无关误差/内参偏差）",
+    "value_or_direction": "ATE < 5 mm all datasets; ATE-S degrades to 16.2 mm on texture-less EgoDex; intrinsic deviation < 1% (mean 0.64%, std 0.21%)",
+    "comparator": "offline target-based calibration; RGB-only vs RGBD input",
+    "task_or_sample": "four evaluation datasets including Ego4D, EgoDex, in-house RealSense L515",
+    "locator": "4.1. Precision of the AoE System, Figure 5f Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "ATE/ATE-S 数值与 4.1 正文一致，标定偏差与『deviate ... by < 1% (mean 0.64%, std 0.21%)』一致；传播路径的表述基于 3.2 的管线顺序（MANO 经 SLAM 位姿变换），属于机制描述而非额外实验断言。"
+   }
+  },
+  {
+   "card_id": "2602.23893-C03",
+   "claim": "AoE 的质量控制设定显式数值门限：自动过滤运动学离群（关节速度 >3σ）与高重投影误差（>5px）的样本，5% 人工抽检用于管线自适应调整，失败样本进入难负样本池重标注；端侧另丢弃时长不足的片段。",
+   "stance": "support",
+   "relation": "直接回答『可接受阈值与缓解手段』：>3σ 关节速度与 >5px 重投影误差是本文对重建轨迹质量的验收口径，难负样本池+重标注构成质量闭环；门限的通过率（废片率）未报告。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 Quality Control 段给出 >3σ/>5px 门限、5% 抽检与难负样本池机制；3.1 与附录 7.2 给出端侧时长过滤。",
+   "locator": "3.2. Automated Annotation and Quality Filtering Pipeline",
+   "source_context": "We automatically filter kinematic outliers (> 3𝜎 joint velocities) and high reprojection errors (> 5px).",
+   "evidence_type": "method",
+   "quantitative": {
+    "metric": "joint-velocity outlier threshold; reprojection-error threshold (px); manual inspection rate (%)（关节速度离群门限/重投影误差门限/人工抽检率）",
+    "value_or_direction": "> 3sigma joint velocities filtered; > 5px reprojection errors filtered; 5% manual inspection",
+    "comparator": "无对照，为管线验收门限",
+    "task_or_sample": "cloud annotation pipeline over AoE-collected egocentric videos",
+    "locator": "3.2. Automated Annotation and Quality Filtering Pipeline"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "门限数值与 3.2 原文逐字一致；claim 显式注明废片率未报告，未把门限等同于精度保证。"
+   }
+  },
+  {
+   "card_id": "2602.23893-C04",
+   "claim": "在 Unitree G1 人形真机上，50 条遥操作加 200 条 AoE 人类视频使 Close Laptop 成功率 45%→95%、Push Bowl & Pour Seeds 0%→20%（PSR 30%→48%）、Pick&Place 45%→75%；但 Fold Scarf 维持 10% 不变，作者归因于硬件时延阻碍可形变物体所需的高频反应控制。策略学习走 FLARE 未来潜变量对齐，不使用重建轨迹作动作标签。",
+   "stance": "conditional",
+   "relation": "回答『可用性』维度：厘米级重建误差的人类视频在潜变量对齐路线下可显著提升下游策略，但该路线绕开了轨迹级动作监督——AoE 证据不能支持『重建轨迹可直接重定向为机器人动作标签』；Fold Scarf 反例说明高频接触任务中硬件时延而非数据精度成为瓶颈。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 与 4.3.1 给出四任务 SR/PSR 对比与 Fold Scarf 归因；7.4 说明 FLARE 训练只用未来潜变量对齐损失 + 遥操作动作流匹配损失。",
+   "locator": "4.3. Real-World Evaluation on Humanoid Hardware; 7.4. Experiment Setups",
+   "source_context": "Notably, in Close Laptop, adding AoE data boosts SR from 45.0% to 95.0%. In the challenging Push Bowl & Pour Seeds task, where the baseline fails (0% SR), AoE inclusion enables a 20.0% SR and increases PSR from 30.0% to 48.0%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate SR / phase-wise success rate PSR (%)（任务成功率/分阶段成功率）",
+    "value_or_direction": "Close Laptop 45.0 to 95.0; Pick&Place 45.0 to 75.0; Push Bowl & Pour Seeds 0.0 to 20.0 (PSR 30.0 to 48.0); Fold Scarf unchanged at 10.0",
+    "comparator": "50 Teleop baseline vs 50 Teleop + 200 AoE human video demonstrations",
+    "task_or_sample": "four dexterous tasks on Unitree G1 with Inspire five-fingered hands, GR00T N1.5 + FLARE",
+    "locator": "4.3. Real-World Evaluation on Humanoid Hardware, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四组数值与 Table 2 及 4.3.1 正文一致；『不用轨迹作动作标签』与 7.4 的 FLARE 描述一致；claim 显式限定该证据为条件性（潜变量路线），未外推到显式重定向路线。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Zhang et al., HaWoR, arXiv 2501.02973, 2025",
+   "role": "手部 3D 重建后端"
+  },
+  {
+   "citation": "Li et al., MegaSaM, arXiv 2412.04463, 2024",
+   "role": "相机轨迹/SLAM 估计"
+  },
+  {
+   "citation": "Zheng et al., FLARE, arXiv 2505.15659, 2025",
+   "role": "无动作标签的人类视频策略学习框架"
+  },
+  {
+   "citation": "Hoque et al., EgoDex, arXiv 2505.11709, 2025",
+   "role": "精度评测基准数据集之一"
+  }
+ ],
+ "notes": "C01 的 PA-MPJPE 数值来自扁平化表格文本，以区间形式引用并在 verification 注明归属解释空间。C04 必须与『FLARE 潜变量对齐、不用轨迹标签』一起引用，否则会被误读为重建轨迹可直接驱动机器人。"
+}

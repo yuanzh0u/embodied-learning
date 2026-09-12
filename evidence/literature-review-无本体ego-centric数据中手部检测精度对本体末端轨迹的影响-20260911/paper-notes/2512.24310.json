@@ -1,0 +1,349 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2512.24310",
+  "title": "World In Your Hands: A Large-Scale and Open-source Ecosystem for Learning Human-centric Manipulation in the Wild",
+  "published": "2025-12-30",
+  "url": "https://arxiv.org/abs/2512.24310",
+  "authors": [
+   "Tars Robotics",
+   "Yupeng Zheng",
+   "Jichao Peng",
+   "Weize Li",
+   "Yuhang Zheng",
+   "Xiang Li",
+   "Yujie Jin",
+   "Julong Wei",
+   "Guanhua Zhang",
+   "Ruilin Zheng",
+   "Ming Cao",
+   "Songen Gu",
+   "Zhenhong Zou",
+   "Kaige Li",
+   "Ke Wu",
+   "Mingming Yang",
+   "Jiahao Liu",
+   "Pengfei Li",
+   "Hengjie Si",
+   "Feiyu Zhu",
+   "Wang Fu",
+   "Likun Wang",
+   "Rui Yao",
+   "Jieru Zhao",
+   "Yilun Chen",
+   "Wenchao Ding"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "dataset",
+  "relevance": {
+   "decision": "include",
+   "reason": "大规模无本体人类操作数据生态论文，自带可穿戴采集套件的手部/手腕轨迹自动标注管线、动捕验证的精度验收口径（5mm 均值）与投影相交质检流程，并做了人手数据重定向到灵巧手的 co-training 实验，直接落在综述问题的误差来源、验收阈值与下游可用性链条上。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "定位问题：现有手部操作数据集在场景多样性、模态对齐、基准上的三大缺口，以及作者声称的毫米级动作精度贡献。"
+   },
+   {
+    "locator": "2 World In Your Hands Ecosystem",
+    "role": "method-or-design",
+    "purpose": "精读 Oracle Suite 硬件（H-FPVHive/H-Glove/H-Backpack）与 IR+RGB+IMU 融合的自动标注管线，提取手腕 6D 轨迹精度声明与数据验证方法。"
+   },
+   {
+    "locator": "3 World In Your Hands Dataset",
+    "role": "data-or-setting",
+    "purpose": "确认数据规模（1045 小时、125.4k clips、10 场景、100 技能）与标注流水线构成。"
+   },
+   {
+    "locator": "4 Benchmark and Application",
+    "role": "results-or-analysis",
+    "purpose": "检查 HVL 基准与 4DGS 世界建模应用，评估与综述问题的相关性（次要）。"
+   },
+   {
+    "locator": "5 Human-centric Manipulation",
+    "role": "results-or-analysis",
+    "purpose": "精读跨本体预训练与重定向 co-training 两组真机实验的设计与成功率结果，提取人类数据精度受限但仍提升泛化的关键论述。"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者结论与贡献边界。"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "精读 A 硬件与自动标注细节（VIO+IR 在线、SfM 离线）、采集范式效率/质量对比表、D co-training 细节中关于采集精度的未来工作声明。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表对证据卡无直接贡献，跳过。"
+   }
+  ]
+ },
+ "research_question": "如何构建一个野外大规模、开源的人类中心操作数据生态（采集套件+数据集+标注/基准），使人类中心数据能提升机器人灵巧操作的泛化与成功率？",
+ "contributions": [
+  "Oracle Suite：低成本可穿戴采集套件，融合 IR/RGB/IMU 的自动标注管线输出 6D 手腕轨迹，声称毫米级平移精度（平均误差低于 5mm）。",
+  "WIYH 数据集：1045 小时、125.4k clips、10 类野外场景、100+ 技能的多模态人类操作数据。",
+  "标注与基准：400 小时原子动作指令、100k 视觉语言实例，HVL 基准与 4DGS 世界建模应用。",
+  "两组真机实验：跨本体预训练（成功率 15%→70%）与人手数据重定向 co-training（杂乱场景 8%→60%）。"
+ ],
+ "method": {
+  "summary": "自研 Oracle Suite 可穿戴套件（胸戴多模态相机 H-FPVHive、含 6 个 IMU/指尖压力/鱼眼相机的手套 H-Glove、背包计算单元），在线 VIO+IR 粗定位、离线 SfM 精修的自动标注管线输出 6D 手腕轨迹与 3D 手部骨架；数据验收采用动捕室对比测试与手部骨架-分割掩膜投影相交评分阈值过滤+人工复核；下游通过跨本体预训练（StarVLA-PI）与重定向 co-training（UMI 机器人数据+人类数据到低自由度灵巧手）验证数据效用。",
+  "assumptions": [
+   "动捕室验证的 5mm 精度可代表数据整体质量（野外精度未单独量化）。",
+   "手部骨架与手部掩膜的投影相交评分能有效代理动作标注正确性。",
+   "低自由度灵巧手重定向可以吸收人手数据的动作分布而不被精度误差主导。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "WIYH 自建数据集（1045 小时、125.4k clips、10 场景、100+ 技能）",
+   "UMI 机器人数据（co-training 基线）"
+  ],
+  "tasks": [
+   "rose insertion",
+   "gift packing",
+   "单物体与多物体杂乱场景灵巧抓取",
+   "HVL 三任务（Spatial Referring/Subtask Prediction/Completion Verification）",
+   "4DGS 重建与视频生成"
+  ],
+  "embodiments": [
+   "Oracle Suite 人类采集套件",
+   "StarVLA-PI 机器人（夹爪后训练）",
+   "低自由度灵巧手末端执行器 H"
+  ],
+  "sample_or_scale": "1045 小时、125.4k clips；跨本体预训练每任务 150 条遥操作样本、每设置 10 次测试；co-training 使用 200/500 条机器人 clips 加 800 条人类 clips。"
+ },
+ "evaluation": {
+  "design": "数据质量：动捕室手腕轨迹对比+投影相交质检；下游：跨本体预训练三设置对比（w/o、VLM、VLA pretrain）与重定向 co-training 两场景×两数据量×有无人类数据对比。",
+  "baselines": [
+   "w/o Pretrain",
+   "VLM Pretrain",
+   "robot-data-only（200/500 clips）",
+   "Teleop/DexUMI/VR 采集范式（效率与质量对比）"
+  ],
+  "metrics": [
+   "手腕轨迹平均位置误差（mm）",
+   "投影相交评分阈值",
+   "任务成功率 SR（%）",
+   "HVL 准确率",
+   "PSNR/SSIM/LPIPS/AbsRel/δ1",
+   "VBench 四维指标"
+  ],
+  "ablations": [
+   "预训练类型消融（VLM vs VLA vs 无）",
+   "机器人数据量消融（200 vs 500 clips）",
+   "有无人类数据 co-training 消融"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Oracle Suite 自动标注在动捕室受控环境下取得平均 5mm 手腕位置误差；野外环境精度未单独报告。",
+   "scope": "动捕室验证设置",
+   "locator": "2.2 Data Validation System"
+  },
+  {
+   "finding": "人类中心数据运动精度受限，但其动作分布多样性仍提升策略对未见初始状态的泛化：杂乱场景 co-training 成功率 8%→60%（+52pp），单物体场景 43.3%→56.7%（+13.4pp）。",
+   "scope": "低自由度灵巧手重定向 co-training 实验",
+   "locator": "5.2 Results and In-depth Discussion"
+  },
+  {
+   "finding": "VR 手部追踪仅提供 2D 手部骨架且受视觉遮挡影响；Oracle Suite 在遮挡下仍提供准确 3D 手部骨架。",
+   "scope": "采集范式对比",
+   "locator": "Appendix"
+  },
+  {
+   "finding": "部分任务所有方法成功率持续偏低，作者将“进一步提高人类数据采集精度”列为未来研究方向。",
+   "scope": "co-training 难任务",
+   "locator": "Appendix"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "为提升可及性与可复现性，高保真仿真环境仍在开发中，计划未来版本发布。",
+    "locator": "1 Introduction"
+   },
+   {
+    "limitation": "某些任务上所有方法成功率持续偏低，需进一步提高人类数据的采集精度并设计更好的人-机知识迁移算法。",
+    "locator": "Appendix"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "5mm 精度声明仅在动捕室受控环境验证；野外 1045 小时数据的实际手腕/手指误差分布未量化，野外精度只能由投影相交质检间接保证。",
+    "basis": "2.2 节验证实验设置与 3 节数据统计中均无野外误差数值。"
+   },
+   {
+    "boundary": "跨本体预训练每设置仅 10 次测试、co-training 未报告方差与每任务试验次数，成功率差值的统计稳健性未知。",
+    "basis": "5.1 节说明每任务每设置测试 10 次；Table 5 无置信区间。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于：野外人类操作场景下可穿戴套件采集的手腕/手部轨迹数据；低自由度灵巧手抓取与两个夹爪后训练任务；成功率指标；精度验证在动捕室进行。不能直接外推到纯视觉无标记手部追踪的误差水平、全自由度灵巧手（如五指高自由度）重定向、或力/接触密集型操作任务。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "精度声明有动捕室对照验证而非仅自报；数据验收有双通道（动捕测试+投影相交阈值+人工复核）。",
+   "下游验证同时覆盖预训练与重定向 co-training 两条使用路径，场景含遮挡/高度/位姿变化。",
+   "公开承认人类数据精度受限，并将其与分布多样性的补偿作用区分开。"
+  ],
+  "design_risks": [
+   "野外实际追踪精度未量化，5mm 数字可能被读者误读为全数据集精度。",
+   "co-training 未分离手腕位姿误差与手指姿态误差对重定向的各自贡献。",
+   "效率对比（720 vs 150 clips/天）自报且无第三方复现。"
+  ],
+  "baseline_fairness": "跨本体预训练的三种设置使用相同后训练数据与测试协议，公平；采集范式对比（Teleop/DexUMI/VR）以星级与单日 clips 数给出，颗粒度粗，属于作者自评。",
+  "metric_validity": "5mm 平均位置误差直接测量手腕轨迹，与重定向末端轨迹精度高度相关；成功率是部署效用指标；但未报告旋转误差、手指关节误差与轨迹平滑度，对手部检测精度的刻画不完整。",
+  "reproducibility": "承诺开源数据与硬件设计；管线细节（VIO+IR 在线、SfM 离线）有附录描述；但阈值取值、人工复核比例未给出，复现数据验收口径需自行标定。",
+  "external_validity": "1045 小时×10 场景覆盖广，但全部由熟练操作者按标准作业流程执行；对非熟练操作、极端光照/遮挡条件下的手部追踪精度与下游效用未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2512.24310-C01",
+   "claim": "WIYH 的 Oracle Suite 自动标注管线（IR+RGB+IMU 融合）输出的手腕轨迹在动捕室受控验证中取得平均约 5mm 的位置误差，作者以此作为数据集动作标注的精度验收依据。",
+   "stance": "conditional",
+   "relation": "支持综述命题“无本体人类数据可达到毫米级手腕轨迹标注”，但附带条件：该精度数字来自动捕室受控环境，而非野外采集全程。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "2.2 节明确给出动捕室对比测试：Oracle Suite 轨迹与动捕轨迹的平均位置误差 5mm；图 3 说明此为受控实验室环境下的平均平移误差。",
+   "locator": "2.2 Data Validation System",
+   "source_context": "Our Oracle Suite achieves an average position error of 5 mm in the motion capture room environment.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "手腕轨迹平均位置误差（相对动捕真值）",
+    "value_or_direction": "5 mm（平均）；图 3 表述为 mean translational error below 5 mm",
+    "comparator": "光学动作捕捉系统轨迹真值",
+    "task_or_sample": "动捕室内佩戴 H-Gloves 完成与 WIYH 数据集相同的操作",
+    "locator": "2.2 Data Validation System"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "2.2 节正文与图 3 图注均给出 5mm/below 5mm 的受控环境表述，claim 未将其外推为野外精度，措辞与原文一致。"
+   }
+  },
+  {
+   "card_id": "2512.24310-C02",
+   "claim": "WIYH 对手部动作标注质量采用可操作的验收口径：将 H-Gloves 的 3D 手部骨架投影到胸戴相机视角，与分割得到的手部掩膜计算相交评分，低于预设阈值的样本被标记并经人工复核后过滤。",
+   "stance": "support",
+   "relation": "支持综述命题“数据生态可通过投影一致性阈值+人工复核对手部标注质量做分级验收”，提供了一个具体的误差筛查机制。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "2.2 节描述了投影相交质检流程：手部掩膜与骨架投影求交，低分样本进入人工复核与过滤，图 3 图注复述该阈值-复核机制。",
+   "locator": "2.2 Data Validation System",
+   "source_context": "We compute an intersection score and flag samples whose score falls below a predefined threshold; these cases are then manually reviewed and filtered to ensure data quality.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 2.2 节与图 3 图注，claim 仅复述该机制而未声称具体阈值数值或过滤比例（原文未报告），范围一致。"
+   }
+  },
+  {
+   "card_id": "2512.24310-C03",
+   "claim": "在多物体杂乱场景的灵巧抓取任务中，仅用机器人数据训练的策略成功率最高 8%，混入 800 条重定向人类中心数据后成功率升至 60%（+52 个百分点）；单物体场景同样观察到 +13.4 个百分点的提升。",
+   "stance": "support",
+   "relation": "支持综述命题“手部轨迹精度有限的人类数据经重定向后仍能显著提升本体末端任务的可用性”，量化了下游收益。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节与表 5 报告：杂乱场景 500 条机器人数据成功率 8.0%，加 800 条人类数据后 60.0%（+52.0）；单物体场景 43.3%→56.7%（+13.4）。",
+   "locator": "5.2 Results and In-depth Discussion",
+   "source_context": "Simply increasing data quantity from 200 clips to 500 clips yields marginal performance improvement from 0% to 8%. However, after co-training with human-centric data, the success rate increases by 52%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "任务成功率（SR）",
+    "value_or_direction": "杂乱场景 8.0%→60.0%（+52pp）；单物体场景 43.3%→56.7%（+13.4pp）",
+    "comparator": "仅用等量/加量机器人数据（200/500 clips）训练的策略",
+    "task_or_sample": "低自由度灵巧手抓取：单物体场景与多物体杂乱场景（变化初始位姿、物体高度、物体位姿、遮挡）",
+    "locator": "5.2 Results and In-depth Discussion"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值与表 5 四组配置（200/0、200/800、500/0、500/800）及 5.2 节正文 +52%、+13% 的陈述一致；claim 限定在该两场景，未外推。"
+   }
+  },
+  {
+   "card_id": "2512.24310-C04",
+   "claim": "作者明确指出人类中心数据的运动精度是有限的，其下游收益来自动作分布的多样性而非精度：多样性增强了策略对未见初始状态的泛化能力。",
+   "stance": "conditional",
+   "relation": "限定综述命题“提高手部检测精度是提升重定向效用的唯一途径”——在分布多样性充足时，有限精度数据仍有正收益，精度与多样性可解耦。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "5.2 节结果讨论中作者直接陈述：尽管人类中心数据运动精度有限，其多样动作分布增强了对未见初始状态的泛化。",
+   "locator": "5.2 Results and In-depth Discussion",
+   "source_context": "Although the motion precision in the human-centric data is limited, its diverse action distribution en- hances the policy’s generalization capability to unseen initial states.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 5.2 节原文；claim 保留了作者“limited precision”的限定，未将其改写为精度无影响。"
+   }
+  },
+  {
+   "card_id": "2512.24310-C05",
+   "claim": "在采集范式对比中，基于 VR 的手部追踪只提供 2D 手部骨架且受视觉遮挡影响，而融合 IMU/IR/鱼眼视觉的 Oracle Suite 在遮挡下仍能提供准确的 3D 手部骨架。",
+   "stance": "limit",
+   "relation": "限制综述命题“消费级纯视觉手部追踪足以为重定向提供可靠 3D 手部数据”——指出遮挡与 2D 输出是纯视觉方案的主要误差来源，多模态传感是缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 A.2 质量对比：VR 手部追踪仅 2D 骨架且受遮挡影响；Oracle Suite 提供遮挡下准确的 3D 骨架。",
+   "locator": "Appendix",
+   "source_context": "Quality: VR-based hand tracking only provides 2D hand skeletons and suffers from visual occlusion. In contrast. In comparison, the Oracle Suite provides accurate 3D hand skeletons, even if under visual occlusion.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自附录 A.2；claim 是对作者对比结论的复述，未量化“accurate”的程度（原文此处也未给数值），范围一致。"
+   }
+  },
+  {
+   "card_id": "2512.24310-C06",
+   "claim": "在部分灵巧操作任务上所有方法的成功率持续偏低，作者将“进一步提高人类数据的采集精度”与“设计更好的人机知识迁移算法”并列为关键未来方向，即承认当前采集精度是部分任务的瓶颈之一。",
+   "stance": "gap",
+   "relation": "支持综述命题“手部/手腕采集精度对重定向后轨迹可用性的影响仍是未解决问题”，提供了一个数据生态侧自认的开放缺口。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 D 在分析各任务成功率与失败原因后指出：部分任务所有方法成功率持续偏低，未来需提高人类数据采集精度并改进迁移算法。",
+   "locator": "Appendix",
+   "source_context": "the consistently low success rates across all methods in certain tasks highlight important directions for future research: how to further improve the collection precision of human data and how to design efficient algorithms that can better transfer knowledge from human data to dexterous manipulation tasks.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自附录 D；claim 将其定位为作者自认的研究缺口而非实验结论，未夸大因果。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "数据生态类论文，对手部标注精度有罕见的动捕室定量验收（5mm）与投影相交质检流程；但野外精度未量化、手指级误差未单独报告。与本批次 2605.05945（消费级采集）形成精度-成本对照。"
+}

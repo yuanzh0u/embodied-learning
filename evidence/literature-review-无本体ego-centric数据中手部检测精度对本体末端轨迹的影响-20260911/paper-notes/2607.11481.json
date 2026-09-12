@@ -1,0 +1,524 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.11481",
+  "title": "Towards Human-level Dexterous Teleoperation",
+  "published": "2026-07-13",
+  "url": "https://arxiv.org/abs/2607.11481",
+  "authors": [
+   "Puhao Li",
+   "Zeyuan Chen",
+   "Yingying Wu",
+   "Pengkun Wei",
+   "Yuyang Li",
+   "Tianyu Wang",
+   "Jiaxiao Shi",
+   "Mingrui Yu",
+   "Baoxiong Jia",
+   "Song-Chun Zhu",
+   "Tengyu Liu",
+   "Siyuan Huang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "遥操作系统中手部追踪→末端控制链的对照证据：作者刻意选用高精度 NOKOV 动捕（而非视觉手部追踪）作输入源，证明在高精度追踪下纯运动学重定向仍失败于接触密集任务——界定了手部追踪精度收益的上限；并给出追踪噪声鲁棒阈值（±5mm 指尖噪声等）这一稀缺定量证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题：现有灵巧遥操作无法达到人手级 in-hand 灵巧性；运动学重定向忽视接触力导致滑脱，生成式动作先验引入轨迹漂移。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位三类遥操作路线（运动学重定向/学习先验/参考驱动 RL）与各自的误差形态。"
+   },
+   {
+    "locator": "3 TELEDEXTER",
+    "role": "method-or-design",
+    "purpose": "co-tracking 问题形式化：操作者指定指尖位置+物体位姿目标，RL 控制器执行接触动力学。"
+   },
+   {
+    "locator": "3.1 Learning a Co-tracking Controller",
+    "role": "method-or-design",
+    "purpose": "连续子目标追踪、混合奖励、课程学习、随机动作掩码与域随机化（含观测噪声与延迟注入）。"
+   },
+   {
+    "locator": "3.2 Hand-Object Reference Motion Construction",
+    "role": "method-or-design",
+    "purpose": "两阶段几何感知重定向；Curobo 时序平滑项抑制采集抖动。"
+   },
+   {
+    "locator": "3.3 Real-world Teleoperation Deployment",
+    "role": "method-or-design",
+    "purpose": "部署架构：腕部 IK + 指尖/物体位姿构成 co-tracking 目标，30Hz 闭环。"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "实验设计总览。"
+   },
+   {
+    "locator": "4.1 Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "Franka FR3 + LeapHand/SharpaWave 双本体；NOKOV 动捕实时追踪手与物体；30Hz。"
+   },
+   {
+    "locator": "4.2 Dexterous Teleoperation Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "7 任务 SR/TP 对比（Tab.1-2）：运动学重定向基线在接触密集阶段崩溃。"
+   },
+   {
+    "locator": "4.3 From Teleoperation to Autonomy",
+    "role": "results-or-analysis",
+    "purpose": "遥操作数据训练 Diffusion Policy 的下游可用性（50 演示 → 40-73% SR）。"
+   },
+   {
+    "locator": "4.4 Ablation Studies",
+    "role": "results-or-analysis",
+    "purpose": "稀疏子目标 vs 密集逐帧追踪；随机动作掩码消融。"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与贡献复述。"
+   },
+   {
+    "locator": "6 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述 limitation：物体专属控制器；部署依赖动捕，换成无标记视觉追踪可降低门槛。"
+   },
+   {
+    "locator": "Appendix A Extended Results and Analysis",
+    "role": "appendix-or-supplement",
+    "purpose": "any-to-any 重定位容差（2cm/20°）与失败模式分类（交互扰动/接触卡死/追踪停滞）。"
+   },
+   {
+    "locator": "Appendix B.3 Hardware and Teleoperation System",
+    "role": "appendix-or-supplement",
+    "purpose": "NOKOV 动捕配置：离线稠密标记 24 关节+腕部 SE(3)+物体 6D；在线仅腕部+指尖标记，30Hz。"
+   },
+   {
+    "locator": "Appendix C.5-C.8",
+    "role": "appendix-or-supplement",
+    "purpose": "几何感知重定向损失权重、参考数据采集（150 轨迹/物体，30Hz）、域随机化范围（指尖 ±5mm 等）与动作掩码机制。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Appendix C.1-C.4, C.9",
+    "role": "appendix-or-supplement",
+    "reason": "观测/奖励/课程/超参的完整数值表，与手部追踪精度主问题弱相关，仅抽查容差相关条目。"
+   },
+   {
+    "locator": "Appendix D Baseline Implementation Details; E Autonomous Policy Details",
+    "role": "appendix-or-supplement",
+    "reason": "基线复现与 DP 训练超参细节，已把握其对照逻辑，不逐行精读。"
+   }
+  ]
+ },
+ "research_question": "如何让灵巧手遥操作达到人手级 in-hand 灵巧性（重定向、手指步态、工具使用），同时保持可部署性与数据采集价值？",
+ "contributions": [
+  "TELEDEXTER 手-物 co-tracking 控制器：操作者给定指尖位置与物体位姿目标，单阶段 RL 训练的低层控制器执行多接触动力学。",
+  "连续子目标 co-tracking 公式 + 混合稀疏/稠密奖励，免逐帧模仿带来的物理不可行约束。",
+  "几何感知两阶段重定向（向量对齐 + 物体网格表面吸附/防穿透/Curobo 时序平滑）。",
+  "随机动作掩码 + 系统域随机化实现零样本 sim-to-real；7 任务平均 75.2% SR，基线近乎全败。",
+  "遥操作演示可直接训练自主 Diffusion Policy（50 演示，40.0-73.3% SR）。"
+ ],
+ "method": {
+  "summary": "离线：NOKOV 动捕采集人-物交互轨迹（150 条/物体，30Hz），经向量重定向+几何感知优化（表面吸附/防穿透/自碰撞/时序平滑）转为机器人参考运动；在线：动捕实时流（腕部+指尖标记手套 + 物体刚体标记，30Hz）中腕部位姿经 IK 驱动 Franka 手臂，指尖位置与物体 6D 位姿构成 co-tracking 目标，由 RL 控制器输出关节位置命令。训练注入感知噪声（指尖/物体 ±5mm、姿态 ±2°）与 2 帧观测延迟队列，并用随机动作掩码（p=0.15，冻结 1-10 帧）正则化。",
+  "assumptions": [
+   "动捕系统提供的腕部/指尖/物体位姿足够准确（亚厘米级），视觉追踪精度问题被作者外置为 limitation。",
+   "每个物体需单独采集参考数据并训练专属控制器。",
+   "抓取前趋近阶段由运动学重定向处理，接触建立后切换到 co-tracking 控制器。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "每物体 150 条徒手人-物交互动捕轨迹（20s/条，30Hz，约 50 分钟/物体）"
+  ],
+  "tasks": [
+   "3 个重定向任务（Cylinder/Cuboid/BunnyReorient）",
+   "4 个长程工具使用任务（HammerUse/BrushSweep/ScrewdriverUse/BulbReplace）",
+   "自主策略：BulbInstall/HammerDriver/BrushForward"
+  ],
+  "embodiments": [
+   "Franka FR3 + SharpaWave（5 指 22 DoF）",
+   "Franka FR3 + LeapHand（4 指 16 DoF）"
+  ],
+  "sample_or_scale": "遥操作每方法每任务 15 次试验；自主策略每任务 50 条演示、15 次评估试验；RL 训练 ~10^10 环境步、62,400 并行环境、4×RTX 5090。"
+ },
+ "evaluation": {
+  "design": "真实机器人 7 任务 × 双本体对照 4 个基线（DexRT/GeoRT/DexGen/SimToolReal），SR + 任务进度 TP 双指标；any-to-any 重定位压力测试；模拟内稀疏/密集追踪消融与真实世界动作掩码消融；遥操作数据训练 Diffusion Policy 的下游验证。",
+  "baselines": [
+   "DexRT（向量运动学重定向）",
+   "GeoRT（神经几何重定向）",
+   "DexGen（生成式动作先验）",
+   "SimToolReal（物体中心 sim-to-real 工具策略，非遥操作）"
+  ],
+  "metrics": [
+   "成功率 SR",
+   "任务进度 TP",
+   "any-to-any 连续成功数与 per-target SR（容差 2cm/20°）",
+   "episode 长度与连续子目标数（消融）"
+  ],
+  "ablations": [
+   "连续子目标追踪 vs 密集逐帧追踪（模拟）",
+   "随机动作掩码（真实，3 任务）",
+   "课程学习与 SAPG vs PPO（附录）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "TELEDEXTER 平均 75.2% SR / 87.1% TP；所有基线近乎全败（DexRT 5.7/37.6，GeoRT 0.0/28.5，DexGen 0.0/25.0），且失败集中于首个需要 in-hand 重定向或手指步态的接触密集阶段。",
+   "scope": "7 任务 × 15 次/方法，SharpaWave，同一 NOKOV 动捕接口",
+   "locator": "4.2 Dexterous Teleoperation Evaluation, Tab. 1"
+  },
+  {
+   "finding": "训练注入的感知噪声与延迟预算：指尖位置 ±5mm、物体位置 ±5mm、物体姿态 ±2°、观测延迟 2 帧队列（采样概率 0.5）。",
+   "scope": "RL 训练域随机化范围（Tab. 9），零样本迁移到真实系统",
+   "locator": "References (Appendix C.7 Domain Randomization, Tab. 9)"
+  },
+  {
+   "finding": "作者承认部署依赖动捕进行实时手-物位姿估计，认为换成无标记视觉追踪可降低部署门槛。",
+   "scope": "limitation 陈述，未给出视觉追踪不可用的定量证据",
+   "locator": "6 Limitations"
+  },
+  {
+   "finding": "50 条遥操作演示训练的 Diffusion Policy 在 BulbInstall/HammerDriver/BrushForward 上达 46.7%/73.3%/40.0% SR。",
+   "scope": "3 任务 × 15 次试验，RGB（第三人称+腕部）条件",
+   "locator": "4.3 From Teleoperation to Autonomy, Tab. 3"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "控制器是物体专属的：换新物体需要重新采集人-物交互数据并训练专门策略。",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "真实部署依赖动捕系统进行实时手-物位姿估计；换成无标记视觉追踪将降低部署门槛并扩大适用性。",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "三类失败模式：工具-环境冲击（交互扰动）、手指卡死（接触转换 jam）、缺触觉导致的追踪停滞。",
+    "locator": "References (Appendix A.4 TELEDEXTER Failure Analysis)"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "本文的高成功率建立在动捕级追踪精度上，不能外推到视觉手部追踪；作者将视觉追踪列为未来工作，意味着视觉追踪的精度/稳定性尚未被证明能支撑该控制回路。",
+    "basis": "4.1 与 B.3 明确全部遥操作评估使用 NOKOV 动捕；6 Limitations 把替换为视觉追踪描述为降低门槛的方向而非已验证能力。"
+   },
+   {
+    "boundary": "75.2% SR 未报告操作者间方差；学习曲线与操作者熟练度对数据质量的影响未测量。",
+    "basis": "4.2 协议仅说明每方法每任务 15 次试验，未披露操作者人数与训练时长。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：动捕级高精度手-物位姿输入 + 单臂灵巧手 + 已知物体的接触密集 in-hand 操作数据采集。不适用于：无标记视觉手部追踪场景（未验证）、物体泛化（每物体专属控制器）、以及需要触觉闭环的重抓恢复（追踪停滞失败模式）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "双本体（22-DoF SharpaWave 与 16-DoF LeapHand）与 7 任务覆盖重定向+长程工具使用，SR/TP 双指标定位失败阶段。",
+   "所有方法共享同一动捕遥操作接口与硬件，基线失败可归因于控制范式而非追踪源差异。",
+   "域随机化给出明确的感知噪声/延迟数值范围，是稀缺的『追踪噪声可接受阈值』型证据。"
+  ],
+  "design_risks": [
+   "DexGen 无官方实现，作者复现时替换了关键中间策略，基线强度存疑。",
+   "未报告操作者间方差与遥操作延迟预算（30Hz 回路的端到端时延未剖析）。",
+   "追踪噪声容差来自训练域随机化设计而非真实追踪误差测量，二者等价性是假设。"
+  ],
+  "baseline_fairness": "DexRT/GeoRT 用官方代码与作者硬件公平部署；DexGen 为作者复现（中间策略被替换为本文控制器），公平性中等；SimToolReal 明确标注非遥操作方法。",
+  "metric_validity": "SR/TP 是任务级离散指标，不直接度量末端轨迹误差；any-to-any 测试的 2cm/20° 容差提供了任务级可接受阈值的间接锚点。全文无手部追踪误差毫米级测量。",
+  "reproducibility": "任务定义、奖励参数、域随机化范围、超参全面披露（附录 B-E）；动捕硬件门槛高但配置描述具体，可复现性较好。",
+  "external_validity": "结论限于动捕输入与单臂双灵巧手；对视觉追踪 ego-centric 场景的外推只能作为『追踪精度充足时瓶颈在接触动力学』的界定性证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.11481-C01",
+   "claim": "在同一 NOKOV 动捕追踪接口与相同硬件下，TELEDEXTER 在 7 个灵巧任务上达 75.2% 平均 SR / 87.1% 平均 TP，而纯运动学重定向基线（DexRT 5.7/37.6、GeoRT 0.0/28.5）与生成式先验基线（DexGen 0.0/25.0）近乎全败，失败集中于首个接触密集的 in-hand 重定向/手指步态阶段。",
+   "stance": "support",
+   "relation": "界定『手部追踪精度→末端轨迹可用性』的收益上限：当追踪精度已达动捕级（所有方法共享），瓶颈从追踪精度转移到接触动力学先验——更高的手部追踪精度无法单独挽救接触密集任务。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 正文给出 75.2/87.1 与基线近乎全败的对比；Tab. 1 逐格列出各方法 SR/TP；阶段分析指出基线在首个接触密集阶段崩溃。",
+   "locator": "4.2 Dexterous Teleoperation Evaluation, Tab. 1",
+   "source_context": "As shown in Tab. 1, TELEDEXTER achieves 75.2% average SR and 87.1% average TP across all seven tasks, while all baselines near-uniformly fail. On the reorienta- tion tasks, TELEDEXTER achieves 66.7–80.0% SR by executing dynamic in-hand reorientation through learned contact strategies. In contrast, kinematic retargeting methods (DexRT, GeoRT) rarely progress beyond the initial pick-up stage, as they lack the dynamics prior needed for contact- rich in-hand manipulation.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (SR) / task progress (TP) 任务成功率与进度",
+    "value_or_direction": "TELEDEXTER 75.2% SR / 87.1% TP average",
+    "comparator": "DexRT 5.7/37.6, GeoRT 0.0/28.5, DexGen 0.0/25.0 (same NOKOV MoCap interface 同一动捕追踪)",
+    "task_or_sample": "7 dexterous tasks on Franka FR3 + SharpaWave, 15 trials per method per task",
+    "locator": "4.2 Dexterous Teleoperation Evaluation, Tab. 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "75.2/87.1 与基线数值逐字见于 4.2 正文及 Tab. 1『Average 5.7 / 37.6 0.0 / 28.5 0.0 / 25.0 ... 75.2 / 87.1』行；共享动捕接口由 4.1『We use a NOKOV MoCap system...For all methods』与附录 D『share the same teleoperation interface』支撑；claim 未把基线失败归因于追踪精度。"
+   }
+  },
+  {
+   "card_id": "2607.11481-C02",
+   "claim": "作者明确承认 TELEDEXTER 的真实部署依赖动捕系统进行实时手-物位姿估计，并将『替换为无标记视觉追踪系统』列为降低部署门槛、扩大适用性的未来方向，而非已验证能力。",
+   "stance": "limit",
+   "relation": "限定该系统结论对视觉 ego-centric 场景的迁移性：达到 75.2% SR 的演示是在动捕级追踪精度下取得的；视觉手部追踪能否支撑同等质量的遥操作回路仍属开放问题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 6 节 Limitations 第二段逐字陈述对动捕的依赖与无标记视觉追踪作为未来方向。",
+   "locator": "6 Limitations",
+   "source_context": "Our real-world deployment relies on a motion-capture system for real-time hand and object pose estimation. Replacing this with a markerless, vision-based tracking system would significantly lower the barrier to deployment and broaden the practical applicability of the framework.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配第 6 节；claim 严格限定在作者陈述的依赖关系与未来方向上，未推断视觉追踪一定不可行。"
+   }
+  },
+  {
+   "card_id": "2607.11481-C03",
+   "claim": "TELEDEXTER 训练时向观测注入指尖位置 ±5mm、物体位置 ±5mm、物体姿态 ±2° 的均匀噪声与 2 帧观测延迟队列（采样概率 0.5），并随机化关节位置高斯噪声 σ=0.1；在此噪声预算下训练的控制器零样本迁移到真实遥操作，给出了一组可复现的『追踪/感知噪声可接受阈值』参考值。",
+   "stance": "support",
+   "relation": "支持『可接受阈值』问题：该文以域随机化范围形式给出手部追踪类感知噪声的工程预算——指尖位置噪声 ±5mm、2 帧延迟下系统仍达 75% 级成功率。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 Tab. 9 逐项列出 sensing noise 与 observation latency 的随机化范围；C.7 说明其目的是容忍 sim-to-real 感知差距。",
+   "locator": "References (Appendix C.7 Domain Randomization, Tab. 9)",
+   "source_context": "Sensing noise joint position q t additive Gaussian σ = 0.1 fingertip position additive uniform ±5 mm object position additive uniform ±5 mm object orientation additive uniform ±2 ◦ Observation latency queue size constant 2 frames queue sampling probability constant 0.5",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "sensing noise / observation latency randomization ranges 感知噪声与延迟随机化范围",
+    "value_or_direction": "fingertip position ±5 mm, object position ±5 mm, object orientation ±2°, latency queue 2 frames (p=0.5), joint noise σ=0.1",
+    "comparator": "noise-free simulator observations 无噪声仿真观测",
+    "task_or_sample": "RL training of co-tracking controller (Isaac Gym, ~62,000 parallel envs), zero-shot real deployment",
+    "locator": "References (Appendix C.7 Domain Randomization, Tab. 9)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 Tab. 9 Sensing noise/Observation latency 行的逐字拼接（归一化后精确匹配 References 表面内的附录文本）；C.7 首句『we randomize...sensing noise, and observation latency to tolerate the sim-to-real gap』支撑其用途定性；claim 将其表述为训练预算而非实测追踪误差，措辞未越界。"
+   }
+  },
+  {
+   "card_id": "2607.11481-C04",
+   "claim": "即使在动捕采集端，TELEDEXTER 的几何感知重定向仍需引入 Curobo 时序平滑能量项（对关节速度/加速度/加加速度惩罚）来抑制采集抖动（capture jitter），说明采集噪声沿参考轨迹传导、必须在重定向阶段显式压制。",
+   "stance": "support",
+   "relation": "支持『误差来源：采集抖动进入参考轨迹；缓解手段：重定向阶段时序平滑正则』——与消费级追踪（Vision Pro）自遮挡抖动同类但量级更小的噪声源。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 末段逐字说明 L_smooth 采用 Curobo 时序平滑能量以抑制 capture jitter；C.5 给出该能量项的构成（速度 log-cosh + 加速度/加加速度 ℓ2）。",
+   "locator": "3.2 Hand-Object Reference Motion Construction",
+   "source_context": "L smooth applies the Curobo [40] temporal smoothness energy on q 1:T to suppress capture jitter.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 3.2（数学排版空白归一化后精确）；『capture jitter』一词直接来自原文，claim 关于能量项构成的补充逐字见于附录 C.5『a log-cosh penalty on the velocity, a squared ℓ2 penalty on the acceleration, and a squared ℓ2 penalty on the jerk』。"
+   }
+  },
+  {
+   "card_id": "2607.11481-C05",
+   "claim": "any-to-any 重定位压力测试以物体位置误差 <2cm 且旋转误差 <20° 作为目标到达判据；部署后的控制器在该判据下于 Cylinder 上连续到达 41.1 个随机目标、per-target 成功率 97.6%（Cuboid 为 12.1 个、92.3%）。",
+   "stance": "conditional",
+   "relation": "为『可接受阈值』提供任务级锚点：2cm/20° 是该系统实际采用的任务成功容差；同时说明阈值下的成功率依赖物体几何（连续曲面 vs 棱角）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 A.1 给出判据（2cm/20° 同时满足）、15 次/物体协议与结果（41.1/97.6% vs 12.1/92.3%），并归因于物体几何差异。",
+   "locator": "References (Appendix A.1 Any-to-Any Reposition Evaluation, Tab. 6)",
+   "source_context": "A target is counted as reached when the object position error falls below 2 cm and the object rotation error falls below 20 ◦ simultaneously. A trial terminates when (i) the object slips out of the hand, or (ii) the active target has not been reached for 20 s.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "any-to-any per-target success rate / consecutive successes（容差 2 cm & 20°）",
+    "value_or_direction": "Cylinder 97.6% per-target SR, 41.1 consecutive; Cuboid 92.3%, 12.1 consecutive",
+    "comparator": "Cylinder vs Cuboid object geometry 物体几何对照",
+    "task_or_sample": "LeapHand any-to-any reposition stress test, 15 trials per object",
+    "locator": "References (Appendix A.1 Any-to-Any Reposition Evaluation, Tab. 6)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "判据引文逐字匹配（20◦ 跨行排版已按原文保留）；结果数值『41.1 consecutive targets...97.6%』『12.1 consecutive successes, 92.3%』逐字见于 A.1 结果段；claim 限定在该压力测试协议内。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": null,
+   "reference": "[5] Y. Qin et al. AnyTeleop. arXiv:2307.04577, 2023.",
+   "reason": "DexRT 基线的向量重定向来源，运动学映射范式的代表。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[13] Z.-H. Yin et al. DexterityGen. arXiv:2502.04307, 2025.",
+   "reason": "DexGen 基线，其生成式先验的级联轨迹漂移是本文对照的关键误差形态。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Dexterous teleoperation results on SharpaWave. Each cell: SR / TP (%; higher is better).",
+   "section": "4.2 Dexterous Teleoperation Evaluation",
+   "rows": [
+    [
+     "Task",
+     "DexRT",
+     "GeoRT",
+     "DexGen",
+     "SimToolReal†",
+     "SimToolReal‡",
+     "TELEDEXTER"
+    ],
+    [
+     "CylinderReorient",
+     "6.7 / 37.8",
+     "0.0 / 24.4",
+     "0.0 / 31.1",
+     "—",
+     "—",
+     "80.0 / 86.7"
+    ],
+    [
+     "CuboidReorient",
+     "26.7 / 51.1",
+     "0.0 / 33.3",
+     "0.0 / 28.9",
+     "—",
+     "—",
+     "80.0 / 86.7"
+    ],
+    [
+     "BunnyReorient",
+     "0.0 / 35.6",
+     "0.0 / 31.1",
+     "0.0 / 26.7",
+     "—",
+     "—",
+     "66.7 / 77.8"
+    ],
+    [
+     "HammerUse",
+     "0.0 / 26.7",
+     "0.0 / 30.5",
+     "0.0 / 26.7",
+     "0.0 / 27.6",
+     "20.0 / 36.2",
+     "66.7 / 86.7"
+    ],
+    [
+     "BrushSweep",
+     "0.0 / 39.0",
+     "0.0 / 29.5",
+     "0.0 / 8.6",
+     "26.7 / 41.9",
+     "0.0 / 5.7",
+     "73.3 / 89.5"
+    ],
+    [
+     "ScrewdriverUse",
+     "6.7 / 37.3",
+     "0.0 / 25.3",
+     "0.0 / 33.3",
+     "0.0 / 17.3",
+     "0.0 / 20.0",
+     "73.3 / 86.7"
+    ],
+    [
+     "BulbReplace",
+     "0.0 / 35.6",
+     "0.0 / 25.6",
+     "0.0 / 20.0",
+     "—",
+     "—",
+     "86.7 / 95.6"
+    ],
+    [
+     "Average",
+     "5.7 / 37.6",
+     "0.0 / 28.5",
+     "0.0 / 25.0",
+     "8.9 / 28.9",
+     "6.7 / 20.6",
+     "75.2 / 87.1"
+    ]
+   ],
+   "usage": "作者用该表证明同一追踪接口下控制范式（而非追踪精度）决定接触密集任务成败。"
+  },
+  {
+   "table_id": "T9",
+   "caption": "Domain randomization ranges (hand dynamics, object physics, external force, sensing noise, observation latency, initial state).",
+   "section": "References (Appendix C.7)",
+   "rows": [
+    [
+     "Group",
+     "Parameter",
+     "Operation",
+     "Range"
+    ],
+    [
+     "Sensing noise",
+     "joint position q_t",
+     "additive Gaussian",
+     "σ = 0.1"
+    ],
+    [
+     "Sensing noise",
+     "fingertip position",
+     "additive uniform",
+     "±5 mm"
+    ],
+    [
+     "Sensing noise",
+     "object position",
+     "additive uniform",
+     "±5 mm"
+    ],
+    [
+     "Sensing noise",
+     "object orientation",
+     "additive uniform",
+     "±2°"
+    ],
+    [
+     "Observation latency",
+     "queue size",
+     "constant",
+     "2 frames"
+    ],
+    [
+     "Observation latency",
+     "queue sampling probability",
+     "constant",
+     "0.5"
+    ]
+   ],
+   "usage": "作者用该表披露训练注入的感知噪声/延迟预算，是本综述『可接受阈值』问题的直接定量证据。"
+  }
+ ],
+ "notes": "对综述问题的独特价值：(1) 唯一在本批次中给出感知噪声随机化数值预算（±5mm 指尖、2 帧延迟）的系统；(2) 与 Bunny-VisionPro 形成互补——本文证明追踪精度达到动捕级后瓶颈转移为接触动力学，界定了追踪精度收益的边界；(3) 明确把视觉追踪列为未解决的部署门槛。"
+}

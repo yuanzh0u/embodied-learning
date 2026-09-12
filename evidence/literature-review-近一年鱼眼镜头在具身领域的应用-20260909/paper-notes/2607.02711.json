@@ -1,0 +1,603 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.02711",
+  "title": "RayTun3R: Online Camera Adaptation in 3D Foundation Models",
+  "published": "2026-07",
+  "url": "https://arxiv.org/abs/2607.02711",
+  "authors": [
+   "Daniil Sinitsyn",
+   "Nikita Araslanov",
+   "Daniel Cremers"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "『鱼眼相机进入具身感知』主题下的方法类核心证据：把冻结 3D 基础模型（DA3/π³/VGGT）经 PE/RoPE 残差在线适配到 110°–200° 鱼眼输入，服务深度+位姿前馈估计（导航级感知）。对鱼眼综述的价值：(1) 量化 pinhole 基础模型在鱼眼输入的退化与适配收益（旋转误差 2–12×、对 LoRA 约 14× 参数优势、零推理开销）；(2) 机制证据：pinhole bias 定位于位置编码（PE Jacobian 分析），适配应改位置—射线映射而非通用特征变换；(3) 部署边界清晰：逐相机重适配、径向畸变假设、标定依赖、需足够帧间位移、全景/ERP 明确不在范围（与 RePer-360 的任务分界）；(4) 与 Center-PH 投影路线的深度/视场权衡给出条件化结论（位姿获益、深度视数据集而定）。局限：无机器人控制闭环，具身性停留在平台语境（车辆/手持/室内扫描）与动机层。"
+  },
+  "sections_read": [
+   {
+    "locator": "pages 1-2, Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题陈述（3D 基础模型在鱼眼下急剧退化 + pinhole bias 归因）、crop 流水线 workaround 的成本，与贡献列表。"
+   },
+   {
+    "locator": "pages 2-3, Section 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位本文在『相机感知几何 / 投影复用 / PEFT 适配』谱系中的位置，登记 Fisheye3R、FishRoPE、PRoPE、CalTok 等近邻工作。"
+   },
+   {
+    "locator": "pages 4-6, Sections 3-4.3 Method",
+    "role": "method-or-design",
+    "purpose": "精读 pinhole bias 的 Jacobian 分析（式 2-4、Fig 2）、四组件适配设计（式 5-6）、自监督损失组（式 7-13）与实现细节。"
+   },
+   {
+    "locator": "page 6, Section 5 (Datasets/Baselines/Metrics/Protocol)",
+    "role": "data-or-setting",
+    "purpose": "确认五数据集 FOV 谱（110°–200°）、基线设定（Center-PH/Multi-PH/LoRA/CalTok）、指标定义（R°/t°/d_reproj/AbsRel/δ1.25）与 30 窗口适配协议。"
+   },
+   {
+    "locator": "pages 7-9, Sections 5.1-5.2",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table 1 主结果、Table 2 跨 backbone、Table 3 深度与适配超参、Table 4 消融与开销。"
+   },
+   {
+    "locator": "page 9, Section 6 Conclusion and Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "登记作者五条编号限制（相机特定/径向假设/标定依赖/全景未覆盖/运动量依赖）。"
+   },
+   {
+    "locator": "pages 13-16, Supplementary A-I",
+    "role": "appendix-or-supplement",
+    "purpose": "精读指标定义（A）、AnyCalib 预测标定（B）、naive undistortion 失败分析（C、Fig 5）、算力（D）、跨 backbone 均值（E、Table 6）、损失消融（F）、PE/RoPE 拆分与免参数消融（G、Tables 7-8）、broader impact（H）与资产许可（I）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "pages 10-12, References",
+    "reason": "参考文献列表本身无综述问题相关主张；核心引文（DA3/VGGT/π³/LoRA/CalTok/Fisheye3R/FishRoPE/AnyCalib）已按需登记 core_citations。"
+   }
+  ]
+ },
+ "research_question": "论文问题：如何把 pinhole 预训练的 3D 基础模型在线适配到鱼眼相机——在冻结主干、极小参数量（10,752）与无 GT 自监督下恢复深度与位姿精度，且不增加推理开销？综述映射：鱼眼镜头在具身感知（里程计/位姿/深度）中的应用方式（在线相机适配）、效果（位姿精度、深度、运行时）与局限（逐相机适配、径向假设、标定与运动依赖、全景未覆盖）。",
+ "contributions": [
+  "揭示并量化 3D 基础模型位置编码中的 pinhole bias：预训练绝对 PE 的局部 Jacobian 关于归一化半径几乎平坦（与针孔结构一致），适配后向解析鱼眼参考弯曲。",
+  "提出 RayTun3R 轻量适配器：仅 10,752 可训练参数的 PE/RoPE 极坐标残差查找表 + 免参数 tokenization/预测网格修正，主干完全冻结，在线自监督（UFM 匹配重投影 + MAGSAC++ 固定位姿目标）训练。",
+  "跨五个鱼眼数据集（FOV 110°–200°）与三个冻结 backbone 家族（DA3/π³/VGGT）实证：旋转误差降低 2–12×，优于 LoRA（约 14× 参数优势）与 CalTok，且推理零开销。"
+ ],
+ "method": {
+  "summary": "输入已知/已估计相机模型 κ 的鱼眼视频流，冻结 3D 基础模型（默认 DA3-Small；另测 π³/VGGT/DA3 变体），仅适配与 token 位置—相机几何相关的组件：(1) 绝对 PE——在标定主点周围极坐标 (ρ,θ) 参数化残差，径向 N_r=20 bin + 角向 N_θ=8 bin 查找表线性插值，P'(u,v)=P_A(u,v)+t_r(ρ)+ρ·δ_θ(θ)，零初始化；(2) RoPE——径向查找表残差 ω'=ω+Δ_r(ρ)（20 bin，跨频率共享）；(3) 预测网格坐标——DPT 头 2D 正弦网格经标定鱼眼→针孔映射去畸变替换（免参数）；(4) patch 分词——有效圆外 patch 用均值 token 替换 + 按 Qin-Li 局部线性化逐 patch 去畸变（免参数）。训练为在线自监督：从短时段取 30 个三帧窗口（过滤平均光流位移 <2px 的近静态窗口），损失 = UFM 匹配的重投影损失 + MAGSAC++ 一次性估计的固定相对位姿角度目标 + 边缘感知平滑 + PE 表 L2 回归 + 全变差正则（w_pose=1, w_smooth=10, w_L2=2, w_TV=20），Adam lr=1e-3、梯度裁剪 1.0、504×504。推理单次前向、无额外开销。",
+  "assumptions": [
+   "鱼眼与针孔的核心差异位于位置→射线映射，因此相机偏置主要承载在位置编码而非通用特征处理（PE Jacobian 分析支持，Fig 2）。",
+   "相机模型可用：主点已知、畸变以径向为主（KB/EUCM 类）；或可由 AnyCalib 类网络预测。",
+   "适配时段内存在足够帧间位移，使重投影/位姿自监督约束有效。",
+   "固定位姿伪标签由外部匹配器（UFM+MAGSAC++）一次性估计，适配器不能影响自身伪标签（防自我证实）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "KITTI-360（室外驾驶，185° FOV）",
+   "TUM-VI（手持双鱼眼视频，195°）",
+   "ScanNet++（带位姿 DSLR 鱼眼扫描，115°，含稠密深度）",
+   "ETH3D（多相机采集，110°，含稠密深度）",
+   "FIORD（室内外双鱼眼，200°）"
+  ],
+  "tasks": [
+   "鱼眼输入的前馈深度 + 相对相机位姿估计（3D 基础模型在线适配）"
+  ],
+  "embodiments": [
+   "无机器人控制闭环；评测平台语境为车辆（KITTI-360）、手持双鱼眼（TUM-VI）、室内外扫描（ScanNet++/ETH3D/FIORD）；作者动机层覆盖 robotics、autonomous systems、AR/VR、indoor mapping（page 15 Sec H：fisheye cameras are common in robotics, autonomous systems, AR/VR, and indoor mapping）；GPU 为 RTX A6000/A4000"
+  ],
+  "sample_or_scale": "每序列 30 个三帧窗口做适配（过滤光流位移 <2px），504×504 输入，DA3-Small（C=384）为主 backbone；总计约 180–250 GPU 小时；推理约 100 ms/帧@RTX A4000（1000 帧平均）"
+ },
+ "evaluation": {
+  "design": "五数据集主对比（DA3-Small，Table 1）+ 跨 backbone 对比（π³/VGGT 单序列 Table 2、ETH3D 均值 Table 6）+ 稠密深度评估（ETH3D/ScanNet++，Table 3 左）+ 组件/损失/PE-RoPE/bin 数消融（Table 4a、7a、7b、8）+ 推理开销实测（Table 4b）+ AnyCalib 预测标定敏感性（Table 5）+ 定性重建（Fig 4）",
+  "baselines": [
+   "Vanilla（未适配直接推理）",
+   "Center-PH（单 110° 前向虚拟针孔裁剪）",
+   "Multi-PH（Center-PH + 4 个附加虚拟视图融合）",
+   "LoRA（QKV 适配器，r∈{4,8,16}，α∈{8,16,32}；主对比用 r=8, α=16）",
+   "CalTok（t∈{4,8} 个学习辅助 token；主对比用 t=4）"
+  ],
+  "metrics": [
+   "旋转角误差 R°（度）",
+   "平移方向误差 t°（度）",
+   "重投影深度误差 d_reproj（用 GT 位姿 + 尺度对齐，主对比用）",
+   "AbsRel / δ1.25（稠密深度，ETH3D/ScanNet++）",
+   "ms/frame、开销百分比、可训练参数量"
+  ],
+  "ablations": [
+   "组件消融：patch 去畸变 / naive PE 重映射 / 径向 PE / 径向+角向 / 去 border token / 去 DPT 修正 / 去 RoPE / 全模型（Table 4a）",
+   "损失组件：pose / L2 / TV 正则组合（Table 7a）",
+   "PE vs RoPE 拆分与 bin 数敏感性（Table 7b）",
+   "学习残差 vs 免参数修正（Table 8）",
+   "LoRA/CalTok 超参选择（Table 3 右）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "头条：FOV 110°–200° 五数据集上旋转误差相对未适配模型降低 2–12×，以约 14× 更少参数胜过 LoRA，深度保持竞争力",
+   "scope": "DA3-Small 主对比",
+   "locator": "page 1, Abstract"
+  },
+  {
+   "finding": "主表：全部五数据集最低平移误差、四数据集最低旋转误差（ETH3D 0.70/4.48/5.82 vs Vanilla 8.59/15.16/15.98）",
+   "scope": "Table 1 五数据集",
+   "locator": "page 7, Table 1"
+  },
+  {
+   "finding": "部署效率：约 100 ms/帧、约 0% 推理开销、10.8K 参数（vs Multi-PH +300%、LoRA +10%/147.5K）",
+   "scope": "DA3-Small@504×504，A4000，1000 帧平均",
+   "locator": "page 9, Table 4 (b)"
+  },
+  {
+   "finding": "机制：学习型 PE 残差主导（naive 几何重映射失败 12.93 平移；仅 RoPE 近未适配 19.52；免参数单独在 FIORD 退化 39.04 vs 28.09）",
+   "scope": "组件消融 + PE/RoPE 拆分",
+   "locator": "pages 9, 15, Tables 4a/7b/8"
+  },
+  {
+   "finding": "深度是条件性获益：ETH3D 全表最优 0.107/0.884（含 vs Center-PH 0.111/0.867），ScanNet++ 输给 Center-PH（0.108 vs 0.066 AbsRel）但位姿大幅更好（旋转 3.27→1.11、平移 22.77→5.78）",
+   "scope": "ETH3D/ScanNet++ 稠密深度 + ScanNet++ 位姿",
+   "locator": "page 8, Table 3 and Section 5.1"
+  },
+  {
+   "finding": "跨 backbone：五个冻结 backbone（DA3-S/B/L、π³、VGGT）上均最低平均旋转与平移误差（如 VGGT 0.96/4.82 vs baseline 3.19/11.52）",
+   "scope": "ETH3D 场景均值",
+   "locator": "page 14, Table 6"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "相机特定修正：换鱼眼相机或畸变档案需要重新适配",
+    "locator": "page 9, Section 6 Limitations (i)"
+   },
+   {
+    "limitation": "假设主点与以径向为主的畸变，不显式覆盖强切向/非径向光学",
+    "locator": "page 9, Section 6 Limitations (ii)"
+   },
+   {
+    "limitation": "需要相机参数（GT 或预测标定；AnyCalib 预测可用但精度受限）",
+    "locator": "page 9, Section 6 Limitations (iii)"
+   },
+   {
+    "limitation": "只针对鱼眼图像；全景/equirectangular 输入留作未来工作",
+    "locator": "page 9, Section 6 Limitations (iv)"
+   },
+   {
+    "limitation": "训练集需要足够帧间位移；小/退化运动下自监督约束变弱",
+    "locator": "page 9, Section 6 Limitations (v)"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无具身下游任务验证：全部实验为位姿/深度基准，无导航、操作等闭环任务；robotics/AR-VR 表述停留在动机层（Sec H），综述引用时应作为『鱼眼感知方法』而非具身任务证据",
+    "basis": "Section 5 实验设置（全部为 benchmark 评测）+ page 15 Sec H 动机句；全文无下游控制任务实验"
+   },
+   {
+    "boundary": "深度主指标是代理指标：d_reproj 用 GT 位姿 + 逐对尺度对齐的重投影误差，非真深度误差；五数据集中三个（KITTI-360/TUM-VI/FIORD）无稠密 GT 深度，深度结论应主要看 ETH3D/ScanNet++ 的 AbsRel",
+    "basis": "page 13 Sec A 指标定义（Since ground-truth dense depth is not available for all fisheye datasets, we use a reprojection-based depth metric）+ page 7 Sec 5 指标段"
+   },
+   {
+    "boundary": "逐相机/逐序列适配的运营成本：每序列 30 窗口适配 + 2–5 小时/场景的 train-and-evaluate（180–250 GPU 小时总量，A6000/A4000 级 GPU）；具身车队级部署的适配调度成本未被讨论",
+    "basis": "page 13 Sec D（about 2–3 hours per ETH3D, ScanNet++, or FIORD scene ... approximately 180–250 total GPU-hours）+ page 7 评测协议（30 three-frame windows）"
+   },
+   {
+    "boundary": "无统计不确定性：所有表格为单值点估计，无种子/方差/显著性；2–12× 等倍数区间为跨数据集合成而非置信区间",
+    "basis": "Tables 1-8 全为单值，Sec 5 无重复实验声明"
+   },
+   {
+    "boundary": "序列特定吸收风险：作者在 Discussion 承认适配器在特定序列上拟合、可能吸收序列特定信号（trainable capacity 受限于 PE/RoPE 残差是缓解因素），但跨序列/跨相机迁移量未单独量化",
+    "basis": "page 8 Discussion（Although the adapter is fitted on a specific sequence and can absorb some sequence-specific signal, its trainable capacity is restricted to PE/RoPE residuals）"
+   },
+   {
+    "boundary": "标定鲁棒性证据样本小：AnyCalib 敏感性实验每数据集仅一条代表序列（Table 5），对预测标定误差幅度与失败模式的覆盖有限",
+    "basis": "page 13 Sec B（one representative sequence per dataset）+ Table 5 设置"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：已知或可预测相机模型（主点 + 径向为主畸变）的鱼眼输入；冻结 DA3/π³/VGGT 类 pinhole 预训练 3D 基础模型；具备足够帧间位移的短时段自监督在线适配；GPU 前向推理（约 100 ms/帧@A4000）。不适用于：全景/equirectangular 输入（作者列为未来工作）、强切向/非径向光学、静态或退化运动序列、无相机参数且预测标定失效的场景、以及期望免重适配跨相机/跨序列直接迁移的部署。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "机制分析先行：PE Jacobian 测量把『为什么适配位置编码』建立在可检验证据上（Fig 2）",
+   "消融链条完整：组件（4a）/损失（7a）/PE-RoPE 拆分（7b）/学习 vs 免参数（8）逐层隔离",
+   "推理开销实测（1000 帧平均）且给出全部对照的开销-参数-时延三维对比",
+   "跨五个 backbone 家族验证效果不绑定单一实现；AnyCalib 敏感性补充了标定现实性",
+   "基线按各自最强超参报告（LoRA r=8/α=16、CalTok t=4 由 Table 3 右侧选择），比较公平"
+  ],
+  "design_risks": [
+   "主深度指标为重投影代理（依赖 GT 位姿），真深度仅两数据集；深度结论的证据等级不均匀",
+   "单值点估计、无方差/显著性报告",
+   "KITTI-360 上旋转与深度输给 Center-PH 的负结果仅在正文一句带过，未展开分析",
+   "适配集每序列 30 窗口、AnyCalib 每数据集 1 条序列，鲁棒性证据样本偏小",
+   "相机特定适配的车队级运营成本（何时触发重适配）未讨论"
+  ],
+  "baseline_fairness": "LoRA/CalTok 报告各超参的最强设定（Table 3 右侧显式选择）；投影基线按其设计最优 FOV（110° 裁剪）；所有方法共用同一对采样与同一标定（GT 或同源 AnyCalib）；作者同时给出 Vanilla 与两类路线基线，覆盖三条主要替代路线。",
+  "metric_validity": "位姿指标标准（R°/t° 角度误差）；深度主指标 d_reproj 为重投影代理（三数据集无稠密 GT），稠密深度指标（AbsRel/δ1.25）仅在 ETH3D/ScanNet++ 报告；无下游任务效用指标（具身场景缺失）。",
+  "reproducibility": "代码承诺公开（Our code will be made publicly available）；训练超参、损失权重、bin 设置、窗口过滤阈值披露完整；180–250 GPU 小时（A6000/A4000）可复现；数据集许可已逐项登记（Table 9）。",
+  "external_validity": "五数据集跨驾驶/手持/室内外、FOV 110°–200°，平台多样性好；但每相机/畸变档案需重适配、径向假设限定光学类型、全景/ERP 明确不在范围；具身下游任务无验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.02711-C01",
+   "claim": "作者问题陈述：DUSt3R/MASt3R/VGGT/π³/DA3 等 3D 基础模型在针孔（pinhole）图像上可前馈产出强深度与位姿估计，但在鱼眼几何下急剧退化；作者将此失败部分归因于预训练位置编码中的针孔相机偏置（pinhole bias）。",
+   "stance": "limit",
+   "relation": "限制『透视/针孔预训练 3D 基础模型可直接用于鱼眼输入』的命题：为综述中『直接迁移受限』提供任务级（深度+位姿）问题陈述与作者归因。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要开篇陈述问题与归因：pinhole imagery 上强、fisheye geometry 下急剧退化，原因之一是位置编码的 pinhole bias。",
+   "locator": "page 1, Abstract",
+   "source_context": "Recent 3D foundation models, such as DUSt3R, MASt3R, VGGT, π\n3\n, and Depth\nAnything 3, provide strong feed-forward depth and pose estimates on pinhole\nimagery, but degrade sharply under fisheye camera geometry. We show that this\nfailure is partly caused by a pinhole camera bias in the positional encodings of\npretrained 3D foundation models, and propose RayTun3R,",
+   "evidence_type": "problem-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 provide strong feed-forward depth and pose estimates on pinhole imagery, but degrade sharply under fisheye camera geometry 与 partly caused by a pinhole camera bias in the positional encodings；claim 仅复述作者的问题陈述与归因（『部分归因』），未扩大为全部原因或扩大到其他任务。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C02",
+   "claim": "方法设计：RayTun3R 冻结预训练网络主干，仅适配与 token 位置和相机几何绑定的轻量组件——学习对绝对与旋转位置编码（PE/RoPE）的参数高效残差修正，配合免参数的 tokenization 与预测网格坐标修正以移除残余针孔假设；适配器仅含 10,752 个可训练参数，可从短时段片段用几何损失学得，适配后无额外推理开销地迁移到序列其余帧。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：鱼眼输入接入冻结 3D 基础模型的代表性技术路线——『位置编码残差在线适配』，与投影裁剪、LoRA 通用微调形成对照。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要方法段完整给出：冻结主干 + PE/RoPE 残差 + 免参数修正 + 10,752 参数 + 短时段几何损失 + 零推理开销。",
+   "locator": "page 1, Abstract",
+   "source_context": "It keeps the pretrained network fixed and adapts only\nlightweight components tied to token position and camera geometry. RayTun3R\nlearns parameter-efficient residual corrections to absolute and rotary positional\nencodings, together with parameter-free tokenization and corrections to prediction-\ngrid coordinates that remove residual pinhole assumptions. The resulting adapter\ncontains only 10,752 trainable parameters and can be learned from a short temporal\nsegment using geometric losses. Once adapted, RayTun3R transfers effectively\nto the remaining frames of the sequence without incurring additional runtime\ncosts.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "trainable parameter count of the adapter",
+    "value_or_direction": "only 10,752 trainable parameters; learned from a short temporal segment using geometric losses; no additional runtime costs after adaptation",
+    "comparator": "pretrained network kept fixed",
+    "task_or_sample": "fisheye camera adaptation of 3D foundation models",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 keeps the pretrained network fixed、residual corrections to absolute and rotary positional encodings、parameter-free tokenization and corrections to prediction-grid coordinates、only 10,752 trainable parameters、without incurring additional runtime costs；claim 的组件清单、参数量与开销主张均由 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C03",
+   "claim": "头条效果：在视场角 110°–200° 的多样鱼眼数据集上，适配器相对未适配模型将旋转误差降低 2–12×，以约 14× 更少的可训练参数胜过 LoRA，位姿优于免适配基线且避免其多视图推理成本，深度精度保持有竞争力。",
+   "stance": "support",
+   "relation": "支持综述命题（效果）：鱼眼相机适配路线在位姿任务上获得数量级级改进且参数/运行时双高效——为『哪些任务获益』提供位姿（导航级感知）的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要末句集中给出四个量化锚点：2–12× 旋转误差、~14× 参数优势、位姿优于免适配基线、深度竞争力。",
+   "locator": "page 1, Abstract",
+   "source_context": "Across diverse fisheye datasets with fields of view from 110\n◦ \nto 200\n◦\n, our\nadapter reduces rotation error by 2–12× relative to the unadapted model, out-\nperforms LoRA while using ∼ 14× fewer trainable parameters, improves pose\nover adaptation-free baselines while avoiding their multi-view inference cost, and\nremains competitive on depth accuracy.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "rotation error reduction and parameter efficiency",
+    "value_or_direction": "reduces rotation error by 2-12 relative to the unadapted model; out-performs LoRA while using ~14 fewer trainable parameters",
+    "comparator": "unadapted model; LoRA; adaptation-free baselines",
+    "task_or_sample": "fisheye depth and pose estimation across datasets with FOV 110 to 200 degrees",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 fields of view from 110◦ to 200◦、reduces rotation error by 2–12× relative to the unadapted model、out-performs LoRA while using ∼ 14× fewer trainable parameters、remains competitive on depth accuracy；claim 的倍数、比较对象与『深度保持竞争力』的限定均逐点对应，未将深度表述为改进。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C04",
+   "claim": "机制证据（pinhole bias 定位）：作者测量 DA3 各规模（Small/Base/Large/Giant）绝对位置编码的局部 Jacobian（以最大奇异值 σ1 与面积元刻画），发现预训练 PE 关于归一化半径几乎平坦——与针孔相机的位置无关结构一致；在 KITTI-360 上拟合适配器后，同样曲线向解析鱼眼参考弯曲。这把『鱼眼失配』定位到位置编码而非通用特征处理。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：透视/针孔预训练模型迁移到鱼眼的失败点在位置—射线映射（位置编码承载相机偏置），适配应修正位置组件而非通用特征变换——为具身系统选型鱼眼感知适配机制提供分析证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 3 节末段 + Fig 2：PE Jacobian 测量的实证描述——预训练平坦（pinhole-like），适配后弯向鱼眼参考。",
+   "locator": "page 4, Section 3 (On pinhole bias) and Figure 2",
+   "source_context": "Using Depth Anything 3 [5], we verify this bias by measuring the local Jacobian of the absolute\npositional embedding, J\nPE \n= ∂P\nA\n/∂(u, v) ∈ R\nC×2\n, and summarizing it by its largest singular value\nσ\n1 \nand local area element\nq\ndet(J\n⊤\nPE\nJ\nPE\n) in Fig. 2. These quantities capture the strongest local\nvariation and local scale of the embedding. Across all frozen model sizes, both are nearly flat as\na function of normalized radius ρ (cf . Fig. 2a,b), matching the position-independent structure of a\npinhole camera. After fitting our adapter on KITTI-360, the same curves bend toward the analytical\nfisheye reference (cf . Fig. 2c,d). This motivates RayTun3R: Finetuning the positional representations\nthat carry the camera bias rather than generic feature processing.",
+   "evidence_type": "mechanism-analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 verify this bias by measuring the local Jacobian of the absolute positional embedding、Across all frozen model sizes, both are nearly flat as a function of normalized radius ρ, matching the position-independent structure of a pinhole camera、After fitting our adapter on KITTI-360, the same curves bend toward the analytical fisheye reference；claim 的『各规模平坦→pinhole 结构』『适配后弯向鱼眼参考』『定位到位置表征』均由 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C05",
+   "claim": "方法细节：RayTun3R 修改四类与 token 位置—几何相关的组件——绝对 PE、（存在时的）RoPE、预测网格坐标、patch tokenization；唯一可学习参数是小型 PE/RoPE 查找表修正，所有注意力块、MLP、预测头与 DPT 权重保持冻结；极坐标 (ρ,θ) 参数化的径向+角向 PE 残差零初始化，DPT 网格与分词修正是免参数的。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：给出可复用的鱼眼适配组件清单与『只动位置、不动特征』的设计原则，供具身系统按组件对号入座。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 4 节方法总览 + 4.1 问题设定 + 4.2 适配细节：四组件清单、唯一可学习部分、冻结范围、极坐标残差与零初始化。",
+   "locator": "pages 4-5, Sections 4-4.2",
+   "source_context": "Our goal is to adapt a pretrained pinhole 3D foundation model to fisheye input while keeping the\npretrained model frozen. Fisheye optics change the mapping between token locations in the image\nand viewing rays, so the spatial structure learned during pinhole pretraining no longer matches the\ninput camera. Motivated by the PE Jacobian analysis, we therefore modify the components that\nencode how token locations in the image relate to geometry: Absolute positional embeddings, rotary\npositional encoding when present, prediction-grid coordinates, and patch tokenization. The only\nlearned parameters are small PE/RoPE lookup table corrections. Fig. 1 visualizes the main learned\ncorrection: The image content and backbone remain fixed, while the positional encoding is adapted\nto the fisheye camera geometry.\n4.1 Problem setup\nLet f\nθ \nbe a pretrained 3D foundation model that predicts depth and pose from one or more images. We\nconsider pinhole-trained backbones, such as Depth Anything 3, π\n3\n, and VGGT. Given a fisheye image\nstream {I\nt\n} and a known or estimated camera model κ, we learn a small set of adapter parameters ϕ\nwhile keeping all backbone weights θ fixed. The adapted model f\nθ,ϕ \nshould produce accurate depth\nand pose on fisheye input without retraining the original backbone.\nThe only trainable parts are attached to positional mechanisms. In particular, we adapt the absolute\npositional embedding P\nA \nand, when present, the rotary positional mechanism P\nR \ndefined in Sec. 3.\nAll attention blocks, MLPs, prediction heads, and DPT weights remain frozen.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4-5 逐字给出 modify the components that encode how token locations in the image relate to geometry: Absolute positional embeddings, rotary positional encoding when present, prediction-grid coordinates, and patch tokenization、The only learned parameters are small PE/RoPE lookup table corrections、All attention blocks, MLPs, prediction heads, and DPT weights remain frozen；claim 的组件清单、可学习范围与冻结范围一一对应 context。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C06",
+   "claim": "评测覆盖（应用场景谱）：五个鱼眼数据集覆盖室外驾驶（KITTI-360，185° FOV）、手持双鱼眼视频（TUM-VI，195°）、带位姿 DSLR 鱼眼扫描（ScanNet++，115°）、多相机采集（ETH3D，110°）与室内外双鱼眼（FIORD，200°）；全部提供参考位姿，ETH3D 与 ScanNet++ 另提供稠密深度——对应车辆、手持、室内扫描等具身平台语境。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：110°–200° 鱼眼相机已嵌入驾驶/手持/室内扫描等具身平台的感知链路，位姿+深度是该类相机的核心服务任务；作者动机进一步指向 robotics、autonomous systems、AR/VR、indoor mapping（Sec H）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 5 节数据集段给出五数据集的 FOV 与平台属性；Sec H 给出机器人/自主系统应用动机。",
+   "locator": "page 6, Section 5 (Datasets)",
+   "source_context": "Datasets. Fisheye datasets with reliable pose or depth ground truth remain less common\nthan standard pinhole reconstruction benchmarks. We evaluate on five datasets covering out-\ndoor driving (KITTI-360 [48], 185\n◦ \nFOV), handheld dual-fisheye video (TUM-VI [49], 195\n◦\n),\n(a) Center-PH (b) Multi-PH\nFigure 3: Adaptation-free baselines.\nposed DSLR fisheye scans (ScanNet++ [50], 115\n◦\n),\nmulti-camera captures (ETH3D [51], 110\n◦\n), and dual-\nfisheye indoor/outdoor scenes (FIORD [52], 200\n◦\n). All\ndatasets provide reference poses; ETH3D and Scan-\nNet++ also provide dense depth.",
+   "evidence_type": "application-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 five datasets covering outdoor driving (KITTI-360, 185◦ FOV)、handheld dual-fisheye video (TUM-VI, 195◦)、posed DSLR fisheye scans (ScanNet++, 115◦)、multi-camera captures (ETH3D, 110◦)、dual-fisheye indoor/outdoor scenes (FIORD, 200◦) 与 All datasets provide reference poses; ETH3D and ScanNet++ also provide dense depth；claim 的 FOV、平台与标注属性均由 context 直接蕴含，机器人应用动机引自 page 15 Sec H（fisheye cameras, which are common in robotics, autonomous systems, AR/VR, and indoor mapping）。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C07",
+   "claim": "主结果（Table 1，DA3-Small，五数据集，指标 R°/t°/d_reproj）：RayTun3R 在全部五个数据集上取得最低平移方向误差，在 ETH3D/TUM-VI/ScanNet++/FIORD 上取得最低旋转误差。ETH3D：0.70/4.48/5.82，显著优于 Vanilla 8.59/15.16/15.98、LoRA 2.18/10.74/9.02、CalTok 2.48/13.21/11.94；ScanNet++：1.11/5.78/4.16 vs Vanilla 10.21/30.26/23.82；FIORD：4.10/5.40/9.00 vs Vanilla 18.20/29.50/75.30。",
+   "stance": "support",
+   "relation": "支持综述命题（效果）：鱼眼位姿估计（导航/里程计级感知）是适配路线获益最大的任务——跨五数据集一致的位姿改进，提供任务级量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 五行全量数值 + Section 5.1 首句的『全数据集最低平移、四数据集最低旋转』总结。",
+   "locator": "page 7, Table 1 and Section 5.1",
+   "source_context": "Dataset Vanilla Center-PH Multi-PH LoRA CalTok RayTun3R (ours)\nETH3D 8.59 15.16 15.98 3.46 13.70 10.92 3.31 13.68 13.48 2.18 10.74 9.02 2.48 13.21 11.94 0.70 4.48 5.82\nKITTI-360 1.69 12.81 11.64 0.79 4.17 3.10 1.71 9.75 4.72 1.37 8.49 5.56 1.66 10.05 5.83 0.84 2.92 3.88\nTUM-VI 10.41 23.23 57.01 3.33 29.24 3.22 \n2.99 25.60 4.92 3.38 13.63 3.83 3.84 16.17 9.61 2.41 13.23 3.81\nScanNet++ 10.21 30.26 23.82 3.27 22.77 2.21 1.66 10.43 1.63 3.68 17.66 4.98 4.51 23.20 7.02 1.11 5.78 4.16\nFIORD 18.20 29.50 75.30 6.92 23.40 7.20 6.30 18.90 15.60 7.75 12.20 12.10 20.40 22.20 25.20 4.10 5.40 9.00",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "rotation R, translation-direction t, reprojection depth error across five datasets",
+    "value_or_direction": "ETH3D 0.70/4.48/5.82, KITTI-360 0.84/2.92/3.88, TUM-VI 2.41/13.23/3.81, ScanNet++ 1.11/5.78/4.16, FIORD 4.10/5.40/9.00; vs Vanilla 8.59/15.16/15.98 (ETH3D), 10.21/30.26/23.82 (ScanNet++), 18.20/29.50/75.30 (FIORD)",
+    "comparator": "Vanilla, Center-PH, Multi-PH, LoRA, CalTok (DA3-Small backbone)",
+    "task_or_sample": "pose and depth on five fisheye datasets (triple R, t, d_reproj per entry)",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 逐字给出全部五行六方法三元组数值，page 7 Section 5.1 逐字给出 gives the lowest translation-direction error on all datasets and the lowest rotation error on ETH3D, TUM-VI, ScanNet++, and FIORD；claim 的每个数值与『最低』的范围限定均由表格行与正文总结直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C08",
+   "claim": "路线权衡（裁剪 vs 适配）：Center-PH（单 110° 虚拟针孔裁剪）在深度上保持强竞争力，因为它产出接近主干预训练分布的透视图像；但它丢弃鱼眼外围内容，位姿明显更差——ScanNet++ 上 RayTun3R 把 Center-PH 的旋转误差从 3.27° 降到 1.11°、平移方向误差从 22.77° 降到 5.78°。",
+   "stance": "conditional",
+   "relation": "条件化综述命题（效果）：鱼眼全视场 vs 透视裁剪的选择应按任务分层——深度任务裁剪路线可能够用甚至更强，位姿任务需全视场适配；『哪些任务获益』的答案是位姿而非深度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 5.1 节 Dense depth evaluation 段：裁剪路线深度优势的归因 + ScanNet++ 位姿对比数字。",
+   "locator": "page 8, Section 5.1 (Dense depth evaluation)",
+   "source_context": "Dense depth evaluation. For ETH3D and ScanNet++, which provide ground-truth depth, we\nreport AbsRel and δ\n1.25 \nin Tab. 3 (left). RayTun3R improves over the vanilla model and lightweight\nadaptation baselines on both datasets. Center-PH remains strong on depth because it produces\nperspective images close to the backbone’s pretraining distribution. However, Center-PH discards the\nperipheral fisheye content, yielding less accurate pose estimates: On ScanNet++, RayTun3R reduces\nCenter-PH rotation from 3.27\n◦ \nto 1.11\n◦ \nand translation from 22.77\n◦ \nto 5.78",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "rotation and translation error vs Center-PH on ScanNet++",
+    "value_or_direction": "rotation from 3.27 to 1.11, translation from 22.77 to 5.78",
+    "comparator": "Center-PH (single 110 virtual pinhole crop)",
+    "task_or_sample": "ScanNet++ fisheye pose estimation",
+    "locator": "page 8, Section 5.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 Center-PH remains strong on depth because it produces perspective images close to the backbone's pretraining distribution、Center-PH discards the peripheral fisheye content, yielding less accurate pose estimates、On ScanNet++, RayTun3R reduces Center-PH rotation from 3.27◦ to 1.11◦ and translation from 22.77◦ to 5.78◦；claim 的归因、权衡方向与两组数值均由 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C09",
+   "claim": "稠密深度（Table 3 左，DA3-Small）：ETH3D 上 RayTun3R AbsRel 0.107 / δ1.25 0.884 为全表最优（含 Center-PH 0.111/0.867、LoRA 0.166/0.814、CalTok4 0.175/0.793、Vanilla 0.178/0.751）；ScanNet++ 上 Center-PH 深度更优（0.066/0.961 vs RayTun3R 0.108/0.886），但 RayTun3R 仍明显优于 Vanilla（0.282/0.601）与两个适配基线（LoRA 0.175/0.760、CalTok4 0.168/0.769）——深度获益是数据集条件性的。",
+   "stance": "conditional",
+   "relation": "条件化综述命题（效果）：鱼眼深度任务的获益取决于对照路线——优于未适配与 PEFT 适配基线，但对透视裁剪基线的胜负依数据集而定。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 左半：两数据集五方法 AbsRel/δ1.25 全量数值。",
+   "locator": "page 8, Table 3 (left)",
+   "source_context": "ETH3D ScanNet++\nMethod AbsRel ↓ δ\n1.25 \n↑ AbsRel ↓ δ\n1.25 \n↑\nCenter-PH 0.111 0.867 0.066 0.961\nLoRA 0.166 0.814 0.175 0.760\nCalTok4 0.175 0.793 0.168 0.769\nVanilla 0.178 0.751 0.282 0.601\nRayTun3R (ours) 0.107 0.884 \n0.108 0.886",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "AbsRel and threshold accuracy on ETH3D and ScanNet++",
+    "value_or_direction": "ETH3D 0.107/0.884 best incl. vs Center-PH 0.111/0.867; ScanNet++ 0.108/0.886 vs Center-PH 0.066/0.961; Vanilla 0.178/0.751 and 0.282/0.601",
+    "comparator": "Center-PH, LoRA, CalTok4, Vanilla (DA3-Small)",
+    "task_or_sample": "dense depth on ETH3D and ScanNet++ (mean of per-scene means)",
+    "locator": "page 8, Table 3 (left)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 3 左侧逐字给出 Center-PH 0.111 0.867 0.066 0.961、LoRA 0.166 0.814 0.175 0.760、CalTok4 0.175 0.793 0.168 0.769、Vanilla 0.178 0.751 0.282 0.601、RayTun3R (ours) 0.107 0.884 0.108 0.886；claim 的每组数值与『ETH3D 全表最优、ScanNet++ 输给 Center-PH 但优于其余』的方向均由表行直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C10",
+   "claim": "推理开销（Table 4b，DA3-Small，504×504，RTX A4000，1000 帧平均）：RayTun3R 约 100 ms/帧、开销约 0%、可训练参数 10.8K；对照 LoRA 约 110 ms（+10%、147.5K 参数）、CalTok 约 105 ms（+5%、18.4K 参数）、Multi-PH 约 400 ms（+300%）、Center-PH 约 105 ms（+5%）。",
+   "stance": "support",
+   "relation": "支持综述命题（部署）：位置编码适配路线对推理时延零负担、参数量最小——满足具身平台在线感知的运行时约束，是多视图投影路线（+300%）与 LoRA（+10%）之外的轻量档。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4b 六行开销表 + 表注测量条件（504×504、A4000、1000 帧平均）。",
+   "locator": "page 9, Table 4 (b)",
+   "source_context": "(b) Inference\ncost on DA3-Small, measured per fisheye frame at 504×504 on one NVIDIA RTX A4000 and\naveraged over 1000 frames. Trainable parameter counts account for the DA3-Small backbone width,\nwith token size C = 384.\n(a) Component ablation on KITTI-360.\nConfiguration R\n◦ \n↓ t\n◦ \n↓ d\nreproj \n↓\nPatch undistortion (no learnable PE) 1.397 6.66 8.96\nNaive remap of PE 0.810 12.93 11.53\nRadial PE only 1.154 5.48 3.70\nRadial + angular PE 1.038 4.21 3.39\nRayTun3R w/o border token 1.061 4.45 3.17\nRayTun3R w/o DPT pos fix 1.094 4.78 3.64\nRayTun3R w/o RoPE adapter 0.942 5.56 3.27\nRayTun3R (ours) 1.183 4.81 3.03\n(b) Inference cost on DA3-Small\nMethod ms/frame Overhead Params\nVanilla DA3 ∼100 baseline 0\nCenter-PH (single 110\n◦\n) ∼105 +5% 0\nMulti-PH (5 views) ∼400 +300% 0\nLoRA (r=8) ∼110 +10% 147.5K\nCalTok (t=4) ∼105 +5% 18.4K\nRayTun3R (ours) ∼100 ≈ 0% 10.8K",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "inference time per frame, overhead, trainable parameters",
+    "value_or_direction": "~100 ms/frame, ~0% overhead, 10.8K params vs LoRA ~110 ms +10% 147.5K, CalTok ~105 ms +5% 18.4K, Multi-PH ~400 ms +300%",
+    "comparator": "Vanilla DA3, Center-PH, Multi-PH, LoRA, CalTok",
+    "task_or_sample": "per-fisheye-frame inference cost on DA3-Small at 504x504, averaged over 1000 frames",
+    "locator": "page 9, Table 4 (b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 4b 逐字给出 Vanilla DA3 ∼100 baseline 0、Center-PH ∼105 +5% 0、Multi-PH ∼400 +300% 0、LoRA (r=8) ∼110 +10% 147.5K、CalTok (t=4) ∼105 +5% 18.4K、RayTun3R (ours) ∼100 ≈ 0% 10.8K；claim 的时延、开销与参数量均来自表行，测量条件来自表题。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C11",
+   "claim": "组件消融（Table 4a，KITTI-360 cam02 185°，30 帧训练、前 500 帧评测）：完整模型重投影误差最低（1.183/4.81/3.03）；最大增益来自学习型 PE 残差（仅径向 PE 已 1.154/5.48/3.70，加角向 1.038/4.21/3.39）；直接对预训练 PE 表做几何重索引（Naive remap of PE）失败——旋转 0.810 但平移 12.93、深度 11.53；仅免参数的 patch 去畸变 1.397/6.66/8.96 远低于学习适配器。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：鱼眼失配的修正主要靠学习位置残差而非几何硬重映射或 tokenization 修补——『学习型 PE 残差』是适配机制的主导成分。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4a 八行消融 + Section 5.2 首段归因（largest gain from learned PE residual；naive remap 失败原因）。",
+   "locator": "page 9, Table 4 (a) and Section 5.2",
+   "source_context": "Table 4: Component ablation and inference cost. (a) Component ablation on KITTI-360 (drive\n0000, cam02, 185\n◦ \nfisheye), trained on 30 frames and evaluated on the first 500 frames. (b) Inference\ncost on DA3-Small, measured per fisheye frame at 504×504 on one NVIDIA RTX A4000 and\naveraged over 1000 frames. Trainable parameter counts account for the DA3-Small backbone width,\nwith token size C = 384.\n(a) Component ablation on KITTI-360.\nConfiguration R\n◦ \n↓ t\n◦ \n↓ d\nreproj \n↓\nPatch undistortion (no learnable PE) 1.397 6.66 8.96\nNaive remap of PE 0.810 12.93 11.53\nRadial PE only 1.154 5.48 3.70\nRadial + angular PE 1.038 4.21 3.39\nRayTun3R w/o border token 1.061 4.45 3.17\nRayTun3R w/o DPT pos fix 1.094 4.78 3.64\nRayTun3R w/o RoPE adapter 0.942 5.56 3.27\nRayTun3R (ours) 1.183 4.81 3.03",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "R, t, d_reproj across component ablation configurations",
+    "value_or_direction": "full 1.183/4.81/3.03 (lowest d_reproj); naive remap of PE 0.810/12.93/11.53; radial PE only 1.154/5.48/3.70; radial + angular PE 1.038/4.21/3.39; patch undistortion only 1.397/6.66/8.96",
+    "comparator": "component-removed and component-only variants",
+    "task_or_sample": "component ablation on KITTI-360 cam02 185 fisheye, 30 training frames, first 500 eval frames",
+    "locator": "page 9, Table 4 (a)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 4a 逐字给出八行配置数值（1.397/6.66/8.96、0.810/12.93/11.53、1.154/5.48/3.70、1.038/4.21/3.39、1.061/4.45/3.17、1.094/4.78/3.64、0.942/5.56/3.27、1.183/4.81/3.03），表题给出 30 训练帧/500 评测帧设定；Section 5.2 逐字给出 The largest gain comes from the learned PE residual 与 Naive remap 的失败描述；claim 数值与归因均由 context 蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C12",
+   "claim": "机制拆分（Table 7b + Table 8，ETH3D terrains / FIORD Kitchen）：绝对 PE 是主要学习组件——仅 RoPE 适配几乎无效（19.52/7.8/9.6，接近未适配 Vanilla 19.87/8.2/10.7），仅绝对 PE 已 0.68/0.9/1.6 近全模型（0.48）；去掉角向 bin 明显退化（径向 only 2.82/3.3/3.6）；免参数修正单独使用收益小且在 FIORD 上反而退化（39.04/36.3/19.2 vs Vanilla 28.09/20.7/14.2），仅学习组件 4.64/4.1/5.8，组合最优 3.10/2.5/5.5——剩余失配含方向依赖成分，不只径向。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：鱼眼适配的主导机制是学习型 PE/RoPE 残差（绝对 PE 为主、角向成分必要），免参数相机模型修正只是互补组件——与 Table 4a 消融互证。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 7b（PE/RoPE 拆分与 bin 敏感性）+ Table 8（学习 vs 免参数），两表连续位于附录 G。",
+   "locator": "page 15, Tables 7 (b) and 8 (Supplementary G)",
+   "source_context": "Absolute PE only (no RoPE) 0.68 0.9 1.6\nRoPE only (no Absolute PE) 19.52 7.8 9.6\nBoth (full) 0.48 0.9 1.6\nN\nr \n=10, N\nθ \n=8 0.72 0.9 1.7\nN\nr \n=20, N\nθ \n=8 (default) 0.48 0.9 1.6\nN\nr \n=40, N\nθ \n=8 0.47 0.9 1.5\nN\nr \n=20, N\nθ \n=0 (radial only) 2.82 3.3 3.6\nTable 8: Learned positional residuals vs. parameter-free camera-model corrections. We report\npose rotation error R\n◦\n, translation-direction error t\n◦\n, and reprojection error d\nreproj \non ETH3D\nterrains and FIORD Kitchen. Lower is better for all metrics. Param.-free denotes patch undistortion,\nprediction-grid coordinate correction, and border-token handling. Bold marks the best value per\ndataset and metric.\nETH3D terrains FIORD Kitchen\nConfiguration Details R\n◦ \n↓ t\n◦ \n↓ d\nreproj \n↓ R\n◦ \n↓ t\n◦ \n↓ d\nreproj \n↓\nVanilla no PE/RoPE, no param.-free corrections 19.87 8.2 10.7 28.09 20.7 14.2\nParam.-free only patch undist., grid correct., border token 17.78 7.3 10.9 39.04 36.3 19.2\nLearned only PE+RoPE, no param.-free corrections 0.67 1.0 1.8 4.64 4.1 5.8\nRayTun3R Full PE+RoPE + param.-free corrections 0.48 0.9 1.6 3.10 2.5 5.5",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "R, t, d_reproj for PE/RoPE split and learned vs parameter-free components",
+    "value_or_direction": "RoPE only 19.52/7.8/9.6 close to Vanilla 19.87/8.2/10.7; Absolute PE only 0.68/0.9/1.6; radial-only bins 2.82/3.3/3.6; param.-free only degrades FIORD to 39.04/36.3/19.2 vs Vanilla 28.09/20.7/14.2; learned only 4.64/4.1/5.8; full 3.10/2.5/5.5",
+    "comparator": "Vanilla, parameter-free-only, learned-only configurations",
+    "task_or_sample": "ETH3D terrains and FIORD Kitchen component ablation",
+    "locator": "page 15, Tables 7 (b) and 8"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 15 Table 7b 逐字给出 Absolute PE only (no RoPE) 0.68 0.9 1.6、RoPE only (no Absolute PE) 19.52 7.8 9.6、Both (full) 0.48 0.9 1.6、Nr=20, Nθ=0 (radial only) 2.82 3.3 3.6；Table 8 逐字给出 Vanilla 19.87 8.2 10.7 28.09 20.7 14.2、Param.-free only 17.78 7.3 10.9 39.04 36.3 19.2、Learned only 0.67 1.0 1.8 4.64 4.1 5.8、RayTun3R Full 0.48 0.9 1.6 3.10 2.5 5.5；claim 的全部数值与『绝对 PE 为主、免参数单独退化 FIORD』的方向均由两表行直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C13",
+   "claim": "标定敏感性（Table 5，DA3-Small，每数据集一条代表序列）：用 AnyCalib 单图预测标定替换 GT 标定后，RayTun3R 误差增大但仍显著优于 LoRA/CalTok——ETH3D terrains 从 0.48/0.9/1.7（GT）到 1.02/2.3/2.6（AnyCalib），而 CalTok+AnyCalib 在 ScanNet++ 达 4.44/24.7/5.5、FIORD Kitchen 达 30.3/59.9/10.6——适配有效性以『可用相机参数（GT 或预测）』为前提条件。",
+   "stance": "conditional",
+   "relation": "条件化综述命题（部署）：鱼眼适配依赖相机模型可用性；预测标定可维持相对优势但绝对精度下降，引用时应标注标定来源。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 5 六行（三方法 × GT/AnyCalib）+ Sec B 正文结论（remains useful under approximate camera calibration）。",
+   "locator": "page 13, Table 5 and Section B (Supplementary)",
+   "source_context": "RayTun3R (ours) (GT) 0.48 0.9 1.7 0.69 2.4 2.9 1.94 11.2 3.6 0.40 2.2 1.7 3.1 2.5 5.5\nRayTun3R (ours) (AnyCalib) 1.02 2.3 2.6 1.14 2.5 3.1 1.16 7.0 4.4 0.75 4.6 3.1 4.9 3.0 5.2\nLoRA (GT) 3.62 3.4 4.0 0.61 2.8 4.6 2.96 12.6 2.8 4.22 23.0 2.9 7.7 14.6 10.1\nLoRA (AnyCalib) 2.30 4.7 3.2 2.32 2.8 4.8 6.60 20.4 16.6 3.52 17.5 4.9 10.2 14.2 10.8\nCalTok (GT) 3.41 4.8 4.5 1.09 3.1 4.4 3.79 14.9 4.6 3.09 20.0 4.4 15.8 15.5 9.0\nCalTok (AnyCalib) 2.15 4.4 3.4 1.90 8.5 5.8 7.21 42.0 38.1 4.44 24.7 5.5 30.3 59.9 10.6",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "R, t, d_reproj under ground-truth vs AnyCalib predicted calibration",
+    "value_or_direction": "RayTun3R ETH3D terrains 0.48/0.9/1.7 (GT) vs 1.02/2.3/2.6 (AnyCalib); CalTok AnyCalib degrades to 4.44/24.7/5.5 on ScanNet++ 3f15 and 30.3/59.9/10.6 on FIORD Kitchen",
+    "comparator": "LoRA and CalTok under the same calibration regimes",
+    "task_or_sample": "one representative sequence per dataset with DA3-Small",
+    "locator": "page 13, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 Table 5 逐字给出 RayTun3R (GT) 0.48 0.9 1.7 ...、RayTun3R (AnyCalib) 1.02 2.3 2.6 ...、CalTok (AnyCalib) 2.15 4.4 3.4 1.90 8.5 5.8 7.21 42.0 38.1 4.44 24.7 5.5 30.3 59.9 10.6；page 13 Sec B 逐字给出 our method remains useful under approximate camera calibration and outperforms the competitors LoRA and CalTok consistently and significantly；claim 的数值与条件化表述均由 context 蕴含。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C14",
+   "claim": "作者自述限制（五条）：(i) 计算的是相机特定修正，换鱼眼相机或畸变档案需重新适配；(ii) 假设主点与以径向为主的畸变，不显式覆盖强切向/非径向光学；(iii) 需要相机参数（AnyCalib 预测标定可用但精度受限）；(iv) 只针对鱼眼图像，全景/equirectangular 输入留作未来工作；(v) 训练集需要足够帧间位移，小/退化运动下自监督约束变弱。",
+   "stance": "limit",
+   "relation": "限制综述命题（局限）：鱼眼 PE 适配路线的硬边界——逐相机重适配成本、径向畸变假设、标定依赖、全景不覆盖、运动量依赖；其中 (iv) 明确了本方法与全景（ERP）路线（如 RePer-360）的任务分界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 6 Limitations 原文逐字给出五条编号限制。",
+   "locator": "page 9, Section 6 Conclusion and Limitations",
+   "source_context": "Limitations. (i) RayTun3R computes a camera-specific correction; a different fisheye camera or\ndistortion profile requires new adaptation. (ii) RayTun3R assumes a principal point and mostly radial\ndistortion; it does not explicitly cover strong tangential or non-radial optics. (iii) RayTun3R requires\ncamera parameters, although Sec. B shows that predicted calibration from off-the-shelf networks\nsuch as AnyCalib [23] remains accurate. (iv) Our work focuses on fisheye images. Panoramic or\nequirectangular inputs remain for future work. (v) The training set for RayTun3R needs sufficient\ninter-frame displacement. With small or degenerate motion, the self-supervised constraints become\nweak because large depth or translation-direction errors can induce only small reprojection errors.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Section 6 逐字给出 (i) camera-specific correction ... requires new adaptation、(ii) assumes a principal point and mostly radial distortion ... not ... strong tangential or non-radial optics、(iii) requires camera parameters ... AnyCalib remains accurate、(iv) focuses on fisheye images. Panoramic or equirectangular inputs remain for future work、(v) needs sufficient inter-frame displacement ... self-supervised constraints become weak；claim 五条限制均逐点对应原文。"
+   }
+  },
+  {
+   "card_id": "2607.02711-C15",
+   "claim": "跨 backbone 泛化（Table 6，ETH3D 场景均值）：RayTun3R 在全部五个冻结 backbone（DA3-Small/Base/Large、π³、VGGT）上取得最低平均旋转与平移误差——DA3-Small 0.70/4.48 vs Baseline 8.59/15.16、Center-PH 3.46/13.70；DA3-Base 0.54/3.26 vs 8.27/12.24；DA3-Large 0.51/2.96 vs 6.36/13.94；π³ 0.66/2.48 vs 2.66/11.30；VGGT 0.96/4.82 vs 3.19/11.52；Center-PH 深度有竞争力但位姿始终更高。",
+   "stance": "support",
+   "relation": "支持综述命题（效果/机制）：pinhole bias 是位置编码层的普遍现象，PE 残差适配跨 backbone 家族可复用——效果不绑定 DA3-Small 单一实现。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 6 五 backbone × 三方法均值表 + Sec E 正文总结（lowest mean rotation and translation error for every backbone）。",
+   "locator": "page 14, Table 6 and Section E (Supplementary)",
+   "source_context": "Method DA3-Small DA3-Base DA3-Large π\n3 \nVGGT\nR t AbsRel δ R t AbsRel δ R t AbsRel δ R t AbsRel δ R t AbsRel δ\nBaseline 8.59 15.16 0.178 0.751 8.27 12.24 0.147 0.794 6.36 13.94 0.135 0.828 2.66 11.30 0.250 0.642 3.19 11.52 0.285 0.557\nCenter-PH 3.46 13.70 0.111 0.867 1.85 9.36 0.082 0.911 1.56 9.32 0.075 0.941 1.08 10.46 0.156 0.772 1.17 8.98 0.228 0.623\nRayTun3R (ours) 0.70 4.48 0.107 0.884 0.54 3.26 0.089 0.910 0.51 2.96 0.083 0.925 0.66 2.48 0.175 0.863 0.96 4.82 0.139 0.834",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean rotation and translation error across five frozen backbones on ETH3D",
+    "value_or_direction": "DA3-Small 0.70/4.48, DA3-Base 0.54/3.26, DA3-Large 0.51/2.96, VGGT 0.96/4.82 vs Baseline 8.59/15.16, 8.27/12.24, 6.36/13.94, 3.19/11.52; lowest for every backbone",
+    "comparator": "Vanilla baseline and Center-PH within each backbone",
+    "task_or_sample": "mean ETH3D results across scenes for DA3-Small, DA3-Base, DA3-Large backbones and VGGT",
+    "locator": "page 14, Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Table 6 逐字给出 Baseline 8.59 15.16 0.178 0.751 8.27 12.24 ... 3.19 11.52 0.285 0.557、Center-PH 3.46 13.70 ... 1.17 8.98 ...、RayTun3R (ours) 0.70 4.48 0.107 0.884 0.54 3.26 0.089 0.910 0.51 2.96 0.083 0.925 0.66 2.48 0.175 0.863 0.96 4.82 0.139 0.834；page 14 Sec E 逐字给出 lowest mean rotation and translation error for every backbone；claim 数值与全 backbone 最低的断言均由 context 蕴含。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[5] Depth Anything 3: Recovering the visual space from any views (ICLR 2026)",
+   "reason": "主要被适配 backbone（DA3-Small 默认）与 pinhole bias 分析对象。"
+  },
+  {
+   "ref": "[8] LoRA: Low-Rank Adaptation of Large Language Models (ICLR 2022)",
+   "reason": "最强通用 PEFT 基线，参数量（147.5K vs 10.8K）与延迟（+10% vs ≈0%）对比的参照系。"
+  },
+  {
+   "ref": "[11] Extending foundational monocular depth estimators to fisheye cameras with calibration tokens (ICCV 2025, CalTok)",
+   "reason": "最接近的鱼眼适配基线（学习辅助 token），本文『位置编码 vs 特征 token』论点的直接对照。"
+  },
+  {
+   "ref": "[29] Fisheye3R: Adapting unified 3D feed-forward foundation models to fisheye lenses (arXiv 2603.28896)",
+   "reason": "同期鱼眼适配工作（标定 token + 掩码注意力，合成监督），本综述语料内平行路线。"
+  },
+  {
+   "ref": "[30] FishRoPE: Projective rotary position embeddings for omnidirectional visual perception (arXiv 2604.10391)",
+   "reason": "同期鱼眼感知 RoPE 修改工作（有监督检测/BEV），与本方法的 PE/RoPE 残差路线互为参照。"
+  },
+  {
+   "ref": "[23] AnyCalib: On-manifold learning for model-agnostic single-view camera calibration (ICCV 2025)",
+   "reason": "预测标定来源，Table 5 鲁棒性实验的标定提供方。"
+  },
+  {
+   "ref": "[3] VGGT: Visual Geometry Grounded Transformer (CVPR 2025) / [4] π³: Permutation-equivariant visual geometry learning (ICLR 2026)",
+   "reason": "另两个被验证的冻结 backbone，支撑跨家族泛化主张。"
+  }
+ ],
+ "notes": "alphaxiv 文本层提取（note 内 extraction.method 按规范记为 pdf-text；来源 alphaxiv-fulltext-api 非 OCR 文本层），16 页：正文 9 页 + 参考文献 3 页 + 附录 A-I 4 页。与综述连接：鱼眼（径向畸变）路线的『3D 基础模型在线适配』核心证据，与 RePer-360（2603.05999，ERP 全景 + 归一化调制 + 离线监督）构成『冻结透视基础模型 + 轻量畸变感知适配』范式下的平行方法——RayTun3R 走位置编码残差/在线自监督/逐相机，RePer-360 走 AdaLN 调制/离线监督/单模型多数据集；作者限制 (iv) 明确全景不在范围，二者任务分界清晰。与本 run 语料内 Fisheye3R（2603.28896）、FishRoPE（2604.10391）构成鱼眼 PE 适配三重证据。"
+}

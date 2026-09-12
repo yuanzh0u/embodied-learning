@@ -1,0 +1,258 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.08341",
+  "title": "AnyDexRT: Calibration-Free Dexterous Hand Retargeting with Few-Shot Human Guidance",
+  "published": "2026-07-09",
+  "url": "https://arxiv.org/abs/2607.08341",
+  "authors": [
+   "Chenxi Wang",
+   "Ying Feng",
+   "Hongjie Fang",
+   "Shangning Xia",
+   "Lixin Yang",
+   "Chuan Wen",
+   "Cewu Lu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接讨论上游手部测量误差（标定/坐标系失准、捏取时传感器失效）如何经重定向目标函数传播为机器人运动失真与任务失败，并给出两级缓解：局部坐标系运动保持降低对标定误差的敏感性、接触分类器在指尖位置映射失效时接管捏取姿态；含标定扰动旋转实验（Fig 5）与真实遥操作捏取成功率（Tab 4）。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认重定向三要求（R1 直观性、R2 标定效率、R3 通用性）与既有方法对精确标定/手工调参的依赖"
+   },
+   {
+    "locator": "2 Related Works",
+    "role": "relevant-core",
+    "purpose": "定位误差来源论述：传统方法需仔细标定坐标系/向量原点/缩放因子；GeoRT 的腕系运动保持受指尖失准影响、对训练样本与标定误差敏感"
+   },
+   {
+    "locator": "3 AnyDexRT (3.1-3.4)",
+    "role": "method-or-design",
+    "purpose": "提取局部运动保持（对标定误差鲁棒的机制）、few-shot 锚点对齐、接触分类器捏取修正的设计与假设 A1/A2"
+   },
+   {
+    "locator": "4 Experiments (4.1-4.2)",
+    "role": "results-or-analysis",
+    "purpose": "提取 GMC/LMC 定义与结果、标定敏感性扰动实验（Fig 5）、消融（Tab 3）、真实遥操作效率与捏取成功率（Tab 4）"
+   },
+   {
+    "locator": "5 Conclusion and Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者声明的局限：仍需少量人工锚点、接触修正仅覆盖捏取、未做下游策略训练验证"
+   },
+   {
+    "locator": "Appendix A-D",
+    "role": "appendix-or-supplement",
+    "purpose": "网络/训练/推理实现细节、任务定义（Pick-10 捏取成功率=10/尝试次数）、锚点采集流程（P1-P3，允许轻微偏移）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表不逐条精读"
+   }
+  ]
+ },
+ "research_question": "如何在不要求精确标定与手工调参的前提下，把操作者指尖运动映射为跨多种类人灵巧手的直观、可行的机器人手部运动？",
+ "contributions": [
+  "提出 AnyDexRT：自监督指尖形状对应（partial Chamfer + 距离保持 + 局部运动保持）+ few-shot 人工锚点对齐的免标定重定向方法",
+  "用接触分类器识别捏取模式并在推理时搜索机器人捏取姿态，修复传感器失效导致的捏取失真",
+  "在 7 种 6-20 DoF 灵巧手上做仿真评估（GMC/LMC、标定敏感性、训练稳定性、消融），并在 Flexiv Rizon 4 + Wuji Hand 上完成 8 名操作者、4 个真实遥操作任务评估"
+ ],
+ "method": {
+  "summary": "把重定向分解为指尖空间映射 f_m（人指尖位置→机器人指尖位置）与关节求解 f_s（IK/NNS/神经网络）。f_m 用自监督目标训练：partial Chamfer（只要求人→机器人单向覆盖，避免冗余机器人区域扭曲映射）、成对距离保持（防几何失真）、局部坐标系运动方向保持（替代 GeoRT 的全局系方向一致性，降低对标定误差的敏感性）、few-shot 锚点对齐（操作者模仿参考手势采集配对锚点，消除映射歧义）。独立的接触分类器 f_c（拇指-他指指尖位置对→接触概率）在检测到人际接触时在映射位置邻域搜索机器人捏取姿态。",
+  "assumptions": [
+   "A1：机器人手与人手结构相似（类人灵巧手），低维姿态协同使指尖位置+参考关节角足以约束 IK，f_s 可近似为一对一映射",
+   "A2：人指尖运动空间经适当几何变换后可被机器人指尖空间覆盖（仅要求人→机器人方向）",
+   "输入为指尖 3D 位置（部署时由 Manus 手套提供，HTC Vive Tracker 控制手臂）",
+   "锚点采集允许操作者不严格对齐定义姿态，轻微偏移可接受"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采集人指尖样本（Manus 手套）与仿真机器人指尖样本（7 种手）",
+   "配对锚点：每类锚 K0=5 个人工采集位姿，插值到 K=50（侧旋）/K=100（弯曲）"
+  ],
+  "tasks": [
+   "仿真：7 种手上的重定向质量（GMC/LMC）与标定敏感性",
+   "真实遥操作：喷壶按压（Sprink）、拧灯泡（Screw）、铲牛排（Shovel）、小球捏取（Pick-10）"
+  ],
+  "embodiments": [
+   "Inspire Hand",
+   "Ability Hand",
+   "XHand",
+   "Wuji Hand",
+   "Allegro Hand",
+   "Leap Hand",
+   "Shadow Hand",
+   "Flexiv Rizon 4 臂 + Wuji Hand（真机）"
+  ],
+  "sample_or_scale": "仿真 7 种手 × 5 随机种子；标定敏感性用 Wuji Hand 做 ±45°/±90° 输入旋转扰动；真实遥操作 8 名操作者 × 4 任务"
+ },
+ "evaluation": {
+  "design": "仿真对比 Optimization[33]（离线版）与 GeoRT[55]：GMC（共享坐标系方向一致性，假设理想标定）与 LMC（局部系方向一致性，弱标定依赖）；标定敏感性通过对输入人数据绕 y 轴旋转模拟手套-机器人坐标系失准；消融逐档加 L_dist/L_motion/L_align；真机测任务完成时间与捏取成功率",
+  "baselines": [
+   "Optimization-based retargeting [33]（离线版）",
+   "GeoRT [55]（神经重定向）"
+  ],
+  "metrics": [
+   "全局运动一致性 GMC",
+   "局部运动一致性 LMC",
+   "训练稳定性（5 种子重定向位置标准差）",
+   "每任务完成时间",
+   "捏取成功率（Pick-10：10/尝试次数）",
+   "推理速度（Hz）与超参数数量"
+  ],
+  "ablations": [
+   "Wuji Hand 上 LMC（×10^-2）：仅 L_P-Chamfer 4.1 → +L_dist 83.8 → +L_motion 89.1 → +L_align 92.3"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "标定敏感性实验（Wuji Hand）：将输入人数据绕 y 轴旋转 -90°/-45°/45°/90° 模拟手套测量与机器人手的坐标系失准，优化基线与 GeoRT 的 LMC 显著退化（依赖精确坐标对齐），AnyDexRT 在所有旋转下保持稳定的重定向质量（Fig 5）",
+   "scope": "仿真，Wuji Hand，4 档旋转扰动",
+   "locator": "4.1 Calibration Sensitivity, Figure 5（提取结构中落入第二个 'Method' 文本块，定位器不可解析，见 notes）"
+  },
+  {
+   "finding": "真实遥操作捏取成功率：AnyDexRT 62.0% vs Optimization 39.6% vs GeoRT 29.2%（Pick-10）；四个任务完成时间均最短（Sprink 10.6s、Screw 17.0s、Shovel 28.0s、Pick-10 105.8s）",
+   "scope": "8 名操作者，Flexiv Rizon 4 + Wuji Hand",
+   "locator": "4.2 Real-World Teleoperation Performance, Table 4（第三个 'Method' 文本块，定位器不可解析）"
+  },
+  {
+   "finding": "仿真重定向质量：7 种手平均 LMC 从 GeoRT 的 59.8% 提升到 90.2%，且各种子/各手标准差小（约 ±0.2），GeoRT 波动大（如 Ability LMC 36.2±11.2）；AnyDexRT 只需 3 个超参、默认超参跨手直接复用、运行约 300 Hz",
+   "scope": "7 种灵巧手 × 5 种子",
+   "locator": "4.1 Retargeting Quality, Table 1-2"
+  },
+  {
+   "finding": "消融（Wuji Hand LMC×10^-2）：partial Chamfer 单独仅 4.1，加距离保持 83.8，加局部运动保持 89.1，加锚点对齐 92.3——局部运动保持与锚点对齐是直观性的主要贡献项",
+   "scope": "Wuji Hand 消融",
+   "locator": "4.1 Ablation, Table 3（第二个 'Method' 文本块，定位器不可解析）"
+  },
+  {
+   "finding": "锚点采集对人误差宽容：操作者不需严格对齐定义的锚点姿态，轻微偏移在实际中可接受；锚点按操作者习惯定义（侧旋/弯曲两类），仅 P1 需人参与，P2 插值与 P3 机器人锚点生成自动化",
+   "scope": "锚点采集流程（K0=5→K=50/100）",
+   "locator": "Appendix D Anchor Data Collection"
+  },
+  {
+   "finding": "度量口径本身反映标定误差：GMC 在共享坐标系比较位移方向、假设理想良好标定；LMC 在局部系比较方向、弱标定依赖、更贴合操作者控制——作者据此以 LMC 为主指标",
+   "scope": "评估协议设计",
+   "locator": "4.1 Simulation Experiments Setup"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仍需少量人工引导锚点；未来可自动化锚点选择/采集或从操作者反馈在线调整映射",
+    "locator": "5 Conclusion and Limitations"
+   },
+   {
+    "limitation": "接触感知修正目前只覆盖捏取相关姿态，更广泛的接触丰富行为可能需要更丰富的接触模型",
+    "locator": "5 Conclusion and Limitations"
+   },
+   {
+    "limitation": "真实评估主要验证遥操作性能；用所采数据训练下游操作策略尚未验证",
+    "locator": "5 Conclusion and Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "标定敏感性实验只做了绕单轴（y 轴）的旋转扰动且只报 LMC 曲线形态，未给各旋转角度下的具体数值，也未测试平移/缩放/时延等其他标定误差模式；'calibration-free'结论的扰动覆盖有限",
+    "basis": "4.1 Calibration Sensitivity 仅有 4 档旋转与 Fig 5 曲线，无数值表；扰动类型单一"
+   },
+   {
+    "boundary": "所有实验输入来自 Manus 数据手套（专用传感硬件）而非 ego-centric 视觉检测；'传感器限制与电磁干扰致捏取失真'是手套场景的失效描述，向纯视觉手部检测噪声的迁移需额外验证",
+    "basis": "4.2 Setup 明确手套+Vive Tracker 管线；全文未用视觉手部检测器做输入"
+   },
+   {
+    "boundary": "Pick-10 捏取成功率以 10/尝试次数计，未分离'检测噪声→映射误差'与'控制/接触物理'两类失败源；接触分类器提升捏取的机制性证据是定性的（Fig 8 案例分析）",
+    "basis": "4.2 与附录 C.2 仅给成功率与定性姿态对比图"
+   }
+  ]
+ },
+ "transfer_boundary": "本文输入为数据手套指尖位置，非 ego-centric 视觉手部检测；其证据直接回答的是'测量/标定误差如何经重定向目标传播'：全局坐标系方向一致性目标会把标定/测量失准直接放大为运动方向失真，局部系目标与接触分类器分别在目标函数层与接触层吸收这类误差。向无本体 ego-centric 视频迁移时，需把'手套标定误差'类比为'视觉 3D 手部重建的帧级失准与接触时刻失真'，但后者噪声量级与相关性结构不同，本文未提供视觉输入下的定量阈值。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "显式把标定误差作为一等公民处理：局部运动保持的动机直接来自手套标定误差使全局方向失准的观察，并用旋转扰动实验验证",
+   "GMC/LMC 双指标把'理想标定下的一致性'与'弱标定依赖的一致性'区分开，度量设计本身承认标定误差存在",
+   "7 种手 × 5 种子 + 真实 8 操作者 4 任务，覆盖仿真与真机、效率与捏取成功率"
+  ],
+  "design_risks": [
+   "标定敏感性仅 Fig 5 曲线、无各扰动档数值；扰动仅单轴旋转",
+   "捏取失败的失效分析（Fig 4）仅定性展示，未量化'测量姿态偏离'的幅度分布",
+   "接触分类器的邻域搜索依赖预生成模板，模板密度与搜索半径未报告",
+   "真实评估未测下游策略训练（作者自述）"
+  ],
+  "baseline_fairness": "与 GeoRT 同用自监督学习类方法、同报 5 种子标准差；Optimization 基线为离线版（作者标注*），速度/调参比较（Tab 2）口径一致",
+  "metric_validity": "LMC/GMC 度量运动方向一致性而非末端位置误差，未直接报告指尖位置误差（mm）；捏取成功率是任务级代理指标，与'末端轨迹精度'是间接关系",
+  "reproducibility": "网络结构（MLP 3-128-128-3 与 6-128-128-1）、训练超参（20 epochs、lr 1e-4、batch 2048）、锚点流程（K0=5、K=50/100、λ=2）公开；但损失权重未调的具体值、接触判定阈值 0.5 以外的模板细节缺失",
+  "external_validity": "结论限于类人结构灵巧手（A1）与手套输入；对视觉检测噪声、非类人手的适用性未验证"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.08341-C01",
+   "claim": "在捏取等精细接触任务中，上游手部测量误差会被直接放大为任务级失败：抓取小物体时即使很小的位置误差也会导致任务失败；由于传感器限制与潜在电磁干扰，即使操作者明确做出指尖接触，测得的手部姿态仍可能显著偏离真实手势、无法捕捉捏取的几何特征。AnyDexRT 的缓解是不再仅依赖（含噪的）指尖位置映射推断精细接触，而是训练接触分类器从拇指-他指指尖位置对识别捏取模式；推理时检测到人际指尖接触即在对应映射机器人位置的邻域搜索机器人捏取姿态以保证稳定抓取。",
+   "stance": "conditional",
+   "relation": "误差来源（传感器限制+电磁干扰→测量姿态显著偏离真实手势）与任务级影响阈值（小物体捏取下小位置误差→任务失败），缓解手段（接触级）：接触信号比指尖位置更可靠，用分类器+邻域搜索绕开含噪位置映射推断接触，阻断测量噪声经指尖映射传入捏取姿态。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.4 节明确：小物体抓取对重定向精度要求高、小位置误差即可致任务失败；因传感器限制与电磁干扰，测量手姿可显著偏离真实手势、丢失捏取几何特征；为此训练接触分类器 f_c 识别接触模式（式 5，BCE 损失），推理时检测到接触即在映射位置邻域搜索机器人捏取姿态。",
+   "locator": "6 DoF 7 DoF (mangled extraction heading spanning Sections 1-4.1 Setup, passage in 3.4 Pinch Pose Refinement using Contact Classifier)",
+   "source_context": "Grasping tiny objects requires higher retargeting accuracy, as even\nsmall positional errors can lead to task failure. This is especially\ncritical for pinch motions, where precise fingertip contact is re-\nquired. As shown in Fig. 4, due to sensor limitations and poten-\ntial electromagnetic interference, the measured hand pose may still\ndeviate significantly from the actual hand gesture, even when the\noperator makes clear fingertip contact. As a result, the measured\npose may fail to capture the geometric characteristics of a pinch.\nTo address this issue, we no longer rely solely on fingertip position\nmapping to infer fine contact patterns. Since finger contact signals\nare easy to collect and annotate, and can directly reflect key manip-\nulation intentions such as pinching, we instead train a classifier f\nc\nto recognize such contact patterns.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 3.4 节前两段（提取文本跨行断词 re-/poten-/manip- 已按原文保留）；claim 前半逐句对应引文，后半推理时邻域搜索一句对应同节末尾'During inference, when a human fingertip contact is detected, we search the neighborhood of the corresponding mapped robotic position for a robotic pinch pose, ensuring stable grasping'，已核对一致；失效归因（电磁干扰等）与任务阈值陈述均未夸大，定位器因提取标题损坏用混杂块名并在括号注明实际小节。"
+   }
+  },
+  {
+   "card_id": "2607.08341-C02",
+   "claim": "在全局手基坐标系中施加运动方向一致性的重定向目标（如 GeoRT）隐含假设指尖测量已良好标定；实践中手套传感器标定误差会在测量与真实指尖位置之间引入平移或旋转差异，使全局测量的运动方向失准，即标定/坐标系对齐误差经全局方向目标直接传播为重定向运动失真。AnyDexRT 改为在局部坐标系中保持运动方向（局部运动损失，与 partial Chamfer、距离保持联合训练），作者陈述这使重定向行为对标定误差更不敏感、更符合操作者意图。",
+   "stance": "limit",
+   "relation": "误差传播路径（标定/坐标系对齐误差→全局方向一致性目标失真→重定向运动偏离操作者意图）+ 目标函数级缓解（局部坐标系运动保持替代全局方向一致性，降低对标定误差的敏感性）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.2 节 Local Motion Preservation：GeoRT 在全局手基系施加方向一致性、隐含假设指尖测量良好标定；手套标定误差引入平移/旋转差异使全局方向失准（该句因分页在提取文本中被图 3 噪声截断，前后两半均已核对）；本节末句陈述局部运动损失使重定向对标定误差更不敏感。4.1 节 Fig 5 的 ±45°/±90° 旋转扰动实验为该机制提供实证（见 findings，定位器不可解析）。",
+   "locator": "6 DoF 7 DoF (mangled extraction heading spanning Sections 1-4.1 Setup, passage in 3.2 Local Motion Preservation)",
+   "source_context": "Local Motion Preservation Partial correspondence aligns fingertip spaces, but does not guarantee\nthat local motion directions are preserved. GeoRT [55] imposes directional consistency in the global\nhand-base frame, implicitly assuming well-calibrated fingertip measurements.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 3.2 节 Local Motion Preservation 段首；claim 中'平移或旋转差异使全局方向失准'对应紧随的'In practice, glove-sensor calibration errors may introduce translational or rotational discrepancies between measured and actual fingertip positions, causing globally measured directions to be misaligned'（该句被第 4 页分页与图 3 内容截为两段，已分别核对），'更不敏感'对应本节末'this local motion loss encourages retargeting behavior that is less sensitive to calibration errors and more consistent with operator intent'，均逐字核对；未声称 Fig 5 数值。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "ID 段预算（B03 六篇共 15 个事件 ID，本文用 0040-0041）下仅投影 2 张核心卡。提取文本的章节标题损坏（preamble/6 DoF 7 DoF/Method×3/...），§4.1 Calibration Sensitivity（Fig 5 旋转扰动实验）、Tab 3 消融、Tab 4 捏取成功率 62.0%/39.6%/29.2% 与 §5 局限落在第二、三个 'Method' 文本块内，_surface_for_section 只能解析首个 'Method' 块，相关内容无法通过 claim-support audit 的定位器解析，故这些内容保留在 findings/limitations 未投影；两张证据卡的引文均落在可解析的 '6 DoF 7 DoF' 块（字符 432-22328，覆盖 §1 至 §4.1 Setup）。"
+}

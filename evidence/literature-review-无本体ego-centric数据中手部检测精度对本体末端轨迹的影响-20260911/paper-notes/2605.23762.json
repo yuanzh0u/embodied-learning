@@ -1,0 +1,330 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.23762",
+  "title": "Direct Dynamic Retargeting for Humanoid Imitation Learning from Videos",
+  "published": "2026-05-22",
+  "url": "https://arxiv.org/abs/2605.23762",
+  "authors": [
+   "Constant Roux",
+   "Ludovic De Matteïs",
+   "Armand Jordana",
+   "Valentin Guillet",
+   "Nicolas Mansard",
+   "Olivier Stasse",
+   "Philippe Souères"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接从单目视频提取 SMPL 关键点（VideoMimic 管线，含手部关键点）做人形机器人重定向：明确指出视频提取工具产生 noisy 且物理不一致的轨迹，GR 会把该噪声直接传导为滑移/接触破坏/物理不可行段，而 DDR 用任务空间 Laplacian 距离（对全局平移旋转不变）+ 物理仿真内 CEM 采样吸收噪声与接触歧义。给出接触序列错误率、不可行段比例、RL 收敛效率的量化对照，覆盖综述的误差来源、传播与缓解三维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认视频提取噪声、形态学失配与几何偏差的问题陈述。"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "梳理 GR/IDR/从视频模仿三条线，确认参考质量敏感性的文献定位。"
+   },
+   {
+    "locator": "C. Imitation Learning from Video Demonstrations",
+    "role": "relevant-core",
+    "purpose": "核对'运动学噪声或动力学不可行参考导致次优行为与学习失败'的论断。"
+   },
+   {
+    "locator": "III. METHOD",
+    "role": "method-or-design",
+    "purpose": "理解 DDR 单阶段任务空间优化、可行性集合定义与 d(x_DDR)≤d(x_IDR) 的下界论证。"
+   },
+   {
+    "locator": "B. SMPL keypoints extraction",
+    "role": "method-or-design",
+    "purpose": "确认视频→SMPL→关键点（躯干/肩/手/脚）的参考构成。"
+   },
+   {
+    "locator": "D. Dynamically Feasible Trajectory",
+    "role": "method-or-design",
+    "purpose": "核对 Laplacian 相对形状度量对全局平移/旋转不变的设计与 CEM-MPC 求解。"
+   },
+   {
+    "locator": "E. Imitation via Reinforcement Learning",
+    "role": "method-or-design",
+    "purpose": "核对 RL 蒸馏、奖励与约束设置。"
+   },
+   {
+    "locator": "A. Motion collection",
+    "role": "data-or-setting",
+    "purpose": "确认五个动作、三个被试单目视频、五种子平均与 Table II 不可行段数据位置。"
+   },
+   {
+    "locator": "B. Retargeted trajectories",
+    "role": "results-or-analysis",
+    "purpose": "提取接触序列错误率（Table III）、成功率阈值（骨盆偏差 50 cm）与滑移归因段落。"
+   },
+   {
+    "locator": "C. Imitation Policies",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table VI RL 收敛效率与 Table VII 策略跟踪误差。"
+   },
+   {
+    "locator": "D. Real World experiments",
+    "role": "results-or-analysis",
+    "purpose": "确认真机零样本迁移范围。"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取'Laplacian 任务空间距离缓解视频噪声与漂移'的结论与作者自述局限。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "无附录",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: no appendix or supplement"
+   }
+  ]
+ },
+ "research_question": "能否绕过几何重定向（GR）中间步骤，从单目视频提取的带噪人体关键点直接生成动力学可行的人形机器人轨迹，并提升下游模仿学习效率？",
+ "contributions": [
+  "提出 DDR：基于 CEM 采样 MPC、在物理仿真内直接从视频关键点生成动力学可行轨迹的单阶段框架。",
+  "量化证明消除中间几何偏差使重定向精度超过 GR 与 IDR 基线。",
+  "证明物理可行参考加速 RL 收敛并提升最终表现，并在 Unitree H1-2 上零样本真机部署五个敏捷/平衡动作。"
+ ],
+ "method": {
+  "summary": "用 VideoMimic 管线从单目视频重建 SMPL 人体运动，取躯干/肩/手/脚关键点轨迹作参考 x_ref；在任务空间以 欧氏跟踪项+相对形状匹配项（Laplacian 图距离，对全局平移旋转不变）构造增强距离；用 Hydrax 框架的 CEM 采样 MPC 在 MuJoCo 物理仿真内直接滚动优化控制序列，使机器人关键点轨迹贴近参考，无需预定义接触序列；得到的可行轨迹再蒸馏为每动作一个 PPO 闭环 RL 策略（Constraints-as-Terminations，IsaacLab）。",
+  "assumptions": [
+   "VideoMimic 提取的 SMPL 关键点含噪声与漂移，但任务意图可恢复。",
+   "物理仿真（接触模型）足够接近真实，使可行性判定有部署意义。",
+   "每个动作训练单独策略；MPC 短视性对所选任务可接受。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "三个不同人类被试的单目视频（每动作三条）",
+   "VideoMimic SMPL 重建关键点"
+  ],
+  "tasks": [
+   "squat",
+   "kung fu pose",
+   "long one-foot balance",
+   "pistol squat",
+   "balancing stick"
+  ],
+  "embodiments": [
+   "Unitree H1-2 人形（21 自由度动作空间）",
+   "仿真：MuJoCo（参考生成）+ Pinocchio/ProxQP（无偏可行性判定）"
+  ],
+  "sample_or_scale": "5 个动作 × 3 被试视频；IDR/DDR 结果 5 个随机种子平均；RL 每方法 5 种子"
+ },
+ "evaluation": {
+  "design": "GR / IDR / DDR 三方法对照：物理不可行段比例（Pinocchio+ProxQP 独立判定）、接触序列错误率（对手工标注真值）、滑移定性、重定向成功率（骨盆偏差>50cm 判失败）、Laplacian 跟踪误差；下游 RL 收敛效率（Table VI）与策略对参考的跟踪误差（Table VII）；真机零样本部署。",
+  "baselines": [
+   "GR（Pyroki 运动学优化，VideoMimic 集成）",
+   "IDR（同一 CEM 求解器但以 GR 轨迹为参考）"
+  ],
+  "metrics": [
+   "不可行段百分比",
+   "接触序列错误率",
+   "重定向成功率（骨盆偏差阈值 50 cm）",
+   "Laplacian 关键点跟踪误差",
+   "RL final reward 与 90% 收敛步数",
+   "策略关节 RMSE / 平均笛卡尔位置误差 / 平均 Laplacian 误差"
+  ],
+  "ablations": [
+   "GR vs IDR vs DDR（隔离几何偏差）",
+   "5 种子方差"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "GR 重定向轨迹含 3.08%-28.38% 物理不可行段，IDR/DDR 压到 0-3.36%（Table II）。",
+   "scope": "5 个动作 × 3 视频，Pinocchio 独立判定",
+   "locator": "A. Motion collection, Table II"
+  },
+  {
+   "finding": "接触序列错误率 DDR 一致最低（0-13.71%），GR 最高达 32.12%；作者将 GR 的滑移/接触破坏归因于缺少动态接触模型并纯依赖带噪专家示教。",
+   "scope": "同上手工资标注接触真值",
+   "locator": "B. Retargeted trajectories, Table III"
+  },
+  {
+   "finding": "重定向成功率（骨盆偏差>50cm 判失败）：DDR 全面高于 IDR（如 balancing stick 66.67% vs 0%，one-foot balance 46.67% vs 13.33%）。",
+   "scope": "每动作 5 种子",
+   "locator": "B. Retargeted trajectories, Table IV"
+  },
+  {
+   "finding": "RL 学习效率：DDR 参考在几乎所有动作上 final reward 最高、收敛最快（pistol squat 383.7/79.6k vs GR 200.7/128.4k）；IDR 在 balancing stick 上未能收敛。",
+   "scope": "每动作每方法 5 种子",
+   "locator": "C. Imitation Policies, Table VI"
+  },
+  {
+   "finding": "策略对参考的执行跟踪：DDR 参考下策略的平均笛卡尔位置误差最低（如 squat 0.265 m vs GR 0.410 m；pistol squat 0.316 m vs 0.541 m）。",
+   "scope": "训练后策略 rollout 对各自参考",
+   "locator": "C. Imitation Policies, Table VII"
+  },
+  {
+   "finding": "GR 原始跟踪误差最低属预期（忽略可行性约束）；IDR 因 GR 初始化的运动学偏差而持续劣于 DDR。",
+   "scope": "squat 等动作的 Laplacian 跟踪",
+   "locator": "B. Retargeted trajectories"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "目标函数纯定义在任务空间，可能导致病态解或收敛变慢。",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "性能对任务空间权重与初始化敏感，目前需人工调节。",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "MPC 可能表现短视行为（对当前任务可行，更远预见需其他求解方案）。",
+    "locator": "D. Dynamically Feasible Trajectory"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "视频侧仅使用 VideoMimic 单目 SMPL 重建，未报告关键点本身的定量精度（如 MPJPE），'噪声吸收'证据是通过下游可行性/接触/收敛指标间接体现的，无法从中推出手部检测误差的具体可接受阈值。",
+    "basis": "III.B 仅描述关键点选取，全文无对 VideoMimic 重建误差的直接测量；所有量化指标都在重定向与学习侧。"
+   },
+   {
+    "boundary": "任务是全身敏捷/平衡动作（squat、kung fu、平衡），手部仅作为关键点之一；结论对精细手部操作（抓取、指法）中手部轨迹精度的适用性未验证。",
+    "basis": "IV.A 的动作集与 IV 的评估指标均围绕足端接触与骨盆稳定，无操作任务。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：单目视频→SMPL 关键点→人形机器人全身敏捷/平衡动作的离线重定向与 RL 蒸馏；其'动力学可行性约束过滤视频噪声'与'任务空间 Laplacian 不变量吸收全局漂移'的机制可迁移到手部轨迹重定向。不直接适用于：灵巧操作的手指尖端精度分析、无物理仿真器的纯运动学管线、或需要关键点精度定量阈值的场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "可行性判定用独立的 Pinocchio+ProxQP 栈而非生成参考所用的 MuJoCo，避免模拟器自评偏差。",
+   "IDR 与 DDR 共享同一求解器与代价函数，仅参考不同（x_GR vs x_ref），干净地隔离了几何偏差机制。",
+   "接触真值为视频手工标注，接触评估独立于算法内部状态。"
+  ],
+  "design_risks": [
+   "每动作仅 3 条视频、5 个动作，任务集小且均为非操作类动作。",
+   "VideoMimic 重建质量未定量控制，'噪声'作为既有条件而非受控变量。",
+   "真机部署无定量指标，仅定性展示与视频。"
+  ],
+  "baseline_fairness": "IDR 基线与 DDR 共享求解器/代价，公平；GR 用 VideoMimic 自带 Pyroki 集成，代表标准运动学管线；未与 VideoMimic 完整管线（含其自身 RL）端到端对比。",
+  "metric_validity": "不可行段比例、接触错误率、骨盆偏差 50 cm 失败阈值直接对应'轨迹可用性'；Table VII 的平均笛卡尔位置误差（m）是少数直接度量执行轨迹误差的结果；Laplacian 误差是形状相似性代理，非绝对精度。",
+  "reproducibility": "求解器（Hydrax）、RL 框架（skrl PPO、IsaacLab）、奖励表与阈值均写明；声称代码将公开；但 CEM 采样预算、任务空间权重等关键超参未列。",
+  "external_validity": "限于单目视频+SMPL 重建、H1-2 全身动作、每动作单独策略的设置；对手部操作与 ego-centric 视角遮挡场景的外推需谨慎。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.23762-C01",
+   "claim": "对单目视频提取的人体关键点做纯几何重定向（GR）会把视频噪声直接传导为物理不可用的机器人轨迹：GR 的接触序列错误率最高达 32.12%（squat），各动作均高于或远高于 DDR（0%-13.71%）；作者明确归因——GR 缺少动态接触模型且纯依赖带噪专家示教，导致预期接触相出现滑移伪影，而动力学一致性约束（IDR/DDR）能强制接触点静止从而缓解这些伪影。",
+   "stance": "support",
+   "relation": "支持综述命题'误差来源与缓解：上游视频姿态估计噪声若经纯运动学重定向无过滤传导，会表现为接触破坏/滑移等轨迹级失效；动力学可行性约束是有效的下游噪声过滤机制'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 报告五动作 GR/IDR/DDR 接触序列错误率（对手工标注真值）；IV-B 第 3 小节明确将 GR 滑移伪影归因于缺少动态接触模型与依赖带噪示教，并称动态一致性约束缓解之。",
+   "locator": "B. Retargeted trajectories",
+   "source_context": "Movement GR IDR DDR (ours)\nSquat 32.12% 0.00% 0.00%\nKung fu 10.53% 13.03% 4.23%\nOne-foot Balance 21.37% 24.72% 13.71%\nPistol Squat 15.00% 9.13% 5.35%\nBalancing Stick 8.19% 20.73% 7.86%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "contact sequence error rate (%) against manually labeled ground truth",
+    "value_or_direction": "GR 8.19-32.12% vs IDR 0.00-24.72% vs DDR 0.00-13.71%; DDR closest to reference on all five motions",
+    "comparator": "geometric retargeting (GR) and indirect dynamic retargeting (IDR) with identical cost functions",
+    "task_or_sample": "five motions (squat, kung fu, one-foot balance, pistol squat, balancing stick) x three monocular videos each; IDR/DDR averaged over five seeds",
+    "locator": "B. Retargeted trajectories, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table III 十五个数值与 IV-B 正文归因段（'GR lacks a dynamic contact model and relies purely on a noisy expert demonstration; conversely, these artifacts are mitigated in DDR and IDR'）逐项核对一致；claim 限定于足端接触与该动作集，未外推到手部操作场景。"
+   }
+  },
+  {
+   "card_id": "2605.23762-C02",
+   "claim": "参考轨迹的物理质量沿'参考→RL 监督'通道传播为学习效率差距：用 DDR 参考训练的 RL 策略在几乎所有动作上 final reward 最高、收敛最快（pistol squat 383.7/79.6k 步 vs GR 200.7/128.4k 步；one-foot balance 360.0/76.3k vs GR 253.7/219.9k），而 GR 参考因物理不可行使 RL 智能体陷入跟踪与物理定律的持续冲突；IDR 虽可行但因 GR 初始化的运动学偏差在 balancing stick 上未能收敛（Table VI 记为 '-'）。",
+   "stance": "support",
+   "relation": "支持综述命题'传播路径：上游轨迹误差/不可用性不止影响回放，还经监督通道降低策略收敛速度与最终表现'——并显示中间几何投影引入的偏差可独立造成损害（IDR 不收尾案例）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table VI 报告三方法五动作的 final reward 与 90% 收敛步数；IV-C 正文解释 GR 参考物理不可行导致 RL 冲突、IDR 被 GR 初始化偏差锚定。",
+   "locator": "C. Imitation Policies",
+   "source_context": "Movement \nGR IDR DDR (Ours)\nFinal 90% Final 90% Final 90%\nSquat 307.0 41.3k 374.8 38.2k 363.2 21.1k\nKung fu 322.7 91.1k 366.8 95.6k 398.4 71.6k\nOne-foot Bal. 253.7 219.9k 301.6 57.3k 360.0 76.3k\nPistol Squat 200.7 128.4k 340.8 93.5k 383.7 79.6k\nBal. Stick 252.6 103.2k - - 364.5 78.9k",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RL final cumulative reward and steps to 90% of final",
+    "value_or_direction": "DDR highest final reward on 4/5 motions (pistol squat 383.7 vs GR 200.7) and fastest 90% on 3/5 (squat 21.1k vs 41.3k); IDR fails to converge on Balancing Stick",
+    "comparator": "same PPO/Constraints-as-Terminations RL framework trained on GR and IDR references, five seeds per method",
+    "task_or_sample": "five humanoid motions on Unitree H1-2 in IsaacLab, five random seeds per retargeting method",
+    "locator": "C. Imitation Policies, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table VI 全部数值（含 IDR 在 Balancing Stick 的 '-' 缺失项）与 IV-C 机制解释逐条核对一致；claim 保留了 squat 上 IDR final reward (374.8) 高于 DDR (363.2) 这一例外所对应的'几乎所有动作'措辞，未做全称断言。"
+   }
+  },
+  {
+   "card_id": "2605.23762-C03",
+   "claim": "DDR 的作者声称：把参考生成问题直接 formulation 在任务空间并采用 Laplacian 图距离，能有效缓解从视频中提取的人体数据的噪声与漂移影响；该 Laplacian 相对形状度量显式保持示教的局部结构形状，且对全局平移与旋转不变，采样式 CEM 求解器同时内在地处理带噪视频数据中接触识别的歧义。",
+   "stance": "support",
+   "relation": "支持综述命题'缓解手段：用对全局平移/旋转不变的相对形状度量替代绝对关键点跟踪，可吸收视频重建的全局漂移；采样式求解器可绕过接触序列识别噪声'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V. CONCLUSION 明确陈述 Laplacian 任务空间距离缓解视频噪声与漂移；III-D 说明该度量对全局平移旋转不变；I. INTRODUCTION 说明 CEM 采样内在处理带噪视频接触识别歧义。",
+   "locator": "V. CONCLUSION",
+   "source_context": "ing. By formulating the reference generation problem di-\nrectly in the task space using a Laplacian graph distance,\nour approach effectively mitigates the impact of noisy and\ndrifting human data extracted from videos. Furthermore, by\nemploying a sampling-based solver directly within a physics\nsimulator, DDR inherently optimizes over complex contact\nsequences while guaranteeing the physical viability of the\nresulting motions.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "结论段引文与 III-D 的 Laplacian 不变量陈述（'with invariance to global translation and rotation'）、引言的 CEM 接触歧义陈述逐字核对一致；claim 标注为作者方法性主张，其有效性证据由 C01/C02 的下游指标间接支撑，未将其表述为已分离验证的因果结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "paper_id": "videomimic-ref",
+   "title": "Visual imitation enables contextual humanoid control (VideoMimic)",
+   "authors": [
+    "A. Allshire",
+    "H. Choi",
+    "J. Zhang",
+    "D. McAllister",
+    "A. Zhang",
+    "C. M. Kim",
+    "T. Darrell",
+    "P. Abbeel",
+    "J. Malik",
+    "A. Kanazawa"
+   ],
+   "year": 2025,
+   "url": "https://arxiv.org/abs/2410.16973",
+   "relation": "本文的视频→SMPL 关键点提取管线来源；视频重建噪声即经此管线进入。"
+  }
+ ],
+ "notes": "全身人形敏捷/平衡任务，非手部操作；对综述的价值在于'视频噪声→纯运动学重定向直接传导→动力学约束过滤'的机制与量化对照，以及'参考质量→RL 学习效率'的传播证据。VideoMimic 的关键点重建误差未定量报告，阈值维度仅有骨盆偏差 50 cm 的失败判据。"
+}

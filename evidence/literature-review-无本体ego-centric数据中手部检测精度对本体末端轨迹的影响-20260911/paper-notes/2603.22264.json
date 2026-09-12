@@ -1,0 +1,258 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.22264",
+  "title": "UniDex: A Robot Foundation Suite for Universal Dexterous Hand Control from Egocentric Human Videos",
+  "published": "2026-03-23",
+  "url": "https://arxiv.org/abs/2603.22264",
+  "authors": [
+   "Gu Zhang",
+   "Qicheng Xu",
+   "Haozhe Zhang",
+   "Jianhan Ma",
+   "Long He",
+   "Yiming Bao",
+   "Zeyu Ping",
+   "Zhecheng Yuan",
+   "Chenhao Lu",
+   "Chengbo Yuan",
+   "Tianhai Liang",
+   "Xiaoyu Tian",
+   "Maanping Shao",
+   "Feihong Zhang",
+   "Mingyu Ding",
+   "Yang Gao",
+   "Hao Zhao",
+   "Hang Zhao",
+   "Huazhe Xu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "核心系统：从四个 ego RGB-D 人体数据集（H2O/HOI4D/HOT3D/TACO）重定向构建 50K 条八爪手机器人中心数据集；指尖 IK + 6-DoF dummy base 的人机回环重定向显式把手部姿态估计偏差列为系统性误差来源并以标定吸收，直接命中误差来源与缓解手段。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble",
+    "role": "problem",
+    "purpose": "图 1：UniDex 三件套总览（Dataset/VLA/Cap）"
+   },
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "问题与三件套贡献"
+   },
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "灵巧手基础模型的三大难点与 ego 视频转化动机"
+   },
+   {
+    "locator": "3.1. Overview",
+    "role": "data-or-setting",
+    "purpose": "数据集来源（H2O/HOI4D/HOT3D/TACO）与规模"
+   },
+   {
+    "locator": "3.2. Human-Robot Transformation",
+    "role": "method-or-design",
+    "purpose": "指尖 IK + dummy base 人机回环重定向、手部姿态估计偏差的标定吸收、视觉对齐"
+   },
+   {
+    "locator": "4.1. Unified Action Space: FAAS",
+    "role": "method-or-design",
+    "purpose": "跨手统一动作空间"
+   },
+   {
+    "locator": "5. Experiments",
+    "role": "results-or-analysis",
+    "purpose": "5 个真机工具使用任务、泛化、UniDex-Cap 共训练交换率"
+   },
+   {
+    "locator": "6. Conclusion and Limitation",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与作者自述局限"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "B 重定向 GUI、D UniDex-Cap 标定（Vision Pro 与 RealSense 外参对齐）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2. Related Work",
+    "role": "relevant-core",
+    "purpose": "背景定位，略读"
+   },
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "purpose": "引文列表，略读"
+   }
+  ]
+ },
+ "research_question": "如何从大规模 ego-centric 人体操作视频构建机器人中心的灵巧手预训练数据集，并通过统一动作空间（FAAS）训练可跨八种灵巧手本体迁移的 VLA 基础策略？",
+ "contributions": [
+  "UniDex-Dataset：从 4 个 ego RGB-D 人体数据集转化，9M 配对图像-点云-动作帧、52K 条轨迹、覆盖 8 种灵巧手（6-24 主动 DoF）",
+  "人机回环重定向管线：指尖 IK + 机器人基座前 6-DoF dummy base 偏移，GUI 交互调整保证接触可信",
+  "FAAS 功能-执行器对齐统一动作空间 + UniDex-VLA（3D 点云 VLA），真机 5 个工具使用任务平均任务进度 81%",
+  "UniDex-Cap 便携采集装置（Vision Pro + RealSense L515 刚性耦合）与人-机数据共训练方案"
+ ],
+ "method": {
+  "summary": "从 H2O/HOI4D/HOT3D/TACO 取 ego RGB-D 与手部姿态；以指尖为对齐目标，在机器人基座前插入 6-DoF dummy base，先用 PyBullet 多末端 IK 自动求解，再经 GUI 人工微调 dummy 偏移保证手-物接触可信；视觉侧用 WiLoR+SAM2 掩除人手并把重定向后的机器人手渲染进点云再重投影回 RGB-D。动作用 FAAS 统一到 32 维功能坐标。UniDex-Cap 用 3D 打印支架刚性耦合 Vision Pro（手/头姿态）与 RealSense L515（RGB-D），滑块 GUI 将 VP 骨架与 RealSense 手部点云对齐求常值外参。",
+  "assumptions": [
+   "源数据集（H2O/HOI4D/HOT3D/TACO）的手部姿态标注与 Vision Pro 手部追踪精度足够，其残余偏差可被 6-DoF dummy base 标定吸收（全文无量化精度报告）",
+   "指尖位置对齐+接触可信性足以替代全手型/力闭环绕一性",
+   "功能等价的执行器可共享 FAAS 坐标而忽略形态差异"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "UniDex-Dataset（自构）：52K 轨迹/9M 帧/8 种手，源自 H2O、HOI4D、HOT3D、TACO",
+   "UniDex-Cap 自采人体演示用于共训练"
+  ],
+  "tasks": [
+   "Make Coffee（Inspire）",
+   "Sweep Objects（Inspire）",
+   "Water Flowers（Wuji）",
+   "Cut Bags（Wuji 剪刀）",
+   "Use Mouse（Wuji）"
+  ],
+  "embodiments": [
+   "Franka Panda 7-DoF 臂 + Inspire（6 主动 DoF）/Wuji（20 主动 DoF）/Oymotion（6 主动 DoF）",
+   "数据集覆盖 Inspire/Leap/Shadow/Allegro/Ability/Oymotion/Xhand/Wuji"
+  ],
+  "sample_or_scale": "每任务 50 条遥操作微调演示；每任务每算法 20 次真机 trial；共训练网格 h×r 各点 20 次 trial"
+ },
+ "evaluation": {
+  "design": "真机 5 任务平均任务进度（阶段成功率均值）为主指标；对比 DP/DP3/π0/No-Pretrain；空间（DemoGen 点云增强）、物体、跨手零样本泛化；UniDex-Cap 共训练 h×r 网格实验",
+  "baselines": [
+   "Diffusion Policy",
+   "DP3",
+   "π0",
+   "UniDex-VLA (No Pretrain)"
+  ],
+  "metrics": [
+   "Average Task Progress (%)",
+   "Final Success Rate (%)",
+   "共训练交换率"
+  ],
+  "ablations": [
+   "No Pretrain 对照（81.0% vs 32.5% 平均任务进度）",
+   "共训练中人/机演示数量网格（Fig. 13）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "手部姿态估计偏差被显式列为跨数据集的系统性差异来源之一，通过每数据集×每手一次基础交互式标定（选 dummy base 偏移）吸收；接触密集片段再少量人工微调，基础标定即可覆盖绝大多数轨迹。",
+   "scope": "UniDex-Dataset 构建管线",
+   "locator": "3.2. Human-Robot Transformation"
+  },
+  {
+   "finding": "共训练交换率约 2:1（约 2 条转化后人体演示抵 1 条机器人演示），且没有任何机器人数据时成功率始终接近零；人体演示采集快约 5.2 倍。",
+   "scope": "Make Coffee 任务共训练网格（Fig. 13）",
+   "locator": "5.4. UniDex-Cap for Human-Robot Data Co-train"
+  },
+  {
+   "finding": "UniDex-VLA 平均任务进度 81.0%、最终成功率 76.0%，显著优于 DP/DP3/π0/No-Pretrain；跨手零样本迁移 Oymotion 60%、Wuji 40%（基线接近零）。",
+   "scope": "5 个真机任务",
+   "locator": "5.2. Performance; 5.3. Generalization"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "尚未利用大规模无动作（或弱标注）的 ego 活动数据集，预训练数据扩展受限",
+    "locator": "6. Conclusion and Limitation"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部姿态估计偏差只被定性命名并用人工标定吸收，全文无检测误差量级报告，也无标定后残余误差对下游性能影响的剂量-响应实验",
+    "basis": "3.2.1 仅描述标定流程；附录 B/D 只给出 GUI 操作"
+   },
+   {
+    "boundary": "重定向质量依赖人工视觉检查（'visually inspects alignment'），接触可信性无物理仿真验证，误差判定主观且不可自动复现",
+    "basis": "3.2.1 交互阶段描述"
+   },
+   {
+    "boundary": "交换率 2:1 仅在 Make Coffee 单任务上测得，且该任务为 Inspire 手，不可外推至更高 DoF 手或接触更密集任务",
+    "basis": "5.4 实验范围"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于手部姿态标注已存在的 ego RGB-D 数据集与 Vision Pro 级手部追踪；dummy-base 标定吸收的是系统性偏移而非逐帧随机误差，对低质量/逐帧抖动大的手部追踪是否仍然有效未验证；交换率结论限于单任务单手。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "显式承认手部姿态估计偏差并给出可扩展的工程化吸收机制（每数据集一次标定+接触段微调）",
+   "共训练 h×r 网格设计能量化人/机数据交换率，而非单点对比",
+   "跨八只手的统一预训练+跨手零样本迁移实验，覆盖度罕见"
+  ],
+  "design_risks": [
+   "手部追踪精度全链路无定量标定（源数据集标注质量、Vision Pro 追踪、标定后残余误差均无数字）",
+   "重定向接触质量靠人眼判断，存在标注者间差异",
+   "交换率与 5.2× 采集效率均来自单一任务"
+  ],
+  "baseline_fairness": "DP/DP3/π0 均在同任务同 50 演示预算下评估，π0 与 No-Pretrain 均用 FAAS 接口；对照公平。",
+  "metric_validity": "平均任务进度为阶段级成功均值，非轨迹级误差；无指尖/末端位置误差报告，重定向保真度不可直接读出。",
+  "reproducibility": "IK 公式、dummy base 参数化、FAAS 32 维映射、标定 GUI 均有描述；但人工交互环节本身不可完全复现。",
+  "external_validity": "真机仅 Franka+三种手；更高 DoF（Shadow 24 DoF）只在数据集侧出现未上真机；单摄像头单视角设定。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.22264-C01",
+   "claim": "UniDex 把手部姿态估计偏差显式列为 ego 人体数据转机器人轨迹时的系统性误差来源之一：其重定向在机器人基座前插入 6-DoF dummy base 偏移，并通过对每个人体数据集×每种灵巧手做一次基础交互式标定来选择该偏移，以吸收坐标系差异与手部姿态估计偏差；接触密集片段再人工微调少量帧，作者报告该基础标定即可覆盖绝大多数轨迹，使管线能以 modest 人工量扩展到大规模 ego 数据集。",
+   "stance": "support",
+   "relation": "误差来源与缓解：手部检测/标注偏差被建模为每数据集的系统性偏移（而非逐帧随机噪声），用 6-DoF 人机回环标定在重定向层吸收——这是不提升检测器本身、而在坐标对齐层吸收检测误差的代表性工程手段。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2.1 说明指尖 IK + dummy base 的两阶段人机回环流程，并明确 dummy 偏移用于处理跨数据集系统性差异（含 hand-pose estimation bias）与手型形态差异；同段报告基础标定覆盖绝大多数轨迹。",
+   "locator": "3.2. Human-Robot Transformation",
+   "source_context": "we per- form a basic interactive calibration to select dummy base offsets to handle systematic differences across datasets (e.g., coordinate frames/ hand-pose estimation bias) and hand morphology differences",
+   "evidence_type": "reported-finding",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.2.1 原文逐字命中（'per- form'与'frames/ hand-pose'为抽取断行原样保留）；同段上文确认 dummy base 为 6-DoF 对齐偏移、下文确认'basic calibration suffices to cover the vast majority of trajectories'与接触段少量微调。claim 限定于系统性偏移吸收，未声称其处理逐帧随机误差。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "H2O [28] / HOI4D [35] / HOT3D [4] / TACO [36]",
+   "reason": "手部姿态与 RGB-D 来源数据集，检测精度特性全部继承"
+  },
+  {
+   "citation": "Apple Vision Pro + OpenTeleVision [12] / dex-retargeting [47]",
+   "reason": "UniDex-Cap 与遥操作的手部追踪来源"
+  },
+  {
+   "citation": "WiLoR [44] + SAM2 [49]",
+   "reason": "视觉对齐中的人手检测与掩码来源"
+  }
+ ],
+ "notes": "六遍式完成；scoping 深度。本文对综述的核心贡献：把'手部姿态估计偏差'显式命名为系统性误差来源并给出 dummy-base 标定吸收机制（ ego 数据→灵巧手重定向的代表性工程缓解）；附 2:1 人/机数据交换率与 5.2× 采集效率的可用性量化。主要证据缺口：全链路无手部追踪误差量化。受 B06 批次 ID 段余量限制只投影 1 卡，交换率等定量结果保留在 findings 供定性引用。"
+}

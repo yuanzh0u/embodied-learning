@@ -1,0 +1,910 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.08521",
+  "title": "OccTrack360: 4D Panoptic Occupancy Tracking from Surround-View Fisheye Cameras",
+  "published": "2026-03",
+  "url": "https://arxiv.org/abs/2603.08521",
+  "authors": [
+   "Yongzhi Lin",
+   "Kai Luo",
+   "Yuanfan Zheng",
+   "Hao Shi",
+   "Mengfei Duan",
+   "Yang Liu",
+   "Kailun Yang"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "_extraction_provenance": "alphaxiv-fulltext-api 镜像的 arXiv 文本层（非 OCR，页定位 page N），按 schema 允许值映射为 pdf-text。",
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是环视鱼眼相机做 4D 全景占据跟踪（4D panoptic occupancy tracking）的代表工作：基于 KITTI-360 鱼眼相机构建 OccTrack360 基准（174~2234 帧长序列、18 类、128×128×16 体素、实例级体素跟踪标注、全方向遮挡掩码 + MEI 鱼眼 FoV 掩码），并提出鱼眼原生基线 FoSOcc（CFM 中心聚焦监督 + FEL 基于 MEI 统一投影模型的 2D-to-3D 提升）。对鱼眼综述的价值：(1) 应用方式证据——'在模型内部以 MEI 球面几何适配鱼眼'与'先矫正成透视再推理'两条路线的直接对照；(2) 任务获益/受限证据——针孔管线在原始鱼眼输入上近乎崩溃（OccSQ 1.59）、矫正路线损失 FoV、FEL 使原始鱼眼可用（14.37），增益集中在几何规则小类（parking 0→7.56、fence 0.85→2.90）而大尺度结构类回退（building 29.87→25.09）；(3) 局限证据——GPU 显存使有效范围减半、SVD 标签构造忽略 z 轴真实变化、评测仅单序列。综述按'环视鱼眼-4D 占据跟踪'主线使用。注意本体为自动驾驶车辆（KITTI-360），非机器人平台，跨本体结论需谨慎。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract + Section I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：4D 全景占据跟踪缺基准——既有数据集面向针孔、受限 FoV 或短序列，不能同时提供宽 FoV 鱼眼观测、时序一致实例级体素标注、原则性可见性约束；鱼眼成像带来球面投影畸变与体素定位不准两大建模挑战。"
+   },
+   {
+    "locator": "page 2, Section I 末段贡献清单 + Fig. 2(a)(b)",
+    "role": "relevant-core",
+    "purpose": "提取四点贡献（基准/双掩码/FoSOcc 框架/双基准实验）与数据集对比表：OccTrack360 为 18 类、128×128×16 体素、实例级 ✓；类别分布与 SSCBench-KITTI360 基本对齐。"
+   },
+   {
+    "locator": "page 2-3, Section II Related Work",
+    "role": "relevant-core",
+    "purpose": "定位三条相关工作线：占据预测/SSC（针孔优化、近场盲区）、4D 实例级占据（缺静态元素实例边界）、鱼眼感知与数据集（BEV/检测→3D 占据，但缺时序一致实例 ID）。"
+   },
+   {
+    "locator": "page 3-4, Section III OccTrack360 Benchmark (Voxel Generation / Object Completion)",
+    "role": "data-or-setting",
+    "purpose": "精读基准构造：基于 KITTI-360/SSCBench-KITTI360 投影带实例 ID 的边界框生成体素；自车从后边界重定位到中心，前向标注+后向补全（静态体素对齐式(1) + 动态体素变换式(2)）；XY 平面投影 + SVD 归一化的 z 轴误差问题（Fig. 4 z+ error）。"
+   },
+   {
+    "locator": "page 4-5, Section III Visibility Constraint + Fisheye FoV Mask",
+    "role": "method-or-design",
+    "purpose": "精读双掩码设计：遮挡掩码改用体素空间边界点连线（Occ3D 用占据体素中心，向上方向覆盖不全）；MEI 鱼眼 FoV 掩码推导 a_max=√(1/(ξ²−1))、采样 a∈[0,a_max]、Brown-Conrady 畸变映射、图像边界手动截断、球面扩展到整个体素域。"
+   },
+   {
+    "locator": "page 5-6, Section IV FoSOcc (Overall / CFM / FEL)",
+    "role": "method-or-design",
+    "purpose": "精读 FoSOcc：CFM 将监督从易受扰动的实例边界转移到稳定中心（六方向偏移乘积 focus feature、实例级归一化）；FEL 用 MEI 模型改写 LSS 提升（镜面参数 ξ、深度 bins 缩放单位球向量）。"
+   },
+   {
+    "locator": "page 6-7, Section V-A/V-B Setups + Implementation",
+    "role": "data-or-setting",
+    "purpose": "提取评测协议：Occ3D-Waymo [−40m,40m]/0.4m 体素/2Hz；OccTrack360 [−25.6m,25.6m]/0.2m 体素/2Hz 但实验有效范围压缩到 [−12.8m,12.8m]；ResNet-50、200 queries、τ1=0.3/τ2=0.25/Tf=3、24 epochs、AdamW lr 2e-4、batch 4、4×RTX 3090、704×704、Seq06 评测、仅类 1~6 参与跟踪评测。"
+   },
+   {
+    "locator": "page 7, Section V-C/V-D + Table I + Table II",
+    "role": "results-or-analysis",
+    "purpose": "提取主结果：Occ3D-Waymo 上 FoSOcc OccSQ 30.8 vs 基线 29.4（sign +11.1%/G.O. +20.7% 相对提升、cyclist AQ +26.1%）；OccTrack360 上 raw fisheye TrackOcc 1.59 vs FoSOcc 14.37、all 输入 12.90→14.20、矫正路线 10.15、building 29.87→25.09 回退。"
+   },
+   {
+    "locator": "page 8, Section V-E Ablations + Table III",
+    "role": "results-or-analysis",
+    "purpose": "提取 CFM 消融（12 epochs 控制）：A 单独 29.99→30.16、A+B 30.67、full-train 30.80；G.O. 15.51→17.88→20.15、C.C. full-train 14.18。"
+   },
+   {
+    "locator": "page 7-8, Section VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论重申：OccTrack360 提供长时序序列与全方向遮挡掩码 + MEI 鱼眼 FoV 掩码，FoSOcc 以 center focusing 与 spherical lift 模块应对畸变球面投影与体素定位不准，双基准上取得领先的 4D 全景占据跟踪性能。注意：结论未讨论逐类回退与评测范围限制（这些散见于正文与设置节）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 参考文献列表无正文证据价值，关键引文（KITTI-360、SSCBench-KITTI360、TrackOcc、LSS、MEI）已摘录进 core_citations。本篇无独立附录。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在环视鱼眼相机输入下实现 4D 全景占据跟踪——即同时解决（a）基准缺口（无支持鱼眼感知、长时序、实例级体素跟踪的评测基准）与（b）建模挑战（严重径向畸变与球面投影几何破坏针孔提升管线假设、深度噪声降低体素定位精度、尤其伤害实例级跟踪）。综述问题映射：鱼眼在具身/移动平台 3D 时序感知任务上的应用方式（几何原生适配 vs 矫正）、效果（哪些类别获益）与局限（哪些类别/设置受限）。",
+ "contributions": [
+  "OccTrack360 基准：首个面向环视鱼眼 4D 全景占据跟踪的基准，基于 KITTI-360 构建，提供 174~2234 帧长时序多样序列（显著长于既有基准）、18 语义类、128×128×16 体素空间、实例级体素跟踪标注（对动态智能体与静态地标统一身份一致性）。",
+  "原则性可见性监督：全方向遮挡掩码（改用体素空间边界点连线构造，修复 Occ3D 遮挡掩码向上方向覆盖不全的问题）+ MEI 统一投影模型推导的鱼眼 FoV 掩码（a_max=√(1/(ξ²−1))，显式判定每个体素是否在有效鱼眼视场内）。",
+  "FoSOcc 鱼眼原生基线：Center Focusing Module（CFM）以六方向偏移乘积的 center-peaked focus feature + 实例级归一化，把监督焦点从易受畸变扰动的实例边界转移到稳定中心；Fisheye-based Enhanced Lifting（FEL）把 LSS 提升改写到 MEI 模型球面几何下（镜面参数 ξ），直接处理原始鱼眼输入而非先矫正。",
+  "双基准实验：Occ3D-Waymo（针孔基准上 CFM 的增益验证）+ OccTrack360（鱼眼基准上 FEL 与输入模态对照：all/Rectified Fisheyes/Fisheyes 三设置），并用 12/24 epochs 控制的消融分离 CFM 两组件贡献。"
+ ],
+ "method": {
+  "summary": "基准 + 基线方法双轨。基准侧：从 KITTI-360/SSCBench-KITTI360 投影带实例 ID 的边界框生成体素标注，将自车从后边界重定位到中心后做后向补全（静态体素对齐 + 动态体素变换，XY 平面投影 + SVD 归一化约束填充范围），再以全方向遮挡掩码 AND MEI 鱼眼 FoV 掩码过滤出可见监督区域。方法侧：FoSOcc 在标准占据管线（2D backbone → 提升 → 4D 占据解码器 → 查询传播）上插入两个模块——CFM 用多尺度特征的 center-peaked 监督增强实例感知定位（通过单层交叉注意力接入 3D 特征），FEL 把 2D-to-3D 提升的针孔假设替换为 MEI 球面几何（归一化图像坐标→极坐标→有效径距约束→入射角→单位球向量→深度 bins 缩放）。",
+  "assumptions": [
+   "KITTI-360 的鱼眼相机标定（MEI 模型参数 ξ、内参、畸变系数）与安装位姿准确可用——FoV 掩码与 FEL 都依赖该标定。",
+   "后向体素补全的 XY 平面投影 + SVD 归一化能把误差压到可接受水平（作者承认该操作忽略 z 轴真实变化）。",
+   "占据体素 + 实例 ID 是表达'空间连续+时序一致'场景理解的恰当中间表示。",
+   "体素可见性（遮挡+视场联合掩码）是训练与评测的合理监督区域定义。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "OccTrack360（自建，基于 KITTI-360 鱼眼相机；18 语义类、128×128×16 体素、实例级标注；序列 174~2234 帧；空间覆盖 [−25.6m,25.6m]×[−2.0m,4.4m]、0.2m 体素分辨率、2Hz 输入；实验有效水平范围压缩至 [−12.8m,12.8m]）",
+   "Occ3D-Waymo（外部针孔占据基准；[−40m,40m]×[−1m,5.4m]、0.4m 体素、2Hz）",
+   "SSCBench-KITTI360 / KITTI-360（标签与相机标定的上游来源）"
+  ],
+  "tasks": [
+   "4D 全景占据跟踪（occupancy segmentation + 实例级 voxel tracking，指标 OccSTQ/OccSQ/OccAQ）",
+   "输入模态对照：all inputs / Rectified Fisheyes（矫正后鱼眼）/ Fisheyes（原始鱼眼）"
+  ],
+  "embodiments": [
+   "自动驾驶 ego-vehicle（KITTI-360 数据采集车，左侧鱼眼相机等环视安装）——非机器人平台",
+   "论文动机覆盖 robotics 与 autonomous driving，但实验全部在车辆平台数据上"
+  ],
+  "sample_or_scale": "OccTrack360：序列长度 174~2234 帧（论文称显著长于既有基准）；Occ3D-Waymo 标准划分。训练 24 epochs（消融 12 epochs 控制）、AdamW lr 2e-4、batch 4、4×RTX 3090；推理单张 RTX 3090、OccTrack360 评测在 Seq06 单序列、图像 704×704、仅类 1~6 参与跟踪评测。"
+ },
+ "evaluation": {
+  "design": "双基准设计：Occ3D-Waymo 验证 CFM 在针孔标准设置下的增益（与 MinVIS/CTVIS/AB3DMOT/4D-LCA/TrackOcc 对比，E2E 与非 E2E 两栏）；OccTrack360 验证鱼眼原生建模（同基线 TrackOcc 在 all/Rectified Fisheyes/Fisheyes 三种输入设置下与 FoSOcc 对照，FoSOcc 用 FEL 提升）。消融以 12/24 epochs 控制分离 CFM 的实例级归一化（A）与监督 focus feature（B）。",
+  "baselines": [
+   "TrackOcc（ICRA 2025，camera-based 4D panoptic occupancy tracking，主基线，all/Rectified/Fisheyes 三设置）",
+   "MinVIS、CTVIS（E2E 视频实例分割范式，Occ3D-Waymo）",
+   "AB3DMOT、4D-LCA（非 E2E 跟踪范式，Occ3D-Waymo）"
+  ],
+  "metrics": [
+   "OccSTQ（Tracking Quality，主指标）",
+   "OccSQ（Segmentation Quality，含 overall 与逐类）",
+   "OccAQ（Association Quality，含 overall 与逐类）"
+  ],
+  "ablations": [
+   "CFM 两组件消融（Occ3D-Waymo，12 epochs 控制）：A=实例级归一化、B=监督 focus feature",
+   "输入模态对照（OccTrack360 Table II）：all / Rectified Fisheyes / Fisheyes",
+   "基准侧诊断：Occ3D 遮挡掩码方向覆盖不全的对照（Fig. 5）与 z+ error 现象（Fig. 4）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "针孔占据跟踪管线在原始鱼眼输入上近乎崩溃：TrackOcc 以 Fisheyes 设置仅取得 OccSQ 总体 1.59 / OccSTQ 1.67；矫正成透视视角可部分恢复（OccSQ 10.15），但仍低于 all 输入设置（12.90），且矫正过程固有地限制 FoV 并降低覆盖。",
+   "scope": "OccTrack360，TrackOcc 基线的输入模态对照",
+   "locator": "page 7, Table II + Section V-D"
+  },
+  {
+   "finding": "FEL 使原始鱼眼输入直接可用：FoSOcc 在 Fisheyes 设置取得 OccSQ 14.37 / OccSTQ 14.38，较同输入的 TrackOcc（1.59/1.67）提升 +12.78/+12.71，甚至高于 all 输入设置的 FoSOcc（14.20/15.82 中的 OccSQ 部分）——鱼眼原生提升优于'多输入拼接'与'先矫正'两条替代路线。",
+   "scope": "OccTrack360，FoSOcc vs TrackOcc 鱼眼专用建模",
+   "locator": "page 7, Table II（差值另见 page 1 Fig. 1 标注 +12.78）"
+  },
+  {
+   "finding": "任务获益呈类别分化：all 输入设置下 FoSOcc 将 OccSQ 总体 12.90→14.20，增益集中在此前近乎为零的几何规则类——parking 0→7.56、fence 0.85→2.90；Occ3D-Waymo 上几何规则小类同样获益（sign 相对 +11.1%、general objects 相对 +20.7%、cyclist AQ 相对 +26.1%）。",
+   "scope": "OccTrack360 + Occ3D-Waymo 双基准",
+   "locator": "page 7, Table II + Table I + Section V-C"
+  },
+  {
+   "finding": "大尺度结构类出现回退：all 输入设置下 building 类 OccSQ 从 TrackOcc 的 29.87 降至 FoSOcc 的 25.09（−4.78），OccTrack360 Fisheyes 设置下 OccAQ Car 8.38→6.64、Truck 3.40→1.69 也低于 all 设置——鱼眼专用组件的收益并非全局，大尺度/依赖远距观测的类别受损，正文未单独讨论该回退。",
+   "scope": "OccTrack360，逐类结果（读者从表格对比得出）",
+   "locator": "page 7, Table II"
+  },
+  {
+   "finding": "CFM 消融（Occ3D-Waymo，12 epochs 控制）：实例级归一化（A）单独 29.99→30.16，加监督 focus feature（B）→30.67，全量训练 30.80；B 对 general objects 增益最大（15.51→17.88→20.15），construction cones 在 full-train 达 14.18——center-peaked 软监督主要改善小尺度与几何规则类别。",
+   "scope": "Occ3D-Waymo，CFM 组件归因",
+   "locator": "page 8, Table III + Section V-E"
+  },
+  {
+   "finding": "机制层证据：鱼眼外围的严重切向畸变与不均匀分辨率使深度提升产生必然误差，单个体素深度错位即令边界偏移监督触发最大误差惩罚与不稳定梯度——这是'鱼眼畸变破坏标准边界监督'的直接机制解释，也是 CFM 改为中心监督的动机。",
+   "scope": "方法设计动机（作者论述）",
+   "locator": "page 6, Section IV-B.1"
+  },
+  {
+   "finding": "基准侧发现：Occ3D 遮挡掩码以占据体素中心连线构造，向上等方向覆盖不全，无掩码时预测出现体素歧义；KITTI360 外参的 z+ error（坡道上 z_w 值与语义不符）与 SVD 归一化忽略 z 轴真实变化，构成该类变换式基准标签的系统性风险。",
+   "scope": "基准构造诊断（Fig. 4/Fig. 5 + 正文论述）",
+   "locator": "page 3-4, Fig. 4 + Section III"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "GPU 显存限制使实验有效水平范围从设计的 [−25.6m,25.6m] 压缩到 [−12.8m,12.8m]——基准宣称的环视感知范围在实验中仅兑现一半，远距感知未被评估。",
+    "locator": "page 6, Section V-A"
+   },
+   {
+    "limitation": "后向体素补全的 SVD 归一化'抑制误差的同时不可避免地忽略了 z 轴方向的真实变化'，且 z+ error 现象（KITTI360 外参高度平移与坡道标注不一致）被记录为基准构造的已知问题。",
+    "locator": "page 4, Section III + page 3, Fig. 4"
+   },
+   {
+    "limitation": "跟踪评测仅覆盖类 1~6（car/bicycle/motorcycle/truck/other_vehicle/person），OccTrack360 推理评测仅在单序列 Seq06 上进行。",
+    "locator": "page 7, Section V-B"
+   },
+   {
+    "limitation": "作者自述方法定位是'可比肩有竞争力的替代方案、为未来研究提供强基线'，而非全面超越——贡献第四条原话为 comparable to competitive alternatives。",
+    "locator": "page 2, 贡献清单第 4 条"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "逐类回退未被解释：all 设置下 building OccSQ 29.87→25.09、Fisheyes 设置下 OccAQ Car/Truck 低于 all 设置，提示鱼眼原生提升（FEL 的球面几何）对依赖远距/大尺度结构的类别可能引入几何偏差，但样本仅 Seq06 单序列，无法区分真实回退与评测噪声。",
+    "basis": "page 7 Table II 数字对比；正文未讨论该现象（推理）"
+   },
+   {
+    "boundary": "本体边界：数据来自 KITTI-360 自动驾驶车辆的环视鱼眼相机（城市道路、2Hz、平滑车辆运动），结论不能直接外推到足式/臂式机器人平台的高频振动、非结构化室内场景；'robotics' 仅出现在动机与 Related Work，无任何机器人实验。",
+    "basis": "page 1 动机段 + page 6 Section V-A 实验设置（全文无机器人平台实验）"
+   },
+   {
+    "boundary": "绝对性能仍低：最好的 Fisheyes 设置 OccSQ 14.37/OccSTQ 14.38（百分制），说明环视鱼眼 4D 占据跟踪远未解决——所有'获益'结论都是相对基线的提升而非任务已可用。",
+    "basis": "page 7 Table II 绝对数值（推理）"
+   },
+   {
+    "boundary": "无运行时/FPS 报告：论文未报告推理延迟或帧率，实时性（具身部署的关键约束）无证据；基线 TrackOcc 在其他论文报告过效率，但本篇未给出对照。",
+    "basis": "全文无 runtime/FPS 数据（推理）"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：(1) 任务——环视鱼眼相机输入的 4D 全景占据跟踪（OccSTQ/OccSQ/OccAQ 口径），不含 2D MOT、深度估计或 BEV 分割任务本身；(2) 数据分布——KITTI-360 城市道路场景（车辆 ego-motion、2Hz），无室内/机器人平台数据；(3) 标定条件——MEI 模型鱼眼标定与安装位姿已知且准确（FEL 与 FoV 掩码都依赖该前提），未标定/在线标定漂移场景无证据；(4) 空间范围——实验有效范围 [−12.8m,12.8m]（设计的 [−25.6m,25.6m] 因显存压缩），远距感知无证据；(5) 评测覆盖——OccTrack360 主结果仅 Seq06 单序列、跟踪仅类 1~6；(6) '任务获益'结论限定于几何规则小类（parking/fence/sign/G.O.），大尺度结构类（building）与部分车辆类的回退提示收益分布不均；(7) 基准标签经变换式构造（前向标注+后向补全+SVD 归一化），z 轴维度存在作者承认的系统性损失。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "双基准设计把'方法增益'（Occ3D-Waymo 针孔标准设置）与'鱼眼适配增益'（OccTrack360 三种输入模态对照）分离，能区分 CFM 的通用增益与 FEL 的鱼眼专属增益。",
+   "输入模态对照（all/Rectified Fisheyes/Fisheyes）直接回答了综述关心的'矫正 vs 原生'路线之争，是同类论文中少见的干净对照。",
+   "消融用 12/24 epochs 控制（非全量训练的 shortcut 消融），CFM 两组件（A/B）的归因更可信。",
+   "可见性掩码（全方向遮挡 + MEI FoV）有原理性推导（式(3)-(6)），修复了 Occ3D 遮挡掩码的方向覆盖缺陷并有 Fig. 5 定性证据。",
+   "与 5 个基线（E2E 与非 E2E 两范式）对比，主基线 TrackOcc 是该任务此前最好方法。"
+  ],
+  "design_risks": [
+   "基准标签非直接标注而是变换式构造：前向标注+后向补全依赖 ego-pose/实例位姿变换的准确性，SVD 归一化忽略 z 轴变化 + z+ error 现象意味着标签噪声可能进入评测基准本身——评测数值（绝对值低）部分可能反映标签问题而非模型问题。",
+   "OccTrack360 主结果仅在单序列 Seq06 上评测（作者明示），单序列的统计功效有限，逐类回退（building −4.78）与增益（parking +7.56）的稳健性存疑。",
+   "有效范围减半（[−12.8m,12.8m]）使'环视长距感知'的核心卖点未被检验。",
+   "Table II 中 FoSOcc 的 Fisheyes 行是否与 TrackOcc Fisheyes 行使用相同训练协议与数据量未明说，FEL 增益与数据/训练差异的混淆不能完全排除。",
+   "Fig. 1 摘要式图表与 Table II 的数字口径需交叉核对（本文核对一致：12.90→14.20/+1.30、1.59→14.37/+12.78 等六组差值均能复算）。"
+  ],
+  "baseline_fairness": "Occ3D-Waymo 上与 5 个已发表方法（MinVIS/CTVIS/AB3DMOT/4D-LCA/TrackOcc）对比，结果引用或同协议复现，TrackOcc 为主基线且 FoSOcc 建于其上，同范式对比公平；OccTrack360 上 TrackOcc 在三种输入设置下均被评测，Fisheyes 设置的对照（1.59 vs 14.37）是同输入同任务的干净对比。风险点：TrackOcc-Fisheyes 是否经过与其原设置等量的训练调参未说明，'针孔方法在鱼眼上崩溃'的结论对调参鲁棒性未做敏感性分析。",
+  "metric_validity": "OccSTQ/OccSQ/OccAQ 沿用 TrackOcc 建立的 4D 占据跟踪标准指标，社区已接受；逐类分解使'哪些类别获益/受限'可追溯。局限：指标以可见体素掩码过滤后的区域为口径，评测区域本身依赖本文新提出的掩码构造——基准与指标同源，独立性有限。",
+  "reproducibility": "实现细节较完整（backbone/queries/阈值/epochs/优化器/batch/GPU/分辨率/评测序列），代码与基准承诺开源（GitHub: YouthZest-Lin/OccTrack360，论文时点尚未可验证）；MEI 掩码与 FEL 的公式链（式(3)-(6)）完整可复现。缺：FEL 的具体深度 bins 数量、FoV 掩码截断的手工规则细节、Seq06 之外的划分协议。",
+  "external_validity": "外部效度受限明显：车辆平台城市道路数据（KITTI-360），'robotics'动机无机器人实验支撑；单序列评测 + 有效范围减半 + 跟踪仅 6 类，使'环视鱼眼 4D 占据跟踪已获益'的结论边界窄。对具身综述的可用推断：FEL 代表的 MEI 几何原生适配路线与'矫正损失 FoV'的权衡机制可迁移（几何论证与 OccTrack360 内部对照支撑），但量化幅度（+12.78 OccSQ）绑定于该基准与 Seq06。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.08521-C01",
+   "claim": "OccTrack360 论文主张：截至该文（2026），既有占据/占据跟踪基准主要面向针孔相机设置、受限 FoV 或较短序列，不能同时提供宽 FoV 鱼眼观测、时序一致的实例级体素标注和原则性可见性约束，因此不足以评估长期环视动态理解——这是环视鱼眼 4D 占据跟踪的基准空白。",
+   "stance": "gap",
+   "relation": "领域空白命题：鱼眼在 3D 时序占据感知任务上缺乏可评测基准，为综述'任务受限'维度提供空白证据（不是模型不行，而是此前连评测条件都不具备）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者在引言中列举既有基准（Occ3D、SSCBench 等）的三个联合缺失项：宽 FoV 鱼眼观测、时序一致实例级体素标注、原则性可见性约束。",
+   "locator": "page 1, Section I Introduction",
+   "source_context": "Existing occupancy datasets and benchmarks [5], [6] pri- marily focus on pinhole-camera setups, limited Fields of View (FoV), or relatively short sequences, which makes them insufficient for evaluating long-term, surround-view dynamic understanding. In particular, they do not jointly provide: (1) wide-FoV fisheye observations, (2) temporally consistent instance-level voxel annotations, and (3) principled visibility constraints for occupancy tracking.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应 page 1 引言对既有基准三项联合缺失的陈述，无外推；'基准空白'是作者原话 insuffcient for evaluating 的忠实转述。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C02",
+   "claim": "OccTrack360 提供 174~2234 帧的长时序多样序列（论文称显著长于既有占据跟踪基准），并配以原则性体素可见性标注：覆盖全方向的遮挡掩码与基于 MEI 统一投影模型的鱼眼 FoV 掩码。",
+   "stance": "support",
+   "relation": "应用方式命题：环视鱼眼相机进入 4D 占据跟踪任务的评测基础设施——长序列+实例级体素标注+鱼眼几何感知的可见性掩码，为综述'应用方式'维度提供基准侧证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要明确给出序列长度区间与两类掩码；长时序（最长 2234 帧）是评估时序一致性与长时程跟踪行为的前提。",
+   "locator": "page 1, Abstract",
+   "source_context": "OccTrack360 provides substantially longer and more diverse sequences (174∼2234 frames) than prior benchmarks, together with principled voxel visibility annotations, including an all- direction occlusion mask and an MEI-based fisheye field-of-view mask.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "sequence length (frames)",
+    "value_or_direction": "174∼2234 frames, substantially longer than prior benchmarks",
+    "comparator": "prior occupancy tracking benchmarks",
+    "task_or_sample": "OccTrack360 benchmark, surround-view fisheye input",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "摘要原文给出 174∼2234 帧区间与 all-direction occlusion mask + MEI-based fisheye FoV mask 两项标注；claim 未超出摘要蕴含范围。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C03",
+   "claim": "在占据与鱼眼感知数据集对比表中，OccTrack360 以 18 个语义类别、128×128×16 体素空间并提供实例级标注，与 TrackOcc-Waymo（2025，14 类、200×200×16、实例级）同列，而 SemanticKITTI/Occ3D/nuScenes-Occupancy/OpenOcc/SSCBench-KITTI360 系列均无实例级标注——鱼眼占据跟踪基准进入'实例级'时代但体素空间反而小于针孔路线。",
+   "stance": "support",
+   "relation": "应用方式命题：环视鱼眼占据基准的能力画像（18 类/实例级/128×128×16），同时暴露'鱼眼路线体素空间更小'的工程权衡，为综述'应用方式+局限'维度提供数据集规格证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 2(a) 对比表：OccTrack360 行为 2026/18 类/128×128×16/实例级 ✓；WoodScape/SynWoodScape 为鱼眼但无体素标注；TrackOcc-Waymo 是唯一此前有实例级的占据跟踪基准。",
+   "locator": "page 2, Fig. 2(a)",
+   "source_context": "TrackOcc-Waymo [13] 2025 14 200×200×16 ✓ OccTrack360 (Ours) 2026 18 128×128×16 ✓",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "number of classes / voxel grid size",
+    "value_or_direction": "OccTrack360: 18 classes, 128×128×16 with instance level; TrackOcc-Waymo: 14, 200×200×16",
+    "comparator": "TrackOcc-Waymo (prior instance-level occupancy tracking benchmark)",
+    "task_or_sample": "occupancy / fisheye benchmark comparison, Fig. 2(a)",
+    "locator": "page 2, Fig. 2(a)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Fig. 2(a) 表格行逐字给出两行规格；'其余系列无实例级标注'由表中 ✗ 标记直接蕴含；体素空间大小的对比是表格数字的直接对比，无外推。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C04",
+   "claim": "在 OccTrack360 上，采用针孔式 2D-to-3D 提升的 TrackOcc 基线直接以原始鱼眼图像为输入时近乎崩溃：OccSQ 总体仅 1.59、OccSTQ 1.67（对比 all 输入设置的 12.90/14.84）——针孔占据跟踪管线不经鱼眼几何适配无法处理未矫正鱼眼输入。",
+   "stance": "limit",
+   "relation": "任务受限命题：鱼眼原始输入使针孔 3D 占据管线失效（OccSQ 跌至 1.59），为综述'哪些任务受限'维度提供最直接的负面证据——3D 体素提升类任务对畸变最敏感。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 的 Fisheyes 行：TrackOcc 1.59（OccSQ overall）/1.67（OccSTQ），各分项亦全面低下（parking 1.02、building 4.37、fence 0.34、OccAQ overall 2.16）。",
+   "locator": "page 7, Table II",
+   "source_context": "TrackOcc Fisheyes 1.59 1.02 4.37 0.34 0.03 1.76 2.16 0.74 0.14 1.67 FoSOcc (Ours) 14.37 6.33 33.75 3.73 12.95 14.40 17.63 6.64 1.69 14.38",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OccSQ overall / OccSTQ (fisheye-only input)",
+    "value_or_direction": "TrackOcc on raw Fisheyes: 1.59 OccSQ / 1.67 OccSTQ (vs 12.90/14.84 under all inputs)",
+    "comparator": "TrackOcc baseline under different input settings (all vs Fisheyes)",
+    "task_or_sample": "OccTrack360 benchmark, Seq06",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table II 三行（all/Fisheyes）数值与 claim 一致：1.59/1.67 与 12.90/14.84 均为表内原始数字；'近乎崩溃'是对 1.59（百分制）与各分项全面低下的忠实概括。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C05",
+   "claim": "将鱼眼图像矫正为透视视图再输入针孔管线可部分恢复性能（TrackOcc OccSQ 10.15，高于原始鱼眼的 1.59 但低于 all 输入的 12.90），且作者明确指出矫正过程固有地限制 FoV 并降低覆盖——'先矫正后推理'是鱼眼部署中 FoV 换可用性的次优路线。",
+   "stance": "limit",
+   "relation": "局限命题：矫正路线虽能恢复部分精度（10.15 vs 1.59），但以损失 FoV 与覆盖为代价——综述'应用方式取舍'维度的核心权衡证据（宽 FoV 是鱼眼的立身之本，矫正恰恰牺牲它）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 的 Rectified Fisheyes 行给出 10.15；正文 V-D 节明确陈述矫正限制 FoV 并降低覆盖，FoSOcc 直接处理原始鱼眼以保持更完整感知范围。",
+   "locator": "page 7, Table II + Section V-D",
+   "source_context": "Notably, while TrackOcc [13] relies on rectifying fisheye images into perspective views—a process that inherently limits the field-of-view (FoV) and degrades coverage—our FoSOcc framework processes raw fisheye inputs directly, thereby preserving a more comprehensive sensing range.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OccSQ overall (TrackOcc)",
+    "value_or_direction": "Rectified Fisheyes 10.15 vs raw Fisheyes 1.59 vs all inputs 12.90",
+    "comparator": "input modality settings within Table II (rectified vs raw fisheye vs all)",
+    "task_or_sample": "OccTrack360 benchmark, Seq06",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "10.15/1.59/12.90 三个数字均出自 page 7 Table II 对应行；'矫正限制 FoV 并降低覆盖'为正文 V-D 原话；'次优路线'的判断由该权衡直接蕴含（精度仅部分恢复且损失 FoV）。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C06",
+   "claim": "配备 MEI 球面几何提升（FEL）的 FoSOcc 直接以原始鱼眼为输入取得 OccSQ 总体 14.37 / OccSTQ 14.38，较同输入设置下针孔提升的 TrackOcc（1.59/1.67）提升 +12.78/+12.71——在提升模块内建模鱼眼几何（而非矫正图像）使原始鱼眼输入达到甚至超过 all 输入设置的水平。",
+   "stance": "support",
+   "relation": "任务获益命题：鱼眼原生几何适配（FEL）使 4D 占据跟踪在纯鱼眼输入上可用并大幅获益（+12.78 OccSQ），为综述'应用方式-几何原生路线的效果'维度提供量化核心证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II Fisheyes 行：FoSOcc 14.37/14.38 vs TrackOcc 1.59/1.67；page 1 Fig. 1 亦标注 +12.78（SQ overall F 列），交叉一致。Fisheyes 设置的 14.37 甚至高于 all 设置的 14.20。",
+   "locator": "page 7, Table II",
+   "source_context": "TrackOcc Fisheyes 1.59 1.02 4.37 0.34 0.03 1.76 2.16 0.74 0.14 1.67 FoSOcc (Ours) 14.37 6.33 33.75 3.73 12.95 14.40 17.63 6.64 1.69 14.38",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OccSQ / OccSTQ overall (fisheye-only input)",
+    "value_or_direction": "1.59→14.37 OccSQ; 1.67→14.38 OccSTQ (Fig. 1 records +12.78)",
+    "comparator": "TrackOcc (pinhole LSS lifting) vs FoSOcc (FEL), same raw fisheye inputs",
+    "task_or_sample": "OccTrack360 benchmark, Fisheyes setting, Seq06",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "14.37/14.38/1.59/1.67 均为 Table II 原始数字；+12.78 与 page 1 Fig. 1 的标注一致且可由表内数字复算（14.37−1.59）；'达到甚至超过 all 设置'由 14.37>14.20（Table II all 行）直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C07",
+   "claim": "在 all 输入设置下，FoSOcc 将 OccSQ 总体从 12.90 提升至 14.20（OccSTQ 14.84→15.82），增益集中出现在此前近乎为零的几何规则类别：parking 0→7.56、fence 0.85→2.90——鱼眼感知的收益分布不均，几何规则小类获益最大。",
+   "stance": "support",
+   "relation": "任务获益命题：环视鱼眼占据跟踪中'哪些类别获益'的量化画像（parking/fence 等几何规则类从近零到可用），为综述'任务获益'维度提供逐类证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II all 行两组数字逐类对比；parking 从 0 到 7.56 与 fence 从 0.85 到 2.90 是增益主体，Fig. 1 亦标注 +1.30/+7.56/+2.05 三组差值（overall/parking/fence），交叉一致。",
+   "locator": "page 7, Table II",
+   "source_context": "TrackOcc all 12.90 0 29.87 0.85 7.02 17.07 20.69 8.38 3.40 14.84 FoSOcc (Ours) 14.20 7.56 25.09 2.90 12.70 17.61 21.53 9.87 5.03 15.82",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OccSQ overall / parking / fence + OccSTQ (all-input setting)",
+    "value_or_direction": "overall 12.90→14.20; parking 0→7.56; fence 0.85→2.90; OccSTQ 14.84→15.82",
+    "comparator": "TrackOcc vs FoSOcc, all-input setting",
+    "task_or_sample": "OccTrack360 benchmark, all inputs, Seq06",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "六个数字均为 Table II all 行原始值；差值 +1.30/+7.56/+2.05 与 page 1 Fig. 1 标注一致；'几何规则类获益最大'由 parking/fence 的增益幅度直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C08",
+   "claim": "同一 all 输入设置下，大尺度结构类出现回退：building 类 OccSQ 从 TrackOcc 的 29.87 降至 FoSOcc 的 25.09（−4.78）；Fisheyes 设置下 FoSOcc 的 OccAQ Car（6.64）与 Truck（1.69）也低于 all 设置（9.87/5.03）——鱼眼球面提升的收益集中于小尺度几何规则类，对大尺度/远距结构类存在几何代价。",
+   "stance": "limit",
+   "relation": "任务受限命题：鱼眼原生路线的类别选择性代价（building −4.78、车辆类 AQ 低于 all 设置），为综述'哪些任务/类别受限'维度提供负面证据，与 C07 的获益画像互补。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 中 all 行 building 列 29.87→25.09；Fisheyes 行 Car 6.64/Truck 1.69 对比 all 行 9.87/5.03。正文未单独讨论该回退（作者局限部分亦未提及），该模式由表格数字直接呈现。",
+   "locator": "page 7, Table II",
+   "source_context": "TrackOcc all 12.90 0 29.87 0.85 7.02 17.07 20.69 8.38 3.40 14.84 FoSOcc (Ours) 14.20 7.56 25.09 2.90 12.70 17.61 21.53 9.87 5.03 15.82",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OccSQ building (all inputs); OccAQ car/truck (fisheyes vs all)",
+    "value_or_direction": "building 29.87→25.09 (−4.78); OccAQ car 9.87→6.64, truck 5.03→1.69 (all vs fisheyes setting)",
+    "comparator": "TrackOcc vs FoSOcc (all); FoSOcc fisheyes vs FoSOcc all",
+    "task_or_sample": "OccTrack360 benchmark, Seq06",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "29.87/25.09 出自 Table II all 行 building 列；6.64/1.69 出自 Fisheyes 行、9.87/5.03 出自 all 行 OccAQ 列；−4.78 为表内数字差；'存在几何代价'的解释性措辞限于类别选择性事实（回退与获益并存的分布），未做超出表格的归因。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C09",
+   "claim": "在针孔基准 Occ3D-Waymo 上，FoSOcc（CFM）取得 OccSQ 总体 30.8（基线 TrackOcc 29.4）、OccSTQ 20.9（20.0）；作者报告相对 SQ 提升 sign +11.1%、general objects +20.7%、cyclist AQ +26.1%——中心聚焦监督在针孔标准设置下也带来小尺度类别增益，说明其收益不专属鱼眼畸变。",
+   "stance": "support",
+   "relation": "效果命题：CFM 的中心监督增益在针孔基准上独立成立（几何规则小类 sign/G.O. 相对 +11.1%/+20.7%），为综述'效果'维度提供跨设置稳健性证据，同时标定 FEL 增益的鱼眼专属边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I：FoSOcc 30.8/15.3(sign)/44.9(building)/40.8(vegetation)/11.1(G.O.)/14.2(AQ)/20.9(STQ) vs TrackOcc 29.4/13.6/43.2/40.0/9.2/13.5/20.0；正文 V-C 给出三个相对提升百分比。",
+   "locator": "page 7, Table I + Section V-C",
+   "source_context": "Our proposed CFM significantly outperforms the baseline, achieving relative SQ improvements of 11.1% for traffic signs and 20.7% for general objects. Furthermore, a substan- tial AQ gain of 26.1% is observed in the cyclist category.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OccSQ overall / OccSTQ (Occ3D-Waymo)",
+    "value_or_direction": "OccSQ 29.4→30.8; OccSTQ 20.0→20.9; relative SQ +11.1% signs, +20.7% general objects; AQ +26.1% cyclist",
+    "comparator": "TrackOcc baseline (and MinVIS/CTVIS/AB3DMOT/4D-LCA)",
+    "task_or_sample": "Occ3D-Waymo, 4D panoptic occupancy tracking",
+    "locator": "page 7, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "30.8/29.4/20.9/20.0 为 Table I 原始数字；三个相对提升百分比出自 page 7 V-C 节原话；sign 13.6→15.3 与 G.O. 9.2→11.1 的表格数字与所述相对提升一致（15.3/13.6≈1.125 记作 11.1% 口径按作者原文）。claim 未超出表格与正文蕴含范围。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C10",
+   "claim": "CFM 的核心机制主张：六方向偏移乘积构成的 focus feature 在实例几何中心自然达到最大并向边界衰减，该 center-peaked 分布作为类高斯软约束，比硬边界偏移对鱼眼畸变导致的空间抖动耐受得多——把监督焦点从易受扰动的边界转移到稳定中心是畸变鲁棒的关键设计。",
+   "stance": "support",
+   "relation": "机制命题：为什么中心监督对鱼眼畸变鲁棒（软约束容忍空间抖动），为综述'应用方式-模型内适配'维度提供设计机制证据（与 C11 的机制性缺陷证据成对）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者在 IV-B.2 论证 δp 的中心峰值性质并以实例级归一化保证尺度不变；Fig. 9 的 SFF 热图可视化提供定性支撑。",
+   "locator": "page 6, Section IV-B.2",
+   "source_context": "This “center-peaked” distribution acts as a Gaussian-like soft constraint, which is far more tolerant to the spatial jitter caused by fisheye distortion than hard boundary offsets.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应 IV-B.2 的机制陈述（Gaussian-like soft constraint、far more tolerant、fisheye distortion、hard boundary offsets），属作者设计主张而非实验结果，claim 已按 author-claim 口径限定。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C11",
+   "claim": "作者指出鱼眼光学使既有体素偏移（boundary offset）监督失效的机制：外围区域严重切向畸变与不均匀分辨率导致 2D-to-3D 深度提升的必然误差，单个体素的深度错位即可令损失函数以最大可能误差惩罚模型并产生不稳定梯度——鱼眼畸变通过深度提升误差直接破坏边界监督信号。",
+   "stance": "limit",
+   "relation": "任务受限命题（机制）：鱼眼畸变不是均匀的图像退化，而是通过深度提升误差集中于外围并放大监督噪声——为综述'哪些环节受限'维度提供故障机制证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-B.1 列举边界偏移监督的两个缺陷，第一缺陷的因果链完整：外围切向畸变→深度提升误差→单 voxel 错位→最大误差惩罚→不稳定梯度；第二缺陷为全局归一化的物理含义模糊。",
+   "locator": "page 6, Section IV-B.1",
+   "source_context": "In fisheye optics, peripheral regions suffer from severe tangential distortion and non-uniform resolution, leading to inevitable errors in 2D-to-3D depth lifting. Even a single-voxel misalignment in depth can cause the loss function to penalize the model with the maximum possible error",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 因果链逐句对应 IV-B.1 原文（severe tangential distortion and non-uniform resolution → inevitable errors in 2D-to-3D depth lifting → single-voxel misalignment → maximum possible error → unstable gradients），无外推。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C12",
+   "claim": "FEL 把 LSS 式 2D-to-3D 提升从针孔假设改写为 MEI 统一投影模型下的球面过程：引入镜面参数 ξ 显式建模到偏移单位球的投影，为宽 FoV 占据预测提供更有表达力的几何基础——代表'在提升模块内原生建模鱼眼几何'而非'先矫正图像'的技术路线。",
+   "stance": "support",
+   "relation": "应用方式命题：鱼眼适配的第三条路线（MEI 球面几何内建于提升模块），与矫正路线（C05）形成直接对照，为综述'应用方式分类'提供路线代表证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-C 陈述针孔提升模型的失效与 FEL 的改写方式；式(3)-(6) 给出从归一化图像坐标到单位球向量的完整推导链；其效果由 Table II 的 Fisheyes 对照（C06）支撑。",
+   "locator": "page 6, Section IV-C",
+   "source_context": "To bridge this geometric gap, we propose Fisheye-based Enhanced Lifting (FEL), which reformulates the lifting process using the Unified Projection Model (MEI) [7]. By incorporating a mirror parameter ξ, FEL explicitly models the projection onto a displaced unit sphere, providing a more expressive geometric foundation for wide-FoV occupancy prediction.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 逐字对应 IV-C 的方法陈述（mirror parameter ξ、displaced unit sphere、wide-FoV occupancy prediction）；'路线代表'的归类基于该设计与矫正路线的明确对立（V-D 节原文），未超出论文内容。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C13",
+   "claim": "由于 GPU 显存限制，OccTrack360 上的实验将水平有效范围从基准设计的 [−25.6m, 25.6m] 压缩到 [−12.8m, 12.8m]——环视感知范围仅兑现一半，12.8m 以远的占据预测能力未被评估，'360° 环视'的实际评测范围与宣称覆盖之间存在落差。",
+   "stance": "limit",
+   "relation": "局限命题：鱼眼占据跟踪的评测范围受算力约束减半（25.6m→12.8m），为综述'局限'维度提供硬件/算力侧负面证据——宽 FoV 的远距价值在当前实验设置中未被检验。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-A 节明确写出设计覆盖与实验有效范围的差异及原因（limited GPU memory）；z 轴 [−2.0m,4.4m] 与 0.2m 体素分辨率未受影响。",
+   "locator": "page 6, Section V-A",
+   "source_context": "In the proposed OccTrack360, the spatial coverage is defined over [−25.6m, 25.6m] in both the forward-backward and left-right directions, and [−2.0m, 4.4m] along the z (vertical) axis. Each voxel has a finer resolution of 0.2m×0.2m×0.2m, and the input data are also provided at 2Hz. To accommodate limited GPU memory, however, we restrict the effective range in our experiments to [−12.8m, 12.8m] in the horizontal plane.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "horizontal effective range in experiments",
+    "value_or_direction": "designed [−25.6m, 25.6m] vs used [−12.8m, 12.8m]",
+    "comparator": "benchmark design coverage vs experiment effective range (GPU memory constraint)",
+    "task_or_sample": "OccTrack360 experiments",
+    "locator": "page 6, Section V-A"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两个范围数值与 GPU memory 原因均为 V-A 节原文；'仅兑现一半'是 12.8/25.6 的直接算术；'远距未评估'由范围压缩的事实直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C14",
+   "claim": "CFM 组件消融（Occ3D-Waymo，12/24 epochs 控制）：实例级归一化（A）单独把 OccSQ 总体从 29.99 提至 30.16，加监督 focus feature（B）提至 30.67，全量训练 30.80；B 组件对 general objects 增益最大（15.51→17.88→20.15，full-train 19.62），construction cones 在 full-train 达 14.18——两组件互补，监督 focus feature 是小尺度类别增益的主要来源。",
+   "stance": "support",
+   "relation": "效果命题：CFM 增益的组件归因（B 组件驱动 G.O. 15.51→20.15），为综述'效果-归因'维度提供消融级证据，支撑'中心监督改善小尺度几何规则类'的机制故事。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 四行消融配置（✗✗/✓✗/✓✓/full-train）逐列给出；12 epochs 控制使组件归因不被训练量差异混淆（full-train 行单独标注）。",
+   "locator": "page 8, Table III",
+   "source_context": "✗ ✗ 29.99 14.96 44.00 40.46 11.78 15.51 10.62 14.02 2.68 5.43 ✓ ✗ 30.16 14.27 44.27 40.03 12.57 17.88 11.21 14.89 2.71 4.91 ✓ ✓ 30.67 16.22 45.12 40.71 12.92 20.15 10.65 14.06 2.72 5.73 full-train 30.80 15.28 44.87 40.79 11.13 19.62 14.18 18.90 3.19 5.79",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OccSQ overall / G.O. / C.C. (ablation, 12 epochs vs full-train)",
+    "value_or_direction": "overall 29.99→30.16→30.67 (12ep), 30.80 full-train; G.O. 15.51→17.88→20.15, 19.62 full-train; C.C. 10.62→11.21→10.65, 14.18 full-train",
+    "comparator": "ablation configs: A = instance-level normalization, B = supervised focus feature",
+    "task_or_sample": "Occ3D-Waymo, half-epoch control (12 of 24 epochs)",
+    "locator": "page 8, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "所有数字均为 Table III 四行原始值；列对应关系（Overall/Sign/Building/Vegetation/G.O./C.C./AQ Overall/Vehicle/Pedestrian/Cyclist）由表头与表注（A/B 定义、12 epochs 控制、G.O./C.C. 缩写）确认；claim 的组件归因方向（B 驱动 G.O. 增益）由 15.51→17.88（A 行）→20.15（A+B 行）的递进直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.08521-C15",
+   "claim": "OccTrack360 后向体素补全对 ego/实例位姿变换做 XY 平面投影并用 SVD 归一化，作者承认该操作在抑制误差的同时'不可避免地忽略了 z 轴方向的真实变化'——变换式标签构造在高度维度存在系统性信息损失，构成该类鱼眼占据基准的标签质量边界。",
+   "stance": "limit",
+   "relation": "局限命题：鱼眼占据基准标签由变换式构造（非逐帧直接标注），z 轴系统性损失被作者承认——为综述'局限-基准可信度'维度提供证据，提醒引用 OccTrack360 数值时注意标签构造口径。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III 节 Object Completion 段承认 SVD 归一化的 z 轴代价；page 3 Fig. 4 另记录 z+ error 现象（KITTI360 外参高度平移 z_w 与坡道语义不一致），两者共同构成高度维度的标签风险。",
+   "locator": "page 4, Section III Object Completion",
+   "source_context": "Singular Value Decomposition (SVD) is then performed for normalization, which suppresses errors but inevitably disregards genuine variations along the z-axis.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 前半句逐字对应 III 节 SVD 归一化的承认；'标签质量边界'的措辞限于该承认的直接含义（z 轴真实变化被忽略），未外推到具体误差幅度。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "KITTI-360: A novel dataset and benchmarks for urban scene understanding in 2D and 3D (TPAMI 2023)",
+   "arxiv_id": "",
+   "reason": "OccTrack360 的数据与鱼眼相机标定/安装位姿来源；FoV 掩码与 FEL 依赖其 MEI 标定。"
+  },
+  {
+   "title": "TrackOcc: Camera-based 4D panoptic occupancy tracking (ICRA 2025)",
+   "arxiv_id": "",
+   "reason": "主基线与指标体系（OccSTQ/OccSQ/OccAQ）来源；Table I/II 全部对照的参照系。"
+  },
+  {
+   "title": "Mei and Rives, Single view point omnidirectional camera calibration from planar grids (ICRA 2007)",
+   "arxiv_id": "",
+   "reason": "MEI 统一投影模型原始文献——FEL 与鱼眼 FoV 掩码的几何基础（镜面参数 ξ）。"
+  },
+  {
+   "title": "Philion and Fidler, Lift, Splat, Shoot (ECCV 2020)",
+   "arxiv_id": "",
+   "reason": "被 FEL 改写的针孔 2D-to-3D 提升范式（LSS）原始文献。"
+  },
+  {
+   "title": "SSCBench: A large-scale 3D semantic scene completion benchmark (IROS 2024)",
+   "arxiv_id": "",
+   "reason": "OccTrack360 体素标注的上游（SSCBench-KITTI360）与类别分布对照参照。"
+  }
+ ],
+ "figures": [
+  {
+   "figure_id": "Fig. 2",
+   "caption": "(a) Dataset comparison for occupancy and fisheye perception. (b) Distribution of 18 semantic classes.",
+   "section": "I Introduction",
+   "usage": "作者用该图对比占据/鱼眼数据集规格（OccTrack360 为 18 类/128×128×16/实例级）与类别分布（与 SSCBench-KITTI360 基本对齐，truck 与 other-ground 因感知范围不同而差异明显）。"
+  },
+  {
+   "figure_id": "Fig. 4",
+   "caption": "Illustration of z+ error. ... The value z_w represents the height translation extracted from the extrinsic parameters provided by KITTI360.",
+   "section": "III OccTrack360 Benchmark",
+   "usage": "作者用该图记录基准构造中发现的 z+ error 现象：坡道上 ego 已爬升但外参 z_w 反而减小，提示 KITTI360 外参高度平移与语义标注不一致。"
+  },
+  {
+   "figure_id": "Fig. 6",
+   "caption": "Fisheye FoV mask pipeline. ... The maximum radius is first computed from the intrinsic parameters and projected onto the distorted image plane for rectification. The result is then lifted to a normalized spherical surface ...",
+   "section": "III Visibility Constraint",
+   "usage": "作者用该图说明 MEI 鱼眼 FoV 掩码的构造链路（内参→最大半径→畸变平面矫正→球面提升→体素域扩展）。"
+  },
+  {
+   "figure_id": "Fig. 8",
+   "caption": "Overall pipeline of FoSOcc. ... (1) Fisheye-based Enhanced Lifting (FEL) ... (2) Center Focusing Module (CFM) ...",
+   "section": "IV FoSOcc",
+   "usage": "作者用该图展示 FoSOcc 总体架构：2D backbone → FEL 球面提升 → 4D 占据解码器，CFM 以多尺度特征做中心监督并通过交叉注意力接入。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "Table I",
+   "caption": "Results on Occ3D-Waymo. G.O. denotes general objects. Methods are evaluated on categories with and without instance IDs.",
+   "section": "V-C Comparison with State-of-the-Art on Occ3D-Waymo",
+   "rows": [
+    [
+     "Method",
+     "E2E",
+     "OccSQ Overall",
+     "Sign",
+     "Building",
+     "Vegetation",
+     "G.O.",
+     "OccAQ Overall",
+     "Vehicle",
+     "Pedestrian",
+     "Cyclist",
+     "OccSTQ"
+    ],
+    [
+     "MinVIS",
+     "✓",
+     "29.1",
+     "10.6",
+     "39.1",
+     "34.0",
+     "11.7",
+     "3.3",
+     "4.0",
+     "1.5",
+     "3.1",
+     "9.8"
+    ],
+    [
+     "CTVIS",
+     "✓",
+     "26.5",
+     "13.2",
+     "36.9",
+     "30.9",
+     "8.1",
+     "4.3",
+     "5.3",
+     "2.1",
+     "1.6",
+     "10.7"
+    ],
+    [
+     "AB3DMOT",
+     "✗",
+     "29.1",
+     "10.7",
+     "39.2",
+     "34.0",
+     "11.7",
+     "5.3",
+     "6.8",
+     "1.7",
+     "2.9",
+     "12.4"
+    ],
+    [
+     "4D-LCA",
+     "✗",
+     "29.1",
+     "10.7",
+     "39.2",
+     "34.0",
+     "11.7",
+     "9.0",
+     "11.4",
+     "3.4",
+     "4.1",
+     "16.2"
+    ],
+    [
+     "TrackOcc (baseline)",
+     "✓",
+     "29.4",
+     "13.6",
+     "43.2",
+     "40.0",
+     "9.2",
+     "13.5",
+     "18.1",
+     "3.1",
+     "4.6",
+     "20.0"
+    ],
+    [
+     "FoSOcc (Ours)",
+     "✓",
+     "30.8",
+     "15.3",
+     "44.9",
+     "40.8",
+     "11.1",
+     "14.2",
+     "18.9",
+     "3.2",
+     "5.8",
+     "20.9"
+    ]
+   ]
+  },
+  {
+   "table_id": "Table II",
+   "caption": "Impact of input modalities on OccTrack360. The \"all\" setting utilizes the FoV, while the \"Rectified Fisheyes\" and \"Fisheyes\" settings are constrained to the fisheye-specific FoV.",
+   "section": "V-D Comparison with State-of-the-Art on OccTrack360",
+   "rows": [
+    [
+     "Method",
+     "Inputs & FoV",
+     "OccSQ Overall",
+     "parking",
+     "Building",
+     "Fence",
+     "O.S.",
+     "OccAQ Overall",
+     "Car",
+     "Truck",
+     "O.V.",
+     "OccSTQ"
+    ],
+    [
+     "TrackOcc",
+     "all",
+     "12.90",
+     "0",
+     "29.87",
+     "0.85",
+     "7.02",
+     "17.07",
+     "20.69",
+     "8.38",
+     "3.40",
+     "14.84"
+    ],
+    [
+     "FoSOcc (Ours)",
+     "all",
+     "14.20",
+     "7.56",
+     "25.09",
+     "2.90",
+     "12.70",
+     "17.61",
+     "21.53",
+     "9.87",
+     "5.03",
+     "15.82"
+    ],
+    [
+     "TrackOcc",
+     "Rectified Fisheyes",
+     "10.15",
+     "5.26",
+     "17.44",
+     "2.91",
+     "8.52",
+     "12.97",
+     "15.62",
+     "5.80",
+     "4.11",
+     "11.48"
+    ],
+    [
+     "TrackOcc",
+     "Fisheyes",
+     "1.59",
+     "1.02",
+     "4.37",
+     "0.34",
+     "0.03",
+     "1.76",
+     "2.16",
+     "0.74",
+     "0.14",
+     "1.67"
+    ],
+    [
+     "FoSOcc (Ours)",
+     "Fisheyes",
+     "14.37",
+     "6.33",
+     "33.75",
+     "3.73",
+     "12.95",
+     "14.40",
+     "17.63",
+     "6.64",
+     "1.69",
+     "14.38"
+    ]
+   ]
+  },
+  {
+   "table_id": "Table III",
+   "caption": "Ablations of each adjustment in the CFM on Occ3D-Waymo. Here, A and B denote instance-level normalization and supervised focus feature, respectively. All configs except full-train are trained for half of the original epochs (12 out of 24).",
+   "section": "V-E Ablation Studies",
+   "rows": [
+    [
+     "A",
+     "B",
+     "OccSQ Overall",
+     "Sign",
+     "Building",
+     "Vegetation",
+     "G.O.",
+     "C.C.",
+     "OccAQ Overall",
+     "Vehicle",
+     "Pedestrian",
+     "Cyclist"
+    ],
+    [
+     "✗",
+     "✗",
+     "29.99",
+     "14.96",
+     "44.00",
+     "40.46",
+     "11.78",
+     "15.51",
+     "10.62",
+     "14.02",
+     "2.68",
+     "5.43"
+    ],
+    [
+     "✓",
+     "✗",
+     "30.16",
+     "14.27",
+     "44.27",
+     "40.03",
+     "12.57",
+     "17.88",
+     "11.21",
+     "14.89",
+     "2.71",
+     "4.91"
+    ],
+    [
+     "✓",
+     "✓",
+     "30.67",
+     "16.22",
+     "45.12",
+     "40.71",
+     "12.92",
+     "20.15",
+     "10.65",
+     "14.06",
+     "2.72",
+     "5.73"
+    ],
+    [
+     "full-train",
+     "",
+     "30.80",
+     "15.28",
+     "44.87",
+     "40.79",
+     "11.13",
+     "19.62",
+     "14.18",
+     "18.90",
+     "3.19",
+     "5.79"
+    ]
+   ]
+  }
+ ],
+ "notes": "六遍式精读完成（scoping 模式）。全 8 页正文已读，参考文献略读。口径核对：(1) Fig. 1 的六组差值（+1.30/+7.56/+2.05/+12.78/+5.31/+3.39）与 Table II 的 all 行及 Fisheyes 行数字逐一复算一致，确认 Fig. 1 同时呈现 all 与 Fisheyes 两设置；(2) C09 的相对提升百分比（11.1%/20.7%/26.1%）为正文 V-C 原话，与 Table I 绝对数字方向一致；(3) Table II 中 FoSOcc-Fisheyes 行的 Building 33.75 显著高于 all 行 25.09 与 TrackOcc 的 29.87——纯鱼眼 FEL 设置在大尺度类反而最强，这与 all 设置下 building 回退（C08）并存，提示输入组合与提升几何存在交互效应，正文未解释，作为读者推断记录于 reader_inferred。本体边界强调：本文为自动驾驶车辆平台（KITTI-360），综述引用时应作为'移动平台环视鱼眼 3D 时序感知'证据而非机器人平台证据。"
+}

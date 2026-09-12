@@ -1,0 +1,592 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.13476",
+  "title": "RobotPan: A 360° Surround-View Robotic Vision System for Embodied Perception",
+  "published": "2026-04",
+  "url": "https://arxiv.org/abs/2604.13476",
+  "authors": [
+   "Jiahao Ma",
+   "Qiang Zhang",
+   "Peiran Liu",
+   "Zeran Su",
+   "Pihai Sun",
+   "Gang Han",
+   "Wen Zhao",
+   "Wei Cui",
+   "Zhang Zhang",
+   "Zhiyuan Xu",
+   "Renjing Xu",
+   "Jian Tang",
+   "Miaomiao Liu",
+   "Yijie Guo"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "对综述问题高度相关的环视系统证据：(1) 应用方式——在人形平台 Tiangong 3.0 上以六台 118°×92° 超广角相机+40 线 LiDAR 的环视 rig 替代多鱼眼拼接实现 360° 视觉，并明确给出'相机无法共置→经典鱼眼拼接不可用→需几何感知视图合成'的方案分界；(2) 效果——自建环视数据集上 4 视角 NVS 24.70 dB/327K 高斯（对比 DepthSplat 22.97/1261K）、流式 28.59 dB/0.47 s/帧/230 FPS、球面体素消融 1261K→327K，并给出 339 片段多传感器数据集；(3) 局限——无位姿设定落后 Pi3、公共基准互有胜负、存储非最优（4DGS 0.3 vs 7.2 MB）、人因收益（模拟器眩晕/态势感知）未实验验证、数据采集用保守化人穿戴协议——'获益（环视渲染/重建/流式）与受限（无位姿几何、人因验证、步态抖动）'两端证据齐全。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：人机回路中前视窄视场限制态势感知、多相机切换打断工作流、HMD 抖动引发模拟器眩晕；提出六相机+LiDAR 环视系统；提取'多鱼眼 rig 光心可近似共置而本系统相机不可共置'的方案分界陈述。"
+   },
+   {
+    "locator": "page 2-3, 1 Related Works（1.1-1.4）与贡献列表",
+    "role": "relevant-core",
+    "purpose": "定位相关工作版图：前馈重建（DUSt3R/MASt3R/VGGT/Pi3）、可泛化 NVS、3DGS 量化、足式/人形全景感知（HumanoidPano/四足多模态占据/OneOcc/碰撞避让）；确认本文定位为通用可部署 360° 环视视觉系统。"
+   },
+   {
+    "locator": "page 3-6, 2 Methodology（2.1-2.6）",
+    "role": "method-or-design",
+    "purpose": "精读方法：VGGT 式交替注意力+π3 置换等变几何预测、LiDAR 监督度量微调、机器人中心球面体素化（近细远粗）、每体素固定数高斯解码、流式融合（共享高斯+动态高斯+tiny-MLP 残差精修+距离图像域多视一致性动态掩膜）。"
+   },
+   {
+    "locator": "page 6-7, 3.1 Experimental Setup（Figs. 4-5）",
+    "role": "data-or-setting",
+    "purpose": "核对硬件与数据：89 mm 半径六相机环（0/±60/±120/180°，118°×92°）+40 线 LiDAR；339 片段×200 帧、~80% 动态、1920×1536→518×406、80/10/10；人穿戴同构 rig（~160 cm、颈部稳定器、≤1.2 m/s、≤0.4 rad/s）。"
+   },
+   {
+    "locator": "page 7-10, 3.2-3.5 Experiments（Tables 1-7, Figs. 6-9）",
+    "role": "results-or-analysis",
+    "purpose": "精读全部定量结果：点图估计（自建有/无位姿+DTU/ETH3D）、4 视角 NVS（Table 3）与跨数据集泛化（Table 4）、流式 NVS（Table 5）、范式消融（Table 6）、流式融合消融（Table 7）。"
+   },
+   {
+    "locator": "page 11, 4 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与检查限制陈述：结论重述系统/方法/数据集贡献；无独立 Limitations 小节，仅在与基线比较处承认 4DGS 存储更紧凑、IGS 内存略小、RealEstate10K PSNR 非最佳。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 11-12, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，无补充实验；scoping 模式下仅按需核对被引方法名（DUSt3R/VGGT/Pi3 等）。"
+   }
+  ]
+ },
+ "research_question": "本论文问题：如何在人形机器人上以多相机环视 rig（相机光心不可共置）实现实时、度量一致、可流式的 360° 视觉接口，支撑遥操作/导航/移动操作等人机回路与自主任务。综述问题映射：该工作代表'环视（超广角多相机而非鱼眼拼接）'这一路线在具身领域的应用方式、量化效果与边界，并与多鱼眼全景 rig 形成直接对照。",
+ "contributions": [
+  "ROBOTPAN 前馈管线：从标定稀疏视角经层级球面体素先验预测度量尺度、紧凑 3D 高斯，支持实时 360° 环视渲染与度量重建。",
+  "流式高斯更新策略：增量融合多帧多相机预测，更新动态内容、防止静态区域无界增长（共享高斯+tiny-MLP 残差精修）。",
+  "部署于 Tiangong 3.0 人形平台的六相机+LiDAR 球面环视视觉系统（硬件 rig + 可穿戴采集装置）。",
+  "首个面向机器人 360° 新视图合成与度量 3D 重建的多传感器数据集与基准（339 片段，含 ~80% 动态场景）。（'首个'为作者自述）"
+ ],
+ "method": {
+  "summary": "系统层：六台 118°×92° RGB 相机均匀分布在半径 89 mm 圆环（0/±60/±120/180°）+头顶 40 线 LiDAR，联合标定与时间同步；作者强调因硬件约束相机光心不可共置，经典多鱼眼拼接不可用，故走'几何感知视图合成'路线。算法层：VGGT 式交替注意力 transformer（DINOv2 backbone，π3 置换等变改造，36 块）做前馈多视几何预测；预测点图变换到机器人中心球面坐标并体素化为近细远粗的层级球面格；每体素解码固定数量高斯（锚点+MLP 头）；LiDAR 投影监督+尺度感知点损失对齐度量尺度；流式阶段以共享高斯集+帧级动态高斯+tiny-MLP 残差精修维持紧凑表征，用距离图像域多视融合识别动态区域。",
+  "assumptions": [
+   "六相机外参与内参已标定且时间同步（位姿已知条件下几何优势显著，无位姿设定不保证领先）。",
+   "LiDAR 可用并已与相机联合标定，用于度量监督（纯视觉部署需另行解决尺度）。",
+   "场景可由机器人中心球面体素层级良好表达（近场细/远场粗假设）。",
+   "动态区域可通过 2D 分割+多视球面距离图像融合可靠识别。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "RobotPan 自建数据集：339 同步片段×200 帧，6 相机+LiDAR，室内外多场景，~80% 动态，1920×1536（训练 518×406），80/10/10 划分",
+   "DTU、ETH3D（点图重建公共基准，每 5 帧采样关键帧）",
+   "DL3DV-Benchmarks、RealEstate10K（可泛化 NVS 公共基准）",
+   "流式评测：10 个动态子场景（200 帧×6 视角）"
+  ],
+  "tasks": [
+   "稀疏视角点图/度量 3D 重建（有/无位姿）",
+   "4 视角稀疏新视图合成",
+   "流式动态场景新视图合成（在线/离线对比）",
+   "面向遥操作/导航/移动操作的环视渲染接口（声称的下游用途，未直接评测）"
+  ],
+  "embodiments": [
+   "Tiangong 3.0 人形机器人（部署平台）",
+   "人穿戴同构头戴采集 rig（数据采集）"
+  ],
+  "sample_or_scale": "339 片段×200 帧×6 视角；流式评测 10 子场景×1,200 图像；8 GPU 训练（π3 checkpoint 初始化+LiDAR 微调+渲染联合训练）"
+ },
+ "evaluation": {
+  "design": "在自建环视基准与 4 个公共基准上与代表性前馈重建/NVS 方法对比（有/无位姿两设定）；流式任务与在线（逐帧更新）和离线（全序列优化）两类基线对比；辅以预测范式与流式组件消融。",
+  "baselines": [
+   "点图重建：Dust3R、Fast3R、FLARE、VGGT、Pi3、MASt3R、Spann3R",
+   "稀疏 NVS：pixelSplat、MVSplat、FLARE、DepthSplat",
+   "流式：离线 K-Planes、4DGS、Spacetime-GS；在线 StreamRF、3DGStream、IGS"
+  ],
+  "metrics": [
+   "Chamfer Acc./Comp./Overall（Sim(3) 对齐+ICP）",
+   "PSNR/SSIM/LPIPS",
+   "高斯数与存储（MB）",
+   "每帧训练时间（s）与渲染 FPS"
+  ],
+  "ablations": [
+   "高斯预测范式：像素式 vs 笛卡尔体素式 vs 球面体素式（Table 6）",
+   "流式组件：朴素拼接 / 去距离图像融合 / 去 tiny-MLP / 完整模型（Table 7）",
+   "层级球面设计存储削减 ~70%（Sec 2.3 陈述）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "六相机环视 rig 因光心不可共置而无法沿用多鱼眼拼接，需前馈几何感知视图合成实现 360° 视觉接口。",
+   "scope": "Tiangong 3.0 人形平台头部环视系统设计（作者论述）",
+   "locator": "page 1, Section 1 Introduction"
+  },
+  {
+   "finding": "自建环视数据集 4 视角 NVS：24.70 dB/0.811/0.197，327K 高斯，比每像素法少 3.86×、比 pixelSplat 少 11.57×，同时全面优于 pixelSplat/MVSplat/FLARE/DepthSplat。",
+   "scope": "RobotPan 数据集 4-view 设定（Table 3）",
+   "locator": "page 8, Table 3"
+  },
+  {
+   "finding": "流式 NVS：28.59 dB、0.47 s/帧更新、230 FPS、7.2 MB，优于全部在线基线（IGS 27.75/3.65/204/6.5 等）与离线基线质量。",
+   "scope": "10 个动态子场景（200 帧×6 视角）流式设定（Table 5）",
+   "locator": "page 9, Table 5"
+  },
+  {
+   "finding": "球面体素范式相对像素式把 1,261K/378 MB 压缩到 327K/97 MB 且 PSNR +3.27 dB；球面优于笛卡尔体素（机器人中心几何适配）。",
+   "scope": "RobotPan 数据集消融（Table 6）",
+   "locator": "page 10, Table 6"
+  },
+  {
+   "finding": "条件性结果：有位姿时自建数据集点图 Overall 0.268 优于 Pi3 0.332；无位姿时 Acc./Overall（0.612/0.482）劣于 Pi3（0.580/0.460）；公共基准 DTU Overall 略优、ETH3D Overall 劣于 Pi3。",
+   "scope": "自建+DTU/ETH3D 点图估计（Tables 1-2）",
+   "locator": "page 7, Tables 1-2"
+  },
+  {
+   "finding": "朴素逐帧拼接在 200 帧内膨胀到 65,400K 高斯/19,400 MB，证实长序列必须共享紧凑表征；距离图像融合与 tiny-MLP 精修各贡献可测质量增益。",
+   "scope": "流式消融（Table 7）",
+   "locator": "page 10, Table 7"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "存储紧凑性非最优：离线 4DGS 存储 0.3 MB 远小于本方法 7.2 MB（需全序列优化故不适配低延迟流式）；在线 IGS 内存占用也略小于本方法（6.5 vs 7.2 MB），作者以渲染质量与速度作为补偿论据。",
+    "locator": "page 10, Section 3.4 Comparison 末段（4DGS 数字见 page 9, Table 5）"
+   },
+   {
+    "limitation": "公共基准非全面领先：RealEstate10K 上 PSNR 27.43 低于 DepthSplat 27.47（作者自述'其余指标保持有竞争力'）；DTU/ETH3D 上 Acc./Comp./Overall 与 Pi3 互有胜负。",
+    "locator": "page 8, Section 3.3 与 page 7, Tables 2/4"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "人因收益未验证：模拟器眩晕、态势感知、遥操作工作流收益止于动机陈述，全文无人因/操作者实验（全部指标为 Chamfer/PSNR/SSIM/LPIPS/存储/时间类代理指标）。",
+    "basis": "page 1 摘要-引言动机 vs page 7-10 实验范围与 page 11 结论的对照（见 C12）。"
+   },
+   {
+    "boundary": "无位姿鲁棒性证据不足：自建数据集无位姿设定下 Acc./Overall 落后 Pi3，'强鲁棒性'宣称应限定为有标定/位姿条件。",
+    "basis": "page 7, Table 1 数字（0.612/0.482 vs Pi3 0.580/0.460）与正文宣称的对照（见 C06）。"
+   },
+   {
+    "boundary": "运动分布保守：数据由人穿戴同构 rig+颈部稳定器采集，步速 ≤1.2 m/s、转向 ≤0.4 rad/s，未覆盖真实人形步态抖动/更高动态运动；系统对 gait-induced jitter 的实际鲁棒性未被该数据协议直接检验。",
+    "basis": "page 7, Section 3.1 Data collection 协议（见 C15）；抖动作为动机在 page 1 提出。"
+   },
+   {
+    "boundary": "度量尺度依赖 LiDAR：系统标定与度量监督均依赖 40 线 LiDAR 联合标定，纯视觉（鱼眼/全景相机-only）部署的尺度一致性未被评估。",
+    "basis": "page 3-5, Sections 2.2/2.5 LiDAR 监督设计；实验均基于 6 相机+LiDAR rig。"
+   },
+   {
+    "boundary": "下游机器人任务未闭环评测：声称服务 SLAM/闭环控制/导航/操作，但未报告任何下游任务指标（SLAM 精度、操作成功率、碰撞率等）。",
+    "basis": "page 1 动机与 page 7-10 实验范围的对照。"
+   },
+   {
+    "boundary": "基线设定公平性存疑：NVS 基线（pixelSplat/MVSplat/DepthSplat 等）为前向/物体重建设定设计，被放入低重叠环视稀疏视角设定，对该设定下的基线不利；且未与任何多鱼眼拼接/传统全景管线做对比（论文以'不适用'论证替代实证对比）。",
+    "basis": "page 2-3 Related Works 与 page 7-8 实验设定；无拼接基线出现在 Tables 1-7。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论可迁移范围：已标定、时间同步的六相机（118°×92°）+LiDAR 环视 rig，在 200 帧量级片段、人穿戴保守运动（≤1.2 m/s/≤0.4 rad/s）采集、室内外场景上，前馈球面体素高斯可获得 24.70-28.59 dB 渲染质量、327K-3,023K 高斯、0.47 s/帧流式更新与 230 FPS 渲染；有位姿时度量重建优于 Pi3。不可迁移/未验证：无位姿优势、无 LiDAR 的纯视觉度量尺度、真实人形步态抖动下的鲁棒性、以及遥操作/导航/操作等人因或任务级收益；存储紧凑性相对 4DGS（0.3 MB）与 IGS（6.5 MB）非最优。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "前馈设计避免逐场景优化，流式更新 0.47 s/帧与 230 FPS 渲染直接对应具身低延迟需求，且有在线/离线两类基线对照。",
+   "球面体素近细远粗设计与机器人中心场景几何匹配，Table 6 消融（像素/笛卡尔/球面三范式）对'为何球面'给出同设定归因证据。",
+   "LiDAR 度量监督+四项损失（渲染×2+点+法线）使重建具备度量一致性，服务于 SLAM/闭环控制诉求。",
+   "Table 7 消融（朴素拼接 65,400K/19,400 MB）量化了长序列共享表征的必要性，设计归因清晰。",
+   "双公共基准（DTU/ETH3D、DL3DV/RealEstate10K）提供超出自建数据的外部检查点。"
+  ],
+  "design_risks": [
+   "主战场为自建基准与自定协议（4-view、200 帧、末 20 帧抽测），存在有利于自身设计的设定选择风险。",
+   "NVS 基线多为前向/物体重建方法，置于低重叠环视设定未必是其设计最优条件；未与多鱼眼拼接/传统全景管线实证对比。",
+   "人因动机（模拟器眩晕、态势感知、工作流）无操作者实验验证，动机与证据脱节。",
+   "数据采集用保守化人穿戴协议（限速+颈部稳定器），与人形平台真实步态抖动的差距未量化。",
+   "未报告前馈网络本身的端到端推理延迟（230 FPS 为渲染速度，0.47 s 为流式每帧更新时间），'实时系统'整体延迟链路不完整。",
+   "无方差/显著性报告，部分优势幅度小（RealEstate10K SSIM 0.896 vs 0.889），单次运行结果的可复现波动未知。"
+  ],
+  "baseline_fairness": "重建基线（DUSt3R/Pi3/VGGT 等）为通用方法且按其原协议评测，相对公平；NVS 基线被置于其非设计设定的环视低重叠场景，对基线不利；无位姿设定下落后 Pi3 说明基线仍具竞争力；缺少与经典多鱼眼全景拼接或全景相机原生方案的对照。",
+  "metric_validity": "Chamfer/PSNR/SSIM/LPIPS/高斯数/存储/时间为渲染与重建代理指标，不直接测量遥操作绩效、态势感知或模拟器眩晕等论文动机声称的具身收益；紧凑性与速度指标对部署相关，但缺少端到端系统延迟与机器人下游任务指标。",
+  "reproducibility": "中上：公布项目网站与数据集/基准（作者表述）、训练细节（π3 初始化、8 GPU、AdamW 超参、双阶段训练）完整；但 12 页正文未见代码发布承诺与随机种子/方差信息，流式评测协议细节（子场景选择标准）部分依赖作者自定。",
+  "external_validity": "有限-中等：跨 DTU/ETH3D/DL3DV/RealEstate10K 的泛化测试存在且互有胜负（多数指标最佳、个别略逊）；但所有'具身'结论限定于单一人形平台头部几何、单一 rig 配置与保守运动分布，向其他平台/传感器配置/动态等级的外推未检验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.13476-C01",
+   "claim": "RobotPan 的应用方式：在人形平台 Tiangong 3.0 上用六台相机的环视 rig（而非多鱼眼全景 rig）实现 360° 视觉；作者明确说明因硬件约束六相机光学中心无法共置，经典多鱼眼拼接管线不适用，必须用几何感知的视图合成来获得环视画面。",
+   "stance": "support",
+   "relation": "支持命题：具身智能中环视/360° 视觉的一种核心实现路径，并揭示多相机环视与多鱼眼拼接 rig 的关键差别（光学中心能否近似共置决定能否用经典拼接）——界定鱼眼/全景方案与多相机方案的适用边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言指出多鱼眼全景 rig 近似单一光心故可拼接，而本系统相机受硬件约束无法共置，经典图像拼接管线不可用，需要有原理的几何感知视图合成。",
+   "locator": "page 1, Section 1 Introduction",
+   "source_context": "Unlike multi-fisheye panoramic rigs that approximate a sin-\ngle optical center, our cameras cannot be co-located due to\nhardware constraints, which makes classical image-stitching\npipelines inapplicable and requires principled geometry-\naware view synthesis. Meanwhile",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 引言原文逐字给出 multi-fisheye panoramic rigs approximate a single optical center、our cameras cannot be co-located due to hardware constraints、classical image-stitching pipelines inapplicable、requires principled geometry-aware view synthesis 四个要点；claim 为作者论述的忠实复述，未附加论文外断言。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C02",
+   "claim": "具身人机回路（遥操作、数据采集、紧急接管）中窄视场前视相机的问题陈述：受限视场降低态势感知，操作者需以不舒服的身体/头部旋转去“搜索”视点；机器人传感布局与人眼差异导致 HMD 视图不稳定并引发模拟器眩晕。",
+   "stance": "support",
+   "relation": "支持命题：说明具身智能为何需要 360°/环视视觉接口（任务动机端），是全景/超广角相机在具身领域获益任务（遥操作、数据采集、紧急接管）的直接作者论述。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言逐条列出前视相机受限视场的三个实际问题：态势感知受限、需要不舒服的体位搜索视点、多相机切换打断工作流；摘要同时指出运动诱发抖动导致 HMD 模拟器眩晕。",
+   "locator": "page 1, Section 1 Introduction",
+   "source_context": "First, the\nlimited field of view of a forward-facing camera restricts\nsituational awareness: operators cannot reliably perceive\nsurrounding obstacles or affordances, which constrains safe\nmotion and often requires uncomfortable body/head rota-\ntions to “search” for viewpoints.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 原文逐字给出 restricted situational awareness、uncomfortable body/head rotations to search for viewpoints 等表述（摘要段另证 simulator sickness，见 C12 context）；claim 限定于作者陈述的动机，未声称已被实验验证。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C03",
+   "claim": "环视 rig 硬件配置：六台向外 RGB 相机均匀分布在半径 89 mm 的圆环上，方位角 0°/±60°/±120°/180°，每台相机水平视场 118°、垂直视场 92°；配合头顶 40 线激光雷达（水平 360°、垂直 59°）提供多模态数据。",
+   "stance": "support",
+   "relation": "支持命题：给出环视具身系统的具体传感器选型参数（超广角 118°×92° 相机 ×6 + LiDAR），是“全景/环视/超广角相机在具身智能中的应用方式”的硬件层证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.1 节传感器布局段给出圆环半径、六个方位角、每相机 118°×92° 视场与 40 线 LiDAR 覆盖，并称该几何保证稳健的多视重叠。",
+   "locator": "page 6, Section 3.1 Experimental Setup (Fig. 4/5; 40-beam LiDAR 描述延续至 page 7 首段)",
+   "source_context": "they are positioned at 0\n◦ \n(front), ±60\n◦ \n(front-\nleft/right), ±120\n◦ \n(back-left/right), and 180\n◦ \n(rear). Cou-\npled with each camera’s wide horizontal field of view of\n118\n◦ \nand vertical field of view of 92\n◦\n, this geometry guar-\nantees robust, multi-view visual overlap.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "相机水平/垂直视场；环半径",
+    "value_or_direction": "118° H-FoV / 92° V-FoV；89 mm",
+    "comparator": "六相机环视 rig + 40 线 LiDAR（自建 Tiangong 3.0 头部）",
+    "task_or_sample": "Tiangong 3.0 人形平台头部传感布局",
+    "locator": "page 6, Section 3.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 89 mm 环半径、0/±60/±120/180° 方位角与 118°/92° 视场；40 线 LiDAR 及 360°×59° 覆盖在 page 7 首段逐字核对（'a 40-beam spinning LiDAR ... 59◦ vertical field of view'）；数字与方位角均来自原文表格级参数段。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C04",
+   "claim": "RobotPan 数据集规模与构成：339 个同步片段、每片段 200 帧，六 RGB 相机 + 一台 LiDAR 联合标定同步采集，覆盖室内（办公/家庭/展厅/厂房）与室外（街区/园区/道路）场景，约 80% 片段含动态/非刚性内容，RGB 分辨率 1920×1536（训练下采样到 518×406），按 80/10/10 划分。",
+   "stance": "support",
+   "relation": "支持命题：为 360° 视角下具身感知（新视图合成+度量 3D 重建）提供的数据基础设施证据，属全景/环视相机在具身领域的应用方式（数据集贡献）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.1 节数据集段给出片段数、帧数、场景类型、动态占比、分辨率与划分比例。",
+   "locator": "page 7, Section 3.1 RobotPan dataset",
+   "source_context": "Our dataset contains 339 synchronized\nclips, each with 200 frames, captured with a calibrated\nrig consisting of six RGB cameras and one LiDAR. The\nsequences cover diverse indoor environments (office build-\nings, households, exhibition halls, and factories) and outdoor\nenvironments (urban blocks, industrial parks, and roads).\nAll sensors are time-synchronized and jointly calibrated,\nenabling consistent multi-view and multi-sensor geometry.\nThe RGB cameras record at a resolution of 1920×1536, and\nwe downsample images to 518×406 during training. The\ndataset features substantial non-rigid and dynamic content,\nwith dynamic scenes accounting for approximately 80% of\nthe clips, including crowded pedestrian scenarios.",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "片段数/帧数/动态场景占比/分辨率/划分",
+    "value_or_direction": "339 片段 × 200 帧；~80% 动态；1920×1536；80/10/10",
+    "comparator": "自建多传感器机器人环视数据集（首个面向机器人 360° NVS 与度量重建，作者表述）",
+    "task_or_sample": "室内+室外真实平台采集",
+    "locator": "page 7, Section 3.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 339 synchronized clips、each with 200 frames、approximately 80% of the clips、1920×1536、518×406、80%/10%/10%；“首个/first”限定为作者自述（page 1-2 'the first multi-sensor dataset tailored to 360◦ novel view synthesis ... for robotics'），claim 中已标注为作者表述。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C05",
+   "claim": "在 RobotPan 自建数据集 4 视角稀疏新视图合成上，ROBOTPAN 以 327K 高斯取得最佳三项渲染指标（PSNR 24.70、SSIM 0.811、LPIPS 0.197），高斯数比每像素一高斯方法少 3.86×、比 pixelSplat（多高斯每像素，3,783K）少 11.57×；最佳前基线 DepthSplat 为 1,261K/22.97/0.787/0.200。",
+   "stance": "support",
+   "relation": "支持命题：环视稀疏视角设定下球面体素高斯表征的量化效果——紧凑性（高斯数量级减少）与渲染质量同时占优，是全景/环视相机具身应用“获益”的定量证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 与正文给出本方法与 pixelSplat/MVSplat/FLARE/DepthSplat 的对比及 3.86×/11.57× 紧凑性倍数。",
+   "locator": "page 8, Table 3 与 Section 3.3 Comparison 段",
+   "source_context": "DepthSplat [34] Pixel-wise 1,261K 22.97 0.787 0.200\nOurs Spherical voxel-wise 327K 24.70 0.811 0.197\nTABLE 4\nQuantitative comparison with state-of-the-art novel view synthesis\nmethods on the DL3DV-Benchmarks and RealEstate10K datasets.\nMethod \nDL3DV-Benchmarks RealEstate10K\nPSNR↑ SSIM↑ LPIPS↓ PSNR↑ SSIM↑ LPIPS↓\npixelSplat [26] 16.55 0.456 0.480 25.89 0.858 0.142\nMVSplat [27] 18.13 0.559 0.393 26.39 0.869 0.128\nFLARE [12] 18.89 0.591 0.352 27.39 0.873 0.107\nDepthSplat [34] 19.24 0.620 0.322 27.47 0.889 0.114\nOurs 20.13 0.616 0.318 27.43 0.896 0.109\n3.3 Generalized Novel View Synthesis\nDatasets. We evaluate generalized novel view synthe-\nsis on both our proposed surround-view robotic dataset\nand two public benchmarks, DL3DV-Benchmarks [58] and\nRealEstate10K [59]. Our proposed dataset is designed\nfor sparse-view robotic perception with large viewpoint\nchanges and limited overlap across input cameras, making\nview synthesis substantially more challenging than stan-\ndard forward-facing or object-centric settings. To further\nassess generalization, we also report results on DL3DV-\nBenchmarks and RealEstate10K, which are widely used\nbenchmarks for feed-forward novel view synthesis.\nMetrics and baselines. We compare our method\nagainst representative feed-forward novel view synthe-\nsis approaches, including pixelSplat [26], MVSplat [27],\nFLARE [12], and DepthSplat [34]. Following standard prac-\ntice, we report PSNR, SSIM, and LPIPS, where higher\nPSNR/SSIM and lower LPIPS indicate better rendering\nquality. In addition to image quality, we also compare the\nnumber of rendered Gaussians to evaluate representation\ncompactness and rendering efficiency.\nComparison. Tab. 3 reports quantitative results on our pro-\nposed dataset under the 4-view setting. Despite the highly\nsparse-view configuration, our method achieves the best\nperformance across all three image quality metrics while us-\ning a substantially more compact Gaussian representation.\nOur method achieves the best rendering quality while using\na substantially more compact representation. Specifically,\nit uses only 327K Gaussians, which is 3.86× fewer than\nrecent one-Gaussian-per-pixel methods and 11.57× fewer\nthan pixelSplat (multiple-Gaussian-per-pixel).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PSNR / SSIM / LPIPS / 高斯数",
+    "value_or_direction": "24.70 dB / 0.811 / 0.197 / 327K（基线最佳 DepthSplat：22.97 / 0.787 / 0.200 / 1,261K；高斯数少 3.86×–11.57×）",
+    "comparator": "pixelSplat、MVSplat、FLARE、DepthSplat",
+    "task_or_sample": "RobotPan 数据集 4 视角稀疏新视图合成",
+    "locator": "page 8, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 3 行逐字核对 Ours 327K 24.70 0.811 0.197 与 DepthSplat 1,261K 22.97 0.787 0.200、pixelSplat 3,783K 17.79；3.86×/11.57× 在同页正文逐字出现；claim 限定在 4-view 自建数据集设定，未外推。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C06",
+   "claim": "点图重建结果的条件性：在自建环绕数据集上，已知相机位姿时本方法 Overall Chamfer 0.268 优于最佳基线 Pi3 的 0.332（Comp. 0.126 vs 0.221）；但在无位姿设定下 Acc. 0.612 与 Overall 0.482 反而劣于 Pi3 的 0.580/0.460——本方法的优势依赖已知标定/位姿条件。",
+   "stance": "limit",
+   "relation": "限制命题：环视多相机重建的优势并非无条件——去掉位姿后相对 Pi3 变差，说明该系统的几何优势部分依赖外部位姿/标定信息，审读时不能把“强鲁棒性”读成无条件结论。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 按 w/o pose 与 w/ pose 两设定报告 Acc./Comp./Overall，本方法仅在有位姿列全面领先，无位姿列 Acc./Overall 落后 Pi3。",
+   "locator": "page 7, Table 1（Section 3.2）",
+   "source_context": "Pi3 [13] 0.580 0.440 0.353 0.221 0.460 0.332\nOurs 0.612 0.409 0.350 0.126 0.482 0.268",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Chamfer Acc./Comp./Overall",
+    "value_or_direction": "w/ pose Overall 0.268 vs Pi3 0.332（优）；w/o pose Acc. 0.612 vs 0.580、Overall 0.482 vs 0.460（劣）",
+    "comparator": "Pi3（最强基线）",
+    "task_or_sample": "RobotPan 自建环绕数据集稀疏视角点图估计",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 行逐字核对：Pi3 0.580 0.440 0.353 0.221 0.460 0.332；Ours 0.612 0.409 0.350 0.126 0.482 0.268；列序（w/o p. / w/ p. × Acc./Comp./Overall）取自表头；方向判断（有位姿优、无位姿劣）由数字直接得出，且与正文“strong robustness”表述形成对照，属数字层面的忠实陈述。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C07",
+   "claim": "在公共重建基准上结果互有胜负而非全面领先：DTU 上 Overall 3.0251 略优于 Pi3 的 3.0785（但 Acc. 3.3049/Comp. 2.2424 均劣于 Pi3 的 3.0213/2.1322）；ETH3D 上 Overall 0.1841 劣于 Pi3 的 0.1672（Acc. 0.1132 优、Comp. 0.1240 劣）。",
+   "stance": "conditional",
+   "relation": "限制命题：把论文“competitive/SOTA”的总体宣称收紧为“DTU Overall 与 ETH3D Acc. 略优、其余多数指标与 Pi3 相当或更差”的条件性结论，防止综述高估其外部领先性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 报告 DTU/ETH3D 上与 Dust3R/MASt3R/Spann3R/VGGT/Pi3 的对比，本方法与 Pi3 各有胜负。",
+   "locator": "page 7, Table 2（Section 3.2）",
+   "source_context": "Pi3 [13] 3.0213 2.1322 3.0785 \n0.1341 0.1169 0.1672\nOurs 3.3049 2.2424 3.0251 0.1132 0.1240 0.1841",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Chamfer Acc./Comp./Overall（DTU 与 ETH3D）",
+    "value_or_direction": "DTU Overall 3.0251 vs Pi3 3.0785（略优）；DTU Acc./Comp. 劣（3.3049/2.2424 vs 3.0213/2.1322）；ETH3D Overall 0.1841 vs 0.1672（劣）",
+    "comparator": "Pi3、VGGT、Dust3R、MASt3R、Spann3R",
+    "task_or_sample": "DTU 与 ETH3D 公共基准（每 5 帧采样关键帧的稀疏视角协议）",
+    "locator": "page 7, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 2 行逐字核对：Pi3 3.0213 2.1322 3.0785 0.1341 0.1169 0.1672；Ours 3.3049 2.2424 3.0251 0.1132 0.1240 0.1841；方向陈述均由数字直接得出，未附加论文外判断。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C08",
+   "claim": "流式新视图合成：在 10 个动态子场景（每场景 200 帧 × 6 视角=1,200 图像）上，流式变体取得 28.59 dB PSNR、每帧更新仅 0.47 s、渲染 230 FPS、存储 7.2 MB，全面优于在线基线（IGS 27.75 dB/3.65 s/204 FPS/6.5 MB；3DGStream 26.11 dB/12.25 s/215 FPS/7.8 MB）与离线基线（Spacetime-GS 25.41 dB）。",
+   "stance": "support",
+   "relation": "支持命题：环视多相机流式渲染在动态场景的实时性证据——0.47 s/帧的更新速度与 230 FPS 渲染满足具身低延迟流式需求，是 360° 视觉“获益”任务（长序列流式感知/渲染）的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 5 与正文报告与离线（K-Planes/4DGS/Spacetime-GS）和在线（StreamRF/3DGStream/IGS）方法的 PSNR/训练时间/渲染速度/存储对比。",
+   "locator": "page 9, Table 5 与 Section 3.4 Comparison 段（26×/33×/7.8× 训练加速表述在 page 10）",
+   "source_context": "Ours (Streaming) 28.59 0.47 230 7.2\nMetrics and baselines. Following prior work [64], we report\nPSNR, Storage usage, Training time, and Rendering speed\nfor comparison with previous approaches. For online training\nmethods, the first-frame observations are used to initialize\nthe scene representation, and the subsequent frames are in-\ncorporated incrementally through per-frame updates. In this\nsetting, we compare against StreamRF [63], 3DGStream [54],\nand IGS [64]. For offline training methods, all frames in each\nsequence are jointly used for training. The offline baselines\ninclude K-Planes [60], 4DGS [61], and Spacetime-GS [62].\nAll reported metrics are averaged over the full 200-frame\nsequence, including frame 0.\nComparison with offline and online methods. We compare\nour streaming framework against both offline and online\ntraining methods on the proposed multi-view camera dy-\nnamic scene dataset, with quantitative results reported in\nTab. 5. Compared to offline methods, our approach achieves\nthe best rendering quality, reaching 28.59 dB PSNR and\noutperforming K-Planes, 4DGS, and Spacetime-GS by a\nclear margin. At the same time, our method preserves real-\ntime rendering efficiency at 230 FPS, matching the fastest\nonline baseline and substantially exceeding most offline\nalternatives.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PSNR / 每帧训练时间 / 渲染 FPS / 存储",
+    "value_or_direction": "28.59 dB / 0.47 s / 230 FPS / 7.2 MB（IGS：27.75 dB / 3.65 s / 204 FPS / 6.5 MB；3DGStream：26.11 dB / 12.25 s / 215 FPS / 7.8 MB）",
+    "comparator": "IGS、3DGStream、StreamRF（在线）；K-Planes、4DGS、Spacetime-GS（离线）",
+    "task_or_sample": "10 个动态子场景（200 帧 × 6 相机视角，末 20 帧各随机抽 1 视角为测试）",
+    "locator": "page 9, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 5 行逐字核对 Ours (Streaming) 28.59 0.47 230 7.2 与 IGS 27.75 3.65 204 6.5、3DGStream 26.11 12.25 215 7.8、Spacetime-GS 25.41；子场景数量与评测协议在同页 Datasets 段逐字核对；26×/33×/7.8× 加速倍数在 page 10 正文核对，claim 中仅引用 page 9 可见数字。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C09",
+   "claim": "高斯预测范式消融：球面体素式预测把表征从像素式的 1,261K 高斯/378 MB 压缩到 327K/97 MB，同时把 PSNR/SSIM/LPIPS 从 21.43/0.713/0.341 提升到 24.70/0.811/0.197；笛卡尔体素式居中（439K/130 MB/23.12/0.791/0.236）——球面近细远粗层级与机器人中心场景几何最匹配。",
+   "stance": "support",
+   "relation": "支持命题：环视/全景具身场景中“机器人中心球面几何先验”优于通用像素/笛卡尔表征的因果性消融证据，支撑综述对球面/柱面表征适配 360° 视觉的判断。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 6 对比像素式/体素式/球面体素式三种高斯预测范式；正文明确给出 1261K→327K、378 MB→97 MB 与指标提升。",
+   "locator": "page 10, Table 6 与 Section 3.5 Ablation 段（约 70% 存储削减的表述在 page 4, Section 2.3）",
+   "source_context": "Pixel-wise 1261K 378 21.43 0.713 0.341\nVoxel-wise 439K 130 23.12 0.791 0.236\nSpherical voxel-wise 327K 97 24.70 0.811 0.197\nTABLE 7\nAblation study of key design choices on the proposed dataset for\nstreaming novel view synthesis over 200 evaluation frames.\nConfiguration #Gaussians Storage (MB)↓ PSNR↑ SSIM↑ LPIPS↓\nNaive Concatenation (w/o MLP) 65,400K 19,400 24.66 0.806 0.201\nw/o Range-Image Fusion 3,094K 1,371 24.71 0.812 0.213\nw/o Tiny-MLP Refinement 3,023K 872 24.32 0.739 0.241\nFull Model 3,023K 1,296 \n25.12 0.832 0.184\ntion scheme, the scene representation allocates Gaussians\nmore efficiently across space, allowing us to model the\nscene with a smaller number of Gaussians while preserving\nreconstruction fidelity. This compact representation further\nreduces computational rendering overhead and contributes\nto the high rendering speed achieved by our proposed\nmethod. Although offline methods such as 4DGS are more\ncompact in storage, they require sequence-level optimiza-\ntion over the entire scene and therefore are not suitable for\npractical low-latency streaming applications in robotics.\nCompared to prior online training methods, our method\nachieves the best overall trade-off between rendering qual-\nity, training efficiency, rendering speed, and storage usage.\nSpecifically, our streaming variant outperforms StreamRF,\n3DGStream, and IGS in PSNR, while reducing the per-\nframe training time to only 0.47 seconds. This is more than\n26× faster than 3DGStream, more than 33× faster than\nStreamRF, and about 7.8× faster than IGS. In addition,\nour method achieves the highest rendering speed among\nall online baselines at 230 FPS. While IGS is slightly more\ncompact in memory footprint, our method provides better\nrendering quality and substantially faster rendering, leading\nto the strongest overall performance in streaming settings.\nThese results demonstrate the effectiveness of our\nstreaming design. By performing scene initialization and\nsequential updates in a feed-forward manner, our method\navoids the heavy optimization cost of prior online ap-\nproaches and thus greatly reduces update latency. Further-\nmore, our spherical voxelization scheme enables a com-\npact Gaussian representation that allocates model capacity\nmore efficiently in space, thereby lowering rendering cost\nwhile preserving reconstruction quality. Consequently, our\nmethod effectively overcomes the typical trade-off between\nquality and efficiency in online novel view synthesis.\n3.5 Ablation Study\nSpherical voxel-wise prediction. Tab. 6 compares three\nGaussian prediction paradigms: pixel-wise, Cartesian voxel-\nwise, and spherical voxel-wise. Both voxel-wise variants\noutperform pixel-wise prediction by aggregating nearby\nobservations into compact anchor features, which reduces\nredundancy and improves rendering quality. In particular,\nspherical voxel-wise prediction achieves the best overall re-\nsults, reducing the representation from 1261K to 327K Gaus-\nsians and from 378 MB to 97 MB, while improving PSNR/S-\nSIM/LPIPS from 21.43/0.713/0.341 to 24.70/0.811/0.197.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "高斯数 / 存储 / PSNR / SSIM / LPIPS",
+    "value_or_direction": "327K / 97 MB / 24.70 / 0.811 / 0.197（像素式基线：1,261K / 378 MB / 21.43 / 0.713 / 0.341；笛卡尔体素式：439K / 130 MB / 23.12 / 0.791 / 0.236）",
+    "comparator": "Pixel-wise 与 Cartesian Voxel-wise 两种预测范式",
+    "task_or_sample": "RobotPan 数据集上的高斯预测消融",
+    "locator": "page 10, Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 Table 6 三行逐字核对（Pixel-wise 1261K 378 21.43 0.713 0.341；Voxel-wise 439K 130 23.12 0.791 0.236；Spherical voxel-wise 327K 97 24.70 0.811 0.197），正文 1261K→327K 与指标提升逐字出现；“约 70% 存储削减”另在 page 4 逐字出现（reduces storage by about 70%），claim 已注明出处。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C10",
+   "claim": "流式融合消融：朴素拼接跨帧预测会在 200 帧评测中把表征膨胀到 65,400K 高斯、19,400 MB 存储，尽管渲染质量尚可（PSNR 24.66）但对长序列不可行；完整模型为 3,023K/1,296 MB/25.12/0.832/0.184；去掉距离图像融合（3,094K/1,371/24.71/0.812/0.213）或去掉 tiny-MLP 精修（3,023K/872/24.32/0.739/0.241）均降低质量。",
+   "stance": "support",
+   "relation": "支持命题：长序列环视流式感知中“共享紧凑表征+动态/静态分离”设计的必要性证据——朴素累积不可行是全景/环视流式应用的结构性约束的量化体现。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 7 报告朴素拼接/去距离图像融合/去 tiny-MLP/完整模型四配置的高斯数、存储与渲染指标；正文明确称朴素拼接 impractical。",
+   "locator": "page 10, Table 7 与 Section 3.5 Streaming fusion 段",
+   "source_context": "Naive Concatenation (w/o MLP) 65,400K 19,400 24.66 0.806 0.201\nw/o Range-Image Fusion 3,094K 1,371 24.71 0.812 0.213\nw/o Tiny-MLP Refinement 3,023K 872 24.32 0.739 0.241\nFull Model 3,023K 1,296 \n25.12 0.832 0.184\ntion scheme, the scene representation allocates Gaussians\nmore efficiently across space, allowing us to model the\nscene with a smaller number of Gaussians while preserving\nreconstruction fidelity. This compact representation further\nreduces computational rendering overhead and contributes\nto the high rendering speed achieved by our proposed\nmethod. Although offline methods such as 4DGS are more\ncompact in storage, they require sequence-level optimiza-\ntion over the entire scene and therefore are not suitable for\npractical low-latency streaming applications in robotics.\nCompared to prior online training methods, our method\nachieves the best overall trade-off between rendering qual-\nity, training efficiency, rendering speed, and storage usage.\nSpecifically, our streaming variant outperforms StreamRF,\n3DGStream, and IGS in PSNR, while reducing the per-\nframe training time to only 0.47 seconds. This is more than\n26× faster than 3DGStream, more than 33× faster than\nStreamRF, and about 7.8× faster than IGS. In addition,\nour method achieves the highest rendering speed among\nall online baselines at 230 FPS. While IGS is slightly more\ncompact in memory footprint, our method provides better\nrendering quality and substantially faster rendering, leading\nto the strongest overall performance in streaming settings.\nThese results demonstrate the effectiveness of our\nstreaming design. By performing scene initialization and\nsequential updates in a feed-forward manner, our method\navoids the heavy optimization cost of prior online ap-\nproaches and thus greatly reduces update latency. Further-\nmore, our spherical voxelization scheme enables a com-\npact Gaussian representation that allocates model capacity\nmore efficiently in space, thereby lowering rendering cost\nwhile preserving reconstruction quality. Consequently, our\nmethod effectively overcomes the typical trade-off between\nquality and efficiency in online novel view synthesis.\n3.5 Ablation Study\nSpherical voxel-wise prediction. Tab. 6 compares three\nGaussian prediction paradigms: pixel-wise, Cartesian voxel-\nwise, and spherical voxel-wise. Both voxel-wise variants\noutperform pixel-wise prediction by aggregating nearby\nobservations into compact anchor features, which reduces\nredundancy and improves rendering quality. In particular,\nspherical voxel-wise prediction achieves the best overall re-\nsults, reducing the representation from 1261K to 327K Gaus-\nsians and from 378 MB to 97 MB, while improving PSNR/S-\nSIM/LPIPS from 21.43/0.713/0.341 to 24.70/0.811/0.197.\nThese results show that structured local aggregation is more\nsuitable for our multi-view robotic setting than directly\nregressing dense pixel-aligned primitives.\nCompared with Cartesian voxels, spherical voxels are\nbetter aligned with our robot-centric surround-view setting.\nTheir volume increases with radius, naturally assigning\nfiner resolution to near-field regions and coarser resolu-\ntion to distant areas. This radius-adaptive hierarchy better\nmatches the geometry distribution of embodied scenes,\nyielding both higher compactness and better rendering\nquality than uniform Cartesian voxelization.\nStreaming fusion. Tab. 7 validates the effectiveness of the\nproposed streaming fusion design for streaming novel view\nsynthesis. Naive concatenation causes severe redundancy\nacross time, increasing the representation to 65,400K Gaus-\nsians and 19,400 MB storage, which is impractical for long\nsequences despite reasonable rendering quality.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "高斯数 / 存储 / PSNR / SSIM / LPIPS",
+    "value_or_direction": "朴素拼接 65,400K / 19,400 MB（不可行）；完整模型 3,023K / 1,296 MB / 25.12 / 0.832 / 0.184",
+    "comparator": "Naive Concatenation / w/o Range-Image Fusion / w/o Tiny-MLP Refinement",
+    "task_or_sample": "200 帧流式新视图合成消融（自建多相机动态数据集）",
+    "locator": "page 10, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 Table 7 四行逐字核对（Naive Concatenation 65,400K 19,400 24.66 0.806 201；w/o Range-Image Fusion 3,094K 1,371 24.71 0.812 213；w/o Tiny-MLP 3,023K 872 24.32 0.739 241；Full Model 3,023K 1,296 25.12 0.832 184——表内 LPIPS 列去小数点前导，0.201/0.213/0.241/0.184 为表头约定的一致读法）；impractical 表述逐字出现。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C11",
+   "claim": "存储并非最优的作者承认：离线方法 4DGS 在存储上更紧凑（Table 5 中 0.3 MB vs 本方法 7.2 MB），但需全序列联合优化、不适合机器人低延迟流式；在线方法 IGS 的内存占用也略小于本方法（6.5 vs 7.2 MB），作者以更好渲染质量与更快渲染作为补偿论据。",
+   "stance": "limit",
+   "relation": "限制命题：环视流式高斯方法在存储紧凑性上并非全面领先（相对 4DGS 差约 24×、相对 IGS 略差），收益来自速度/质量而非最小存储——综述中引用其紧凑性时需限定维度。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "正文承认 offline 方法（如 4DGS）storage 更紧凑、IGS slightly more compact，并给出适用性论辩。",
+   "locator": "page 10, Section 3.4 Comparison 末段（4DGS 0.3 MB 数据在 page 9, Table 5）",
+   "source_context": "Although offline methods such as 4DGS are more\ncompact in storage, they require sequence-level optimiza-\ntion over the entire scene and therefore are not suitable for\npractical low-latency streaming applications in robotics.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "存储 / 内存占用",
+    "value_or_direction": "4DGS 0.3 MB vs Ours 7.2 MB（差约 24×）；IGS 6.5 MB vs Ours 7.2 MB（略差）",
+    "comparator": "4DGS（离线）、IGS（在线）",
+    "task_or_sample": "10 个动态子场景流式新视图合成",
+    "locator": "page 9, Table 5 与 page 10 Section 3.4 末段"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 逐字出现 Although offline methods such as 4DGS are more compact in storage 与 While IGS is slightly more compact in memory footprint；0.3 MB/6.5 MB/7.2 MB 数字在 page 9 Table 5 逐字核对（4DGS 24.55 9.8 30 0.3；IGS 27.75 3.65 204 6.5；Ours 28.59 0.47 230 7.2）；24× 为读者按 7.2/0.3 计算的比值，已在 claim 中标注计算性质。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C12",
+   "claim": "动机-证据缺口：论文以“运动诱发抖动导致 HMD 模拟器眩晕”与窄视场/多相机切换打断操作者工作流作为系统动机，但全文实验只覆盖点图重建、稀疏/流式新视图合成等代理指标，未报告任何操作者实验（如模拟器眩晕量表、态势感知或遥操作绩效）来直接验证这些动机收益。",
+   "stance": "gap",
+   "relation": "缺口命题：环视视觉对人机回路任务（遥操作/数据采集/紧急接管）的收益在本文止于动机陈述，缺少人因层面的证据——综述回答“哪些任务获益”时，此类收益应标注为未验证主张。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "摘要与引言提出 HMD 模拟器眩晕、工作流打断等动机；但 Section 3 实验全部为重建/NVS 指标（Table 1-7），Section 4 结论也未报告操作者研究。",
+   "locator": "page 1, Abstract（动机陈述）；page 7-10, Sections 3.2-3.5（实验全部为重建/NVS 指标，无人因实验）",
+   "source_context": "However, current robotic visual interfaces\nare often limited to narrow forward-facing views, or, when multiple on-board cameras are available, require cumbersome manual\nswitching that interrupts the operator’s workflow. Both configurations suffer from motion-induced jitter that causes simulator sickness in\nhead-mounted displays.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 motion-induced jitter that causes simulator sickness in head-mounted displays 与 cumbersome manual switching that interrupts the operator's workflow（后者在 context 相邻句，同页已核对）；“无操作者实验”基于通读 page 7-10 全部实验段（Tables 1-7 均为 Chamfer/PSNR/SSIM/LPIPS/高斯数/存储/时间）与 page 11 结论段核对；该推断的前提（动机存在、实验仅代理指标）与结论（人因收益未验证）均在原文范围内，若后续版本补充用户研究则会削弱此卡。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C13",
+   "claim": "跨数据集泛化的条件性：在 DL3DV-Benchmarks 上本方法 PSNR 20.13 与 LPIPS 0.318 均最佳（DepthSplat 19.24/0.322）；在 RealEstate10K 上 SSIM 0.896 最佳但 PSNR 27.43 略低于 DepthSplat 的 27.47，作者自述“其余指标保持有竞争力”。",
+   "stance": "conditional",
+   "relation": "条件性支持命题：球面体素表征在非机器人的通用前向场景也能取得多数最佳指标，但并非逐项领先——外部泛化能力应按“多数指标最佳、个别略逊”来引用。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4 报告 DL3DV 与 RealEstate10K 上的 PSNR/SSIM/LPIPS 对比；正文明确承认 RealEstate10K 上 PSNR 非最佳。",
+   "locator": "page 8, Table 4 与 Section 3.3 跨数据集段（best SSIM 表述延续至 page 9 首段）",
+   "source_context": "DepthSplat [34] 19.24 0.620 0.322 27.47 0.889 0.114\nOurs 20.13 0.616 0.318 27.43 0.896 0.109\n3.3 Generalized Novel View Synthesis\nDatasets. We evaluate generalized novel view synthe-\nsis on both our proposed surround-view robotic dataset\nand two public benchmarks, DL3DV-Benchmarks [58] and\nRealEstate10K [59]. Our proposed dataset is designed\nfor sparse-view robotic perception with large viewpoint\nchanges and limited overlap across input cameras, making\nview synthesis substantially more challenging than stan-\ndard forward-facing or object-centric settings. To further\nassess generalization, we also report results on DL3DV-\nBenchmarks and RealEstate10K, which are widely used\nbenchmarks for feed-forward novel view synthesis.\nMetrics and baselines. We compare our method\nagainst representative feed-forward novel view synthe-\nsis approaches, including pixelSplat [26], MVSplat [27],\nFLARE [12], and DepthSplat [34]. Following standard prac-\ntice, we report PSNR, SSIM, and LPIPS, where higher\nPSNR/SSIM and lower LPIPS indicate better rendering\nquality. In addition to image quality, we also compare the\nnumber of rendered Gaussians to evaluate representation\ncompactness and rendering efficiency.\nComparison. Tab. 3 reports quantitative results on our pro-\nposed dataset under the 4-view setting. Despite the highly\nsparse-view configuration, our method achieves the best\nperformance across all three image quality metrics while us-\ning a substantially more compact Gaussian representation.\nOur method achieves the best rendering quality while using\na substantially more compact representation. Specifically,\nit uses only 327K Gaussians, which is 3.86× fewer than\nrecent one-Gaussian-per-pixel methods and 11.57× fewer\nthan pixelSplat (multiple-Gaussian-per-pixel). This result\nhighlights the advantage of our anchor-wise representation\nin producing higher-quality renderings with significantly\nreduced redundancy.\nTo further evaluate cross-dataset generalization, we\ncompare with prior methods on DL3DV-Benchmarks and\nRealEstate10K in Tab. 4. Our method achieves the best PSNR\nand LPIPS on DL3DV-Benchmarks, and the best SSIM on",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PSNR / SSIM / LPIPS（DL3DV-Benchmarks 与 RealEstate10K）",
+    "value_or_direction": "DL3DV：PSNR 20.13、LPIPS 0.318 均最佳；RealEstate10K：SSIM 0.896 最佳，PSNR 27.43 略低于 DepthSplat 27.47",
+    "comparator": "pixelSplat、MVSplat、FLARE、DepthSplat",
+    "task_or_sample": "DL3DV-Benchmarks 与 RealEstate10K 公共基准泛化评测",
+    "locator": "page 8, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 4 行逐字核对（Ours 20.13 0.616 0.318 27.43 0.896 0.109；DepthSplat 19.24 0.620 0.322 27.47 0.889 0.114）；'the best PSNR and LPIPS on DL3DV-Benchmarks, and the best SSIM on RealEstate10K, while remaining competitive' 在 page 8 末-9 首逐字核对；方向陈述均由数字直接得出。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C14",
+   "claim": "度量一致性的实现方式：为满足 SLAM 与闭环控制等下游任务对度量一致场景的要求，作者用 LiDAR 监督微调几何预测器，把预测点图对齐到每个相机坐标系下的 LiDAR 度量几何；训练损失含 LiDAR 稀疏尺度感知点损失与 π3 伪法线损失。",
+   "stance": "support",
+   "relation": "支持命题：环视多相机系统获得“度量尺度”的关键手段是相机-LiDAR 联合标定与监督——说明具身环视视觉要服务闭环控制时普遍需要额外度量锚定（鱼眼/全景纯视觉方案需另行解决尺度问题）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "2.2 节末与 2.5 节说明 LiDAR 监督微调与四项训练目标（MSE/LPIPS 渲染损失+LiDAR 点损失+法线损失）。",
+   "locator": "page 4, Section 2.2 末段（训练损失细节在 page 5, Section 2.5）",
+   "source_context": "Finally, to ensure metric consistency, we fine-\ntune the geometry predictor with LiDAR supervision, align-\ning the predicted point maps to LiDAR-derived metric ge-\nometry in each camera frame; training details are provided\nin Sec. 2.5.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 to ensure metric consistency, we fine-tune the geometry predictor with LiDAR supervision, aligning the predicted point maps to LiDAR-derived metric geometry in each camera frame；'SLAM 与闭环控制需要度量一致'在 page 1 引言逐字核对（'the reconstructed scene must be metrically consistent'）；四项损失在 page 5 Section 2.5 逐字核对；claim 为方法设计陈述的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2604.13476-C15",
+   "claim": "数据采集协议：训练/评估数据由人佩戴与机器人同构的头戴式采集系统采集（操作者平均身高约 160 cm 以匹配人形平台传感器高度），并加颈部稳定器抑制头部诱发运动、执行保守运动剖面——步速限制 ≤1.2 m/s、转向速度 ≤0.4 rad/s 以保证数据一致性。",
+   "stance": "support",
+   "relation": "支持命题（应用方式+边界）：环视数据集以人体穿戴同构 rig 而非机器人本体采集，其运动分布是刻意保守化的（限速+稳定器）——这同时是理解该系统对真实人形步态抖动鲁棒性证据强度的边界条件。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.1 节数据采集段给出穿戴 rig、身高匹配、颈部稳定器与限速协议。",
+   "locator": "page 7, Section 3.1 Data collection 段（Fig. 5 在 page 6）",
+   "source_context": "Data are recorded by human\noperators (average height ∼160 cm) wearing the rig on the\nhead to match the sensor height of the target humanoid\nplatform. We further add a neck stabilizer to reduce head-\ninduced motion and enforce conservative motion profiles\nduring capture: walking speed is limited to ≤ 1.2 m/s and\nturning speed to ≤ 0.4 rad/s for data consistency.",
+   "evidence_type": "data-or-setting",
+   "quantitative": {
+    "metric": "操作者身高 / 步速上限 / 转向速度上限",
+    "value_or_direction": "约 160 cm；≤1.2 m/s；≤0.4 rad/s",
+    "comparator": "与 Tiangong 3.0 机器人头部传感器几何同构的人穿戴 rig",
+    "task_or_sample": "RobotPan 数据集采集协议",
+    "locator": "page 7, Section 3.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 average height ∼160 cm、neck stabilizer、walking speed is limited to ≤ 1.2 m/s and turning speed to ≤ 0.4 rad/s；claim 是协议事实的忠实复述，其对鲁棒性证据强度的影响归入 reader-inferred 限制而未混入本卡 claim。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[13] π3: Permutation-equivariant visual geometry learning (ICLR 2026)",
+   "reason": "本文几何预测器的直接架构来源与最强点图基线，无位姿设定下优于本文，是理解其相对性能的关键被引工作。"
+  },
+  {
+   "ref": "[8] VGGT: Visual Geometry Grounded Transformer (CVPR 2025)",
+   "reason": "交替注意力架构与重建基线来源。"
+  },
+  {
+   "ref": "[45] HumanoidPano: Hybrid spherical panoramic-lidar cross-modal perception for humanoid robots",
+   "reason": "同作者群的球面全景-LiDAR 人形感知前作，是综述'鱼眼/全景+具身'主题的直接相邻工作。"
+  },
+  {
+   "ref": "[47] OneOcc: Semantic occupancy prediction for legged robots with a single panoramic camera",
+   "reason": "单全景相机路线与本多相机路线的对照点，已在本次综述其他论文中深读。"
+  }
+ ],
+ "notes": "alphaxiv 文本层提取（extraction method 记为 pdf-text，来源 alphaxiv-fulltext-api 的非 OCR 文本层），12 页 IEEE TPAMI 双栏排版。IEEE 风格章节编号（1/2/3 小节）无独立 Limitations 节；作者相对弱点散见于与基线比较的行文（4DGS/IGS 存储、RealEstate10K PSNR）。本笔记为 scoping 模式六遍精读：全文 12 页逐页读毕，Tables 1-7 逐行核对。定位器统一用 page N（提取层为页级文本）。与综述主题的连接点：本文是'环视=超广角多相机'路线（与多鱼眼拼接路线互补）在具身领域的系统级证据。"
+}

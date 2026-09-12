@@ -1,0 +1,383 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.15212",
+  "title": "RynnVLA-001: Using Human Demonstrations to Improve Robot Manipulation",
+  "published": "2025-09-18",
+  "url": "https://arxiv.org/abs/2509.15212",
+  "authors": [
+   "Yuming Jiang",
+   "Siteng Huang",
+   "Shengke Xue",
+   "Yaxi Zhao",
+   "Jun Cen",
+   "Sicong Leng",
+   "Kehan Li",
+   "Jiayan Guo",
+   "Kexiang Wang",
+   "Mingxiu Chen",
+   "Fan Wang",
+   "Deli Zhao",
+   "Xin Li"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "提供一条『绕开显式重定向』的对照路线：人类手腕轨迹来自 Apple Vision Pro 设备追踪（EgoDex）而非视频检测器输出，视频姿态检测器只承担 12M 语料的二元可见性过滤；人机运动学差异通过分域 ActionVAE 与丢弃人类动作头在表征层吸收。对综述问题的价值在于把『检测器精度影响语料选择』与『追踪精度影响轨迹标签』两条路径显式分离，且全文无追踪误差消融——是误差来源清单的重要边界证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble",
+    "role": "problem",
+    "purpose": "摘要：两阶段预训练与 ActionVAE 主结果"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "数据稀缺动机与三阶段流水线"
+   },
+   {
+    "locator": "3.1 Ego-Centric Video Generative Pretraining",
+    "role": "method-or-design",
+    "purpose": "Stage 1 I2V 任务定义"
+   },
+   {
+    "locator": "3.2 Human-Centric Trajectory-Aware Video Modeling 3 METHODOLOGY",
+    "role": "method-or-design",
+    "purpose": "手腕轨迹来源（EgoDex/AVP）、状态嵌入、动作头与 L1 监督"
+   },
+   {
+    "locator": "3.3 ActionVAE: Action Representaton via VAE",
+    "role": "method-or-design",
+    "purpose": "动作块压缩动机"
+   },
+   {
+    "locator": "3.4 Robot-Centric Vision-Language Action Modeling 3 METHODOLOGY",
+    "role": "method-or-design",
+    "purpose": "分域 ActionVAE、丢弃人类动作头、Stage 3 目标"
+   },
+   {
+    "locator": "3.5 Inference",
+    "role": "method-or-design",
+    "purpose": "闭环推理与动作块解码"
+   },
+   {
+    "locator": "5 EXPERIMENTS",
+    "role": "data-or-setting",
+    "purpose": "extraction 将第 4 节 Ego-Centric Video Data Curation Pipeline 并入此表面：关键点检测与二元 ego 过滤"
+   },
+   {
+    "locator": "5.1 Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "SO100 数据规模、三任务、基线与评测协议"
+   },
+   {
+    "locator": "5.2 Comparison with SoTA methods 5 EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "Table 1/2 主结果与 SR@1 定位精度自述"
+   },
+   {
+    "locator": "5.3 Effectiveness of Pretraining 5 EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "Table 3/4 预训练阶段消融"
+   },
+   {
+    "locator": "5.4 Ablation Study on Model Designs 5 EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "Calvin 上分辨率/ActionVAE/动作头消融"
+   },
+   {
+    "locator": "5.5 Further Analysis 5 EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "前视相机遮蔽与干扰物数据消融"
+   },
+   {
+    "locator": "6 Discussion and Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1 Vision-Language-Action Models",
+    "role": "relevant-core",
+    "purpose": "仅用于定位引用，非证据来源"
+   },
+   {
+    "locator": "2.2 Future Prediction for Robot Learning",
+    "role": "relevant-core",
+    "purpose": "仅用于定位引用，非证据来源"
+   },
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "not-applicable: 仅用于定位引用"
+   }
+  ]
+ },
+ "research_question": "如何用大规模 ego 人类示教视频的两阶段生成式预训练（未来帧预测→人类腕部轨迹感知建模）为 VLA 模型提供更有效的初始化，以缓解机器人操作数据稀缺？",
+ "contributions": [
+  "从网络源清洗 12M ego-centric 人类操作视频（姿态估计器逐帧关键点 + 无面部/手部可见二元过滤 + Qwen2-VL-7B 短指令标注），并把 Chameleon AR 图像模型扩展为 I2V 做生成式预训练",
+  "Human-Centric Trajectory-Aware Modeling：以 EgoDex（Apple Vision Pro 采集）中仅腕部关键点的轨迹块 ActionVAE 潜嵌入为预测目标，桥接视觉预测与动作预测",
+  "ActionVAE 动作表示：人/机分域各训一个 VAE 把动作块压成紧凑潜嵌入；SO100 三任务平均成功率 90.6%，优于同数据微调的 GR00T N1.5（55.6%）与 Pi0（70.4%）"
+ ],
+ "method": {
+  "summary": "Stage 1 在 12M 清洗后的 ego 操作视频上训练语言-视觉 token 交错的 AR I2V 模型；语料清洗用现成全身姿态估计模型（Yang et al., 2023）逐帧提取面部/躯干/手部关键点，按『含面部关键点即丢弃 + 仅保留手腕/手部关键点可见帧』的二元规则过滤。Stage 2 取 EgoDex 上肢关节轨迹中的腕部关键点（作者明确以其近似末端执行器位置），当前腕部位置以状态嵌入输入，模型联合预测未来帧与未来腕部轨迹块的人体专用 ActionVAE 潜嵌入（L1 损失）。Stage 3 继承权重，因人手轨迹与机器人运动学差异大而丢弃 Stage 2 动作头，新初始化单层线性头预测机器人动作块的机器人专用 ActionVAE 潜嵌入，并保留未来帧预测作辅助正则；推理时丢弃视觉生成、每步输出一个动作嵌入解码为动作块闭环执行。",
+  "assumptions": [
+   "EgoDex/Apple Vision Pro 的腕部追踪精度足以充当『近似末端位置』的监督真值（论文未测量其误差）",
+   "腕部关键点轨迹与机器人动作的相似性足以让轨迹预测成为有效的中间预训练任务",
+   "二元可见性过滤（无面部关键点 + 手/腕可见）足以保证 12M 语料的 ego 操作相关性，无需置信度阈值",
+   "ActionVAE 潜空间能保留动作块的可执行结构（平滑性、时序一致性）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "12M ego-centric 人类操作视频（EgoVid-5M、Ego4D、HowTo100M、EPIC-KITCHENS、Something-Something 等网络源清洗）",
+   "EgoDex（Apple Vision Pro 采集的上肢关节轨迹，仅用腕部关键点）",
+   "244K 开源机器人操作视频（RT-1、BridgeData V2、OXE、DROID 过滤）",
+   "自采 SO100 遥操作数据：green blocks 248、strawberries 249、pen-into-holder 301 条示教"
+  ],
+  "tasks": [
+   "Pick up and place green blocks",
+   "Pick up and place strawberries",
+   "Grab pen and put it into holder（各含单目标/多目标/带干扰物三设置）",
+   "Calvin ABC→D（消融用）"
+  ],
+  "embodiments": [
+   "LeRobot SO100 单臂（3 台、不同环境与光照）",
+   "Calvin 仿真臂"
+  ],
+  "sample_or_scale": "12M ego 视频 + 244K 机器人视频预训练；798 条 SO100 示教微调；除 Scratch 变体（每任务每设置 5 试次、单臂）外每任务 60 试次（2 臂×3 场景×10）"
+ },
+ "evaluation": {
+  "design": "真实 SO100 三任务×三设置的成功率与 SR@1 评测；与 GR00T N1.5/Pi0 在相同 SO100 数据上微调对照；预训练四变体消融（Scratch/Chameleon/Video/Full）；Calvin ABC→D 上做图像分辨率、ActionVAE 潜嵌入 vs 原始动作、动作头深度三组消融；另作前视相机遮蔽与无干扰物训练两组功能性分析",
+  "baselines": [
+   "GR00T N1.5",
+   "Pi0",
+   "RynnVLA-001-Scratch / -Chameleon / -Video（预训练消融变体）"
+  ],
+  "metrics": [
+   "任务成功率与三任务平均成功率",
+   "SR@1（单次试次成功率）",
+   "Calvin 任务链 1-5 成功率与 Avg.Len"
+  ],
+  "ablations": [
+   "预训练阶段消融（Scratch→Chameleon→Video→Full）",
+   "图像分辨率 384×384 vs 256×256",
+   "ActionVAE 潜嵌入预测 vs 原始动作序列预测",
+   "线性动作头 vs 五层 MLP 动作头",
+   "前视相机遮蔽（功能分析）",
+   "无干扰物数据训练（功能分析）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "预训练阶段消融：平均成功率 Scratch 4.4% → Chameleon 50.0% → Video（仅 Stage 1）84.4% → Full（Stage 1+2）90.6%，Stage 2 人类腕部轨迹建模带来 +6.2 绝对点",
+   "scope": "SO100 三任务",
+   "locator": "5.3 Effectiveness of Pretraining 5 EXPERIMENTS, Table 3"
+  },
+  {
+   "finding": "主结果：RynnVLA-001 平均成功率 90.6%，优于 Pi0 70.4% 与 GR00T N1.5 55.6%；SR@1 56.7% 仅与 Pi0 56.3% 相当，作者自述三模型 SR@1 偏低说明物体定位精度仍是单次成功瓶颈",
+   "scope": "SO100 三任务×三设置",
+   "locator": "5.2 Comparison with SoTA methods 5 EXPERIMENTS, Table 1"
+  },
+  {
+   "finding": "ActionVAE 潜嵌入预测优于原始动作预测（Calvin ABC→D Avg.Len 4.161 vs 4.019）；动作头加深为五层 MLP 反而降至 3.323",
+   "scope": "Calvin 消融（减 epochs，相对比较）",
+   "locator": "5.4 Ablation Study on Model Designs 5 EXPERIMENTS, Table 5"
+  },
+  {
+   "finding": "前视相机遮蔽后，目标在腕部相机初始视野外时成功率从 80%（4/5）跌至 0%；抬高前视相机改变投影几何即导致插笔任务失败——末端粗定位与 3D 投影信息依赖前视相机",
+   "scope": "strawberries 与 pen-holder 任务",
+   "locator": "5.5 Further Analysis 5 EXPERIMENTS"
+  },
+  {
+   "finding": "无干扰物数据训练的变体在杂乱场景抓草莓任务 0%（10 试次中 5 次误抓干扰物），全模型 90%（9/10）",
+   "scope": "指令跟随鲁棒性",
+   "locator": "5.5 Further Analysis 5 EXPERIMENTS"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仅在单一机器人本体（LeRobot SO100）上验证，评测环境与训练设置高度相似，前视相机固定；泛化性需更多本体、环境与视角验证",
+    "locator": "6 Discussion and Conclusion"
+   },
+   {
+    "limitation": "三模型 SR@1 均偏低，说明物体定位精度距可靠单次成功仍有较大提升空间",
+    "locator": "5.2 Comparison with SoTA methods 5 EXPERIMENTS"
+   },
+   {
+    "limitation": "Scratch 变体因性能过低仅评 5 试次/任务/设置且单臂，与其他变体 60 试次的评测规模不对等",
+    "locator": "5.3 Effectiveness of Pretraining 5 EXPERIMENTS（脚注 2）"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "腕部追踪精度完全未被测量或消融：EgoDex/AVP 轨迹被当作真值，无噪声注入、无追踪质量-性能曲线，无法回答可接受阈值",
+    "basis": "3.2 仅描述数据来源与用法，全文无追踪误差定量"
+   },
+   {
+    "boundary": "检测器误差的影响被隐性化：12M 语料过滤只用二元可见性（无面部/手可见），无置信度阈值与人工抽检，误检/漏检以语料分布偏置形式传播且不可追溯",
+    "basis": "5 EXPERIMENTS 表面内第 4 节数据清洗管线"
+   },
+   {
+    "boundary": "监督粒度仅到腕部点（无手指/手型姿态），且轨迹以 VAE 潜嵌入形式监督——末端姿态与精细操作精度完全不由人类轨迹信号承担",
+    "basis": "3.2 'we selectively use only the wrist keypoints'"
+   },
+   {
+    "boundary": "Stage 2 的 +6.2 点增益混合了轨迹监督与额外训练数据/步数，未隔离『轨迹信号质量』本身的贡献",
+    "basis": "Table 3 变体间训练量不对等"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：AVP 设备追踪的人类腕部轨迹作为预训练中间监督 + 表征层域差处理（分域 ActionVAE + 换动作头）的路线；该系统不做显式运动学重定向，人类轨迹数值从不进入机器人末端控制空间，故不能回答『重定向后末端轨迹精度』本身；腕部追踪误差阈值、检测器置信度-语料质量关系、手指级监督均出界。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三阶段课程（视觉预测→轨迹预测→动作预测）每阶段有隔离消融，预训练贡献可定位",
+   "轨迹监督取 AVP 设备追踪而非视频 2D 检测器输出，规避了检测器误差直接进入轨迹标签",
+   "域差异在表征层处理（分域 ActionVAE + 丢弃人类动作头），绕开显式运动学重定向的误差累积",
+   "前视相机遮蔽实验把『粗定位 vs 精细调整』的传感分工定量化"
+  ],
+  "design_risks": [
+   "12M 语料的 ego 过滤完全依赖现成姿态估计器的二元可见性判定，无置信度阈值、无人工抽检，检测误差的传播不可见",
+   "EgoDex/AVP 腕部追踪被当作真值，无任何噪声鲁棒性验证",
+   "Stage 2 消融未控制训练量，+6.2 点不能全归因于轨迹监督信号",
+   "Scratch 行评测规模缩减（5 试次 vs 60 试次），虽披露但削弱对照力度"
+  ],
+  "baseline_fairness": "GR00T N1.5 与 Pi0 用官方代码在相同 SO100 数据上微调，同数据对照公平；但预训练预算不可比，结论应读作『该预训练初始化更有效』而非同预算优劣。",
+  "metric_validity": "成功率 + SR@1 双指标、三场景协议明确；Calvin 消融自述减 epochs 仅供相对比较；Scratch 评测缩减有脚注披露。",
+  "reproducibility": "给出 GitHub 仓库链接；但 12M 清洗管线的产出统计、EgoDex 子集规模、ActionVAE 结构与超参未完整披露，复现粒度有限。",
+  "external_validity": "作者自承单一本体、环境贴近训练分布、相机固定；SR@1 偏低提示对初始定位误差敏感，结论不宜外推到长时序精细操作或跨本体场景。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.15212-C01",
+   "claim": "RynnVLA-001 的人类轨迹监督不来自视频手部检测器，而来自 EgoDex 数据集中 Apple Vision Pro 设备采集的上肢关节轨迹，且只取腕部关键点（作者明确以其近似末端执行器位置）；模型不回归原始坐标，而是预测由人体专用 ActionVAE 压缩的轨迹块潜嵌入，当前腕部关键点位置另以状态嵌入形式逐帧输入。",
+   "stance": "conditional",
+   "relation": "回答轨迹来源与监督粒度：手部信号的来源是设备级追踪（AVP）而非 2D 视频检测器，监督粒度被压缩为『腕部点的 ActionVAE 潜嵌入』——检测精度问题被外置到采集设备，任何腕部追踪误差都会先经 VAE 压缩再进入监督信号。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 给出 EgoDex/AVP 来源、仅取腕部关键点近似末端位置、预测 ActionVAE 潜嵌入而非原始坐标、腕部状态嵌入四点。",
+   "locator": "3.2 Human-Centric Trajectory-Aware Video Modeling",
+   "source_context": "To this end, we adopt the EgoDex dataset (Hoque et al., 2025), which provides trajectories of all upper-body joints captured via Apple Vision Pro devices. Among these, we selectively use only the wrist keypoints, as they approximate end-effector positions.",
+   "evidence_type": "system-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 3.2；'rather than predicting raw coordinates, the model is trained to predict compact and continuous embeddings of trajectory chunks generated by a pretrained ActionVAE' 与 'These embeddings represent the current keypoint positions of the human wrists and are fed into the model at each timestep.' 两句逐字见于同节，支撑 claim 的潜嵌入与状态嵌入部分。"
+   }
+  },
+  {
+   "card_id": "2509.15212-C02",
+   "claim": "RynnVLA-001 的 12M ego 视频语料用现成全身姿态估计模型（Yang et al., 2023）逐帧提取面部、躯干与手部关键点（腕、肘、手指），并以两条二元规则过滤：含面部关键点的视频按第三视角线索丢弃，仅保留手腕与手部关键点可见的帧；全程无检测置信度阈值或轨迹级质量门控。",
+   "stance": "conditional",
+   "relation": "回答误差来源与传播路径：视频手部检测器在此系统中只承担语料筛选职能——逐帧姿态估计的二元可见性判定决定视频去留；检测器的误检/漏检以语料分布偏置的形式隐性传播，而不直接进入轨迹标签，与 EgoDex/AVP 轨迹监督路径（C01）显式分离。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 4 节数据清洗管线（extraction 并入 5 EXPERIMENTS 表面）给出关键点检测与两条 ego 过滤规则。",
+   "locator": "5 EXPERIMENTS / 4 Ego-Centric Video Data Curation Pipeline",
+   "source_context": "For each frame in the video, we apply a pose estimation model (Yang et al., 2023) to extract human keypoints, including facial landmarks, torso joints, and hand-related keypoints (e.g., wrists, elbows, fingers). Ego-centric Filtering. We apply two key filtering criteria to retain only high-quality ego-centric manipulation videos: 1) No facial keypoints: Videos containing facial landmarks are discarded. The appearance of a human face strongly suggests a third-person perspective, which is not suitable for ego-centric modeling. 2) Presence of hand keypoints: We retain only frames where keypoints corresponding to the wrists and hands are visible.",
+   "evidence_type": "system-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "整段引文逐字匹配 extraction 中 5 EXPERIMENTS 表面内的第 4 节文本；claim 的『无置信度阈值』部分是对该节所述两条二元规则的如实归纳——该节仅给出有无判定，未提及任何置信度或轨迹级门控。"
+   }
+  },
+  {
+   "card_id": "2509.15212-C03",
+   "claim": "面对『人手轨迹与机器人手臂运动学实质不同』，RynnVLA-001 的域差处理是表征级的：训练两个域专属 ActionVAE（Stage 2 压缩人类轨迹、Stage 3 压缩机器人动作），且 Stage 3 直接丢弃 Stage 2 预训练的人类动作头、重新初始化单层线性头来预测机器人动作嵌入。",
+   "stance": "conditional",
+   "relation": "回答域差异如何量化与弥合：作者用分域 VAE + 换动作头承认并绕开运动学差异——人类腕部轨迹的数值从不直接映射到机器人末端控制空间，追踪误差的影响被限制在预训练表示质量上；全文无显式运动学重定向环节（读者推断，见 limitations）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.4 给出两个域专属 ActionVAE 与丢弃人类动作头两处设计。",
+   "locator": "3.4 Robot-Centric Vision-Language Action Modeling",
+   "source_context": "Since human hand trajectories differ substantially from robot arm kinematics, the action head pretrained in Stage 2 is discarded.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 3.4；'we train two domain-specific ActionVAEs: one for compressing human trajectories (used in Stage 2) and another for compressing robot actions (used in Stage 3)' 与 'a new lightweight action head (a single linear layer) is initialized to predict robot action embeddings' 逐字见于同节，claim 各分句均有原文支撑。"
+   }
+  },
+  {
+   "card_id": "2509.15212-C04",
+   "claim": "三个模型的单试次成功率（SR@1）均明显低于其平均成功率：RynnVLA-001 平均 90.6% 而 SR@1 仅 56.7%，Pi0 70.4%/56.3%，GR00T N1.5 55.6%/37.2%；作者自述较低的 SR@1 表明物体定位精度距可靠单次成功仍有较大提升空间。",
+   "stance": "limit",
+   "relation": "回答精度瓶颈的落点：在手腕轨迹监督充分供给之后，该系统末端任务精度的残余瓶颈被作者归因于物体定位（视觉感知侧）而非轨迹信号质量——即在此类无显式重定向路线中，手部追踪精度不是首要限制因素，但末端定位精度问题依然存在。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 给出三模型任务成功率、平均成功率与 SR@1；5.2 正文自述 SR@1 偏低指向定位精度瓶颈。（extraction 将 Table 1 表体切到第一个 'Method' 表面，5.2 正文亦在其中，故用复合定位器。）",
+   "locator": "5.2 Comparison with SoTA methods / Method, Table 1",
+   "source_context": "The relatively low SR@1 values for all three models suggest that there is still a large zoom for improving object localization accuracy to achieve reliable single-trial success.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR@1（单试次成功率）与三任务平均成功率（%）",
+    "value_or_direction": "RynnVLA-001：56.7 vs 90.6；Pi0：56.3 vs 70.4；GR00T N1.5：37.2 vs 55.6",
+    "comparator": "三模型在相同 SO100 数据上微调、相同评测协议",
+    "task_or_sample": "SO100 三任务（green blocks/strawberries/pen-holder）×三设置，每任务 60 试次",
+    "locator": "5.2 Comparison with SoTA methods, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 5.2 正文（extraction 第一个 'Method' 表面内）；六组数字逐字核对 Table 1 三行（'GR00T N1.5 65.0 53.3 48.3 55.6 37.2'、'Pi0 75.6 71.1 64.4 70.4 56.3'、'RynnVLA-001 (Ours) 90.0 91.7 90.0 90.6 56.7'），claim 未超出原文归因表述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": "2505.11709",
+   "title": "EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video",
+   "reason": "Stage 2 腕部关键点轨迹的唯一来源（Apple Vision Pro 采集的上肢关节轨迹）"
+  },
+  {
+   "arxiv_id": "",
+   "title": "Effective Whole-Body Pose Estimation with Two-Stages Distillation (Yang et al., CVPR 2023)",
+   "reason": "12M 语料清洗所用的现成姿态估计模型"
+  },
+  {
+   "arxiv_id": "2405.09818",
+   "title": "Chameleon: Mixed-Modal Early-Fusion Foundation Models",
+   "reason": "I2V 模型骨架与初始化来源（Chameleon 变体即消融对照）"
+  },
+  {
+   "arxiv_id": "2410.24164",
+   "title": "π0: A Vision-Language-Action Flow Model for General Robot Control",
+   "reason": "主对照基线之一"
+  },
+  {
+   "arxiv_id": "",
+   "title": "GR00T N1.5 (Bjorck et al., 2025)",
+   "reason": "主对照基线之一"
+  }
+ ],
+ "notes": "精读批次 B07 第 6 篇。本批 ID 段 EA-EGOPREC-2026-0301..0325；本篇 4 张卡全部投影，占 0322-0325。本篇为『无显式重定向』路线对照：检测器仅管语料筛选（C02）、设备追踪管轨迹标签（C01）、域差在表征层吸收（C03）、残余精度瓶颈在物体定位而非轨迹信号（C04）。注意：extraction 有两个同名 'Method' 标题（表头误切），audit 的表面解析对同名标题只取第一个，Table 3 的 Stage 2 消融数字（Video 84.4→Full 90.6，+6.2 点）所在区域不可达，故该消融仅保留在 findings 而未成卡；前视相机遮蔽实验同理仅入 findings。"
+}

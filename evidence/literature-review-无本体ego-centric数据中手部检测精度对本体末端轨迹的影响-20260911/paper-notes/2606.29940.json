@@ -1,0 +1,370 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.29940",
+  "title": "WARP: Whole-Body Retargeting for Learning from Offline Human Demonstrations",
+  "published": "2026-08-19",
+  "url": "https://arxiv.org/abs/2606.29940",
+  "authors": [
+   "Zhenyang Chen",
+   "Chuizheng Kong",
+   "Chuye Zhang",
+   "Yuanshao Yang",
+   "Lawrence Y. Zhu",
+   "Shreyas Kousik",
+   "Danfei Xu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "离线人类示教→机器人轨迹的重定向管线，直接论述'无人在环时重定向误差即监督误差'的传播路径（1 Introduction 与 Fig 1），给出掌位误差（mm 级）与下游策略成功率的量化对照，并在附录 D.1 自述采集设备（Quest inside-out 追踪）的抖动/漂移/不连续会直接传播进机器人轨迹与策略监督——与综述的检测精度→轨迹误差链条同构。人侧姿态来自 Quest 头显而非 ego 视频手部检测，但 D.1 的噪声传播陈述与 B.5 死区滤波器均直接回应误差来源与缓解手段。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认离线设置下重定向误差→监督误差的核心问题陈述与两类失败模式（不精确/不一致）。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位与 SEW-Mimic/GMR/MINK 的关系及 quasi-static 操作设定。"
+   },
+   {
+    "locator": "3 Method",
+    "role": "method-or-design",
+    "purpose": "理解 c-SEW 闭式求解、掌部硬约束、adaptive offset、lazy base 与策略训练接口。"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "确认 H1/H2/H3 假设与评估结构。"
+   },
+   {
+    "locator": "4.1 Evaluation on Retargeting Motion Quality",
+    "role": "results-or-analysis",
+    "purpose": "提取 Fig 5 掌位/朝向误差、可行性、解一致性数值与 514 条示教规模。"
+   },
+   {
+    "locator": "4.2 Simulation Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "提取 DexMimicGen replay/policy 成功率对照（Table 1）。"
+   },
+   {
+    "locator": "4.3 Real-World Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "提取真实世界四任务 replay/rollout 成功率（Fig 7）与 Finding Summary。"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者结论与图像观测缺失的限制声明。"
+   },
+   {
+    "locator": "Appendix A Why Existing Retargeting Fails?",
+    "role": "method-or-design",
+    "purpose": "核对软目标 IK 的三类失败模式（不一致/不精确/运动学本体差距）与权重扫描证据。"
+   },
+   {
+    "locator": "Appendix B.1/B.5/B.8",
+    "role": "appendix-or-supplement",
+    "purpose": "核对体中心坐标系的抗噪构造、lazy base 死区滤波参数与 18 项指标定义。"
+   },
+   {
+    "locator": "Appendix C.1 Human data collection",
+    "role": "data-or-setting",
+    "purpose": "确认 Quest 头显 inside-out 追踪 60 Hz 全身+手部数据采集与 AprilTag 物体追踪。"
+   },
+   {
+    "locator": "Appendix D.1 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取采集设备噪声（jitter/drift/discontinuity）直接传播进机器人轨迹与策略监督的作者自述。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "如何把离线（无人在环）人类全身示教重定向为精确、一致、可开环回放且可被行为克隆直接学习的全身机器人动作？",
+ "contributions": [
+  "提出 WARP：基于 SEW 表示的闭式全身重定向器，掌部匹配为硬约束，每个非退化人臂姿态映射到唯一机器人配置。",
+  "配套系统：adaptive offset、任务感知身体部位约束选择、lazy 移动底座控制、层级掩码 flow 策略。",
+  "在 514 条 BONES-SEED 示教（135,896 帧）上验证重定向质量，在 DexMimicGen 与真实 RB-Y1 四任务上验证下游策略学习；声称为首个从离线人类示教直接训练全身移动操作策略的框架。"
+ ],
+ "method": {
+  "summary": "WARP 将人臂表示为肩-肘-腕（SEW）几何骨架，先构造目标机器人 SEW 骨架再闭式求解关节角：adaptive offset 平移机器人上体原点使双掌质心对齐，逐臂以掌部位置/朝向硬约束反解腕部，再用 Stereo-sew 转移肘部半平面角 ψ 并以 SP3 闭式求肘；躯干 6-DoF 由 ik-geo 闭式求解。lazy base 用死区+二阶滤波分离底座粗定位与躯干细调节。数据来自单个 Meta Quest 头显 inside-out 追踪（60 Hz 全身运动树+手部关节），物体用 AprilTag 追踪并表达到上体系；策略为带近端-远端 block-causal 掩码的 HPT flow 模型。",
+  "assumptions": [
+   "低层控制器能准确跟踪重定向参考（纯运动学设定，不显式建模控制器误差与动力学）。",
+   "人体关键点非共线，体中心坐标系可由双肩+锚点闭式构造。",
+   "物体位姿可由 AprilTag 获得，回避视觉本体差距。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "BONES-SEED SOMA Proportional（514 条操作示教子集，135,896 帧；另 7,623 条大规模子集）",
+   "DexMimicGen GR1 示教（三任务各 200 条合成）",
+   "真实世界每任务 50 条 Quest 人类示教"
+  ],
+  "tasks": [
+   "仿真：coffee、pouring、can-sort（DexMimicGen）",
+   "真实：pick-up-laundry、push-cart、rotate-box、fridge-door-closing（肘模式）"
+  ],
+  "embodiments": [
+   "RB-Y1 人形（全向底座+6-DoF 躯干+双臂 7-DoF+12-DoF XHand）",
+   "人侧：Meta Quest 头显 inside-out 全身/手部追踪",
+   "仿真跨本体：Dual Kinova3、OpenArm"
+  ],
+  "sample_or_scale": "514 条重定向评估示教（135,896 帧）；7,623 条大规模子集；真实世界每任务 10 次试验、50 条示教"
+ },
+ "evaluation": {
+  "design": "三层评估：(1) 重定向运动质量（18 项指标，对照 SEW-M/MINK-EF/MINK-TE × JL on/off）；(2) DexMimicGen 仿真 replay 与 BC 策略成功率（WARP-MINK 成功交集上训练）；(3) 真实世界四任务 replay 与策略 rollout（各 10 次试验）。",
+  "baselines": [
+   "MINK-EF（仅末端软目标 IK）",
+   "MINK-TE（末端+躯干+肘 swivel 软目标）",
+   "SEW-M（SEW-Mimic 无约束）"
+  ],
+  "metrics": [
+   "掌位误差 mean/P95/P99（mm）与掌朝向误差（deg）",
+   "torso outlier/near-limit/self-collision 分数",
+   "NNAD/PCA/RMS 解一致性",
+   "replay 与 policy 成功率（%）",
+   "求解时间（ms/frame）"
+  ],
+  "ablations": [
+   "MINK 姿态权重扫描（肘角/躯干权重 vs 掌位误差与 NNAD，Fig 10）",
+   "JL on/off",
+   "7.6k 大规模子集复核"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "WARP（JL off）掌位误差 0.0046 mm、掌朝向误差 8.74e-6 deg（机器精度），较 MINK-EF 的 0.701 mm 降低 150 倍以上；SEW-M 达 178.979 mm。",
+   "scope": "514 条 BONES-SEED 操作示教、135,896 帧",
+   "locator": "4.1 Evaluation on Retargeting Motion Quality, Fig 5"
+  },
+  {
+   "finding": "DexMimicGen 上 WARP 与 MINK replay 成功率接近（平均 80.0% vs 79.5%），但训练出的策略成功率 71% vs 59%（+12%）；真实世界 rotate-box 策略 65% vs 40%。",
+   "scope": "三仿真任务各 200 条合成示教 + 真实四任务各 10 次试验",
+   "locator": "4.2 Simulation Evaluation, Table 1; 4.3 Real-World Evaluation, Fig 7"
+  },
+  {
+   "finding": "回放持平掩盖重定向差异：可行性与解一致性不改变可回放性，但直接塑造策略可学性。",
+   "scope": "DexMimicGen 三任务",
+   "locator": "4.2 Simulation Evaluation"
+  },
+  {
+   "finding": "作者自述 Quest inside-out 追踪引入的 jitter/drift/不连续/肢体估计不准可源自采集设备本身，且离线管线会将这些伪影直接传播进机器人轨迹与策略监督。",
+   "scope": "全文系统（Quest 采集 + 离线重定向 + BC）",
+   "locator": "Appendix D.1 Limitations"
+  },
+  {
+   "finding": "lazy base 死区滤波（δxy=0.05 m、δθ=0.1 rad、ζ=1、fn≈1.5 Hz）使抖动与小晃动永不传达到轮子，底座只处理真实搬移。",
+   "scope": "RB-Y1 移动底座控制",
+   "locator": "Appendix B.5 Lazy Mobile-Base Filter"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "策略训练缺少图像观测，限制了可尝试的任务；留待未来研究视觉运动策略。",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "公式是纯运动学的：不显式建模控制器误差与机器人动力学，报告的重定向精度应解释为参考轨迹质量而非真实执行精度的完整保证。",
+    "locator": "Appendix D.1 Limitations"
+   },
+   {
+    "limitation": "采集设备（Quest inside-out 追踪）本身引入运动误差与 jerkiness——快速运动、遮挡或异常体态下的抖动、漂移、不连续、肢体估计不准；离线管线无人在环吸收，伪影直接传播进机器人轨迹与策略监督。",
+    "locator": "Appendix D.1 Limitations"
+   },
+   {
+    "limitation": "物体感知依赖 AprilTag 而非原始视觉，限制了部署范围与 marker-free 泛化。",
+    "locator": "Appendix D.1 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "人侧姿态来源是 Quest 头显的 inside-out 全身/手部追踪（60 Hz），不是 ego-centric RGB 视频的手部检测器；其'检测噪声→轨迹误差'证据对应的是 VR 追踪噪声量级，向单目 ego 视频手部检测（更大深度不确定性与遮挡率）的外推需标记为类比。",
+    "basis": "C.1 节描述采集管线为 Quest inside-out tracking，D.1 将其噪声特征列为 limitation，全文无 ego 视频手部检测器（如 MediaPipe/HaMeR）的误差统计。"
+   },
+   {
+    "boundary": "掌位误差 0.0046 mm 的机器精度是相对人侧参考轨迹的几何一致性，不含人侧追踪本身的绝对误差；实验用 AprilTag 物体与 Vicon 底座定位主动隔离了感知噪声，故真实部署的末端精度还取决于被剥离的感知环节。",
+    "basis": "3 Method/B.6 明确为隔离运动学与策略贡献而用 AprilTag 追踪物体、Vicon 定位底座；D.1 承认参考质量≠执行精度。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：离线人类示教→全身移动操作的动作生成，人侧输入为 VR 级全身追踪（Quest 60 Hz），机器人侧具备关节阻抗控制与精确底座定位；其'离线设置放大人侧追踪噪声'与'闭式硬约束+死区滤波吸收噪声'的证据可迁移到 ego 视频管线的误差分析。不直接适用于：单目 ego 视频手部检测精度本身的量化、接触丰富任务的力域执行、或缺少物体/底座外部定位的开放部署。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "重定向质量、仿真策略、真实策略三层评估闭环，把'参考精度'与'监督可学性'分离测量。",
+   "DexMimicGen 实验用 WARP-MINK 成功交集训练，控制数据内容一致，隔离重定向器差异。",
+   "附录 A.2 的权重扫描证明软目标 IK 无法在掌精度/姿态/一致性三轴同时达到 WARP 水平，机制归因清晰。"
+  ],
+  "design_risks": [
+   "真实世界每配置仅 10 次试验，Fig 7 的百分比波动大（如 laundry rollout 37.5% vs 7.5%）。",
+   "为隔离变量引入 AprilTag+Vicon，削弱了结论对无外部定位部署的外推力。",
+   "BONES-SEED 基准的人侧真值本身是数据集骨架，非采集噪声场景下的精度测试。"
+  ],
+  "baseline_fairness": "MINK 两变体与 SEW-M 覆盖软目标 IK 与无约束 SEW 两类主流设计；A.1/A.2 给出基线配置与权重扫描，比较公平；未与 GMR 等学习式全身重定向器直接对照（仅引述）。",
+  "metric_validity": "掌位/朝向误差直接对应末端轨迹精度；NNAD/PCA/RMS 度量监督一致性，与'多模态动作妨碍 BC'的机制假设对应；真实世界用分级成功评分。指标与声称的机制匹配良好。",
+  "reproducibility": "附录给出滤波器参数、指标公式、数据筛选规则与采集频率；BONES-SEED 与 DexMimicGen 公开；闭式求解器描述完整。",
+  "external_validity": "结论限于 quasi-static 操作、VR 级人侧追踪质量与具备外部定位的部署；对 ego 视频单目手部检测噪声量级、接触丰富场景的适用性未经验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.29940-C01",
+   "claim": "在离线（无人在环）人类示教设置中，重定向误差无人吸收、被直接放大：不精确的重定向（全身相似性与末端跟踪此消彼长）或不一致的重定向（相似人姿映射到不同关节配置）都会把重定向误差变成策略的监督误差，小误差即可导致回放失败。",
+   "stance": "support",
+   "relation": "支持综述命题'误差传播路径：离线 ego 视频管线中手部检测/重定向误差无法被在线修正吸收，会直接成为下游监督误差'——本文给出该机制的问题化陈述与两类失败模式分解。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "1 Introduction 系统陈述离线设置缺少遥操作的在线修正，重定向轨迹即监督，并列出 imprecision 与 inconsistency 两类失败模式；Fig 1 说明小误差导致回放失败。",
+   "locator": "1 Introduction",
+   "source_context": "Either case turns retargeting error into supervision er-\nror. Second, the solution may be inconsistent: because humanoids are highly redundant, nearly\nidentical human poses can map to different configurations depending on solver initialization or local\ntradeoffs. Similar observations would be paired with divergent actions, which impedes learning.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字摘自 1 Introduction（含跨行连字符），与该段及 Fig 1(b) 'small errors cause replay failure' 一致；claim 限定为作者对离线设置机制的陈述，未将'小误差'量化为具体阈值，未超出本文设定。"
+   }
+  },
+  {
+   "card_id": "2606.29940-C02",
+   "claim": "闭式 SEW 求解+掌部硬约束把重定向环节的掌位误差压到机器精度量级：WARP（JL off）掌位均值误差 0.0046 mm、P95 0.046 mm、掌朝向误差 8.74e-6 deg，较优化式末端软目标基线 MINK-EF（0.701 mm / 1.853 mm / 0.0107 deg）降低 150 倍以上，且无约束 SEW-M 达 178.979 mm；评估覆盖 514 条人类示教、135,896 帧。",
+   "stance": "support",
+   "relation": "支持综述命题'缓解手段：以几何硬约束替代加权软目标可基本消除重定向环节引入的末端轨迹误差，使残余误差主要来自上游人侧姿态估计而非求解器'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig 5 表格给出四种方法 JL on/off 的掌位/朝向误差等指标，正文陈述 150× 与机器精度结论；C.2.1 给出 514 motions、135,896 frames 规模。",
+   "locator": "4.1 Evaluation on Retargeting Motion Quality",
+   "source_context": "SEW-M off 178.979 201.056 7.89e-6 0.000 0.0126 0.243 0.488 1.20e-25 6.83e-14\nMINK-EF off 0.701 1.853 0.0107 0.625 0.1610 0.977 0.368 173.49 3.117\nMINK-TE off \n18.557 73.980 0.157 0.027 0.0852 0.640 1.026 1119.11 6.106\nWARP off 0.0046 0.046 8.74e-6 0.000 0.0047 0.163 0.289 1.14e-25 6.66e-14",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "palm position error (mm, mean / P95) and palm orientation error (deg)",
+    "value_or_direction": "WARP 0.0046 mm / 0.046 mm / 8.74e-6 deg vs MINK-EF 0.701 mm / 1.853 mm / 0.0107 deg vs SEW-M 178.979 mm; >150x reduction over MINK-EF",
+    "comparator": "MINK-EF (end-effector-only soft IK), MINK-TE (with torso/elbow soft terms), SEW-M (unconstrained SEW-Mimic), all joint-limit off",
+    "task_or_sample": "514 BONES-SEED SOMA Proportional manipulation demonstrations, 135,896 retargeted frames on RB-Y1 kinematics",
+    "locator": "4.1 Evaluation on Retargeting Motion Quality, Fig 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Fig 5 表内四行数值与正文 '>150× over MINK-EF / machine precision' 陈述逐项核对一致；514/135,896 规模数字取自 C.2.1；claim 限定于 JL-off 与该数据集，并注明该精度是相对人侧参考的几何一致性、不含上游追踪绝对误差。"
+   }
+  },
+  {
+   "card_id": "2606.29940-C03",
+   "claim": "重定向质量差异在开环回放成功率上几乎不可见（DexMimicGen 三任务平均 WARP 80.0% vs MINK 79.5%），但传导到策略学习后显著放大：相同策略在 WARP 数据上平均成功率 71% vs MINK 数据 59%（+12%）；真实世界 rotate-box 上同样回放接近而策略 65% vs 40%。作者据此断言'replay 持平掩盖重定向差异，运动质量而非回放完成度决定下游成败'。",
+   "stance": "support",
+   "relation": "支持综述命题'传播路径的隐蔽性：手部/重定向误差对末端轨迹可用性的影响不能只用回放成功率评估，误差经监督通道在策略学习阶段放大为成功率差距'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 报告三任务 replay/policy 成功率矩阵，4.2 正文给出'replay parity understates the difference'与'decisive downstream'结论；4.3 Finding Summary 给出真实世界 65% vs 40%。",
+   "locator": "4.2 Simulation Evaluation; 4.3 Real-World Evaluation",
+   "source_context": "MINK 99.5% 94% 88.5% 74% 50.5% 8% 79.5% 59%\nWARP 98.5% 100% 90.5% 78% 51.0% 34% 80.0% 71%\nTable 1: Replay and policy rollout re-\nsult (%) on DexMimicGen tasks. WARP\nachieves 12% higher success rate for policy.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate (%), replay vs policy rollout",
+    "value_or_direction": "replay average 80.0% (WARP) vs 79.5% (MINK) near-parity; policy average 71% vs 59% (+12 points); real-world rotate-box policy 65% vs 40%",
+    "comparator": "identical BC policies trained on WARP-retargeted vs MINK-retargeted versions of the same DexMimicGen demonstrations (success-intersection matched)",
+    "task_or_sample": "DexMimicGen coffee/pouring/can-sort (200 GR1 demos each, balanced N=50 subset per task-method); real-world rotate-box 10 trials per method",
+    "locator": "4.2 Simulation Evaluation, Table 1; 4.3 Real-World Evaluation, Fig 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 八项数值、正文 12% 结论、4.3 节 65% vs 40% 与 'Motion quality, not replay completion, governs downstream success' 均逐项核对一致；claim 保留 replay 持平的前提，未将策略优势归因于单一因素（作者归因于可行性与一致性）。"
+   }
+  },
+  {
+   "card_id": "2606.29940-C04",
+   "claim": "作者自述：人侧采集设备（Quest 头显 inside-out 追踪）本身引入运动误差与 jerkiness——尤其在快速运动、遮挡或异常体态下的 jitter、drift、不连续与肢体估计不准；由于管线是离线的，这些伪影可直接传播进重定向后的机器人轨迹，再进入策略监督。",
+   "stance": "limit",
+   "relation": "限定综述命题'无本体管线的误差来源'：即使重定向器本身达机器精度（见 C02），人侧姿态估计噪声仍是不可消除的上游误差源，并在离线设置下沿 检测→重定向轨迹→策略监督 路径传播；与 ego 视频手部检测噪声的传播同构。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 D.1 'Human data quality' 段明确把部分重定向轨迹误差归因于采集设备，描述噪声形态（jitter/drift/discontinuities/inaccurate limb estimates）及其在离线管线中的直接传播。",
+   "locator": "Appendix D.1 Limitations; References",
+   "source_context": "in the retargeted trajectories can originate from the collection device itself. Inside-out tracking may\nintroduce jitter, drift, discontinuities, or inaccurate limb estimates, especially during fast motion,\nocclusion, or unusual body poses. Since our pipeline is offline, these artifacts can propagate directly\ninto the robot trajectory and then into the policy supervision.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字摘自附录 D.1（该段位于提取文本 References 标题之后的附录区）；claim 为作者自述 limitation，未量化噪声幅度（原文未给），保持定性表述并指明与 ego 视频检测噪声的同构关系为读者类比。"
+   }
+  },
+  {
+   "card_id": "2606.29940-C05",
+   "claim": "为吸收人侧运动的小幅抖动与晃动，WARP 在移动底座上采用死区+二阶滤波（deadband δxy=0.05 m、δθ=0.1 rad、阻尼比 ζ=1、自然频率 fn≈1.5 Hz）：死区内弹簧力为零、底座仅靠阻尼滑行静止，jitter 与小晃动永不传到轮子；躯干吸收细调节、底座只处理真实搬移。",
+   "stance": "support",
+   "relation": "支持综述命题'缓解手段：在执行端用死区/滤波与身体冗余（躯干吸收细调节）隔离人侧轨迹噪声，防止其转化为不稳定的底座运动'——给出具体可用的阈值参数。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 B.5 给出死区滤波器公式（Eq. 6-7）与全部参数取值，并陈述死区内抖动不达轮子的设计目标；3 Method 的 Lazy Mobile-Base Tracking 段给出躯干吸收细调节的机制说明。",
+   "locator": "Appendix B.5 Lazy Mobile-Base Filter; References",
+   "source_context": "Inside the deadband the spring\nforce vanishes and the base coasts to rest under damping alone, so jitter and small sway never reach\nthe wheels; outside it, the spring smoothly draws the base toward the target. We use ζ = 1 for\nnon-overshooting tracking, f\nn \n≈ 1.5 Hz, and deadband radii δ\nxy \n= 0.05 m and δ\nθ \n= 0.1 rad.",
+   "evidence_type": "method",
+   "quantitative": {
+    "metric": "lazy-base filter parameters (deadband radii, damping ratio, natural frequency)",
+    "value_or_direction": "δxy = 0.05 m, δθ = 0.1 rad, ζ = 1, fn ≈ 1.5 Hz; jitter below deadband never reaches the wheels",
+    "comparator": "direct tracking of the implied base pose q_d, which couples every small upper-body shift into wheel motion",
+    "task_or_sample": "RB-Y1 holonomic-base mobile manipulation, design parameter (not an ablated quantity)",
+    "locator": "Appendix B.5 Lazy Mobile-Base Filter, Eq. 6-7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "B.5 节参数值（0.05 m / 0.1 rad / ζ=1 / fn≈1.5 Hz）与设计目标陈述逐字核对一致；claim 注明这些是设计参数而非消融验证量，未声称有对照实验分离其贡献。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "paper_id": "2602.01632",
+   "title": "A closed-form geometric retargeting solver for upper body humanoid robot teleoperation (SEW-Mimic)",
+   "authors": [
+    "C. Kong",
+    "Y. Cho",
+    "W. Jung",
+    "I. Wibowo",
+    "P. Shinde",
+    "S. Vinodh-Sangeetha",
+    "L. Y. Chung",
+    "Z. Chen",
+    "A. Mattei",
+    "A. Nidumukkala",
+    "A. Elias",
+    "D. Xu",
+    "T. Higgins",
+    "S. Kousik"
+   ],
+   "year": 2026,
+   "arxiv_id": "2602.01632",
+   "url": "https://arxiv.org/abs/2602.01632",
+   "relation": "WARP 的闭式 IK 骨干；C02 的精度结论依赖其 SEW 解的唯一性。"
+  }
+ ],
+ "notes": "人侧输入为 Quest inside-out 追踪而非 ego 视频手部检测；对综述的核心价值是(1)离线设置下误差传播的问题化分解，(2)D.1 采集噪声→轨迹→监督的自述链条，(3)闭式硬约束消除重定向环节误差的量化证据，(4)死区滤波缓解参数。附录文本在提取中位于 ## References 标题之后，相应卡的定位器采用 '附录节名; References' 复合形式以同时满足人工查阅与自动解析。"
+}

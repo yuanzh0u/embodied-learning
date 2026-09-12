@@ -1,0 +1,352 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2409.19499",
+  "title": "FastUMI: A Scalable and Hardware-Independent Universal Manipulation Interface with Dataset",
+  "published": "2024-09-29",
+  "url": "https://arxiv.org/abs/2409.19499",
+  "authors": [
+   "Zhaxizhuoma",
+   "Liu, Kehui",
+   "Guan, Chuyue",
+   "Zhongjie Jia",
+   "Ziniu Wu",
+   "Liu, Xin",
+   "Tianyu Wang",
+   "Shuai Liang",
+   "Chen, Pengan",
+   "Zhang, Pingrui",
+   "He Song",
+   "Danru Qu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "UMI 族 robot-free 采集接口的标杆重设计：手持夹爪用 RealSense T265 提供 6-DoF 末端位姿真值，并用光学动捕做了逐任务毫米级误差标定（Table I），直接回答手部追踪精度、遮挡失效模式与缓解手段。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题：UMI 原有 GoPro VIO+SLAM 在长时间遮挡下失效、标定复杂，FastUMI 的改进动机。"
+   },
+   {
+    "locator": "II. HARDWARE-CENTRIC PROTOTYPE DESIGN",
+    "role": "method-or-design",
+    "purpose": "手持/机载设备的追踪传感器选型（T265 替代 VIO）、视觉一致性对齐规则与非平行夹爪引入的 TCP 偏差。"
+   },
+   {
+    "locator": "III. SOFTWARE-FOCUSED FRAMEWORK",
+    "role": "method-or-design",
+    "purpose": "200Hz 位姿流与 60Hz 视频的 20Hz 同步、T265 漂移校正（重初始化/回环）、数据质量门槛、TCP 轨迹推导公式与手持-机器人镜像假设。"
+   },
+   {
+    "locator": "IV. ALGORITHMIC ADAPTATIONS FOR FASTUMI",
+    "role": "relevant-core",
+    "purpose": "策略侧对采集数据特性的适配，含动态误差补偿算法（夹爪 TCP 偏移）。"
+   },
+   {
+    "locator": "V. OPEN-SOURCE DATASET",
+    "role": "data-or-setting",
+    "purpose": "10k 演示、22 任务的数据规模与采集质控流程。"
+   },
+   {
+    "locator": "VI. SYSTEM EVALUATION",
+    "role": "results-or-analysis",
+    "purpose": "Table I 位姿误差（对照光学动捕真值）、Table II-VI 策略成功率与相机/数据量消融。"
+   },
+   {
+    "locator": "VII. LIMITATIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：无触觉/力觉、平台受限、有线传输。"
+   },
+   {
+    "locator": "VIII. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "与 SLAM/动捕/视觉追踪等 TCP 获取方式的对比定位。"
+   },
+   {
+    "locator": "IX. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与后续工作。"
+   },
+   {
+    "locator": "X. APPENDIX",
+    "role": "appendix-or-supplement",
+    "purpose": "T265 与 RoboBaton MINI 参数对照（200Hz/10mm 量级）与数据集格式。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，不含独立证据内容。"
+   }
+  ]
+ },
+ "research_question": "如何重新设计 UMI，使其在保持手持采集到机器人执行的观测/轨迹一致性的同时，摆脱对特定夹爪与复杂 VIO 标定的依赖，并量化新追踪方案（T265）的位姿精度？",
+ "contributions": [
+  "FastUMI 解耦式硬件：标准化插拔指尖 + ISO 法兰 + 可调 GoPro 支架，手持与机载设备视角一致（对齐规则：鱼眼图像底边对齐指尖底边）。",
+  "用 RealSense T265 现成追踪模块替代 UMI 的 GoPro VIO+SLAM 管线，并以光学动捕真值量化其毫米级定位误差（Table I）。",
+  "配套软件栈：多传感器 20Hz 亚毫秒同步、T265 置信度门控与漂移校正、TCP/关节轨迹推导、动态误差补偿算法。",
+  "开源 10,000+ 条真实演示（22 任务）及 ACT/DP 适配变体（Smooth-ACT、PoseACT、Depth-Enhanced DP）。"
+ ],
+ "method": {
+  "summary": "手持设备集成 GoPro（155° 鱼眼观测）与 RealSense T265（200Hz 6-DoF 位姿真值，VIO+IMU），ArUco 标记测夹爪开度；T265 位姿经相机-夹爪固定偏移 Δc2g 变换为机器人基座坐标系下的绝对/相对 TCP 轨迹，再由 URDF+IK 得关节轨迹；部署端用视角一致的机载 GoPro 执行策略，非平行夹爪的 TCP 偏移由动态误差补偿算法在推理时修正。",
+  "assumptions": [
+   "手持设备运动被假设为精确镜像机器人末端执行器运动（III-C 原文：hand-held device motion precisely mirrors that of the robot end-effector），人手的非刚性抖动未建模。",
+   "T265 相机中心到夹爪中心的偏移 Δc2g 已知且恒定。",
+   "T265 坐标系可与机器人基座坐标系对齐（依赖初始位姿标定）。",
+   "采集环境需满足 T265 置信度要求（≥95% 采样点为 High），低置信度位姿可被邻帧插值替代而不破坏连续性。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "FastUMI 开源数据集：10,000+ 条真实演示，22 个日常任务，19 类物体，12 种操作技能，单条约 6-12 秒"
+  ],
+  "tasks": [
+   "追踪精度评估：Pick Cup / Open Container / Rearrange Coke（遮挡递增）",
+   "策略评估：12 个任务（铰链操作、取放、推扫、按压按钮）"
+  ],
+  "embodiments": [
+   "xArm 6（策略评估主平台）",
+   "Flexiv、Franka、Z1（硬件适配展示）",
+   "手持平行夹爪采集设备"
+  ],
+  "sample_or_scale": "追踪误差评估：3 任务 × 每传感器 10 条轨迹（对照光学动捕）；策略评估：每任务 200 条演示训练、15 次测试；数据集 10,000+ 条。"
+ },
+ "evaluation": {
+  "design": "1) 位姿追踪精度：手持设备贴 4 个反光标记，以光学动捕为真值，evo 工具包计算 T265/MINI 误差；2) 策略基线：ACT（绝对关节）与 DP（相对 TCP）在 12 任务上的 15 次成功率；3) 算法增强消融：Depth-Enhanced DP、Smooth-ACT、PoseACT；4) 附加因素：相机配置（D435i/GoPro 平镜/鱼眼/多视角）与数据量（200/400/800）。",
+  "baselines": [
+   "UMI 原系统（GoPro VIO + 开源 SLAM）",
+   "ACT（绝对关节轨迹）",
+   "Diffusion Policy（相对 TCP）"
+  ],
+  "metrics": [
+   "平均定位误差（mm，对照光学动捕）",
+   "任务成功率（%，15 次尝试）",
+   "T265 追踪置信度（Failed/Low/Medium/High）"
+  ],
+  "ablations": [
+   "DP vs Depth-Enhanced DP（Pick Lid 53.33%→80.00%，Open Ricecooker 20.00%→93.33%）",
+   "ACT/Smooth-ACT/PoseACT-absolute/PoseACT-relative",
+   "相机配置（D435i 第一视角 0% 失败 vs GoPro 鱼眼第一视角 80-100%）",
+   "训练数据量 200/400/800（Pick Cup 20.00%→26.67%→53.33%）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "T265 手持位姿追踪对照动捕真值的平均定位误差随遮挡加剧而上升：Pick Cup 10.5mm、Open Container 17.7mm、Rearrange Coke 进一步劣化（Table I 各轨迹 19-36mm）；RoboBaton MINI 在低遮挡下 15.2mm 略差但更稳定（部分遮挡 11.2mm）。",
+   "scope": "3 个桌面任务、每任务 10 条轨迹、室内桌面环境",
+   "locator": "VI-A. Data Quality, Table I"
+  },
+  {
+   "finding": "VIO 误差沿轨迹呈非均匀分布：首尾低、中段高；夹爪靠近桌面遮挡视觉特征时出现明显误差峰，回到初始视角后回环闭合将精度恢复至接近初始水平。",
+   "scope": "T265、Pick Cup 任务的代表性轨迹（Fig. 11）",
+   "locator": "VI-A. Data Quality, Fig. 11"
+  },
+  {
+   "finding": "非平行夹爪（xArm Gripper）全开-全闭间有效长度变化约 1cm，导致手持演示迁移到机载时相机视角与 TCP 错位，需动态误差补偿算法在推理时修正。",
+   "scope": "xArm Gripper 等不满足严格平行运动的夹爪",
+   "locator": "II-C. Robot-Mounted Device Design, Fig. 4"
+  },
+  {
+   "finding": "UMI 原有 GoPro VIO+开源 SLAM 配置在铰链操作等长时间遮挡任务中难以维持鲁棒追踪，视觉信号间歇丢失时数据质量下降。",
+   "scope": "作者对 UMI 系统的实验评估观察",
+   "locator": "I. INTRODUCTION"
+  },
+  {
+   "finding": "采集端质量控制依赖 T265 四级置信度门控（≥95% High）、低置信度位姿剔除+邻帧插值、漂移重初始化/回环闭合；光照不足会显著降低置信度并加剧漂移。",
+   "scope": "FastUMI 采集管线（III-A/III-B）",
+   "locator": "III-B. Raw Data Quality Assessment"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仅依赖视觉感知，缺少力/触觉，难以处理易碎物体等需精细力控的任务。",
+    "locator": "VII. LIMITATIONS"
+   },
+   {
+    "limitation": "仅适配单臂/双臂平台，未支持移动操作臂等需全身控制的复杂形态。",
+    "locator": "VII. LIMITATIONS"
+   },
+   {
+    "limitation": "有线数据传输限制了便携性与野外独立部署。",
+    "locator": "VII. LIMITATIONS"
+   },
+   {
+    "limitation": "T265 在大幅运动（如突然加速）下会累积漂移，需重初始化或依赖蓝色 3D 打印参考槽回环校正；严重错位时回环无效须重启。",
+    "locator": "III-A. Raw Data Acquisition"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "毫米级定位精度结论仅基于 3 个桌面任务×10 条轨迹的动捕对照；更大工作空间、更长时程下的漂移特性未量化，T265 已停产后的替代传感器（MINI）精度略低（低遮挡 15.2mm vs 10.5mm）。",
+    "basis": "VI-A 评估规模有限；Table I 与 Table VII 参数对照。"
+   },
+   {
+    "boundary": "整条轨迹精度继承手持-机器人镜像假设：人手持握的非刚性抖动、Δc2g 标定误差与基座对齐误差都会直接进入 TCP 轨迹真值，文中未给出这些项的误差预算分解。",
+    "basis": "III-C 的镜像假设与 Δc2g 已知假设；正文只报告了 T265 本体的端到端误差。"
+   },
+   {
+    "boundary": "低置信度位姿的插值修复与漂移人工重录依赖操作者通过 RVIZ 实时监控，数据质量部分取决于操作者警觉性而非自动化保证。",
+    "basis": "III-B 插值策略与 V-B 的质量保证协议。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于室内桌面、光照充足、单臂平行/近平行夹爪的 UMI 式手持采集；位姿真值精度为 T265 级 VIO 的 1-4cm 量级（随遮挡上升），对亚厘米级精细任务（如按钮按压）需结合策略侧深度增强或补偿；低光、强遮挡近距操作与移动/全身平台超出本文验证范围。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "用光学动捕提供独立真值，对追踪模块做逐任务定量标定（而非仅声明精度），并覆盖遮挡递增的三个任务。",
+   "把追踪置信度、漂移校正、插值修复写成显式采集协议，误差缓解手段可操作。",
+   "硬件解耦与视角一致性规则（鱼眼底边对齐指尖）使手持-机载观测分布对齐可被工程化复现。"
+  ],
+  "design_risks": [
+   "追踪误差评估样本小（3 任务×10 轨迹），未报告旋转误差与误差分布统计量。",
+   "策略成功率每任务仅 15 次尝试，粒度 ±6.67pp，未给置信区间。",
+   "漂移校正（回环/重初始化）需人工判断，自动化程度有限。"
+  ],
+  "baseline_fairness": "ACT 与 DP 使用相同 200 条训练数据与相同测试协议，相机消融用同场景遥操作数据；但基线为原始版本而非各自最强变体。",
+  "metric_validity": "毫米级定位误差对照动捕真值是部署相关的直接度量；二元成功率是粗粒度代理，不能区分'轨迹略偏但成功'与'精确复现'。",
+  "reproducibility": "开源数据集与项目网站（fastumi.com），硬件清单与对齐规则明确；但补偿超参（d_close/d_open）、动捕系统型号、evo 具体指标口径未在正文给出。",
+  "external_validity": "策略评估集中在 xArm 6 单平台 12 个桌面任务；低光照与重度近距遮挡显著劣化 T265；移动操作与全身平台明确超出范围。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2409.19499-C01",
+   "claim": "FastUMI 手持设备以 RealSense T265 提供末端位姿真值，对照光学动捕真值的平均定位误差随视觉遮挡加剧而上升：低遮挡 Pick Cup 为 10.5mm，部分遮挡 Open Container 升至 17.7mm，强遮挡 Rearrange Coke 进一步劣化（Table I 单轨迹 19-36mm）；替代传感器 RoboBaton MINI 低遮挡下 15.2mm 略差，但部分遮挡下 11.2mm 更稳定。",
+   "stance": "conditional",
+   "relation": "量化回答'手部/末端追踪精度'在 robot-free 采集中的实际量级及其对遮挡的条件依赖：UMI 类系统末端轨迹真值精度为 1-4cm 量级，遮挡是主要误差来源。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "作者将 4 个反光标记贴于手持设备，以光学动捕系统轨迹为真值，用 evo 工具包计算 T265 与 MINI 在 3 个遮挡递增任务上的定位误差，每任务 10 条轨迹；正文明确给出 10.5/17.7/15.2/11.2mm 四个均值并指出 Rearrange Coke 中 T265 进一步劣化。",
+   "locator": "VI-A. Data Quality, Table I",
+   "source_context": "In the “Pick Cup” scenario, where occlusion is minimal, T265 achieves an average positioning error of 10.5 mm, while MINI’s error averages 15.2 mm. In the “Open Container,” T265’s error increases to 17.7 mm, reflecting the partial obstruction of its field of view, whereas MINI’s error decreases to 11.2 mm.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均定位误差（对照光学动捕真值）",
+    "value_or_direction": "T265: 10.5 mm（低遮挡）→ 17.7 mm（部分遮挡）→ Table I 单轨迹 19-36 mm（强遮挡）；MINI: 15.2 mm → 11.2 mm",
+    "comparator": "光学动捕系统（4 反光标记）为真值；RoboBaton MINI 追踪模块横向对照",
+    "task_or_sample": "Pick Cup / Open Container / Rearrange Coke 三任务，每任务每传感器 10 条轨迹",
+    "locator": "VI-A. Data Quality, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "VI-A 正文逐字给出 10.5/15.2/17.7/11.2mm 及遮挡归因，Table I 列出 Rearrange Coke 各轨迹 19-36mm；卡面数值、对照（动捕真值、MINI）、任务与样本量均与该节一致，未外推到其他场景。"
+   }
+  },
+  {
+   "card_id": "2409.19499-C02",
+   "claim": "T265 的 VIO 误差沿演示轨迹呈非均匀时间分布：轨迹首尾误差低、中段显著增大，夹爪靠近桌面遮挡视觉特征时出现两个明显误差峰，回到初始视角后回环闭合机制将追踪精度恢复至接近初始水平。",
+   "stance": "conditional",
+   "relation": "揭示手部追踪误差向末端轨迹的传播路径：误差集中在轨迹中段的近桌面/遮挡阶段——恰是接触与放置发生的阶段，意味着轨迹关键区段的真值质量最差。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-A 正文明确描述该时间模式并以 Fig. 11 展示 Pick Cup 任务中 T265 误差曲线：近桌面遮挡产生两个误差峰，返回初始视角后回环恢复精度。",
+   "locator": "VI-A. Data Quality, Fig. 11",
+   "source_context": "We also observe that the VIO error typically remains low at the beginning and end of each trajectory but grows noticeably in the middle. Fig. 11 illustrates this pattern for T265 during the “Pick Cup” task: as the gripper moves closer to the table, occlusion reduces visible features and causes two pronounced error peaks.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 VI-A，结论限于 T265 与所述任务模式；卡面未将单任务定性观察泛化为所有轨迹。"
+   }
+  },
+  {
+   "card_id": "2409.19499-C03",
+   "claim": "FastUMI 的采集端质量控制依赖 T265 四级置信度（Failed/Low/Medium/High）门控：环境需满足至少 95% 采样位姿为 High 才开录；录制中低置信度位姿被剔除并用邻帧插值保持连续；光照不足会显著降低置信度并加剧漂移。",
+   "stance": "conditional",
+   "relation": "给出 robot-free 采集中维持末端轨迹真值质量的可操作缓解手段与失效前兆（低光→置信度下降→漂移加剧），是误差缓解与环境先决条件的直接证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B 描述置信度门控、环境验证阈值、低置信度位姿剔除插值与光照敏感性；III-A 另给出重初始化与蓝色参考槽回环两种漂移校正策略。",
+   "locator": "III-B. Raw Data Quality Assessment",
+   "source_context": "Our tests indicate that lighting conditions notably affect the T265’s performance, with dim or low-light environments often leading to reduced confidence levels and increased drift. During actual recordings, any low-confidence pose is excluded and interpolated from neighboring frames to maintain continuity.",
+   "evidence_type": "system-description",
+   "quantitative": {
+    "metric": "sample poses achieving High confidence（T265 confidence levels 门控占比，环境开录门槛）",
+    "value_or_direction": "at least 95% of sample poses achieve High confidence；low-confidence pose excluded and interpolated",
+    "comparator": "T265 四级置信度 Failed/Low/Medium/High 分级阈值",
+    "task_or_sample": "FastUMI 数据采集管线（III-A/III-B 协议）",
+    "locator": "III-B. Raw Data Quality Assessment"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "95% 门槛与四级置信度在 III-B 原文可查，插值修复与光照敏感性为引文逐字内容；漂移校正策略在 III-A 有对应描述，卡面限于协议本身未夸大其效果。"
+   }
+  },
+  {
+   "card_id": "2409.19499-C04",
+   "claim": "非平行夹爪造成系统性末端轨迹偏差：xArm Gripper 全开-全闭间有效长度变化约 1 厘米，使手持演示迁移到机载执行时相机视角与 TCP 错位，FastUMI 因此需要在推理时运行动态误差补偿算法（按夹爪开度沿 TCP 局部 Z 轴反向修正指令位姿）。",
+   "stance": "limit",
+   "relation": "指出采集-部署同构性要求下的一类系统性误差源：即使追踪本身准确，手持平行夹爪与机载非平行夹爪的运动学差异也会向末端轨迹注入厘米级偏差，需显式补偿。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "II-C 给出 xArm Gripper 有效长度变化约 1cm 的事实与迁移错位问题，IV-E 给出两阶段动态误差补偿公式（补偿距离 d(i) 与位姿修正 p'ee = pee - d(i)·z_axis）。",
+   "locator": "II-C. Robot-Mounted Device Design, Fig. 4",
+   "source_context": "For example, the xArm Gripper’s effective length changes by approximately 1 centimeter as it moves between fully open and closed positions (see Fig. 4). This discrepancy in gripper motion can create mismatches in the observed camera view, especially when transferring demonstrations collected on the handheld device to different robot-mounted setups.",
+   "evidence_type": "system-description",
+   "quantitative": {
+    "metric": "xArm Gripper effective length changes（夹爪有效长度变化）",
+    "value_or_direction": "approximately 1 centimeter between fully open and closed positions，导致 TCP 沿局部 Z 轴移位需补偿",
+    "comparator": "handheld 平行夹爪（采集端）与 xArm Gripper 非平行夹爪（部署端）",
+    "task_or_sample": "手持到 xArm 机载设备的演示迁移（Fig. 4）",
+    "locator": "II-C. Robot-Mounted Device Design, Fig. 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "1 厘米数值与迁移错位问题逐字出自 II-C，补偿算法的两阶段设计出自 IV-E；卡面未声称补偿后的残余误差，限于作者报告。"
+   }
+  },
+  {
+   "card_id": "2409.19499-C05",
+   "claim": "作者实验观察到原 UMI 系统基于 GoPro 的 VIO 加开源 SLAM 配置在铰链操作等涉及长时间遮挡的任务中难以维持鲁棒运行，视觉信号间歇丢失导致数据质量下降、削弱后续学习效用；且 VIO 对参数化敏感、需复杂标定与多次坐标变换。",
+   "stance": "limit",
+   "relation": "为'视觉手部追踪失效模式'提供反面对照：纯视觉里程计方案在长时间遮挡下失效，是 FastUMI 改用自带 IMU 的现成追踪模块（T265）的直接动机，界定了 ego-centric 采集对追踪方案的鲁棒性要求。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "I. INTRODUCTION 明确记录作者对 UMI 系统的实验评估观察（prolonged occlusions 下追踪困难）及 VIO 标定复杂性，作为 FastUMI 重设计动机。",
+   "locator": "I. INTRODUCTION",
+   "source_context": "Through experimental evaluation, we observe that the UMI system encounters difficulties in tasks that involve prolonged occlusions, such as hinged operations. As a result, the UMI software configuration struggles to maintain robust operation when visual signals are intermittently lost, thereby diminishing data quality and reducing its utility for subsequent learning tasks.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 Introduction，是作者基于自身实验的观察（非转引他人结果）；卡面限于其对 UMI 原始配置的观察，未外推至所有 VIO 方案。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Chi et al., Universal Manipulation Interface: In-the-Wild Robot Teaching Without In-the-Wild Robots, arXiv:2402.10329, 2024（FastUMI 重设计的对象，C05 的 UMI VIO 失效观察针对该系统）",
+  "Campos et al., ORB-SLAM3, IEEE T-RO 2021（UMI 原 VIO 管线依赖的开源 SLAM）"
+ ],
+ "notes": "FastUMI 是 UMI 族中唯一用手法光学动捕对采集端位姿真值做毫米级定量标定的论文（Table I），其误差-遮挡曲线、置信度门控协议与夹爪运动学补偿是本综述误差来源/缓解手段部分的核心证据。手持-机器人镜像假设（III-C）与 Δc2g 标定是隐含的误差传递项，正文未做误差预算分解。"
+}

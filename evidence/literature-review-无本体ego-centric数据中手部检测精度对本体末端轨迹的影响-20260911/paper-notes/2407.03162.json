@@ -1,0 +1,507 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2407.03162",
+  "title": "Bunny-VisionPro: Real-Time Bimanual Dexterous Teleoperation for Imitation Learning",
+  "published": "2024-07-03",
+  "url": "https://arxiv.org/abs/2407.03162",
+  "authors": [
+   "Runyu Ding",
+   "Yuzhe Qin",
+   "Jiyue Zhu",
+   "Chengzhe Jia",
+   "Shiqi Yang",
+   "Ruihan Yang",
+   "Xiaojuan Qi",
+   "Xiaolong Wang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "经典锚点：以 Apple Vision Pro 手部/腕部追踪为唯一输入源驱动双臂灵巧手遥操作，直接呈现『手部追踪精度→重定向→末端轨迹→下游模仿学习』完整传导链，并明确报告自遮挡导致追踪不准、命令抖动的 limitation。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题陈述：VR 手部追踪驱动双臂遥操作的挑战（延迟导致不精确运动、安全约束）与贡献。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位手部追踪输入源谱系（动捕/IMU/VR 手柄/视觉/VR 头显）与 AnyTeleop、Telekinesis 基线关系。"
+   },
+   {
+    "locator": "3 Teleoperation System",
+    "role": "method-or-design",
+    "purpose": "总览三模块解耦架构：手部重定向、手臂运动控制、触觉反馈。"
+   },
+   {
+    "locator": "3.2 Robot Hand Motion Retargeting",
+    "role": "method-or-design",
+    "purpose": "重定向优化目标（指尖关键点向量差 + 时序平滑项）与 loop joint 降维求解——追踪误差到关节命令的第一站。"
+   },
+   {
+    "locator": "3.3 Robot Arm Motion Control",
+    "role": "method-or-design",
+    "purpose": "腕部位姿→IK+奇异/碰撞避免统一优化，腕部追踪误差到末端轨迹的传导路径。"
+   },
+   {
+    "locator": "3.4 Human Haptic Feedback Device",
+    "role": "method-or-design",
+    "purpose": "FSR 零漂校准+低通滤波+ERM 振动反馈链路，作为追踪/交互误差的缓解手段。"
+   },
+   {
+    "locator": "4 System Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "评估设计与基线设置（Telekinesis 基准 + 自建双臂任务，AnyTeleop+ 对照）。"
+   },
+   {
+    "locator": "4.1 Profiling Results",
+    "role": "results-or-analysis",
+    "purpose": "各模块延迟剖析：重定向 3.43ms、运动控制 15.93ms、>60Hz 实时性。"
+   },
+   {
+    "locator": "4.2 Real Robot Teleoperation Experiments",
+    "role": "results-or-analysis",
+    "purpose": "遥操作成功率/时长/EpLen/∆Qpos 对比，含 Table 1-3 数值与轨迹平滑性证据。"
+   },
+   {
+    "locator": "4.3 User Study of Haptic Feedback",
+    "role": "results-or-analysis",
+    "purpose": "5 名未受训操作者用户研究：触觉反馈对成功率与完成时间的影响。"
+   },
+   {
+    "locator": "5 Imitation Learning",
+    "role": "results-or-analysis",
+    "purpose": "演示数据质量→ACT/DP/DP3 下游策略成功率与泛化（SR-SG/SR-U）证据。"
+   },
+   {
+    "locator": "5.2 Tactile Data as Policy Input",
+    "role": "results-or-analysis",
+    "purpose": "触觉信号作为策略输入的消融及 FSR 零漂对力数据稳定性的影响。"
+   },
+   {
+    "locator": "6 Conclusion and Limitation",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述 limitation：Vision Pro 自遮挡下追踪不准导致抖动命令；轻触下触觉反馈难以感知。"
+   },
+   {
+    "locator": "A Bimanual Teleoperation Initialization",
+    "role": "appendix-or-supplement",
+    "purpose": "初始化对齐模式（人/机坐标系同步）——末端轨迹误差的系统级来源之一。"
+   },
+   {
+    "locator": "C Task Suits Design",
+    "role": "appendix-or-supplement",
+    "purpose": "演示采集细节：图像 30Hz、本体感知 >100Hz、插值对齐降采样至 10Hz。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "B Sphere Modeling in Collision Checking",
+    "role": "appendix-or-supplement",
+    "reason": "碰撞球建模实现细节，与手部追踪精度→末端轨迹问题弱相关。"
+   },
+   {
+    "locator": "D Haptic Feedback Implementation; E Tactile Data Processing; F Imitation Learning Implementation",
+    "role": "appendix-or-supplement",
+    "reason": "工程实现细节（PWM/Arduino/训练超参），已把握其对主问题的作用，不再逐行精读。"
+   }
+  ]
+ },
+ "research_question": "如何构建一个实时、安全的双臂灵巧手遥操作系统，用消费级 VR 头显（Apple Vision Pro）的手部/腕部追踪采集高质量演示以服务模仿学习？",
+ "contributions": [
+  "Bunny-VisionPro 系统：Vision Pro 手部追踪 + 三模块解耦（手部重定向、手臂运动控制、触觉反馈）的实时双臂灵巧遥操作。",
+  "支持 loop joint（四连杆）灵巧手的实时重定向优化，降维求解使 Ability hand 重定向提速 10.2 倍。",
+  "低成本 ERM 触觉反馈设备（每个 1.2 美元）+ FSR 零漂校准与低通滤波。",
+  "在 Telekinesis 基准与自建双臂任务上成功率 +11%、完成时间 -45%，且演示数据使下游模仿学习泛化显著提升。"
+ ],
+ "method": {
+  "summary": "Vision Pro 输出的手指关键点与腕部位姿流经两条优化通路：手部重定向最小化缩放后人手指尖关键点向量与机器人手正运动学关键点向量之差，并加 β||∆q||² 时序平滑项，loop joint 通过被动关节参数化降维后用 SQP 求解；手臂控制以腕部位姿构造 IK 目标并叠加奇异规避（可操作度）与碰撞（球体距离）项统一优化；触觉通路将 FSR 读数零漂校准、低通滤波后经 PWM 驱动 ERM 振动马达。模块化进程隔离避免延迟累积。",
+  "assumptions": [
+   "Vision Pro 手部/腕部追踪在可见条件下足够准确（作者承认自遮挡时不准确）。",
+   "人-机坐标系经初始化对齐模式标定后，相对运动可一致映射。",
+   "缩放因子 α 可吸收人手与机器人手尺寸差异。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Telekinesis benchmark（10 个单臂任务）",
+   "自建 6 个双臂任务演示（短程 50 条/任务，长程 30 条/任务）"
+  ],
+  "tasks": [
+   "抓取玩具、擦锅、开盖倾倒（短程双臂）",
+   "擦玻璃、扫地、冲咖啡（长程双臂）",
+   "用户研究：玩具交接、移球"
+  ],
+  "embodiments": [
+   "双 UFactory xArm-7 + 双 6-DoF Ability hand（24-DoF 系统，每手 30 个触觉传感器）"
+  ],
+  "sample_or_scale": "遥操作对比每任务 50（短程）/30（长程）条演示；模仿学习每任务 10 次试验 × 3 策略；用户研究 5 名未受训操作者 × 2 任务 × 5 次。"
+ },
+ "evaluation": {
+  "design": "系统剖析（模块延迟）+ Telekinesis 基准成功率对比（引原文报告值）+ 自建任务对照 AnyTeleop+（同一 Vision Pro 追踪源与相同机器人硬件）+ 触觉用户研究 + 三种模仿学习策略（ACT/Diffusion Policy/DP3）下游评估。",
+  "baselines": [
+   "Telekinesis [3]",
+   "AnyTeleop [4]",
+   "AnyTeleop+（AnyTeleop 手臂控制 + 相同 Vision Pro 手部追踪）"
+  ],
+  "metrics": [
+   "成功率",
+   "采集时间",
+   "episode 长度",
+   "手臂关节位置变化 ∆Qpos",
+   "模块延迟 ms",
+   "下游策略 SR/SR-SG/SR-U"
+  ],
+  "ablations": [
+   "触觉作为 DP3 策略输入的 4 种信号表示消融（力/冲量 × 向量/点云）",
+   "触觉反馈有无的用户研究对照"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "重定向（含 loop joint）3.43ms、运动控制含奇异+碰撞规避 15.93ms，整体 >60Hz 实时运行；loop joint 降维求解较约束法提速 10.2 倍。",
+   "scope": "CPU i7-12700KF 单核，Ability hand + xArm-7",
+   "locator": "4.1 Profiling Results / 4.2 Real Robot Teleoperation Experiments, Table 1"
+  },
+  {
+   "finding": "自建 6 任务上 Bunny-VisionPro 较 AnyTeleop+ 成功率高 11%、完成时间少 45%、episode 长度降 19%，AnyTeleop+ 手臂关节位置变化高 43%（轨迹更激进、更不安全）。",
+   "scope": "相同 Vision Pro 追踪源与相同双臂硬件下的对照",
+   "locator": "4.2 Real Robot Teleoperation Experiments, Table 3"
+  },
+  {
+   "finding": "用 Bunny-VisionPro 演示训练的策略平均成功率高 22%，空间泛化 +14% SR-SG、未见物体 +26% SR-U。",
+   "scope": "3 任务 × ACT/DP/DP3 三策略，每配置 10 次试验",
+   "locator": "5 Imitation Learning, Table 4"
+  },
+  {
+   "finding": "作者承认 Vision Pro 手部追踪在手指自遮挡时不准确，导致抖动的控制命令。",
+   "scope": "系统级 limitation，未量化发生频率",
+   "locator": "6 Conclusion and Limitation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "Vision Pro 的手部追踪在手指自遮挡时不准确，导致抖动的控制命令；可通过融合可穿戴设备数据缓解。",
+    "locator": "6 Conclusion and Limitation"
+   },
+   {
+    "limitation": "机器人轻触物体时触觉反馈的细微变化难以感知；未来拟用压电等大接触面积高灵敏执行器。",
+    "locator": "6 Conclusion and Limitation"
+   },
+   {
+    "limitation": "剪刀拾取任务表现略差，因 Ability hand 自由度受限难以插入剪刀柄。",
+    "locator": "4.2 Real Robot Teleoperation Experiments"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论仅适用于 Vision Pro 追踪质量良好的可见手部运动；论文未给出追踪误差的量化阈值（如关键点误差 mm 级）或丢踪统计，无法据此推导『可接受追踪精度阈值』。",
+    "basis": "全文仅定性描述自遮挡问题，所有评估均在追踪可用条件下进行，无追踪误差与末端误差的对应测量。"
+   },
+   {
+    "boundary": "∆Qpos 等平滑性收益来自完整系统（重定向+平滑项+奇异/碰撞规避）与 AnyTeleop+ 的整体对比，无法归因到单个模块或追踪源差异——两系统共用同一 Vision Pro 追踪，差异在下游优化。",
+    "basis": "4.2 明确 AnyTeleop+ 集成相同 Vision-Pro 手部追踪，说明差距源于运动控制/重定向设计而非手部检测本身。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：Vision Pro 类消费级头显手部追踪 + 桌面双臂灵巧操作 + 短/长程演示采集。不适用于：手指频繁深度自遮挡的精细指尖操作（抖动未量化）、非 Vision Pro 追踪源（手套/单目视觉）的精度推断、以及需要力控接触丰富任务（触觉反馈在轻触下失效）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "AnyTeleop+ 对照共享同一 Vision Pro 追踪源与相同机器人硬件，较好隔离了运动控制/重定向设计的贡献。",
+   "提供模块级延迟剖析（Table 1）与轨迹平滑性指标 ∆Qpos，把『实时性』『轨迹质量』从形容词变成可核查数值。",
+   "下游模仿学习泛化评估（SR-SG/SR-U）直接验证演示数据质量这一最终用途。"
+  ],
+  "design_risks": [
+   "Telekinesis 基准对比引用原文报告值，实验条件不完全可控；自建任务成功样本量（50/30 条、每配置 10 次试验）较小，无方差/置信区间报告。",
+   "手部追踪误差未作独立测量，自遮挡问题只有定性描述；触觉用户研究仅 5 人。",
+   "长程任务『73% 子任务/38% 整任务』与 Table 5 原始分数（整任务 15/30）口径不完全一致，需以表格为准。"
+  ],
+  "baseline_fairness": "自建任务使用 AnyTeleop+（同一追踪源+同一硬件）属公平对照；Telekinesis 基准沿用原文数字，公平性中等。",
+  "metric_validity": "∆Qpos 是轨迹平滑性的合理代理指标，但非末端位置误差本身；全文无手部追踪精度或末端轨迹误差的直接度量（如 mm 级误差），对综述问题中『可接受阈值』只能提供间接证据。",
+  "reproducibility": "系统架构、优化目标、延迟剖析、任务与样本量均有披露，项目主页公开；超参与初始化模式在附录给出，可复现性中上。",
+  "external_validity": "结论限于 Vision Pro 追踪 + xArm-7/Ability hand 组合与桌面任务；对手套或纯视觉追踪系统、移动操作场景的外推需谨慎。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2407.03162-C01",
+   "claim": "Bunny-VisionPro 作者明确承认：Apple Vision Pro 的手部追踪在手指自遮挡时不准确，直接导致机器人控制命令抖动；作者提出融合可穿戴设备数据作为缓解方向。",
+   "stance": "limit",
+   "relation": "限定『消费级 VR 头显手部追踪可直接作为遥操作末端轨迹源』的适用边界：自遮挡是手部追踪→末端轨迹链上的明确误差源，且以控制命令抖动的形式显性传导。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 6 节 limitation 第一句逐字给出自遮挡→追踪不准→命令抖动的因果陈述与可穿戴融合的缓解建议。",
+   "locator": "6 Conclusion and Limitation",
+   "source_context": "Limitation. Our system has two main limitations: (i) Vision Pro’s hand tracking is inaccurate when fingers are self-occluded, causing jerky control commands. This issue could be mitigated by fusing data from wearable devices with Vision Pro.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配第 6 节开头；claim 未超出作者陈述范围——论文未量化遮挡频率或抖动幅度，claim 亦保持定性。"
+   }
+  },
+  {
+   "card_id": "2407.03162-C02",
+   "claim": "在相同 Vision Pro 手部追踪源与相同双臂硬件下，Bunny-VisionPro 的重定向+运动控制优化使 6 个自建双臂任务中手臂关节位置变化（∆Qpos）较 AnyTeleop+ 低约 43%，AnyTeleop+ 在复杂轨迹与大末端位姿变化下出现激进、不可预测且可能不安全的关节运动。",
+   "stance": "support",
+   "relation": "支持『手部追踪误差/噪声到末端轨迹的传导可被下游优化显著衰减』：同一追踪源下，带时序平滑与奇异/碰撞规避的优化管线产出更平滑、更安全的末端轨迹。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 正文报告 AnyTeleop+ 手臂关节位置变化高 43% 并描述其激进运动；Table 3 给出各任务 ∆Qpos 原始值（如 Grasp Toy 0.35 vs 0.77）。",
+   "locator": "4.2 Real Robot Teleoperation Experiments, Table 3",
+   "source_context": "In contrast, AnyTeleop+ struggles with complex trajectories and large end-effector pose changes, often leading to aggressive joint movements and unpredictable, potentially unsafe robot control, as evidenced by a 43% increase in arm joint position changes during tasks.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "手臂关节位置变化 ∆Qpos",
+    "value_or_direction": "AnyTeleop+ 较 Bunny-VisionPro 高 43%",
+    "comparator": "AnyTeleop+（相同 Vision Pro 追踪源、相同机器人硬件）",
+    "task_or_sample": "6 个自建双臂任务（3 短程 × 50 演示 + 3 长程 × 30 演示）",
+    "locator": "4.2 Real Robot Teleoperation Experiments, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "43% 数值与『aggressive joint movements』描述逐字见于 4.2；Table 3 各行 ∆Qpos（0.35/0.58/0.86/0.68/1.30/1.05 vs 0.77/0.98/1.26/1.44/1.99/1.87）方向一致；claim 限定在同一追踪源对照内，未归因于手部检测差异。"
+   }
+  },
+  {
+   "card_id": "2407.03162-C03",
+   "claim": "用 Bunny-VisionPro 采集的演示训练 ACT/Diffusion Policy/DP3，平均成功率较 AnyTeleop+ 演示高 22%；泛化上空间新位置 +14% SR-SG、未见物体 +26% SR-U，作者据此认为高质量、轨迹一致的演示显著提升模仿学习泛化。",
+   "stance": "support",
+   "relation": "支持『遥操作轨迹质量沿数据链传导到下游策略性能』：更平滑一致的末端轨迹（同源追踪、更优优化）转化为模仿学习成功率与泛化的可测提升。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 正文给出 22%/14%/26% 三个数值与轨迹一致性解释；Table 4 提供三任务×三策略的逐格成功率。",
+   "locator": "5 Imitation Learning, Table 4",
+   "source_context": "As shown in Tab. 4, Bunny-VisoinPro significantly outperforms AnyTeleop+ by an average of 22% success rate across three tasks using three different policies. This showcases the superior quality of the demonstrations collected by our system.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "下游模仿学习成功率 SR / SR-SG / SR-U",
+    "value_or_direction": "平均 SR +22%，SR-SG +14%，SR-U +26%",
+    "comparator": "AnyTeleop+ 采集的演示（相同任务与策略）",
+    "task_or_sample": "3 个双臂任务 × 3 种策略（ACT/Diffusion Policy/DP3），每配置 10 次试验",
+    "locator": "5 Imitation Learning, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "22% 逐字见于 5.1 正文；『exceeds by 14% SR-SG and 26% SR-U』同节逐字可核；Table 4 逐格数值方向与平均增幅一致（如 Uncover & pour 中 ACT 2/10→8/10）。"
+   }
+  },
+  {
+   "card_id": "2407.03162-C04",
+   "claim": "Bunny-VisionPro 的手部重定向（含 loop joint）单帧耗时 3.43ms、含奇异与碰撞规避的完整运动控制 15.93ms，系统在 CPU 上整体 >60Hz 实时运行；loop joint 降维求解较等式约束法（34.98ms）提速约 10.2 倍，使全自由度灵巧重定向不成为延迟来源。",
+   "stance": "support",
+   "relation": "支持『延迟是手部追踪→末端轨迹链上的独立误差源且可被工程设计压到实时阈值内』：引言指出延迟导致不精确机器人运动，剖析数据给出各模块延迟的具体预算。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 剖析各模块毫秒级耗时；4.1 正文确认 >60Hz；3.2 报告 10.2 倍提速；引言指出延迟→不精确运动。",
+   "locator": "4.2 Real Robot Teleoperation Experiments, Table 1",
+   "source_context": "CPU i7-12700KF Module Time (ms) Retargeting (w/o loop joints) 2.54 Retargeting (loop joints as Cons.) 34.98 Retargeting (loop joints ours) 3.43 Motion Control (IK only) 0.74 Motion Control (+ Coll.) 7.85 Motion Control (+ Sing.) 10.42 Motion Control (+ Coll. + Sing.) 15.93 Haptic Feedback (PWM) 0.04",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "模块单帧耗时（ms）与系统控制频率",
+    "value_or_direction": "重定向含 loop joint 3.43ms（vs 约束法 34.98ms，10.2× 提速）；完整运动控制 15.93ms；整体 >60Hz",
+    "comparator": "loop joints as equality constraints 的 SQP 求解",
+    "task_or_sample": "Ability hand 重定向 + xArm-7 运动控制，CPU i7-12700KF",
+    "locator": "4.2 Real Robot Teleoperation Experiments, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 各行毫秒数逐字匹配 4.2 表面内表格文本；10.2× 提速逐字见于 3.2；>60Hz 逐字见于 4.1；claim 将三处同文数据合并且未夸大。"
+   }
+  },
+  {
+   "card_id": "2407.03162-C05",
+   "claim": "在 5 名未受训操作者的用户研究中，低成本 ERM 触觉反馈在 10 组比较中的 9 组维持或提高任务成功率，并加快对形变小的球的移球任务；操作者报告视觉部分受阻时触觉反馈加快了物体定位并增强遥操作信心。",
+   "stance": "conditional",
+   "relation": "作为『缓解手段』的条件性证据：视觉受阻正是 Vision Pro 手部追踪退化（自遮挡）的场景，触觉反馈在该场景下帮助维持操作性能，但其作用在轻触时受限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 用户研究报告 9/10 比较维持或提高成功率、移球任务更快，以及操作者在视觉受阻时借助触觉定位的主观报告。",
+   "locator": "4.3 User Study of Haptic Feedback",
+   "source_context": "As shown in Fig. 4, haptic feedback maintains or improves suc- cess rates in 9 out of 10 comparisons. This boost is attributed to enhanced interaction awareness between the robot and the object, which prevents abnormal current generation in robot arms due to excessive pressure, thus promoting safer operations.",
+   "evidence_type": "user-study",
+   "quantitative": {
+    "metric": "task success rate 任务成功率比较（haptics vs no haptics）",
+    "value_or_direction": "maintained or improved in 9 out of 10 comparisons（10 组比较中 9 组维持或提高）",
+    "comparator": "same system without haptic feedback（无触觉反馈）",
+    "task_or_sample": "5 untrained operators × 2 tasks (toy handover, ball moving) × 5 trials each",
+    "locator": "4.3 User Study of Haptic Feedback, Figure 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "『9 out of 10 comparisons』逐字匹配（extraction 中 suc-cess 跨行断词已按原文保留）；样本量与任务描述逐字见于 4.3；『视觉受阻时帮助定位』为同节操作者报告的如实转述。"
+   }
+  },
+  {
+   "card_id": "2407.03162-C06",
+   "claim": "Bunny-VisionPro 的手部重定向目标函数显式包含时序平滑项 β||∆q||²，对相邻帧间大幅关节位置变化施加惩罚，从算法层面抑制逐帧手部追踪噪声向机器人关节命令的传导。",
+   "stance": "support",
+   "relation": "支持『缓解手段：在重定向优化中嵌入时序平滑正则，可衰减逐帧手部追踪抖动』——与 C01 的自遮挡抖动问题构成『问题-缓解』对应。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 式(1)第二项逐字说明对连续帧间 ∆q 的惩罚；该项与关键点向量误差项共同构成重定向目标。",
+   "locator": "3.2 Robot Hand Motion Retargeting",
+   "source_context": "The second term enforces temporal smoothness by penal- izing large joint position changes ∆q between consecutive frames, with weight β.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 3.2（penal-izing 跨行断词按原文保留）；claim 对平滑项功能的描述与该句及式(1)语境一致，未声称其可完全消除遮挡误差。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": null,
+   "reference": "[4] Y. Qin et al. AnyTeleop: A general vision-based dexterous robot arm-hand teleoperation system. RSS 2023.",
+   "reason": "主要基线与追踪源对照（AnyTeleop+），支撑 C02/C03 的差分归因。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[3] A. Sivakumar et al. Robotic telekinesis. RSS 2022.",
+   "reason": "Telekinesis 基准来源，遥操作对比的任务框架。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Profiling Results. We profile different modules at certain conditions.",
+   "section": "4.2 Real Robot Teleoperation Experiments",
+   "rows": [
+    [
+     "Module",
+     "Time (ms)"
+    ],
+    [
+     "Retargeting (w/o loop joints)",
+     "2.54"
+    ],
+    [
+     "Retargeting (loop joints as Cons.)",
+     "34.98"
+    ],
+    [
+     "Retargeting (loop joints ours)",
+     "3.43"
+    ],
+    [
+     "Motion Control (IK only)",
+     "0.74"
+    ],
+    [
+     "Motion Control (+ Coll.)",
+     "7.85"
+    ],
+    [
+     "Motion Control (+ Sing.)",
+     "10.42"
+    ],
+    [
+     "Motion Control (+ Coll. + Sing.)",
+     "15.93"
+    ],
+    [
+     "Haptic Feedback (PWM)",
+     "0.04"
+    ]
+   ],
+   "usage": "作者用该表证明各模块毫秒级耗时，支撑 >60Hz 实时性主张。"
+  },
+  {
+   "table_id": "T3",
+   "caption": "Teleoperation System Evaluation: success rate, collection time, episode length, and arm joint position changes (∆Qpos).",
+   "section": "4.2 Real Robot Teleoperation Experiments",
+   "rows": [
+    [
+     "Task",
+     "System",
+     "Success",
+     "Time",
+     "EpLen",
+     "∆Qpos"
+    ],
+    [
+     "Grasp Toy",
+     "AnyTeleop+ / Ours",
+     "50/54 / 50/55",
+     "28.9 / 24.3",
+     "145±24 / 142±21",
+     "0.77 / 0.35"
+    ],
+    [
+     "Clean Pan",
+     "AnyTeleop+ / Ours",
+     "50/78 / 50/58",
+     "74.6 / 30.4",
+     "282±23 / 186±17",
+     "0.98 / 0.58"
+    ],
+    [
+     "Uncover & Pour",
+     "AnyTeleop+ / Ours",
+     "50/77 / 50/63",
+     "63.2 / 41.5",
+     "189±21 / 183±15",
+     "1.26 / 0.86"
+    ],
+    [
+     "Wipe Glass",
+     "AnyTeleop+ / Ours",
+     "30/53 / 30/41",
+     "69.0 / 32.2",
+     "517±51 / 360±35",
+     "1.44 / 0.68"
+    ],
+    [
+     "Sweep Floor",
+     "AnyTeleop+ / Ours",
+     "30/61 / 30/40",
+     "129.4 / 45.4",
+     "786±118 / 570±77",
+     "1.99 / 1.30"
+    ],
+    [
+     "Prepare Coffee",
+     "AnyTeleop+ / Ours",
+     "30/52 / 30/44",
+     "95.3 / 55.2",
+     "705±42 / 576±33",
+     "1.87 / 1.05"
+    ]
+   ],
+   "usage": "作者用该表给出成功率、时长、episode 长度与 ∆Qpos 的系统级对照，是轨迹平滑性证据的来源。"
+  }
+ ],
+ "notes": "锚点论文。对综述问题的独特价值：(1) 唯一明确把 Vision Pro 自遮挡→抖动命令写成 limitation 的遥操作系统之一；(2) 提供 ∆Qpos 这一可复用的轨迹平滑性代理指标；(3) 同源追踪对照设计（AnyTeleop+）隔离了下游优化的贡献。未提供手部追踪误差的毫米级量化或可接受阈值。"
+}

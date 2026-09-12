@@ -1,0 +1,341 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2508.09976",
+  "title": "Masquerade: Learning from In-the-wild Human Videos using Data-Editing",
+  "published": "2025-08-13",
+  "url": "https://arxiv.org/abs/2508.09976",
+  "authors": [
+   "Marion Lepert",
+   "Jiaying Fang",
+   "Jeannette Bohg"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接把 Phantom 管线扩展到 in-the-wild ego-centric 视频(Epic Kitchens, 无深度)，明确展示了单目手部姿态估计在 ego-centric 场景的精度边界：只能用 2D 关键点做辅助监督而非动作标签，并给出遮挡/相机运动/关键点错误的过滤与填补规则及数据规模消融。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "问题设定：in-the-wild ego-centric 视频缺动作标签且有视觉本体差距。"
+   },
+   {
+    "locator": "III. METHOD",
+    "role": "method-or-design",
+    "purpose": "整体三阶段管线。"
+   },
+   {
+    "locator": "B. Data processing of in-the-wild egocentric videos",
+    "role": "method-or-design",
+    "purpose": "核心节：HaMeR 2D/3D 精度边界、无深度下的 2D 监督降级、homography 相机补偿、过滤规则、imperfect overlay 声明。"
+   },
+   {
+    "locator": "C. Policy learning",
+    "role": "method-or-design",
+    "purpose": "2D 辅助损失预训练+机器人数据共训练的损失设计。"
+   },
+   {
+    "locator": "IV. RESULTS",
+    "role": "results-or-analysis",
+    "purpose": "OOD 主结果、overlay 与 cotrain 消融、数据规模曲线。"
+   },
+   {
+    "locator": "F. Does increasing the amount of in-the-wild data improve",
+    "role": "results-or-analysis",
+    "purpose": "数据规模定量消融(0/10/50/100%)。"
+   },
+   {
+    "locator": "V. LIMITATIONS AND FUTURE WORK",
+    "role": "conclusion-or-limitations",
+    "purpose": "手部姿态估计器在快运动/重遮挡下失效、缺深度导致遮挡处理错误等自述局限。"
+   },
+   {
+    "locator": "C. Additional data-editing details",
+    "role": "appendix-or-supplement",
+    "purpose": "相机运动 5cm/0.5rad 过滤阈值与单手遮挡动作复用规则。"
+   },
+   {
+    "locator": "E. Camera extrinsics detailed explanation",
+    "role": "appendix-or-supplement",
+    "purpose": "homography 冻结首帧视角的外参处理细节。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II. RELATED WORKS",
+    "role": "relevant-core",
+    "reason": "背景综述，无直接误差机制证据。"
+   },
+   {
+    "locator": "A. Policy Training Details / B. Dataset description / D. Hardware and controller details",
+    "role": "appendix-or-supplement",
+    "reason": "超参与硬件细节，与检测精度问题弱相关。"
+   },
+   {
+    "locator": "F. Detailed scene results / G. Task variation description",
+    "role": "appendix-or-supplement",
+    "reason": "分场景柱状图与任务布置，图形数据未在文本中给出数值。"
+   }
+  ]
+ },
+ "research_question": "把 in-the-wild ego-centric 人类视频显式编辑成'机器人化'视频后用于预训练+共训练，能否比隐式对齐方法更好地提升机器人策略在未见场景的鲁棒性？",
+ "contributions": [
+  "将 Phantom 数据编辑管线扩展到大规模无深度 in-the-wild ego-centric 视频(Epic Kitchens 675K 帧)。",
+  "提出编辑视频 2D 关键点辅助损失预训练 + 50 条机器人演示共训练的范式，三个长程双臂任务在未见场景超过基线 5-6 倍。",
+  "消融证明 robot overlay 与 co-training 缺一不可，且性能随编辑人类视频量对数级提升。"
+ ],
+ "method": {
+  "summary": "对 Epic Kitchens ego-centric 视频：用 Epic Kitchens 标注定位双手、HaMeR 估计每手 21 个 3D 关键点并映射为机器人末端位姿后做时间平滑；Detectron2+SAM2 分割人臂、E2FGVI inpaint、按已知内外参叠加渲染双臂机器人；因无深度，仅用 2D 投影关键点(经 homography 对齐相机运动)作为视觉编码器的辅助预测目标，不直接用作策略动作；过滤相机运动过大或动作无效的帧；最后用 50 条单场景双臂机器人演示与编辑视频共训练(ViT-Base + Diffusion Policy 头)。",
+  "assumptions": [
+   "机器人相机内外参已知且固定",
+   "人类视频无深度，绝对 3D 姿态不可恢复",
+   "单目 HaMeR 的 2D 关键点足够可靠，可作辅助监督",
+   "重灵巧抓取可近似重定向到平行夹爪"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Epic Kitchens 编辑视频 10K 片段 / 675,713 帧",
+   "每任务 50 条双臂 Kinova 遥操作演示(Oculus)"
+  ],
+  "tasks": [
+   "Stack Pots(三段)",
+   "Scrape Potato(三段)",
+   "Sweep Chilis(三段)"
+  ],
+  "embodiments": [
+   "双臂 Kinova Gen3 + Robotiq 2F-85 平行夹爪",
+   "ZED mini ego-centric RGB 相机",
+   "人类双手(ego-centric 视频)"
+  ],
+  "sample_or_scale": "675K 帧人类视频 + 每任务 50 条机器人演示；每任务在 3 个 OOD 场景各 10 次 rollout(共 30/任务)"
+ },
+ "evaluation": {
+  "design": "三个长程双臂任务，每个在 3 个 OOD 场景评估；与 HRP/ImageNet/DINOv2 视觉表征基线对比；消融 overlay、cotraining、数据规模",
+  "baselines": [
+   "HRP(人类视频 affordance 预训练)",
+   "ImageNet ViT",
+   "DINOv2",
+   "Ours No Overlay",
+   "Ours No Co-train"
+  ],
+  "metrics": [
+   "平均成功率(%，含子任务部分分)",
+   "±SEM"
+  ],
+  "ablations": [
+   "No Overlay(原始人类视频)",
+   "No Co-train(仅 finetune)",
+   "数据规模 0/10/50/100%",
+   "λ 共训练权重(0.5-40，取 10)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Masquerade 在三个 OOD 场景平均成功率 74%，比基线平均高 62 个百分点(12%→74%)。",
+   "scope": "三个双臂长程任务 × 3 OOD 场景",
+   "locator": "C. Performance in OOD scenes"
+  },
+  {
+   "finding": "无深度时 HaMeR 绝对 3D 姿态不准，只能将 2D 关键点作为辅助损失而非直接动作标签——手部估计精度直接决定标签可用层级。",
+   "scope": "in-the-wild 单目 ego-centric 视频",
+   "locator": "B. Data processing of in-the-wild egocentric videos"
+  },
+  {
+   "finding": "成功率随编辑人类视频量提升：0%→2%、10%→26%、50%→47%、100%→68%(Stack Pots, OOD scene 1)。",
+   "scope": "Stack Pots 任务 OOD scene 1",
+   "locator": "F. Does increasing the amount of in-the-wild data improve, Fig. 6"
+  },
+  {
+   "finding": "不完美的 overlay(遮挡处理错误、灵巧抓取无法重定向)仍远优于无 overlay；但快运动/重遮挡帧因手部估计失效必须丢弃。",
+   "scope": "Epic Kitchens 编辑管线",
+   "locator": "B. Data processing of in-the-wild egocentric videos; V. LIMITATIONS AND FUTURE WORK"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "依赖单目手部姿态估计器对齐 overlay；这些模型在快速运动或重度遮挡帧上表现差，这些帧必须从训练集中丢弃。",
+    "locator": "V. LIMITATIONS AND FUTURE WORK"
+   },
+   {
+    "limitation": "缺深度数据导致无法判断机器人像素与场景物体的前后遮挡关系，渲染抓取真实性受损。",
+    "locator": "V. LIMITATIONS AND FUTURE WORK"
+   },
+   {
+    "limitation": "ego-centric 相机运动迫使过滤大量帧(固定基座机器人无法利用)；灵巧抓取到平行夹爪的重定向不完美。",
+    "locator": "V. LIMITATIONS AND FUTURE WORK"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论适用于'2D 辅助监督+小规模机器人数据共训练'范式；完全无机器人数据时 2D 标签能否驱动策略未验证(0% 共训练数据时成功率仅 2%)。",
+    "basis": "Fig. 6 显示 0% 编辑数据共训练时成功率 2%，即机器人数据仍是主要动作监督来源。"
+   },
+   {
+    "boundary": "所有标签为图像平面 2D waypoint，不产出 3D 末端轨迹；不能回答 3D 重定向精度问题。",
+    "basis": "III-B2 明确不用 3D 姿态做策略学习，只投影到 2D。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：无深度的单目 ego-centric 人类视频作为表征预训练信号(2D 监督)，配合小规模机器人演示共训练；不适合需要直接从人类视频恢复 3D 末端轨迹或零机器人数据部署的场景；快运动/重遮挡片段会被过滤而非修复。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "overlay 与 cotrain 消融、数据规模曲线设计直接隔离各组件贡献",
+   "基线覆盖同架构下的强视觉表征(HRP/ImageNet/DINOv2)，控制了 backbone 容量",
+   "显式报告编辑伪影(overlay imperfect)并论证粗糙对齐仍有收益"
+  ],
+  "design_risks": [
+   "Fig. 4/5 的关键数值未在文本中给出，只能从图形读取",
+   "每场景 10 次 rollout、每任务 30 次，统计功效有限",
+   "过滤规则(相机运动 5cm/0.5rad、无效动作)丢弃的数据比例未量化报告"
+  ],
+  "baseline_fairness": "所有模型同为 ViT-Base，HRP 用官方开源权重；但 HRP 预训练数据量(150K 片段)与 Masquerade(675K 帧)不易直接对齐，存在资源差异。",
+  "metric_validity": "成功率含子任务部分分，适合长程任务；未报告轨迹级误差或手部关键点估计精度本身的量化指标。",
+  "reproducibility": "给出帧数、演示数、超参与 λ 搜索范围；Epic Kitchens 与所用模型均公开；但编辑后数据集未声明发布。",
+  "external_validity": "限于厨房 ego-centric 视频到固定基座双臂的迁移；快运动、重遮挡、无深度场景的结论向其他域外推需重新验证过滤损耗。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2508.09976-C01",
+   "claim": "在 Masquerade 中，HaMeR 可可靠恢复手型与 2D 关键点位置，但单目输入排除了准确的绝对 3D 姿态估计；由于大规模 in-the-wild 视频没有深度数据(无法像 Phantom 那样用深度精修)，作者只把 2D 关键点位置用作视觉模型的辅助监督标签，而不直接纳入策略学习。",
+   "stance": "conditional",
+   "relation": "直接回答'无本体 ego-centric 视频中手部检测精度如何约束标签可用性'：单目+无深度时手部轨迹只能降级为 2D 图像空间监督信号，3D 末端轨迹标签不可用，检测精度边界决定了人类视频在共训练中只能承担表征层而非动作层角色。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B2 明确对比 Phantom 的深度精修，指出无深度时仅将 2D 关键点作辅助损失，不直接进策略学习。",
+   "locator": "B. Data processing of in-the-wild egocentric videos",
+   "source_context": "HaMeR reliably recovers hand shape and 2D keypoint locations, its monocular input precludes accurate absolute 3D pose estimation. Unlike [13], which refines HaMeR with depth, our large-scale human videos lack depth data. Therefore, we use the 2D keypoint locations as supervisory labels for an auxiliary loss in our vision model, without in- corporating them directly into policy learning.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文逐句对应：2D 可靠/3D 不可恢复→无深度→降级为 2D 辅助标签；claim 未超出该段论述范围。"
+   }
+  },
+  {
+   "card_id": "2508.09976-C02",
+   "claim": "Masquerade 通过显式过滤与填补规则控制手部追踪误差进入训练集：丢弃相机运动超过每步 5cm 平移或 0.5rad 旋转的帧及因关键点错误或运动学限制导致动作无效的帧；单手被遮挡或出画时复用该手最后可见帧的动作，全程不可见的手赋予固定'出画'标签，双手均缺失的帧直接丢弃。",
+   "stance": "conditional",
+   "relation": "为'误差缓解手段'提供具体的阈值化过滤+遮挡动作复用方案：ego-centric 视频的手部追踪噪声通过阈值(5cm/0.5rad)与帧级丢弃规则控制，代价是数据损耗，说明检测质量以'可用数据量'形式进入训练管线。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B3 给出无效动作/相机运动过滤原则，Appendix C 给出 5cm/0.5rad 阈值与遮挡复用/丢弃规则。",
+   "locator": "B. Data processing of in-the-wild egocentric videos; C. Additional data-editing details",
+   "source_context": "remove all frames where the estimated camera motion exceeds 5 cm in translation or 0.5 rad in rotation per timestep. To preserve all possible actions and maintain temporal consistency, if a single hand becomes occluded or leaves the frame, its action from the last visible frame in the episode is reused for all subsequent frames. If a hand is invisible for the entire episode, it is assigned a fixed “out-of-frame” action label. Frames in which both hands are missing are discarded.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "camera-motion frame filter threshold",
+    "value_or_direction": "frames where estimated camera motion exceeds 5 cm translation or 0.5 rad rotation per timestep are removed",
+    "comparator": "absolute threshold rule (no comparator)",
+    "task_or_sample": "Epic Kitchens 编辑视频数据集(675,713 帧)",
+    "locator": "C. Additional data-editing details"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "阈值与遮挡规则逐字出自 Appendix C；III-B3 的'keypoint errors or kinematic limits'无效动作过滤在方法节核对一致；claim 为两处的合并陈述，未扩展。"
+   }
+  },
+  {
+   "card_id": "2508.09976-C03",
+   "claim": "作者明确承认：其方法依赖单目手部姿态估计器对齐机器人 overlay，而这些模型在快速运动或重度遮挡的帧上表现差，这类帧必须从训练数据集中丢弃；overlay 质量随手部估计器进步而提升。",
+   "stance": "limit",
+   "relation": "界定误差来源与传播路径：快速运动与重度遮挡是 ego-centric 手部检测失效的主导条件，失效帧无法利用(数据损耗路径)，overlay 视觉质量上限由手部估计器决定。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Limitations 第一条即手部姿态估计器在快运动/重遮挡失效且帧须丢弃。",
+   "locator": "V. LIMITATIONS AND FUTURE WORK",
+   "source_context": "First, our method relies on hand-pose estimators to align robot overlays from monocular images. These models perform poorly on frames with fast motions or heavy occlusions, and such frames must be discarded from our training dataset. However, this also means that as hand-pose estimators improve, our overlays will too.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 Limitations 首条，claim 为同义压缩，未推广到其他估计器或场景。"
+   }
+  },
+  {
+   "card_id": "2508.09976-C04",
+   "claim": "在 Stack Pots 任务 OOD 场景，共训练所用编辑人类视频比例从 0%/10%/50%/100% 递增时，策略成功率分别为 2%/26%/47%/68%(各 25 次 rollout)：即便标签只是带噪的 2D 手部关键点，编辑后人类视频量的增加仍单调提升机器人策略性能。",
+   "stance": "support",
+   "relation": "为'低精度手部轨迹标签仍可通过规模获益'提供定量证据：2D 噪声标签+overlay 的人类数据共训练呈单调增益，说明对末端轨迹精度的要求可通过数据量与任务粗粒度(2D waypoint 预测)放宽。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 6 数据规模实验正文报告 2/26/47/68% 四档成功率。",
+   "locator": "F. Does increasing the amount of in-the-wild data improve, Fig. 6",
+   "source_context": "success rates rise steadily with more human-video data: 0% → 2%, 10% → 26%, 50% → 47%, and 100% → 68% (25 rollouts each). This clear upward trend demonstrates that increasing the amount of in-the-wild human videos directly boosts robot performance and suggests further gains could be realized by scaling beyond the current dataset size.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均成功率(%)",
+    "value_or_direction": "0%→2%, 10%→26%, 50%→47%, 100%→68%(单调上升)",
+    "comparator": "同任务不同编辑视频共训练比例(0/10/50/100%)，相同训练 epoch",
+    "task_or_sample": "Stack Pots 任务, OOD scene 1, 每档 25 次 rollout",
+    "locator": "F. Does increasing the amount of in-the-wild data improve, Fig. 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四档数值与正文及 Fig. 6 图注一致；claim 限定在 Stack Pots OOD scene 1，未推广到全部任务。"
+   }
+  },
+  {
+   "card_id": "2508.09976-C05",
+   "claim": "Masquerade 的重定向管线无法处理 in-the-wild 视频中的所有灵巧抓取，且缺少深度数据使其无法正确处理遮挡(有时机器人像素错误地覆盖在场景物体上)；尽管如此，这些不完美的 overlay 相比完全不用 overlay 仍能大幅提升性能，粗糙的视觉对齐即可显著收益于跨本体迁移。",
+   "stance": "conditional",
+   "relation": "支持'对视觉编辑质量(含手部/遮挡对齐精度)的要求是宽松的'：重定向与遮挡处理存在明确误差，但端到端策略仍显著受益——视觉对齐误差的可接受阈值低于直觉预期，而动作层误差则通过仅使用 2D 监督规避。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B 末段承认重定向与遮挡处理缺陷，同时声明 imperfect overlay 远优于无 overlay；IV-D 消融证实无 overlay 性能骤降。",
+   "locator": "B. Data processing of in-the-wild egocentric videos",
+   "source_context": "While this filtering removes the most problematic cases, many overlays remain imperfect. Our retargeting pipeline cannot handle all dexterous grasps seen in in-the-wild videos, and the absence of depth data prevents correct handling of occlusions, sometimes causing robot pixels to erroneously appear over scene objects. Nevertheless, we show that these imperfect overlays dramatically improve performance compared to using no overlays at all —highlighting how even rough visual alignment can strongly benefit cross- embodiment transfer.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 III-B 末段；'性能骤降'对应 IV-D 的 no-overlay 消融(Fig. 5)；claim 未给出具体数值因为正文未报告。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Lepert et al., Phantom: Training Robots Without Robots Using Only Human Videos, arXiv:2503.00779",
+   "reason": "数据编辑管线来源，本文是其向 in-the-wild 无深度设定的扩展"
+  },
+  {
+   "citation": "Pavlakos et al., HaMeR, CVPR 2024",
+   "reason": "手部姿态估计器，标签精度边界来源"
+  },
+  {
+   "citation": "Damen et al., Epic Kitchens, ECCV 2018",
+   "reason": "in-the-wild ego-centric 视频数据源"
+  }
+ ],
+ "notes": "ego-centric 无深度设定的关键一篇：明确把'手部检测精度不足'转化为设计约束(只做 2D 辅助监督+过滤+遮挡复用)，并给出规模消融。0% 共训练(纯 50 机器人演示、无编辑人类数据)仅 2% 成功率，反向说明编辑人类数据是主要增益来源。"
+}

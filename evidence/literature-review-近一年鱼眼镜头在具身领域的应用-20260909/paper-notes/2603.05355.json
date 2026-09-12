@@ -1,0 +1,567 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.05355",
+  "title": "OmniDP: Beyond-FOV Large-Workspace Humanoid Manipulation with Omnidirectional 3D Perception",
+  "published": "2026-03",
+  "url": "https://arxiv.org/abs/2603.05355",
+  "authors": [
+   "Pei Qu",
+   "Zheng Li",
+   "Yufei Jia",
+   "Ziyun Liu",
+   "Liang Zhu",
+   "Haoang Li",
+   "Jinni Zhou",
+   "Jun Ma"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是\"全景 360° 传感接入人形操作策略\"的邻接模态核心证据：用头装全景 LiDAR（Livox MID-360，360°×−7°~52°）而非鱼眼相机解决与鱼眼/全景相机相同的窄 FOV 问题，直接回答综述问题的三个子问——应用方式（原始全景点云端到端驱动扩散策略）、效果（OV 任务 0/20→11-16/20、避碰 5/20 vs 18-20/20 碰撞）、局限（臂尺度 1.3 m 工作区、纯几何无语义、仅控上肢、无全景相机基线对比）。其引言把鱼眼环视相机（Fisheye-BEVSeg、背对背鱼眼 SLAM）与全景 LiDAR 并列为宽视角传感路线，为综述的模态对比层提供关键参照。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：基座受限场景下 RGB-D 窄 FOV/自遮挡迫使频繁重定位（运动不确定性与安全风险）；主动视觉/第三视角相机的机械复杂度/标定/延迟成本；全向感知优先于颜色/语义的论断。"
+   },
+   {
+    "locator": "page 2, II Related Work",
+    "role": "relevant-core",
+    "purpose": "定位全景传感（360° 相机与 LiDAR）在 AD/导航/腿式运动中的既有进展与人形端到端操作的空白；LiDAR 感知相关工作（Omni-Perception/LVI-Q/BeamDojo/PILOT）均限于运动/导航。"
+   },
+   {
+    "locator": "page 3, III-A/III-B System Overview and OmniDP",
+    "role": "method-or-design",
+    "purpose": "精读架构（金字塔卷积编码器+时间感知注意力池化+Diffusion Policy 解码）、全景感知设计（每时间步 360° 点云）、点云预处理（1.3 m 裁剪/4096 点降采样）、TAP 机制、策略输入输出分解（43 维输入/28 维上肢监督/HOMIE 下肢/自体系免标定）。"
+   },
+   {
+    "locator": "page 3-4, III-C Whole-body Teleoperation System",
+    "role": "method-or-design",
+    "purpose": "精读硬件配置（Unitree G1 29-DoF+两只 7-DoF Dex3-1=43 关节全驱、头装 Livox MID-360 360°×−7°~52° FoV/200k 点/s@10 Hz）、轻量 XR 遥操作（Quest 3 HMD+手柄、约束 IK、SE(3) 运动映射、摇杆控制移动）、TeleVuer 数据记录（同步 LiDAR 点云+43-DoF 本体态）。"
+   },
+   {
+    "locator": "page 5, IV Experiments: Tasks / Baselines / Robot Setup",
+    "role": "data-or-setting",
+    "purpose": "确认任务集（MuJoCo 仿真 2 任务+真机 4 任务，OV=关键物体在固定相机视野外）、三基线定义与对比目的声明（检验 FOV 限制影响而非算法优越性）、硬件（MID-360+RealSense D435i 头装）、评估协议（20 trials/任务）。"
+   },
+   {
+    "locator": "page 5-7, IV-A/B/C/D Results and Ablation",
+    "role": "results-or-analysis",
+    "purpose": "提取 Tab. I 主结果（OV 任务基线全 0/20）、视野内任务次级增益归因、Tab. II 避碰（障碍置于相机 FOV 外）、Tab. III 泛化（边际 1-3/20）、Tab. IV 消融（移除全景观察 0/20）。"
+   },
+   {
+    "locator": "page 7, V Conclusion and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录结论总结；汇集作者未来工作暴露的边界：全身自主、多模态（LiDAR 几何+RGB 语义+触觉）整合、RL 精化、零样本泛化。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 7-8, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 本文无附录或补充材料，page 7 末至 page 8 为参考文献列表（40 条）。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：当人形机器人的基座因物理约束无法重定位/旋转时，如何用全向 3D 感知替代窄 FOV RGB-D 实现大工作区灵巧操作——需要什么样的点云编码（时间感知注意力池化处理稀疏、时间闪烁的全景点云）、什么样的策略分解（上肢策略+预训练下肢控制器）、以及什么样的全身演示数据采集系统（轻量 XR 全身遥操作）。",
+ "contributions": [
+  "OmniDP：端到端 LiDAR 驱动 3D 视动策略，以时间感知编码全景点云，实现超越相机视野（beyond-FOV）的大工作区人形操作。",
+  "轻量全身遥操作系统：仅需标准 HMD 与 XR 手柄（Meta Quest 3，基于 HOMIE 框架改造，非同构外骨骼），高效采集含全身协调的人形演示数据。",
+  "仿真+真机大规模实验验证：大工作区与全向无碰撞操作鲁棒性能，在目标超出相机视野的场景全面超过依赖自体深度相机的基线。"
+ ],
+ "method": {
+  "summary": "传感：头装 Livox MID-360 全景 LiDAR（360° 水平、−7°~52° 垂直 FoV、10 Hz 下最多 200k 点/s、非重复扫描），直接以原始 LiDAR 点云为唯一视觉输入模态（不用多相机融合或结构光深度）；仿真侧 LiDAR 栈基于 DISCOVERSE。预处理：按臂可达先验裁剪 1.3 m 外点、均匀降采样至 4096 点/帧。编码：金字塔卷积点云编码器 + Time-Aware Attention Pooling（短时间窗聚合点云、逐点归一化相对时间戳、小 MLP 依时间偏移预测注意力权重、加权求和得时间平滑全局特征，缓解 LiDAR 稀疏与时间闪烁导致的单帧池化不稳定）。解码：Diffusion Policy 迭代去噪生成协调动作序列；输入 43 维全身关节本体态+全景点云，监督 28 维上肢关节角；部署时策略只发上肢命令，下肢/腰由预训练 HOMIE 控制稳定行走；点云在 LiDAR 自体系表示、免外参标定。数据采集：XR 全身遥操作（头动定义感知参考系、手柄位姿经约束非线性 IK 生成上肢目标、摇杆命令移动与躯干高度），经 TeleVuer 记录同步观察-动作轨迹（实时处理点云+43-DoF 本体态）。",
+  "assumptions": [
+   "基座受限（无法重定位/旋转）场景下，全向几何感知比颜色/语义信息更关键。",
+   "原始 LiDAR 点云经时间聚合与时间感知池化后足以端到端驱动操作策略，无需中间状态估计或 RGB 语义。",
+   "臂可达范围内（约 1.3 m）的点云经 4096 点降采样后足以表达操作所需几何。",
+   "预训练 HOMIE 的下肢控制与策略上肢命令可组合成协调的全身行为。",
+   "仿真（MuJoCo+DISCOVERSE LiDAR 栈）与真机（MID-360）的点云分布足够接近，支撑 sim-to-real 迁移。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采集全身遥操作演示数据（XR 遥操作系统记录同步观察-动作轨迹：实时处理 LiDAR 点云 + 43-DoF 本体关节位置；保留完整 3D 空间结构以支持几何空间中的策略学习；演示条数/时长未在文中报告）"
+  ],
+  "tasks": [
+   "仿真（MuJoCo）：Pick & Place；Pour (OV)",
+   "真机：Pick & Place；Hand Over (OV)；Pour (OV)；Wipe (OV)",
+   "OV（Out of View）标记 = 任务关键物体可能处于固定相机视野之外，需要全景空间感知"
+  ],
+  "embodiments": [
+   "Unitree G1 人形机器人：29-DoF 身体 + 两只 7-DoF Dex3-1 灵巧手 = 43 个主动控制关节（遥操作与部署时全身全驱）；头装 Livox MID-360 全景 LiDAR（策略输入）+ Intel RealSense D435i（基线深度来源）；Meta Quest 3 遥操作设备"
+  ],
+  "sample_or_scale": "每任务每方法 20 次一致初始条件试验（Tab. I 为 6 任务×20=120 trials/方法；Tab. II/III/IV 各 20 trials/设置）；演示数据量未报告；仿真基于 MuJoCo + DISCOVERSE LiDAR 栈。"
+ },
+ "evaluation": {
+  "design": "与三个共享 Diffusion Policy 骨干、视觉模态各异的基线在 2 仿真+4 真机任务上对比（作者明示目的为检验 FOV 限制的影响而非算法优越性）；主指标任务成功率（20 trials/任务），避碰任务加报碰撞率；另设三项专项评估：避碰（障碍置于头装 RGB-D 视野外）、泛化（Pick & Place 上实例/光照/杂乱三变体）、消融（Hand Over 上移除全景观察/TAP）。",
+  "baselines": [
+   "DP：240×424 RGB 图像输入的 Diffusion Policy",
+   "DP3：第三视角深度相机点云（相机系坐标、降采样 4096 点）",
+   "iDP3：自体深度相机点云（相机系坐标、降采样 4096 点）",
+   "全部为窄视场相机方法；无鱼眼/全景相机基线、无多相机对照、无外部方法对比"
+  ],
+  "metrics": [
+   "task success rate（每任务 20 次一致初始条件试验的成功数）",
+   "collision rate（执行中与周围障碍发生物理接触的试验比例，杂乱避碰任务）"
+  ],
+  "ablations": [
+   "w/o Omni. Obs.（移除全景 LiDAR 输入，仅用自体深度点云）",
+   "w/o TAP（移除时间感知注意力池化）",
+   "均在 Hand Over (OV) 任务上进行"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "全向 LiDAR 策略总成功 82/120，约为最强相机基线 iDP3（25/120）的 3.3 倍；四个视野外任务上相机基线全部 0/20，OmniDP 达 11-16/20。",
+   "scope": "仿真+真机主结果（6 任务×20 trials）",
+   "locator": "page 5, Table I"
+  },
+  {
+   "finding": "收益分层：视野外任务收益极大（0/20→11-16/20）；视野内 Pick & Place 收益较小（仿真 16/20 vs 14/20、真机 15/20 vs 11/20），归因于全景场景上下文与时间稳定性等次级机制。",
+   "scope": "任务级分析",
+   "locator": "page 5, Table I; page 6, Section IV-A"
+  },
+  {
+   "finding": "障碍置于相机 FOV 外的避碰评估：OmniDP 成功 14/20、碰撞 5/20；相机基线成功 0/20、碰撞 18-20/20。",
+   "scope": "真机避碰评估（20 trials）",
+   "locator": "page 6, Table II and Section IV-B"
+  },
+  {
+   "finding": "外观类扰动的泛化优势有限：实例/光照/场景变体下 13/20、15/20、12/20 vs iDP3 的 12/20、12/20、10/20（边际 1-3 次成功）。",
+   "scope": "真机泛化评估（视野内任务）",
+   "locator": "page 6, Table III"
+  },
+  {
+   "finding": "消融因果证据：移除全景观察后 Hand Over 完全失败（0/20 vs 12/20）；移除 TAP 降至 9/20。",
+   "scope": "真机消融（Hand Over）",
+   "locator": "page 7, Table IV; page 6, Section IV-D"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "LiDAR 点云非均匀密度（近密远疏）：需按臂可达先验裁剪 1.3 m 外的点并降采样至 4096 点/帧才能兼顾操作范围点密度与实时效率。",
+    "locator": "page 3, Section III-B, Point Cloud Processing"
+   },
+   {
+    "limitation": "当前系统为纯 LiDAR 几何输入：作者计划未来整合 LiDAR 几何、RGB 语义与触觉反馈的多模态感知。",
+    "locator": "page 7, Section V, Future Work"
+   },
+   {
+    "limitation": "未实现全身自主：部署时策略仅生成上肢命令，下肢与腰由预训练 HOMIE 控制；利用移动主动获取视角的全身自主列为未来工作。",
+    "locator": "page 3, Section III-B, Learning and Deployment; page 7, Section V, Future Work"
+   },
+   {
+    "limitation": "零样本泛化不足：未见物体/布局/任务上的泛化与零样本性能被作者列为可靠部署的关键未来步骤。",
+    "locator": "page 7, Section V, Future Work"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "\"大工作区\"实际上界为约 1.3 m 臂可达半径：360° 感知扩展的是环绕身体的环形覆盖而非远距操作；超出臂尺度的目标仍需底盘移动，而策略本身不控制移动（下肢由预训练 HOMIE 控制、遥操作期靠摇杆），端到端\"无需重定位\"的主张限于臂尺度环形工作区。",
+    "basis": "page 3 Point Cloud Processing（crop out points beyond 1.3 meters，arm reachability prior）+ Learning and Deployment（policy generates commands only for the upper-body joints）"
+   },
+   {
+    "boundary": "无全景相机基线：基线全部为窄视场相机方法（DP/DP3/iDP3），且 OmniDP 相对基线同时改变传感器模态（LiDAR vs 相机）、视场（全景 vs 窄）与标定需求（自体系 vs 相机系）——增益中\"FOV 因素\"与\"LiDAR 几何质量因素\"不可分离；全景 LiDAR 相对全景相机（鱼眼/360°）方案的优劣未被检验。",
+    "basis": "page 5 Baselines 段（三基线+对比目的声明）与 page 5-6 Sec. IV-A 基线输入定义；全文无 panoramic/fisheye camera 基线或多相机对照（已穷尽核对）"
+   },
+   {
+    "boundary": "小样本单值成功率：每任务 20 trials、无种子/方差/显著性报告；泛化差距（13/20 vs 12/20 等 1-3 次成功边际）在 20 次试验下统计置信度有限，仅主结论（OV 任务 0/20 vs 11-16/20 大差距）较稳健。",
+    "basis": "page 5-6 评估协议（20 times under consistent initial conditions）与 Tab. I-IV 均为单值计数，全文无 error bar/多次运行/seed 报告（已穷尽核对）"
+   },
+   {
+    "boundary": "无语义输入的适配范围未测：四个任务（抓放/倒/递/擦）均为几何可解任务，无需要语义区分同类物体或依指令选择物体的任务——\"全向 > 颜色/语义\"的判断只在几何任务族内被验证。",
+    "basis": "page 5 Tasks 段（任务列表全部为几何操作）与 page 1 摘要（全向优先于颜色/语义的适用前提）；无语义判别任务的实验"
+   },
+   {
+    "boundary": "单一平台/单一 LiDAR/受控室内场景：Unitree G1 + MID-360 + 桌面级室内任务族；LiDAR 垂直 FoV 仅 −7°~52°，对低位/高位物体的覆盖有限（未讨论）；演示数据量未报告，数据效率结论不可评估。",
+    "basis": "page 3-5 硬件与实验设置（单一平台/传感器/场景族）；page 3 FoV 数字；page 3-4 数据采集段无演示条数"
+   }
+  ]
+ },
+ "transfer_boundary": "适用范围：Unitree G1 类人形平台，头装全景 LiDAR（MID-360 级，360°×−7°~52°）为唯一几何视觉输入，扩散策略骨干+时间感知点云编码+模仿学习，臂尺度（约 1.3 m 半径）环形工作区、目标/障碍在相机视野外、基座受限不宜频繁重定位的室内任务；上肢策略+预训练下肢控制器的部署组合。不适用/未验证：需要颜色/语义区分的任务（纯几何输入）、超出臂尺度的目标（仍需移动且策略不控下肢）、全景 LiDAR 相对全景相机（鱼眼/360°）路线的直接对比、跨平台/跨 LiDAR 迁移、零样本物体/布局泛化、20 trials 以外的统计置信度、演示数据规模依赖（数量未报告）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "基线选择与研究目的对齐：三个基线共享 Diffusion Policy 骨干、仅视觉模态不同，且作者明示对比目的是检验 FOV 限制的影响而非算法优越性——定位诚实、归因框架清晰。",
+   "任务设计把\"视野外\"结构显式操作化：四个 OV 任务+障碍置于相机 FOV 外的避碰评估，直接检验全向感知的获益结构而非间接代理。",
+   "消融给出强因果证据：移除全景观察即 0/20 完全失败，配合 TAP 消融（9/20），两个组件的必要性均有定量支撑。",
+   "仿真（MuJoCo+DISCOVERSE LiDAR 栈）与真机（MID-360）双环境验证，全栈自洽（遥操作→数据→策略→部署）。"
+  ],
+  "design_risks": [
+   "模态混杂：OmniDP 相对基线同时改变传感器（LiDAR vs 相机）、视场（全景 vs 窄）与标定需求，\"FOV 限制\"的归因无法与 LiDAR 几何质量/点云表征差异分离；无全景相机基线或多相机对照。",
+   "每任务 20 trials 且无方差/种子：泛化表 1-3 次成功的边际在 20 次试验下统计稳健性不明。",
+   "演示数据规模未报告：策略学习的样本量与采集成本不可评估，数据效率与复现的关键信息缺失。",
+   "泛化评估仅在视野内 Pick & Place（基线最强任务）上做，OV 任务上的泛化未测；消融也仅在单一任务（Hand Over）上做。"
+  ],
+  "baseline_fairness": "基线共享扩散策略骨干、评估协议一致（20 trials、一致初始条件），且作者明示对比意图为检验 FOV 限制影响而非证明算法优越性——基线角色定位诚实；但 OmniDP 与基线的差异是传感器模态+视场+标定需求的复合差异，单因素归因不成立；缺少全景相机基线、\"同预算多相机/第三视角\"对照与外部方法对比，宽视角路线内部的相对优劣未检验。",
+  "metric_validity": "任务成功率（20 trials）与碰撞率（物理接触试验比例）直接对应任务完成与安全目标，定义清晰可操作；但均为单值计数、无方差，碰撞率在 20 次试验下分辨率 5%，方法间小差距的解释力受限；无阶段级分解指标，失败定位粒度粗于任务级。",
+  "reproducibility": "硬件（Unitree G1、Dex3-1、Livox MID-360、RealSense D435i、Quest 3）、架构组成（金字塔卷积编码器+TAP+Diffusion Policy、43 维输入/28 维监督、1.3 m 裁剪/4096 点）、仿真栈（MuJoCo+DISCOVERSE）与评估协议（20 trials）报告完整；但演示数据量、训练超参（步数/学习率/批量）、TAP 注意力 MLP 细节与遥操作 IK 权重未给出，提取文本中亦无代码/数据发布声明——复现依赖 HOMIE/Diffusion Policy 原始文献。",
+  "external_validity": "结论限定于：Unitree G1 人形、头装 MID-360 全景 LiDAR、臂尺度环形工作区、室内桌面级几何任务、模仿学习+扩散策略；对需要语义的任务、超臂尺度目标、全景相机替代方案、其他平台/场景/传感器、零样本设置的迁移均未验证；\"全向感知 > 颜色/语义\"的判断仅在基座受限+几何任务前提下成立。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.05355-C01",
+   "claim": "作者的问题定义：常规 RGB-D 方案受窄视场（FOV）与自遮挡限制，迫使机器人频繁移动基座，带来运动不确定性与安全风险；现有扩展感知的方案（主动视觉系统与第三视角相机）引入机械复杂度、标定依赖与延迟，阻碍可靠的实时性能。",
+   "stance": "limit",
+   "relation": "限定命题：窄视场相机（含常规 RGB-D）在基座受限场景的结构性局限是宽视角/全景传感进入具身操作的核心动机——与鱼眼/全景相机综述共享同一问题起点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要逐句给出 RGB-D 窄 FOV 与自遮挡、频繁基座移动的运动不确定性与安全风险，以及主动视觉/第三视角相机的机械复杂度、标定依赖、延迟三项成本。",
+   "locator": "page 1, Abstract",
+   "source_context": "conventional RGB-D solutions suffer from narrow fields of view (FOV) and self-occlusion, requiring frequent base move- ments that introduce motion uncertainty and safety risks. Existing approaches to expanding perception, including active vision systems and third-view cameras, introduce mechanical complexity, calibration dependencies, and latency that hinder reliable real-time performance.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 conventional RGB-D solutions suffer from narrow fields of view (FOV) and self-occlusion, requiring frequent base movements that introduce motion uncertainty and safety risks 与 active vision systems and third-view cameras, introduce mechanical complexity, calibration dependencies, and latency that hinder reliable real-time performance；claim 各分句逐点对应原文，无性能数字。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C02",
+   "claim": "作者的核心条件判断：在物理约束阻止机器人重新定位自身的场景中，保持全向感知（omnidirectional awareness）远比颜色或语义信息更关键。",
+   "stance": "conditional",
+   "relation": "条件性命题（哪些任务获益）：基座受限、无法靠重定位弥补视野的场景是全向传感获益的结构性场景；该场景下几何覆盖被置于颜色/语义之上——为全景 LiDAR 与全景相机两条宽视角路线的模态取舍给出任务条件。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要第二句给出该判断；page 1 引言以“viewpoint-limited”案例重申（target objects may remain undetected by conventional RGB-D cameras, thereby limiting the effective workspace）。引言版本已核对。",
+   "locator": "page 1, Abstract",
+   "source_context": "In scenarios where physical constraints prevent the robot from repositioning itself, maintaining om- nidirectional awareness becomes far more critical than color or semantic information.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 In scenarios where physical constraints prevent the robot from repositioning itself, maintaining omnidirectional awareness becomes far more critical than color or semantic information；page 1 引言同义句（omnidirectional awareness becomes more critical than color or semantic information，viewpoint-limited 场景）已核对；claim 未超出两处证据。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C03",
+   "claim": "全景传感器（包括 360° 相机与 LiDAR）无需机械运动即可提供宽水平视场，已在自动驾驶、导航与腿式运动中展现潜力，但其在人形机器人端到端视动操作中的应用仍探索不足——这是本文识别并填补的空白。",
+   "stance": "gap",
+   "relation": "缺口命题：全景/环视传感（含 360° 相机、鱼眼环视路线）在人形端到端操作策略中的接入是空白；本文以全景 LiDAR 路线填补，鱼眼相机路线的对应空白需综述其他证据覆盖。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言末段（page 2 开头）逐句给出全景传感器的无机械运动宽视场、AD/导航/运动中的既有进展（引文 [21][22][23]-[25][26]）与人形端到端视动操作的 under-explored 空白；[22] 为鱼眼环视相机 BEV 分割、[23] 为背对背鱼眼相机 SLAM，均为全景相机路线的被引代表。",
+   "locator": "page 2, Section I (final paragraph)",
+   "source_context": "Panoramic sensors, including 360 ◦ cameras and LiDAR, provide wide horizontal fields of view without mechanical motion. Al- though they have shown promise in autonomous driving [21], [22], navigation [23]–[25], and locomotion [26], their use in end-to-end visuomotor manipulation for humanoid robots remains under-explored, representing a gap in enabling large- workspace manipulation tasks [25], [27], [28].",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字给出 Panoramic sensors, including 360 ◦ cameras and LiDAR, provide wide horizontal fields of view without mechanical motion、shown promise in autonomous driving [21], [22], navigation [23]–[25], and locomotion [26] 与 their use in end-to-end visuomotor manipulation for humanoid robots remains under-explored, representing a gap in enabling large- workspace manipulation tasks；claim 各分句逐点对应原文；鱼眼被引工作（Fisheye-BEVSeg [22]、back-to-back fisheye SLAM [23]）逐字位于 page 8 参考文献列表（已核对）。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C04",
+   "claim": "OmniDP 的应用方式：端到端 LiDAR 驱动 3D 视动策略——金字塔卷积点云编码器（增强时间感知注意力）把全景点云编码为含空间结构与时间上下文的紧凑全局特征，条件化 Diffusion Policy 解码器迭代去噪生成协调动作序列，直接从全向观察映射动作、无中间状态估计；采用全景 LiDAR 在每个时间步捕获完整 360° 点云，提供对周围的全空间感知，使机器人不移动即可触及并操作身体周围任意位置的物体，并通过持续感知周围障碍在杂乱环境中支持无碰撞双臂协调。",
+   "stance": "support",
+   "relation": "支持命题（应用方式）：宽视角传感进入具身策略的另一条路线——头装全景 LiDAR 作为唯一视觉模态端到端驱动操作策略（以几何换取 360° 覆盖），而非相机系 RGB-D 点云或多相机融合。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. III-B 两段：Architecture of OmniDP 段给出编码器-解码器组成与端到端声明；Omnidirectional Perception 段给出 360° 点云、无需移动即可操作周围物体与无碰撞双臂协调的设计意图。",
+   "locator": "page 3, Section III-B, OmniDP",
+   "source_context": "OmniDP comprises a percep- tion encoder and an action decoder. The encoder processes panoramic point clouds using a pyramid convolutional en- coder [6] enhanced with time-aware attention, producing a compact global feature that captures both spatial structure and temporal context. This feature conditions a Diffusion Policy [4] decoder, which iteratively denoises random noise into coordinated action sequences. The end-to-end frame- work directly maps omnidirectional observations to whole- body actions without intermediate state estimation. Omnidirectional Perception for Large-Workspace Ma- nipulation. Most existing 3D visuomotor policies operate on third-view [5] or egocentric [6] point clouds from depth cameras, which suffer from a narrow field of view. This restricts the effective manipulation space to the camera’s immediate vicinity, forcing frequent repositioning when ob- jects are distributed across a wider area. As illustrated in Fig. 3, which compares the visual coverage of LiDAR and RGB-D cameras, we instead adopt panoramic LiDAR to capture complete 360° point clouds at each timestep. This provides full spatial awareness of the robot’s surroundings, enabling it to reach and manipulate objects anywhere around its body without moving. It also allows collision-free biman- ual coordination in cluttered environments by maintaining continuous awareness of surrounding obstacles throughout task execution.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 pyramid convolutional encoder enhanced with time-aware attention、This feature conditions a Diffusion Policy decoder, which iteratively denoises random noise into coordinated action sequences、directly maps omnidirectional observations to whole-body actions without intermediate state estimation、we instead adopt panoramic LiDAR to capture complete 360° point clouds at each timestep、enabling it to reach and manipulate objects anywhere around its body without moving 与 allows collision-free bimanual coordination in cluttered environments by maintaining continuous awareness of surrounding obstacles throughout task execution；claim 各环节逐点对应原文。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C05",
+   "claim": "传感硬件：头装 Livox MID-360 全景 LiDAR 提供 360° 水平、−7° 到 52° 垂直视场，10 Hz 下每秒最多生成 200k 点；宽 FoV 与非重复扫描模式在短时间窗内改善空间覆盖、增强杂乱室内环境的几何一致性；系统不依赖多相机融合或结构光深度传感器，直接以原始 LiDAR 点云作为主要视觉输入模态。",
+   "stance": "support",
+   "relation": "支持命题：具身智能中的“全景/环视”硬件不止相机一路——头装全景 LiDAR（360°×−7°~52°）以原始点云直接作为策略视觉输入，是鱼眼/环视相机之外的宽视角传感替代路线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. III-C Panoramic Lidar Perception 段给出 MID-360 的 FoV、点率、非重复扫描与“原始点云为唯一视觉输入”的声明；仿真侧 LiDAR 技术栈基于 DISCOVERSE（同段末句，已核对）。",
+   "locator": "page 3, Section III-C, Panoramic Lidar Perception",
+   "source_context": "Our perception system centers on a head-mounted Livox MID-360 LiDAR, rigidly installed to align with the operator’s egocentric viewpoint and provide panoramic 3D observations. The LiDAR pro- vides a 360 ◦ horizontal and −7 ◦ to 52 ◦ vertical field-of- view (FoV), generating up to 200k points per second at 10 Hz. The wide FoV and non-repetitive scanning pattern improve spatial coverage within short temporal windows, which enhances geometric consistency in cluttered indoor environments. Instead of relying on multi-camera fusion or structured-light depth sensors, we directly utilize raw LiDAR point clouds as the primary visual input modality.",
+   "evidence_type": "design-choice",
+   "quantitative": {
+    "metric": "LiDAR field of view and point rate",
+    "value_or_direction": "360 horizontal FoV, -7 to 52 vertical FoV, up to 200k points per second at 10 Hz, non-repetitive scanning pattern",
+    "comparator": "vs head-mounted RGB-D camera (Intel RealSense D435i, narrow FOV, page 5 Robot Setup) and structured-light depth sensors / multi-camera fusion (explicitly not used)",
+    "task_or_sample": "Unitree G1 humanoid head-mounted panoramic perception as the sole visual input for the manipulation policy",
+    "locator": "page 3, Section III-C, Panoramic Lidar Perception"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 head-mounted Livox MID-360 LiDAR、360 ◦ horizontal and −7 ◦ to 52 ◦ vertical field-of-view (FoV)、generating up to 200k points per second at 10 Hz、non-repetitive scanning pattern improve spatial coverage、Instead of relying on multi-camera fusion or structured-light depth sensors, we directly utilize raw LiDAR point clouds as the primary visual input modality；头装 RealSense D435i 逐字位于 page 5 Robot Setup（已核对）；claim 数字与声明均逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C06",
+   "claim": "点云预处理以臂可达为界：原始全景 LiDAR 点云密度非均匀（传感器附近密集、远处稀疏）；为保证机械臂可达范围内的点密度与实时推理效率，系统裁剪 LiDAR 1.3 米以外的点（基于臂可达先验，远距稀疏采样对操作任务效用有限），剩余点均匀降采样至每帧 4096 点——全景覆盖下的有效操作工作区实际以约 1.3 米臂尺度为界。",
+   "stance": "limit",
+   "relation": "限定命题：全景 LiDAR 的“大工作区”以臂可达半径（约 1.3 m）为实际上界——360° 感知扩展的是环绕身体的环形覆盖而非无界远距操作；超出臂尺度的目标仍需移动底盘，与“无需重定位”的主张形成内部边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. III-B Point Cloud Processing 段给出非均匀密度动机、1.3 m 裁剪（arm reachability prior）与 4096 点/帧降采样。",
+   "locator": "page 3, Section III-B, Point Cloud Processing",
+   "source_context": "Raw panoramic LiDAR point clouds exhibit non-uniform density, with points densely distributed near the sensor and sparse at a distance. To ensure sufficient point density for nearby objects within the robot’s manipulation range while maintaining real-time inference efficiency, we design a lightweight preprocessing pipeline. Specifically, we crop out points beyond 1.3 meters from the Lidar sensor based on the robot’s arm reachability prior, where the sparse sampling provides limited utility for manipulation tasks. The remaining points are then uniformly downsampled to 4096 points per frame, balancing geometric fidelity with computational efficiency for 3D encoding.",
+   "evidence_type": "design-choice",
+   "quantitative": {
+    "metric": "point-cloud crop radius and downsampled points per frame",
+    "value_or_direction": "crop points beyond 1.3 meters from the LiDAR (arm reachability prior); remaining points uniformly downsampled to 4096 points per frame",
+    "comparator": "vs raw panoramic point clouds (non-uniform density: dense near the sensor, sparse at a distance)",
+    "task_or_sample": "OmniDP policy input preprocessing on Unitree G1 with head-mounted Livox MID-360",
+    "locator": "page 3, Section III-B, Point Cloud Processing"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 Raw panoramic LiDAR point clouds exhibit non-uniform density, with points densely distributed near the sensor and sparse at a distance、we crop out points beyond 1.3 meters from the Lidar sensor based on the robot’s arm reachability prior, where the sparse sampling provides limited utility for manipulation tasks、uniformly downsampled to 4096 points per frame；“以约 1.3 米臂尺度为界”为对该设计选择的直接复述性概括，未附加原文未含的断言。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C07",
+   "claim": "策略输入输出分解：模型输入为覆盖人形全部关节的 43 维关节状态（本体感知）加头装 LiDAR 全景点云；监督目标仅为上肢 28 维关节角（臂+灵巧手）；部署时学习到的策略只生成上肢关节命令，下肢与腰由预训练 HOMIE 算法控制以保持稳定行走；点云表示在 LiDAR 自体系中，部署时无需外参标定并增强跨环境适应性。",
+   "stance": "limit",
+   "relation": "限定命题：全景感知策略的控制范围限于上肢——“全身协调”由预训练下肢控制器与策略上肢命令组合实现，全身自主与移动主动取景留待未来；同时“自体系点云免外参标定”是全景 LiDAR 路线相对相机系方案的部署优势。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. III-B Learning and Deployment 段给出 43 维输入、28 维监督、部署分工与自体系免标定声明；全身自主列为未来工作（page 7，已核对）。",
+   "locator": "page 3, Section III-B, Learning and Deployment",
+   "source_context": "We train OmniDP using human demonstration data collected via the whole-body teleoperation system described in Sec. III-C. To achieve coor- dinated whole-body control, the model takes as input the 43- dimensional joint states covering all joints of the humanoid as proprioceptive information, together with panoramic point clouds from the head-mounted LiDAR as visual perception. The supervision target is the 28-dimensional joint angles of the upper body, including arms and dexterous hands. During deployment, the learned policy generates commands only for the upper-body joints, while the lower body and waist are controlled by a pre-trained HOMIE [38] algorithm for stable locomotion. Notably, our point clouds are represented in the LiDAR’s egocentric frame, which eliminates the need for extrinsic calibration during deployment and enhances the adaptability of the policy across different environments.",
+   "evidence_type": "design-choice",
+   "quantitative": {
+    "metric": "policy proprioception input dimension and supervision target dimension",
+    "value_or_direction": "43-dimensional joint states as proprioceptive input; supervision target is the 28-dimensional joint angles of the upper body (arms and dexterous hands)",
+    "comparator": "vs whole-body 43-DoF actuation enabled during teleoperation (Unitree G1 with two 7-DoF Dex3-1 hands)",
+    "task_or_sample": "OmniDP deployment on Unitree G1 humanoid; lower body and waist controlled by pre-trained HOMIE",
+    "locator": "page 3, Section III-B, Learning and Deployment"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 逐字给出 the model takes as input the 43- dimensional joint states covering all joints of the humanoid as proprioceptive information、The supervision target is the 28-dimensional joint angles of the upper body, including arms and dexterous hands、the learned policy generates commands only for the upper-body joints, while the lower body and waist are controlled by a pre-trained HOMIE [38] algorithm for stable locomotion、our point clouds are represented in the LiDAR’s egocentric frame, which eliminates the need for extrinsic calibration during deployment and enhances the adaptability of the policy across different environments；43 关节全身驱动（29-DoF 身体+两只 7-DoF Dex3-1）逐字位于 page 3 Hardware Configuration（已核对）；claim 各分句逐点对应原文。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C08",
+   "claim": "六任务（2 仿真 + 4 真机，每任务 20 次试验）总成功率：OmniDP 82/120，相机基线 iDP3 25/120、DP3 22/120、DP 18/120；四个视野外（OV）任务上三个基线全部 0/20，OmniDP 达仿真 Pour 12/20、真机 Hand Over 12/20、Pour 11/20、Wipe 16/20；视野内 Pick & Place 上仿真 16/20（iDP3 14/20）、真机 15/20（iDP3 11/20）。",
+   "stance": "support",
+   "relation": "支持命题（效果）：头装全景 LiDAR 端到端策略在目标超出相机视野的任务上从 0/20 提升至 11-16/20，总成功率约为最强相机基线的 3.3 倍——全向几何感知兑现大工作区操作收益。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. I 逐格给出四方法 × 六任务成功率与 Total 列；OV 任务基线全 0/20 的解释见 page 6 Sec. IV-A（all baselines largely fail due to their limited perceptual coverage，已核对）。",
+   "locator": "page 5, Table I",
+   "source_context": "TABLE I: Performance comparison. Our method consistently outperforms existing RGB-based and depth-to-point-cloud baselines across all simulated and real-world tasks, with particularly significant advantages in scenarios where target objects lie outside the camera’s field of view. Simulation Real World Method Pick & Place Pour (OV) Pick & Place Hand Over (OV) Pour (OV) Wipe (OV) Total DP 10/20 0/20 8/20 0/20 0/20 0/20 18/120 DP3 13/20 0/20 9/20 0/20 0/20 0/20 22/120 iDP3 14/20 0/20 11/20 0/20 0/20 0/20 25/120 Ours 16/20 12/20 15/20 12/20 11/20 16/20 82/120",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate (20 trials per task, 6 tasks: 2 simulation + 4 real-world)",
+    "value_or_direction": "Total: OmniDP 82/120 vs iDP3 25/120, DP3 22/120, DP 18/120; OV tasks: all camera baselines 0/20 while OmniDP Pour(OV, sim) 12/20, Hand Over(OV) 12/20, Pour(OV, real) 11/20, Wipe(OV) 16/20; in-view Pick & Place sim 16/20 vs iDP3 14/20, real 15/20 vs iDP3 11/20",
+    "comparator": "OmniDP (panoramic LiDAR point clouds) vs DP (240 x 424 RGB images), DP3 (third-view depth-camera point clouds), iDP3 (egocentric depth-camera point clouds), all sharing a diffusion-policy backbone",
+    "task_or_sample": "Unitree G1 humanoid, 2 simulation (MuJoCo) + 4 real-world tasks, 20 trials per task per method",
+    "locator": "page 5, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Tab. I 逐格给出四方法 × 六任务（Pick & Place / Pour (OV) 仿真，Pick & Place / Hand Over (OV) / Pour (OV) / Wipe (OV) 真机）的成功率与 Total 列（DP 18/120、DP3 22/120、iDP3 25/120、Ours 82/120）；DP 用 240×424 RGB、DP3/iDP3 用深度相机点云（camera-frame、4096 点）逐字位于 page 5-6 Sec. IV-A（已核对）；claim 全部数字逐字来自该表。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C09",
+   "claim": "收益分层：对目标位于相机视野外的任务（OV），所有相机基线因感知覆盖受限基本失败（Tab. I 中全部 0/20），OmniDP 借全向 360° 感知实现大工作区操作、在保持全环境感知的同时触及周围任意位置物体；对视野内任务（如 Pick & Place），OmniDP 也超过基线（仿真 16/20 vs 14/20、真机 15/20 vs 11/20），作者归因于全景感知提供全面场景上下文利于避障与空间推理、时间感知编码通过缓解瞬态传感器噪声增强时间稳定性。",
+   "stance": "conditional",
+   "relation": "条件性命题（哪些任务获益、获益多少）：视野外任务收益极大（0/20→11-16/20），视野内任务收益较小（+2~+4 次成功）——全向传感的收益结构呈“目标越出窄视场越显著”，视野内任务的增益来自场景上下文与时间稳定性等次级机制。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec. IV-A 分析段给出 OV 基线失败归因与视野内任务的两条增益机制；具体数值见 Tab. I（page 5，已核对）。",
+   "locator": "page 6, Section IV-A; values from page 5, Table I",
+   "source_context": "For tasks where target objects are located outside the camera’s field of view (denoted OV), all baselines largely fail due to their limited perceptual coverage. In contrast, OmniDP leverages its omnidirectional 360° perception to achieve robust large-workspace manipulation, reaching ob- jects anywhere in the surroundings while maintaining full environmental awareness. For in-view tasks such as Pick & Place, OmniDP also outperforms the baselines, benefit- ing from panoramic perception that provides comprehensive scene context for better obstacle avoidance and spatial rea- soning, while the time-aware encoding mechanism enhances temporal stability by mitigating transient sensor noise.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate on in-view task (Pick & Place)",
+    "value_or_direction": "simulation: OmniDP 16/20 vs iDP3 14/20; real world: OmniDP 15/20 vs iDP3 11/20 (Table I, page 5); contrast: OV tasks where all camera baselines score 0/20",
+    "comparator": "OmniDP vs iDP3 (strongest camera baseline) on in-view tasks, contrasted with OV tasks",
+    "task_or_sample": "Pick & Place (in-view) in simulation and real world, 20 trials per task per method",
+    "locator": "page 5, Table I; page 6, Section IV-A"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 For tasks where target objects are located outside the camera’s field of view (denoted OV), all baselines largely fail due to their limited perceptual coverage、In contrast, OmniDP leverages its omnidirectional 360° perception to achieve robust large-workspace manipulation, reaching objects anywhere in the surroundings while maintaining full environmental awareness、For in-view tasks such as Pick & Place, OmniDP also outperforms the baselines, benefit- ing from panoramic perception that provides comprehensive scene context for better obstacle avoidance and spatial reasoning, while the time-aware encoding mechanism enhances temporal stability by mitigating transient sensor noise；视野内数值 16/20 vs 14/20、15/20 vs 11/20 逐字来自 page 5 Tab. I（已核对）；claim 数字与归因均未超出两处证据。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C10",
+   "claim": "杂乱环境避碰评估（物理障碍置于机器人操作路径上、处于头装 RGB-D 相机视野之外，page 6 Sec. IV-B）：OmniDP 任务成功 14/20、碰撞率 5/20；三个相机基线任务成功均为 0/20、碰撞率 DP 20/20、DP3 18/20、iDP3 18/20——基线因无法感知相机视野外的障碍而频繁碰撞。",
+   "stance": "support",
+   "relation": "支持命题（效果）：全向感知在“障碍处于窄视场之外”的安全关键场景兑现硬收益——成功 14/20 vs 0/20、碰撞 5/20 vs 18-20/20，全景/环视类传感的避障价值有直接定量证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. II 逐格给出四方法的成功率与碰撞率；障碍置于相机 FOV 外的实验设置逐字位于 page 6 Sec. IV-B（place a physical obstacle along the robot’s manipulation path, positioned outside the field of view of the head-mounted RGB-D camera，已核对）。",
+   "locator": "page 6, Table II and Section IV-B",
+   "source_context": "TABLE II: Collision-free manipulation evaluation. Results demonstrate that OmniDP achieves robust omnidirectional obstacle avoidance in cluttered environments. Method Success Rate ↑ Collision Rate ↓ DP 0/20 20/20 DP3 0/20 18/20 iDP3 0/20 18/20 Ours 14/20 5/20",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate and collision rate (20 trials, cluttered environment)",
+    "value_or_direction": "OmniDP: 14/20 success, 5/20 collision; DP: 0/20 success, 20/20 collision; DP3: 0/20, 18/20; iDP3: 0/20, 18/20",
+    "comparator": "OmniDP (panoramic LiDAR) vs DP / DP3 / iDP3 (narrow-FOV camera baselines); obstacle placed outside the head-mounted RGB-D camera field of view (Section IV-B)",
+    "task_or_sample": "collision-free manipulation in a cluttered environment with an out-of-view obstacle, Unitree G1, 20 trials",
+    "locator": "page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Tab. II 逐格给出四方法两列（DP 0/20 20/20、DP3 0/20 18/20、iDP3 0/20 18/20、Ours 14/20 5/20）；障碍置于头装 RGB-D 相机视野外的设置句逐字位于同页 Sec. IV-B（已核对）；基线频繁碰撞的归因句（frequently colliding with the obstacle due to their inability to perceive objects outside the limited camera field of view）逐字位于同页（已核对）；claim 数字与设置均逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C11",
+   "claim": "泛化评估（在基线表现最好的视野内 Pick & Place 任务上引入三类变化）：OmniDP 在物体实例、光照、杂乱场景变体下分别保持 13/20、15/20、12/20，高于最强基线 iDP3 的 12/20、12/20、10/20，但差距仅 1-3 次成功（每变体 20 次试验）；DP 为 3/20、4/20、2/20，DP3 为 7/20、8/20、7/20；作者归因于全景场景理解提供全面空间上下文、天然较少受光照变化与局部杂乱影响。",
+   "stance": "conditional",
+   "relation": "条件性命题：全向几何感知对外观类扰动（实例/光照）的鲁棒性有优势但幅度有限（+1~+3/20，20 次试验下接近噪声），且仅在视野内任务上评估——“全景带来外观鲁棒性”的主张证据强度为中等，不及 OV 任务上的收益确定。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. III 逐格给出四方法 × 三变体成功率；归因句（panoramic scene understanding...inherently less affected by lighting changes or local clutter）逐字位于 page 6 Sec. IV-C（已核对）。",
+   "locator": "page 6, Table III and Section IV-C",
+   "source_context": "TABLE III: Generalization capability evaluation. Results demonstrate that OmniDP maintains consistently high suc- cess rates across varying object instances, lighting condi- tions, and cluttered scenes. Method Instance Lighting Scene DP 3/20 4/20 2/20 DP3 7/20 8/20 7/20 iDP3 12/20 12/20 10/20 Ours 13/20 15/20 12/20",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate under object-instance, lighting, and cluttered-scene variations (Pick & Place)",
+    "value_or_direction": "OmniDP 13/20 (instance), 15/20 (lighting), 12/20 (scene) vs iDP3 12/20, 12/20, 10/20; DP 3/20, 4/20, 2/20; DP3 7/20, 8/20, 7/20",
+    "comparator": "OmniDP vs DP / DP3 / iDP3 under three environmental variations; margins over strongest baseline are 1-3 successes out of 20 trials",
+    "task_or_sample": "Pick & Place task with three variation types (object instances, lighting conditions, cluttered scenes with distractors), 20 trials per variant",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Tab. III 逐格给出四方法 × 三变体成功率（DP 3/20 4/20 2/20、DP3 7/20 8/20 7/20、iDP3 12/20 12/20 10/20、Ours 13/20 15/20 12/20）；归因句与三变体定义（different object instances、changing lighting conditions、cluttered scenes with distractor objects）逐字位于同页 Sec. IV-C（已核对）；“差距仅 1-3 次成功”为表内数字的直接比较陈述；claim 未超出该表与同页正文。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C12",
+   "claim": "Hand Over 任务消融（Tab. IV）：完整 OmniDP 成功率 12/20；移除全景观察（w/o Omni. Obs.，即仅依赖自体深度相机点云，page 6 Sec. IV-D）导致完全任务失败 0/20——作者称之为凸显 360° 场景理解对此类任务的关键作用；移除时间感知注意力池化（w/o TAP）降至 9/20，表明历史点云上的注意力时间平滑贡献更稳定的策略执行。",
+   "stance": "support",
+   "relation": "支持命题：全景输入是大工作区任务成功的必要条件（移除即 0/20 完全失败），时间感知编码提供次级但可测的稳定增益（12/20 vs 9/20）——宽视角传感收益的因果证据来自消融而非仅相关对比。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. IV（page 7）给出三行成功率；消融叙述（removing the panoramic LiDAR input (i.e., relying solely on egocentric depth-based point clouds) leads to complete task failure；disabling TAP results in a noticeable decrease）逐字位于 page 6 Sec. IV-D（已核对）。",
+   "locator": "page 7, Table IV; page 6, Section IV-D",
+   "source_context": "TABLE IV: Ablation study. The results confirm the neces- sity of the designed components. Ablation Success Rate OmniDP 12/20 w/o Omni. Obs. 0/20 w/o TAP 9/20",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (Hand Over ablation)",
+    "value_or_direction": "OmniDP 12/20; w/o Omni. Obs. 0/20; w/o TAP 9/20",
+    "comparator": "full OmniDP vs removing panoramic LiDAR observation (relying solely on egocentric depth-based point clouds) vs removing time-aware attention pooling",
+    "task_or_sample": "Hand Over (OV) task, 20 trials",
+    "locator": "page 7, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Tab. IV 逐行给出 OmniDP 12/20、w/o Omni. Obs. 0/20、w/o TAP 9/20；消融任务为 Hand Over、移除全景输入=仅依赖自体深度点云、leads to complete task failure、disabling TAP results in a noticeable decrease in success rate 等叙述逐字位于 page 6 Sec. IV-D（已核对）；claim 数字与归因均逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C13",
+   "claim": "作者未来工作声明暴露的系统边界：当前 OmniDP 为纯 LiDAR 几何路线——计划通过整合 LiDAR 几何、RGB 语义与触觉反馈引入多模态感知；全身自主（利用 LiDAR 感知相机视野外目标并用移动主动获取视角）、扩散策略+强化学习的动作精化、以及未见物体/布局/任务的零样本泛化均列为未来方向。",
+   "stance": "limit",
+   "relation": "限定命题：全景 LiDAR 路线以放弃颜色/语义为代价换取全向几何——语义相关任务与零样本泛化是当前未解边界；对鱼眼综述的意义：全景相机路线天然保留语义与外观信息，这是两条宽视角路线的关键分野。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Conclusion/Future Work 段逐句列出四项未来方向；摘要中“全向感知比颜色/语义更关键”的判断（C02）与该多模态整合计划共同构成当前系统几何单模态的证据。",
+   "locator": "page 7, Section V, Future Work",
+   "source_context": "Future work will extend the system toward whole-body autonomy, leveraging LiDAR to perceive targets beyond the camera’s field of view and using locomotion for active viewpoint acquisition. We also plan to incorpo- rate multi-modal sensing by integrating LiDAR geometry, RGB semantics, and tactile feedback. On the control side, augmenting diffusion policy with reinforcement learning represents a promising direction to improve action refinement and adaptability. Strengthening the policy’s generalization and zero-shot performance on unseen objects, layouts, and tasks will be another key step toward reliable deployment in real-world environments.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 Future work will extend the system toward whole-body autonomy, leveraging LiDAR to perceive targets beyond the camera’s field of view and using locomotion for active viewpoint acquisition、We also plan to incorporate multi-modal sensing by integrating LiDAR geometry, RGB semantics, and tactile feedback、augmenting diffusion policy with reinforcement learning、Strengthening the policy’s generalization and zero-shot performance on unseen objects, layouts, and tasks will be another key step；claim 各分句逐点对应原文。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C14",
+   "claim": "本文的基线集合仅含三个共享扩散策略骨干、视觉输入各异的窄视场相机方法（DP 用 240×424 RGB、DP3 用第三视角深度点云、iDP3 用自体深度点云），且作者明示该对比旨在检验“FOV 限制”的影响而非证明算法优越性；全部评估（Tab. I-IV）中不存在任何鱼眼/全景相机基线或同等预算多相机对照——全景 LiDAR 相对全景相机（360°/环视鱼眼）方案的优劣在本文中未被检验。",
+   "stance": "gap",
+   "relation": "缺口命题：全景 LiDAR 与全景相机（鱼眼）两条宽视角路线在同任务上的直接对比证据缺失——本文只能证明“全向几何优于窄视场相机输入”，不能证明“LiDAR 优于全景相机”；该对比空白正是鱼眼综述需要汇集多源证据回答的问题。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "Baselines 段逐字列出三个基线与对比目的声明；基线输入模态差异逐字位于 page 5-6 Sec. IV-A（已核对）；“无全景相机基线”为对 page 1-8 全部基线/任务/表格的穷尽检索结论（已核对：全文无 fisheye/panoramic camera 基线或附加相机对照实验）。",
+   "locator": "page 5, Section IV, Baselines",
+   "source_context": "We evaluate our approach against three diffusion-based manipulation policies: DP [4], DP3 [5], and iDP3 [6]. These methods share a common diffusion-policy Out of Vie Pick and Plac Handove Pou Wip Fig. 5: Real-world experiments and snapshots. We further validate OmniDP on four real-world tasks, confirming its robust performance in real-world environments and out-of- view manipulation scenarios. backbone but differ in their visual observation modalities and encoder architectures. By benchmarking under a unified diffusion framework, we aim to systematically examine how variations in visual input representation and feature encod- ing influence policy performance, particularly in scenarios requiring panoramic or large-scale spatial perception. Task success rate is adopted as the primary evaluation metric. It is important to note that the comparison with DP / DP3 / iDP3 is not intended to demonstrate the superiority of our algorithm, but rather to validate the impact of the ‘FOV limitation’.",
+   "evidence_type": "evaluation-protocol",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字给出 We evaluate our approach against three diffusion-based manipulation policies: DP [4], DP3 [5], and iDP3 [6] 与 the comparison with DP / DP3 / iDP3 is not intended to demonstrate the superiority of our algorithm, but rather to validate the impact of the ‘FOV limitation’；DP 用 240×424 RGB、DP3/iDP3 用深度相机点云逐字位于 page 5-6 Sec. IV-A（已核对）；“不存在鱼眼/全景相机基线或多相机对照”为对 page 1-8 提取文本的穷尽检索结论（已核对：基线、任务、Tab. I-IV 与消融中均无 panoramic/fisheye camera 方法或附加相机对照）；claim 前半逐字可溯、后半为已验证的缺失推断，故标 inference。"
+   }
+  },
+  {
+   "card_id": "2603.05355-C15",
+   "claim": "评估协议：所有方法主要以任务成功率评估，每任务在一致初始条件下运行 20 次并报告成功试验数；杂乱环境避碰任务额外报告碰撞率（执行中与周围障碍发生物理接触的试验比例）；全文（page 1-8）未报告试验种子、方差或显著性检验，20 次试验下以 5% 为分辨率的单值计数使方法间小差距（如泛化 13/20 vs 12/20）的统计稳健性无法判定。",
+   "stance": "gap",
+   "relation": "缺口命题：全景 LiDAR 操作策略的定量证据缺少统计不确定性报告——小样本单值成功率限制细粒度排序结论的外推强度，主结论（0/20 vs 11-16/20 的大差距）受影响较小。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Evaluation Metrics 段逐字给出 20 次/任务、成功率与碰撞率定义；全文无种子/方差/显著性报告（已通读 page 1-8 提取文本核对）。",
+   "locator": "page 6, Section IV, Evaluation Metrics",
+   "source_context": "Evaluation Metrics. We evaluate all methods primarily by task success rate. For each task, we run each model 20 times under consistent initial conditions and report the number of successful trials. For collision-free manipulation tasks conducted in cluttered environments, we additionally report the collision rate, defined as the proportion of trials where the robot makes physical contact with surrounding obstacles during execution. This metric captures the robot’s ability to leverage environmental awareness for safe whole- body coordination, complementing the success rate which focuses on task completion.",
+   "evidence_type": "evaluation-protocol",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 We evaluate all methods primarily by task success rate. For each task, we run each model 20 times under consistent initial conditions and report the number of successful trials、we additionally report the collision rate, defined as the proportion of trials where the robot makes physical contact with surrounding obstacles during execution、complementing the success rate which focuses on task completion；“全文未报告种子/方差/显著性”为对 page 1-8 提取文本的穷尽检索结论（已核对：Tab. I-IV 与正文均为单值计数，无 error bar/多次运行/seed 表述）；claim 前半逐字可溯、后半为已验证的缺失声明。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "3D Diffusion Policy: Generalizable Visuomotor Policy Learning via Simple 3D Representations",
+   "arxiv_id": "2403.03954",
+   "reason": "DP3 基线与点云扩散策略谱系的基础（引文 [5]），OmniDP 的动作解码器沿用 Diffusion Policy 范式（引文 [4]）。"
+  },
+  {
+   "title": "HOMIE: Humanoid Loco-Manipulation with Isomorphic Exoskeleton Cockpit",
+   "arxiv_id": "2502.13013",
+   "reason": "部署侧下肢控制器与遥操作框架的基础（引文 [38]）：OmniDP 上肢策略+预训练 HOMIE 下肢的分解直接依赖它。"
+  },
+  {
+   "title": "Omni-Perception: Omnidirectional Collision Avoidance for Legged Locomotion in Dynamic Environments",
+   "arxiv_id": "2505.19214",
+   "reason": "全景 LiDAR 感知在腿式运动中的先行工作（引文 [26]），本文将其从运动避障推进到人形端到端操作。"
+  },
+  {
+   "title": "Fisheye-BEVSeg: Surround View Fisheye Cameras based Bird's-Eye View Segmentation for Autonomous Driving",
+   "arxiv_id": "",
+   "reason": "被引的鱼眼环视相机代表工作（引文 [22]，CVPR 2024）：支撑\"全景传感成熟于自动驾驶、空白在人形操作\"的缺口判断，是本文与鱼眼相机路线的直接文献接口。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是\"全景 360° 传感接入具身操作策略\"的 LiDAR 路线核心证据，与 2608.02257（全景相机 VLA 路线）构成同问题双模态对照。关键判断：(1) 应用方式——头装全景 LiDAR（MID-360，360°×−7°~52°）原始点云为唯一视觉输入，金字塔卷积编码+时间感知注意力池化+Diffusion Policy 端到端，自体系免外参标定；(2) 获益任务——基座受限+目标/障碍在相机视野外的大工作区任务（OV 任务 0/20→11-16/20，避碰 5/20 vs 18-20/20 碰撞）与视野内任务的次级增益（场景上下文+时间稳定）；(3) 受限边界——有效工作区以约 1.3 m 臂可达为界、纯几何无颜色/语义（语义整合列为未来）、策略仅控上肢（下肢靠预训练 HOMIE）、外观泛化边际小（1-3/20）；(4) 缺口——无鱼眼/全景相机基线，\"全景 LiDAR vs 全景相机\"的对比空白需综述汇集证据回答；(5) 统计缺口——20 trials/任务、无方差。注意：arXiv 列表标题为 Omni-Manip，正文与提取标题均为 OmniDP（以正文为准）。IEEE 会议格式 8 页，page 7 末-8 为参考文献。所有 source_context 均逐字取自提取页（page 1、2、3、5、6、7）。"
+}

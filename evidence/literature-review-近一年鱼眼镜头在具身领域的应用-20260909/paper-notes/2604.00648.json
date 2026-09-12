@@ -1,0 +1,580 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.00648",
+  "title": "DirectFisheye-GS: Enabling Native Fisheye Input in Gaussian Splatting with Cross-View Joint Optimization",
+  "published": "2026-04",
+  "url": "https://arxiv.org/abs/2604.00648",
+  "authors": [
+   "Zhengxian Yang",
+   "Fei Xie",
+   "Xutao Xue",
+   "Rui Zhang",
+   "Taicheng Huang",
+   "Yang Liu",
+   "Mengqi Ji",
+   "Tao Yu"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "鱼眼镜头进入具身智能场景重建/数字化管线的核心方法学证据：(1) 应用背景——论文明确定位鱼眼（超宽 FoV >90°，常见 120°/180°）为自动驾驶、机器人与沉浸式 VR 的基石输入；(2) 局限定量化——通行 undistortion 预处理有双重信息税（黑边裁剪抵消宽 FoV 优势 + 拉伸插值稀释细节导致 3DGS 过拟合低频区产生模糊/漂浮伪影），且原始 3DGS 直吃鱼眼全面崩溃（FisheyeNeRF 平均 PSNR 18.85 vs 去畸变 25.54）；(3) 效果——Kannala-Brandt 模型内嵌 3DGS（原生输入、保持显式架构与 viewer/商业工具兼容）+ 跨视图联合优化（CVO），FisheyeNeRF 平均 26.25 dB 超过去畸变管线与 3DGUT，大尺度户外 Ruziniu test view +2.86dB（3DGUT SSIM 崩至 0.5230），边界区（>60° FoV）PSNR 反超 3DGUT，训练 0.395h/渲染 77FPS 与 SOTA 成本相当；(4) 受限面——反射/镜面室内场景 3DGUT 略优、复杂光照下 CVO 增益不显著、batch≥2 训练时间 +60%。直接回答综述问题中'鱼眼在具身场景重建的应用方式、效果与局限'。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract and 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：3DGS 依赖栅格化与针孔假设，鱼眼输入要么被 undistortion 预处理（双重信息税）要么直接失败；即使建模正确，边缘强畸变区仍有 floaters（随机单视图选择忽略跨视图相关性）；提取三贡献（Fisheye-Compatible 3DGS / CVO / SOTA 性能）。"
+   },
+   {
+    "locator": "page 2-3, 2 Related Work (2.1 Novel View Synthesis; 2.2 Camera Modeling for NVS)",
+    "role": "relevant-core",
+    "purpose": "定位鱼眼 NVS 三条路线：NeRF 系（SC-NeRF/FBINeRF/OmniNeRF 等不适合实时）、3DGS 系（Fisheye-GS 仍需等距投影预处理、3DGUT 用 UT+光线追踪但破坏显式架构致与现有 viewer/商业管线不兼容、Self-Cali-GS 收敛慢）、全景系（360-GS/OmniGS）；确认本文'最大兼容现有管线'的差异化定位。"
+   },
+   {
+    "locator": "page 3-5, 3 Method (3.1 Preliminary; 3.2 Fisheye Camera Model Formulation; 3.3 Cross-View Joint Optimization)",
+    "role": "method-or-design",
+    "purpose": "精读方法：KB 多项式投影（θd=θ+k1θ³+k2θ⁵+k3θ⁷+k4θ⁹，式 3-5）与投影 Jacobian Jθ（式 7）解析推导；前向渲染/反向梯度算法（Supp Algorithm 2/3）；CVO 两步（SIFT 共享特征数相机关联图 + 位姿角度差降序排序）与逐迭代主视图+top-(N-1) 关联相机联合优化。"
+   },
+   {
+    "locator": "page 5-6, 4 Experiments (4.1 Baselines; 4.2 Datasets Preparation; 4.3 Experiments Setup) and Algorithm 1",
+    "role": "method-or-design",
+    "purpose": "核对实验协议：基线（3DGS 双口径、Fisheye-GS、3DGUT、Self-Cali-GS，各用默认超参）；数据集（FisheyeNeRF 6 场景 4240×2384、ScanNet++ 同 3DGUT 六场景 1752×1168、Den-SOFT Ruziniu/Coffee 1.6k）；单张 A100 80GB、batchsize 2、PSNR/SSIM/LPIPS-VGG 三指标。"
+   },
+   {
+    "locator": "page 6-8, 5 Results and Analysis (5.1 Qualitative and Quantitative Results; 5.2 Ablation Study)",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table 1（FisheyeNeRF train：Ours 26.25 dB 全面最优，3DGS 直吃 18.85 崩溃）、Table 2（ScanNet++ test：3DGUT SSIM/PSNR 略高、Ours LPIPS 0.186 vs 0.256）、Table 3（Den-SOFT：Ruziniu test Ours 22.74 vs 3DGUT 19.88）、Table 4（边界区 PSNR）、Table 5/6（CVO 与视图选择消融）、Table 7（针孔迁移）；Fig. 5/6 定性与高斯尺度分布。"
+   },
+   {
+    "locator": "page 8, 6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论：KB 建模+梯度推导无缝接入现有 CUDA 框架；CVO 替换随机视图选择、对高度畸变的图像边缘尤其有效且同样适用于针孔管线；未来工作探索针孔技术迁移到鱼眼重建。"
+   },
+   {
+    "locator": "page 12-14, Supplementary A-G (B Contributions; C Forward/Gradient Algorithms and Toy Analysis; D More Comparisons; E Larger Batch-Size; F Computational Cost; G Limitations Discussion)",
+    "role": "appendix-or-supplement",
+    "purpose": "精读附录：Algorithm 2/3 完整伪代码；Jacobian 非线性→视图依赖各向异性→梯度不平衡的机理分析与 Fig. 7/8 玩具实验；Section D 反射场景 3DGUT 略优的归因与 3DGUT 七 sigma 点采样在大畸变边界产生马赛克伪影的分析；Table 8（FisheyeNeRF test）、Table 9（Tanks&Temples 针孔迁移）、Table 10（batch size 权衡）、Table 11（计算成本）；Section G 作者自述局限。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-11, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需核对核心引文（3DGS[15]、Kannala-Brandt[14]、3DGUT[39]、Fisheye-GS[24]、Self-Cali-GS[5]、MVGS[6]、Den-SOFT[47]、ScanNet++[46]）条目。"
+   }
+  ]
+ },
+ "research_question": "如何让 3D Gaussian Splatting 直接以原生鱼眼图像为输入（不做 undistortion 预处理、保持栅格化效率与现有 viewer/商业工具链兼容），并通过跨视图联合优化（CVO）修复鱼眼图像边缘强畸变区的优化病态（极端高斯形状与漂浮伪影），从而在公开鱼眼数据集上匹配或超越 SOTA 重建质量？",
+ "contributions": [
+  "Fisheye-Compatible 3DGS：首次将 Kannala-Brandt 鱼眼投影模型（含解析 Jacobian 前向投影与反向梯度传播）嵌入 3DGS 栅格化管线，实现原生鱼眼图像直接训练、无预处理、不牺牲栅格化效率，且保持与现有 3DGS viewer 和商业工具的完全兼容（对比 3DGUT 破坏显式架构）。",
+  "Cross-View Joint Optimization（CVO）：基于特征重叠（COLMAP SIFT 共享特征数）与视角发散度（位姿角度差降序）自适应分组训练视图，替代逐迭代随机单视图选择，对同一高斯施加跨视图几何/光度一致性约束，缓解极端高斯形状。",
+  "机理与消融证据链：附录 C 给出鱼眼 Jacobian 非线性诱导视图依赖各向异性→跨视图梯度不平衡→外周高斯极端形变的数学分析与玩具实验验证；消融证明 CVO 增益在鱼眼与针孔管线均成立（Table 5-7、Supp Table 9）。",
+  "SOTA 性能与效率：三个公开数据集（FisheyeNeRF/ScanNet++/Den-SOFT）上定量（PSNR/SSIM/LPIPS）与定性匹配或超越现有方法，大尺度户外场景优势最大；计算成本与 3DGUT 相当（0.395h 训练）且渲染更快（77 vs 55 FPS）。"
+ ],
+ "method": {
+  "summary": "两部分。(1) 鱼眼相机建模（Sec 3.2）：采用 Kannala-Brandt 通用多项式径向畸变模型——θd = θ + k1θ³ + k2θ⁵ + k3θ⁷ + k4θ⁹（4 个标定畸变参数 + fx/fy/cx/cy），推导像素坐标对相机空间坐标的投影 Jacobian Jθ（式 7，含 θ′d 与径向距离 d、深度 zc 的高阶项），实现前向渲染（Supp Algorithm 2：μcam→θd→μp、Σ2D=(WJθ)Σ(WJθ)ᵀ）与反向梯度（Algorithm 3：∇Σ=(WJθ)ᵀ(∇Σ2D)(WJθ)），保持 CUDA 栅格化与完全显式架构（结果可用原 SIBR Viewer 查看）。(2) CVO（Sec 3.3）：动机是即使相机模型正确，3DGS 逐迭代随机单视图优化忽略同一高斯的跨视图相关性，在畸变最重的图像边缘产生极端形状与 floaters；实现上利用 COLMAP SfM 稀疏点云天然编码的跨图像特征对应——Step 1 按共享 SIFT 特征数为每张图像排序近邻相机构建特征重叠关联图，Step 2 对图中相机对按位姿角度差降序排序得 max angle association graph；训练时每次迭代随机选主视图并取其 top-(batchsize−1) 关联相机（默认 N=2），联合渲染并累计 L1+SSIM 损失回传（Algorithm 1），同时保证共享高斯优化与多视图几何/光度一致性。附录 C 病态机理：Jθ 是相机坐标的高度非线性函数，大入射角区呈强视图依赖各向异性导致跨视图梯度不平衡（玩具实验：中心高斯保持各向同性、外周高斯极端形变），该策略不依赖 COLMAP（可换 VGGT 等特征匹配）且同样适用于针孔管线。",
+  "assumptions": [
+   "KB 四阶多项式模型能表征所用数据集镜头的径向畸变，且标定参数可得（FisheyeNeRF 用作者提供内参跑 COLMAP；ScanNet++/Den-SOFT 用数据集原始标定）。",
+   "CVO 依赖 SfM（COLMAP）特征对应构建相机关联图；作者声明可替换为更鲁棒的特征匹配（如 VGGT）但未实验验证。",
+   "评估假设 PSNR/SSIM/LPIPS 能反映重建质量；数值接近时以定性结果（图/视频）裁决。",
+   "所有对比方法用各自默认超参、单张 A100 80GB、30k 迭代、batchsize 2，假设该设置对各方法公平。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "FisheyeNeRF：6 个物体中心小尺度场景，4240×2384，作者内参作 COLMAP 先验；Fisheye-GS 需转换为理想等距鱼眼",
+   "ScanNet++：1000+ 室内场景中选与 Fisheye-GS/3DGUT 相同的 6 个，1752×1168，用原始标定结果",
+   "Den-SOFT：9 个大尺度真实 VR/AR 场景中的 Ruziniu（户外）与 Coffee（室内），46 动作相机 5568×4176 inside-looking-out 采集，1.6k 分辨率评估",
+   "自采集针孔场景 Square2/Coffee + Tanks&Temples（CVO 针孔迁移实验）"
+  ],
+  "tasks": [
+   "新视角合成 NVS（train view 与 test view 两种口径）",
+   "鱼眼图像边界区（超过 60° FoV）PSNR 评估",
+   "CVO 在针孔 3DGS 管线上的迁移验证",
+   "计算成本对比（训练时间/渲染 FPS）"
+  ],
+  "embodiments": [
+   "应用语境：自动驾驶、机器人、沉浸式 VR/AR（引言动机锚点；VR 头动时 floaters/flickering 降低沉浸感）",
+   "实际实验为离线 NVS 数据集重建，无机器人/自动驾驶闭环任务",
+   "硬件：单张 NVIDIA A100 80GB 训练"
+  ],
+  "sample_or_scale": "3 个公开数据集 + 自采集场景：FisheyeNeRF 6 场景、ScanNet++ 6 场景、Den-SOFT 2 个鱼眼场景、针孔迁移 2+4 场景。"
+ },
+ "evaluation": {
+  "design": "与全部现有开源鱼眼 3DGS 方法对比（原始 3DGS 双口径：直接吃鱼眼当针孔 / 去畸变输入+鱼眼渲染；Fisheye-GS 需等距预处理；3DGUT 当前最准开源；Self-Cali-GS），覆盖小尺度物体中心（FisheyeNeRF）、中尺度室内（ScanNet++）、大尺度室内外（Den-SOFT）三档；消融包括 CVO 开关（Table 5）、视图选择策略（Table 6：cross-view vs random-select[对齐 MVGS 采样]）、batch size 1-5（Table 10）、针孔迁移（Table 7 + Supp Table 9）；专项评估边界区 PSNR（Table 4，超过 60° FoV）；附录 D 定量+定性对比分析。",
+  "baselines": [
+   "3DGS（原始，鱼眼直接当针孔输入）",
+   "3DGS*（去畸变图像输入 + 本文方法渲染鱼眼输出）",
+   "Fisheye-GS（等距鱼眼投影，仍需预处理）",
+   "3DGUT（Unscented Transform + 光线追踪，当前 SOTA 开源）",
+   "Self-Cali-GS（可逆残差网络位移场）",
+   "3DGS + random select（MVGS 式随机多视图采样消融）"
+  ],
+  "metrics": [
+   "SSIM↑ / PSNR↑ / LPIPS(VGG)↓（NVS 三指标）",
+   "图像边界区（>60° FoV）PSNR",
+   "高斯点数（Num.Points）",
+   "训练时间（h）/ 渲染速度（FPS）/ ΔPSNR/ΔTime"
+  ],
+  "ablations": [
+   "CVO 消融（Table 5：fisheye model only vs +CVO，两场景全指标改善）",
+   "视图选择策略（Table 6：cross-view PSNR 24.0154/6.67M 点 vs random-select 23.5864/6.87M 点——更少点更高质量）",
+   "batch size 1-5（Table 10：N=1→2 增益最大 1.0344%/分钟，N≥3 递减）",
+   "CVO 针孔迁移（Table 7 + Supp Table 9：Square2/Coffee/Tanks&Temples 一致改善并超 random-select）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "原始 3DGS 把鱼眼当针孔直接训练全面崩溃：FisheyeNeRF train view 平均 SSIM 0.6124/PSNR 18.8454/LPIPS 0.5228，每格最低；去畸变后（3DGS*）恢复到 0.8240/25.5382/0.2431——针孔假设失败与去畸变损失是两个独立问题。",
+   "scope": "FisheyeNeRF 6 场景（train view）",
+   "locator": "page 7, Table 1"
+  },
+  {
+   "finding": "原生鱼眼输入定量优于去畸变管线：DirectFisheye-GS 平均 0.8284/26.2522/0.2295，超 3DGS*（0.8240/25.5382/0.2431）、Fisheye-GS**（0.8183/25.1783/0.2658）与 3DGUT（0.8020/25.2837/0.3290）——undistortion 不可避免丢失场景信息被实验证明。",
+   "scope": "FisheyeNeRF 6 场景（train view），全指标",
+   "locator": "page 7, Table 1"
+  },
+  {
+   "finding": "ScanNet++ test view 上与 SOTA 互有胜负：Ours 平均 SSIM/PSNR 0.8972/28.3683 略低于 3DGUT（0.9042/28.4178）但 LPIPS 0.1863 显著更好（3DGUT 0.2563）；附录 D 归因：两个紧凑高反射室内场景 3DGUT 略优（光线追踪式对局部光照/镜面更鲁棒），其余场景 Ours 一致更高。",
+   "scope": "ScanNet++ 6 场景（test view）",
+   "locator": "page 8, Table 2; page 13, Appendix Section D"
+  },
+  {
+   "finding": "大尺度真实场景优势最大：Den-SOFT 户外 Ruziniu train PSNR 24.0154 vs 3DGUT 22.2100（+1.81dB）、test 22.7404 vs 19.8780（+2.86dB，3DGUT test SSIM 崩至 0.5230）；室内 Coffee 同样最优（27.3528 vs 25.7450）；正文归因于无界户外光照剧变、细节丰富使其他方法局限更严重。",
+   "scope": "Den-SOFT Ruziniu/Coffee（train+test view）",
+   "locator": "page 8, Table 3; page 6, Section 5.1"
+  },
+  {
+   "finding": "边界区（超过 60° FoV）PSNR：CVO 使 Ruziniu 23.0033→23.7625、Coffee 26.2492→27.3819，均超 3DGUT（22.2242/25.8105）——鱼眼边缘强畸变区的短板可被跨视图联合优化修复并反超。",
+   "scope": "Den-SOFT 两场景图像边界区",
+   "locator": "page 8, Table 4; page 7, Section 5.2"
+  },
+  {
+   "finding": "CVO 增益不绑定鱼眼：针孔管线上 3DGS+CVO 一致改善并超 random-select（Square2 PSNR 30.5345→30.9500；Coffee 27.2348→27.5138），Tanks&Temples 四场景复现；视图分组还以更少高斯点达到更高质量（6.67M vs random-select 6.87M 点，PSNR +0.43dB）。",
+   "scope": "自采集针孔场景 + Tanks&Temples",
+   "locator": "page 8, Table 6, Table 7; page 14, Supp Table 9"
+  },
+  {
+   "finding": "成本与权衡：训练 0.395h/渲染 77FPS（3DGUT 0.404h/55FPS、Self-Cali-GS 3.333h/31FPS，单张 A100）；batch size 1→2 增益最大（PSNR 23.7717→24.0154，ΔPSNR/ΔTime 1.0344%）但训练时间 38.87→62.43 分钟（+60.5%），N≥3 边际递减——立体监督是性价比拐点。",
+   "scope": "ScanNet++ 8d563fc2cc（成本）与 Den-SOFT Ruziniu（batch size）",
+   "locator": "page 14, Table 10, Table 11, Appendix Section E-F"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "CVO 的性能增益在复杂光照条件下不显著：它有利于同一高斯的视图相关属性（SH）优化，但 Splat 范式下仍需进一步建模反射/折射等复杂效应（复杂反射率与各向异性、光照反射方向建模留作未来工作）。",
+    "locator": "page 14, Appendix Section G"
+   },
+   {
+    "limitation": "超挑战区域（如弱纹理）对 3DGS 本身已困难，需要更好的表示与语义约束（future work）；CVO 用 COLMAP 多视图特征对应分组重叠视图，在稀疏纹理区域不降低性能但未给量化消融。",
+    "locator": "page 14, Appendix Section G"
+   },
+   {
+    "limitation": "在两个紧凑高反射室内 ScanNet++ 场景（0a5c013435、d415cc449b）上 3DGUT 略优于本方法——光线追踪式建模对局部光照与镜面效应更鲁棒。",
+    "locator": "page 13, Appendix Section D"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "评估全部为离线 NVS 数据集（6+6+2 个场景）；'鱼眼是自动驾驶/机器人/VR 基石'仅为动机引用，无任何闭环具身任务（机器人操作/导航/驾驶感知）验证——对具身系统下游任务（如用重建模型做仿真训练数据）的迁移未证明。",
+    "basis": "page 2 Section 1 动机句；page 5-6 Section 4.2 数据集清单全部为离线采集重建数据集。"
+   },
+   {
+    "boundary": "KB 模型为径向对称多项式（4 畸变参数），未建模切向畸变/非对称像差；论文未报告任何数据集镜头的 FoV 或畸变参数数值，'严重畸变'程度不可复现校验，对超出多项式表达能力的极端镜头泛化未验证。",
+    "basis": "page 4 Section 3.2.1 式(4)(5) 模型定义；全文（含 4.2 数据集准备）无镜头 FoV/畸变参数报告。"
+   },
+   {
+    "boundary": "CVO 相机关联图依赖 COLMAP SIFT 特征对应质量；作者仅在 limitations 声称稀疏纹理区'不降低性能'但无量化消融，对重复纹理/弱纹理场景关联图失效风险未评估；VGGT 替代仅是设想。",
+    "basis": "page 5 Section 3.3 Step 1；page 14 Section G 'does not degrade performance in sparse-texture regions' 无对应表格。"
+   },
+   {
+    "boundary": "跨视图联合监督的训练时间成本：batch 2 比单视图 +60.5%（38.87→62.43 min），更高 batch 边际递减（N=5 需 160.92 min）——对训练预算敏感的具身平台迭代是实际约束；渲染 77FPS 仅在单场景 A100 上测得。",
+    "basis": "page 14 Table 10（Ruziniu 30k 迭代）与 Table 11（单场景 ScanNet++ 8d563fc2cc）。"
+   },
+   {
+    "boundary": "指标间张力依赖定性裁决：ScanNet++ 平均 SSIM/PSNR 3DGUT 略高时，作者以 LPIPS + 定性图/视频主张优势；FisheyeNeRF 上 Fisheye-GS 个别场景数值略高也被以定性质量解释——数值接近处的主观裁决未被盲测等客观程序支撑。",
+    "basis": "page 8 Table 2 平均列；page 13 Section D 'Fisheye-GS may obtain slightly higher numerical scores in some cases' 与 'qualitative results ... better reflect the reconstruction quality'。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：标定参数可得的 KB 类径向畸变鱼眼镜头的 3DGS 场景重建/NVS（离线重建、VR/AR 内容生成、具身平台的场景数字化），要求 COLMAP 能建立相机关联；CVO 部分独立可迁移到针孔多相机 rig（Table 7/9 验证）。效果边界：大尺度户外与强畸变边缘区增益最大；常规室内与 SOTA 互有胜负（LPIPS 占优、SSIM/PSNR 略低）；反射/镜面与复杂光照场景是弱区（作者承认，3DGUT 光线追踪式占优）。不适用/未验证：切向/非对称畸变镜头、无标定或特征对应缺失场景、闭环机器人感知任务、VR 头动 floaters/flickering 仅有视频证据无定量。对综述的接口：本文证明'鱼眼原生输入 + 工具链兼容'工程上已可行且成本可比（0.395h/77FPS），undistortion 税被定量化（原生输入反而更优）；但鱼眼边缘强畸变区的优化病态是结构性问题（非线性 Jacobian 视图依赖各向异性），需要跨视图联合监督对症缓解，物理光效（反射/折射）仍是开放短板。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "因果链完整：先证明'即使正确建模仍有边缘病态'（消融 Table 5 + 附录 C 数学机理 + Fig. 7 玩具实验），再给 CVO 修复并用边界区 PSNR（Table 4）定向验证——问题、机制、解法、验证环环相扣。",
+   "对比口径诚实：3DGS 双口径（直接吃 vs 去畸变）分离'针孔假设失败'与'去畸变信息损失'两种效应；Fisheye-GS 需预处理、3DGUT 破坏显式架构等关键差异均在表注与正文显式标注。",
+   "边界区（>60° FoV）单独评估直击鱼眼核心痛点，而非只报全局均值。",
+   "CVO 针孔迁移实验（Table 7/9）证明贡献不绑定鱼眼输入，泛化性得到独立验证；视图分组以更少高斯点达更高质量（Table 6）排除了'堆点数'解释。",
+   "成本与 batch-size 权衡透明报告（Table 10/11），含 ΔPSNR/ΔTime 边际指标。"
+  ],
+  "design_risks": [
+   "ScanNet++ 平均 SSIM/PSNR 低于 3DGUT，靠 LPIPS 与定性图裁决优势——指标间张力存在主观偏好风险，无盲测定性评估。",
+   "无任何数据集镜头 FoV/畸变参数报告，'严重畸变'程度与各数据集难度不可复现校验；KB 多项式对非对称畸变的表达能力未讨论。",
+   "Den-SOFT 仅 2 个鱼眼场景（Ruziniu/Coffee），大尺度结论样本量小；FisheyeNeRF train view 在主文、test view 在附录（Table 8），口径分散。",
+   "random-select 消融对齐 MVGS 采样但剥离其正交改进（作者自行声明），与 MVGS 原版无直接对比；EVER/3D Gaussian Ray Tracing 等以'计算瓶颈'为由未进实验。",
+   "玩具实验（3 球 3 高斯）与真实场景的机理外推未量化；VR 头动 floaters/flickering 主张仅依赖补充视频。"
+  ],
+  "baseline_fairness": "基线覆盖全部现有开源鱼眼 3DGS 方法且用各自默认超参，3DGS 双口径与 Fisheye-GS 预处理标注清晰，fairness 意识强；缺口：与 MVGS 原版（而非其采样策略消融版）无直接对比；3DGUT 在反射场景占优被归因于'非本文重点'，与 SOTA 主张存在轻微张力；未开源代码链接（正文无 GitHub），第三方复现对比受限。",
+  "metric_validity": "PSNR/SSIM/LPIPS-VGG 三指标 + 边界区 PSNR + 点数/训练时间/FPS 成本指标，维度较全且区分 train/test 口径；局限：指标结论不一致时（ScanNet++ SSIM/PSNR vs LPIPS）依赖定性图与视频裁决，'数值接近时定性更好反映质量'是作者立场而非客观程序；边界区以 60° FoV 为界的定义只在正文一句带过，无敏感性分析。",
+  "reproducibility": "数学与算法完整（式 3-7、Algorithm 1-3、batchsize 2、30k 迭代、A100、默认基线超参、数据预处理协议含 FisheyeNeRF 内参先验与 Fisheye-GS 等距转换说明）；缺口：无代码/项目页链接，KB 畸变参数与各数据集镜头 FoV 未报告，CVO 相机关联图构建阈值（top-N 之外无参数）与 SIFT 匹配配置未给。",
+  "external_validity": "结论限离线 NVS 数据集（14 个评估场景）；自动驾驶/机器人动机无闭环任务实验；VR 沉浸感主张依赖视频证据；不同 FoV/畸变程度的剂量-响应未系统扫描；对具身平台最相关的'重建质量如何影响下游仿真/训练'未触及。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.00648-C01",
+   "claim": "作者定位：鱼眼镜头因超宽视场（>90°，常见 120° 或 180°）与少量采集即可高效覆盖场景，是自动驾驶、机器人与沉浸式 VR 的基石输入；但其严重径向畸变与非线性投影违反原始 3DGS 的针孔假设，直接套用会产生伪影与性能退化。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼镜头是具身智能（自动驾驶/机器人/VR）感知与场景重建的基石传感器之一——为综述提供'鱼眼在具身生态中的部署位置'与'为什么需要专门的鱼眼 3DGS 方法'的动机锚点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言：3DGS 擅长针孔相机，直接用于鱼眼图像面临关键限制；鱼眼是自动驾驶、机器人、沉浸式 VR 的基石（超宽 FoV>90°，常见 120°/180°，少量采集高效覆盖）；严重径向畸变与非线性投影违反针孔假设，naive 应用产生伪影与性能退化。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "its direct application to fisheye images-a cor- nerstone of autonomous driving, robotics, and immersive VR due to ultra-wide FOV ( >90°, the common ones are 120° or 180°) and efficient scene coverage with fewer cap- tures—faces critical limitations. Fisheye lenses’ severe ra- dial distortion and nonlinear projection violate pinhole as- sumptions of the original 3DGS, causing artifacts and per- formance degradation when naively applied.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 引言段逐字匹配（cornerstone 短语、FoV >90°/120°/180°、violate pinhole assumptions、artifacts and performance degradation 四要素均在 context 中）；claim 未附加论文未说的内容，FoV 数值为作者给出的典型值而非实验测量。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C02",
+   "claim": "对鱼眼图像先去畸变再训练 3DGS 的通行做法引入两类问题：(1) 图像边缘黑边造成信息丢失，抵消鱼眼大 FoV 优势；(2) 拉伸-插值重采样把每像素值摊到更大区域、稀释细节密度，导致 3DGS 过拟合这些低频区，产生模糊与漂浮伪影。",
+   "stance": "limit",
+   "relation": "限定命题：undistortion 预处理是鱼眼进入标准 3DGS 管线的结构性信息税——宽 FoV 优势被部分抵消、细节密度被稀释，具身平台用鱼眼做场景重建时若走去畸变路线必须支付该代价（页 2 正文进一步称其 irreversible compromises）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要列出 undistortion 两个问题：黑边信息损失 negate 大 FoV 优势；stretch-and-interpolate 重采样稀释细节密度导致 3DGS 过拟合低频区、产生 blur 与 floating artifacts；page 2 引言以 'irreversible compromises' 复述并归为现有鱼眼 3DGS 工作（3DGS/Fisheye-GS）的共同前置。",
+   "locator": "page 1, Abstract",
+   "source_context": "1) Black borders\nat image edges cause information loss and negate the fish-\neye’s large FOV advantage; 2) Undistortion’s stretch-and-\ninterpolate resampling spreads each pixel’s value over a\nlarger area, diluting detail density— causes 3DGS overfit-\nting these low-frequency zones, producing blur and float-\ning artifacts.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字匹配（两个编号问题、negate FOV advantage、diluting detail density、overfitting low-frequency zones、blur/floating artifacts）；claim 为作者对 undistortion 代价的机理性论断，定量佐证由 C07 卡（原生输入优于 3DGS*）承担；'irreversible' 措辞出自 page 2（已核对）。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C03",
+   "claim": "DirectFisheye-GS 将 Kannala-Brandt 鱼眼投影模型嵌入 3DGS 管线，实现原生鱼眼图像直接训练、无需去畸变预处理，同时保持栅格化渲染效率、与现有 3DGS viewer 和商业工具的完全兼容，并保留相邻光线间的原始空间关系（多视图一致性约束的必要条件）。",
+   "stance": "support",
+   "relation": "支持命题：原生鱼眼输入的 3D 重建在工程上可行且不牺牲效率与工具链兼容性——对具身平台意味着鱼眼数据可被直接用于高质量场景数字化而无需预处理工序；工具链兼容是与 3DGUT（破坏显式架构、与现有 viewer/商业管线不兼容）的关键工程差异。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言方法段：整合 KB [14] 投影模型消除 undistortion 预处理、保持栅格化效率；确保与现有 3DGS viewer/商业工具完全兼容；保留相邻光线空间关系。page 3 Section 2.2 指出 3DGUT 虽平衡精度与泛化但破坏 3DGS 完全显式架构、训练结果与现有 viewer 和商业管线不兼容；page 6 Section 5.1 确认本文结果可用原始 SIBR Viewer 查看。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "We integrate the Kannala-Brandt [14] fisheye projection model into the 3DGS pipeline, eliminating the need for undistortion pre- processing and preserving the efficiency of rasterization- based rendering. This not only ensures full compatibility with existing 3DGS viewers and commercial tools, but also retains the original spatial relationships among neighbor- ing rays—an essential condition for multi-view consistency constraints.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 引言方法段逐字匹配（KB 模型、消除 undistortion、保持栅格化效率、full compatibility、retains spatial relationships）；3DGUT 不兼容与 SIBR Viewer 可查看的交叉引用分别出自 page 3 Section 2.2 与 page 6 Section 5.1（均已核对）；claim 限于设计属性声明，效果证据由 C07/C14 卡承担。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C04",
+   "claim": "作者观察：即使鱼眼相机模型建模正确，重建场景在图像边缘仍出现漂浮物——畸变向周边增大，而 3DGS 原始的逐迭代随机单视图选择优化忽略同一高斯的跨视图相关性，导致极端形状（如过大或拉长）从而降低重建质量。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼边缘强畸变区即使有正确相机模型仍是 3DGS 优化的结构性病态区——单视图随机优化与畸变放大的交互使边缘成为鱼眼重建的系统性短板（Section 3.3 补充：边缘畸变最重，VR 头动时产生明显 floaters/flickering 降低沉浸感）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要：'Despite correct modeling' 后描述边缘 floaters 现象与两个成因（畸变向周边增大 + 随机单视图选择忽略跨视图相关性→极端形状）；page 4 Section 3.3 展开：独立逐迭代优化对同一高斯产生跨视图不一致的几何/光度参数，边缘（畸变最大处）最严重，VR 头动时 floaters/flickering 降低沉浸感。",
+   "locator": "page 1, Abstract",
+   "source_context": "Despite correct modeling, we observed that the recon- structed scenes still exhibit floaters at image edges: Dis- tortion increases toward the periphery, and 3DGS’s orig- inal per-iteration random-selecting-view optimization ig- nores the cross-view correlations of a Gaussian, leading\nto extreme shapes (e.g., oversized or elongated) that de- grade reconstruction quality.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字匹配（Despite correct modeling、image edges、random-selecting-view、cross-view correlations、oversized or elongated）；VR 头动 floaters/flickering 细节出自 page 4 Section 3.3（已核对）并置于 summary 而非 claim；claim 严格限于摘要句的信息量。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C05",
+   "claim": "机理与玩具实验（附录 C）：大畸变（大入射角）区域的投影 Jacobian 呈强视图依赖的各向异性，导致跨视图梯度不平衡；图像中心处 Jacobian 平滑退化为针孔情形、优化更稳定且近各向同性。三个等半径球用三个高斯拟合多视图鱼眼图像的玩具实验中，中心高斯在优化中保持各向同性尺度，外周（蓝色）高斯被非线性视图依赖梯度拉成不稳定极端形变。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼边缘重建病态有明确数学机理（Jacobian 视图依赖各向异性→梯度不平衡）——解释了为什么鱼眼 FoV 边缘是重建质量的系统性短板，也解释了为什么跨视图联合监督（CVO）是对症解法而非经验修补。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 C：反传中 3D 协方差梯度 ∇Σ=(WJθ)ᵀ(∇Σ2D)(WJθ) 被鱼眼模型的非线性 Jacobian 直接调制（式 7 的 Jθ 是相机坐标高度非线性函数，含 θd、θ′d 与径向距离/深度高阶项，已核对）；大入射角区强视图依赖各向异性→不平衡梯度，中心平滑退化为针孔；Fig. 7 玩具实验给出中心 vs 外周高斯的对照。",
+   "locator": "page 13, Appendix Section C, Fig. 7",
+   "source_context": "In regions with large\ndistortion (i.e., large incident angles), the Jacobian exhibits\nstrong view-dependent anisotropy, leading to unbalanced\ngradients across views. In contrast, near the image center\nthe Jacobian smoothly degenerates toward the pinhole case,\nresulting in more stable and nearly isotropic optimization.\nWe further illustrate this effect with a toy experiment\n(Fig. 7). Three spheres with identical radii are rendered\ninto multiple fisheye images and fitted using three Gaus-\nsian primitives. The results show that the central Gaus-\nsian preserves isotropic scale during optimization, whereas\nthe peripheral Gaussian (blue) is pulled by nonlinear, view-\ndependent gradients, leading to unstable optimization and\nextreme shape deformation.",
+   "evidence_type": "reported-analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 附录 C 连续段落逐字匹配（大入射角区/中心退化/玩具实验设计与中心-外周对照）；Jacobian 非线性与 ∇Σ 调制机制的数学表述出自同节前文（已核对）置于 summary；claim 未超出该节的分析与玩具实验范围。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C06",
+   "claim": "CVO 设计：利用 3DGS 初始化所依赖的 COLMAP SfM 稀疏点云天然编码的跨图像特征对应——Step 1 按共享 SIFT 特征数为每张图像排序近邻相机、构建特征重叠关联图；Step 2 对图中每对相机计算位姿角度差并降序排序（max angle association graph）；训练时每次迭代随机选主视图并从图中取其 top-(batchsize−1) 关联相机——该策略同时平衡特征重叠与角度多样性。",
+   "stance": "support",
+   "relation": "支持命题：跨视图联合监督（特征重叠 + 视角发散度双准则分组）是修复鱼眼边缘优化病态的方法级解——为具身平台用鱼眼做高质量重建提供'如何用'的工程路径；分组信息可由任意鲁棒特征匹配（作者提及 VGGT）替代 COLMAP。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.3 两步实现（SIFT 共享特征数 + 位姿角度差降序）与逐迭代主视图+top-(N-1) 采样；Algorithm 1（page 6）给出 L1+SSIM 损失累计回传伪代码；batchsize=2（page 6 Section 4.3）；设计目标是 Shared Gaussian Optimization 与 Multi-View Consistency（page 4-5）；不依赖 COLMAP 本身（page 12 Section B 声明可换 VGGT）。",
+   "locator": "page 5, Section 3.3 Cross-View Joint Optimization",
+   "source_context": "Step 1: Camera Association. Construct a feature-overlap graph for each image, ranking neighboring cameras by shared SIFT feature counts (→ camera association graph) . Step 2: Angular Divergence Sorting. For each camera pair in the camera association graph , compute their pose angular difference and sort them in descending order (→ max angle association graph). During training, we iteratively sample a primary view and select its top-batchsize−1 correlated cameras from the graph. This strategy balances overlap and angular diversity, as formalized in Algorithm 1.",
+   "evidence_type": "method-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section 3.3 两步描述逐字匹配（含 '→ camera association graph' 与 '→ max angle association graph' 标注）；batchsize=2、L1+SSIM 损失与 Algorithm 1 细节分别出自 page 6 Section 4.3 与 Algorithm 1（已核对）置于 summary；VGGT 可替代性出自 page 12 Section B（已核对）；claim 限于设计描述。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C07",
+   "claim": "FisheyeNeRF 数据集（train view）六场景平均：原始 3DGS 把鱼眼当针孔直接训练全面崩溃（SSIM 0.6124/PSNR 18.8454/LPIPS 0.5228）；DirectFisheye-GS 达 SSIM 0.8284/PSNR 26.2522/LPIPS 0.2295，超过去畸变输入+鱼眼渲染的 3DGS*（0.8240/25.5382/0.2431）、Fisheye-GS**（0.8183/25.1783/0.2658）与 3DGUT（0.8020/25.2837/0.3290）——原生输入优于去畸变管线，作者据此说明相机建模正确且 undistortion 不可避免丢失场景信息。",
+   "stance": "support",
+   "relation": "支持命题：原生鱼眼输入不仅可行还定量优于去畸变预处理管线（全面指标）——'undistortion 税'从机理论断（C02）升级为实验证据，鱼眼宽 FoV 信息在原生建模下被完整保留。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1（train view）六场景平均行：3DGS 0.6124/18.8454/0.5228（各场景最低）→ 3DGS* 0.8240/25.5382/0.2431 → Fisheye-GS** 0.8183/25.1783/0.2658 → 3DGUT 0.8020/25.2837/0.3290 → Self-Cali-GS 0.7460/24.0084/0.4507 → Ours 0.8284/26.2522/0.2295；page 6 Section 5.1 正文：3DGS 无法处理鱼眼图像每格最低，undistortion 后训练再鱼眼渲染 'our method achieves superior or comparable results in all cases'，证明 undistortion 不可避免丢失信息。",
+   "locator": "page 7, Table 1",
+   "source_context": "3DGS 0.6355 19.8407 0.5273 0.5306 18.0784 0.5122 0.6491 19.3742 0.5388 0.5412 18.1212 0.5362 0.6842 19.8638 0.5045 0.6338 17.7938 0.5179 0.6124 18.8454 0.5228\n3DGS* 0.8587 26.9129 0.2223 0.8108 26.6751 0.2129 0.8356 26.4027 0.2502 0.8187 24.5977 0.2140 0.8163 25.6968 0.2666 0.8036 22.9437 0.2924 0.8240 25.5382 0.2431\nFisheye-GS** 0.8593 26.9145 0.2245 0.8230 26.8117 0.2242 0.8384 26.9748 0.2604 0.8022 24.4500 0.2285 0.8223 24.9219 0.2888 0.7643 20.9969 0.3681 0.8183 25.1783 0.2658\n3DGUT 0.8200 26.0860 0.3250 0.7730 25.4410 0.2970 0.8050 26.0730 0.3530 0.7340 23.3250 0.3370 0.7890 24.5390 0.3840 0.8910 26.2380 0.2780 0.8020 25.2837 0.3290\nSelf-Cali-GS 0.7428 24.6431 0.4628 0.7162 24.4566 0.4955 0.7638 24.9037 0.4702 0.6458 22.1389 0.5398 0.8023 24.6079 0.3839 0.8048 23.3000 0.3522 0.7460 24.0084 0.4507\nOurs\n0.8351 26.6411 0.2111 0.8066 26.6411 0.2228 0.8259 27.0780 0.2491 0.7802 24.1444 0.2335 0.8178 25.5095 0.2717 0.9049 27.4988 0.1890 0.8284 26.2522 0.2295",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "average SSIM/PSNR/LPIPS on FisheyeNeRF dataset (train view)",
+    "value_or_direction": "3DGS 0.6124/18.8454/0.5228; 3DGS* (undistorted input) 0.8240/25.5382/0.2431; Fisheye-GS 0.8183/25.1783/0.2658; 3DGUT 0.8020/25.2837/0.3290; Self-Cali-GS 0.7460/24.0084/0.4507; Ours 0.8284/26.2522/0.2295 (best on all three metrics)",
+    "comparator": "original 3DGS, undistorted-input 3DGS*, Fisheye-GS, 3DGUT, Self-Cali-GS",
+    "task_or_sample": "novel view synthesis on 6 FisheyeNeRF scenes (train view evaluation)",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 全表行逐字匹配，平均列数值（0.6124/18.8454/0.5228、0.8240/25.5382/0.2431、0.8183/25.1783/0.2658、0.8020/25.2837/0.3290、0.7460/24.0084/0.4507、0.8284/26.2522/0.2295）已逐一核对；表注确认 3DGS* 为去畸变输入+鱼眼渲染口径、Fisheye-GS** 需预处理；'每格最低'与 undistortion 信息损失的叙述出自 page 6 Section 5.1（已核对）；claim 限于 train view 口径。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C08",
+   "claim": "ScanNet++ 数据集（test view）六场景平均：DirectFisheye-GS SSIM 0.8972/PSNR 28.3683/LPIPS 0.1863，与 3DGUT（SSIM 0.9042/PSNR 28.4178/LPIPS 0.2563）相比 SSIM/PSNR 略低但 LPIPS 明显更优（低 0.070），同时超过 Fisheye-GS**（0.8970/27.8600/0.1950）与 3DGS*（0.8651/25.8754/0.2223）——常规室内场景上与 SOTA 互有胜负而非全面领先。",
+   "stance": "conditional",
+   "relation": "限定命题：原生鱼眼 3DGS 在常规室内场景的优势集中在感知质量（LPIPS）而非全指标领先——综述引用本文室内结果时应表述为'匹配或接近 SOTA'；反射场景的进一步条件（3DGUT 略优）见 C09 卡。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2（test view）平均行：3DGUT 0.9042/28.4178/0.2563、Self-Cali-GS 0.8251/23.2996/0.2442、Ours 0.8972/28.3683/0.1863；Fisheye-GS** 0.8970/27.8600/0.1950 与 3DGS* 0.8651/25.8754/0.2223 出自同表（已核对）；LPIPS 差距 0.2563-0.1863=0.070。",
+   "locator": "page 8, Table 2",
+   "source_context": "3DGUT 0.9300 29.7930 0.2290 0.9010 25.7450 0.2520 0.9340 30.4110 0.2470 0.8650 27.4000 0.2630 0.9510 32.2130 0.2570 0.8440 24.9450 0.2900 0.9042 28.4178 0.2563\nSelf-Cali-GS 0.8549 22.7834 0.1985 0.8422 21.1700 0.2316 0.8747 25.6795 0.2055 0.7259 21.9833 0.3383 0.9081 28.1148\n0.1481 0.7447 20.0664 0.3431 0.8251 23.2996 0.2442\nOurs 0.9191 28.7369 0.1511 0.8984 25.9518 0.1715 0.9296 30.6031 0.1783 0.8499 27.1832 0.2127 0.9473 32.7372 0.1849 0.8390 24.9978 0.2194 0.8972 28.3683 0.1863",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "average SSIM/PSNR/LPIPS on ScanNet++ dataset (test view)",
+    "value_or_direction": "Ours 0.8972/28.3683/0.1863 vs 3DGUT 0.9042/28.4178/0.2563 (3DGUT slightly higher SSIM/PSNR, Ours clearly better LPIPS); Fisheye-GS 0.8970/27.8600/0.1950; 3DGS* 0.8651/25.8754/0.2223",
+    "comparator": "3DGUT, Fisheye-GS, Self-Cali-GS, undistorted-input 3DGS*",
+    "task_or_sample": "novel view synthesis on 6 ScanNet++ indoor scenes (test view evaluation)",
+    "locator": "page 8, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 2 连续表行逐字匹配，平均列数值已核对（3DGUT 0.9042/28.4178/0.2563、Self-Cali-GS 0.8251/23.2996/0.2442、Ours 0.8972/28.3683/0.1863）；Fisheye-GS**/3DGS* 平均列出自同表其余行（已核对）；LPIPS 差值为算术差（0.2563-0.1863）；claim 忠实保留'互有胜负'方向而非宣称全面最优。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C09",
+   "claim": "作者对比分析：在与 3DGUT 相同的六个 ScanNet++ 场景上，两个紧凑高反射室内场景（ID 0a5c013435、d415cc449b）3DGUT 略优于本方法——与其光线追踪式建模对局部光照与镜面效应更鲁棒一致（且非本文重点）；其余场景与数据集上本方法一致取得更高重建质量。",
+   "stance": "conditional",
+   "relation": "限定命题：反射/镜面主导的室内场景是栅格化原生鱼眼重建的弱区（光线追踪式 3DGUT 占优）——界定了鱼眼 3DGS 在具身室内场景（玻璃/镜面密集环境）重建中的适用边界，与 C15 卡（作者承认复杂光照下 CVO 增益不显著）互为印证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 D：3DGUT 是性能最接近的方法；两反射场景略优归因于 ray-based formulation 对局部光照/镜面更鲁棒且'is not the primary focus of this work'；其余场景/数据集本方法一致更高；同节还分析 3DGUT 的七 sigma 点 UT 采样在强畸变边界产生马赛克伪影（Fig. 5/8/9 与视频）。",
+   "locator": "page 13, Appendix Section D",
+   "source_context": "On two compact and highly reflective indoor scenes\n(IDs: 0a5c013435 and d415cc449b), 3DGUT slightly out-\nperforms our method, which is consistent with its ray-based\nformulation that is more robust to localized lighting and\nspecular effects and is not the primary focus of this work.\nIn the other scenes and datasets, however, our method con-\nsistently achieves higher reconstruction quality.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 附录 D 段落逐字匹配（两场景 ID、slightly outperforms、ray-based robustness 归因、其余场景一致更高的对照表述）；两场景 ID 与 Table 2 列名一致（已核对）；claim 为作者自述的对比分析结论，未附加定量数值。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C10",
+   "claim": "Den-SOFT 大尺度真实场景：户外无界场景 Ruziniu 上 DirectFisheye-GS 显著领先——train view SSIM/PSNR/LPIPS 0.8225/24.0154/0.2140 vs 3DGUT 0.7500/22.2100/0.3400（PSNR +1.81dB）；test view 0.8006/22.7404/0.2222 vs 3DGUT 0.5230/19.8780/0.4380（PSNR +2.86dB，且 3DGUT test SSIM 崩至 0.5230）；室内 Coffee 场景同样最优（train PSNR 27.3528 vs 3DGUT 25.7450）。",
+   "stance": "support",
+   "relation": "支持命题：在最具挑战的大尺度户外鱼眼场景（光照剧变+强畸变+in-the-wild，正文指出其他方法局限在此最严重），原生鱼眼+跨视图联合优化优势最大——鱼眼'宽 FoV 少量采集覆盖大场景'的卖点在大尺度下兑现。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3（Den-SOFT train+test）：Ours 在 Ruziniu/Coffee 全部口径最优；3DGUT 在 Ruziniu test SSIM 0.5230 接近崩溃、Fisheye-GS** train SSIM 仅 0.5965/0.5843、Self-Cali-GS 全面落后；page 6 Section 5.1 正文：无界户外场景光照剧变、细节丰富使其他方法局限更严重，'on an outdoor scene like Ruziniu, our method significantly outperforms others'（已核对）。",
+   "locator": "page 8, Table 3",
+   "source_context": "3DGUT 0.7500 22.2100 0.3400 0.8830 25.7450 0.3310 Self-Cali-GS 0.5224 19.7540 0.5969 0.8873 22.9550 0.2460 Ours 0.8225 24.0154 0.2140 0.9105 27.3528 0.2181 Test View SSIM↑ PSNR↑ LPIPS↓ SSIM↑ PSNR↑ LPIPS↓ 3DGS* 0.7403 19.6615 0.2754 0.8740 24.0067 0.2488 Fisheye-GS** 0.5843 19.9809 0.4523 0.8664 24.6196 0.2731 3DGUT 0.5230 19.8780 0.4380 0.8770 24.9090 0.3390 Self-Cali-GS 0.5072 19.5411 0.6024 0.8629 21.4954 0.2729 Ours 0.8006 22.7404 0.2222 0.8815 24.9305 0.2299",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "SSIM/PSNR/LPIPS on Den-SOFT large-scale scenes (Ruziniu outdoor, Coffee indoor; train and test views)",
+    "value_or_direction": "Ruziniu train: Ours 0.8225/24.0154/0.2140 vs 3DGUT 0.7500/22.2100/0.3400 (+1.81 dB PSNR); Ruziniu test: Ours 0.8006/22.7404/0.2222 vs 3DGUT 0.5230/19.8780/0.4380 (+2.86 dB, 3DGUT SSIM collapses to 0.5230); Coffee train: Ours 27.3528 dB vs 3DGUT 25.7450 dB",
+    "comparator": "3DGUT, Self-Cali-GS, Fisheye-GS, undistorted-input 3DGS*",
+    "task_or_sample": "novel view synthesis on Den-SOFT Ruziniu (unbounded outdoor) and Coffee (indoor) fisheye scenes at 1.6k resolution",
+    "locator": "page 8, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 3 连续表行逐字匹配（train 段 3DGUT/Self-Cali-GS/Ours 行 + test 段全部行）；train 段 3DGS*/Fisheye-GS** 行数值（0.7518/20.0220、0.5965/20.8819）与 test 段（0.7403/19.6615、0.5843/19.9809）已核对；dB 差值为算术差（24.0154-22.2100=1.81、22.7404-19.8780=2.86）；户外归因叙述出自 page 6 Section 5.1（已核对）。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C11",
+   "claim": "鱼眼图像边界区（正文 Section 5.2 界定为超过 60° FoV 的边缘区域）PSNR（Den-SOFT）：加 CVO 后 Ruziniu 从 23.0033 升至 23.7625、Coffee 从 26.2492 升至 27.3819，均超过 3DGUT（Ruziniu 22.2242、Coffee 25.8105）——CVO 在畸变最重的鱼眼边缘区有效且反超 SOTA。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼边缘强畸变区（>60° FoV）的重建质量短板可被跨视图联合优化修复并反超光线追踪式方法——'边缘受限'不是鱼眼的宿命而是优化策略问题，为 C04/C05 卡的病态诊断提供解法定向验证。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4（图像边界区 PSNR，Den-SOFT）：Ruziniu w/o CVO 23.0033 / w/ CVO 23.7625 / 3DGUT 22.2242；Coffee 26.2492 / 27.3819 / 25.8105；page 7 Section 5.2 正文：'CVO improves PSNR at the boundary (beyond 60° FOV) and outperforms 3DGUT'，强化鱼眼模型与 CVO 对图像边缘高斯的作用（已核对）。",
+   "locator": "page 8, Table 4",
+   "source_context": "Scene w/o CVO w/ CVO 3DGUT Ruziniu 23.0033 23.7625 22.2242 Coffee 26.2492 27.3819 25.8105",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "image-boundary region PSNR (boundary defined as beyond 60 deg FOV)",
+    "value_or_direction": "Ruziniu: 23.0033 (w/o CVO) -> 23.7625 (w/ CVO) vs 3DGUT 22.2242; Coffee: 26.2492 -> 27.3819 vs 25.8105",
+    "comparator": "same model without CVO, and 3DGUT",
+    "task_or_sample": "boundary-region PSNR evaluation on Den-SOFT Ruziniu and Coffee scenes",
+    "locator": "page 8, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 4 表行逐字匹配（两场景×三列数值已核对）；'>60° FoV' 的边界界定出自 page 7 Section 5.2 叙述句（已核对）并在 claim 与 quantitative 中注明出处为正文定义；数值方向（CVO 提升、均超 3DGUT）与表一致。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C12",
+   "claim": "CVO 迁移到针孔相机管线有效：Square2 场景 3DGS+CVO PSNR 30.9500/SSIM 0.9403/LPIPS 0.1420（原始 3DGS 30.5345/0.9354/0.1505；3DGS+random select 30.6498/0.9355/0.1491），Coffee 场景 27.5138/0.9033/0.2172（vs 27.2348 与 random select 反降至 26.2880）——跨视图联合优化不依赖鱼眼输入，对针孔 3DGS 同样改善且优于随机多视图采样。",
+   "stance": "support",
+   "relation": "支持命题：CVO 的增益来自跨视图监督本身而非鱼眼特异性——该优化策略可平移到具身平台的常规针孔多相机 rig，放大了方法对具身重建生态的通用价值（附录 Supp Table 9 在 Tanks&Temples 四场景复现该趋势）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 7（自采集针孔场景 Square2/Coffee）：3DGS → +random select → +CVO 的 SSIM/PSNR/LPIPS 对比，Coffee random select PSNR 反降（26.2880）；page 8 Section 5.2 正文：'This strategy can also be seamlessly integrated into the pinhole camera–based GS pipeline'、CVO 一致改善并超 random-selection；page 14 Supp Table 9（Tanks&Temples：drjohnson/playroom/train/truck 四场景同趋势，已核对）。",
+   "locator": "page 8, Table 7",
+   "source_context": "Method SSIM↑ PSNR↑ LPIPS↓ SSIM↑ PSNR↑ LPIPS↓ 3DGS 0.9354 30.5345 0.1505 0.9013 27.2348 0.2237 3DGS + random select 0.9355 30.6498 0.1491 0.8936 26.2880 0.2370 3DGS + CVO 0.9403 30.9500 0.1420 0.9033 27.5138 0.2172",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "SSIM/PSNR/LPIPS under pinhole inputs (CVO transfer)",
+    "value_or_direction": "Square2: 3DGS 30.5345 -> +CVO 30.9500 PSNR (random select 30.6498); Coffee: 27.2348 -> 27.5138 (random select drops to 26.2880); SSIM/LPIPS improve in the same direction",
+    "comparator": "vanilla 3DGS and 3DGS + random-select (MVGS-style sampling)",
+    "task_or_sample": "pinhole-input 3DGS on self-captured Square2 and Coffee scenes (trend replicated on Tanks&Temples in Supp Table 9)",
+    "locator": "page 8, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Table 7 表头与三行数据逐字匹配（Square2/Coffee 双场景 SSIM/PSNR/LPIPS 已核对，random select 在 Coffee PSNR 26.2880 反降）；表注 'random-select refers to training strategy used in MVGS'（已核对）确认消融口径；Tanks&Temples 复现出自 page 14 Supp Table 9（已核对）置于 summary。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C13",
+   "claim": "CVO batch-size 权衡（Ruziniu，30k 迭代）：N=1→2 增益最大（PSNR 23.7717→24.0154，ΔPSNR/ΔTime 1.0344%）但训练时间从 38.87 分钟增至 62.43 分钟（+60.5%）；N≥3 边际收益递减（ΔPSNR/ΔTime 0.1711%-0.5215%），N=5 时 PSNR 24.2896 需 160.92 分钟（约 4.1 倍单视图时间）——作者指出最显著改善发生在 N=1→2（从单目到立体监督的转变），概念上重要。",
+   "stance": "limit",
+   "relation": "限定命题：跨视图联合监督的收益有明确成本曲线——立体监督（N=2）是性价比拐点，更高 batch 的训练时间成本（+60%起步）对具身平台的迭代效率与训练预算构成实际约束。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 10：N=1-5 的 PSNR/LPIPS/Time/ΔPSNR/ΔTime（1: 23.7717/0.2232/38.87min/-；2: 24.0154/0.2139/62.43/1.0344%；3: 24.1583/0.2102/89.83/0.5215%；4: 24.2262/0.2077/129.52/0.1711%；5: 24.2896/0.2051/160.92/0.2019%）；Section E：N=2 为默认设置；N=训练图像数时视图选择策略无关紧要；'most significant improvement happens when moving from N=1→2—shifting from monocular to stereo supervision. This transition is conceptually important.'",
+   "locator": "page 14, Table 10, Appendix Section E",
+   "source_context": "Batchsize PSNR LPIPS Time (min) ∆PSNR/∆Time\n1 23.7717 0.2232 38.87 -\n2 24.0154 0.2139 62.43 1.0344%\n3 24.1583 0.2102 89.83 0.5215%\n4 24.2262 0.2077 129.52 0.1711%\n5 24.2896 0.2051 160.92 0.2019%\nvariance updates under large distortion. Combined with the\nCVO strategy, our method achieves sharper edges, smoother\nα-blending, and better cross-view geometric consistency,\nshowing generality and effectiveness even in dataset like\nDen-SOFT (Table 3, Fig. 9), which exhibits more severe\ndistortion, larger spatial coverage, and more challenging in-\nthe-wild conditions (complex lighting, occlusions).\nFinally, while numerical metrics between the two meth-\nods can be close in some scenes, qualitative results in our\nfigures and videos show that our method preserves finer\nstructures and sharper boundaries, further demonstrating\nthe effectiveness of DirectFisheye-GS.\nE. About Larger Batch-Size\nIn our experiments, the top-batchsize (defined in Line.332)\nis set to N = 2. Increasing N improves performance, but\nit also significantly raises the training time. For example,\nwhen N = the number of training images, the view selection\nstrategy becomes irrelevant. We computed the trade-off be-\ntween performance gain and training time for top-batchsizes\nN = 1→5 over 30k iterations as shown in Table 10.\nWhile increasing N results in better performance, the\nmost significant improvement happens when moving from\nN=1→2—shifting from monocular to stereo supervision.\nThis transition is conceptually important.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "PSNR and training time across CVO batch sizes (30k iterations, Ruziniu)",
+    "value_or_direction": "N=1: 23.7717 PSNR / 38.87 min; N=2: 24.0154 / 62.43 min (ΔPSNR/ΔTime 1.0344%, +60.5% time); N=3-5: 24.1583/89.83, 24.2262/129.52, 24.2896/160.92 min with ΔPSNR/ΔTime 0.1711%-0.5215% (diminishing returns)",
+    "comparator": "single-view baseline N=1 and intermediate batch sizes",
+    "task_or_sample": "CVO training on Den-SOFT Ruziniu scene, 30k iterations",
+    "locator": "page 14, Table 10"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Table 10 表行与 Section E 'most significant improvement ... monocular to stereo supervision' 句逐字匹配（连续跨度含表与该句）；+60.5% 与 4.1 倍为算术推导（62.43/38.87、160.92/38.87）；30k 迭代与场景限定出自 Section E（已核对）；claim 限于 Ruziniu 单场景权衡。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C14",
+   "claim": "计算成本（ScanNet++ 8d563fc2cc 场景，单张 NVIDIA A100）：DirectFisheye-GS 训练 0.395 小时、渲染 77 FPS——训练成本与 3DGUT（0.404 小时）相当，渲染更快（3DGUT 55 FPS），远优于 Self-Cali-GS（3.333 小时/31 FPS）；作者据此称在支持原生鱼眼输入的方法中同时取得最优重建质量与计算效率。",
+   "stance": "support",
+   "relation": "支持命题：原生鱼眼 3DGS 的部署成本与现有 SOTA 相当且渲染更快——鱼眼重建能力对具身平台（VR/AR 实时渲染、机器人场景数字化）是可负担的增量而非效率奢侈品。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 11 对比三个支持原生鱼眼输入的方法（其余方法需预处理）；Section F：以 ScanNet++ 8d563fc2cc 场景为例，本方法同时取得最优重建质量（引 Table 2）与计算效率。",
+   "locator": "page 14, Table 11, Appendix Section F",
+   "source_context": "Method Ours 3DGUT Self-Cali-GS Training-Time (h) 0.395 0.404 3.333 Rendering-Speed (FPS) 77 55 31",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "training time (hours) and rendering speed (FPS) for methods supporting native fisheye inputs",
+    "value_or_direction": "Ours 0.395 h / 77 FPS; 3DGUT 0.404 h / 55 FPS; Self-Cali-GS 3.333 h / 31 FPS",
+    "comparator": "3DGUT and Self-Cali-GS (the other native-fisheye methods)",
+    "task_or_sample": "computational cost on ScanNet++ 8d563fc2cc scene, single NVIDIA A100 GPU",
+    "locator": "page 14, Table 11"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Table 11 表行逐字匹配（三方法×两指标数值已核对）；表注 'All methods are evaluated on a single NVIDIA A100 GPU'（已核对）；场景与'最优质量+效率'表述出自 Section F（已核对）；claim 限于单场景单 GPU 口径。"
+   }
+  },
+  {
+   "card_id": "2604.00648-C15",
+   "claim": "作者自述局限：CVO 的性能增益在复杂光照条件下不显著——它有利于同一高斯的视图相关属性（SH）优化，但 Splat 范式下仍需进一步建模反射/折射等复杂效应（更精确的复杂反射率与各向异性、光照反射方向建模是有价值的未来工作）。",
+   "stance": "limit",
+   "relation": "限定命题：跨视图联合优化解决几何/光度一致性问题但不解决物理光效——复杂光照与反射/折射场景（玻璃、镜面密集的具身环境）仍是原生鱼眼栅格化重建的开放短板，与 C09 卡的反射场景实验条件互补。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 G Limitations Discussion 首条：复杂光照下 CVO 增益不显著；Splat 范式需反射/折射建模；同节另指出超挑战区域（弱纹理等）对 3DGS 本身已困难、需更好表示与语义约束（future work），且 CVO 用 COLMAP 特征对应分组在稀疏纹理区不降低性能（无量化消融）。",
+   "locator": "page 14, Appendix Section G",
+   "source_context": "A primary limitation is that CVO’s performance gain is not\nsignificant under complex lighting conditions. While it ben-\nefits optimization of view-dependent attributes (SH) of the\nsame Gaussian, further modeling of complex effects like re-\nflection and refraction is needed under the Splat-paradigm.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 附录 G 首段逐字匹配（complex lighting、view-dependent attributes (SH)、reflection and refraction、Splat-paradigm）；同节第二条局限（超挑战区域/语义约束）与 COLMAP 依赖声明（已核对）置于 summary；claim 限于作者自述首条局限。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "3DGUT: Enabling Distorted Cameras and Secondary Rays in Gaussian Splatting",
+   "arxiv_id": "2412.12507",
+   "reason": "引文 [39]：当前最准的开源鱼眼 3DGS 方法（UT+光线追踪），本文最主要的定量对照；其破坏显式架构致与现有 viewer/商业管线不兼容、七 sigma 点采样在强畸变边界产生马赛克伪影是本文差异化定位的两个支点。"
+  },
+  {
+   "title": "Fisheye-GS: Lightweight and Extensible Gaussian Splatting Module for Fisheye Cameras",
+   "arxiv_id": "2409.04751",
+   "reason": "引文 [24]：首个探索非线性相机模型的 3DGS 工作，但仍需把图像转换为理想等距鱼眼投影的预处理——'undistortion 税'路线的代表，本文原生输入路线的直接对照。"
+  },
+  {
+   "title": "Self-Calibrating Gaussian Splatting for Large Field of View Reconstruction",
+   "arxiv_id": "2502.09563",
+   "reason": "引文 [5]：用可逆残差网络预测稀疏网格位移场的自标定路线，训练 3.333h/渲染 31FPS——效率对照（本文 0.395h/77FPS）。"
+  },
+  {
+   "title": "A Generic Camera Model and Calibration Method for Conventional, Wide-Angle, and Fish-Eye Lenses (Kannala-Brandt)",
+   "arxiv_id": null,
+   "reason": "引文 [14]：本文采用的通用多项式鱼眼投影模型来源（2006 TPAMI），是'原生鱼眼输入'的数学基础；与 CO-Calib 等标定工作中的投影族讨论形成跨论文接口。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是'鱼眼镜头进入具身场景重建管线'的方法学证据。关键判断：(1) 应用方式——鱼眼（>90° FoV，常见 120°/180°）是自动驾驶/机器人/VR 的基石输入，但标准 3DGS 管线要么 undistortion（双重信息税：黑边抵消 FoV 优势 + 拉伸插值稀释细节→过拟合低频区）要么直接崩溃（PSNR 18.85 vs 25.54）；(2) 解法——KB 模型内嵌 3DGS（原生输入、保持显式架构与 viewer/商业工具兼容）+ CVO（特征重叠+角度发散度视图分组联合优化）；(3) 效果——FisheyeNeRF 平均 26.25dB 全面最优（含超过去畸变管线，证明 undistortion 有损）；大尺度户外 Ruziniu test +2.86dB（3DGUT SSIM 崩至 0.523）；边界区（>60° FoV）反超 3DGUT；训练 0.395h/渲染 77FPS 成本可比；(4) 受限面——常规室内与 3DGUT 互有胜负（LPIPS 占优、SSIM/PSNR 略低），反射/镜面与复杂光照场景光线追踪式占优（作者承认），batch≥2 训练时间 +60%；(5) 边界——全部为离线 NVS 评估，无闭环具身任务验证，镜头 FoV/畸变参数未报告，代码未开源。页面定位器按 extraction 16 页文本层（含 5 页附录）；附录表格（Table 8-11）与 Section D-G 位于 page 13-14。"
+}

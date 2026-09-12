@@ -1,0 +1,355 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.21986",
+  "title": "Developing Vision-Language-Action Model from Egocentric Videos",
+  "published": "2025-09-26",
+  "url": "https://arxiv.org/abs/2509.21986",
+  "authors": [
+   "Tomoya Yoshida",
+   "Shuhei Kurita",
+   "Taichi Nishimura",
+   "Shinsuke Mori"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "论文刻意绕开手部姿态检测，改用 EgoScaler 从原始 ego 视频提取物体的 6DoF 轨迹作为末端执行器状态近似，并系统记录了检测/配准误差来源、规则过滤阈值消融（Table III）与抖动缓解手段，直接覆盖综述问题中的误差来源、传播与阈值权衡。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认问题定位：无辅助标注的 ego 视频能否直接训练 VLA；与依赖手部姿态标注路线的对比动机。"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "梳理 EgoMimic/EgoVLA/LAPA 等依赖手部姿态或潜动作的相邻路线，确认本文走物体中心轨迹路线的差异。"
+   },
+   {
+    "locator": "III. METHOD",
+    "role": "method-or-design",
+    "purpose": "理解整体框架：EgoScaler 提取 6DoF 物体轨迹 + π0 预训练/后训练两阶段。"
+   },
+   {
+    "locator": "A. Problem Definition",
+    "role": "method-or-design",
+    "purpose": "确认动作/状态在预训练中以末端执行器空间近似、不含夹爪的设定。"
+   },
+   {
+    "locator": "B. Pre-training Dataset Construction",
+    "role": "method-or-design",
+    "purpose": "重点阅读轨迹提取管线（GPT-4o→分割→3D 点追踪→点云配准→SVD 旋转）、COLMAP 内参估计、两条规则过滤器与平滑滤波，对应误差来源与缓解。"
+   },
+   {
+    "locator": "C. Policy Training",
+    "role": "method-or-design",
+    "purpose": "确认动作表示为 6DoF 物体位姿位移（9 维、无夹爪）及归一化处理。"
+   },
+   {
+    "locator": "IV. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "确认实验设置（SIMPLER + ALOHA）与评测口径。"
+   },
+   {
+    "locator": "A. Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "记录任务、rollout 数、成功率计分方式与训练超参。"
+   },
+   {
+    "locator": "B. Results",
+    "role": "results-or-analysis",
+    "purpose": "提取与 scratch/LAPA/真实机器人数据集对比的定量结果（Table II、Fig. 5）。"
+   },
+   {
+    "locator": "C. Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "提取数据集规模消融与 BGTS 阈值消融（Table III），对应质量-数量权衡证据。"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "核对作者结论与是否声明局限。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "ACKNOWLEDGMENT",
+    "role": "conclusion-or-limitations",
+    "purpose": "致谢，与综述问题无关。"
+   },
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表；scoping 深度不要求逐条核对，核心引用按需路由。"
+   }
+  ]
+ },
+ "research_question": "能否仅用无辅助标注（无手部姿态、无动作时间戳）的大规模 ego 视频构建 VLA 预训练数据集，并达到与真实机器人遥操作数据集相当的效果？",
+ "contributions": [
+  "将 EgoScaler 从 Ego-Exo4D 扩展到 Ego4D、HD-EPIC、Nymeria 四个数据集，从原始 ego 视频自动提取 6DoF 物体操纵轨迹（124,559 条初始 episode）。",
+  "提出两条规则过滤器（行程距离阈值、背景轨迹相似度 BGTS）与五帧平滑来清除检测/配准误差与深度抖动，最终得到 45,157 条 episode 的预训练数据集。",
+  "在 π0 架构上验证：该数据集预训练显著优于从头训练与 LAPA，并与 BC-Z/BridgeData V2/Fractal 等真实机器人数据集相当，混合后进一步提升。"
+ ],
+ "method": {
+  "summary": "管线不走手部检测：GPT-4o 定位动作起止与被操纵物体，开放词表分割（Grounding DINO/SAM）+ 稠密 3D 点追踪（SpatialTracker）提取物体质心位置序列，点云配准把序列投影到动作起始帧相机坐标系以消除佩戴者运动，再用 SVD 求相邻帧点云变换得到旋转；物体 6DoF 位姿被近似为机器人末端执行器状态（不含夹爪）。Ego4D 缺相机内参时用 COLMAP 估计，找不到满足几何约束的初始图像对则剔除该样本。数据清洗用行程距离阈值（配准误差→异常大位移）与 BGTS（检测误差多落在静态物体上→物体轨迹与背景相似），再加五帧均值平滑抑制深度不一致导致的抖动。",
+  "assumptions": [
+   "被操纵物体的质心+旋转可近似为末端执行器状态，忽略夹爪与手指层面信息。",
+   "单目 ego 视频经点云配准/SfM 可恢复足够可用的 3D 轨迹；依赖相机内参（缺失时用 COLMAP 估计）。",
+   "规则阈值（δ_DT、δ_BGTS=0.7）能以可接受的召回损失换取轨迹质量。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Ego4D",
+   "Ego-Exo4D",
+   "HD-EPIC",
+   "Nymeria（轨迹提取来源）",
+   "BridgeData V2 / BC-Z / Fractal（对照预训练集）",
+   "SthV2（LAPA 对照）"
+  ],
+  "tasks": [
+   "SIMPLER BridgeData V2 环境 4 个 pick-and-place 任务",
+   "ALOHA 真机 4 个语言条件 pick-and-place 任务（carrot/onion × pot/bowl）"
+  ],
+  "embodiments": [
+   "ALOHA（真机后训练与评测）",
+   "SIMPLER 仿真 WidowX 设置"
+  ],
+  "sample_or_scale": "初始 124,559 episode，清洗后 45,157 episode（313 动词、1,217 物体）；真机每任务 200 条后训练 episode（共 800），评测每任务 10 次 rollout；仿真每任务评测 200 次 rollout。"
+ },
+ "evaluation": {
+  "design": "同一 π0 架构下，分别用本数据集、三个真实机器人数据集、LAPA 潜动作、从头训练做预训练，再统一后训练并比较成功率；含数据集规模与 BGTS 阈值两组消融。",
+  "baselines": [
+   "Scratch（仅后训练）",
+   "LAPA (Sthv2)",
+   "LAPA (Ours)",
+   "BridgeData V2",
+   "BC-Z",
+   "Fractal"
+  ],
+  "metrics": [
+   "任务成功率（真机 0.5 抓取 + 0.5 放置两段计分）",
+   "SIMPLER 平均成功率"
+  ],
+  "ablations": [
+   "数据集规模 5K/20K/45K",
+   "BGTS 阈值 δ_BGTS ∈ {0.5, 0.7, 1.0}"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "用本数据集预训练的 π0 在真机任务上达 21/40，高于 BC-Z 19/40 与 BridgeData V2 17/40，低于规模更大的 Fractal 22/40；与 BridgeData V2 混合后达 27/40。",
+   "scope": "ALOHA 真机 4 任务、每任务 10 次 rollout",
+   "locator": "B. Results, Table II"
+  },
+  {
+   "finding": "Scratch 真机成功率为 0%，LAPA 在仿真中性能下降；作者据此认为显式动作轨迹比潜动作提供更鲁棒的监督。",
+   "scope": "同一 π0 架构与后训练设置",
+   "locator": "B. Results"
+  },
+  {
+   "finding": "BGTS 阈值消融显示：不过滤（δ=1.0）虽保留 86,427 条 episode，但真机成功率降至 38.8±4.3，低于 δ=0.7 的 55.0±6.1；过严（δ=0.5）则因数据量缩减至 28,719 条而略降。",
+   "scope": "Table III，SIMPLER 与真机两环境",
+   "locator": "C. Ablation Study, Table III"
+  },
+  {
+   "finding": "数据集规模在真机上显著提升性能，但在仿真中全量数据反而比 0.1 子集低约 1%，作者归因于视觉域差距。",
+   "scope": "Fig. 6，规模消融",
+   "locator": "C. Ablation Study"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "EgoScaler 有时产生不准确轨迹，主要来自物体检测误差与点云配准误差；相邻帧深度不一致还会给平移分量带来抖动噪声。",
+    "locator": "B. Pre-training Dataset Construction, Data Curation Methods"
+   },
+   {
+    "limitation": "夹爪状态无法从 ego 视频管线获得，动作只能表示为 9 维（6DoF 位移，不含夹爪）。",
+    "locator": "C. Policy Training, Action Representation"
+   },
+   {
+    "limitation": "仿真中的收益较小且全量数据略逊于 0.1 子集，作者归因于仿真简化视觉系统造成的视觉域差距。",
+    "locator": "C. Ablation Study"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "物体中心轨迹只在抓取后的物体随动阶段近似末端轨迹，无法监督接近/抓取前的手部接近段与手指动作，对精细灵巧操作的迁移无证据。",
+    "basis": "方法以被操纵物体质心+旋转近似末端执行器状态且明确排除夹爪（III-A/III-C）。"
+   },
+   {
+    "boundary": "依赖相机内参与单目 3D 恢复（点云配准、COLMAP），对内参缺失或配准失败的样本只能剔除，轨迹绝对精度未与真值对标（无论文内 3D 误差定量）。",
+    "basis": "III-B 中 Ego4D 需 COLMAP 估计内参、失败即剔除；全文无轨迹精度真值评测。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：单目 RGB ego 视频、以刚体物体搬运类（pick-and-place）任务为目标、用物体 6DoF 轨迹替代手部/末端轨迹做 VLA 预训练的设置；不覆盖需要夹爪/手指级监督的灵巧操作，轨迹精度仅经下游成功率间接验证，且无真值 3D 误差定量。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "对照设计公平：LAPA 被移植到同一 π0 架构比较；真实机器人数据集与本文数据在相同后训练协议下对比。",
+   "BGTS 阈值消融直接量化“检测误差污染 vs 数据规模”的权衡，是少数把轨迹提取质量与下游策略性能挂钩的实验。",
+   "误差来源被显式归因到检测误差、配准误差、深度抖动三类，并各自对应一个可复现的规则缓解手段。"
+  ],
+  "design_risks": [
+   "真机评测每任务仅 10 次 rollout（共 40 次），样本量小、标准误大（±4~6 个百分点）。",
+   "轨迹质量没有与真值 3D 误差直接挂钩，只通过下游成功率间接体现；无法从本文推出可接受的厘米级/度数级阈值。",
+   "BGTS 阈值按仿真经验设定（δ=0.7），存在针对评测环境调参的风险。"
+  ],
+  "baseline_fairness": "LAPA 在相同 π0 架构与数据上复现，较公平；真实机器人数据集对照共享后训练协议，但各预训练集在内容/ embodiment 分布上天然不可控。",
+  "metric_validity": "成功率是部署可用性的直接代理；真机两段式 0.5+0.5 计分较粗，无法区分抓取失败与放置失败的误差来源；无轨迹级精度指标。",
+  "reproducibility": "管线组件均为公开模型（GPT-4o、Grounding DINO/SAM、SpatialTracker、COLMAP），过滤器规则与阈值写明；但未说明代码/数据是否发布。",
+  "external_validity": "仅覆盖搬运类任务与单臂 ALOHA/WidowX；对双手、灵巧手、长时程任务的外推无证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.21986-C01",
+   "claim": "存在一条不经过手部检测的路线：用 EgoScaler 从纯 RGB ego 视频提取被操纵物体的 6DoF 轨迹（质心+旋转），并将其近似为机器人末端执行器状态（不含夹爪）用于 VLA 预训练，从而完全绕开手部姿态标注对专用硬件的依赖。",
+   "stance": "conditional",
+   "relation": "支持“手部检测精度瓶颈可被物体中心表示绕开”的命题，但仅在以物体搬运为目标、可放弃夹爪监督的条件下成立。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言明确写出 EgoScaler 轨迹中每个位姿表示被操纵物体质心与旋转、近似为末端执行器状态（排除夹爪），并将该框架应用于 Ego4D/Ego-Exo4D/HD-EPIC/Nymeria 四个数据集。",
+   "locator": "I. INTRODUCTION",
+   "source_context": "Each pose in a trajectory rep-\nresents the centroid and rotation of the manipulated object,\napproximated as the end-effector states of a robot, excluding\nthe gripper. We apply this framework to four large egocentric\nvideo datasets, including Ego4D [22], Ego-Exo4D [23], HD-\nEPIC [24], and Nymeria [25].",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文 III-B 与引言均直接陈述物体位姿近似末端执行器状态、排除夹爪、应用于四个数据集；claim 未超出该设定，仅把'绕开手部检测'限定为与引言中批评 hand-pose 依赖一致的表述。"
+   }
+  },
+  {
+   "card_id": "2509.21986-C02",
+   "claim": "作者将无本体 ego 视频轨迹提取的误差显式归因于三类来源：物体检测误差、点云配准误差、相邻帧深度不一致造成的平移抖动；并分别用背景轨迹相似度（BGTS）阈值、行程距离阈值和五帧均值平滑予以缓解。",
+   "stance": "support",
+   "relation": "直接回答综述问题中的误差来源与缓解手段：即使不走手部检测，检测/配准/深度抖动仍是 robot-free 轨迹提取的主要误差源，且可用规则过滤器低成本缓解。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Data Curation 小节原话指出不准确轨迹主要来自检测与配准误差，并描述两条对应过滤器；随后一段说明深度不一致导致抖动并用五帧窗口平滑。",
+   "locator": "B. Pre-training Dataset Construction",
+   "source_context": "We found that EgoScaler some-\ntimes produces inaccurate trajectories, mainly due to object\ndetection and point cloud registration errors. To remove\nthem automatically, we apply two rule-based filters: a travel\ndistance threshold for registration errors and a background\ntrack similarity threshold for detection errors.\nFor the travel distance threshold (δ\nDT \n), we define the\ntravel distance D of a trajectory as the cumulative displace-\nment of its positional component, D = \nP\nT −1\nt=1 \n∥p\nt+1 \n− p\nt\n∥\n2\n,\nwhere p\nt \n= (x\nt\n, y\nt\n, z\nt\n) denotes the translational element of\nthe object trajectory τ\nt\n. Trajectories corrupted by registration\nerrors often contain abrupt mismatches across consecutive\nframes, leading to abnormally large D. We therefore discard\ntrajectories with D > δ\nTD\n.\nFor the background track similarity threshold (δ\nBGTS\n),\nlet the object track be {o\nt\n}\nT\nt=1 \nand the background track\nbe {q\nt\n}\nT\nt=1\n, where o\nt\n, q\nt \n∈ R\n2 \nare image-plane positions\nobtained by point tracker [51] within EgoScaler framework.\nWe observed that tracks from detection errors often resemble\n• \nPick up the carrot and place it into the pot.\n• \nPick up the carrot and place it into the bowl.\n• \nPick up the onion and place it into the pot.\n• \nPick up the onion and place it into the bowl.\nFig. 4: Overview of real-robot evaluation setting.\nTABLE I: Statistics of previous robot datasets and ours.\nDataset #Episodes #Verbs #Objects\nRoboTurk [55] 1,796 2 2\nBC-Z [26] 39,350 9 17\nBridgeData V2 [27] 53,192 270 749\nFractal [3] 87,212 6 13\nDROID [29] 92,233 194 907\nOurs 45,157 313 1,217\nthose of the background, as shown in Fig. 3. This is because\ndetection errors typically occur on non-interacted, static\nobjects. To detect such cases, we compute the background\ntrack similarity (BGTS) as the average cosine similarity\nbetween the object and background displacements:\nBGTS = \n1\nT − 1\nT −1\nX\nt=1\nu\nt \n· b\nt\n∥u\nt\n∥ ∥b\nt\n∥ \n, (1)\nwhere u\nt \n= o\nt+1\n−o\nt \nand b\nt \n= q\nt+1\n−q\nt \nare velocity vectors\nfrom the object and background tracks. We discard episodes\nwith BGTS > δ\nBGTS\n, where we empirically set δ\nBGTS \n= 0.7\nbased on simulator experiments.\nMoreover, due to depth inconsistencies between consec-\nutive frames, the translational components of the extracted\ntrajectories often contain jitter noise. To suppress this, we\napply a smoothing filter by averaging each translation vector\nover a five-frame window centered at the current frame.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两段原文分别支持三类误差源与三种缓解手段的一一对应；claim 中的归因关系与原文措辞一致，未引入因果外推。"
+   }
+  },
+  {
+   "card_id": "2509.21986-C03",
+   "claim": "轨迹提取质量与数据规模存在可量化的权衡：不过滤检测误差（δ_BGTS=1.0，86,427 条）时真机成功率降至 38.8±4.3，而 δ_BGTS=0.7（45,157 条）达 55.0±6.1，即约 2 倍含噪数据反而使成功率下降约 16 个百分点；过严过滤（0.5，28,719 条）为 53.8±5.2。",
+   "stance": "support",
+   "relation": "直接支撑“检测/追踪误差污染监督信号会降低策略性能，且存在质量-数量最优阈值”的命题；为可接受阈值提供经验锚点（BGTS≈0.7），同时说明单靠扩数据不能抵消轨迹噪声。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 给出三个阈值下的 episode 数与两环境成功率；消融段落解释为较低阈值去噪但缩量、较高阈值留噪而性能下降，0.7 为最佳折中。",
+   "locator": "B. Results; C. Ablation Study",
+   "source_context": "TABLE III: Performance comparison across different\nbackground track similarity thresholds (BGTS).\nδ\nBGTS \n#Episodes SIMPLER [20] Real Robot\n0.5 28,719 25.8\n±5.4 \n53.8\n±5.2\n0.7 45,157 26.0\n±5.9 \n55.0\n±6.1\n1.0 86,427 22.5\n±4.8 \n38.8\n±4.3",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate (ALOHA real-robot, mean ± std err)",
+    "value_or_direction": "55.0±6.1 at δ_BGTS=0.7 drops to 38.8±4.3 at δ_BGTS=1.0 (no filtering); 53.8±5.2 at δ_BGTS=0.5",
+    "comparator": "three BGTS thresholds 0.5 / 0.7 / 1.0 with 28,719 / 45,157 / 86,427 episodes",
+    "task_or_sample": "four ALOHA language-conditioned pick-and-place tasks, 10 rollouts each (40 total)",
+    "locator": "B. Results, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table III 的数值（86,427/45,157/28,719 与 38.8±4.3/55.0±6.1/53.8±5.2）与 claim 逐一核对一致；成功率下降的解读与作者消融段文字一致，claim 限定在真机 ALOHA 设置，未外推到其他任务。"
+   }
+  },
+  {
+   "card_id": "2509.21986-C04",
+   "claim": "用物体中心 ego 轨迹预训练的 π0 在真机搬运任务上达到 21/40，与真实机器人遥操作数据集相当（BC-Z 19/40、BridgeData V2 17/40、Fractal 22/40），与 BridgeData V2 混合后达 27/40；同设置下从头训练成功率为 0%。",
+   "stance": "support",
+   "relation": "支持“绕开手部检测的 robot-free 轨迹在搬运类任务上可提供接近遥操作数据的监督质量”，为该替代路线的可用性提供真机证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 报告四个预训练数据集在相同后训练协议下的真机成功率；正文确认 scratch 真机 0% 且混合数据集进一步增益。",
+   "locator": "B. Results",
+   "source_context": "TABLE II: Comparison with robot datasets. Successes\nout of 10 rollouts are reported for each task, with the final\ncolumn showing the total.\nDataset \nCarrot\n-Pot\nCarrot\n-Bowl\nOnion\n-Pot\nOnion\n-Bowl \nTotal\nBridgeData V2 [27] 4/10 3/10 6/10 4/10 17/40\nBC-Z [26] 5/10 5/10 4/10 5/10 19/40\nFractal [3] 7/10 4/10 7/10 4/10 22/40\nOurs 4/10 6/10 7/10 4/10 21/40\nOurs + [27] 7/10 7/10 7/10 6/10 27/40\nAs shown in Fig. 5, our method outperforms the scratch base-\nline in real-robot tasks, while achieving smaller but consis-\ntent gains in simulation. Under an identical architecture and\npost-training setting, the scratch model attains 0% success\nin real-robot, indicating a failure to ground instructions and\ngenerate meaningful trajectories.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "successes out of 40 rollouts (0.5 grasp + 0.5 place scoring)",
+    "value_or_direction": "Ours 21/40 vs BC-Z 19/40, BridgeData V2 17/40, Fractal 22/40; Ours+BridgeData V2 27/40; scratch 0%",
+    "comparator": "π0 pre-trained on three real-robot teleoperation datasets and scratch, identical post-training",
+    "task_or_sample": "four ALOHA pick-and-place tasks (carrot/onion into pot/bowl), 10 rollouts per task",
+    "locator": "B. Results, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table II 各行数值与 claim 一致；0% scratch 出自 Results 正文原句；claim 仅陈述真机搬运任务结果，未声称等价于灵巧操作。"
+   }
+  },
+  {
+   "card_id": "2509.21986-C05",
+   "claim": "该管线的监督信号止于刚体物体层面：夹爪状态无法从 ego 视频获得，动作被截断为 9 维（6DoF 位移、不含夹爪），因此无法监督抓取闭合与手指级控制。",
+   "stance": "limit",
+   "relation": "限定“绕开手部检测”路线的适用边界：监督精度在末端轨迹层面可用，但在夹爪/手指维度存在结构性缺失，review 中讨论末端轨迹可用性时必须排除该维度。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Action Representation 小节原话说明因 III-B 无法获得夹爪状态，每个动作为 9 维向量；问题定义节也说明预训练中状态与动作均在无夹爪的末端执行器空间近似。",
+   "locator": "C. Policy Training",
+   "source_context": "Action Representation. During pre-training on our dataset,\nan action is represented as the displacement of the 6DoF\n\n0\n9\n18\n27\n36\n45\n27\n26\n18\n21\n23\nScratch LAPA (Sthv2) LAPA (Ours) Ours Ours + BridgeData V2\n(b)SIMPLER\nAverage\n0\n20\n40\n60\n80\n68\n60\n707070\n55\n45\n70\n60\n45 \n38\n20\n35\n45\n50\n34\n30\n353535\n00000\nAverageCarrot - Pot Carrot - Bowl Onion - Pot Onion - Bowl\n(a) Real Robot Tasks\n% Success Rate\nFig. 5: Performance of baselines and our dataset across manipulation tasks. “ObjectA – ObjectB” denotes the\ntask “pick ObjectA and place it into ObjectB.” Parentheses indicate the used dataset for latent action pre-\ntraining. Average success rates (%) with standard error are reported.\nobject pose trajectory τ :\na\nt \n= \n\u0002\n∆x\nt\n, ∆y\nt\n, ∆z\nt\n, ∆rot6D\nt\n\u0003\n. (2)\nHere, {x\nt\n, y\nt\n, z\nt\n} denotes the positional coordinates, and\nrot6D\nt \n∈ R\n6 \nis a flattened vector of the first two columns\nof the rotation matrix R\nt\n. Because gripper states cannot be\nobtained from Section III-B, each action is represented by a\n9-dimensional vector.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两句原文分别出自 III-C 与 III-A，均直接支持 claim；'无法监督抓取闭合与手指级控制'是对'无夹爪维度'的直接释义，未扩展因果。"
+   }
+  },
+  {
+   "card_id": "2509.21986-C06",
+   "claim": "单目 ego 视频的 3D 轨迹恢复依赖相机内参：Ego4D 不提供 EgoScaler 所需内参，需先用 COLMAP 估计，找不到满足特征匹配与几何约束（最小内点数、最大重投影误差）的初始图像对时，该样本被直接剔除。",
+   "stance": "limit",
+   "relation": "对应综述问题中单目 3D 恢复的深度/标定歧义：内参缺失时只能靠 SfM 估计，失败样本被丢弃而非修正，构成数据召回层面的代价。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Egocentric Video Resources 小节说明 Ego4D 无内参、用 COLMAP 预估计、无有效初始对则剔除样本。",
+   "locator": "B. Pre-training Dataset Construction",
+   "source_context": "Unlike the other datasets, Ego4D\ndoes not provide camera intrinsics required by EgoScaler\nto reconstruct 3D trajectories. We therefore estimate them\nin advance using COLMAP [53], [54]. COLMAP searches\nfor an initial image pair that satisfies predefined feature-\nmatching and geometric constraints, such as a minimum\nnumber of inliers and a maximum re-projection error. If no\nvalid pair is found, we exclude the corresponding instance\nfrom our dataset.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文逐句支持内参依赖、COLMAP 估计与失败剔除；claim 未给出剔除比例（原文亦未给出），表述与证据强度匹配。"
+   }
+  }
+ ],
+ "core_citations": [
+  "T. Yoshida et al., EgoScaler: Generating 6DoF object manipulation trajectories from action description in egocentric vision, CVPR 2025（轨迹提取管线本体，本文误差来源即继承自它）",
+  "S. Ye et al., LAPA: Latent action pretraining from videos, ICLR 2025（显式轨迹 vs 潜动作的对照）"
+ ],
+ "notes": "Fig. 5/Fig. 6 的柱状数值在 html-flat 抽取中顺序错乱，未据此产出定量卡；规模消融仅采用正文方向性陈述。本文无独立 Limitations 节，author_stated 取自方法与消融中的自述误差来源。"
+}

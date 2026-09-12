@@ -1,0 +1,376 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2512.13644",
+  "title": "World Models for Learning Dexterous Hand-Object Interactions from Human Videos",
+  "published": "2025-12-15",
+  "url": "https://arxiv.org/abs/2512.13644",
+  "authors": [
+   "Raktim Gautam Goswami",
+   "Amir Bar",
+   "David Fan",
+   "Tsung-Yen Yang",
+   "Gaoyue Zhou",
+   "P. Krishnamurthy",
+   "Michael Rabbat",
+   "F. Khorrami",
+   "Yann LeCun"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接在 ego-centric 人类视频（EgoDex 829 小时）上训练灵巧手-物体交互世界模型，动作空间即 3D 手部关键点差分；其手部一致性损失消融、L2/PCK 指标背离、失败模式分解（Last cm/State Drift）与真机零样本迁移结果直接回答手部表征误差如何进入动力学学习并影响末端轨迹规划。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "定位问题：粗动作空间无法建模灵巧动态；人手上关键点作为动作表征的动机。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "确认与 PEVA/NWM/HOP/MAPLE 等人类视频驱动方法的边界。"
+   },
+   {
+    "locator": "3 Proposed Methodology",
+    "role": "method-or-design",
+    "purpose": "精读状态（DINOv2 patch 特征）、动作（21 关键点差分+相机运动）、预测器（CDiT 回归）、手部一致性损失与 MPC 规划。"
+   },
+   {
+    "locator": "4 Experiments and Results",
+    "role": "results-or-analysis",
+    "purpose": "精读消融（人类视频、HC 损失、模型规模、骨干）、开环轨迹评估与人到机器人迁移结果。"
+   },
+   {
+    "locator": "5 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：静态场景假设、约 4 小时探索性仿真数据依赖。"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者结论边界。"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "精读 EgoDex 标注构成（25 关键点/手、置信度）、四指 Allegro 到五指动作空间的映射、成功判据与失败模式分解表。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表对证据卡无直接贡献，跳过。"
+   },
+   {
+    "locator": "7 Acknowledgement",
+    "role": "appendix-or-supplement",
+    "purpose": "致谢与综述问题无关，跳过。"
+   }
+  ]
+ },
+ "research_question": "能否在 ego-centric 人类视频上以手部 3D 关键点为动作空间训练灵巧手-物体交互世界模型，并将其作为状态转移模型零样本迁移到机器人灵巧操作规划？",
+ "contributions": [
+  "DexWM：基于 DINOv2 patch 隐状态与 CDiT 预测器的灵巧交互世界模型，动作空间为双手 21 关键点 3D 差分加相机运动（44×3 维）。",
+  "手部一致性（HC）辅助损失：从预测隐状态恢复指尖/手腕热图，4 秒预测 PCK@20 提升最高 34 个百分点。",
+  "在 EgoDex（829 小时 ego 人类视频）+DROID（约 100 小时）上训练，约 4 小时 RoboCasa 探索数据微调后，仿真 reach/grasp/place 成功率 72/58/28%，真机零样本抓取 83%（10/12）。"
+ ],
+ "method": {
+  "summary": "冻结 DINOv2 编码图像为 patch 级隐状态；动作向量取相邻状态间 MANO 21 关键点（双手）3D 差分并叠加相机平移/旋转变化；CDiT 预测器直接回归下一隐状态；附加手部一致性损失（从预测状态解码指尖与手腕热图，高斯真值 σ=2 像素）；下游用 CEM 在 MPC 框架内优化关节角序列，以隐状态距离+关键点位素距离为规划代价。",
+  "assumptions": [
+   "环境动态确定性（不建模随机性）。",
+   "数据集自带的手部关键点标注质量足以支撑动作空间（未做额外去噪或人工校正）。",
+   "四指 Allegro 手可通过复制无名指关键点近似五指人手动作空间。",
+   "静态场景、无外部智能体干扰。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EgoDex（829 小时 1080p/30Hz ego 视频，194 任务、500 物体，25 关键点/手带置信度）",
+   "DROID（约 100 小时平行夹爪机器人数据，末端同心圆伪关键点）",
+   "RoboCasa 探索数据（约 4 小时随机臂运动）"
+  ],
+  "tasks": [
+   "开环轨迹预测（4 秒/20 帧@5Hz）",
+   "仿真 reach/grasp/place（各 50 次试验）",
+   "真机零样本抓取（12 次试验、4 种物体）"
+  ],
+  "embodiments": [
+   "人类（Apple Vision Pro 采集）",
+   "Franka Panda + Allegro 四指灵巧手（仿真与真机）",
+   "DROID 平行夹爪（伪关键点近似）"
+  ],
+  "sample_or_scale": "预训练 40 epoch、batch 4096；DexWM-XL 456M 参数；仿真每任务 50 次试验；真机 12 次试验。"
+ },
+ "evaluation": {
+  "design": "消融（人类数据、HC 损失、模型规模、骨干网络）+开环轨迹对比（NWM*/PEVA*/Cosmos-Predict2）+MPC 规划迁移对比（Diffusion Policy、无预训练 DexWM）。",
+  "baselines": [
+   "NWM*（仅相机运动条件）",
+   "PEVA*（仅上肢姿态、无手指）",
+   "Cosmos-Predict2（文本条件）",
+   "Diffusion Policy（含同款人类数据预训练变体）",
+   "DexWM w/o pre-training"
+  ],
+  "metrics": [
+   "embedding L2 error",
+   "PCK@20（预测关键点 20 像素内命中率）",
+   "任务成功率（reach<15cm、grasp 接触+20cm、place<10cm）"
+  ],
+  "ablations": [
+   "EgoDex/DROID 数据组合",
+   "HC 损失有无",
+   "预测器规模 30M-450M",
+   "视觉骨干 DINOv2/DINOv3/Web-SSL/V-JEPA2/SigLIP2"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仅预测视觉特征不足以建模灵巧动态：手部只占图像小区域，需手部一致性损失提供局部监督，4 秒 PCK@20 从 26 提升到 60。",
+   "scope": "EgoDex 开环预测",
+   "locator": "4.2 Ablation Studies"
+  },
+  {
+   "finding": "全局感知相似度（embedding L2）更低不等于手部位置更准：PEVA* 的 L2 略优于 DexWM，但 PCK@20 平均低 5 个百分点以上。",
+   "scope": "EgoDex 开环预测对比",
+   "locator": "4.4 Open-Loop Trajectory Evaluation"
+  },
+  {
+   "finding": "加入 EgoDex 人类视频后 RoboCasa 下游开环指标改善（L2 0.79/0.57 vs 1.3/0.96；PCK@20 7/17 vs 2/12），人类视频对跨本体动力学学习有贡献。",
+   "scope": "RoboCasa Lift 开环评估",
+   "locator": "3.4 Robot Task Planning"
+  },
+  {
+   "finding": "DexWM 真机零样本抓取 10/12（≈83%），显著超过 Diffusion Policy（0%）与无人类预训练变体（0%）。",
+   "scope": "Franka+Allegro 真机抓取",
+   "locator": "4.5 Human Video To Robot Transfer"
+  },
+  {
+   "finding": "规划失败分解显示 Last cm 末端误差与隐状态漂移是主要失败模式之一（grasp：Last cm 20%、State Drift 18%）。",
+   "scope": "RoboCasa reach/grasp/place 规划",
+   "locator": "Appendix"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "依赖约 4 小时探索性仿真数据弥合本体差距，去除该依赖留作未来工作。",
+    "locator": "5 Limitations"
+   },
+   {
+    "limitation": "假设静态场景且无外部智能体（含预训练数据集）；动态交互环境可能需要引入测试时优化的随机隐变量。",
+    "locator": "5 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部关键点标注噪声对世界模型的影响未做受控实验：EgoDex 关键点为自动标注（带置信度），论文未报告按置信度过滤或注入噪声的消融，无法从本文确定动力学性能对标注误差的敏感度曲线。",
+    "basis": "3.1 与附录 C.2 仅说明标注构成；全部实验使用原始标注。"
+   },
+   {
+    "boundary": "真机评估仅 12 次抓取试验且成功判据为人工观察，reach/place 未做真机评估。",
+    "basis": "4.5 与附录 C.5。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于：EgoDex 式高质量 ego 视频（AVP 采集、1080p30、带 3D 关键点与置信度标注）训练的隐空间世界模型；Franka+Allegro 单臂单手 reach/grasp/place 短时规划（真机规划时域 2 步、开环执行）；静态场景。不能外推到纯 2D 手部追踪、长时序闭环任务、双手协作或接触力密集型操作；手部标注噪声-动力学性能的剂量关系本文未测。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "手部一致性损失消融直接隔离了手部监督对动力学学习的作用。",
+   "同时报告全局（L2）与局部手部（PCK@20）指标并指出二者背离，避免了单一代理指标的误导。",
+   "失败模式按接触/掉落/末端误差/状态漂移分类定量报告；DP 同款预训练对照排除了“仅靠预训练数据”的替代解释。"
+  ],
+  "design_risks": [
+   "NWM*/PEVA* 为作者在自框架内的简化复现（去掉手/手指条件），与原版不完全等价。",
+   "真机 12 次试验样本小、人工判成功；规划每次 168 秒（8×H100），部署可行性有限。",
+   "未分析 EgoDex 关键点标注误差对动作空间与预测精度的传播。"
+  ],
+  "baseline_fairness": "DP 使用官方实现并额外做了同款人类数据预训练对照，较公平；NWM*/PEVA* 为裁剪变体，作者在 4.3 明确说明了裁剪内容，比较方向是动作空间粒度而非模型全貌。",
+  "metric_validity": "PCK@20 直接测预测隐状态恢复手部关键点的能力，与灵巧交互建模高度相关；仿真成功判据用末端位置欧氏阈值+接触检测，接近部署效用；L2 仅代理感知相似度，作者自己指出其对手部精度不敏感。",
+  "reproducibility": "架构、训练超参、CEM 参数、成功判据均在附录给出；有项目页；EgoDex/DROID/RoboCasa 均为公开资源。",
+  "external_validity": "训练数据集中于 AVP 采集的第一人称操作与厨房仿真场景；对手持手机等消费级 ego 视频、非厨房场景、更低质量手部标注的迁移性未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2512.13644-C01",
+   "claim": "仅用视觉隐状态预测损失训练世界模型不足以捕捉灵巧动态，因为手部只占图像很小区域；作者据此引入从预测隐状态解码指尖/手腕热图的手部一致性损失作为局部监督。",
+   "stance": "support",
+   "relation": "支持综述命题“手部误差会在全局视觉目标下被稀释、从而污染动力学学习”，并给出一种缓解机制（手部特异性辅助监督）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.3 节作者明确观察到单靠 L_state 不足以捕捉灵巧动态所需的细粒度细节，原因是手部在图像中占比小，因此加入手部一致性损失。",
+   "locator": "3.3 Hand Consistency Training Loss",
+   "source_context": "insufficient for capturing the fine-grained details necessary for modeling dexterous dynamics, as the hands occupy only a small region of the image.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 3.3 节原文（L_state 下标在抽取中换行，取连续片段避免断词）；claim 只复述作者动机，未声称数值效果。"
+   }
+  },
+  {
+   "card_id": "2512.13644-C02",
+   "claim": "在 EgoDex 开环预测上，加入手部一致性损失使 4 秒预测的 PCK@20 从 26 提升至 60（+34 个百分点），embedding L2 误差同时从 0.85 降到 0.66，说明手部特异性监督显著改善了世界模型对手部位形的建模。",
+   "stance": "support",
+   "relation": "支持综述命题“针对手部的监督信号可缓解手部表征误差对动力学学习的污染”，给出量化幅度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 节表 2：无 HC 损失 PCK@20@4s=26、L2=0.85；有 HC 损失 PCK@20@4s=60、L2=0.66；正文复述 +34pp。",
+   "locator": "4.2 Ablation Studies",
+   "source_context": "adding hand consistency loss yields up to a 34% increase in PCK@20 at 4 seconds prediction.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PCK@20（20 像素内关键点命中率）与 embedding L2 error",
+    "value_or_direction": "PCK@20@4s 26→60（+34pp）；L2@4s 0.85→0.66",
+    "comparator": "无手部一致性损失的相同 DexWM",
+    "task_or_sample": "EgoDex 开环轨迹预测（4 秒、20 帧@5Hz）",
+    "locator": "4.2 Ablation Studies"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 2 数值与正文 +34% 陈述一致；claim 限定于 EgoDex 开环预测设置，未外推到下游规划。"
+   }
+  },
+  {
+   "card_id": "2512.13644-C03",
+   "claim": "更低的整体感知相似度误差（embedding L2）并不意味着手部位置建模更准：PEVA* 的 L2 略优于 DexWM（0.62/0.49 vs 0.67/0.51），但 PCK@20 更低（56/63 vs 60/68），DexWM 平均 PCK@20 高出 5 个百分点以上。",
+   "stance": "limit",
+   "relation": "限制综述命题“全局重建/感知指标可代理手部轨迹质量”——评估手部检测精度对动力学的影响需要手部特异性度量（如 PCK），否则误差被掩盖。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 3 给出三模型 L2 与 PCK@20 对照，表注与 4.4 节正文均指出 L2 更低不等于手部位置更准。",
+   "locator": "4.2 Ablation Studies",
+   "source_context": "We find that lower perceptual similarity score (Embedding L2 Error) does not always reflect more accurate hand location, which is reliably captured by estimating the hands position, measured by percentage of correct keypoints (PCK).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "embedding L2 error 与 PCK@20",
+    "value_or_direction": "PEVA* L2 0.62/0.49、PCK@20 56/63；DexWM L2 0.67/0.51、PCK@20 60/68（4s/平均）",
+    "comparator": "NWM*（L2 0.74/0.57、PCK@20 34/48）与 PEVA*（上肢姿态条件、无手指）",
+    "task_or_sample": "EgoDex 开环 4 秒轨迹预测，三模型均训 40 epoch",
+    "locator": "4.2 Ablation Studies"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 3 数值逐一核对；claim 的指标背离表述与表注及 4.4 节正文一致，未超出三模型两数据集外比较。"
+   }
+  },
+  {
+   "card_id": "2512.13644-C04",
+   "claim": "在 DexWM 训练组合中加入 EgoDex 人类 ego 视频后，RoboCasa 下游开环预测改善：embedding L2 从 1.3/0.96 降到 0.79/0.57（4s/平均），PCK@20 从 2/12 升到 7/17，说明带手部关键点标注的人类视频对跨本体动力学学习有可测收益。",
+   "stance": "support",
+   "relation": "支持综述命题“无本体 ego 人类数据可提升机器人本体动力学/轨迹学习”，并暗示手部标注是该数据的载荷之一。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 1（位于 3.4 节版面内）对比 EgoDex+DROID 与仅 DROID 训练在 RoboCasa Lift 开环评估的 L2 与 PCK@20；4.2 节正文确认加入 EgoDex 显著提升 RoboCasa 表现。",
+   "locator": "3.4 Robot Task Planning; 4.2 Ablation Studies",
+   "source_context": "adding EgoDex on top of DROID significantly boosts performance on RoboCasa, while preserving performance on EgoDex.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "embedding L2 error 与 PCK@20",
+    "value_or_direction": "RoboCasa：L2 0.79/0.57（EgoDex+DROID）vs 1.3/0.96（仅 DROID）；PCK@20 7/17 vs 2/12（4s/平均）",
+    "comparator": "仅用 DROID 机器人数据训练的 DexWM",
+    "task_or_sample": "RoboCasa Lift 数据集零样本开环 rollout",
+    "locator": "3.4 Robot Task Planning"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 1 数值逐格核对；引文为 4.2 节原文；claim 未声称人类数据是唯一改进来源（规模消融另述），范围限定 RoboCasa 开环评估。"
+   }
+  },
+  {
+   "card_id": "2512.13644-C05",
+   "claim": "DexWM 在真机 Franka+Allegro 上零样本抓取 12 次试验成功 10 次（≈83%），而 Diffusion Policy 与无人类视频预训练的 DexWM 真机成功率为 0；仿真 reach/place/grasp 成功率 72%/28%/58%。",
+   "stance": "support",
+   "relation": "支持综述命题“由 ego 人类视频训练的手部动作表征可转化为本体末端可用轨迹（经 MPC 规划）”，给出真机可用性证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.5 节与表 4：真机抓取 10/12≈83%；仿真三任务 72/28/58；DP 与无预训练变体真机均为 0。",
+   "locator": "4.5 Human Video To Robot Transfer",
+   "source_context": "Without any finetuning on real robot data, DexWM achieves 10 successes out of 12 trials (≈ 83% success rate)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "任务成功率",
+    "value_or_direction": "真机抓取 83%（10/12）；仿真 reach 72%、grasp 58%、place 28%",
+    "comparator": "Diffusion Policy（真机 0%）与 DexWM 无预训练变体（真机 0%；仿真 18/8/14）",
+    "task_or_sample": "真机 12 次抓取（4 种物体）；仿真每任务 50 次随机化试验",
+    "locator": "4.5 Human Video To Robot Transfer"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "真机数字与 4.5 节正文一致，仿真数字与表 4 一致；claim 同时报告了对照组零成功率，未只报喜。"
+   }
+  },
+  {
+   "card_id": "2512.13644-C06",
+   "claim": "DexWM 规划失败模式分解显示：grasp 任务失败中 20% 为 Last cm 末端误差（到达目标区域但差最后几厘米）、18% 为隐状态漂移（世界模型状态预测随时间逐渐漂移）；reach 任务 Last cm 占 24%。",
+   "stance": "limit",
+   "relation": "支持综述命题“误差沿感知→状态预测→规划路径传播并集中在末端几厘米与时序漂移上显现”，给出了传播路径末端的定量失败结构。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 C.6 表 6 将失败分为接触动态/掉落/Last cm/状态漂移四类并给出各任务百分比；正文定义了 Last cm 与 State Drift 的失效机理。",
+   "locator": "Appendix",
+   "source_context": "Last cm errors occur when the robot reaches the target region but fails due to small inaccuracies in the final few centimeters. State Drift denotes failures where the world model’s state prediction gradually drifts over time.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "失败模式占比（%）",
+    "value_or_direction": "grasp：Last cm 20%、State Drift 18%、接触 4%；reach：Last cm 24%、State Drift 4%；place：掉落 70%",
+    "comparator": "四类失败模式相互之间",
+    "task_or_sample": "RoboCasa reach/grasp/place 各 50 次规划试验的失败子集",
+    "locator": "Appendix"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 6 各行数值核对无误（reach 0/0/24/4、grasp 4/0/20/18、place 0/70/0/2）；引文为 C.6 原文定义；claim 未把失败占比当作成功率的补集误读（表 6 分母为失败）。"
+   }
+  },
+  {
+   "card_id": "2512.13644-C07",
+   "claim": "DexWM 的手部动作监督完全建立在 ego 数据集自带的自动标注之上：EgoDex 提供每只手 25 个 3D 关键点、相机内外参与全部姿态估计的置信度分数，论文未报告额外人工校正或按置信度过滤。",
+   "stance": "conditional",
+   "relation": "限定综述命题“人类视频可直接提供高质量手部监督”——监督质量上界取决于采集端自动标注质量；本文的成立条件是使用带置信度的 AVP 采集标注。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 C.2 说明 EgoDex 标注构成（3D 骨架、25 关键点/手、置信度）；3.1 节说明多数 ego 数据集已含手部关键点标注，DexWM 直接使用。",
+   "locator": "Appendix",
+   "source_context": "EgoDex provides rich multimodal annotations, in- cluding 3D skeletal poses for the upper body and 25 keypoints per hand, camera intrinsics and extrinsics, and confidence scores for all pose estimates.",
+   "evidence_type": "dataset",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 C.2（含换行连字符 in- cluding 的规范化形式）；claim 中“未报告人工校正/过滤”是对全文训练设置的事实陈述（3.1、C.1、C.2 均无此类步骤），属负向事实而非推断。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "世界模型视角的核心证据：手部在图像中占比小导致全局损失稀释手部误差（机制）、HC 损失消融（缓解）、L2/PCK 背离（度量口径）、Last cm/State Drift 失败分解（传播路径末端）。未做标注噪声受控实验是本文相对综述问题的最大空白。"
+}
