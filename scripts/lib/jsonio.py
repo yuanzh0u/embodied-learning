@@ -8,6 +8,16 @@ import uuid
 from pathlib import Path
 
 
+def load_json(path: Path | str) -> dict | list:
+    """Read a JSON document, raising ValueError with the path on decode errors."""
+
+    path = Path(path)
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{path}: invalid JSON ({exc})") from exc
+
+
 def atomic_write_json(path: Path, value: object, *, indent: int | None = 2) -> None:
     """Write ``value`` as JSON via tmp file + ``os.replace`` so readers never
     see a half-written file. Cleans up the tmp file on failure."""

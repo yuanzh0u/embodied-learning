@@ -4,8 +4,8 @@ Keep two layers: a clean reader surface and a complete audit surface.
 
 ## Reader surface
 
-- Body citations point to the paper: `[SIEVE](https://arxiv.org/abs/2607.06442)`.
-- Scientific memo: use paper links in prose, cite at least 5 representative papers, and keep a full `## References`; add sources only when they contribute a distinct mechanism, result, or boundary.
+- Body citations point to the paper: `[SIEVE](https://arxiv.org/abs/2607.06442)` (Zhihu, Xiaohongshu).
+- Scientific memo: **superscript numbered citations, one marker per cited number** — `^[1]^`, `^[2]^` in the text (Pandoc-style superscript with square brackets). NEVER batch numbers into one marker (`^[1,2,3]^` is a style violation): write each cited number as its own adjacent marker, e.g. `^[1]^ ^[2]^ ^[3]^`. Each marker resolves, at Wiki build time, against the document's own `## References` list into a clickable reader link — so the References section must keep its per-entry arXiv links (`[arXiv:2602.11323](https://arxiv.org/abs/2602.11323)`). Cite at least 5 representative papers, then list them under a full `## References` section: one line per entry, numbered to match the superscripts, each giving the paper's English title, first author et al., year, and the arXiv link. Add sources only when they contribute a distinct mechanism, result, or boundary.
 - Zhihu: use a small number of paper links in prose and 3-12 annotated items under `## 延伸阅读` or `## References`.
 - Xiaohongshu: use 3-5 representative paper links and one compact `📚 依据` line; do not add a full bibliography.
 - Never expose event IDs, stance labels, confidence labels, or appendix anchors in body prose.

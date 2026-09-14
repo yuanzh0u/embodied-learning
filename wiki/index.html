@@ -7,6 +7,8 @@
     <meta name="description" content="从科研备忘录到公众解释，导览和阅读空间智能话题研究成果。">
     <title>空间智能研究 Wiki</title>
     <link rel="stylesheet" href="assets/wiki.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
     <script defer src="assets/wiki.js"></script>
   </head>
   <body>
@@ -33,6 +35,9 @@
           <span><strong id="topic-count">—</strong> 篇</span>
           <span id="snapshot-time">正在读取成果索引…</span>
         </div>
+        <button class="evidence-button topbar-chat-button" id="chat-open-button" type="button">
+          <span aria-hidden="true">✦</span> 与 Claude 讨论
+        </button>
         <a class="topbar-icon-button" href="https://github.com/yuanzh0u/embodied-learning" target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 代码仓" data-tooltip="GitHub 代码仓">
           <img class="github-mark-icon" src="assets/github-mark.svg" alt="">
         </a>
@@ -42,9 +47,6 @@
         <button class="topbar-icon-button" id="refresh-button" type="button" aria-label="检查更新" data-tooltip="检查更新">
           <span class="refresh-icon" aria-hidden="true">↻</span>
           <span class="sr-only" id="refresh-label">检查更新</span>
-        </button>
-        <button class="topbar-icon-button" id="chat-toggle" type="button" aria-label="研究助手对话" aria-expanded="false" aria-controls="chat-panel" data-tooltip="研究助手对话">
-          <span aria-hidden="true">✦</span>
         </button>
       </div>
     </header>
@@ -56,6 +58,11 @@
           <p class="tree-section-label">研究领域</p>
           <div class="field-nav" id="field-nav"></div>
         </nav>
+        <div class="sidebar-toc" id="sidebar-toc" hidden>
+          <p class="eyebrow">本页目录</p>
+          <nav id="toc-nav"></nav>
+          <div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div>
+        </div>
       </aside>
 
       <button class="sidebar-scrim" id="sidebar-scrim" type="button" aria-label="关闭话题导航"></button>
@@ -65,11 +72,19 @@
           <p class="eyebrow">Latest research</p>
           <h1>把复杂研究，放进一条可阅读的路径。</h1>
           <p>每个话题只呈现最新完整成果。先读知乎解释版建立理解，再按需进入科研备忘录和证据附录。</p>
+          <div class="home-chat-hero" id="home-chat-hero" hidden>
+            <form id="home-chat-form">
+              <textarea id="home-chat-input" rows="2" placeholder="输入你想综述的主题，例如：室外大尺度场景实例分割…" aria-label="综述主题"></textarea>
+              <button class="chat-send" id="home-chat-send" type="submit">开始综述 →</button>
+            </form>
+            <p class="home-chat-hint">输入主题后回答几个问题，Claude 将执行完整文献综述流程（检索 → 深读 → 大纲确认 → 三种成稿）。</p>
+          </div>
+          <form class="interview-card" id="interview-card" hidden></form>
           <div class="welcome-grid" id="welcome-grid"></div>
         </section>
 
         <article class="article" id="article-view" hidden>
-          <header class="article-header">
+          <header class="article-header" id="article-header">
             <div class="article-kicker">
               <span id="article-field">研究领域</span>
               <span aria-hidden="true">·</span>
@@ -87,17 +102,34 @@
               <button class="evidence-button" id="evidence-button" type="button">
                 <span aria-hidden="true">▤</span> 查看证据
               </button>
-              <button class="evidence-button chat-open-button" id="chat-open-button" type="button">
-                <span aria-hidden="true">✦</span> 与 Claude 讨论
+            </div>
+          </header>
+          <header class="reader-view-header" id="reader-view-header" hidden>
+            <div class="article-kicker">
+              <span>arXiv Reader</span>
+              <span aria-hidden="true">·</span>
+              <span id="reader-view-id"></span>
+            </div>
+            <h1 id="reader-view-title">正在加载论文…</h1>
+            <div class="article-actions">
+              <div class="version-tabs">
+                <button type="button" id="reader-back-button">← 返回主题卡</button>
+              </div>
+              <button class="evidence-button" id="reader-open-external" type="button">
+                <span aria-hidden="true">↗</span> 在 arXiv 打开
               </button>
             </div>
           </header>
-          <div class="reading-meta">
+          <div class="reading-meta" id="reading-meta">
             <span id="version-article-title"></span>
             <span id="reading-length"></span>
           </div>
           <div class="markdown-body" id="article-body" tabindex="-1"></div>
-          <footer class="article-footer">
+          <div class="reader-progress" id="reader-progress" hidden>
+            <span class="reader-progress-bar" id="reader-progress-bar"></span>
+            <span class="reader-progress-label" id="reader-progress-label">正在获取全文…</span>
+          </div>
+          <footer class="article-footer" id="article-footer">
             <p>本文来自研究工作流中的最新完整成稿；三种表达共享证据层，但面向不同阅读场景。</p>
             <button id="next-topic" type="button">阅读下一篇 <span aria-hidden="true">→</span></button>
           </footer>
@@ -110,12 +142,6 @@
           <button type="button" id="retry-button">重新加载</button>
         </section>
       </main>
-
-      <aside class="toc-panel" id="toc-panel" aria-label="本页目录">
-        <p class="eyebrow">本页目录</p>
-        <nav id="toc-nav"></nav>
-        <div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div>
-      </aside>
     </div>
 
     <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title">
@@ -145,22 +171,38 @@
     </aside>
 
     <aside class="chat-panel" id="chat-panel" aria-label="研究助手对话" aria-hidden="true">
+      <button class="chat-resizer" id="chat-resizer" type="button" aria-label="拖动调节对话面板宽度" aria-hidden="true" tabindex="-1"></button>
       <header class="chat-panel-header">
         <div>
           <p class="eyebrow">Chat</p>
           <h2 id="chat-title">研究助手</h2>
         </div>
         <div class="chat-header-actions">
+          <button class="chat-pane-button" id="chat-show-topic" type="button" aria-label="切换到当前主题卡对话">主题对话</button>
+          <button class="chat-pane-button" id="chat-show-paper" type="button" aria-label="切换到单篇论文对话">论文对话</button>
+          <button class="chat-pane-button" id="chat-show-workflow" type="button" aria-label="切换到工作流对话" hidden>工作流</button>
+          <button class="icon-button" id="chat-expand" type="button" aria-label="切换专注模式" data-tooltip="专注模式" aria-pressed="false">⤢</button>
           <button class="icon-button" id="chat-reset" type="button" aria-label="开启新对话" data-tooltip="新对话">⟳</button>
           <button class="icon-button" id="chat-close" type="button" aria-label="关闭对话面板">×</button>
         </div>
       </header>
       <p class="chat-session-meta" id="chat-session-meta"></p>
+      <form class="chat-paper-bar" id="paper-id-form" hidden>
+        <input type="text" id="paper-id-input" placeholder="输入 arXiv 论文 ID，如 2402.10329" autocomplete="off">
+        <button class="chat-send" id="paper-id-load" type="submit">载入论文</button>
+      </form>
       <div class="chat-messages" id="chat-messages"></div>
       <p class="chat-status" id="chat-status" hidden></p>
       <form class="chat-composer" id="chat-form">
         <textarea id="chat-input" rows="2" placeholder="就本话题提问，或让 Claude 写综述草稿…" autocomplete="off"></textarea>
         <div class="chat-composer-actions">
+          <select class="chat-model" id="chat-model" aria-label="对话模型" title="对话使用的模型">
+            <option value="glm-5.3-flash" selected>glm-5.3-flash</option>
+            <option value="deepseek-v4-flash-vision-exp">deepseek-v4-flash-vision-exp</option>
+            <option value="opus">opus</option>
+            <option value="sonnet">sonnet</option>
+            <option value="haiku">haiku</option>
+          </select>
           <span class="chat-hint">Enter 发送 · Shift+Enter 换行</span>
           <button class="chat-stop" id="chat-stop" type="button" hidden>停止</button>
           <button class="chat-send" id="chat-send" type="submit">发送</button>
@@ -169,6 +211,9 @@
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="selection-popup" id="selection-popup" hidden>
+      <button type="button" id="selection-cite">引用到对话</button>
+    </div>
     <noscript>这个 Wiki 需要启用 JavaScript 才能读取研究成果。</noscript>
   </body>
 </html>

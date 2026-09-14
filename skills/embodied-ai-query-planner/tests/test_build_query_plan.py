@@ -313,6 +313,78 @@ class CoverageGroupTests(unittest.TestCase):
             with self.subTest(tier=tier):
                 self.assertEqual(self.planner.coverage_group(tier), expected)
 
+    def test_dynamic_and_calibrated_tiers_fall_back_to_label_keywords(self) -> None:
+        """A 2026-09-11 review run generated 50 dynamic/calibrated queries that
+        all collapsed into one adjacent-and-transfer dimension because their
+        tier names carry no dimension signal. The label keywords name the
+        dimension instead."""
+        cases = {
+            ("dynamic-association", "dynamic-direct-topic-online-temporal-calibration"): "direct-topic",
+            ("dynamic-association", "dynamic-limit-degenerate-motion"): "limits-and-counterevidence",
+            ("dynamic-association", "dynamic-benchmark-euroco"): "evaluation-and-validation",
+            ("dynamic-association", "dynamic-mechanism-bspline"): "mechanisms-and-interfaces",
+            ("dynamic-association", "dynamic-association-unlabeled"): "adjacent-and-transfer",
+            ("dynamic-core", "latin-1"): "direct-topic",
+            ("calibrated-term", "calibrated-limit-degeneracy"): "limits-and-counterevidence",
+            ("calibrated-term", "calibrated-time-offset"): "adjacent-and-transfer",
+        }
+        for (tier, label), expected in cases.items():
+            with self.subTest(tier=tier, label=label):
+                self.assertEqual(self.planner.coverage_group(tier, label), expected)
+
+
+class WeakAliasConfidenceTests(unittest.TestCase):
+    """A topic matched ONLY through generic vocabulary aliases (点云/传感器/data/
+    model/...) must not inherit the matched card's static queries: the 2026-09-11
+    点云特征法粗配准 run inherited EA-SENSOR's robot-manipulation queries, the real
+    topic vocabulary never entered the plan, and retrieval failed end to end.
+    infer_confident_keys is the planner's confidence gate; the plan still keeps
+    the weak ids in knowledge_ids for run-manifest routing context."""
+
+    def setUp(self) -> None:
+        scripts_dir = str(ROOT / "skills" / "embodied-ai-query-planner" / "scripts")
+        if scripts_dir not in sys.path:
+            sys.path.insert(0, scripts_dir)
+        import query_taxonomy
+
+        self.taxonomy = query_taxonomy
+
+    def test_vocabulary_only_topic_degrades_to_no_confident_keys(self) -> None:
+        for topic in ("点云特征法粗配准", "多传感器时间同步误差估计", "点云粗配准", "点云去动态"):
+            with self.subTest(topic=topic):
+                raw = self.taxonomy.infer_keys(topic)
+                self.assertEqual(raw, ["EA-SENSOR"], "expected the old mis-route to reproduce")
+                self.assertEqual(self.taxonomy.infer_confident_keys(topic), [])
+
+    def test_distinctive_topic_still_maps_confidently(self) -> None:
+        cases = {
+            "传感器融合": ["EA-SENSOR"],
+            "vla数据金字塔": ["EA-DATA", "EA-MODEL", "EA-EVAL", "droid-ego4d", "vla", "sim2real"],
+            "触觉力控": ["EA-SENSOR", "tactile-force"],
+            "世界模型驱动4d仿真与规划": ["EA-MODEL", "EA-EVAL", "world-model"],
+        }
+        for topic, expected in cases.items():
+            with self.subTest(topic=topic):
+                self.assertEqual(self.taxonomy.infer_confident_keys(topic), expected)
+
+    def test_weak_only_plan_skips_card_queries_and_keeps_routing_ids(self) -> None:
+        plan = run_json("--topic", "点云特征法粗配准", "--max-queries", "10")
+        self.assertEqual(plan["knowledge_ids"], ["EA-SENSOR"])
+        self.assertEqual(plan["plan_knowledge_ids"], [])
+        labels = {item["label"] for item in plan["arxiv_api_queries"]}
+        self.assertNotIn("ea-sensor-multimodal-policy", labels)
+        self.assertTrue(any(label.startswith("generic") for label in labels))
+        self.assertTrue(
+            any("generic vocabulary aliases" in note for note in plan["notes"]),
+            plan["notes"],
+        )
+
+    def test_confident_plan_keeps_card_queries(self) -> None:
+        plan = run_json("--topic", "传感器融合", "--max-queries", "10")
+        self.assertEqual(plan["plan_knowledge_ids"], ["EA-SENSOR"])
+        labels = {item["label"] for item in plan["arxiv_api_queries"]}
+        self.assertIn("ea-sensor-multimodal-policy", labels)
+
 
 if __name__ == "__main__":
     unittest.main()

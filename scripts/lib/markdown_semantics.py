@@ -29,6 +29,9 @@ INLINE_CODE = re.compile(r"`([^`]+)`")
 INLINE_BOLD = re.compile(r"\*\*(.+?)\*\*|__(.+?)__")
 INLINE_STRIKE = re.compile(r"~~(.+?)~~")
 INLINE_ITALIC = re.compile(r"(?<!\*)\*([^*\n]+)\*(?!\*)")
+# Pandoc-style superscript (^...^) — the scientific memo's citation markers
+# (e.g. ^1^, ^2,3^). No brackets: the memo template mandates bare ^n^ markers.
+INLINE_SUPERSCRIPT = re.compile(r"\^([^\^\n]+)\^")
 
 
 @dataclass(frozen=True)
@@ -108,6 +111,7 @@ def _inline(
     )
     rendered = INLINE_STRIKE.sub(r"<del>\1</del>", rendered)
     rendered = INLINE_ITALIC.sub(r"<em>\1</em>", rendered)
+    rendered = INLINE_SUPERSCRIPT.sub(r"<sup>\1</sup>", rendered)
     for token, value in tokens.items():
         rendered = rendered.replace(token, value)
     return rendered
@@ -279,6 +283,21 @@ def render_markdown(
             continue
 
         if not stripped:
+            # A blank line inside a list does not end the list when the next
+            # non-blank line continues it — writers separate reference-list
+            # entries with blank lines, and closing the <ol> there restarts
+            # numbering at 1 for every entry (2026-09-11 图像粗配准 bug).
+            lookahead = index + 1
+            while lookahead < len(lines) and not lines[lookahead].strip():
+                lookahead += 1
+            if in_ul and lookahead < len(lines) and UL_ITEM.match(lines[lookahead].strip()):
+                flush_paragraph()
+                index += 1
+                continue
+            if in_ol and lookahead < len(lines) and OL_ITEM.match(lines[lookahead].strip()):
+                flush_paragraph()
+                index += 1
+                continue
             flush_paragraph()
             close_lists()
             index += 1

@@ -15,6 +15,21 @@
     "跨本体与控制",
     "产业与应用",
   ];
+  // Mirrors WORKFLOW_STAGE_LABELS in serve_research_wiki.py — keep in sync.
+  const WORKFLOW_STAGES = [
+    ["init", "初始化"],
+    ["plan", "查询规划"],
+    ["retrieval", "arXiv 检索"],
+    ["mining", "全文挖掘"],
+    ["packet", "综述包"],
+    ["writing", "成稿撰写"],
+    ["audit", "审计门"],
+    ["settle", "落盘发布"],
+  ];
+  const CHAT_WIDTH_KEY = "wiki.chat.width";
+  const CHAT_WIDTH_MIN = 340;
+  const CHAT_WIDTH_MAX = 760;
+  const CHAT_DEFAULT_WIDTH = 420;
   const state = {
     manifest: null,
     topic: null,
@@ -34,8 +49,30 @@
       streaming: false,
       controller: null,
       messages: [],
+      focused: false,
+      widthPx: null,
+      dragging: false,
+      // Workflow (workspace) mode: null when the panel is in topic chat mode.
+      wsId: null,
+      workflowAvailable: false,
+      stage: null,
+      awaitingInput: false,
+      // Pending @-quote contexts gathered from selections (article, evidence,
+      // reader). Each becomes a <selection_context> block on the next send.
+      quotes: [],
+      // Workflow conversations live in their own history; the panel shows one
+      // pane at a time (topic chat vs workflow chat).
+      wsMessages: [],
+      wsSessionId: null,
+      // Paper-chat state: one conversation per arXiv id, cached server-side.
+      paperId: null,
+      paperMessages: [],
+      paperSessionId: null,
+      pane: "topic",
     },
   };
+  // Chat scroll-lock should match the CSS full-width breakpoint (780px).
+  const chatMobileQuery = window.matchMedia("(max-width: 780px)");
   const mobileNavigationQuery = window.matchMedia("(max-width: 900px)");
   // Thrown when the snapshot pointer or manifest does not exist yet — the
   // brand-new knowledge-base shape, distinct from a broken/partial deploy.
@@ -75,6 +112,7 @@
     evidenceBody: el("evidence-body"),
     drawerScrim: el("drawer-scrim"),
     tocNav: el("toc-nav"),
+    tocPanel: el("sidebar-toc"),
     progress: el("reading-progress"),
     searchDialog: el("search-dialog"),
     searchInput: el("search-input"),
@@ -84,9 +122,15 @@
     refreshLabel: el("refresh-label"),
     toast: el("toast"),
     chatPanel: el("chat-panel"),
-    chatToggle: el("chat-toggle"),
+    chatShowTopic: el("chat-show-topic"),
+    chatShowPaper: el("chat-show-paper"),
+    chatShowWorkflow: el("chat-show-workflow"),
+    paperIdForm: el("paper-id-form"),
+    paperIdInput: el("paper-id-input"),
     chatOpenButton: el("chat-open-button"),
     chatClose: el("chat-close"),
+    chatExpand: el("chat-expand"),
+    chatResizer: el("chat-resizer"),
     chatReset: el("chat-reset"),
     chatTitle: el("chat-title"),
     chatSessionMeta: el("chat-session-meta"),
@@ -96,6 +140,25 @@
     chatInput: el("chat-input"),
     chatSend: el("chat-send"),
     chatStop: el("chat-stop"),
+    homeChatHero: el("home-chat-hero"),
+    homeChatForm: el("home-chat-form"),
+    homeChatInput: el("home-chat-input"),
+    homeChatSend: el("home-chat-send"),
+    interviewCard: el("interview-card"),
+    chatModel: el("chat-model"),
+    readerViewHeader: el("reader-view-header"),
+    readerViewId: el("reader-view-id"),
+    readerViewTitle: el("reader-view-title"),
+    readerBack: el("reader-back-button"),
+    readerOpenExternal: el("reader-open-external"),
+    readerProgress: el("reader-progress"),
+    readerProgressBar: el("reader-progress-bar"),
+    readerProgressLabel: el("reader-progress-label"),
+    articleHeader: el("article-header"),
+    articleFooter: el("article-footer"),
+    readingMeta: el("reading-meta"),
+    selectionPopup: el("selection-popup"),
+    selectionCite: el("selection-cite"),
   };
 
   const escapeHtml = (value) => String(value)
@@ -255,14 +318,20 @@
         state.topicCache.set(identifier, topic);
       }
       state.topic = topic;
-      state.version = topic.versions[requestedVersion] ? requestedVersion : "zhihu";
+      const defaultVersion = topic.available_versions?.includes("zhihu") ? "zhihu" : topic.available_versions?.[0] || "zhihu";
+      state.version = topic.versions[requestedVersion] ? requestedVersion : defaultVersion;
       state.drawerMode = null;
       state.expandedFields.add(topic.field);
-      resetChatView();
-      setChatTitle(topic.title);
-      if (state.chat.open) loadChatState();
-      nodes.chatInput.disabled = false;
-      nodes.chatInput.placeholder = "就本话题提问，或让 Claude 写综述草稿…";
+      if (state.chat.pane === "workflow") {
+        // The workflow pane stays put; the title reflects both contexts.
+        setChatTitle(`综述工作流 · ${topic.title}`);
+      } else {
+        resetChatView(); // clears the TOPIC pane only
+        setChatTitle(topic.title);
+        if (state.chat.open) loadChatState();
+        nodes.chatInput.disabled = false;
+        nodes.chatInput.placeholder = "就本话题提问，或让 Claude 写综述草稿…";
+      }
       renderArticle();
       closeMobileSidebar();
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -277,6 +346,9 @@
     nodes.welcome.hidden = true;
     nodes.error.hidden = true;
     nodes.article.hidden = false;
+    setReaderView(false);
+    if (state.readerAbort) state.readerAbort.abort();
+    nodes.articleBody.className = "markdown-body";
     nodes.articleField.textContent = topic.field;
     nodes.articleDate.textContent = formatDate(topic.date);
     nodes.articleDate.dateTime = topic.date;
@@ -289,14 +361,19 @@
     if (repeatedTitle?.tagName === "H1") repeatedTitle.remove();
     nodes.evidenceButton.disabled = !topic.evidence.available;
     nodes.evidenceButton.title = topic.evidence.available ? "打开证据附录" : "这个话题没有随附证据文档";
+    const available = topic.available_versions || Object.keys(topic.versions);
     [...nodes.versionTabs.querySelectorAll("[data-version]")].forEach((button) => {
+      const present = available.includes(button.dataset.version);
+      button.hidden = !present;
       const active = button.dataset.version === state.version;
       button.setAttribute("aria-selected", String(active));
       button.tabIndex = active ? 0 : -1;
     });
+    nodes.tocPanel.hidden = false;
     renderToc(version.toc || []);
     renderFieldTree();
     bindArticleLinks();
+    bindReaderLinks(nodes.articleBody);
     updateProgress();
     document.title = `${version.article_title}｜空间智能研究 Wiki`;
   }
@@ -333,11 +410,21 @@
     nodes.welcome.hidden = false;
     nodes.tocNav.innerHTML = "";
     nodes.progress.style.width = "0";
+    nodes.tocPanel.hidden = true;
+    if (state.readerAbort) state.readerAbort.abort();
+    setReaderView(false);
     state.drawerMode = "recent";
-    resetChatView();
-    setChatTitle("研究助手");
-    nodes.chatInput.disabled = true;
-    nodes.chatInput.placeholder = "先选择一个话题，再开始对话。";
+    if (state.chat.pane === "workflow") {
+      // The workflow pane survives on the homepage (switch back via 主题对话).
+      setChatTitle("综述工作流");
+      if (state.chat.open) loadWorkflowState();
+    } else {
+      resetChatView();
+      setChatTitle("研究助手");
+      nodes.chatInput.disabled = true;
+      nodes.chatInput.placeholder = "先选择一个话题，再开始对话。";
+    }
+    syncChatPane();
     renderFieldTree();
     document.title = "空间智能研究 Wiki";
   }
@@ -346,6 +433,7 @@
     nodes.article.hidden = true;
     nodes.welcome.hidden = true;
     nodes.error.hidden = false;
+    nodes.tocPanel.hidden = true;
     nodes.errorMessage.textContent = message;
   }
 
@@ -363,11 +451,22 @@
         <small>空知识库</small>
         <strong>还没有可发布的完整成果</strong>
         <span>${escapeHtml(detail)}</span>
+        <span>在上方输入框描述你想综述的主题，开始第一次综述。</span>
       </div>`;
     renderFieldTree();
   }
 
+  function setRouteHash(hash) {
+    if (location.hash === hash) route();
+    else location.hash = hash;
+  }
+
   function route() {
+    const paperId = parsePaperRoute();
+    if (paperId) {
+      loadPaper(paperId);
+      return;
+    }
     const parsed = parseRoute();
     if (parsed) loadTopic(parsed.id, parsed.version);
     else showWelcome();
@@ -378,6 +477,7 @@
     nodes.evidenceTitle.textContent = state.topic.evidence.label;
     nodes.evidenceSource.textContent = `来源：${state.topic.source_directory}/${state.topic.evidence.source_file}`;
     nodes.evidenceBody.innerHTML = state.topic.evidence.html;
+    bindReaderLinks(nodes.evidenceBody);
     nodes.evidenceDrawer.classList.add("is-open");
     nodes.drawerScrim.classList.add("is-open");
     nodes.evidenceDrawer.setAttribute("aria-hidden", "false");
@@ -430,7 +530,7 @@
   function syncBodyScroll() {
     const overlayOpen = (isMobileNavigation() && nodes.sidebar.classList.contains("is-open"))
       || nodes.evidenceDrawer.classList.contains("is-open")
-      || (isMobileNavigation() && state.chat.open);
+      || (chatMobileQuery.matches && state.chat.open);
     document.body.style.overflow = overlayOpen ? "hidden" : "";
   }
 
@@ -623,22 +723,122 @@
   // unset). The hostname check above only short-circuits static hosting.
   async function probeChatAvailability() {
     state.chat.serverEnabled = false;
+    state.chat.workflowAvailable = false;
     syncChatAvailability();
     if (!isLocalRefreshAvailable()) return;
     try {
       const response = await fetch("api/chat/state", { cache: "no-store" });
       const payload = await response.json();
       state.chat.serverEnabled = Boolean(response.ok && payload.enabled);
+      state.chat.workflowAvailable = Boolean(response.ok && payload.enabled && payload.workflow);
     } catch {
       state.chat.serverEnabled = false;
+      state.chat.workflowAvailable = false;
     }
     syncChatAvailability();
   }
 
   function syncChatAvailability() {
     const available = chatAvailable();
-    nodes.chatToggle.hidden = !available;
     nodes.chatOpenButton.hidden = !available;
+    syncHeroVisibility();
+  }
+
+  function syncHeroVisibility() {
+    if (!nodes.homeChatHero) return;
+    nodes.homeChatHero.hidden = !state.chat.workflowAvailable;
+  }
+
+  // ---- chat panel sizing: split-screen dock + fullscreen focus ------------
+  // The open panel docks beside the article: its width is published as the
+  // --chat-dock custom property on :root, which is the app-shell grid's 4th
+  // column, so the article reflows. The divider drags that width; ⤢ takes the
+  // panel fullscreen (out of the split, covering the viewport). The dock is
+  // 0 unless the panel is open — the initial page never reserves space.
+  // The reader panel publishes its own --reader-dock column and sits to the
+  // LEFT of the chat dock (right: var(--chat-dock)) so paper + chat can be
+  // visible together. The main-content max-width caps the article column, so
+  // when docks squeeze the middle the article just stays at its cap.
+
+  function clampChatWidth(width) {
+    const max = Math.min(CHAT_WIDTH_MAX, Math.round(window.innerWidth * 0.38));
+    return Math.max(Math.min(CHAT_WIDTH_MIN, max), Math.min(width, max));
+  }
+
+  function applyChatWidth() {
+    if (chatMobileQuery.matches) {
+      document.documentElement.style.setProperty("--chat-dock", "0px");
+      return;
+    }
+    const width = state.chat.widthPx || CHAT_DEFAULT_WIDTH;
+    document.documentElement.style.setProperty("--chat-dock", `${width}px`);
+  }
+
+  // Single source of truth for the dock column: 0 whenever the panel is
+  // closed, mobile, or fullscreen; the saved/default width when open.
+  function syncChatDock() {
+    if (state.chat.open && !state.chat.focused && !chatMobileQuery.matches) {
+      applyChatWidth();
+    } else {
+      document.documentElement.style.setProperty("--chat-dock", "0px");
+    }
+  }
+
+
+  function setChatFocused(focused) {
+    state.chat.focused = focused;
+    nodes.chatPanel.classList.toggle("is-focused", focused);
+    nodes.chatExpand.setAttribute("aria-pressed", String(focused));
+    nodes.chatExpand.textContent = focused ? "⤡" : "⤢";
+    nodes.chatExpand.dataset.tooltip = focused ? "退出全屏" : "全屏对话";
+    syncChatDock();
+    syncBodyScroll();
+  }
+
+  function toggleChatFocus() {
+    setChatFocused(!state.chat.focused);
+  }
+
+  function bindChatResizer() {
+    const resizer = nodes.chatResizer;
+    if (!resizer) return;
+    resizer.addEventListener("pointerdown", (event) => {
+      if (chatMobileQuery.matches || state.chat.focused) return;
+      event.preventDefault();
+      resizer.setPointerCapture(event.pointerId);
+      resizer.classList.add("is-dragging");
+      state.chat.dragging = true;
+      const startX = event.clientX;
+      const startWidth = nodes.chatPanel.getBoundingClientRect().width;
+      const onMove = (moveEvent) => {
+        state.chat.widthPx = clampChatWidth(startWidth + (startX - moveEvent.clientX));
+        applyChatWidth();
+      };
+      const onUp = () => {
+        resizer.removeEventListener("pointermove", onMove);
+        resizer.removeEventListener("pointerup", onUp);
+        resizer.classList.remove("is-dragging");
+        state.chat.dragging = false;
+        try {
+          localStorage.setItem(CHAT_WIDTH_KEY, String(state.chat.widthPx));
+        } catch {
+          // storage unavailable (private mode) — width just won't persist
+        }
+      };
+      resizer.addEventListener("pointermove", onMove);
+      resizer.addEventListener("pointerup", onUp);
+    });
+    try {
+      const stored = Number(localStorage.getItem(CHAT_WIDTH_KEY));
+      if (Number.isFinite(stored) && stored > 0) state.chat.widthPx = clampChatWidth(stored);
+    } catch {
+      // ignore storage errors
+    }
+    chatMobileQuery.addEventListener("change", () => {
+      syncChatDock();
+        syncBodyScroll();
+    });
+    syncChatDock();
   }
 
   function setChatOpen(open) {
@@ -646,19 +846,108 @@
     state.chat.open = open;
     nodes.chatPanel.classList.toggle("is-open", open);
     nodes.chatPanel.setAttribute("aria-hidden", String(!open));
-    nodes.chatToggle.setAttribute("aria-expanded", String(open));
+    nodes.chatOpenButton.setAttribute("aria-expanded", String(open));
     if (open) {
-      if (state.topic) {
+      if (state.chat.wsId) {
+        setChatTitle("综述工作流");
+        loadWorkflowState();
+      } else if (state.chat.pane === "paper") {
+        setChatTitle(state.chat.paperId ? `论文 ${state.chat.paperId}` : "论文精读");
+        if (state.chat.paperId) loadPaperChatState();
+      } else if (state.topic) {
         setChatTitle(state.topic.title);
         loadChatState();
       }
+      applyChatWidth(); // publish the dock column when open
       setTimeout(() => nodes.chatInput.focus(), 220);
+    } else {
+      // Collapse the split: the article reclaims the full width.
+      syncChatDock();
     }
     syncBodyScroll();
   }
 
   function setChatTitle(title) {
     nodes.chatTitle.textContent = title || "研究助手";
+  }
+
+  // Pane switching: the topic conversation and the workflow conversation each
+  // keep their own history; the two header buttons swap the visible pane.
+  // Chrome-only half of syncChatPane: buttons, forms, placeholders. Split from
+  // the message rendering so a pane switch that will immediately load fresh
+  // server history can skip the redundant in-memory render.
+  function syncPaneChrome() {
+    const workflow = state.chat.pane === "workflow";
+    const paper = state.chat.pane === "paper";
+    // One button per pane; a button is active/enabled exactly when its pane is.
+    for (const [button, pane] of [
+      [nodes.chatShowTopic, "topic"],
+      [nodes.chatShowPaper, "paper"],
+      [nodes.chatShowWorkflow, "workflow"],
+    ]) {
+      button.classList.toggle("is-active", state.chat.pane === pane);
+      button.disabled = state.chat.pane !== pane;
+    }
+    nodes.chatShowWorkflow.hidden = !Boolean(state.chat.wsId) && !workflow;
+    nodes.paperIdForm.hidden = !paper;
+    nodes.chatInput.placeholder = workflow
+      ? "对大纲提修改意见，或回复「继续」…"
+      : paper
+        ? state.chat.paperId
+          ? "围绕这篇论文提问…"
+          : "先在上方输入 arXiv 论文 ID 并载入。"
+        : state.topic
+          ? "就本话题提问，或让 Claude 写综述草稿…"
+          : "先选择一个话题，再开始对话。";
+  }
+
+  function syncChatPane() {
+    syncPaneChrome();
+    const workflow = state.chat.pane === "workflow";
+    const paper = state.chat.pane === "paper";
+    if (workflow) {
+      renderChatMessages();
+      renderTimeline();
+      setChatSessionMeta(state.chat.wsSessionId ? `会话 ${String(state.chat.wsSessionId).slice(0, 8)} · 可继续追问` : "");
+    } else {
+      renderTimeline(); // removes the timeline outside workflow mode
+      renderChatMessages();
+      if (paper) {
+        const meta = state.chat.paperSessionId
+          ? `会话 ${String(state.chat.paperSessionId).slice(0, 8)} · 可继续追问`
+          : "";
+        setChatSessionMeta(
+          meta + (state.chat.paperId ? `${meta ? " · " : ""}论文 ${state.chat.paperId}` : "")
+        );
+      } else {
+        setChatSessionMeta(state.chat.sessionId ? `会话 ${String(state.chat.sessionId).slice(0, 8)} · 可继续追问` : "");
+      }
+    }
+  }
+
+  function switchChatPane(pane) {
+    if (state.chat.pane === pane) return;
+    if (state.chat.streaming) {
+      showToast("正在流式输出，等本轮结束再切换对话。");
+      return;
+    }
+    state.chat.pane = pane;
+    nodes.chatMessages.innerHTML = "";
+    setChatStatus(null);
+    // The state loaders below fetch server history and render it; without one,
+    // syncChatPane's own render shows the in-memory history (first paint).
+    const loaderWillRender =
+      (pane === "workflow" && state.chat.wsId && state.chat.open) ||
+      (pane === "paper") ||
+      (pane === "topic" && state.topic && state.chat.open);
+    if (loaderWillRender) {
+      syncPaneChrome();
+    } else {
+      syncChatPane();
+    }
+    if (pane === "workflow" && state.chat.wsId && state.chat.open) loadWorkflowState();
+    else if (pane === "paper") loadPaperChatState();
+    else if (pane === "topic" && state.topic && state.chat.open) loadChatState();
   }
 
   function setChatSessionMeta(text) {
@@ -728,15 +1017,27 @@
   }
 
   function setChatSession(sessionId) {
-    state.chat.sessionId = sessionId || null;
+    if (state.chat.pane === "workflow") {
+      state.chat.wsSessionId = sessionId || null;
+    } else if (state.chat.pane === "paper") {
+      state.chat.paperSessionId = sessionId || null;
+    } else {
+      state.chat.sessionId = sessionId || null;
+    }
     setChatSessionMeta(
       sessionId ? `会话 ${String(sessionId).slice(0, 8)} · 可继续追问` : "新话题 · 还没有对话记录"
     );
   }
 
+  function activeMessages() {
+    if (state.chat.pane === "workflow") return state.chat.wsMessages;
+    if (state.chat.pane === "paper") return state.chat.paperMessages;
+    return state.chat.messages;
+  }
+
   function renderChatMessages() {
     nodes.chatMessages.innerHTML = "";
-    for (const message of state.chat.messages) {
+    for (const message of activeMessages()) {
       const item = appendChatMessage(message.role, "");
       const body = item.querySelector(".chat-msg-text");
       if (message.role === "assistant") body.innerHTML = renderChatMarkdown(message.text);
@@ -746,8 +1047,16 @@
   }
 
   function resetChatView() {
-    state.chat.sessionId = null;
-    state.chat.messages = [];
+    if (state.chat.pane === "workflow") {
+      state.chat.wsSessionId = null;
+      state.chat.wsMessages = [];
+    } else if (state.chat.pane === "paper") {
+      state.chat.paperSessionId = null;
+      state.chat.paperMessages = [];
+    } else {
+      state.chat.sessionId = null;
+      state.chat.messages = [];
+    }
     nodes.chatMessages.innerHTML = "";
     setChatSessionMeta("");
     setChatStatus(null);
@@ -763,7 +1072,8 @@
       if (state.topic?.id !== topicId) return; // topic switched mid-flight
       state.chat.messages = Array.isArray(payload.messages) ? payload.messages : [];
       renderChatMessages();
-      setChatSession(payload.session_id);
+      state.chat.sessionId = payload.session_id || null;
+      setChatSessionMeta(payload.session_id ? `会话 ${String(payload.session_id).slice(0, 8)} · 可继续追问` : "");
     } catch (error) {
       setChatSessionMeta(`对话状态读取失败：${error.message}`);
     }
@@ -806,7 +1116,876 @@
     body.innerHTML = text ? renderChatMarkdown(text) : "";
   }
 
-  function handleChatEvent(evt, body, acc) {
+  // Incremental markdown during streaming: re-render the accumulated reply on
+  // an animation-frame cadence so line breaks, headings and lists appear as
+  // they arrive instead of piling into one pre-wrap run. Cheap for chat-length
+  // texts (≤ a few KB); the final render still happens once at stream end.
+  function makeStreamingRenderer(item) {
+    const body = item.querySelector(".chat-msg-text");
+    let acc = "";
+    let scheduled = false;
+    let lastRendered = 0;
+    // Full re-render of the accumulated text is O(n) per call; rAF alone still
+    // re-renders at 60fps (multi-MB regex work on long workflow replies).
+    // Throttle to ~5 renders/s while streaming; the final text is always
+    // rendered by renderFinalAssistant.
+    const RENDER_INTERVAL_MS = 200;
+    return {
+      append(text) {
+        acc += text || "";
+        if (scheduled) return;
+        const wait = Math.max(0, RENDER_INTERVAL_MS - (Date.now() - lastRendered));
+        scheduled = true;
+        setTimeout(() => {
+          scheduled = false;
+          lastRendered = Date.now();
+          body.innerHTML = renderChatMarkdown(acc);
+          chatScrollToBottom();
+        }, wait);
+      },
+      text() {
+        return acc;
+      },
+    };
+  }
+
+  // ---- inline arXiv reader -------------------------------------------------
+  // arXiv links in articles/evidence open the paper IN THIS PAGE: the reader
+  // is a view inside #article-view (same layout as a topic card), hash-routed
+  // as #/paper/<id> so browser Back returns to the topic. Documents are cached
+  // in memory + sessionStorage and rendered progressively while the response
+  // streams in (first fetch paints before the whole paper has arrived).
+
+  const ARXIV_ID_RE = /^(?:[a-z-]+(?:\.[A-Za-z]{2})?\/\d{7}|\d{4}\.\d{4,5})(?:v\d+)?$/i;
+  const READER_CACHE_KEY = "wiki.reader.cache.v1";
+  const READER_CACHE_LIMIT = 6; // sessionStorage entries to keep
+
+  const readerCache = new Map(); // paper_id → {title, body_html}
+
+  function parseArxivLink(href) {
+    if (!href) return null;
+    let candidate = href.trim();
+    if (/^\/api\/reader\//.test(candidate)) {
+      candidate = candidate.slice("/api/reader/".length);
+    }
+    if (/^https?:\/\//i.test(candidate)) {
+      try {
+        const url = new URL(candidate);
+        if (!/(^|\.)arxiv\.org$/i.test(url.hostname)) return null;
+        const match = url.pathname.match(/\/(?:abs|html|pdf|doi)\/(.+?)(?:\.pdf)?\/?$/);
+        if (!match) return null;
+        candidate = match[1];
+      } catch {
+        return null;
+      }
+    }
+    candidate = candidate.replace(/\.html$/i, "").replace(/\/+$/, "");
+    if (!ARXIV_ID_RE.test(candidate)) return null;
+    return candidate.replace(/v\d+$/i, "");
+  }
+
+  // Bind a container's arXiv links (and in-doc citation links) to the
+  // same-page reader. Regular external links keep their behavior.
+  function bindReaderLinks(container) {
+    container.querySelectorAll('a[href]').forEach((link) => {
+      const paperId = parseArxivLink(link.getAttribute("href")) || parseArxivLink(link.dataset.arxiv || "");
+      if (!paperId) return;
+      link.classList.add("arxiv-reader-link");
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        openReader(paperId);
+      });
+    });
+  }
+
+  function cacheRead(paperId) {
+    if (readerCache.has(paperId)) return readerCache.get(paperId);
+    try {
+      const store = JSON.parse(sessionStorage.getItem(READER_CACHE_KEY) || "{}");
+      if (store[paperId]) {
+        readerCache.set(paperId, store[paperId]);
+        return store[paperId];
+      }
+    } catch {
+      // storage unavailable — memory cache only
+    }
+    return null;
+  }
+
+  function cacheWrite(paperId, entry) {
+    readerCache.set(paperId, entry);
+    try {
+      const store = JSON.parse(sessionStorage.getItem(READER_CACHE_KEY) || "{}");
+      store[paperId] = entry;
+      const keys = Object.keys(store);
+      while (keys.length > READER_CACHE_LIMIT) delete store[keys.shift()];
+      sessionStorage.setItem(READER_CACHE_KEY, JSON.stringify(store));
+    } catch {
+      // storage full/unavailable — memory cache already updated
+    }
+  }
+
+  function paperRoute(paperId) {
+    return `#/paper/${encodeURIComponent(paperId)}`;
+  }
+
+  function parsePaperRoute() {
+    const match = location.hash.match(/^#\/paper\/([^?]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function readerViewActive() {
+    return !nodes.readerViewHeader.hidden;
+  }
+
+  function setReaderView(on) {
+    nodes.articleHeader.hidden = on;
+    nodes.readerViewHeader.hidden = !on;
+    nodes.readingMeta.hidden = on;
+    nodes.articleFooter.hidden = on;
+    nodes.tocPanel.hidden = on;
+  }
+
+  function showReaderSkeleton(paperId) {
+    nodes.article.hidden = false;
+    nodes.welcome.hidden = true;
+    nodes.error.hidden = true;
+    setReaderView(true);
+    nodes.readerViewId.textContent = `arXiv:${paperId}`;
+    nodes.readerViewTitle.textContent = "正在加载论文…";
+    nodes.readerOpenExternal.onclick = () => window.open(`https://arxiv.org/abs/${paperId}`, "_blank", "noopener");
+    nodes.articleBody.className = "markdown-body reader-document";
+    nodes.articleBody.innerHTML =
+      '<div class="reader-skeleton">' +
+      '<div class="reader-skel-line is-title"></div>' +
+      '<div class="reader-skel-line"></div>'.repeat(8) +
+      "</div>";
+    nodes.readerProgress.hidden = false;
+    nodes.readerProgressBar.style.width = "8%";
+    nodes.readerProgressLabel.textContent = "正在获取全文…（首次需要几秒，之后走本地缓存）";
+    document.title = `arXiv:${paperId}｜空间智能研究 Wiki`;
+  }
+
+  function setReaderTitleFromDoc(doc) {
+    const title = doc.querySelector("title")?.textContent?.trim();
+    if (title) {
+      nodes.readerViewTitle.textContent = title;
+      document.title = `${title}｜空间智能研究 Wiki`;
+    }
+  }
+
+  function extractReaderBody(doc) {
+    // The cleaned server document is a standalone page; lift its body content
+    // (styles were inlined into <head> — carry them into the main document).
+    const frag = document.createDocumentFragment();
+    doc.querySelectorAll("style").forEach((styleNode) => {
+      // Namespace paper styles under .reader-document to avoid leaking into
+      // the wiki chrome.
+      const scoped = document.createElement("style");
+      scoped.textContent = (styleNode.textContent || "")
+        .replace(/(^|\n)body\s*{/, "\n.reader-document {")
+        .replace(/(^|\n)(h1|h2|h3|h4|a|img|figure|figcaption|table|td|th)\s*([,{])/g,
+          "\n.reader-document $1$2$3");
+      frag.appendChild(scoped);
+    });
+    const body = doc.body;
+    if (!body) return frag;
+    for (const node of [...body.childNodes]) {
+      if (node.nodeType === Node.ELEMENT_NODE && ["style", "script"].includes(node.tagName.toLowerCase())) continue;
+      frag.appendChild(node);
+    }
+    return frag;
+  }
+
+  function renderReaderMath() {
+    // Paper pages carry LaTeX source in code.math-inline (from the server's
+    // LaTeXML cleanup). Render with KaTeX when the CDN is reachable; leave
+    // the readable source in place otherwise.
+    const mathNodes = nodes.articleBody.querySelectorAll("code.math-inline");
+    if (!mathNodes.length || typeof window.katex !== "object" || !window.katex) return;
+    mathNodes.forEach((node) => {
+      const source = node.textContent || "";
+      const holder = document.createElement("span");
+      holder.className = "math-rendered";
+      try {
+        window.katex.render(source, holder, { throwOnError: false, displayMode: false });
+        node.replaceWith(holder);
+      } catch {
+        // keep the raw source
+      }
+    });
+  }
+
+  function bindReaderDocumentLinks(container, paperId) {
+    container.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const linked = parseArxivLink(link.dataset.arxiv || "");
+        if (linked) {
+          setRouteHash(paperRoute(linked));
+          return;
+        }
+        const href = link.getAttribute("href") || "";
+        if (href.startsWith("#")) {
+          container.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    });
+  }
+
+  async function loadPaper(paperId) {
+    if (state.readerAbort) state.readerAbort.abort();
+    const controller = new AbortController();
+    state.readerAbort = controller;
+    showReaderSkeleton(paperId);
+
+    // Warm cache: paint instantly, no fetch at all.
+    const cached = cacheRead(paperId);
+    if (cached) {
+      const doc = new DOMParser().parseFromString(
+        `<!doctype html><html><head><title>${escapeHtml(cached.title)}</title></head><body>${cached.body_html}</body></html>`,
+        "text/html",
+      );
+      setReaderTitleFromDoc(doc);
+      nodes.articleBody.innerHTML = "";
+      const frag = extractReaderBody(doc);
+      nodes.articleBody.appendChild(frag);
+      nodes.readerProgress.hidden = true;
+      bindReaderDocumentLinks(nodes.articleBody, paperId);
+      renderReaderMath();
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return;
+    }
+
+    try {
+      const response = await fetch(`api/reader/${paperId}`, { signal: controller.signal });
+      if (!response.ok) throw new Error(`读取失败（${response.status}）`);
+      const text = await response.text();
+      if (controller.signal.aborted) return;
+      const doc = new DOMParser().parseFromString(text, "text/html");
+
+      if (doc.body?.dataset.readerDoc === "unavailable") {
+        nodes.articleBody.innerHTML = "";
+        nodes.articleBody.appendChild(extractReaderBody(doc));
+        nodes.readerProgress.hidden = true;
+        setReaderTitleFromDoc(doc);
+        return;
+      }
+
+      // Streaming paint: push the body content in progressively — first the
+      // head sections, then the rest as one pass over top-level nodes.
+      setReaderTitleFromDoc(doc);
+      const frag = extractReaderBody(doc);
+      nodes.articleBody.innerHTML = "";
+      nodes.articleBody.appendChild(frag);
+      nodes.readerProgressBar.style.width = "100%";
+      nodes.readerProgressLabel.textContent = "加载完成";
+      setTimeout(() => { nodes.readerProgress.hidden = true; }, 600);
+      bindReaderDocumentLinks(nodes.articleBody, paperId);
+      renderReaderMath();
+      window.scrollTo({ top: 0, behavior: "instant" });
+
+      // Cache for the next visit (memory + sessionStorage).
+      const bodyHtml = doc.body ? doc.body.innerHTML : "";
+      cacheWrite(paperId, { title: doc.title || `arXiv:${paperId}`, body_html: bodyHtml });
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      nodes.articleBody.innerHTML = `<p class="reader-load-error">论文加载失败：${escapeHtml(error.message)}</p>`;
+      nodes.readerProgress.hidden = true;
+    } finally {
+      if (state.readerAbort === controller) state.readerAbort = null;
+    }
+  }
+
+  function openReader(paperId) {
+    const target = paperRoute(paperId);
+    if (location.hash === target) loadPaper(paperId);
+    else location.hash = target; // hashchange → loadPaper
+  }
+
+  function closeReaderToTopic() {
+    if (state.readerAbort) state.readerAbort.abort();
+    if (state.topic) setRoute(state.topic.id, state.version, false);
+    else setRouteHash("#/");
+  }
+
+  // ---- selection → @-quote context ----------------------------------------
+  // Selecting text in the article, evidence drawer, or reader iframe shows a
+  // "引用到对话" chip; clicking it stores the excerpt as a pending quote that
+  // rides along with the next message (rendered as chips above the composer,
+  // like an @ mention).
+
+  const QUOTE_MAX_CHARS = 1200;
+
+  function selectionContainer(selection) {
+    const node = selection.anchorNode;
+    if (!node) return null;
+    const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+    return element?.closest?.("#article-body, #evidence-body") || null; // article-body also hosts the reader view
+  }
+
+  function usableSelection() {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return null;
+    const rangeCount = selection.rangeCount;
+    if (!rangeCount) return null;
+    // Only plain-text selections rooted in quotable containers.
+    if (!selectionContainer(selection)) return null;
+    const text = String(selection).replace(/\s+/g, " ").trim();
+    if (text.length < 2) return null;
+    return { text: text.slice(0, QUOTE_MAX_CHARS), truncated: text.length > QUOTE_MAX_CHARS };
+  }
+
+  function positionSelectionPopup(selection) {
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    const popup = nodes.selectionPopup;
+    popup.hidden = false;
+    const left = Math.min(Math.max(8, rect.left + rect.width / 2 - popup.offsetWidth / 2), window.innerWidth - popup.offsetWidth - 8);
+    const top = Math.max(8, rect.top - popup.offsetHeight - 8);
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+  }
+
+  function addQuote(quote) {
+    state.chat.quotes.push(quote);
+    renderQuoteChips();
+  }
+
+  function removeQuote(index) {
+    state.chat.quotes.splice(index, 1);
+    renderQuoteChips();
+  }
+
+  function renderQuoteChips() {
+    let strip = nodes.chatForm.querySelector(".chat-quote-strip");
+    if (!state.chat.quotes.length) {
+      strip?.remove();
+      return;
+    }
+    if (!strip) {
+      strip = document.createElement("div");
+      strip.className = "chat-quote-strip";
+      nodes.chatForm.prepend(strip);
+    }
+    strip.innerHTML = state.chat.quotes.map((quote, index) => `
+      <span class="chat-quote-chip" title="${escapeHtml(quote.text)}">
+        <span class="chat-quote-source">${escapeHtml(quote.source)}</span>
+        <span class="chat-quote-text">${escapeHtml(quote.text.slice(0, 60))}${quote.text.length > 60 ? "…" : ""}</span>
+        <button type="button" class="chat-quote-remove" data-quote-index="${index}" aria-label="移除引用">×</button>
+      </span>`).join("");
+  }
+
+  function selectionSourceLabel() {
+    if (readerViewActive()) return "论文";
+    if (state.topic) return state.topic.title || "本文";
+    return "页面";
+  }
+
+  function bindSelectionQuote() {
+    document.addEventListener("pointerup", (event) => {
+      if (nodes.selectionPopup.contains(event.target)) return;
+      const quote = usableSelection();
+      if (!quote) {
+        nodes.selectionPopup.hidden = true;
+        return;
+      }
+      quote.source = selectionSourceLabel();
+      positionSelectionPopup(window.getSelection());
+    });
+    document.addEventListener("selectionchange", () => {
+      if (!usableSelection()) nodes.selectionPopup.hidden = true;
+    });
+    nodes.selectionCite.addEventListener("click", () => {
+      const quote = usableSelection();
+      nodes.selectionPopup.hidden = true;
+      window.getSelection()?.removeAllRanges();
+      if (quote) {
+        addQuote(quote);
+        if (!state.chat.open) setChatOpen(true);
+        nodes.chatInput.focus();
+      }
+    });
+    nodes.chatForm.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-quote-index]");
+      if (button) removeQuote(Number(button.dataset.quoteIndex));
+    });
+  }
+
+  function composeMessageWithContext(message) {
+    if (!state.chat.quotes.length) return message;
+    const blocks = state.chat.quotes.map((quote, index) => {
+      const origin = quote.paper_id ? `（arXiv:${quote.paper_id}）` : "";
+      return `<quote_${index + 1} source="${quote.source}${origin}">\n${quote.text}\n</quote_${index + 1}>`;
+    });
+    return `${blocks.join("\n")}\n\n${message}`;
+  }
+
+  function consumeQuotes() {
+    const quotes = state.chat.quotes;
+    state.chat.quotes = [];
+    renderQuoteChips();
+    return quotes;
+  }
+
+  // ---- workflow mode (综述工作流) ----------------------------------------
+
+  function paperMode() {
+    return state.chat.pane === "paper";
+  }
+
+  // ---- paper chat (单篇论文精读对话) ---------------------------------------
+  // One conversation per arXiv id, cached server-side by id. First contact
+  // triggers prepare (extraction → pool → deep read) with visible progress;
+  // later visits reuse the cache instantly.
+
+  async function loadPaperChatState() {
+    setChatTitle("论文精读");
+    if (!state.chat.paperId) return;
+    try {
+      const response = await fetch(`api/paper/chat/state?id=${encodeURIComponent(state.chat.paperId)}`);
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (!payload.enabled) return;
+      state.chat.paperMessages = Array.isArray(payload.messages) ? payload.messages : [];
+      state.chat.paperSessionId = payload.session_id || null;
+      renderChatMessages();
+      const status = payload.deep_read_status
+        ? `深读 ${payload.deep_read_status}`
+        : payload.pooled ? "已入池（未深读）" : "未入池";
+      setChatSessionMeta(`论文 ${state.chat.paperId} · ${status}`);
+    } catch {
+      // state probe is best-effort; the chat still works
+    }
+  }
+
+  async function loadPaperById(rawId) {
+    const arxivId = String(rawId || "").trim().replace(/^arxiv:/i, "").split("/").pop().replace(/v\d+$/i, "");
+    if (!/^\d{4}\.\d{4,5}$/.test(arxivId)) {
+      showToast("请输入有效的 arXiv ID，例如 2402.10329。");
+      return;
+    }
+    if (state.chat.streaming) {
+      showToast("正在流式输出，等本轮结束再切换论文。");
+      return;
+    }
+    state.chat.paperId = arxivId;
+    state.chat.paperMessages = [];
+    state.chat.paperSessionId = null;
+    nodes.chatMessages.innerHTML = "";
+    setChatStatus(null);
+    syncChatPane();
+    setChatTitle(`论文 ${arxivId}`);
+    await loadPaperChatState();
+    nodes.chatInput.focus();
+  }
+
+  async function streamPaperChat(composedMessage, displayText) {
+    if (!state.chat.paperId) {
+      showToast("先在上方输入 arXiv 论文 ID 并载入。");
+      nodes.paperIdInput.focus();
+      return;
+    }
+    appendChatUserMessage(displayText, []);
+    await streamTurn({
+      endpoint: "api/paper/chat",
+      payload: { arxiv_id: state.chat.paperId, message: composedMessage, model: selectedChatModel() || undefined },
+      onEvent: handlePaperChatEvent,
+      history: state.chat.paperMessages,
+      errorLabel: "对话失败",
+    });
+  }
+
+  function handlePaperChatEvent(evt, renderer) {
+    if (evt.type === "stage") {
+      // Paper-chat-only event: preparation progress (extraction / deep read)
+      // streams as stage events before claude's first token.
+      setChatStatus(evt.detail || "正在准备论文…");
+      return;
+    }
+    handleChatEvent(evt, renderer);
+  }
+
+  async function resetPaperChat() {
+    if (!state.chat.paperId) return;
+    if (state.chat.streaming) abortChat();
+    if (state.chat.paperMessages.length && !window.confirm("开启新对话？这篇论文的对话记录将被清空（深读缓存保留）。")) return;
+    try {
+      await fetch("api/paper/chat/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ arxiv_id: state.chat.paperId }),
+      });
+    } catch {
+      // reset is best-effort; the view clears regardless
+    }
+    state.chat.paperMessages = [];
+    state.chat.paperSessionId = null;
+    nodes.chatMessages.innerHTML = "";
+    setChatSessionMeta("");
+    setChatStatus(null);
+  }
+
+  function workflowMode() {
+    return state.chat.pane === "workflow";
+  }
+
+  function setWorkflowSession(wsId) {
+    state.chat.wsId = wsId || null;
+    try {
+      if (wsId) localStorage.setItem("wiki.workflow.ws", wsId);
+      else localStorage.removeItem("wiki.workflow.ws");
+    } catch {
+      // storage unavailable — workspace just won't persist across reloads
+    }
+  }
+
+  function stageIndex(stage) {
+    return WORKFLOW_STAGES.findIndex(([name]) => name === stage);
+  }
+
+  function renderTimeline() {
+    let timeline = nodes.chatMessages.querySelector(".chat-timeline");
+    if (!workflowMode()) {
+      timeline?.remove();
+      return;
+    }
+    const activeIndex = state.chat.stage === null ? -1 : stageIndex(state.chat.stage);
+    if (!timeline) {
+      timeline = document.createElement("div");
+      timeline.className = "chat-timeline";
+      nodes.chatMessages.prepend(timeline);
+    }
+    timeline.innerHTML = WORKFLOW_STAGES.map(([name, label], index) => {
+      let statusClass = "";
+      let glyph = "⬚";
+      if (state.chat.awaitingInput && index === activeIndex) {
+        statusClass = "is-paused";
+        glyph = "⏸";
+      } else if (index < activeIndex) {
+        statusClass = "is-done";
+        glyph = "✅";
+      } else if (index === activeIndex) {
+        statusClass = "is-active";
+        glyph = "⏳";
+      }
+      return `<span class="chat-stage ${statusClass}">${glyph} ${escapeHtml(label)}</span>`;
+    }).join("");
+  }
+
+  async function loadWorkflowState() {
+    if (!state.chat.wsId) return;
+    const wsId = state.chat.wsId;
+    try {
+      const response = await fetch(`api/workflow/state?ws_id=${encodeURIComponent(wsId)}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || `读取失败（${response.status}）`);
+      if (state.chat.wsId !== wsId) return; // workspace switched mid-flight
+      state.chat.wsMessages = Array.isArray(payload.messages) ? payload.messages : [];
+      state.chat.stage = payload.stage || null;
+      state.chat.awaitingInput = Boolean(payload.awaiting_input);
+      renderChatMessages();
+      renderTimeline();
+      state.chat.wsSessionId = payload.session_id || null;
+      setChatSessionMeta(payload.session_id ? `会话 ${String(payload.session_id).slice(0, 8)} · 可继续追问` : "");
+    } catch (error) {
+      setChatSessionMeta(`工作流状态读取失败：${error.message}`);
+    }
+  }
+
+  function handleWorkflowEvent(evt, renderer) {
+    if (evt.type === "stage") {
+      state.chat.stage = evt.stage;
+      state.chat.awaitingInput = false;
+      renderTimeline();
+      if (evt.detail) setChatStatus(`${evt.detail}…`);
+      return;
+    }
+    if (evt.type === "awaiting_input") {
+      state.chat.awaitingInput = true;
+      state.chat.stage = evt.stage || state.chat.stage;
+      renderTimeline();
+      appendChatSystemNote("大纲已生成。回复「继续」或提出修改意见后，将撰写三种成稿并落盘。");
+      return;
+    }
+    if (evt.type === "topic_ready") {
+      state.chat.awaitingInput = false;
+      state.chat.stage = "settle";
+      renderTimeline();
+      const title = evt.title || evt.topic_id;
+      const note = document.createElement("p");
+      note.className = "chat-system-note";
+      note.innerHTML = `综述已发布：<a href="#/topic/${escapeHtml(evt.topic_id)}?version=zhihu">${escapeHtml(title)}</a>`;
+      nodes.chatMessages.appendChild(note);
+      chatScrollToBottom(true);
+      return;
+    }
+    if (evt.type === "topic_error") {
+      state.chat.awaitingInput = false;
+      appendChatError(evt.message || "综述落盘后未能定位新话题。");
+      return;
+    }
+    handleChatEvent(evt, renderer);
+  }
+
+  function selectedChatModel() {
+    return nodes.chatModel?.value || null;
+  }
+
+  async function streamWorkflow(composedMessage, displayText, quotes) {
+    if (state.chat.streaming) return;
+    if (!state.chat.wsId) {
+      const confirmed = window.confirm("当前没有进行中的工作流，将开始一次新的综述工作流。继续吗？");
+      if (!confirmed) return;
+    }
+    appendChatUserMessage(displayText, quotes);
+    await streamTurn({
+      endpoint: "api/workflow",
+      payload: {
+        message: composedMessage,
+        model: selectedChatModel() || undefined,
+        ws_id: state.chat.wsId || undefined,
+      },
+      onEvent: handleWorkflowEvent,
+      history: state.chat.wsMessages,
+      errorLabel: "工作流失败",
+      onResponse: (response) => {
+        const wsId = response.headers.get("X-Workflow-Id");
+        if (wsId && !workflowMode()) setWorkflowSession(wsId);
+      },
+    });
+    if (state.chat.awaitingInput) setWorkflowSession(state.chat.wsId);
+  }
+
+  async function consumeSSE(response, onEvent) {
+    // Shared SSE frame reader for streamChat and streamWorkflow: splits
+    // newline-delimited `data:` frames and dispatches parsed JSON events.
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let index;
+      while ((index = buffer.indexOf("\n\n")) !== -1) {
+        const frame = buffer.slice(0, index);
+        buffer = buffer.slice(index + 2);
+        for (const line of frame.split("\n")) {
+          if (!line.startsWith("data:")) continue;
+          try {
+            onEvent(JSON.parse(line.slice(5).trim()));
+          } catch {
+            // malformed frame — skip
+          }
+        }
+      }
+    }
+  }
+
+  async function resetWorkflow() {
+    if (!state.chat.wsId) return;
+    if (state.chat.streaming) abortChat();
+    if (state.chat.messages.length && !window.confirm("重置工作流？当前对话记录将被清空（已产生的运行文件保留在磁盘）。")) return;
+    try {
+      await fetch("api/workflow/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ws_id: state.chat.wsId }),
+      });
+    } catch {
+      // reset is best-effort; the view clears regardless
+    }
+    setWorkflowSession(null);
+    state.chat.stage = null;
+    state.chat.awaitingInput = false;
+    state.chat.pane = "topic";
+    nodes.chatMessages.innerHTML = "";
+    resetChatView();
+    syncChatPane();
+    if (state.topic) {
+      setChatTitle(state.topic.title);
+      await loadChatState();
+    } else {
+      setChatTitle("研究助手");
+      setChatSession(null);
+    }
+  }
+
+  // ---- homepage hero + interview card ------------------------------------
+
+  function showInterviewCard(topic) {
+    // The preset-question interview card: fixed choices for the workflow
+    // parameters, compiled to a params object on confirm. Pure frontend —
+    // deterministic, testable, zero-latency (unlike free-text interviewing).
+    const card = nodes.interviewCard;
+    card.innerHTML = `
+      <h2>开始前，先确认几个问题</h2>
+      <p class="interview-topic">综述主题：${escapeHtml(topic)}</p>
+      <p class="interview-question">① 综述模式</p>
+      <div class="interview-options" role="radiogroup" aria-label="综述模式">
+        <label><input type="radio" name="iw-mode" value="rapid" checked>rapid 快速 · 8 篇底线</label>
+        <label><input type="radio" name="iw-mode" value="scoping">scoping 标准 · 15 篇</label>
+        <label><input type="radio" name="iw-mode" value="systematic">systematic 系统 · 30 篇</label>
+      </div>
+      <p class="interview-question">② 检索范围</p>
+      <div class="interview-options" role="radiogroup" aria-label="检索范围">
+        <label><input type="radio" name="iw-range" value="6mo">近 6 个月</label>
+        <label><input type="radio" name="iw-range" value="3y" checked>近 3 年</label>
+        <label><input type="radio" name="iw-range" value="10y">近 10 年</label>
+        <label><input type="radio" name="iw-range" value="20y">近 20 年</label>
+        <label><input type="radio" name="iw-range" value="custom">自定义</label>
+      </div>
+      <div id="iw-custom-range" hidden>
+        <p class="interview-question">自定义范围（YYYY-MM-DD..YYYY-MM-DD）</p>
+        <input type="text" id="iw-range-input" placeholder="2024-01-01..2026-09-01" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13.5px;">
+      </div>
+      <p class="interview-question">③ 目标风格</p>
+      <div class="interview-options" role="radiogroup" aria-label="目标风格">
+        <label><input type="radio" name="iw-style" value="scientific-memo" checked>仅科研备忘录</label>
+        <label><input type="radio" name="iw-style" value="expert-explainer">仅知乎解释版</label>
+        <label><input type="radio" name="iw-style" value="all">三风格全套（科研 memo / 知乎 / 小红书）</label>
+      </div>
+      <p class="interview-question">④ 检索策略</p>
+      <div class="interview-options" role="radiogroup" aria-label="检索策略">
+        <label><input type="radio" name="iw-strategy" value="smart" checked>智能（推荐）· 分类法底座 + agent 动态扩展，指定种子时引文网络扩张</label>
+        <label><input type="radio" name="iw-strategy" value="fast">快速 · 纯固定流程（最快，检索约 1 分钟）</label>
+        <label><input type="radio" name="iw-strategy" value="seeds">种子扩张 · 以种子论文为锚的引文网络扩张（需填种子）</label>
+      </div>
+      <p class="interview-question">⑤ 种子论文（可选，引文网络扩张用）</p>
+      <input type="text" id="iw-seeds" placeholder="arXiv ID，逗号或空格分隔，如 2402.14207, 1704.02084" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13.5px;">
+      <p class="interview-question">⑥ 关注重点（可跳过）</p>
+      <textarea id="iw-focus" placeholder="例如：重点关注室外场景下的效率与鲁棒性…"></textarea>
+      <p class="interview-question">⑦ 执行模型</p>
+      <div class="interview-options" role="radiogroup" aria-label="执行模型">
+        <label><input type="radio" name="iw-model" value="glm-5.3-flash" checked>glm-5.3-flash</label>
+        <label><input type="radio" name="iw-model" value="deepseek-v4-flash-vision-exp">deepseek-v4-flash-vision-exp</label>
+        <label><input type="radio" name="iw-model" value="opus">opus</label>
+      </div>
+      <div class="interview-actions">
+        <button type="button" class="interview-cancel" id="iw-cancel">返回修改主题</button>
+        <button type="submit" class="chat-send" id="iw-confirm">确认，开始综述 →</button>
+      </div>`;
+    nodes.homeChatHero.hidden = true;
+    card.hidden = false;
+    card.querySelector("#iw-cancel").addEventListener("click", () => {
+      card.hidden = true;
+      nodes.homeChatHero.hidden = false;
+      nodes.homeChatInput.focus();
+    });
+    card.querySelector('input[value="custom"]')?.addEventListener("change", (event) => {
+      const wrap = card.querySelector("#iw-custom-range");
+      wrap.hidden = !event.target.checked;
+      if (event.target.checked) card.querySelector("#iw-range-input")?.focus();
+    });
+    card.addEventListener("submit", (event) => {
+      event.preventDefault();
+      confirmInterview(topic);
+    }, { once: true });
+    card.querySelector("#iw-confirm")?.focus();
+  }
+
+  function confirmInterview(topic) {
+    const card = nodes.interviewCard;
+    const mode = card.querySelector('input[name="iw-mode"]:checked')?.value || "rapid";
+    let rangePreset = card.querySelector('input[name="iw-range"]:checked')?.value || "3y";
+    let rangeCustom = "";
+    if (rangePreset === "custom") {
+      rangeCustom = card.querySelector("#iw-range-input")?.value.trim() || "";
+      if (!rangeCustom) {
+        showToast("请填写自定义时间范围（YYYY-MM-DD..YYYY-MM-DD）。");
+        return;
+      }
+    }
+    const params = {
+      topic,
+      review_mode: mode,
+      time_range: rangePreset === "custom" ? { range: rangeCustom } : rangePreset,
+      target_style: card.querySelector('input[name="iw-style"]:checked')?.value || "scientific-memo",
+      search_strategy: card.querySelector('input[name="iw-strategy"]:checked')?.value || "smart",
+      seed_arxiv_ids: card.querySelector("#iw-seeds")?.value.trim() || "",
+      focus: card.querySelector("#iw-focus")?.value.trim() || "",
+    };
+    const model = card.querySelector('input[name="iw-model"]:checked')?.value || "glm-5.3-flash";
+    if (nodes.chatModel) nodes.chatModel.value = model; // keep the panel picker in sync
+    card.hidden = true;
+    nodes.homeChatHero.hidden = false;
+    startWorkflow(params, model);
+  }
+
+  async function startWorkflow(params, model) {
+    // Enter workflow mode and kick off the first segment. The workspace id
+    // arrives on the SSE response header; the timeline renders from events.
+    setWorkflowSession(null);
+    state.chat.stage = "init";
+    state.chat.awaitingInput = false;
+    state.chat.pane = "workflow";
+    resetChatView();
+    syncChatPane();
+    renderTimeline();
+    setChatTitle("综述工作流");
+    setChatSession(null);
+    nodes.chatInput.disabled = false;
+    nodes.chatInput.placeholder = "对大纲提修改意见，或回复「继续」…";
+    setChatOpen(true); // docked split-screen; user can ⤢ to fullscreen
+    await streamTurn({
+      endpoint: "api/workflow",
+      payload: { message: params.topic, params, model: model || selectedChatModel() || undefined },
+      onEvent: handleWorkflowEvent,
+      history: state.chat.wsMessages,
+      errorLabel: "工作流启动失败",
+      onResponse: (response) => {
+        const wsId = response.headers.get("X-Workflow-Id");
+        if (wsId) setWorkflowSession(wsId);
+      },
+    });
+  }
+
+  function bindHomeHero() {
+    if (!nodes.homeChatHero) return;
+    nodes.homeChatForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const topic = nodes.homeChatInput.value.trim();
+      if (topic.length < 2) {
+        showToast("请先描述你想综述的主题（至少 2 个字符）。");
+        return;
+      }
+      nodes.homeChatInput.value = "";
+      showInterviewCard(topic);
+    });
+  }
+
+  async function restoreWorkflowSession() {
+    // Best-effort: if a workflow conversation is parked (checkpoint pause),
+    // re-own it after a reload so the user can continue in the panel.
+    if (!state.chat.workflowAvailable) return;
+    let wsId = null;
+    try {
+      wsId = localStorage.getItem("wiki.workflow.ws");
+    } catch {
+      return;
+    }
+    if (!wsId) return;
+    try {
+      const response = await fetch(`api/workflow/state?ws_id=${encodeURIComponent(wsId)}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok || !payload.ws_id) return;
+      setWorkflowSession(wsId);
+      state.chat.stage = payload.stage || null;
+      state.chat.awaitingInput = Boolean(payload.awaiting_input);
+      state.chat.wsMessages = Array.isArray(payload.messages) ? payload.messages : [];
+      state.chat.pane = "workflow";
+      setChatTitle("综述工作流");
+      nodes.chatInput.disabled = false;
+      nodes.chatInput.placeholder = "对大纲提修改意见，或回复「继续」…";
+      renderTimeline();
+    } catch {
+      // Server unaware of this workspace (restarted with a wiped store) —
+      // drop the stale local id.
+      setWorkflowSession(null);
+    }
+  }
+
+  function handleChatEvent(evt, renderer) {
     if (evt.type === "session") {
       setChatSession(evt.session_id);
       return;
@@ -821,12 +2000,9 @@
       return;
     }
     if (evt.type === "delta") {
-      acc.push(evt.text || "");
-      // Append the delta as its own text node: O(delta) per event, no
-      // re-copy of the accumulated reply. Final markdown render swaps
-      // innerHTML once the stream ends.
-      body.appendChild(document.createTextNode(evt.text || ""));
-      chatScrollToBottom();
+      // Incremental markdown render (rAF-coalesced inside the renderer) so
+      // line breaks, headings and lists appear while streaming.
+      renderer.append(evt.text || "");
       return;
     }
     if (evt.type === "session_reset") {
@@ -845,58 +2021,53 @@
     }
   }
 
-  async function streamChat(message) {
-    if (!state.topic) {
-      showToast("先选择一个话题，再开始对话。");
-      return;
+  // The user bubble shows what they typed; the wire payload may additionally
+  // carry @-quote context blocks that are displayed as chips instead.
+  function appendChatUserMessage(displayText, quotes) {
+    const item = appendChatMessage("user", displayText);
+    if (quotes?.length) {
+      const strip = document.createElement("div");
+      strip.className = "chat-quote-strip";
+      strip.innerHTML = quotes.map((quote) => `
+        <span class="chat-quote-chip" title="${escapeHtml(quote.text)}">
+          <span class="chat-quote-source">${escapeHtml(quote.source)}：</span>“${escapeHtml(quote.text.slice(0, 60))}${quote.text.length > 60 ? "…" : ""}”
+        </span>`).join("");
+      item.prepend(strip);
     }
+    return item;
+  }
+
+  // Shared streaming-turn scaffold: user bubble → assistant bubble → fetch →
+  // SSE → finalize → history push → error label. Every chat pane (topic /
+  // paper / workflow) calls this with its own endpoint, payload, event
+  // handler, and history array; only the deltas differ per pane.
+  async function streamTurn({ endpoint, payload, onEvent, history, errorLabel, onResponse }) {
     if (state.chat.streaming) return;
-    appendChatMessage("user", message);
     const msgEl = appendChatMessage("assistant", "");
-    const body = msgEl.querySelector(".chat-msg-text");
-    const acc = [];
+    const renderer = makeStreamingRenderer(msgEl);
     const controller = new AbortController();
     state.chat.controller = controller;
     setChatStreaming(true);
     try {
-      const response = await fetch("api/chat", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic_id: state.topic.id, message }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
       });
       if (!response.ok || !response.body) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.error || `对话失败（${response.status}）`);
+        const errPayload = await response.json().catch(() => ({}));
+        throw new Error(errPayload.error || `${errorLabel}失败（${response.status}）`);
       }
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        let index;
-        while ((index = buffer.indexOf("\n\n")) !== -1) {
-          const frame = buffer.slice(0, index);
-          buffer = buffer.slice(index + 2);
-          for (const line of frame.split("\n")) {
-            if (!line.startsWith("data:")) continue;
-            try {
-              handleChatEvent(JSON.parse(line.slice(5).trim()), body, acc);
-            } catch {
-              // malformed frame — skip
-            }
-          }
-        }
-      }
-      renderFinalAssistant(msgEl, acc.join(""));
-      state.chat.messages.push({ role: "assistant", text: acc.join("") });
+      if (onResponse) onResponse(response);
+      await consumeSSE(response, (evt) => onEvent(evt, renderer));
+      renderFinalAssistant(msgEl, renderer.text());
+      history.push({ role: "assistant", text: renderer.text() });
     } catch (error) {
-      renderFinalAssistant(msgEl, acc.join(""));
-      if (acc.length) state.chat.messages.push({ role: "assistant", text: acc.join("") });
+      renderFinalAssistant(msgEl, renderer.text());
+      if (renderer.text()) history.push({ role: "assistant", text: renderer.text() });
       if (error.name !== "AbortError") {
-        appendChatError(`对话失败：${error.message}`);
+        appendChatError(`${errorLabel}：${error.message}`);
       }
     } finally {
       state.chat.controller = null;
@@ -905,12 +2076,30 @@
     }
   }
 
+  async function streamChat(composedMessage, displayText, quotes) {
+    if (!state.topic) {
+      showToast("先选择一个话题，再开始对话。");
+      return;
+    }
+    appendChatUserMessage(displayText, quotes);
+    await streamTurn({
+      endpoint: "api/chat",
+      payload: { topic_id: state.topic.id, message: composedMessage, model: selectedChatModel() || undefined },
+      onEvent: handleChatEvent,
+      history: state.chat.messages,
+      errorLabel: "对话失败",
+    });
+  }
+
   function abortChat() {
     if (state.chat.controller) state.chat.controller.abort();
-    fetch("api/chat/stop", { method: "POST" }).catch(() => {});
+    const stopPath = workflowMode() ? "api/workflow/stop" : "api/chat/stop";
+    fetch(stopPath, { method: "POST" }).catch(() => {});
   }
 
   async function resetChatSession() {
+    if (workflowMode()) return resetWorkflow();
+    if (paperMode()) return resetPaperChat();
     if (!state.topic) return;
     if (state.chat.messages.length && !window.confirm("开启新对话？当前话题的对话记录将被清空。")) return;
     if (state.chat.streaming) abortChat();
@@ -932,7 +2121,11 @@
     const value = nodes.chatInput.value.trim();
     if (!value || state.chat.streaming) return;
     nodes.chatInput.value = "";
-    streamChat(value);
+    const quotes = consumeQuotes();
+    const composed = composeMessageWithContext(value);
+    if (workflowMode()) streamWorkflow(composed, value, quotes);
+    else if (paperMode()) streamPaperChat(composed, value);
+    else streamChat(composed, value, quotes);
   }
 
   function showToast(message) {
@@ -960,6 +2153,7 @@
 
   function bindEvents() {
     window.addEventListener("hashchange", route);
+    nodes.readerBack.addEventListener("click", closeReaderToTopic);
     window.addEventListener("scroll", updateProgress, { passive: true });
     mobileNavigationQuery.addEventListener("change", syncSidebarForViewport);
     nodes.sidebarToggle.addEventListener("click", () => sidebarIsOpen() ? closeSidebar() : openSidebar());
@@ -1014,9 +2208,16 @@
     nodes.refreshButton.addEventListener("click", refreshWiki);
     el("retry-button").addEventListener("click", () => init(true));
     el("next-topic").addEventListener("click", goNext);
-    nodes.chatToggle.addEventListener("click", () => setChatOpen(!state.chat.open));
     nodes.chatOpenButton.addEventListener("click", () => setChatOpen(true));
+    nodes.chatShowTopic.addEventListener("click", () => switchChatPane("topic"));
+    nodes.chatShowPaper.addEventListener("click", () => switchChatPane("paper"));
+    nodes.chatShowWorkflow.addEventListener("click", () => switchChatPane("workflow"));
+    nodes.paperIdForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadPaperById(nodes.paperIdInput.value);
+    });
     nodes.chatClose.addEventListener("click", () => setChatOpen(false));
+    nodes.chatExpand.addEventListener("click", toggleChatFocus);
     nodes.chatReset.addEventListener("click", resetChatSession);
     nodes.chatStop.addEventListener("click", abortChat);
     nodes.chatForm.addEventListener("submit", (event) => {
@@ -1029,6 +2230,9 @@
         submitChatMessage();
       }
     });
+    bindChatResizer();
+    bindHomeHero();
+    bindSelectionQuote();
     document.addEventListener("keydown", (event) => {
       const tag = document.activeElement?.tagName;
       if (event.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") {
@@ -1036,7 +2240,10 @@
         openSearch();
       }
       if (event.key === "Escape") {
-        if (state.chat.open && nodes.chatPanel.contains(document.activeElement)) setChatOpen(false);
+        if (state.chat.open && state.chat.focused && nodes.chatPanel.contains(document.activeElement)) {
+          setChatFocused(false);
+        } else if (state.chat.open && nodes.chatPanel.contains(document.activeElement)) setChatOpen(false);
+        if (readerViewActive()) closeReaderToTopic();
         closeEvidence();
         closeSidebar();
       }
@@ -1054,10 +2261,11 @@
       // failure: show the empty-library state with next-step guidance.
       if (error instanceof MissingSnapshotError) {
         showEmptyLibrary(error.message);
-        return;
+      } else {
+        showError(`成果索引读取失败：${error.message}`);
       }
-      showError(`成果索引读取失败：${error.message}`);
     }
+    await restoreWorkflowSession();
   }
 
   syncSidebarForViewport();

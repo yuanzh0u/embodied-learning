@@ -11,7 +11,14 @@ import sys
 from typing import Any
 
 try:
-    from query_taxonomy import ALIASES, FAMILY_PLANS, TOPIC_PLANS, infer_keys, normalize_key
+    from query_taxonomy import (
+        ALIASES,
+        FAMILY_PLANS,
+        TOPIC_PLANS,
+        infer_confident_keys,
+        infer_keys,
+        normalize_key,
+    )
 except ImportError as exc:  # pragma: no cover - import path failure is surfaced by CLI
     raise SystemExit(f"Unable to import query taxonomy: {exc}") from exc
 
@@ -206,7 +213,24 @@ def dedupe_queries(entries: list[dict[str, Any]], max_queries: int) -> list[dict
     return [by_query[query] for query in order[:max_queries]]
 
 
-def coverage_group(tier: str) -> str:
+DIMENSION_KEYWORDS: dict[str, tuple[str, ...]] = {
+    # One keyword table shared by tier and label scanning so the two can't drift.
+    "limits-and-counterevidence": ("limit", "failure", "gap", "risk", "burden", "latency", "degeneracy", "degenerate", "unobservable"),
+    "evaluation-and-validation": ("eval", "benchmark", "validation", "sim-real", "closed-loop", "dataset"),
+    "deployment-and-operations": ("deploy", "production", "recovery", "industrial", "business", "engineering"),
+    "direct-topic": ("core", "exact", "named", "quality", "direct-topic", "direct", "anchor"),
+    "mechanisms-and-interfaces": ("method", "representation", "interface", "tracking", "sensor", "mechanism", "estimation"),
+}
+
+
+def _match_dimension(text: str) -> str | None:
+    for dimension, tokens in DIMENSION_KEYWORDS.items():
+        if any(token in text for token in tokens):
+            return dimension
+    return None
+
+
+def coverage_group(tier: str, label: str = "") -> str:
     """Collapse query tiers into review-level coverage dimensions.
 
     Classifies on the tier string's own keywords, not on the taxonomy-alias
@@ -214,27 +238,32 @@ def coverage_group(tier: str) -> str:
     deployment, tracking, benchmark, ...) are ALSO taxonomy aliases for an
     EA-*/family key (e.g. "evaluation" -> "EA-EVAL"), and normalize_key()
     would silently swap in that uppercase canonical ID, breaking every
-    lowercase substring check below and misrouting the query into
+    lowercase substring check and misrouting the query into
     "adjacent-and-transfer" instead of its intended dimension.
+
+    Dynamic and calibration queries carry generic tier names
+    (dynamic-core / dynamic-association / calibrated-term / calibrated-query)
+    that carry no dimension signal of their own — 50 such queries would all
+    collapse into one "adjacent-and-transfer" bucket and flatten the coverage
+    report. For those, fall back to the query label's own keywords
+    (dynamic-direct-topic-*, dynamic-limit-*, calibrated-benchmark-* all name
+    their dimension) before accepting the adjacent default.
     """
     normalized = tier.lower()
-    if any(token in normalized for token in ("limit", "failure", "gap", "risk", "burden", "latency")):
-        return "limits-and-counterevidence"
-    if any(token in normalized for token in ("eval", "benchmark", "validation", "sim-real", "closed-loop")):
-        return "evaluation-and-validation"
-    if any(token in normalized for token in ("deploy", "production", "recovery", "industrial", "business")):
-        return "deployment-and-operations"
-    if any(token in normalized for token in ("core", "exact", "named", "quality")):
-        return "direct-topic"
-    if any(token in normalized for token in ("method", "representation", "interface", "tracking", "sensor")):
-        return "mechanisms-and-interfaces"
+    matched = _match_dimension(normalized)
+    if matched:
+        return matched
+    if normalized.startswith(("dynamic-", "calibrated-", "citation-term")):
+        matched = _match_dimension((label or "").lower())
+        if matched:
+            return matched
     return "adjacent-and-transfer"
 
 
 def build_coverage_dimensions(queries: list[dict[str, Any]], minimum_per_dimension: int) -> list[dict[str, Any]]:
     grouped: dict[str, list[str]] = {}
     for item in queries:
-        group = coverage_group(str(item.get("tier") or "baseline"))
+        group = coverage_group(str(item.get("tier") or "baseline"), str(item.get("label") or ""))
         grouped.setdefault(group, []).append(str(item["label"]))
     return [
         {
@@ -495,13 +524,50 @@ def merge_calibration(paths: list[str]) -> tuple[list[dict[str, Any]], list[dict
 
 def build_plan(args: argparse.Namespace) -> dict[str, Any]:
     topic = args.topic or ""
+    # Two-tier inference: infer_keys catches every alias hit (routing context),
+    # infer_confident_keys drops topics matched only through generic vocabulary
+    # aliases (点云/传感器/data/model/...). A topic like "点云特征法粗配准" used to
+    # inherit EA-SENSOR's robot-manipulation queries and fail retrieval end to
+    # end; an all-weak match now skips the card plan and falls through to the
+    # generic + dynamic queries instead.
     inferred_topics, inferred_families, inference_notes = unpack_inferred(infer_keys(topic))
+    confident_topics, confident_families, _ = unpack_inferred(infer_confident_keys(topic))
+    weak_topic_keys = [key for key in inferred_topics if key not in confident_topics]
+    weak_family_keys = [key for key in inferred_families if key not in confident_families]
+    if (weak_topic_keys or weak_family_keys) and not (confident_topics or confident_families):
+        inference_notes.append(
+            "Topic matched taxonomy keys only through generic vocabulary aliases "
+            f"({', '.join(weak_topic_keys + weak_family_keys)}); skipped the card's static "
+            "queries to avoid off-topic retrieval — using generic + dynamic queries instead."
+        )
     dynamic_topics, dynamic_families, dynamic_arxiv, dynamic_browser, dynamic_web, dynamic_notes, dynamic_suggestions = merge_dynamic(args.dynamic_file)
-    topic_keys = unique_valid([*args.knowledge_id, *inferred_topics, *dynamic_topics], set(TOPIC_PLANS))
-    family_keys = unique_valid([*args.family, *inferred_families, *dynamic_families], set(FAMILY_PLANS))
+    topic_keys = unique_valid(
+        [*args.knowledge_id, *inferred_topics, *dynamic_topics],
+        set(TOPIC_PLANS),
+    )
+    family_keys = unique_valid(
+        [*args.family, *inferred_families, *dynamic_families],
+        set(FAMILY_PLANS),
+    )
+    # Explicit --knowledge-id/--family flags always apply. Inference from the
+    # topic text only applies when confident (see note above); a weak-only
+    # match stays listed in knowledge_ids for run-manifest routing context
+    # but contributes NO static card queries.
+    weak_inferred_only_topics = [
+        key
+        for key in unique_valid([*inferred_topics, *dynamic_topics], set(TOPIC_PLANS))
+        if key not in unique_valid([*args.knowledge_id, *confident_topics, *dynamic_topics], set(TOPIC_PLANS))
+    ]
+    weak_inferred_only_families = [
+        key
+        for key in unique_valid([*inferred_families, *dynamic_families], set(FAMILY_PLANS))
+        if key not in unique_valid([*args.family, *confident_families, *dynamic_families], set(FAMILY_PLANS))
+    ]
+    plan_topic_keys = [key for key in topic_keys if key not in weak_inferred_only_topics]
+    plan_family_keys = [key for key in family_keys if key not in weak_inferred_only_families]
 
     plan_notes = [*inference_notes, *dynamic_notes]
-    if not topic_keys and not family_keys:
+    if not plan_topic_keys and not plan_family_keys:
         plan_notes.append("No EA topic or specialized family matched; emitted generic embodied-AI topic queries.")
 
     raw_queries: list[dict[str, Any]] = []
@@ -516,7 +582,7 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
     raw_queries.extend(query_entry(item, "calibration", "web-calibration") for item in calibrated_arxiv)
     web_queries.extend(calibrated_web)
 
-    for key in family_keys:
+    for key in plan_family_keys:
         plan = FAMILY_PLANS[key]
         raw_queries.extend(query_entry(item, key, "specialized-family") for item in plan.get("queries", []))
         for item in plan.get("browser_fallback_queries", []):
@@ -524,7 +590,7 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         for item in plan.get("web_calibration_queries", []):
             web_queries.append(web_query(item["label"], item["query"], item.get("why", ""), key))
 
-    for key in topic_keys:
+    for key in plan_topic_keys:
         plan = TOPIC_PLANS[key]
         raw_queries.extend(query_entry(item, key, "knowledge-topic") for item in plan.get("queries", []))
         for item in plan.get("browser_fallback_queries", []):
@@ -540,6 +606,19 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
                     "tier": "generic",
                     "query": f'all:"{topic}" AND all:robot',
                     "why": "Fallback query for a topic that did not match the embodied-AI taxonomy.",
+                },
+                "generic",
+                "fallback",
+            )
+        )
+        raw_queries.append(
+            query_entry(
+                {
+                    "label": "generic-topic-broad",
+                    "tier": "generic",
+                    "query": f"all:{topic} AND all:robot",
+                    "why": "Unquoted companion to generic-topic: quoted all: queries on multi-word "
+                    "Chinese topics return nothing, the unquoted form still matches loosely.",
                 },
                 "generic",
                 "fallback",
@@ -583,7 +662,12 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         "end_date": args.end_date,
         "knowledge_ids": topic_keys,
         "families": family_keys,
-        "suggested_categories": suggested_categories(topic_keys, family_keys),
+        # Keys whose static card queries actually entered the plan. Differs
+        # from knowledge_ids when the topic matched only through weak
+        # vocabulary aliases (those stay in knowledge_ids for routing).
+        "plan_knowledge_ids": plan_topic_keys,
+        "plan_families": plan_family_keys,
+        "suggested_categories": suggested_categories(plan_topic_keys, plan_family_keys),
         "query_budget": args.max_queries,
         "review_mode": args.review_mode,
         "search_targets": targets,

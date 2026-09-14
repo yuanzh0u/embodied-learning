@@ -15,6 +15,14 @@ STANDARD_ARTICLES = (
     "zhihu-explainer_zhihu.md",
     "xiaohongshu-post_xiaohongshu.md",
 )
+# Reduced settle scope: a run.json may declare `style` (+ `scope_note`) to ship
+# one deliverable instead of the full triplet (mirrors check_run_bundle).
+STYLE_TO_FILE = {
+    "scientific-memo": "scientific-memo_keyan.md",
+    "expert-explainer": "zhihu-explainer_zhihu.md",
+    "kol-thread": "xiaohongshu-post_xiaohongshu.md",
+    "survey": "review-packet.md",
+}
 
 
 @dataclass(frozen=True)
@@ -132,7 +140,13 @@ def load_catalog_runs(
             raise ValueError(f"catalog routes to non-settled run: {run_json}")
         evidence_paths(run_json, manifest, require_files=require_complete)
         if require_complete:
-            missing = [name for name in STANDARD_ARTICLES if not (run_json.parent / name).is_file()]
+            declared_style = manifest.get("style")
+            required = (
+                [STYLE_TO_FILE[declared_style]]
+                if declared_style in STYLE_TO_FILE
+                else list(STANDARD_ARTICLES)
+            )
+            missing = [name for name in required if not (run_json.parent / name).is_file()]
             if missing:
                 raise ValueError(f"{run_json}: missing reader-facing articles: {', '.join(missing)}")
         runs.append(ReviewRun(run_json, manifest))

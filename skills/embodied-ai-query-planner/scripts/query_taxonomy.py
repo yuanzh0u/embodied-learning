@@ -922,8 +922,13 @@ _ALIAS_PAIRS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("tactile", ("tactile-force", "EA-SENSOR")),
     ("proprioception", ("EA-SENSOR",)),
     ("occlusion", ("EA-SENSOR", "EA-DATA")),
+    ("sensor fusion", ("EA-SENSOR",)),
+    ("multimodal perception", ("EA-SENSOR",)),
     ("传感器", ("EA-SENSOR",)),
     ("多模态", ("EA-SENSOR",)),
+    ("多传感器", ("EA-SENSOR",)),
+    ("传感器融合", ("EA-SENSOR",)),
+    ("多模态感知", ("EA-SENSOR",)),
     ("触觉", ("tactile-force", "EA-SENSOR")),
     ("力控", ("tactile-force", "EA-SENSOR")),
     ("点云", ("EA-SENSOR",)),
@@ -1050,6 +1055,32 @@ ALIASES: dict[str, tuple[str, ...]] = {
     for alias, keys in _ALIAS_PAIRS
 }
 
+# Vocabulary-level aliases: generic words that appear inside many unrelated
+# topics. A topic whose ONLY matches come from this set (each mapping to a
+# single card) has not actually been routed — e.g. "点云特征法粗配准" contains
+# "点云" but is a registration paper with nothing to do with EA-SENSOR's
+# manipulation-perception queries. build_query_plan treats an all-weak match
+# as low confidence: it keeps the ids in knowledge_ids for routing context
+# but skips the card's static queries in favor of the generic + dynamic path.
+WEAK_SINGLE_CARD_ALIASES: frozenset[str] = frozenset(
+    {
+        _slug(alias)
+        for alias, keys in _ALIAS_PAIRS
+        if len(keys) == 1
+        and _slug(alias)
+        in {
+            # English vocabulary words
+            "data", "sensor", "sensors", "multimodal", "rgb", "depth",
+            "point cloud", "proprioception", "hardware", "tracking",
+            "slam", "model", "pretraining", "fine tuning", "fine-tuning",
+            "eval", "evaluation", "benchmark", "deployment", "industrial",
+            # Chinese vocabulary words
+            "数据", "传感器", "多传感器", "多模态", "点云", "硬件", "模型",
+            "预训练", "微调", "评测", "部署", "工业",
+        }
+    }
+)
+
 _SIMULATION_DATA_SIGNALS = (
     "simulation-data",
     "simulated-data",
@@ -1165,6 +1196,25 @@ def _apply_associative_expansions(text_slug: str, keys: set[str]) -> None:
         keys.update(("vla", "droid-ego4d", "sim2real", "EA-DATA", "EA-MODEL", "EA-EVAL"))
 
 
+def _match_keys(text_slug: str) -> tuple[set[str], set[str]]:
+    """One pass over canonical names + aliases, splitting hits into
+    (strong, weak) key sets by the weak-vocabulary-alias table."""
+
+    strong: set[str] = set()
+    weak: set[str] = set()
+    for canonical_slug, canonical_key in _CANONICAL_BY_SLUG.items():
+        if _matches_alias(canonical_slug, text_slug):
+            strong.add(canonical_key)
+    for alias_slug, alias_keys in ALIASES.items():
+        if not _matches_alias(alias_slug, text_slug):
+            continue
+        if alias_slug in WEAK_SINGLE_CARD_ALIASES:
+            weak.update(alias_keys)
+        else:
+            strong.update(alias_keys)
+    return strong, weak
+
+
 def infer_keys(topic_text: str) -> list[str]:
     """Infer matching topic and family keys from free-form Chinese or English text.
 
@@ -1176,19 +1226,30 @@ def infer_keys(topic_text: str) -> list[str]:
     text_slug = _slug(topic_text)
     if not text_slug:
         return []
-
-    keys: set[str] = set()
-    for canonical_slug, canonical_key in _CANONICAL_BY_SLUG.items():
-        if _matches_alias(canonical_slug, text_slug):
-            keys.add(canonical_key)
-
-    for alias_slug, alias_keys in ALIASES.items():
-        if _matches_alias(alias_slug, text_slug):
-            keys.update(alias_keys)
-
+    strong, weak = _match_keys(text_slug)
+    keys = strong | weak
     _apply_associative_expansions(text_slug, keys)
-
     return sorted(keys, key=_rank_key)
+
+
+def infer_confident_keys(topic_text: str) -> list[str]:
+    """infer_keys with weak vocabulary-only matches removed.
+
+    A match is weak when EVERY matched key traces back to generic vocabulary
+    aliases (WEAK_SINGLE_CARD_ALIASES) and no distinctive alias, canonical
+    name, or associative expansion fired. Returns the same shape as
+    infer_keys; empty means "not confidently in the taxonomy" — callers
+    should fall back to generic/dynamic queries instead of a card plan.
+    """
+
+    text_slug = _slug(topic_text)
+    if not text_slug:
+        return []
+    strong, _weak = _match_keys(text_slug)
+    _apply_associative_expansions(text_slug, strong)
+    if strong:
+        return sorted(strong, key=_rank_key)
+    return []
 
 
 __all__ = [
@@ -1202,6 +1263,8 @@ __all__ = [
     "TOPIC_ORDER",
     "TOPIC_PLANS",
     "VISION_CATEGORIES",
+    "WEAK_SINGLE_CARD_ALIASES",
+    "infer_confident_keys",
     "infer_keys",
     "normalize_key",
 ]

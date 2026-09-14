@@ -41,6 +41,14 @@ def parse_args() -> argparse.Namespace:
     add.add_argument("--extraction", required=True, help="Unified extraction JSON (extract_arxiv_content/tex output).")
     add.add_argument("--metadata", help="Optional per-paper metadata JSON (flat or wrapped in `paper`).")
     add.add_argument("--note", help="Optional reading note Markdown to archive as note.md.")
+    add.add_argument(
+        "--note-json",
+        help="Optional paper-note JSON (paper-reader output) to archive as note.json.",
+    )
+    add.add_argument(
+        "--html",
+        help="Optional cleaned/raw paper HTML to archive as paper.html (reader fast path).",
+    )
     add.add_argument("--pool-root", default=DEFAULT_POOL_ROOT)
     add.add_argument("--force", action="store_true", help="Overwrite an existing pool entry and refresh its index line.")
 
@@ -147,6 +155,15 @@ def cmd_add(args: argparse.Namespace) -> int:
     if args.note:
         note_path = Path(args.note).expanduser()
         (target / "note.md").write_text(note_path.read_text(encoding="utf-8"), encoding="utf-8")
+    if args.note_json:
+        note_json_path = Path(args.note_json).expanduser()
+        note_payload = load_json(note_json_path)
+        (target / "note.json").write_text(
+            json.dumps(note_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+    if args.html:
+        html_path = Path(args.html).expanduser()
+        (target / "paper.html").write_bytes(html_path.read_bytes())
 
     quality = extraction.get("quality") or {}
     meta = {

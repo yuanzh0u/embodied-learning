@@ -41,6 +41,8 @@ def add_args(tmp: Path, **overrides: object):
         "extraction": str(extraction_json(tmp, **content_overrides)),
         "metadata": None,
         "note": None,
+        "note_json": None,
+        "html": None,
         "pool_root": str(tmp / "pool"),
         "force": False,
     }

@@ -179,6 +179,43 @@ class BuildResearchWikiTest(unittest.TestCase):
                 with wiki.publication_lock(self.output):
                     pass
 
+    def test_single_style_run_publishes_declared_version_only(self) -> None:
+        """A run.json declaring style+scope_note publishes with just its own
+        deliverable (memo-only interviews must not require the triplet)."""
+        evidence = self.root / "evidence"
+        run = evidence / "literature-review-memo-only-20260909"
+        run.mkdir(parents=True)
+        (run / "run.json").write_text(
+            json.dumps(
+                {
+                    "topic": "单风格话题",
+                    "status": "settled",
+                    "style": "scientific-memo",
+                    "scope_note": "用户只要科研备忘录",
+                    "files": {"outputs": ["scientific-memo_keyan.md"]},
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        (run / "scientific-memo_keyan.md").write_text(
+            "# 单风格\n\n## 结论\n\n这是仅备忘录的完整正文，长度足够作为发布内容。\n",
+            encoding="utf-8",
+        )
+        (run / "evidence-appendix.md").write_text("# 证据附录\n", encoding="utf-8")
+
+        selected, _stats = wiki.discover_topics(evidence)
+        self.assertEqual(len(selected), 1)
+
+        manifest = wiki.build_snapshot(evidence, self.output)
+        topic = json.loads(
+            (self.output / "topics" / f"{manifest['topics'][0]['id']}.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(list(topic["versions"]), ["keyan"])
+        self.assertEqual(topic["available_versions"], ["keyan"])
+        validated = wiki.validate_snapshot(self.output)
+        self.assertEqual(validated["topics"], manifest["topics"])
+
     def test_markdown_renderer_escapes_html_and_keeps_external_links(self) -> None:
         rendered, toc = wiki.markdown_to_html(
             "# 标题\n\n<script>alert(1)</script>\n\n## 小节\n\n[论文](https://example.com/paper)\n"
@@ -201,6 +238,24 @@ class BuildResearchWikiTest(unittest.TestCase):
             rendered,
         )
         self.assertIn('<a href="https://example.com/project"', rendered)
+
+    def test_memo_citation_superscripts_link_through_references(self) -> None:
+        markdown = (
+            "# Memo\n\n"
+            "主张一^[1]^，主张二^[2]^，重复引用^[1]^，未注册^[9]^。\n\n"
+            "## References\n\n"
+            "1. MDE-VIO: Enhancing VIO, Arda et al., 2026, "
+            "[arXiv:2602.11323](https://arxiv.org/abs/2602.11323)\n"
+            "2. SA-LIVO: Efficient LIVO, Yinong et al., 2026, "
+            "[arXiv:2606.25699](https://arxiv.org/abs/2606.25699)\n"
+        )
+        html, _toc = wiki.markdown_to_html(markdown)
+        linked = wiki.link_citation_superscripts(html, wiki._reference_map(markdown))
+
+        self.assertEqual(linked.count('class="citation-link"'), 3)
+        self.assertIn('href="/api/reader/2602.11323"', linked)
+        self.assertIn('href="/api/reader/2606.25699"', linked)
+        self.assertIn("<sup>[9]</sup>", linked)  # unresolvable stays plain
 
     def test_wiki_home_links_to_github_repository(self) -> None:
         index = (Path(__file__).resolve().parents[1] / "wiki" / "index.html").read_text(encoding="utf-8")
@@ -259,7 +314,7 @@ class BuildResearchWikiTest(unittest.TestCase):
 
         # Triggers: a topbar toggle and an article-level open button.
         topbar = index.split('<header class="topbar">', 1)[1].split("</header>", 1)[0]
-        self.assertIn('id="chat-toggle"', topbar)
+        self.assertNotIn('id="chat-toggle"', topbar)  # duplicate trigger removed
         self.assertIn('id="chat-open-button"', index)
         self.assertIn('id="chat-panel"', index)
         self.assertIn('id="chat-messages"', index)
@@ -276,7 +331,7 @@ class BuildResearchWikiTest(unittest.TestCase):
         # GitHub Pages has no local claude: the triggers must be hidden behind
         # the loopback-hostname guard, and no chat fetch may run there.
         self.assertIn('["localhost", "127.0.0.1", "::1"].includes(location.hostname)', script)
-        self.assertIn("nodes.chatToggle.hidden = !available;", script)
+        self.assertIn("nodes.chatOpenButton.hidden = !available;", script)
         self.assertIn("nodes.chatOpenButton.hidden = !available;", script)
         # CSS: overlay panel above the evidence drawer, width token, mobile.
         self.assertIn("--chat-width: 420px", styles)
@@ -284,6 +339,105 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn(".chat-panel.is-open", styles)
         self.assertIn(".chat-msg-user", styles)
         self.assertIn(".chat-msg-assistant", styles)
+
+    def test_wiki_workflow_and_resize_contract(self) -> None:
+        wiki_root = Path(__file__).resolve().parents[1] / "wiki"
+        index = (wiki_root / "index.html").read_text(encoding="utf-8")
+        script = (wiki_root / "assets" / "wiki.js").read_text(encoding="utf-8")
+        styles = (wiki_root / "assets" / "wiki.css").read_text(encoding="utf-8")
+
+        # Chat panel resize + focus mode.
+        self.assertIn('id="chat-resizer"', index)
+        self.assertIn('id="chat-expand"', index)
+        self.assertIn("function bindChatResizer(", script)
+        self.assertIn("function setChatFocused(", script)
+        self.assertIn(".chat-panel.is-focused", styles)
+        self.assertIn(".chat-resizer", styles)
+        # Homepage workflow hero + interview card.
+        self.assertIn('id="home-chat-hero"', index)
+        self.assertIn('id="home-chat-input"', index)
+        self.assertIn('id="home-chat-form"', index)
+        self.assertIn('id="interview-card"', index)
+        self.assertIn("function startWorkflow(", script)
+        self.assertIn("function showInterviewCard(", script)
+        self.assertIn("api/workflow", script)
+        self.assertIn("function consumeSSE(", script)
+        self.assertIn("function renderTimeline(", script)
+        self.assertIn("X-Workflow-Id", script)
+        # Stage timeline mirrors the server's stage list.
+        self.assertIn('"settle"', script)
+        self.assertIn(".chat-timeline", styles)
+        self.assertIn(".home-chat-hero", styles)
+        self.assertIn(".interview-card", styles)
+
+    def test_wiki_sidebar_toc_contract(self) -> None:
+        """The per-page TOC lives under the left research navigation, not as a
+        right-hand panel; the JS render targets keep their ids."""
+        wiki_root = Path(__file__).resolve().parents[1] / "wiki"
+        index = (wiki_root / "index.html").read_text(encoding="utf-8")
+        script = (wiki_root / "assets" / "wiki.js").read_text(encoding="utf-8")
+        styles = (wiki_root / "assets" / "wiki.css").read_text(encoding="utf-8")
+
+        self.assertNotIn('id="toc-panel"', index)  # right-hand panel removed
+        sidebar = index.split('<aside class="sidebar"', 1)[1].split("</aside>", 1)[0]
+        self.assertIn('id="sidebar-toc"', sidebar)
+        self.assertIn('id="toc-nav"', sidebar)
+        self.assertIn('id="reading-progress"', sidebar)
+        self.assertIn('tocPanel: el("sidebar-toc")', script)
+        self.assertNotIn('el("toc-panel")', script)
+        self.assertIn(".sidebar-toc", styles)
+        self.assertNotIn(".toc-panel", styles)
+        self.assertNotIn("--toc-width", styles)
+
+    def test_wiki_reader_and_selection_quote_contract(self) -> None:
+        wiki_root = Path(__file__).resolve().parents[1] / "wiki"
+        index = (wiki_root / "index.html").read_text(encoding="utf-8")
+        script = (wiki_root / "assets" / "wiki.js").read_text(encoding="utf-8")
+        styles = (wiki_root / "assets" / "wiki.css").read_text(encoding="utf-8")
+
+        # Same-page arXiv reader: a view inside #article-view, hash-routed,
+        # cached, progressively rendered. Back returns to the topic card.
+        self.assertIn('id="reader-view-header"', index)
+        self.assertIn('id="reader-back-button"', index)
+        self.assertIn('id="reader-open-external"', index)
+        self.assertIn('id="reader-progress"', index)
+        self.assertIn("function loadPaper(", script)
+        self.assertIn("function parsePaperRoute(", script)
+        self.assertIn("#/paper/", script)
+        self.assertIn("function bindReaderLinks(", script)
+        self.assertIn("api/reader/", script)
+        self.assertIn("sessionStorage", script)
+        self.assertIn(".reader-view-header", styles)
+        self.assertIn(".reader-skel-line", styles)
+        self.assertIn(".citation-link", styles)
+        # Topbar 讨论 trigger sits with the search bar; the conversation stays
+        # bound to each topic card.
+        topbar = index.split('<header class="topbar">', 1)[1].split("</header>", 1)[0]
+        self.assertIn('id="chat-open-button"', topbar)
+        self.assertNotIn('id="chat-open-button"', index.split("</header>", 1)[1])
+        # Dual chat panes: topic conversation vs workflow conversation.
+        self.assertIn('id="chat-show-topic"', index)
+        self.assertIn('id="chat-show-workflow"', index)
+        # Paper chat: per-arXiv-id conversations over the shared pool.
+        self.assertIn('id="chat-show-paper"', index)
+        self.assertIn('id="paper-id-form"', index)
+        self.assertIn("function loadPaperById(", script)
+        self.assertIn("api/paper/chat", script)
+        self.assertIn("function switchChatPane(", script)
+        self.assertIn("function syncChatPane(", script)
+        self.assertIn('state.chat.wsMessages', script)
+        self.assertIn(".chat-pane-button", styles)
+        # Reader formulas render via KaTeX with a graceful fallback.
+        self.assertIn("katex", index)
+        self.assertIn("function renderReaderMath(", script)
+        # Selection → @-quote context.
+        self.assertIn('id="selection-popup"', index)
+        self.assertIn('id="selection-cite"', index)
+        self.assertIn("function bindSelectionQuote(", script)
+        self.assertIn("function composeMessageWithContext(", script)
+        self.assertIn("function consumeQuotes(", script)
+        self.assertIn("chat-quote-chip", styles)
+        self.assertIn(".selection-popup", styles)
 
 
 if __name__ == "__main__":

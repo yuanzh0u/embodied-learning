@@ -19,17 +19,14 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.review_runs import STYLE_TO_FILE  # noqa: E402
+
 DELIVERABLES = [
     "scientific-memo_keyan.md",
     "zhihu-explainer_zhihu.md",
     "xiaohongshu-post_xiaohongshu.md",
 ]
-STYLE_TO_FILE = {
-    "scientific-memo": "scientific-memo_keyan.md",
-    "expert-explainer": "zhihu-explainer_zhihu.md",
-    "kol-thread": "xiaohongshu-post_xiaohongshu.md",
-    "survey": "review-packet.md",
-}
 APPENDIX = "evidence-appendix.md"
 REQUIRED_FIELDS = ["run", "topic", "time_range", "event_count", "files"]
 V2_REQUIRED_FILES = ["query_plan", "candidate_registry", "coverage_report"]

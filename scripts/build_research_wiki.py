@@ -37,7 +37,8 @@ from lib.markdown_semantics import (  # noqa: E402
     render_markdown,
     strip_frontmatter,
 )
-from lib.review_runs import load_catalog_runs  # noqa: E402
+from lib import arxiv_reader  # noqa: E402
+from lib.review_runs import STYLE_TO_FILE, load_catalog_runs  # noqa: E402
 
 
 DEFAULT_SOURCE = REPO_ROOT / "knowledge" / "literature-review-catalog.md"
@@ -127,6 +128,28 @@ def read_run_topic(directory: Path) -> str | None:
     return topic.strip() if isinstance(topic, str) and topic.strip() else None
 
 
+def read_run_manifest(directory: Path) -> dict | None:
+    run_path = directory / "run.json"
+    if not run_path.is_file():
+        return None
+    try:
+        manifest = json.loads(_read_text(run_path))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return manifest if isinstance(manifest, dict) else None
+
+
+# Wiki-publishable subset of check_run_bundle.STYLE_TO_FILE (survey/review-packet
+# is a briefing, not a reader article); version keys come from the deliverable
+# filename via VERSION_FILES, so the mapping lives in one place.
+_FILENAME_TO_VERSION_KEY = {filename: key for key, (_, filename) in VERSION_FILES.items()}
+_STYLE_VERSION_KEYS = {
+    style: _FILENAME_TO_VERSION_KEY[filename]
+    for style, filename in STYLE_TO_FILE.items()
+    if filename in _FILENAME_TO_VERSION_KEY
+}
+
+
 def topic_identity(directory: Path) -> str:
     key = normalize_topic_key(read_run_topic(directory) or directory.name)
     return TOPIC_ALIASES.get(key, key)
@@ -150,9 +173,17 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
 
     complete: list[Candidate] = []
     for directory in all_dirs:
-        if not all((directory / filename).is_file() for _, filename in VERSION_FILES.values()):
+        # Three-style triplet by default; a run.json declaring a reduced scope
+        # (`style` + `scope_note`) publishes with just its own deliverable.
+        manifest = read_run_manifest(directory)
+        declared_style = str((manifest or {}).get("style") or "")
+        if declared_style in _STYLE_VERSION_KEYS:
+            required_files = [VERSION_FILES[_STYLE_VERSION_KEYS[declared_style]][1]]
+        else:
+            required_files = [filename for _, filename in VERSION_FILES.values()]
+        if not all((directory / filename).is_file() for filename in required_files):
             if catalog_mode:
-                raise RuntimeError(f"目录指定的 run 缺少三种成稿：{directory}")
+                raise RuntimeError(f"目录指定的 run 缺少成稿：{directory}")
             continue
         reader_match = _READER_SUFFIX.search(directory.name)
         complete.append(
@@ -270,20 +301,76 @@ def markdown_to_html(markdown: str) -> tuple[str, list[dict[str, object]]]:
     return result.html, result.toc
 
 
+# Scientific-memo citation markers: ^[1]^ renders to <sup>[1]</sup>. Each
+# bracketed number is an individual marker (batch markers like ^[1,2]^ are a
+# style violation caught by the writer rubric, not the renderer). Numbers are
+# resolved against the document's own References list — every entry carries an
+# arXiv link — and rewritten into in-panel reader links.
+_RENDERED_SUP_CITATION = re.compile(r"<sup>\[([^\]<]+)\]</sup>")
+_REFERENCE_ENTRY = re.compile(
+    r"^\s*(\d+)[.)]\s+.*?arxiv\.org/(?:abs|html)/([^\s\]\)#]+)", re.IGNORECASE
+)
+
+
+def _reference_map(markdown: str) -> dict[str, str]:
+    """Number → arXiv id from a document's References/参考文献 numbered list."""
+
+    mapping: dict[str, str] = {}
+    for line in markdown.splitlines():
+        match = _REFERENCE_ENTRY.match(line)
+        if match:
+            paper_id = arxiv_reader.parse_arxiv_id(match.group(2))
+            if paper_id:
+                mapping[match.group(1)] = paper_id
+    return mapping
+
+
+def link_citation_superscripts(html_text: str, references: dict[str, str]) -> str:
+    """Rewrite <sup>[N]</sup> markers into reader links when N exists in the
+    document's reference map. Unresolvable numbers keep plain brackets."""
+
+    def rewrite(match: re.Match) -> str:
+        paper_id = references.get(match.group(1).strip())
+        if not paper_id:
+            return match.group(0)
+        return (
+            f'<sup class="citation-sup"><a class="citation-link" '
+            f'href="/api/reader/{paper_id}" data-arxiv="{html.escape(paper_id, quote=True)}">'
+            f"[{match.group(1).strip()}]</a></sup>"
+        )
+
+    return _RENDERED_SUP_CITATION.sub(rewrite, html_text)
+
+
 def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+    # Three styles by default; a run.json declaring a reduced scope publishes
+    # only its own deliverable (mirrors check_run_bundle's style gate).
+    manifest = read_run_manifest(candidate.directory) or {}
+    declared_style = str(manifest.get("style") or "")
+    version_keys = (
+        [_STYLE_VERSION_KEYS[declared_style]]
+        if declared_style in _STYLE_VERSION_KEYS
+        else list(VERSION_FILES)
+    )
     markdown_by_version = {
-        key: _read_text(candidate.directory / filename)
-        for key, (_, filename) in VERSION_FILES.items()
+        key: _read_text(candidate.directory / VERSION_FILES[key][1])
+        for key in version_keys
     }
-    title = get_topic_title(candidate.directory, markdown_by_version["zhihu"])
+    fallback_markdown = markdown_by_version[version_keys[0]]
+    title = get_topic_title(candidate.directory, fallback_markdown)
     field = classify_field(title, candidate.directory.name)
     identifier = topic_id(candidate.topic_key)
     versions: dict[str, object] = {}
     search_versions: dict[str, object] = {}
 
-    for key, (label, filename) in VERSION_FILES.items():
+    for key in version_keys:
+        label, filename = VERSION_FILES[key]
         markdown = markdown_by_version[key]
         rendered, toc = markdown_to_html(markdown)
+        if key == "keyan":
+            # Memo citation markers resolve against this document's own
+            # References list (number → arXiv id) into in-panel reader links.
+            rendered = link_citation_superscripts(rendered, _reference_map(markdown))
         plain = markdown_to_plain(markdown)
         versions[key] = {
             "label": label,
@@ -315,9 +402,10 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         "title": title,
         "field": field,
         "date": candidate.date,
-        "excerpt": excerpt(markdown_by_version["zhihu"]),
+        "excerpt": excerpt(fallback_markdown),
         "source_directory": _relative(candidate.directory),
         "versions": versions,
+        "available_versions": version_keys,
         "evidence": {
             "available": bool(evidence_html),
             "label": evidence_kind,
@@ -333,7 +421,8 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         "field": field,
         "date": candidate.date,
         "excerpt": topic["excerpt"],
-        "default_version": "zhihu",
+        "default_version": version_keys[0],
+        "available_versions": version_keys,
         "evidence_available": bool(evidence_html),
     }
     search_item = {
@@ -432,7 +521,8 @@ def validate_snapshot(output: Path) -> dict[str, object]:
         if topic.get("id") != identifier or topic.get("topic_key") != key:
             raise RuntimeError(f"{identifier} 的话题文件与发布索引不一致。")
         versions = topic.get("versions", {})
-        missing = [key for key in VERSION_FILES if key not in versions]
+        available = topic.get("available_versions") or list(VERSION_FILES)
+        missing = [key for key in available if key not in versions]
         if missing:
             raise RuntimeError(f"{identifier} 缺少版本：{', '.join(missing)}")
     actual_topic_files = {
