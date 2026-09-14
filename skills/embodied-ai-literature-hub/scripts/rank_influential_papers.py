@@ -138,7 +138,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--retry-base-seconds", type=float, default=5.0)
     parser.add_argument("--retry-max-seconds", type=float, default=60.0)
     parser.add_argument("--fail-fast", action="store_true", help="Abort on first failed request.")
-    parser.add_argument("--user-agent", default="embodied-ai-influence-ranking/1.0 (local research workflow)")
+    parser.add_argument("--user-agent", default="embodied-ai-literature-hub/1.0 (local research workflow)")
     parser.add_argument("--api-key", default=None, help="Semantic Scholar API key. Falls back to S2_API_KEY env var.")
     return parser.parse_args()
 

@@ -1,6 +1,6 @@
 ---
 title: Separate Query Planning From Literature Mining
-status: accepted
+status: superseded by ADR 0003
 date: 2026-06-08
 tags: [adr, embodied-ai, query-planning, literature-mining]
 ---
@@ -9,7 +9,7 @@ tags: [adr, embodied-ai, query-planning, literature-mining]
 
 ## Status
 
-Accepted.
+Superseded by [ADR 0003](0003-consolidate-to-three-skills.md).
 
 ## Context
 

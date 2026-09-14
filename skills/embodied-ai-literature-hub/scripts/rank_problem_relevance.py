@@ -52,7 +52,7 @@ MAX_RETRIES = 3
 TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
 WRAPPER_KEY = {"references": "citedPaper", "citations": "citingPaper"}
 DEFAULT_SEED_STATUSES = frozenset({"accepted", "full-text-queued", "extracted"})
-DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-problem-relevance-ranking", "html")
+DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "html")
 
 # BM25 hyper-parameters (standard Okapi defaults).
 K1 = 1.5
@@ -149,7 +149,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--retry-max-seconds", type=float, default=60.0)
     parser.add_argument("--fail-fast", action="store_true", help="Abort on first failed request.")
     parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR, help="arXiv HTML cache directory.")
-    parser.add_argument("--user-agent", default="embodied-ai-problem-relevance-ranking/1.0 (local research workflow)")
+    parser.add_argument("--user-agent", default="embodied-ai-literature-hub/1.0 (local research workflow)")
     parser.add_argument("--api-key", default=None, help="Semantic Scholar API key. Falls back to S2_API_KEY env var.")
     return parser.parse_args()
 
