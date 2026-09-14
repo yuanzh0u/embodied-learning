@@ -64,7 +64,7 @@ python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --pap
 python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py --paper-id 2402.10329 \
   --topic "..." --topic-id EA-DATA --id-prefix EA-XXX-2026 --terms UMI,data \
   --output-skeleton /tmp/skeleton.jsonl --output-digest /tmp/digest.md   # candidate→evidence promotion
-python3 skills/embodied-ai-literature-review/scripts/build_review_packet.py --topic "..." \
+python3 skills/embodied-ai-review-writer/scripts/build_review_packet.py --topic "..." \
   --knowledge-id EA-DATA --evidence-jsonl /tmp/evidence.jsonl
 # Local public paper pool (default ~/Documents/arxiv/pool, outside the repo): one folder per paper
 python3 skills/embodied-ai-literature-hub/scripts/pool_add_paper.py add --extraction /tmp/extraction.json
@@ -79,23 +79,24 @@ validates the file exists without requiring `sources.md` registration.
 ## Architecture: the skill pipeline
 
 Three skills under `skills/` form a strict one-directional pipeline (rationale in
-`docs/adr/0001-separate-query-planning-from-literature-mining.md`). Each stage's responsibility
-boundary is deliberate — do not blur them:
+`docs/adr/0003-consolidate-to-three-skills.md`). Each stage's responsibility boundary is
+deliberate — do not blur them:
 
-1. **`embodied-ai-query-planner`** — turns a topic into a structured query plan. Plans searches only;
-   it never accepts papers as evidence or mines full text.
-2. **`embodied-ai-literature-hub`** — consumes the plan, searches arXiv, mines HTML 正文, and emits
-   evidence records. It owns no query taxonomy; it only consumes the planner's plan.
-3. **`embodied-ai-literature-review`** — orchestrates `planner → hub → review packet → style menu` and
-   synthesizes the final deliverable.
+1. **`embodied-ai-literature-hub`** (检索) — plans queries (in-skill `build_query_plan.py` stage),
+   searches arXiv/Semantic Scholar, triages candidates (influence, problem relevance), mines HTML
+   正文, and emits evidence records. It plans and mines only; it never writes reader-facing prose.
+2. **`embodied-ai-paper-reader`** (阅读) — deep-reads recovered full text, verifies claims, projects
+   evidence events.
+3. **`embodied-ai-review-writer`** (写作) — owns the review end to end: orchestrates
+   `hub → reader → review packet → writing brief` and synthesizes the final deliverable.
 
 **Handoff contract (easy to get wrong):**
 - The planner JSON keeps channels separate: `queries` (arXiv API) vs. `browser_fallback_queries` vs.
   `web_calibration_queries`. `search_arxiv.py --query-file` reads only the top-level `queries` entries.
 - Planner `start_date`/`end_date` are **scope metadata only**. The actual date filtering is done by
   `search_arxiv.py --start-date/--end-date` — always pass those explicitly.
-- `skills/embodied-ai-literature-hub/scripts/build_query_plan.py` is a **compat wrapper** that delegates
-  to the planner's copy; new work should call the planner script directly.
+- Query planning is a stage inside `$embodied-ai-literature-hub`
+  (`skills/embodied-ai-literature-hub/scripts/build_query_plan.py`).
 - `build_review_packet.py` is a **briefing generator, not an author**: by default it writes
   `review-packet.md` + `writing-brief.md` + `evidence-appendix.md` into a new
   `work/literature-review-<topic>-<date>/` folder. The three prose deliverables

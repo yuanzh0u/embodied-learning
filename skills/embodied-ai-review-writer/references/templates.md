@@ -1,6 +1,6 @@
 # Briefing and Writer Handoff
 
-This Skill does not own reader-facing prose templates. It produces validated writing inputs and hands them to `$embodied-ai-review-writer`.
+The briefing stage does not own reader-facing prose templates. It produces validated writing inputs and hands them to the `$embodied-ai-review-writer` writing stage.
 
 ## Briefing bundle
 
@@ -23,9 +23,9 @@ Pass the following to `$embodied-ai-review-writer`:
 
 The writer then loads its style-specific reference:
 
-- scientific memo → `embodied-ai-review-writer/references/scientific-memo.md`
-- Zhihu explainer → `embodied-ai-review-writer/references/zhihu-explainer.md`
-- Xiaohongshu post → `embodied-ai-review-writer/references/xiaohongshu-post.md`
+- scientific memo → [scientific-memo.md](scientific-memo.md)
+- Zhihu explainer → [zhihu-explainer.md](zhihu-explainer.md)
+- Xiaohongshu post → [xiaohongshu-post.md](xiaohongshu-post.md)
 
 ## Non-deliverables
 

@@ -22,7 +22,7 @@ This repository is a research knowledge base. Optimize for context efficiency an
 
 ## Research Workflow
 
-- When researching a topic, first use the project skill `embodied-ai-literature-review`; it orchestrates `embodied-ai-query-planner` and `embodied-ai-literature-hub` for search planning, evidence extraction, and final review drafting.
+- When researching a topic, first use the project skill `embodied-ai-review-writer`; it owns the review end to end, orchestrating `embodied-ai-literature-hub` (query planning, search, extraction) and `embodied-ai-paper-reader` (deep reading) before writing the final reviews.
 - A paper may enter accepted evidence only after complete non-OCR full text, a validated paper note, and a passing claim-support audit. Scanned-only papers are out of scope.
 
 ## Source Of Truth

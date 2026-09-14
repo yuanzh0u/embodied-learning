@@ -11,7 +11,7 @@ Convert one recovered paper into a structured paper note, verified evidence card
 
 Use this pipeline position:
 
-`$embodied-ai-literature-hub -> $embodied-ai-paper-reader -> $embodied-ai-literature-review -> $embodied-ai-review-writer`
+`$embodied-ai-literature-hub -> $embodied-ai-paper-reader -> $embodied-ai-review-writer`
 
 ## Required inputs
 

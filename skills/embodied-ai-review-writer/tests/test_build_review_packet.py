@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-literature-review" / "scripts" / "build_review_packet.py"
+SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "build_review_packet.py"
 SPEC = importlib.util.spec_from_file_location("build_review_packet", SCRIPT)
 build_review_packet = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -62,7 +62,7 @@ def event_for_paper(event_id: str, arxiv_id: str) -> dict[str, object]:
 
 class BuildReviewPacketTests(unittest.TestCase):
     def test_skill_docs_describe_default_readable_markdown_and_styles(self) -> None:
-        skill_doc = (ROOT / "skills" / "embodied-ai-literature-review" / "SKILL.md").read_text(encoding="utf-8")
+        skill_doc = (ROOT / "skills" / "embodied-ai-review-writer" / "SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("review mode -> planner -> candidate registry -> coverage/saturation", skill_doc)
         self.assertIn("HTML/PDF recovery -> $embodied-ai-paper-reader -> review packet -> writing brief -> $embodied-ai-review-writer", skill_doc)
@@ -312,7 +312,6 @@ title: 数据采集与数据质量
         self.assertIn("review mode -> planner -> candidate registry -> coverage/saturation", packet)
         self.assertIn("complete HTML/text-layer-PDF recovery", packet)
         self.assertIn("$embodied-ai-paper-reader", packet)
-        self.assertIn("$embodied-ai-query-planner", packet)
         self.assertIn("$embodied-ai-literature-hub", packet)
         self.assertIn("not a replacement", packet)
 

@@ -4,7 +4,7 @@ Use this reference before drafting or auditing a full embodied-AI literature rev
 
 ## Boundary
 
-`$embodied-ai-literature-review` owns evidence orchestration and the briefing bundle. Its default path is `planner -> hub -> review packet -> writing brief -> $embodied-ai-review-writer`. **`build_review_packet.py` is a briefing generator, not an author**: it emits `review-packet.md` (audit surface), `writing-brief.md` (thesis candidates, topic-clustered evidence, mandatory caveats), and `evidence-appendix.md` (citation anchors). `$embodied-ai-review-writer` independently drafts and editorially audits the three reader-facing files. Mechanical renders exist only as bannered `*.scaffold.md` files and are never deliverables.
+`$embodied-ai-review-writer` owns evidence orchestration and the briefing bundle. Its default path is `planner -> hub -> review packet -> writing brief -> writer` (the first three stages run inside `$embodied-ai-literature-hub` and `$embodied-ai-paper-reader`). **`build_review_packet.py` is a briefing generator, not an author**: it emits `review-packet.md` (audit surface), `writing-brief.md` (thesis candidates, topic-clustered evidence, mandatory caveats), and `evidence-appendix.md` (citation anchors). `$embodied-ai-review-writer` independently drafts and editorially audits the three reader-facing files. Mechanical renders exist only as bannered `*.scaffold.md` files and are never deliverables.
 
 If the user does not specify a time range for paper discovery or fallback collection, use the most recent six months. Preserve the resolved time range and review mode in the packet and final artifact.
 

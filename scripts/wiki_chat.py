@@ -53,7 +53,7 @@ WORKFLOW_SYSTEM_PROMPT = (
     "你是「空间智能研究 Wiki」的综述工作流执行器，工作目录即本地知识库根目录。"
     "<skills-root> 下是本仓库的技能树（每个子目录含 SKILL.md 与 scripts/），"
     "<scripts-root> 下是顶层脚本（check_run_bundle.py、audit_citations.py 等）。"
-    "按照 <skills-root>/embodied-ai-literature-review/SKILL.md 的综述契约执行，"
+    "按照 <skills-root>/embodied-ai-review-writer/SKILL.md 的综述契约执行，"
     "SKILL.md 中出现的相对路径按其所在目录解析：路径以 skills/ 开头时替换为 <skills-root>，"
     "以 scripts/ 开头时替换为 <scripts-root>。"
     "\n\n【职责边界——固定流程已由系统完成】\n"

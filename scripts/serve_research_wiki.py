@@ -72,11 +72,11 @@ def resolve_pipeline_root() -> Path | None:
     if PIPELINE_ROOT_OVERRIDE is not None:
         candidates.insert(0, PIPELINE_ROOT_OVERRIDE)
     for candidate in candidates:
-        if (candidate / "skills" / "embodied-ai-literature-review" / "SKILL.md").is_file():
+        if (candidate / "skills" / "embodied-ai-review-writer" / "SKILL.md").is_file():
             _PIPELINE_ROOT_CACHE = candidate
             return candidate
         # The bundled copy IS the skills root itself (site-packages layout).
-        if candidate == bundled and (bundled / "embodied-ai-literature-review" / "SKILL.md").is_file():
+        if candidate == bundled and (bundled / "embodied-ai-review-writer" / "SKILL.md").is_file():
             _PIPELINE_ROOT_CACHE = bundled
             return bundled
     _PIPELINE_ROOT_CACHE = None
