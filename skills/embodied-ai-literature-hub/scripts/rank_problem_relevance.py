@@ -97,12 +97,12 @@ RELATED_WORK_KEYWORDS = (
 
 
 def _load_extract_arxiv_html():
-    """Import the literature-hub's HTML extractor as a library.
+    """Import this skill's HTML extractor as a library.
 
     The skill scripts are not importable packages (no ``__init__.py``), so load the
     sibling script by file path -- the same mechanism the tests use.
     """
-    path = Path(__file__).resolve().parents[2] / "embodied-ai-literature-hub" / "scripts" / "extract_arxiv_html.py"
+    path = Path(__file__).resolve().parent / "extract_arxiv_html.py"
     spec = importlib.util.spec_from_file_location("extract_arxiv_html", path)
     if spec is None or spec.loader is None:  # pragma: no cover - defensive
         raise RuntimeError(f"cannot load {path}")

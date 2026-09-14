@@ -49,7 +49,7 @@ from lib.agent_invoke import (  # noqa: E402
     run_one_shot_agent,
 )
 HUB_SCRIPTS = REPO_ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
-PLANNER_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-query-planner" / "scripts" / "build_query_plan.py"
+PLANNER_SCRIPT = HUB_SCRIPTS / "build_query_plan.py"
 PACKET_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "build_reading_packet.py"
 
 REVIEW_MODES = {"rapid", "scoping", "systematic"}

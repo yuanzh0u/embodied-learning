@@ -14,8 +14,9 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[3]
-PLANNER = ROOT / "skills" / "embodied-ai-query-planner" / "scripts" / "build_query_plan.py"
-SEARCH = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "search_arxiv.py"
+HUB_SCRIPTS = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
+PLANNER = HUB_SCRIPTS / "build_query_plan.py"
+SEARCH = HUB_SCRIPTS / "search_arxiv.py"
 
 
 def run_json(*args: str) -> dict:
@@ -342,7 +343,7 @@ class WeakAliasConfidenceTests(unittest.TestCase):
     the weak ids in knowledge_ids for run-manifest routing context."""
 
     def setUp(self) -> None:
-        scripts_dir = str(ROOT / "skills" / "embodied-ai-query-planner" / "scripts")
+        scripts_dir = str(HUB_SCRIPTS)
         if scripts_dir not in sys.path:
             sys.path.insert(0, scripts_dir)
         import query_taxonomy

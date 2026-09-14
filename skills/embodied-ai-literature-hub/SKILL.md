@@ -1,6 +1,6 @@
 ---
 name: embodied-ai-literature-hub
-description: Discover and recover large embodied-AI literature pools through multi-round Semantic Scholar/arXiv/browser search, candidate registries, coverage and saturation checks, HTML-to-TeX-source-to-text-layer-PDF fallback, extraction-quality gates, and a local public paper pool keyed by unique paper ID. Use for broad or systematic paper discovery, negative-evidence discovery, citation chasing, candidate screening, or when arXiv HTML is unavailable; hand complete readable text to embodied-ai-paper-reader for intellectual reading and evidence creation.
+description: Discover and recover large embodied-AI literature pools through scale-aware query planning, multi-round Semantic Scholar/arXiv/browser search, candidate registries, influence and problem-relevance triage rankings, coverage and saturation checks, HTML-to-TeX-source-to-text-layer-PDF fallback, extraction-quality gates, and a local public paper pool keyed by unique paper ID. Use for broad or systematic paper discovery, query planning and topic expansion, negative-evidence discovery, citation chasing, candidate screening, or when arXiv HTML is unavailable; hand complete readable text to embodied-ai-paper-reader for intellectual reading and evidence creation.
 ---
 
 # Embodied AI Literature Hub
@@ -9,7 +9,7 @@ description: Discover and recover large embodied-AI literature pools through mul
 
 - Topic, preferably mapped to one or more knowledge IDs such as `EA-DATA`, `EA-MODEL`, or `EA-EVAL`.
 - Time range. In a literature-review run, consume the orchestrator's resolved range; otherwise default to the most recent six months and record it.
-- Review mode from the planner: `rapid`, `scoping`, or `systematic`.
+- Review mode from the planning step: `rapid`, `scoping`, or `systematic`.
 
 ## Workflow
 
@@ -17,11 +17,24 @@ description: Discover and recover large embodied-AI literature pools through mul
    - `knowledge/index.md`
    - `knowledge/embodied-ai/index.md`
    - relevant topic cards only.
-2. Build a search plan with `$embodied-ai-query-planner`:
-   - Query planning is owned by `$embodied-ai-query-planner`; this Skill only consumes the generated plan.
-   - Use the planner before `search_arxiv.py`, passing topic, knowledge IDs, family hints, time range metadata, and any calibration files.
+2. Plan the queries (in-Skill planning step, `scripts/build_query_plan.py`):
+   - Inputs: topic; optional `knowledge_id` (`EA-DATA`, `EA-MODEL`, ...); optional specialized family (`umi`, `vla`, `sim2real`, `retargeting`, `tactile-force`, `last-centimeter`); time range (recorded as scope metadata only — the actual date filtering is `--start-date/--end-date` on the search scripts); review mode `rapid`/`scoping`/`systematic`; explicit candidate/full-text/accepted-evidence floors (never caps); optional `--dynamic-file` suggestions and `--calibration-file` notes.
+   - If the topic needs associative expansion beyond the static taxonomy, create a dynamic suggestion file (see [dynamic-expansion.md](references/dynamic-expansion.md)). For fresh calibration, search arXiv pages, project pages, author pages, Reddit, and X/Twitter for current terms — save only terms/query hints, not claims (see [web-calibration.md](references/web-calibration.md)) — then re-run with `--dynamic-file` and/or `--calibration-file`.
    - Review `queries`, `search_targets`, `coverage_dimensions`, `stopping_rule`, Browser fallbacks, and notes.
-   - The legacy `scripts/build_query_plan.py` path is only a compatibility wrapper that delegates to `../../embodied-ai-query-planner/scripts/build_query_plan.py` relative to the wrapper file.
+   - Topic taxonomy details: [topic-taxonomy.md](references/topic-taxonomy.md).
+
+## Query plan contract
+
+- `queries`: arXiv API-compatible query entries, read by `search_arxiv.py --query-file` (top-level `queries` only). Each entry carries `label`, `tier`, `query`, and `why`.
+- `browser_fallback_queries`: web/browser search strings for candidate discovery when the API under-recovers.
+- `web_calibration_queries`: search strings for fresh keyword calibration.
+- `dynamic_suggestions`: LLM/agent-suggested query additions and adjacent families, separate from static taxonomy.
+- `calibration_notes`: source and confidence notes, especially for social calibration.
+- `review_mode` and `search_targets`: candidate/full-text/accepted-paper floors scaled by the query surface.
+- `coverage_dimensions`: query labels grouped into direct, mechanism, limit, evaluation, deployment, and adjacent evidence surfaces.
+- `stopping_rule`: minimum rounds plus consecutive low-new-paper rounds; all floors and dimensions must pass.
+
+Planning rules: prefer wide recall plus strong downstream filtering; never stop because a fixed paper count was reached — counts are floors, and coverage and saturation decide completion; `rapid` is for a bounded decision or early scan, `scoping` for normal topic maps, `systematic` for high-consequence or explicitly exhaustive work; keep static taxonomy, dynamic suggestions, and web calibration visibly separate; do not hard-filter with `cat:` by default — include suggested categories as metadata; treat Reddit and X/Twitter as low-confidence social calibration only; **do not use web or social content as accepted paper evidence**.
 3. Search in batches and maintain a registry:
    - Default metadata-search backend is `scripts/search_semantic_scholar.py` (Semantic Scholar Graph API): zero-sleep with a 0.1s inter-query interval, disk-cached responses shared with `expand_via_citations.py`, and `--api-key`/`S2_API_KEY` optional. It accepts the same planner `--query-file` and `--start-date/--end-date` contract as `search_arxiv.py` and emits the same JSON shape.
    - Run `scripts/search_arxiv.py --query-file <planner-json>` as the arXiv Atom API pass — kept as a second channel and compatibility backend (3s politeness sleep applies).
@@ -36,7 +49,87 @@ description: Discover and recover large embodied-AI literature pools through mul
    - For registries with hundreds of papers, use `scripts/screen_candidates.py` to create a reproducible title/abstract priority queue. Prior evidence may seed ranking, but the script never marks a paper accepted.
    - Run `scripts/assess_review_coverage.py` after each round. Continue until candidate, full-text, accepted-paper, dimension, and saturation checks all pass. A target count alone never stops the run.
    - Browser/web results remain discovery-only candidates.
-   - Keyword search alone under-covers a broad topic's sub-themes. Once a keyword round saturates but coverage still feels thin, run `scripts/expand_via_citations.py` against a handful of `accepted`/`full-text-queued` candidates as seeds to chase citation relationships (Semantic Scholar). It ranks 1-hop neighbors by bibliographic coupling/co-citation against the seed set — not a flat per-seed cap — to avoid citation-graph explosion, merges into the registry via `build_candidate_registry.py --citation-result`, and can emit a `--dynamic-file` for `$embodied-ai-query-planner` so the terms it finds widen the next keyword round. Read `references/citation-expansion.md` before using it.
+   - Keyword search alone under-covers a broad topic's sub-themes. Once a keyword round saturates but coverage still feels thin, run `scripts/expand_via_citations.py` against a handful of `accepted`/`full-text-queued` candidates as seeds to chase citation relationships (Semantic Scholar). It ranks 1-hop neighbors by bibliographic coupling/co-citation against the seed set — not a flat per-seed cap — to avoid citation-graph explosion, merges into the registry via `build_candidate_registry.py --citation-result`, and can emit a `--dynamic-file` for this Skill's planning step so the terms it finds widen the next keyword round. Read `references/citation-expansion.md` before using it.
+
+## Candidate triage: influence ranking
+
+`scripts/rank_influential_papers.py` ranks the most influential papers in a root paper's
+1-hop Semantic Scholar citation neighborhood (what it cites and/or what cites it) by a
+**multi-dimensional composite** — citation count, venue prestige, author h-index, code
+availability — not by raw citation count alone.
+
+Use it when "most influential around this root paper" must mean more than "most cited",
+or to triage a large neighborhood into a shortlist for full-text recovery and deep reading
+through `$embodied-ai-paper-reader`. It is **complementary** to `expand_via_citations.py`:
+that script finds de-noised multi-seed sub-topic discoveries; this one scores one root
+paper's neighborhood by influence.
+
+1. Decide direction: `--direction references` (foundations the root builds on), `citations` (what it seeded), or `both` (default). Scope with `--min-year`, and gate recall/precision with `--require-terms` (title+abstract OR), `--require-title-terms` (title-only OR), and `--must-terms` (hard AND — how you require a specific perspective).
+
+```bash
+python3 skills/embodied-ai-literature-hub/scripts/rank_influential_papers.py \
+  --seed-id 2104.07905 --direction citations --top 10 --min-year 2021 \
+  --require-terms "egocentric,exocentric,ego-exo,cross-view,view-invariant,affordance" \
+  --must-terms "third-person,third person,exocentric,exo-centric,exo" \
+  --output work/<run>/influence-ranking-derived.json \
+  --markdown-output work/<run>/influence-ranking-derived.md
+```
+
+2. The 1-hop neighborhood is often too small. Enlarge via 2-hop citation expansion, then feed the discovered IDs back in as `--paper-id-file`:
+
+```bash
+python3 skills/embodied-ai-literature-hub/scripts/expand_via_citations.py \
+  --seed-id-file work/<run>/hop1-citers.txt --direction citations \
+  --min-shared-seeds 2 --output work/<run>/hop2-candidates.json
+
+python3 skills/embodied-ai-literature-hub/scripts/rank_influential_papers.py \
+  --seed-id 2104.07905 --direction citations --top 10 --min-year 2021 \
+  --require-terms "egocentric,exocentric,ego-exo,first-person,third-person,cross-view" \
+  --paper-id-file work/<run>/hop2-ids.txt \
+  --output work/<run>/influence-ranking-enlarged.json
+```
+
+3. Read the ranking, then hand the shortlist to `$embodied-ai-paper-reader` for full-text recovery and claim-support audit **before** any of it can be cited as evidence.
+
+Epistemic boundaries: output is **candidate-level discovery**, exactly like keyword/browser/citation channels — a high composite does not make a paper evidence. The **code** signal is the weakest dimension (`abstract` mode is confirm-only; `pwc` mode is best-effort and degrades to neutral). Author h-index is approximate and records *author-level* standing. Read [scoring-rubric.md](references/scoring-rubric.md) before trusting the scores.
+
+## Candidate triage: problem-relevance ranking
+
+`scripts/rank_problem_relevance.py` fills the **specific gaps** a review still has: given
+the review's existing papers as seeds plus its **open research questions**, it does
+multi-round citation expansion, extracts each candidate's *judgment surface* (abstract +
+introduction + related work), then retrieves the ~50 most task-relevant papers with a BM25
+**explanation** of why each is relevant (which question, which terms, which field, a
+snippet). Relevance is *shown*, not asserted. Use it when evidence answers the headline
+topic but leaves sub-questions open.
+
+Four-stage budget funnel — expensive steps only touch a few papers:
+
+| Stage | Who | Input → Output | Budget |
+|---|---|---|---|
+| 1. **Fetch** | script | seeds → citation neighbors + judgment surfaces | all fetched (capped), *no reading* |
+| 2. **Retrieve** | script (BM25) | corpus → explained relevance shortlist | **~50** |
+| 3. **Rank** | you (the agent) read the judgment packet | 50 → relevance-ranked | **20** |
+| 4. **Deep-read** | you → `$embodied-ai-paper-reader` | 20 → full-text shortlist | **10** |
+
+1. **Run stages 1–2** (one command):
+
+```bash
+python3 skills/embodied-ai-literature-hub/scripts/rank_problem_relevance.py \
+  --question "How is the third-person (exocentric) camera configuration initialized?" \
+  --seed-id 2104.07905 --seed-id 2203.09905 \
+  --rounds 2 --direction both --min-year 2021 \
+  --require-terms "egocentric,exocentric,ego-exo,cross-view,first-person,third-person" \
+  --must-terms "third-person,exo,cross-view" \
+  --target-retrieved 50 \
+  --output work/<run>/problem-relevance.json \
+  --markdown-output work/<run>/problem-relevance.md
+```
+
+2. **Read the ~50** in the `--markdown-output` judgment packet. Assign each a relevance tier per question using [problem-relevance-rubric.md](references/problem-relevance-rubric.md), then re-rank to a top **20**.
+3. **Pick the 10** that most warrant full-text reading and hand them to `$embodied-ai-paper-reader`. Only after that gate can any of them become citable evidence. Stage 3–4 deliverables are **agent-written**; the script intentionally stops at stage 2.
+
+Epistemic boundaries: output is **candidate-level discovery**. BM25 is **lexical** — it can over-rank a paper that *mentions* a concept but never *solves* it, and under-rank papers using synonyms the questions don't literally contain; that is why stage 3 is a human/agent read. The `judgment_surface` is not a full read: a `surface_complete: false` paper fell back to abstract-only — treat its intro/related-work evidence as absent, not negative. Read [retrieval-method.md](references/retrieval-method.md) for the BM25 method and its limits.
 4. Extract full text through one gateway:
    - Run `scripts/extract_arxiv_content.py`, which tries structured HTML, flat HTML, then text-layer PDF by default. `--preferred-source auto` inserts a markdown tier after HTML (HTML -> markdown -> PDF); `--preferred-source tex` forces the markdown tier first.
    - The markdown tier (`scripts/extract_arxiv_tex.py`) defaults to the **arxiv2md** transport: a public REST API fetched with plain curl (`GET https://arxiv2md.org/api/markdown?url=<id>`, no credentials, 30 req/min per IP) returning section-aware markdown with LaTeX math and pipe tables. Works for papers with arXiv HTML (roughly 2024-03 onward); papers without HTML answer HTTP 400 and the chain falls through. Requires nothing beyond curl.
@@ -94,10 +187,10 @@ and stably deduplicated with any explicit `--paper-id` values.
 
 ## Script quick start
 
-From the repository root, prefer the planner Skill path:
+From the repository root, the in-Skill planning step and search backends:
 
 ```bash
-python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
+python skills/embodied-ai-literature-hub/scripts/build_query_plan.py \
   --topic "UMI 数据可用性" \
   --knowledge-id EA-DATA \
   --family umi \
@@ -145,14 +238,11 @@ python skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
   --output work/<run>/candidate-registry.json
 ```
 
-
-Legacy query-plan callers can still use:
+The planning step also supports `--list-topics` to enumerate the built-in taxonomy families:
 
 ```bash
 python skills/embodied-ai-literature-hub/scripts/build_query_plan.py --list-topics
 ```
-
-That command delegates to `$embodied-ai-query-planner` and keeps old `search_arxiv.py --query-file` workflows compatible.
 
 ## References
 
@@ -161,3 +251,6 @@ That command delegates to `$embodied-ai-query-planner` and keeps old `search_arx
 - Read [evidence-schema.md](references/evidence-schema.md) before creating or validating events.
 - Read [browser-fallback.md](references/browser-fallback.md) after API failure or query under-recovery.
 - Read [citation-expansion.md](references/citation-expansion.md) before running `expand_via_citations.py` to widen discovery beyond keyword search.
+- Read [topic-taxonomy.md](references/topic-taxonomy.md), [dynamic-expansion.md](references/dynamic-expansion.md), and [web-calibration.md](references/web-calibration.md) for the planning step's taxonomy, dynamic suggestions, and calibration rules.
+- Read [scoring-rubric.md](references/scoring-rubric.md) before trusting influence-ranking composites.
+- Read [retrieval-method.md](references/retrieval-method.md) and [problem-relevance-rubric.md](references/problem-relevance-rubric.md) before ranking by problem relevance.

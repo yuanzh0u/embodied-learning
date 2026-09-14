@@ -74,7 +74,7 @@ python3 skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
   --citation-result work/<run>/citation-candidates.json \
   --output work/<run>/candidate-registry.json
 
-python3 skills/embodied-ai-query-planner/scripts/build_query_plan.py \
+python3 skills/embodied-ai-literature-hub/scripts/build_query_plan.py \
   --topic "..." --knowledge-id EA-DATA \
   --dynamic-file work/<run>/citation-dynamic.json \
   --output work/<run>/query-plan-round-2.json

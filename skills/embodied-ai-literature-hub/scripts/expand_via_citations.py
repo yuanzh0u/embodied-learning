@@ -452,8 +452,8 @@ def extract_terms(
 
 
 def build_dynamic_suggestions(terms: list[dict], seeds: list[str], direction: str) -> dict:
-    """Shape terms mined from citation-expansion candidates into a query-planner
-    ``--dynamic-file`` (see embodied-ai-query-planner/references/dynamic-expansion.md)."""
+    """Shape terms mined from citation-expansion candidates into the query-planning
+    step's ``--dynamic-file`` (see references/dynamic-expansion.md)."""
     queries = []
     for item in terms:
         term = item["term"]

@@ -22,7 +22,7 @@ Tests are stdlib `unittest` (network is mocked with `unittest.mock`; no live arX
 
 ```bash
 # Run one skill's suite (skill dirs are hyphenated, so scope discovery to the tests dir)
-python3 -m unittest discover -s skills/embodied-ai-query-planner/tests -p 'test_*.py'
+python3 -m unittest discover -s skills/embodied-ai-literature-hub/tests -p 'test_*.py'
 
 # Top-level knowledge-layer suite
 python3 -m unittest discover -s tests -p 'test_*.py'
@@ -48,7 +48,7 @@ Canonical literature-mining chain (see `embodied-ai-literature-hub/SKILL.md` for
 `work/` is gitignored scratch — write intermediate artifacts there, not into the repo:
 
 ```bash
-python3 skills/embodied-ai-query-planner/scripts/build_query_plan.py --topic "..." --family umi \
+python3 skills/embodied-ai-literature-hub/scripts/build_query_plan.py --topic "..." --family umi \
   --knowledge-id EA-DATA --output /tmp/plan.json --markdown-output /tmp/plan.md
 python3 skills/embodied-ai-literature-hub/scripts/search_semantic_scholar.py --query-file /tmp/plan.json \
   --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/s2-candidates.json   # default metadata-search backend

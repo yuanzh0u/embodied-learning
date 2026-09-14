@@ -31,12 +31,6 @@ serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
 # knowledge base at serve time.
 package-dir = { "" = "skills/embodied-ai-literature-hub/scripts", "wiki_scripts" = "scripts", "wiki_scripts.wiki_assets" = "wiki" }
 packages = ["wiki_scripts", "wiki_scripts.lib", "wiki_scripts.wiki_assets"]
-include-package-data = false
-
-[tool.setuptools.package-data]
-# The frontend shell: index.html + assets/* only. wiki/data (built snapshots)
-# holds JSON and is deliberately not matched.
-"wiki_scripts.wiki_assets" = ["index.html", "assets/*.css", "assets/*.js", "assets/*.svg"]
 py-modules = [
     "extract_arxiv_content",
     "extract_arxiv_html",
@@ -44,3 +38,9 @@ py-modules = [
     "extract_arxiv_tex",
     "download_arxiv_source",
 ]
+include-package-data = false
+
+[tool.setuptools.package-data]
+# The frontend shell: index.html + assets/* only. wiki/data (built snapshots)
+# holds JSON and is deliberately not matched.
+"wiki_scripts.wiki_assets" = ["index.html", "assets/*.css", "assets/*.js", "assets/*.svg"]
