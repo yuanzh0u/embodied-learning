@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 import io
 import json
 import tempfile
 import unittest
 import urllib.request
 from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 from unittest import mock
 
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "promote_candidates.py"
+ROOT = Path(__file__).resolve().parents[3]
+SCRIPT = ROOT / "src" / "parse" / "legacy" / "promote_candidates.py"
 SPEC = importlib.util.spec_from_file_location("promote_candidates", SCRIPT)
 promote_candidates = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -157,7 +162,7 @@ class PromoteCandidatesTest(unittest.TestCase):
     def test_validator_rejects_unfilled_skeleton(self) -> None:
         events, _ = self.run_main()
         write_spec = importlib.util.spec_from_file_location(
-            "write_lit_outputs", ROOT / "scripts" / "write_lit_outputs.py"
+            "write_lit_outputs", ROOT / "src" / "parse" / "legacy" / "write_lit_outputs.py"
         )
         write_lit_outputs = importlib.util.module_from_spec(write_spec)
         assert write_spec and write_spec.loader

@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "render_figure_table_block.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "parse" / "legacy" / "render_figure_table_block.py"
 SPEC = importlib.util.spec_from_file_location("render_figure_table_block", SCRIPT_PATH)
 render_figure_table_block = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
