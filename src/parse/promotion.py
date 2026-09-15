@@ -36,7 +36,7 @@ API_URL = "https://export.arxiv.org/api/query"
 ATOM = "{http://www.w3.org/2005/Atom}"
 
 
-from src.fetch.legacy import extract_arxiv_content
+from src.fetch import chain as extract_arxiv_content
 
 
 def parse_args() -> argparse.Namespace:

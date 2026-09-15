@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 
-from src.knowledge.legacy import validate_paper_note as validator
+from src.knowledge import paper_note as validator
 
 
 def parse_args() -> argparse.Namespace:

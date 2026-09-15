@@ -18,7 +18,7 @@ tex = ["pypandoc"] # TeX -> Markdown parsing (extract_arxiv_tex.py); pandoc bina
 sources = ["boto3", "pypandoc"] # convenience: full TeX-source recovery chain
 
 [project.scripts]
-extract_arxiv = "src.fetch.legacy.extract_arxiv_content:main"
+extract_arxiv = "src.fetch.chain:main"
 serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
 
 [tool.setuptools]
@@ -36,10 +36,10 @@ serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
 package-dir = { "wiki_scripts" = "scripts", "wiki_scripts.wiki_assets" = "wiki" }
 packages = [
     "src",
-    "src.search", "src.search.legacy",
-    "src.fetch", "src.fetch.legacy",
-    "src.parse", "src.parse.legacy",
-    "src.knowledge", "src.knowledge.legacy",
+    "src.search",
+    "src.fetch",
+    "src.parse",
+    "src.knowledge",
     "wiki_scripts", "wiki_scripts.lib", "wiki_scripts.wiki_assets",
 ]
 include-package-data = false

@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "search" / "legacy" / "rank_influential_papers.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "search" / "influence.py"
 SPEC = importlib.util.spec_from_file_location("rank_influential_papers", SCRIPT_PATH)
 mod = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

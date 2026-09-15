@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "knowledge" / "legacy" / "pool_add_paper.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "knowledge" / "pool.py"
 SPEC = importlib.util.spec_from_file_location("pool_add_paper", SCRIPT_PATH)
 pool = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

@@ -33,9 +33,9 @@ def load_script(name: str):  # type: ignore[no-untyped-def]
 build_packet = load_script("build_reading_packet")
 ledger = load_script("update_reading_ledger")
 
-from src.knowledge.legacy import audit_claim_support as audit_support
-from src.knowledge.legacy import project_evidence_events as projector
-from src.knowledge.legacy import validate_paper_note as validator
+from src.knowledge import claim_support as audit_support
+from src.knowledge import evidence_projection as projector
+from src.knowledge import paper_note as validator
 
 
 FULL_CONTEXT = (

@@ -219,7 +219,7 @@ def parse_seed_ids(raw: str) -> list[str]:
     Per-token normalization delegates to the shared arXiv-ID grammar; a bare
     ``arxiv:`` prefix is stripped first since parse_arxiv_id only knows URLs."""
 
-    from src.knowledge.legacy.arxiv_reader import parse_arxiv_id
+    from src.knowledge.arxiv_reader import parse_arxiv_id
 
     ids: list[str] = []
     for token in re.split(r"[,\s]+", (raw or "").strip()):

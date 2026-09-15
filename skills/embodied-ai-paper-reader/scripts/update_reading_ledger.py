@@ -13,7 +13,7 @@ from typing import Any
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the src/ package
-from src.knowledge.legacy import validate_paper_note as validator
+from src.knowledge import paper_note as validator
 
 ORDER = {
     "discovered": 0, "abstract-screened": 1, "full-text-recovered": 2, "map-read": 3,

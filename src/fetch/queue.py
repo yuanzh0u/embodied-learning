@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from src.fetch.legacy import extract_arxiv_content
+from src.fetch import chain as extract_arxiv_content
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 # Per-paper subprocess target: prefer the repo thin entry (dev/CI), fall back to
@@ -20,7 +20,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 _EXTRACT_ENTRY = _REPO_ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "extract_arxiv_content.py"
 _EXTRACT_CMD = (
     [sys.executable, str(_EXTRACT_ENTRY)] if _EXTRACT_ENTRY.is_file()
-    else [sys.executable, "-m", "src.fetch.legacy.extract_arxiv_content"]
+    else [sys.executable, "-m", "src.fetch.chain"]
 )
 
 

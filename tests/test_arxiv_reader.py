@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "src" / "knowledge" / "legacy" / "arxiv_reader.py"
+SCRIPT = ROOT / "src" / "knowledge" / "arxiv_reader.py"
 SPEC = importlib.util.spec_from_file_location("arxiv_reader_tested", SCRIPT)
 reader = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

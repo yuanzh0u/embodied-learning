@@ -53,8 +53,8 @@ STANCES = {"support", "limit", "conditional", "gap"}
 EVIDENCE_TYPES = {"method", "experiment", "dataset", "claim", "analysis"}
 
 
-from src.knowledge.legacy import audit_claim_support as auditor
-from src.knowledge.legacy import validate_paper_note as validator
+from src.knowledge import claim_support as auditor
+from src.knowledge import paper_note as validator
 
 
 def normalize(text: Any) -> str:

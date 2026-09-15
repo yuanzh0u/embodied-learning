@@ -9,6 +9,6 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.search.legacy.expand_via_citations import main
+from src.search.citation_expansion import main
 
 raise SystemExit(main())

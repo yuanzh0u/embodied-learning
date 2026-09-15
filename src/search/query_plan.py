@@ -11,7 +11,7 @@ import sys
 from typing import Any
 
 try:
-    from src.search.legacy.query_taxonomy import (
+    from src.search.query_taxonomy import (
         ALIASES,
         FAMILY_PLANS,
         TOPIC_PLANS,

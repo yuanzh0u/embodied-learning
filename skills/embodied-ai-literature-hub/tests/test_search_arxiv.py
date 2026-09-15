@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "search" / "legacy" / "search_arxiv.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "search" / "arxiv.py"
 SPEC = importlib.util.spec_from_file_location("search_arxiv", SCRIPT_PATH)
 search_arxiv = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

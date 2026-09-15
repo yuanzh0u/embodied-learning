@@ -27,9 +27,9 @@ from typing import Any
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the src/ package
-from src.knowledge.legacy import audit_claim_support as AUDITOR
-from src.knowledge.legacy import project_evidence_events as PROJECTOR
-from src.knowledge.legacy import validate_paper_note as VALIDATOR
+from src.knowledge import claim_support as AUDITOR
+from src.knowledge import evidence_projection as PROJECTOR
+from src.knowledge import paper_note as VALIDATOR
 
 STOPWORDS = {
     "the", "and", "for", "that", "with", "from", "this", "into", "their", "than", "are",

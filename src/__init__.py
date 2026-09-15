@@ -1,4 +1,4 @@
 """arXiv data-processing package: search, fetch, parse, and knowledge layers.
 
-Shared implementation lives in per-layer ``legacy/`` subpackages; skill and
-pipeline scripts under skills/ and scripts/ are thin entry points."""
+Modules expose library APIs (classes/functions); the CLI entry points under
+skills/*/scripts/ own argument parsing and ``main``."""

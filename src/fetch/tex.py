@@ -34,7 +34,7 @@ from typing import Any
 
 # The S3 downloader's top-level imports are stdlib-only (boto3 stays lazy inside it),
 # so a module-level import is safe and mock-patchable.
-from src.fetch.legacy import download_arxiv_source
+from src.fetch import s3_source as download_arxiv_source
 
 DEFAULT_SOURCE_CACHE_DIR = "/tmp/embodied-ai-literature-hub/src"
 DEFAULT_TO = "markdown+tex_math_dollars"  # plain $...$ math; gfm would render $`...`$ backtick math

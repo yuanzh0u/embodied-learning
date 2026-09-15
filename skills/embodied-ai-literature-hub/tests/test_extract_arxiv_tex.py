@@ -20,13 +20,13 @@ from pathlib import Path
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "legacy" / "extract_arxiv_tex.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "tex.py"
 SPEC = importlib.util.spec_from_file_location("extract_arxiv_tex", SCRIPT_PATH)
 tex = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(tex)
 
-DOWNLOADER_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "legacy" / "download_arxiv_source.py"
+DOWNLOADER_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "s3_source.py"
 DOWN_SPEC = importlib.util.spec_from_file_location("download_arxiv_source", DOWNLOADER_PATH)
 das = importlib.util.module_from_spec(DOWN_SPEC)
 assert DOWN_SPEC and DOWN_SPEC.loader

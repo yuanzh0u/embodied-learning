@@ -34,7 +34,7 @@ from typing import Any
 
 DEFAULT_OUTPUT_DIR = "/tmp"
 
-from src.fetch.legacy import extract_arxiv_html, extract_arxiv_pdf
+from src.fetch import html as extract_arxiv_html, pdf as extract_arxiv_pdf
 # The TeX tier is loaded lazily inside try_tex(): it only needs boto3/pypandoc
 # when actually exercised, and the default html-first chain must not pay for it.
 extract_arxiv_tex: Any = None
@@ -43,7 +43,7 @@ extract_arxiv_tex: Any = None
 def _load_tex_tier():
     global extract_arxiv_tex
     if extract_arxiv_tex is None:
-        from src.fetch.legacy import extract_arxiv_tex as tex_module
+        from src.fetch import tex as tex_module
         extract_arxiv_tex = tex_module
     return extract_arxiv_tex
 

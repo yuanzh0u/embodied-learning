@@ -17,7 +17,7 @@ if str(_ROOT) not in sys.path:
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "src" / "parse" / "legacy" / "promote_candidates.py"
+SCRIPT = ROOT / "src" / "parse" / "promotion.py"
 SPEC = importlib.util.spec_from_file_location("promote_candidates", SCRIPT)
 promote_candidates = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -162,7 +162,7 @@ class PromoteCandidatesTest(unittest.TestCase):
     def test_validator_rejects_unfilled_skeleton(self) -> None:
         events, _ = self.run_main()
         write_spec = importlib.util.spec_from_file_location(
-            "write_lit_outputs", ROOT / "src" / "parse" / "legacy" / "write_lit_outputs.py"
+            "write_lit_outputs", ROOT / "src" / "parse" / "brief.py"
         )
         write_lit_outputs = importlib.util.module_from_spec(write_spec)
         assert write_spec and write_spec.loader

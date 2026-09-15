@@ -30,7 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root, for the src/ package
-from src.knowledge.legacy.arxiv_reader import parse_arxiv_id  # noqa: E402
+from src.knowledge.arxiv_reader import parse_arxiv_id  # noqa: E402
 
 DEFAULT_KB_ROOT = "~/Documents/arxiv"
 

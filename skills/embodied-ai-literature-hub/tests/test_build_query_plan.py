@@ -16,9 +16,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[3]
 HUB_SCRIPTS = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
 PLANNER_ENTRY = HUB_SCRIPTS / "build_query_plan.py"  # thin entry, used via subprocess
-LEGACY_SEARCH = ROOT / "src" / "search" / "legacy"
-PLANNER = LEGACY_SEARCH / "build_query_plan.py"  # implementation module for spec-loading
-SEARCH = LEGACY_SEARCH / "search_arxiv.py"
+SRC_SEARCH = ROOT / "src" / "search" 
+PLANNER = SRC_SEARCH / "query_plan.py"  # implementation module for spec-loading
+SEARCH = SRC_SEARCH / "arxiv.py"
 
 
 def run_json(*args: str) -> dict:
@@ -42,7 +42,7 @@ def load_search_module():
 
 
 def load_planner_module():
-    # build_query_plan.py does `from src.search.legacy.query_taxonomy import ...`,
+    # build_query_plan.py does `from src.search.query_taxonomy import ...`,
     # which needs the repo root on sys.path (subprocess invocation gets this for
     # free since the thin entry inserts it; direct exec_module here does not).
     if str(ROOT) not in sys.path:
@@ -345,7 +345,7 @@ class WeakAliasConfidenceTests(unittest.TestCase):
     def setUp(self) -> None:
         if str(ROOT) not in sys.path:
             sys.path.insert(0, str(ROOT))
-        from src.search.legacy import query_taxonomy
+        from src.search import query_taxonomy
 
         self.taxonomy = query_taxonomy
 

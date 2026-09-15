@@ -96,7 +96,7 @@ RELATED_WORK_KEYWORDS = (
 
 
 # Cross-layer import: the fetch layer owns the arXiv HTML extractor.
-from src.fetch.legacy import extract_arxiv_html as _ARXIV_HTML
+from src.fetch import html as _ARXIV_HTML
 
 
 def parse_args() -> argparse.Namespace:

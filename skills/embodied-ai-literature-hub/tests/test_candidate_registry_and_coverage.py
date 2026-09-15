@@ -13,7 +13,9 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def load_script(name: str):
-    path = ROOT / "src" / "search" / "legacy" / f"{name}.py"
+    MODNAMES = {"build_candidate_registry": "candidate_registry", "assess_review_coverage": "coverage",
+                "screen_candidates": "screening"}
+    path = ROOT / "src" / "search" / f"{MODNAMES[name]}.py"
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader

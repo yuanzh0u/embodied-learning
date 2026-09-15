@@ -24,7 +24,9 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def load_script(name: str):
-    path = ROOT / "src" / "fetch" / "legacy" / f"{name}.py"
+    MODNAMES = {"extract_arxiv_content": "chain", "extract_arxiv_html": "html",
+               "extract_arxiv_pdf": "pdf"}
+    path = ROOT / "src" / "fetch" / f"{MODNAMES[name]}.py"
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
