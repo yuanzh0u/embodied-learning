@@ -12,10 +12,18 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))  # src/ modules import src.* at load time
+
+# Scripts that stayed in the skill: validate_paper_note / audit_claim_support /
+# project_evidence_events moved to src/knowledge/legacy (loaded via package import
+# below); build_reading_packet and update_reading_ledger remain skill entries.
+_SCRIPTS_DIR = ROOT / "scripts"
 
 
 def load_script(name: str):  # type: ignore[no-untyped-def]
-    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(name, _SCRIPTS_DIR / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
     spec.loader.exec_module(module)
@@ -23,10 +31,11 @@ def load_script(name: str):  # type: ignore[no-untyped-def]
 
 
 build_packet = load_script("build_reading_packet")
-validator = load_script("validate_paper_note")
-audit_support = load_script("audit_claim_support")
-projector = load_script("project_evidence_events")
 ledger = load_script("update_reading_ledger")
+
+from src.knowledge.legacy import audit_claim_support as audit_support
+from src.knowledge.legacy import project_evidence_events as projector
+from src.knowledge.legacy import validate_paper_note as validator
 
 
 FULL_CONTEXT = (

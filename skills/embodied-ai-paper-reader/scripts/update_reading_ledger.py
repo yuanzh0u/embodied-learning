@@ -12,11 +12,8 @@ from pathlib import Path
 from typing import Any
 
 
-SCRIPTS_DIR = Path(__file__).resolve().parent
-SPEC = importlib.util.spec_from_file_location("validate_paper_note", SCRIPTS_DIR / "validate_paper_note.py")
-validator = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(validator)
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the src/ package
+from src.knowledge.legacy import validate_paper_note as validator
 
 ORDER = {
     "discovered": 0, "abstract-screened": 1, "full-text-recovered": 2, "map-read": 3,

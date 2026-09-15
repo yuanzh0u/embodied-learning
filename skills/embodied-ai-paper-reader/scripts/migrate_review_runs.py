@@ -26,20 +26,10 @@ from pathlib import Path
 from typing import Any
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-
-
-def load_module(name: str, path: Path) -> Any:
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
-
-
-VALIDATOR = load_module("paper_note_validator", SCRIPT_DIR / "validate_paper_note.py")
-AUDITOR = load_module("paper_note_auditor", SCRIPT_DIR / "audit_claim_support.py")
-PROJECTOR = load_module("paper_note_projector", SCRIPT_DIR / "project_evidence_events.py")
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the src/ package
+from src.knowledge.legacy import audit_claim_support as AUDITOR
+from src.knowledge.legacy import project_evidence_events as PROJECTOR
+from src.knowledge.legacy import validate_paper_note as VALIDATOR
 
 STOPWORDS = {
     "the", "and", "for", "that", "with", "from", "this", "into", "their", "than", "are",

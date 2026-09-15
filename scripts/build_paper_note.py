@@ -37,14 +37,14 @@ Exit codes: 0 pass, 3 needs-review (cards usable but flagged), 1 reject.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import re
 import sys
 from pathlib import Path
 from typing import Any
 
-READER_SCRIPTS = Path(__file__).resolve().parent.parent / "skills" / "embodied-ai-paper-reader" / "scripts"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root, for the src/ package
+
 DEFAULT_KB_ROOT = "~/Documents/arxiv"
 TOPIC_IDS = ["EA-SENSOR"]
 GENERAL_QUESTION = "该论文的核心贡献、方法有效性的量化证据、适用边界与局限（通用深读问题）"
@@ -53,16 +53,8 @@ STANCES = {"support", "limit", "conditional", "gap"}
 EVIDENCE_TYPES = {"method", "experiment", "dataset", "claim", "analysis"}
 
 
-def load_module(name: str, path: Path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
-
-
-validator = load_module("paper_note_validator", READER_SCRIPTS / "validate_paper_note.py")
-auditor = load_module("claim_support_auditor", READER_SCRIPTS / "audit_claim_support.py")
+from src.knowledge.legacy import audit_claim_support as auditor
+from src.knowledge.legacy import validate_paper_note as validator
 
 
 def normalize(text: Any) -> str:
