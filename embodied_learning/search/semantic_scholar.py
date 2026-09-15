@@ -6,7 +6,7 @@ module-level helpers (query loading, retry/backoff, cache, response parsing).
 The CLI surface owns argument parsing and lives in the skill entry
 ``skills/embodied-ai-literature-hub/scripts/search_semantic_scholar.py``.
 
-The zero-sleep metadata-search counterpart to ``src/search/arxiv.py``:
+The zero-sleep metadata-search counterpart to ``embodied_learning/search/arxiv.py``:
 responses are cached to disk (shared with the citation-expansion library),
 queries run with a small inter-query interval (0.1s default) instead of
 arXiv's 3s politeness delay, and transient 429/5xx responses back off

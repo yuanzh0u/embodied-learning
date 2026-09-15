@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: download/cache an arXiv PDF and extract text-layer content with OCR fallback.
 
-Library API lives in src/fetch/pdf.py (PdfExtraction plus the module-level
+Library API lives in embodied_learning/fetch/pdf.py (PdfExtraction plus the module-level
 quality/matching helpers). This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.fetch.pdf import DEFAULT_CACHE_DIR, PdfExtraction  # noqa: E402
+from embodied_learning.fetch.pdf import DEFAULT_CACHE_DIR, PdfExtraction  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

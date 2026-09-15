@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "src" / "fetch" / "html.py"
+SCRIPT = ROOT / "embodied_learning" / "fetch" / "html.py"
 SPEC = importlib.util.spec_from_file_location("extract_arxiv_html", SCRIPT)
 extract_arxiv_html = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

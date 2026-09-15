@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: fetch/cache arXiv LaTeXML HTML and extract the section tree.
 
-Library API lives in src/fetch/html.py (HtmlExtraction plus the module-level
+Library API lives in embodied_learning/fetch/html.py (HtmlExtraction plus the module-level
 parsing helpers). This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.fetch.html import DEFAULT_CACHE_DIR, HtmlExtraction  # noqa: E402
+from embodied_learning.fetch.html import DEFAULT_CACHE_DIR, HtmlExtraction  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

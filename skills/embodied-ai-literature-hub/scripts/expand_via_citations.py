@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: expand candidates via S2 citation/reference neighborhoods (coupling/co-citation).
 
-Library API lives in src/search/citation_expansion.py (CitationExpansion).
+Library API lives in embodied_learning/search/citation_expansion.py (CitationExpansion).
 This entry owns only argument parsing and dispatch.
 """
 
@@ -16,7 +16,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.search.citation_expansion import DEFAULT_S2_CACHE_DIR, MAX_RETRIES, CitationExpansion  # noqa: E402
+from embodied_learning.search.citation_expansion import DEFAULT_S2_CACHE_DIR, MAX_RETRIES, CitationExpansion  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

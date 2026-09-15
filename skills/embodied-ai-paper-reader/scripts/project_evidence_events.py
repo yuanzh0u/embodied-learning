@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: project a validated note + audit into evidence event JSONL.
 
-Library API lives in src/knowledge/evidence_projection.py (project,
+Library API lives in embodied_learning/knowledge/evidence_projection.py (project,
 load_object). This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -13,7 +13,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.knowledge.evidence_projection import load_object, project  # noqa: E402
+from embodied_learning.knowledge.evidence_projection import load_object, project  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

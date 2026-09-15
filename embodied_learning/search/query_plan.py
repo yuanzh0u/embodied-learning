@@ -18,7 +18,7 @@ import json
 from typing import Any
 
 try:
-    from src.search.query_taxonomy import (
+    from embodied_learning.search.query_taxonomy import (
         ALIASES,
         FAMILY_PLANS,
         TOPIC_PLANS,

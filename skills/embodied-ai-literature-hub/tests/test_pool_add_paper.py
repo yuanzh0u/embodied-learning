@@ -12,7 +12,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from src.knowledge.pool import PaperPool, load_json, paper_identity  # noqa: E402
+from embodied_learning.knowledge.pool import PaperPool, load_json, paper_identity  # noqa: E402
 
 
 def extraction_json(tmp: Path, **overrides: object) -> Path:

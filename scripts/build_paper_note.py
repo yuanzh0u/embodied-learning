@@ -43,7 +43,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root, for the src/ package
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root (embodied_learning)
 
 DEFAULT_KB_ROOT = "~/Documents/arxiv"
 TOPIC_IDS = ["EA-SENSOR"]
@@ -53,8 +53,8 @@ STANCES = {"support", "limit", "conditional", "gap"}
 EVIDENCE_TYPES = {"method", "experiment", "dataset", "claim", "analysis"}
 
 
-from src.knowledge import claim_support as auditor
-from src.knowledge import paper_note as validator
+from embodied_learning.knowledge import claim_support as auditor
+from embodied_learning.knowledge import paper_note as validator
 
 
 def normalize(text: Any) -> str:

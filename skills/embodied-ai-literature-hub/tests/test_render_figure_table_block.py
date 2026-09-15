@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "parse" / "figure_table.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "parse" / "figure_table.py"
 SPEC = importlib.util.spec_from_file_location("render_figure_table_block", SCRIPT_PATH)
 render_figure_table_block = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: prioritize the candidate registry for full-text recovery.
 
-Library API lives in src/search/screening.py (module-level
+Library API lives in embodied_learning/search/screening.py (module-level
 ``select_candidates``). This entry owns only argument parsing and dispatch.
 """
 
@@ -15,7 +15,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.search.screening import run  # noqa: E402
+from embodied_learning.search.screening import run  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

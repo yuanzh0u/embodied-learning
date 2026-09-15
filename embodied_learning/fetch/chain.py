@@ -4,7 +4,7 @@
 Library API: :class:`ContentOptions` (explicit CLI-option state) +
 :func:`extract_content` (tiered fallback chain), plus the module-level helpers
 (title parsing, quality gates, markdown rendering). The chain is loaded by
-other src modules (``src/fetch/queue.py``, ``src/parse/promotion.py``), so the
+other src modules (``embodied_learning/fetch/queue.py``, ``embodied_learning/parse/promotion.py``), so the
 public function surface is stable. The CLI surface owns argument parsing and
 lives in the skill entry
 ``skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py``.
@@ -40,7 +40,7 @@ from typing import Any
 
 DEFAULT_OUTPUT_DIR = "/tmp"
 
-from src.fetch import html as extract_arxiv_html, pdf as extract_arxiv_pdf
+from embodied_learning.fetch import html as extract_arxiv_html, pdf as extract_arxiv_pdf
 # The TeX tier is loaded lazily inside try_tex(): it only needs boto3/pypandoc
 # when actually exercised, and the default html-first chain must not pay for it.
 extract_arxiv_tex: Any = None
@@ -49,7 +49,7 @@ extract_arxiv_tex: Any = None
 def _load_tex_tier():
     global extract_arxiv_tex
     if extract_arxiv_tex is None:
-        from src.fetch import tex as tex_module
+        from embodied_learning.fetch import tex as tex_module
         extract_arxiv_tex = tex_module
     return extract_arxiv_tex
 

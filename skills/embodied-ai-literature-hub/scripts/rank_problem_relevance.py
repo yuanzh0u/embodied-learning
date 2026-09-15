@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: rank papers by BM25 relevance to open research questions.
 
-Library API lives in src/search/problem_relevance.py
+Library API lives in embodied_learning/search/problem_relevance.py
 (ProblemRelevanceRetrieval). This entry owns only argument parsing and
 dispatch.
 """
@@ -17,7 +17,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.search.problem_relevance import (  # noqa: E402
+from embodied_learning.search.problem_relevance import (  # noqa: E402
     DEFAULT_CACHE_DIR,
     DEFAULT_FIELD_WEIGHTS,
     MAX_RETRIES,

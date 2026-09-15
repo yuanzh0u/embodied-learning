@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from src.fetch import chain as extract_arxiv_content
+from embodied_learning.fetch import chain as extract_arxiv_content
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 # Per-paper subprocess target: prefer the repo thin entry (dev/CI), fall back to

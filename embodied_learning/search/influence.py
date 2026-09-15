@@ -34,7 +34,7 @@ dataset / benchmark type, citation velocity, direction) are all emitted so the
 ranking is auditable. Output is candidate-level only: it is a *discovery*
 artifact, never accepted evidence.
 
-Retry/backoff is copied from ``src/search/arxiv.py`` so behavior under rate
+Retry/backoff is copied from ``embodied_learning/search/arxiv.py`` so behavior under rate
 limiting is identical; only the target API and URLs differ.
 """
 

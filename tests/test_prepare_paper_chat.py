@@ -16,7 +16,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # prepare_paper_chat imports src.*
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # prepare_paper_chat imports embodied_learning.*
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = REPO_ROOT / "scripts" / "prepare_paper_chat.py"

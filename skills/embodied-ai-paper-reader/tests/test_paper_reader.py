@@ -14,10 +14,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parent.parent
 if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))  # src/ modules import src.* at load time
+    sys.path.insert(0, str(REPO_ROOT))  # src/ modules import embodied_learning.* at load time
 
 # Scripts that stayed in the skill: validate_paper_note / audit_claim_support /
-# project_evidence_events moved to src/knowledge/legacy (loaded via package import
+# project_evidence_events moved to embodied_learning/knowledge/legacy (loaded via package import
 # below); build_reading_packet and update_reading_ledger remain skill entries.
 _SCRIPTS_DIR = ROOT / "scripts"
 
@@ -33,9 +33,9 @@ def load_script(name: str):  # type: ignore[no-untyped-def]
 build_packet = load_script("build_reading_packet")
 ledger = load_script("update_reading_ledger")
 
-from src.knowledge import claim_support as audit_support
-from src.knowledge import evidence_projection as projector
-from src.knowledge import paper_note as validator
+from embodied_learning.knowledge import claim_support as audit_support
+from embodied_learning.knowledge import evidence_projection as projector
+from embodied_learning.knowledge import paper_note as validator
 
 
 FULL_CONTEXT = (

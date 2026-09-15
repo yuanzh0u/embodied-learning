@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: recover arXiv full text for a paper-ID queue with bounded concurrency.
 
-Library API lives in src/fetch/queue.py (QueueOptions + run_queue plus the
+Library API lives in embodied_learning/fetch/queue.py (QueueOptions + run_queue plus the
 module-level helpers). This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.fetch.queue import QueueOptions, run_queue  # noqa: E402
+from embodied_learning.fetch.queue import QueueOptions, run_queue  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI for the local public paper pool: add | import-existing | list | get.
 
-Library API lives in src/knowledge/pool.py (PaperPool). This entry owns only
+Library API lives in embodied_learning/knowledge/pool.py (PaperPool). This entry owns only
 argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.knowledge.pool import DEFAULT_POOL_ROOT, PaperPool, load_json
+from embodied_learning.knowledge.pool import DEFAULT_POOL_ROOT, PaperPool, load_json
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

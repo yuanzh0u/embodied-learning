@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 
-from src.knowledge import paper_note as validator
+from embodied_learning.knowledge import paper_note as validator
 
 
 def load_object(path: Path) -> dict[str, Any]:

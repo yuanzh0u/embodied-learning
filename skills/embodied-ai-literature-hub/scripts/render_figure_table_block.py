@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: render markdown figure/table blocks from captured captions.
 
-Library API lives in src/parse/figure_table.py (render_figure,
+Library API lives in embodied_learning/parse/figure_table.py (render_figure,
 render_table_block, find_event_figures, load_events). This entry owns only
 argument parsing and dispatch.
 """
@@ -13,7 +13,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.parse.figure_table import (  # noqa: E402
+from embodied_learning.parse.figure_table import (  # noqa: E402
     events_with_paper,
     find_event_figures,
     load_events,

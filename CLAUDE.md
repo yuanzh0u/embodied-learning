@@ -147,5 +147,5 @@ Run `python3 scripts/check_kb_links.py` after editing knowledge files.
 - **Skill layout convention:** each skill is `SKILL.md` + `scripts/` + `references/` + `tests/` +
   `agents/openai.yaml`. A new script gets a matching stdlib-only `unittest` file in the skill's `tests/`
   that loads the script via `importlib.util.spec_from_file_location`. Shared arXiv data-processing
-  logic lives in `src/<search|fetch|parse|knowledge>/legacy/`; `scripts/` files are thin entry points
-  that bootstrap the repo root and import from `src.*`.
+  logic lives in `embodied_learning/<search|fetch|parse|knowledge>/`; `scripts/` files are thin entry points
+  that bootstrap the repo root and import from `embodied_learning.*`.

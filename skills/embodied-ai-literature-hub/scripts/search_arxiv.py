@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: search arXiv through the official Atom API and emit normalized JSON.
 
-Library API lives in src/search/arxiv.py (ArxivSearch). This entry owns only
+Library API lives in embodied_learning/search/arxiv.py (ArxivSearch). This entry owns only
 argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.search.arxiv import MAX_RETRIES, ArxivSearch, load_queries  # noqa: E402
+from embodied_learning.search.arxiv import MAX_RETRIES, ArxivSearch, load_queries  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

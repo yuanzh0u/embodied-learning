@@ -102,7 +102,7 @@ RELATED_WORK_KEYWORDS = (
 
 
 # Cross-layer import: the fetch layer owns the arXiv HTML extractor.
-from src.fetch import html as _ARXIV_HTML  # noqa: E402
+from embodied_learning.fetch import html as _ARXIV_HTML  # noqa: E402
 
 
 class ProblemRelevanceRetrieval:

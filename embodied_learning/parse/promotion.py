@@ -37,7 +37,7 @@ API_URL = "https://export.arxiv.org/api/query"
 ATOM = "{http://www.w3.org/2005/Atom}"
 
 
-from src.fetch import chain as extract_arxiv_content
+from embodied_learning.fetch import chain as extract_arxiv_content
 
 
 def load_paper_ids(cli_ids: list[str], id_files: list[str]) -> list[str]:
@@ -105,7 +105,7 @@ def extract_paper(
     ocr_language: str,
 ) -> dict[str, object]:
     """Run the unified HTML/PDF/OCR extraction path and normalize digest fields."""
-    from src.fetch.chain import ContentOptions
+    from embodied_learning.fetch.chain import ContentOptions
 
     args = ContentOptions(
         paper_id=paper_id,

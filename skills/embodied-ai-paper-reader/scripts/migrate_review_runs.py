@@ -26,10 +26,10 @@ from pathlib import Path
 from typing import Any
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the src/ package
-from src.knowledge import claim_support as AUDITOR
-from src.knowledge import evidence_projection as PROJECTOR
-from src.knowledge import paper_note as VALIDATOR
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the embodied_learning package
+from embodied_learning.knowledge import claim_support as AUDITOR
+from embodied_learning.knowledge import evidence_projection as PROJECTOR
+from embodied_learning.knowledge import paper_note as VALIDATOR
 
 STOPWORDS = {
     "the", "and", "for", "that", "with", "from", "this", "into", "their", "than", "are",

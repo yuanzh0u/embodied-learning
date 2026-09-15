@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the src/ package
-from src.knowledge import paper_note as validator
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for the embodied_learning package
+from embodied_learning.knowledge import paper_note as validator
 
 ORDER = {
     "discovered": 0, "abstract-screened": 1, "full-text-recovered": 2, "map-read": 3,

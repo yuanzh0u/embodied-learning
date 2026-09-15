@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "s3_source.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "fetch" / "s3_source.py"
 SPEC = importlib.util.spec_from_file_location("download_arxiv_source", SCRIPT_PATH)
 das = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

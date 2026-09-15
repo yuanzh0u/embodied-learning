@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: search the Semantic Scholar Graph API and emit arXiv-compatible JSON.
 
-Library API lives in src/search/semantic_scholar.py (SemanticScholarSearch).
+Library API lives in embodied_learning/search/semantic_scholar.py (SemanticScholarSearch).
 This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.search.semantic_scholar import DEFAULT_CACHE_DIR, MAX_RETRIES, SemanticScholarSearch, load_queries  # noqa: E402
+from embodied_learning.search.semantic_scholar import DEFAULT_CACHE_DIR, MAX_RETRIES, SemanticScholarSearch, load_queries  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

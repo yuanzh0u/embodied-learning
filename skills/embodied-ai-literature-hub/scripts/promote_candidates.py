@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: promote verified candidates toward evidence with digests and skeletons.
 
-Library API lives in src/parse/promotion.py (run_promotion + helpers). This
+Library API lives in embodied_learning/parse/promotion.py (run_promotion + helpers). This
 entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -12,8 +12,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.fetch import chain as extract_arxiv_content  # noqa: E402
-from src.parse.promotion import load_paper_ids, run_promotion  # noqa: E402
+from embodied_learning.fetch import chain as extract_arxiv_content  # noqa: E402
+from embodied_learning.parse.promotion import load_paper_ids, run_promotion  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

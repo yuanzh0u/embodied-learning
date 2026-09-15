@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "parse" / "brief.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "parse" / "brief.py"
 SPEC = importlib.util.spec_from_file_location("write_lit_outputs", SCRIPT_PATH)
 write_lit_outputs = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-SPEC = importlib.util.spec_from_file_location("screen_candidates", ROOT / "src" / "search" / "screening.py")
+SPEC = importlib.util.spec_from_file_location("screen_candidates", ROOT / "embodied_learning" / "search" / "screening.py")
 screen_candidates = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(screen_candidates)

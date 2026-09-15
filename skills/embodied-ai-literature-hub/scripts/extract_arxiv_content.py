@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: unified extraction gateway — HTML -> markdown -> PDF chain with quality gates.
 
-Library API lives in src/fetch/chain.py (ContentOptions + extract_content plus
+Library API lives in embodied_learning/fetch/chain.py (ContentOptions + extract_content plus
 the module-level helpers). This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.fetch.chain import (  # noqa: E402
+from embodied_learning.fetch.chain import (  # noqa: E402
     DEFAULT_OUTPUT_DIR,
     ContentOptions,
     emit,
@@ -65,8 +65,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--curl-timeout", type=float, default=120.0,
                         help="[arxiv2md] curl max time in seconds.")
-    from src.fetch.chain import extract_arxiv_tex_default_cache_dir  # noqa: E402
-    from src.fetch import html as _html, pdf as _pdf  # noqa: E402
+    from embodied_learning.fetch.chain import extract_arxiv_tex_default_cache_dir  # noqa: E402
+    from embodied_learning.fetch import html as _html, pdf as _pdf  # noqa: E402
     parser.add_argument("--html-cache-dir", default=_html.DEFAULT_CACHE_DIR)
     parser.add_argument("--pdf-cache-dir", default=_pdf.DEFAULT_CACHE_DIR)
     parser.add_argument("--tex-cache-dir",
@@ -111,7 +111,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         args.paper_id = args.paper_id_pos
     if not args.paper_id:
         parser.error("Provide an arXiv ID, e.g. extract_arxiv 2403.12550")
-    from src.fetch.chain import normalize_id  # noqa: E402
+    from embodied_learning.fetch.chain import normalize_id  # noqa: E402
     paper_id = normalize_id(args.paper_id)
     if args.output is None and sys.stdout.isatty():
         args.output = f"{DEFAULT_OUTPUT_DIR}/{paper_id}.md"  # interactive default

@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # build_paper_note imports src.*
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # build_paper_note imports embodied_learning.*
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BUILDER_PATH = REPO_ROOT / "scripts" / "build_paper_note.py"

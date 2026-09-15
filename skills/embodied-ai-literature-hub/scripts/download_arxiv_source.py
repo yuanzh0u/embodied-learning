@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: download TeX source tarballs from the requester-pays s3://arxiv/ bucket.
 
-Library API lives in src/fetch/s3_source.py (S3DownloadOptions plus the
+Library API lives in embodied_learning/fetch/s3_source.py (S3DownloadOptions plus the
 module-level helpers). This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -13,7 +13,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.fetch.s3_source import (  # noqa: E402
+from embodied_learning.fetch.s3_source import (  # noqa: E402
     DEFAULT_CACHE_DIR,
     MAX_WORKERS,
     REGION,

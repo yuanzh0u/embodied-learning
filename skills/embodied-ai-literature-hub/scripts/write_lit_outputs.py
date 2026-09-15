@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: validate evidence JSONL and render the markdown brief.
 
-Library API lives in src/parse/brief.py (load_events, render_brief,
+Library API lives in embodied_learning/parse/brief.py (load_events, render_brief,
 STANCES/CONFIDENCE vocabularies). This entry owns only argument parsing and
 dispatch; `--validate-only` is the gate invoked by
 scripts/validate_current_reviews.py and the paper-reader pipeline.
@@ -15,7 +15,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.parse.brief import load_events, render_brief  # noqa: E402
+from embodied_learning.parse.brief import load_events, render_brief  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

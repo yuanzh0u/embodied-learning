@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: Markdown tier — arxiv2md REST API (default) or S3 TeX + pandoc.
 
-Library API lives in src/fetch/tex.py (TexExtraction plus the module-level
+Library API lives in embodied_learning/fetch/tex.py (TexExtraction plus the module-level
 helpers). This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.fetch.tex import DEFAULT_SOURCE_CACHE_DIR, DEFAULT_TO, TexExtraction  # noqa: E402
+from embodied_learning.fetch.tex import DEFAULT_SOURCE_CACHE_DIR, DEFAULT_TO, TexExtraction  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -51,7 +51,7 @@ def main(argv: list[str] | None = None) -> int:
         markdown_output=args.markdown_output,
     )
     output = extraction.run()
-    from src.fetch.tex import emit  # noqa: E402  (avoid importing JSON plumbing early)
+    from embodied_learning.fetch.tex import emit  # noqa: E402  (avoid importing JSON plumbing early)
 
     emit(output, args.output, args.markdown_output)
     return 0 if output.get("evidence_eligible") else 2

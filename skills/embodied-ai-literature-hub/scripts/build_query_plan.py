@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: build a structured arXiv query plan from a topic (planning stage).
 
-Library API lives in src/search/query_plan.py (module-level ``build_plan``).
+Library API lives in embodied_learning/search/query_plan.py (module-level ``build_plan``).
 This entry owns argument parsing and dispatch, including the
 ``--list-topics``/``--list-families`` listing modes.
 """
@@ -18,7 +18,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.search.query_plan import (  # noqa: E402
+from embodied_learning.search.query_plan import (  # noqa: E402
     DEFAULT_MAX_QUERIES,
     FAMILY_PLANS,
     REVIEW_MODES,

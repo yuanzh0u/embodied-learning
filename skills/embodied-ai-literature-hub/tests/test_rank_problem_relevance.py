@@ -9,8 +9,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))  # the module imports src.fetch at load time
-SCRIPT_PATH = ROOT / "src" / "search" / "problem_relevance.py"
+    sys.path.insert(0, str(ROOT))  # the module imports embodied_learning.fetch at load time
+SCRIPT_PATH = ROOT / "embodied_learning" / "search" / "problem_relevance.py"
 SPEC = importlib.util.spec_from_file_location("rank_problem_relevance", SCRIPT_PATH)
 mod = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

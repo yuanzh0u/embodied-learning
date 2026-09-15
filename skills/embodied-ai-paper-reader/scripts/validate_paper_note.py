@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: validate paper-note JSON against the note schema.
 
-Library API lives in src/knowledge/paper_note.py (validate_note, load_note).
+Library API lives in embodied_learning/knowledge/paper_note.py (validate_note, load_note).
 This entry owns only argument parsing and dispatch.
 """
 import argparse
@@ -13,7 +13,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.knowledge.paper_note import load_note, validate_note  # noqa: E402
+from embodied_learning.knowledge.paper_note import load_note, validate_note  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

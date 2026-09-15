@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT_PATH = ROOT / "src" / "search" / "citation_expansion.py"
+SCRIPT_PATH = ROOT / "embodied_learning" / "search" / "citation_expansion.py"
 SPEC = importlib.util.spec_from_file_location("expand_via_citations", SCRIPT_PATH)
 mod = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

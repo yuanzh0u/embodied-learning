@@ -14,18 +14,18 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
-    sys.path.insert(0, str(_ROOT))  # the tex module imports src.* at load time
+    sys.path.insert(0, str(_ROOT))  # the tex module imports embodied_learning.* at load time
 from pathlib import Path
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "tex.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "fetch" / "tex.py"
 SPEC = importlib.util.spec_from_file_location("extract_arxiv_tex", SCRIPT_PATH)
 tex = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(tex)
 
-DOWNLOADER_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "s3_source.py"
+DOWNLOADER_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "fetch" / "s3_source.py"
 DOWN_SPEC = importlib.util.spec_from_file_location("download_arxiv_source", DOWNLOADER_PATH)
 das = importlib.util.module_from_spec(DOWN_SPEC)
 assert DOWN_SPEC and DOWN_SPEC.loader
