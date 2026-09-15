@@ -30,7 +30,8 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from build_research_wiki import resolve_snapshot_directory  # noqa: E402
 from init_run import run_folder_name, slugify_topic  # noqa: E402
-from lib import arxiv_reader  # noqa: E402
+sys.path.insert(0, str(SCRIPT_DIR.parent))  # repo root, for the src/ package
+from src.knowledge.legacy import arxiv_reader  # noqa: E402
 import wiki_chat  # noqa: E402
 
 

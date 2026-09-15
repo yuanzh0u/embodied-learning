@@ -37,7 +37,8 @@ from lib.markdown_semantics import (  # noqa: E402
     render_markdown,
     strip_frontmatter,
 )
-from lib import arxiv_reader  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root, for the src/ package
+from src.knowledge.legacy import arxiv_reader  # noqa: E402
 from lib.review_runs import STYLE_TO_FILE, load_catalog_runs  # noqa: E402
 
 

@@ -33,7 +33,8 @@ from lib.agent_invoke import (  # noqa: E402
     resolve_cli,
     run_one_shot_agent,
 )
-from lib.arxiv_reader import parse_arxiv_id  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root, for the src/ package
+from src.knowledge.legacy.arxiv_reader import parse_arxiv_id  # noqa: E402
 from run_review_pipeline import deep_read_paper  # noqa: E402
 
 SKELETON_TIMEOUT_S = 420.0

@@ -40,6 +40,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT))  # repo root, for the src/ package
 from lib.agent_invoke import (  # noqa: E402
     DRIVER_AGENT_MODEL,
     build_skeleton_prompt,
@@ -218,7 +219,7 @@ def parse_seed_ids(raw: str) -> list[str]:
     Per-token normalization delegates to the shared arXiv-ID grammar; a bare
     ``arxiv:`` prefix is stripped first since parse_arxiv_id only knows URLs."""
 
-    from lib.arxiv_reader import parse_arxiv_id
+    from src.knowledge.legacy.arxiv_reader import parse_arxiv_id
 
     ids: list[str] = []
     for token in re.split(r"[,\s]+", (raw or "").strip()):
