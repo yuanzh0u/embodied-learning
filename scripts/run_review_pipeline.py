@@ -50,7 +50,7 @@ from lib.agent_invoke import (  # noqa: E402
     run_one_shot_agent,
 )
 HUB_SCRIPTS = REPO_ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
-PLANNER_SCRIPT = HUB_SCRIPTS / "build_query_plan.py"
+PLANNER_SCRIPT = HUB_SCRIPTS / "search.py"
 PACKET_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "build_reading_packet.py"
 
 REVIEW_MODES = {"rapid", "scoping", "systematic"}
@@ -315,7 +315,7 @@ def outputs_exist(*paths: Path) -> bool:
     return all(path.is_file() and path.stat().st_size > 0 for path in paths)
 
 
-PROJECT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "project_evidence_events.py"
+PROJECT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "note_tools.py"
 
 
 def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
@@ -348,7 +348,7 @@ def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) ->
             continue
         output = evidence_dir / f"{note_path.stem}.jsonl"
         result = run_command([
-            sys.executable, str(PROJECT_SCRIPT),
+            sys.executable, str(PROJECT_SCRIPT), "project-evidence-events",
             "--paper-note", str(note_path),
             "--audit", str(audit_path),
             "--id-prefix", id_prefix,
@@ -497,7 +497,7 @@ def pool_seed(summary_extra: dict, screening_ids: Path, run_dir: Path, args) -> 
         return
     warm = cold = 0
     add_cmd_base = [
-        sys.executable, str(HUB_SCRIPTS / "pool_add_paper.py"), "add",
+        sys.executable, str(HUB_SCRIPTS / "knowledge.py"), "pool-add-paper", "add",
         "--pool-root", str(pool_root),
     ]
     ids = [line.strip() for line in screening_ids.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -631,7 +631,7 @@ def main(argv: list[str] | None = None) -> int:
 
         def plan_cmd_builder() -> list[str]:  # noqa: E306
             return [
-                sys.executable, str(PLANNER_SCRIPT),
+                sys.executable, str(PLANNER_SCRIPT), "build-query-plan",
                 "--topic", args.topic,
                 "--review-mode", args.review_mode,
                 "--start-date", start_date,
@@ -675,7 +675,7 @@ def main(argv: list[str] | None = None) -> int:
         if not skip_arxiv:
             if not args.skip_s2:
                 s2_cmd = lambda: [  # noqa: E731
-                    sys.executable, str(HUB_SCRIPTS / "search_semantic_scholar.py"),
+                    sys.executable, str(HUB_SCRIPTS / "search.py"), "search-semantic-scholar",
                     "--query-file", str(run_dir / "query-plan.json"),
                     "--start-date", start_date,
                     "--end-date", end_date,
@@ -705,7 +705,7 @@ def main(argv: list[str] | None = None) -> int:
                 summary_extra["s2_detail"] = s2_detail
         if not skip_arxiv:
             arxiv_cmd = lambda: [  # noqa: E731
-                sys.executable, str(HUB_SCRIPTS / "search_arxiv.py"),
+                sys.executable, str(HUB_SCRIPTS / "search.py"), "search-arxiv",
                 "--query-file", str(run_dir / "query-plan.json"),
                 "--start-date", start_date,
                 "--end-date", end_date,
@@ -747,7 +747,7 @@ def main(argv: list[str] | None = None) -> int:
         citation_detail = "skipped (no seeds)"
         if seed_ids and (args.search_strategy in ("seeds", "smart")):
             citation_cmd = lambda: [  # noqa: E731
-                sys.executable, str(HUB_SCRIPTS / "expand_via_citations.py"),
+                sys.executable, str(HUB_SCRIPTS / "search.py"), "expand-via-citations",
                 *[item for seed in seed_ids for item in ("--seed-id", seed)],
                 "--direction", "both",
                 "--batch-label", "citation-seeds",
@@ -779,7 +779,7 @@ def main(argv: list[str] | None = None) -> int:
         registry_output = run_dir / "candidate-registry.json"
         def registry_cmd():
             command = [
-                sys.executable, str(HUB_SCRIPTS / "build_candidate_registry.py"),
+                sys.executable, str(HUB_SCRIPTS / "search.py"), "build-candidate-registry",
                 "--output", str(registry_output),
             ]
             if not skip_arxiv and arxiv_output.is_file():
@@ -817,7 +817,7 @@ def main(argv: list[str] | None = None) -> int:
         screening_output = run_dir / "screening.json"
         screening_ids = run_dir / "screening-ids.txt"
         screening_cmd = lambda: [  # noqa: E731
-            sys.executable, str(HUB_SCRIPTS / "screen_candidates.py"),
+            sys.executable, str(HUB_SCRIPTS / "search.py"), "screen-candidates",
             "--candidate-registry", str(registry_output),
             "--terms", ",".join(terms),
             "--limit", str(screen_limit),
@@ -835,7 +835,7 @@ def main(argv: list[str] | None = None) -> int:
         log(f"[DRIVER] 精读候选 {len(screened_ids)} 篇（screening.md 已写入运行目录）")
         coverage_output = run_dir / "coverage-report.json"
         coverage_cmd = lambda: [  # noqa: E731
-            sys.executable, str(HUB_SCRIPTS / "assess_review_coverage.py"),
+            sys.executable, str(HUB_SCRIPTS / "search.py"), "assess-review-coverage",
             "--query-plan", str(run_dir / "query-plan.json"),
             "--candidate-registry", str(registry_output),
             "--output", str(coverage_output),
@@ -848,7 +848,7 @@ def main(argv: list[str] | None = None) -> int:
         begun = time.monotonic()
         extraction_summary = run_dir / "extraction-summary.json"
         extraction_cmd = lambda: [  # noqa: E731
-            sys.executable, str(HUB_SCRIPTS / "extract_content_queue.py"),
+            sys.executable, str(HUB_SCRIPTS / "fetch.py"), "extract-content-queue",
             "--paper-id-file", str(screening_ids),
             "--terms", ",".join(terms),
             "--output-dir", str(run_dir / "extractions"),

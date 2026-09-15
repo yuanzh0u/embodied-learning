@@ -12,7 +12,7 @@
 | 文件 | 必备 | 说明 |
 |---|---|---|
 | `run.json` | 是 | run manifest,字段见下 |
-| `evidence.jsonl` | 是 | accepted 证据事件(经 `write_lit_outputs.py --validate-only` 校验) |
+| `evidence.jsonl` | 是 | accepted 证据事件(经 `parse.py write-lit-outputs --validate-only` 校验) |
 | `scientific-memo_keyan.md` 等三风格成品 | 正式 run | `evidence-appendix.md` 属于 bundle 的第 4 个文件 |
 | `source-entry-draft.md` | 有则收 | 待结算入 `knowledge/sources.md` 的来源草稿 |
 | `query-plan.json` / `query-plan.md` | 有则收 | 本次 run 的检索策略(可复现性) |

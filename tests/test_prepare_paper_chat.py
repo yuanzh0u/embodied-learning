@@ -72,7 +72,7 @@ class PreparePipelineTest(unittest.TestCase):
                 output.parent.mkdir(parents=True, exist_ok=True)
                 output.write_text(json.dumps({"paper": {"arxiv_id": paper_id}}), encoding="utf-8")
                 return mock.Mock(returncode=0, stdout="", stderr="")
-            if "pool_add_paper.py" in joined:
+            if "pool-add-paper" in joined:
                 return mock.Mock(returncode=0, stdout="", stderr="")
             if "build_paper_note.py" in joined:
                 pool_dir = self.kb_root / "pool" / f"arxiv-{paper_id}"

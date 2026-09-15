@@ -28,7 +28,7 @@ python3 -m unittest discover -s skills/embodied-ai-literature-hub/tests -p 'test
 python3 -m unittest discover -s tests -p 'test_*.py'
 
 # Run a single test file directly
-python3 skills/embodied-ai-literature-hub/tests/test_search_arxiv.py
+python3 skills/embodied-ai-literature-hub/tests/test_search.py search-arxiv
 ```
 
 Knowledge-base integrity and ID allocation (top-level `scripts/`):
@@ -48,26 +48,23 @@ Canonical literature-mining chain (see `embodied-ai-literature-hub/SKILL.md` for
 `work/` is gitignored scratch — write intermediate artifacts there, not into the repo:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/build_query_plan.py --topic "..." --family umi \
+python3 skills/embodied-ai-literature-hub/scripts/search.py build-query-plan --topic "..." --family umi \
   --knowledge-id EA-DATA --output /tmp/plan.json --markdown-output /tmp/plan.md
-python3 skills/embodied-ai-literature-hub/scripts/search_semantic_scholar.py --query-file /tmp/plan.json \
+python3 skills/embodied-ai-literature-hub/scripts/search.py search-semantic-scholar --query-file /tmp/plan.json \
   --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/s2-candidates.json   # default metadata-search backend
-python3 skills/embodied-ai-literature-hub/scripts/search_arxiv.py --query-file /tmp/plan.json \
+python3 skills/embodied-ai-literature-hub/scripts/search.py search-arxiv --query-file /tmp/plan.json \
   --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/candidates.json
-python3 skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py build-candidate-registry \
   --semantic-scholar-result /tmp/s2-candidates.json --search-result /tmp/candidates.json --output work/<run>/registry.json
-python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_html.py --paper-id 2402.10329 --terms UMI,data
+python3 skills/embodied-ai-literature-hub/scripts/fetch.py extract-arxiv-html --paper-id 2402.10329 --terms UMI,data
 # Markdown tier (default arxiv2md transport: public REST API via curl, no credentials;
 # `--transport s3-tex` = S3 tarball + pandoc, TODO pending AWS credentials — requester-pays bucket)
 python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --paper-id 2402.10329 \
   --terms UMI,data --preferred-source auto --include-full-text --output /tmp/extraction.json
-python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py --paper-id 2402.10329 \
-  --topic "..." --topic-id EA-DATA --id-prefix EA-XXX-2026 --terms UMI,data \
-  --output-skeleton /tmp/skeleton.jsonl --output-digest /tmp/digest.md   # candidate→evidence promotion
 python3 skills/embodied-ai-review-writer/scripts/build_review_packet.py --topic "..." \
   --knowledge-id EA-DATA --evidence-jsonl /tmp/evidence.jsonl
 # Local public paper pool (default ~/Documents/arxiv/pool, outside the repo): one folder per paper
-python3 skills/embodied-ai-literature-hub/scripts/pool_add_paper.py add --extraction /tmp/extraction.json
+python3 skills/embodied-ai-literature-hub/scripts/knowledge.py pool-add-paper add --extraction /tmp/extraction.json
 # Single-paper quick-read card (速读): ensures pooled + deep-read, then writes
 # quick-read_sudu.md into the pool dir (wiki reader 速读 tab browses it)
 python3 scripts/quick_read_paper.py --arxiv-id 2302.01109
@@ -85,7 +82,7 @@ Three skills under `skills/` form a strict one-directional pipeline (rationale i
 `docs/adr/0003-consolidate-to-three-skills.md`). Each stage's responsibility boundary is
 deliberate — do not blur them:
 
-1. **`embodied-ai-literature-hub`** (检索) — plans queries (in-skill `build_query_plan.py` stage),
+1. **`embodied-ai-literature-hub`** (检索) — plans queries (in-skill `search.py build-query-plan` stage),
    searches arXiv/Semantic Scholar, triages candidates (influence, problem relevance), mines HTML
    正文, and emits evidence records. It plans and mines only; it never writes reader-facing prose.
 2. **`embodied-ai-paper-reader`** (阅读) — deep-reads recovered full text, verifies claims, projects
@@ -95,11 +92,11 @@ deliberate — do not blur them:
 
 **Handoff contract (easy to get wrong):**
 - The planner JSON keeps channels separate: `queries` (arXiv API) vs. `browser_fallback_queries` vs.
-  `web_calibration_queries`. `search_arxiv.py --query-file` reads only the top-level `queries` entries.
+  `web_calibration_queries`. `search.py search-arxiv --query-file` reads only the top-level `queries` entries.
 - Planner `start_date`/`end_date` are **scope metadata only**. The actual date filtering is done by
-  `search_arxiv.py --start-date/--end-date` — always pass those explicitly.
+  `search.py search-arxiv --start-date/--end-date` — always pass those explicitly.
 - Query planning is a stage inside `$embodied-ai-literature-hub`
-  (`skills/embodied-ai-literature-hub/scripts/build_query_plan.py`).
+  (`skills/embodied-ai-literature-hub/scripts/search.py build-query-plan`).
 - `build_review_packet.py` is a **briefing generator, not an author**: by default it writes
   `review-packet.md` + `writing-brief.md` + `evidence-appendix.md` into a new
   `work/literature-review-<topic>-<date>/` folder. The three prose deliverables
@@ -146,7 +143,7 @@ Run `python3 scripts/check_kb_links.py` after editing knowledge files.
 - **Topic-card edits are suggestions** unless the user explicitly asks to edit the knowledge base.
 - **Do not store full papers or full extracted text in the repo** — cache HTML/tarballs outside it. The
   one sanctioned full-text store is the **local public paper pool outside the repository**
-  (`~/Documents/arxiv/pool`, managed by `pool_add_paper.py`), which the repo references but never contains.
+  (`~/Documents/arxiv/pool`, managed by `knowledge.py pool-add-paper`), which the repo references but never contains.
 - **Skill layout convention:** each skill is `SKILL.md` + `scripts/` + `references/` + `tests/` +
   `agents/openai.yaml`. A new script gets a matching stdlib-only `unittest` file in the skill's `tests/`
   that loads the script via `importlib.util.spec_from_file_location`. Shared arXiv data-processing

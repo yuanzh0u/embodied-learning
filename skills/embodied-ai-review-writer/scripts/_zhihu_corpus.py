@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from dataclasses import asdict
 from pathlib import Path
 
-from audit_article_quality import (
+from _article_quality import (
     ARXIV_LINK_RE,
     Finding,
     audit_file,

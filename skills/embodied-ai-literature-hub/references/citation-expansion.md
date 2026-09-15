@@ -1,14 +1,14 @@
 # Citation-Graph Expansion
 
 Keyword search alone under-covers a broad topic: a big topic usually has several
-sub-themes that a fixed keyword taxonomy never anticipated. `expand_via_citations.py`
+sub-themes that a fixed keyword taxonomy never anticipated. `search.py expand-via-citations`
 widens discovery by chasing citation relationships one hop out from a set of seed
 papers, using Semantic Scholar's Graph API (arXiv-only crosswalk via
 `externalIds.ArXiv`) instead of a second query taxonomy.
 
 ## When to use it
 
-- A keyword round has reached saturation (`assess_review_coverage.py` reports
+- A keyword round has reached saturation (`search.py assess-review-coverage` reports
   `ready_to_stop`), but you suspect there are sub-topics the static taxonomy
   never named.
 - You already have a handful of `accepted`/`full-text-queued` candidates for the
@@ -61,7 +61,7 @@ does.
 ## The two-hop loop: candidates now, keywords for the next round
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/expand_via_citations.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py expand-via-citations \
   --seed-registry work/<run>/candidate-registry.json \
   --seed-status accepted --seed-status full-text-queued \
   --direction both \
@@ -69,12 +69,12 @@ python3 skills/embodied-ai-literature-hub/scripts/expand_via_citations.py \
   --graph-output work/<run>/citation-graph.json \
   --dynamic-output work/<run>/citation-dynamic.json
 
-python3 skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py build-candidate-registry \
   --search-result work/<run>/round-1-arxiv.json \
   --citation-result work/<run>/citation-candidates.json \
   --output work/<run>/candidate-registry.json
 
-python3 skills/embodied-ai-literature-hub/scripts/build_query_plan.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py build-query-plan \
   --topic "..." --knowledge-id EA-DATA \
   --dynamic-file work/<run>/citation-dynamic.json \
   --output work/<run>/query-plan-round-2.json
@@ -83,7 +83,7 @@ python3 skills/embodied-ai-literature-hub/scripts/build_query_plan.py \
 The third command feeds the terms mined from citation-expansion candidates back
 into the planner as `tier: dynamic-association` queries; `coverage_group()`
 automatically buckets them under `adjacent-and-transfer`, so re-running
-`search_arxiv.py` against the round-2 plan produces properly labeled candidates
+`search.py search-arxiv` against the round-2 plan produces properly labeled candidates
 that *do* count toward `coverage_dimensions` — unlike the citation-graph
 candidates themselves (see below).
 
@@ -108,10 +108,10 @@ so each additional hop is a deliberate, visible decision.
   the planner, as shown above. If you want citation-graph candidates to count
   directly, you would need to add a query-plan dimension keyed on the
   `citation:` label prefix yourself.
-- `screen_candidates.py` has no native notion of "found by N independent
+- `search.py screen-candidates` has no native notion of "found by N independent
   sources." A zero-code-change proxy: each `(seed, direction)` pair produces its
   own `citation:<seed>:<direction>` query label, so running
-  `screen_candidates.py --query-label-prefix citation:` already weights
+  `search.py screen-candidates --query-label-prefix citation:` already weights
   multiply-connected candidates higher through the existing
   `matched_query_labels` scoring — one match per connected seed.
 
@@ -120,5 +120,5 @@ so each additional hop is a deliberate, visible decision.
 Anonymous access works but is rate-limited more aggressively. If you have a
 Semantic Scholar API key, pass `--api-key <key>` or set `S2_API_KEY` in the
 environment; the script sends it as the `x-api-key` header. Retry/backoff
-(including honoring `Retry-After` on 429s) is identical to `search_arxiv.py`'s,
+(including honoring `Retry-After` on 429s) is identical to `search.py search-arxiv`'s,
 so anonymous runs degrade gracefully rather than failing outright.

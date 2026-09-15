@@ -103,12 +103,12 @@ class DriverPipelineTest(unittest.TestCase):
     # -- fake subprocess plumbing -----------------------------------------
 
     STAGE_SCRIPTS = {
-        "build_query_plan.py": ("query-plan.json", "query-plan.md"),
-        "search_arxiv.py": ("search-arxiv.json",),
-        "build_candidate_registry.py": ("candidate-registry.json",),
-        "screen_candidates.py": ("screening.json", "screening-ids.txt", "screening.md"),
-        "assess_review_coverage.py": ("coverage-report.json",),
-        "extract_content_queue.py": ("extraction-summary.json",),
+        "build-query-plan": ("query-plan.json", "query-plan.md"),
+        "search-arxiv": ("search-arxiv.json",),
+        "build-candidate-registry": ("candidate-registry.json",),
+        "screen-candidates": ("screening.json", "screening-ids.txt", "screening.md"),
+        "assess-review-coverage": ("coverage-report.json",),
+        "extract-content-queue": ("extraction-summary.json",),
     }
 
     def _stage_payload(self, script: str) -> str:
@@ -120,12 +120,12 @@ class DriverPipelineTest(unittest.TestCase):
             "stop_assessment": {"checks": {"candidate_floor": True, "saturation": False}},
         }
         payloads = {
-            "build_query_plan.py": plan,
-            "search_arxiv.py": {},
-            "build_candidate_registry.py": registry,
-            "screen_candidates.py": {},
-            "assess_review_coverage.py": coverage,
-            "extract_content_queue.py": {"paper_count": 2},
+            "build-query-plan": plan,
+            "search-arxiv": {},
+            "build-candidate-registry": registry,
+            "screen-candidates": {},
+            "assess-review-coverage": coverage,
+            "extract-content-queue": {"paper_count": 2},
         }
         return json.dumps(payloads[script])
 
@@ -133,7 +133,10 @@ class DriverPipelineTest(unittest.TestCase):
         """Record the argv and write the stage's declared outputs."""
         self.commands.append(command)
         joined = " ".join(command)
-        for script, outputs in self.STAGE_SCRIPTS.items():
+        # Longest marker first: the registry command carries "search-arxiv.json" as a
+        # path argument, which would otherwise shadow "build-candidate-registry".
+        for script in sorted(self.STAGE_SCRIPTS, key=len, reverse=True):
+            outputs = self.STAGE_SCRIPTS[script]
             if script in joined:
                 for name in outputs:
                     out = self.run_dir / name
@@ -174,7 +177,7 @@ class DriverPipelineTest(unittest.TestCase):
         names = []
         for command in self.commands:
             joined = " ".join(command)
-            for marker in ("build_query_plan.py", "search_arxiv.py", "build_candidate_registry.py", "screen_candidates.py", "assess_review_coverage.py", "extract_content_queue.py"):
+            for marker in ("build-query-plan", "search-arxiv", "build-candidate-registry", "screen-candidates", "assess-review-coverage", "extract-content-queue"):
                 if marker in joined:
                     names.append(marker)
         return names
@@ -183,18 +186,18 @@ class DriverPipelineTest(unittest.TestCase):
         code, summary = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
         self.assertEqual(code, 0)
         names = self.stage_names()
-        # search_arxiv.py appears twice: first pass + empty-result cooldown retry.
+        # search-arxiv appears twice: first pass + empty-result cooldown retry.
         self.assertEqual(
-            [n for n in names if n != "search_arxiv.py"],
+            [n for n in names if n != "search-arxiv"],
             [
-                "build_query_plan.py",
-                "build_candidate_registry.py",
-                "screen_candidates.py",
-                "assess_review_coverage.py",
-                "extract_content_queue.py",
+                "build-query-plan",
+                "build-candidate-registry",
+                "screen-candidates",
+                "assess-review-coverage",
+                "extract-content-queue",
             ],
         )
-        self.assertGreaterEqual(names.count("search_arxiv.py"), 2)
+        self.assertGreaterEqual(names.count("search-arxiv"), 2)
         self.assertEqual(summary["knowledge_ids"], ["EA-SENSOR"])
         self.assertEqual(summary["candidate_count"], 42)
         self.assertEqual(summary["screening_limit"], 24)  # rapid
@@ -209,7 +212,7 @@ class DriverPipelineTest(unittest.TestCase):
 
     def test_arxiv_command_shape_single_process(self):
         self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
-        arxiv = next(c for c in self.commands if "search_arxiv.py" in " ".join(c))
+        arxiv = next(c for c in self.commands if "search-arxiv" in " ".join(c))
         self.assertIn("--query-file", arxiv)
         self.assertIn("--start-date", arxiv)
         self.assertIn("--end-date", arxiv)
@@ -218,7 +221,7 @@ class DriverPipelineTest(unittest.TestCase):
 
     def test_screening_uses_terms_and_mode_limit(self):
         self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
-        screen = next(c for c in self.commands if "screen_candidates.py" in " ".join(c))
+        screen = next(c for c in self.commands if "screen-candidates" in " ".join(c))
         self.assertIn("demo", screen[screen.index("--terms") + 1].split(","))
         self.assertEqual(screen[screen.index("--limit") + 1], "24")
         scoping = self.run_driver(self.argv("--skip-s2", "--no-terms-agent", "--review-mode", "scoping"))
@@ -226,7 +229,7 @@ class DriverPipelineTest(unittest.TestCase):
 
     def test_extraction_workers_capped_and_checkpointed(self):
         self.run_driver(self.argv("--skip-s2", "--no-terms-agent", "--workers", "9"))
-        extraction = next(c for c in self.commands if "extract_content_queue.py" in " ".join(c))
+        extraction = next(c for c in self.commands if "extract-content-queue" in " ".join(c))
         self.assertEqual(extraction[extraction.index("--workers") + 1], "4")
         self.assertIn("--include-full-text", extraction)
         self.assertEqual(extraction[extraction.index("--ocr-mode") + 1], "never")
@@ -266,7 +269,7 @@ class DriverPipelineTest(unittest.TestCase):
         }
         (self.run_dir / "dynamic-queries.json").write_text(json.dumps(prior), encoding="utf-8")
         self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
-        plan_cmd = next(c for c in self.commands if "build_query_plan.py" in " ".join(c))
+        plan_cmd = next(c for c in self.commands if "build-query-plan" in " ".join(c))
         self.assertIn("--dynamic-file", plan_cmd)
         merged = json.loads((self.run_dir / "dynamic-queries.json").read_text(encoding="utf-8"))
         labels = {q["label"] for q in merged["queries"]}
@@ -317,7 +320,7 @@ class SearchStrategyTest(DriverPipelineTest):
         code, summary = self.run_driver(argv)
         self.assertEqual(code, 0)
         self.assertEqual(summary["seed_ids"], ["2402.14207"])
-        self.assertNotIn("search_arxiv.py", " ".join(" ".join(c) for c in self.commands))
+        self.assertNotIn("search-arxiv", " ".join(" ".join(c) for c in self.commands))
 
     def test_smart_strategy_with_seeds_runs_citation_expansion(self):
         argv = self.argv(
@@ -327,7 +330,7 @@ class SearchStrategyTest(DriverPipelineTest):
         code, summary = self.run_driver(argv)
         self.assertEqual(code, 0)
         self.assertEqual(summary["seed_ids"], ["2402.14207", "1704.02084"])
-        expand = next(c for c in self.commands if "expand_via_citations.py" in " ".join(c))
+        expand = next(c for c in self.commands if "expand-via-citations" in " ".join(c))
         self.assertEqual(expand[expand.index("--seed-id") + 1], "2402.14207")
         self.assertNotEqual(summary["citation_expansion"], "skipped (no seeds)")
 
@@ -336,7 +339,7 @@ class SearchStrategyTest(DriverPipelineTest):
         def fake_run_with_citation(command, timeout=None):
             joined = " ".join(command)
             result = self.fake_run(command, timeout=timeout)
-            if "expand_via_citations.py" in joined:
+            if "expand-via-citations" in joined:
                 (self.run_dir / "citation-expansion.json").write_text(
                     json.dumps({"papers": []}), encoding="utf-8"
                 )
@@ -350,7 +353,7 @@ class SearchStrategyTest(DriverPipelineTest):
                     "--skip-s2", "--no-terms-agent", "--seed-arxiv-ids", "2402.14207",
                 ))
         self.assertEqual(code, 0)
-        registry = next(c for c in self.commands if "build_candidate_registry.py" in " ".join(c))
+        registry = next(c for c in self.commands if "build-candidate-registry" in " ".join(c))
         self.assertIn("--citation-result", registry)
 
 

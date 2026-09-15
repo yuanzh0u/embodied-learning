@@ -58,7 +58,7 @@ Use it when the topic uses a new metaphor, product term, or research framing tha
 Run:
 
 ```bash
-python skills/embodied-ai-literature-hub/scripts/build_query_plan.py \
+python skills/embodied-ai-literature-hub/scripts/search.py build-query-plan \
   --topic "VLA的数据金字塔" \
   --dynamic-file /tmp/dynamic-vla-data-pyramid.json \
   --output /tmp/query-plan.json

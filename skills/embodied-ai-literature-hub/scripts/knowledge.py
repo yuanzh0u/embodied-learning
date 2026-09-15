@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""CLI for the local public paper pool: add | import-existing | list | get.
+"""knowledge-layer CLI: one entry, one subcommand per tool.
 
-Library API lives in embodied_learning/knowledge/pool.py (PaperPool). This entry owns only
-argument parsing and dispatch.
+Each subcommand owns its original flags (per-subcommand parsers, so legacy
+flag names never collide); implementation lives in the embodied_learning
+knowledge layer. Subcommand names are the old single-purpose scripts
+kebab-cased: `pool-add-paper` was `scripts/pool_add_paper.py`.
 """
+from __future__ import annotations
+
 import argparse
 import sys
 from pathlib import Path
@@ -12,10 +16,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+# ---- pool-add-paper (was scripts/pool_add_paper.py) --------------------------
+
+import argparse
+
 from embodied_learning.knowledge.pool import DEFAULT_POOL_ROOT, PaperPool, load_json
 
 
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+def _pool_add_paper_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command")
 
@@ -49,8 +57,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
+def _pool_add_paper_main(argv: list[str] | None = None) -> int:
+    args = _pool_add_paper_parse_args(argv)
     pool = PaperPool(args.pool_root)
     if args.command == "add":
         metadata = load_json(Path(args.metadata).expanduser()) if args.metadata else None
@@ -71,6 +79,31 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "get":
         return pool.get(args.paper_id)
     raise SystemExit("choose a command: add | import-existing | list | get")
+
+
+
+_SUBCOMMANDS = {
+    "pool-add-paper": _pool_add_paper_main,
+}
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Dispatch to the tool's own parser: `{layer}.py <subcommand> [flags...]`.
+
+    Each subcommand reuses its original single-purpose parser verbatim, so
+    flags, help text, and exit codes are unchanged from the old scripts.
+    """
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__)
+        print("\nsubcommands: " + ", ".join(_SUBCOMMANDS))
+        return 0
+    handler = _SUBCOMMANDS.get(argv[0])
+    if handler is None:
+        print(f"unknown subcommand: {argv[0]}", file=sys.stderr)
+        print("\nsubcommands: " + ", ".join(_SUBCOMMANDS))
+        return 2
+    return handler(argv[1:])
 
 
 if __name__ == "__main__":

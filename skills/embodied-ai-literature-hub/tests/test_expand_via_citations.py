@@ -16,7 +16,7 @@ mod = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(mod)
 
-ENTRY_PATH = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "expand_via_citations.py"
+ENTRY_PATH = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "search.py"
 ENTRY_SPEC = importlib.util.spec_from_file_location("expand_via_citations_entry", ENTRY_PATH)
 entry = importlib.util.module_from_spec(ENTRY_SPEC)
 assert ENTRY_SPEC and ENTRY_SPEC.loader
@@ -412,7 +412,7 @@ class EndToEndTest(unittest.TestCase):
                 "1",
             ]
             with mock.patch.object(mod.urllib.request, "urlopen", side_effect=fake_urlopen):
-                exit_code = entry.main(argv)
+                exit_code = entry.main(["expand-via-citations", *argv])
 
             self.assertEqual(exit_code, 0)
             candidate_data = json.loads(output.read_text(encoding="utf-8"))

@@ -17,7 +17,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))  # src/ modules import embodied_learning.* at load time
 
 # Scripts that stayed in the skill: validate_paper_note / audit_claim_support /
-# project_evidence_events moved to embodied_learning/knowledge/legacy (loaded via package import
+# validate/audit/project moved to note_tools.py (impl loaded via package import
 # below); build_reading_packet and update_reading_ledger remain skill entries.
 _SCRIPTS_DIR = ROOT / "scripts"
 
@@ -272,7 +272,7 @@ class PaperReaderTest(unittest.TestCase):
         audit_path.write_text(json.dumps(audit_result, ensure_ascii=False), encoding="utf-8")
         completed = subprocess.run(
             [
-                sys.executable, str(ROOT / "scripts" / "project_evidence_events.py"),
+                sys.executable, str(ROOT / "scripts" / "note_tools.py"), "project-evidence-events",
                 "--paper-note", str(note_path), "--audit", str(audit_path),
                 "--id-prefix", "EA-DATA-2026", "--output", str(events_path),
             ],
@@ -281,9 +281,10 @@ class PaperReaderTest(unittest.TestCase):
             check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stderr)
-        hub_validator = ROOT.parent / "embodied-ai-literature-hub" / "scripts" / "write_lit_outputs.py"
+        hub_validator = ROOT.parent / "embodied-ai-literature-hub" / "scripts" / "parse.py"
+        hub_validator_argv = ["write-lit-outputs"]
         completed = subprocess.run(
-            [sys.executable, str(hub_validator), "--evidence-jsonl", str(events_path), "--validate-only"],
+            [sys.executable, str(hub_validator), *hub_validator_argv, "--evidence-jsonl", str(events_path), "--validate-only"],
             capture_output=True,
             text=True,
             check=False,

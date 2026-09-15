@@ -13,7 +13,7 @@ Keep two layers: a clean reader surface and a complete audit surface.
 ## Audit surface
 
 - `evidence-appendix.md` remains the source for event claim, stance, confidence, locator, and short quote.
-- Generate `trace-map.json` with `build_trace_map.py`. It records each article's cited arXiv papers and the accepted event IDs that cover them.
+- Generate `trace-map.json` with `writing_audit.py build-trace-map`. It records each article's cited arXiv papers and the accepted event IDs that cover them.
 - Keep every reader-facing paper inside the accepted evidence set. An uncovered paper is an error, not an editorial exception.
 - For an inference spanning several papers, cite the papers in prose and record all contributing events in the trace map. Explain the inference and its falsifier in the scientific memo.
 - `accepted evidence count` and `article citation count` are different metrics. The former measures the research reservoir; the latter is an editorial selection.

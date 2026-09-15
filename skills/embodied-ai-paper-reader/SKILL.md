@@ -44,10 +44,10 @@ python3 skills/embodied-ai-paper-reader/scripts/build_reading_packet.py \
 6. **Validate and audit.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/validate_paper_note.py \
+python3 skills/embodied-ai-paper-reader/scripts/note_tools.py validate-paper-note \
   work/<run>/paper-notes/2402.10329.json
 
-python3 skills/embodied-ai-paper-reader/scripts/audit_claim_support.py \
+python3 skills/embodied-ai-paper-reader/scripts/note_tools.py audit-claim-support \
   --paper-note work/<run>/paper-notes/2402.10329.json \
   --extraction work/<run>/extractions/2402.10329.json \
   --output work/<run>/paper-notes/2402.10329.audit.json
@@ -56,7 +56,7 @@ python3 skills/embodied-ai-paper-reader/scripts/audit_claim_support.py \
 7. **Project evidence only after the gates pass.** Read [evidence-projection.md](references/evidence-projection.md).
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/project_evidence_events.py \
+python3 skills/embodied-ai-paper-reader/scripts/note_tools.py project-evidence-events \
   --paper-note work/<run>/paper-notes/2402.10329.json \
   --audit work/<run>/paper-notes/2402.10329.audit.json \
   --id-prefix EA-DATA-2026 --start-seq 1 \
@@ -92,39 +92,3 @@ python3 skills/embodied-ai-paper-reader/scripts/update_reading_ledger.py \
 - `paper-note.audit.json`: locator/context and manual-verification gate result.
 - `evidence.jsonl`: compatibility projection for the existing review workflow.
 - `reading-ledger.jsonl` and `reading-summary.json`: auditable state and counts.
-
-## Legacy multi-run migration
-
-Plan a deduplicated migration before recovering or reading papers. The planner prioritizes papers already cited by reader-facing articles, then limiting/conditional/gap and multi-event papers until each run reaches its mode floor. After recovery, rerun the planner with `--require-readable`; never preserve an old citation merely because it was once accepted. Use `--supplement-file` for explicitly reviewed backfills when an old run has no spare readable accepted paper:
-
-```bash
-python3 skills/embodied-ai-paper-reader/scripts/plan_review_migration.py \
-  --runs-root evidence --run-pattern 'literature-review-*-20260714' \
-  --extraction-dir work/paper-reader-migration/full-text \
-  --paper-floor 15 --require-readable \
-  --supplement-file work/paper-reader-migration/readable-backfills.json \
-  --output work/paper-reader-migration/final-migration-plan.json \
-  --paper-id-output work/paper-reader-migration/final-paper-ids.txt
-```
-
-Build new draft runs without modifying settled evidence. `migrate_review_runs.py` reconstructs section maps, uses exact full-text contexts, validates every note, audits every card, and projects compatible evidence. Its lexical matcher is only a navigation aid: low-quality or over-broad legacy claims must be manually narrowed in an override JSON before they can be marked verified.
-
-```bash
-python3 skills/embodied-ai-paper-reader/scripts/migrate_review_runs.py \
-  --plan work/paper-reader-migration/final-migration-plan.json \
-  --extraction-dir work/paper-reader-migration/full-text \
-  --output-root work/paper-reader-migration/draft-runs \
-  --diagnostics work/paper-reader-migration/migration-diagnostics.json \
-  --override-file work/paper-reader-migration/reviewed-context-overrides.json \
-  --event-prefix-file work/paper-reader-migration/event-prefixes.json \
-  --cards-per-paper 1 --minimum-match-score 0.16
-```
-
-Migration rules:
-
-- Keep prior settled runs immutable; publish a suffixed append-only run.
-- Give every migrated run its own globally unique event prefix. Prefer an audited mapping file; without one, the script appends a deterministic run-name fingerprint and records the result in `run.json`.
-- Count only complete, evidence-eligible, non-OCR full text toward the paper floor.
-- Inspect the lowest-scoring selected matches and every manually narrowed claim.
-- An override must name an exact full-text section and start marker; it may narrow a legacy claim but must never broaden it.
-- Draft runs remain `in-progress` until the review writer and every bundle gate pass.

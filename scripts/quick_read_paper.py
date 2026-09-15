@@ -37,7 +37,7 @@ from prepare_paper_chat import ensure_deep_read, ensure_extraction, normalize_ar
 ARTICLE_NAME = "quick-read_sudu.md"
 BRIEF_NAME = "quick-read-brief.md"
 ARTICLE_TIMEOUT_S = 300.0
-AUDIT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "audit_article_quality.py"
+AUDIT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
 STYLE_REFERENCE = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "references" / "quick-read.md"
 CITATION_REFERENCE = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "references" / "citation-projection.md"
 ARTICLE_OPEN = "<<<QUICK-READ-ARTICLE>>>"
@@ -220,7 +220,7 @@ def extract_article(raw: str, paper_id: str) -> str | None:
 def audit_article(path: Path) -> None:
     """Editorial audit; findings are warnings only and never change the exit code."""
     result = subprocess.run(
-        [sys.executable, str(AUDIT_SCRIPT), "--quickread", str(path), "--json"],
+        [sys.executable, str(AUDIT_SCRIPT), "audit-article-quality", "--quickread", str(path), "--json"],
         cwd=str(REPO_ROOT), text=True, capture_output=True, timeout=60.0, check=False,
     )
     try:

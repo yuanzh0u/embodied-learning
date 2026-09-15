@@ -8,7 +8,6 @@ claim's wording and scope.
 Library API: stateless explicit-parameter functions (:func:`audit`,
 :func:`extraction_text`, :func:`locator_surface`, :func:`meaningful_tokens`,
 :func:`normalize`). Consumers import this module directly — build_paper_note.py
-and migrate_review_runs.py call ``audit``/``extraction_text``/``locator_surface``
 /``meaningful_tokens``/``normalize``. The CLI surface owns argument parsing and
 lives in the skill entry
 ``skills/embodied-ai-paper-reader/scripts/audit_claim_support.py``.
