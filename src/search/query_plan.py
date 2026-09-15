@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
-"""Build structured arXiv query plans for embodied-AI literature discovery."""
+"""Build structured arXiv query plans for embodied-AI literature discovery.
+
+Library API: the module-level :func:`build_plan` function taking explicit
+parameters (topic, knowledge_id, family, calibration/dynamic files, review
+mode, targets, query budget) plus the pure helpers (``coverage_group``,
+``search_targets``, ``merge_dynamic``, ``merge_calibration``,
+``render_markdown``, ...). No class is needed — the plan is a pure function of
+its inputs. The CLI surface owns argument parsing (including
+``--list-topics``/``--list-families``) and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/build_query_plan.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
-from pathlib import Path
-import sys
 from typing import Any
 
 try:
@@ -57,32 +64,6 @@ REVIEW_MODES: dict[str, dict[str, object]] = {
         "minimum_per_dimension": 5,
     },
 }
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--topic", required=False, help="Chinese or English embodied-AI topic.")
-    parser.add_argument("--knowledge-id", action="append", default=[], help="EA knowledge ID. May be repeated.")
-    parser.add_argument("--family", action="append", default=[], help="Specialized query family. May be repeated.")
-    parser.add_argument("--start-date", help="Optional YYYY-MM-DD scope metadata.")
-    parser.add_argument("--end-date", help="Optional YYYY-MM-DD scope metadata.")
-    parser.add_argument("--dynamic-file", action="append", default=[], help="JSON file with LLM/agent dynamic query suggestions. May be repeated.")
-    parser.add_argument("--calibration-file", action="append", default=[], help="JSON calibration file. May be repeated.")
-    parser.add_argument(
-        "--review-mode",
-        choices=sorted(REVIEW_MODES),
-        default="scoping",
-        help="Search-depth contract. Targets are floors, never caps.",
-    )
-    parser.add_argument("--target-candidates", type=int, help="Override the mode's candidate floor.")
-    parser.add_argument("--target-full-text", type=int, help="Override the mode's full-text screening floor.")
-    parser.add_argument("--target-evidence", type=int, help="Override the mode's accepted-paper floor.")
-    parser.add_argument("--max-queries", type=int, default=DEFAULT_MAX_QUERIES, help="Max arXiv API query entries.")
-    parser.add_argument("--output", help="Write JSON plan to this path instead of stdout.")
-    parser.add_argument("--markdown-output", help="Write a Markdown review view to this path.")
-    parser.add_argument("--list-topics", action="store_true", help="List supported EA topic IDs and exit.")
-    parser.add_argument("--list-families", action="store_true", help="List supported specialized families and exit.")
-    return parser.parse_args()
 
 
 def stable_now() -> str:
@@ -275,16 +256,22 @@ def build_coverage_dimensions(queries: list[dict[str, Any]], minimum_per_dimensi
     ]
 
 
-def search_targets(args: argparse.Namespace, query_count: int) -> dict[str, int]:
-    mode = REVIEW_MODES[args.review_mode]
+def search_targets(
+    review_mode: str,
+    query_count: int,
+    target_candidates: int | None = None,
+    target_full_text: int | None = None,
+    target_evidence: int | None = None,
+) -> dict[str, int]:
+    mode = REVIEW_MODES[review_mode]
     candidate_floor = max(
         int(mode["candidate_floor"]),
         query_count * int(mode["query_multiplier"]),
     )
     return {
-        "candidate_floor": max(1, args.target_candidates or candidate_floor),
-        "full_text_floor": max(1, args.target_full_text or int(mode["full_text_floor"])),
-        "accepted_paper_floor": max(1, args.target_evidence or int(mode["evidence_floor"])),
+        "candidate_floor": max(1, target_candidates or candidate_floor),
+        "full_text_floor": max(1, target_full_text or int(mode["full_text_floor"])),
+        "accepted_paper_floor": max(1, target_evidence or int(mode["evidence_floor"])),
     }
 
 
@@ -522,8 +509,25 @@ def merge_calibration(paths: list[str]) -> tuple[list[dict[str, Any]], list[dict
     return arxiv_entries, web_entries, notes
 
 
-def build_plan(args: argparse.Namespace) -> dict[str, Any]:
-    topic = args.topic or ""
+def build_plan(
+    topic: str = "",
+    *,
+    knowledge_id: list[str] | None = None,
+    family: list[str] | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    dynamic_file: list[str] | None = None,
+    calibration_file: list[str] | None = None,
+    review_mode: str = "scoping",
+    target_candidates: int | None = None,
+    target_full_text: int | None = None,
+    target_evidence: int | None = None,
+    max_queries: int = DEFAULT_MAX_QUERIES,
+) -> dict[str, Any]:
+    knowledge_id = list(knowledge_id or [])
+    family = list(family or [])
+    dynamic_file = list(dynamic_file or [])
+    calibration_file = list(calibration_file or [])
     # Two-tier inference: infer_keys catches every alias hit (routing context),
     # infer_confident_keys drops topics matched only through generic vocabulary
     # aliases (点云/传感器/data/model/...). A topic like "点云特征法粗配准" used to
@@ -540,13 +544,13 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
             f"({', '.join(weak_topic_keys + weak_family_keys)}); skipped the card's static "
             "queries to avoid off-topic retrieval — using generic + dynamic queries instead."
         )
-    dynamic_topics, dynamic_families, dynamic_arxiv, dynamic_browser, dynamic_web, dynamic_notes, dynamic_suggestions = merge_dynamic(args.dynamic_file)
+    dynamic_topics, dynamic_families, dynamic_arxiv, dynamic_browser, dynamic_web, dynamic_notes, dynamic_suggestions = merge_dynamic(dynamic_file)
     topic_keys = unique_valid(
-        [*args.knowledge_id, *inferred_topics, *dynamic_topics],
+        [*knowledge_id, *inferred_topics, *dynamic_topics],
         set(TOPIC_PLANS),
     )
     family_keys = unique_valid(
-        [*args.family, *inferred_families, *dynamic_families],
+        [*family, *inferred_families, *dynamic_families],
         set(FAMILY_PLANS),
     )
     # Explicit --knowledge-id/--family flags always apply. Inference from the
@@ -556,12 +560,12 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
     weak_inferred_only_topics = [
         key
         for key in unique_valid([*inferred_topics, *dynamic_topics], set(TOPIC_PLANS))
-        if key not in unique_valid([*args.knowledge_id, *confident_topics, *dynamic_topics], set(TOPIC_PLANS))
+        if key not in unique_valid([*knowledge_id, *confident_topics, *dynamic_topics], set(TOPIC_PLANS))
     ]
     weak_inferred_only_families = [
         key
         for key in unique_valid([*inferred_families, *dynamic_families], set(FAMILY_PLANS))
-        if key not in unique_valid([*args.family, *confident_families, *dynamic_families], set(FAMILY_PLANS))
+        if key not in unique_valid([*family, *confident_families, *dynamic_families], set(FAMILY_PLANS))
     ]
     plan_topic_keys = [key for key in topic_keys if key not in weak_inferred_only_topics]
     plan_family_keys = [key for key in family_keys if key not in weak_inferred_only_families]
@@ -578,7 +582,7 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
     browser_queries.extend(dynamic_browser)
     web_queries.extend(dynamic_web)
 
-    calibrated_arxiv, calibrated_web, calibration_notes = merge_calibration(args.calibration_file)
+    calibrated_arxiv, calibrated_web, calibration_notes = merge_calibration(calibration_file)
     raw_queries.extend(query_entry(item, "calibration", "web-calibration") for item in calibrated_arxiv)
     web_queries.extend(calibrated_web)
 
@@ -626,7 +630,7 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         )
         web_queries.append(web_query("web-generic-topic", f'"{topic}" robot learning arxiv', "Calibrate an unmatched topic.", "generic"))
 
-    arxiv_queries = dedupe_queries(raw_queries, args.max_queries)
+    arxiv_queries = dedupe_queries(raw_queries, max_queries)
     query_text = topic or "embodied AI"
     if not browser_queries:
         browser_queries.append(
@@ -647,8 +651,14 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
             )
         )
 
-    mode = REVIEW_MODES[args.review_mode]
-    targets = search_targets(args, len(arxiv_queries))
+    mode = REVIEW_MODES[review_mode]
+    targets = search_targets(
+        review_mode,
+        len(arxiv_queries),
+        target_candidates=target_candidates,
+        target_full_text=target_full_text,
+        target_evidence=target_evidence,
+    )
     coverage_dimensions = build_coverage_dimensions(
         arxiv_queries,
         int(mode["minimum_per_dimension"]),
@@ -658,8 +668,8 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         "generated_at": stable_now(),
         "planner": "embodied-ai-literature-hub",
         "topic": topic,
-        "start_date": args.start_date,
-        "end_date": args.end_date,
+        "start_date": start_date,
+        "end_date": end_date,
         "knowledge_ids": topic_keys,
         "families": family_keys,
         # Keys whose static card queries actually entered the plan. Differs
@@ -668,8 +678,8 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
         "plan_knowledge_ids": plan_topic_keys,
         "plan_families": plan_family_keys,
         "suggested_categories": suggested_categories(plan_topic_keys, plan_family_keys),
-        "query_budget": args.max_queries,
-        "review_mode": args.review_mode,
+        "query_budget": max_queries,
+        "review_mode": review_mode,
         "search_targets": targets,
         # Compatibility field for older Hub callers. This is a floor, never a stopping cap.
         "minimum_candidate_count": targets["candidate_floor"],
@@ -754,24 +764,3 @@ def render_markdown(plan: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main() -> int:
-    args = parse_args()
-    if args.list_topics:
-        return list_and_exit(TOPIC_PLANS)
-    if args.list_families:
-        return list_and_exit(FAMILY_PLANS)
-    if not args.topic:
-        raise SystemExit("--topic is required unless --list-topics or --list-families is used.")
-    plan = build_plan(args)
-    rendered = json.dumps(plan, ensure_ascii=False, indent=2)
-    if args.output:
-        Path(args.output).write_text(rendered + "\n", encoding="utf-8")
-    else:
-        print(rendered)
-    if args.markdown_output:
-        Path(args.markdown_output).write_text(render_markdown(plan), encoding="utf-8")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

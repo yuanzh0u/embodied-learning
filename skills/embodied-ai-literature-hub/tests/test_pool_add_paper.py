@@ -9,11 +9,10 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "knowledge" / "pool.py"
-SPEC = importlib.util.spec_from_file_location("pool_add_paper", SCRIPT_PATH)
-pool = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(pool)
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from src.knowledge.pool import PaperPool, load_json, paper_identity  # noqa: E402
 
 
 def extraction_json(tmp: Path, **overrides: object) -> Path:
@@ -35,19 +34,23 @@ def extraction_json(tmp: Path, **overrides: object) -> Path:
 EXTRACTION_KEYS = {"paper_id", "available", "source_format", "extraction_method", "title", "text", "quality", "doi"}
 
 
-def add_args(tmp: Path, **overrides: object):
+def make_pool(tmp: Path, **overrides: object) -> PaperPool:
+    return PaperPool(str(tmp / "pool"))
+
+
+def add_kwargs(tmp: Path, **overrides: object) -> dict:
+    """Keyword arguments for PaperPool.add, mirroring the old CLI arg namespace."""
     content_overrides = {key: value for key, value in overrides.items() if key in EXTRACTION_KEYS}
-    values: dict[str, object] = {
-        "extraction": str(extraction_json(tmp, **content_overrides)),
+    extraction_path = extraction_json(tmp, **content_overrides)
+    note = overrides.get("note")
+    return {
+        "extraction": load_json(extraction_path),
         "metadata": None,
-        "note": None,
+        "note": Path(note).read_text(encoding="utf-8") if note else None,
         "note_json": None,
-        "html": None,
-        "pool_root": str(tmp / "pool"),
-        "force": False,
+        "html": overrides.get("html"),
+        "force": bool(overrides.get("force", False)),
     }
-    values.update(overrides)
-    return type("Args", (), values)()
 
 
 class AddTest(unittest.TestCase):
@@ -59,7 +62,7 @@ class AddTest(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_add_creates_per_paper_layout_and_index(self) -> None:
-        self.assertEqual(pool.cmd_add(add_args(self.tmp)), 0)
+        self.assertEqual(make_pool(self.tmp).add(**add_kwargs(self.tmp)), 0)
         entry = self.tmp / "pool" / "arxiv-2403.12550"
         self.assertTrue((entry / "paper.md").is_file())
         self.assertTrue((entry / "extraction.json").is_file())
@@ -70,30 +73,30 @@ class AddTest(unittest.TestCase):
         self.assertEqual(index[0]["quality"], "high")
 
     def test_re_add_is_idempotent_without_force(self) -> None:
-        pool.cmd_add(add_args(self.tmp))
-        pool.cmd_add(add_args(self.tmp))
+        make_pool(self.tmp).add(**add_kwargs(self.tmp))
+        make_pool(self.tmp).add(**add_kwargs(self.tmp))
         index = (self.tmp / "pool" / "index.jsonl").read_text().splitlines()
         self.assertEqual(len(index), 1)
 
     def test_force_refreshes_entry(self) -> None:
-        pool.cmd_add(add_args(self.tmp))
-        pool.cmd_add(add_args(self.tmp, force=True))
+        make_pool(self.tmp).add(**add_kwargs(self.tmp))
+        make_pool(self.tmp).add(**add_kwargs(self.tmp, force=True))
         index = (self.tmp / "pool" / "index.jsonl").read_text().splitlines()
         self.assertEqual(len(index), 1)
 
     def test_note_is_archived(self) -> None:
         note = self.tmp / "note.md"
         note.write_text("# Reading note", encoding="utf-8")
-        pool.cmd_add(add_args(self.tmp, note=str(note)))
+        make_pool(self.tmp).add(**add_kwargs(self.tmp, note=str(note)))
         self.assertIn("Reading note", (self.tmp / "pool" / "arxiv-2403.12550" / "note.md").read_text())
 
     def test_unavailable_extraction_is_refused(self) -> None:
         with self.assertRaises(SystemExit):
-            pool.cmd_add(add_args(self.tmp, available=False))
+            make_pool(self.tmp).add(**add_kwargs(self.tmp, available=False))
 
     def test_textless_extraction_is_refused(self) -> None:
         with self.assertRaises(SystemExit):
-            pool.cmd_add(add_args(self.tmp, text=""))
+            make_pool(self.tmp).add(**add_kwargs(self.tmp, text=""))
 
     def test_doi_fallback_naming(self) -> None:
         metadata = self.tmp / "meta.json"
@@ -104,7 +107,10 @@ class AddTest(unittest.TestCase):
             "extraction_method": "html-latexml", "title": "No-arXiv paper",
             "text": "body", "quality": {"grade": "high", "text_chars": 900},
         }), encoding="utf-8")
-        pool.cmd_add(add_args(self.tmp, extraction=str(extraction), metadata=str(metadata)))
+        kwargs = add_kwargs(self.tmp)
+        kwargs["extraction"] = load_json(extraction)   # empty paper_id -> DOI fallback
+        kwargs["metadata"] = load_json(metadata)
+        make_pool(self.tmp).add(**kwargs)
         self.assertTrue((self.tmp / "pool" / "doi-10.1000%2Fxyz" / "meta.json").is_file())
 
 
@@ -121,8 +127,7 @@ class ImportExistingTest(unittest.TestCase):
         root.mkdir()
         (root / "2403.12550.md").write_text("# RGBD GS-ICP SLAM\n\nbody", encoding="utf-8")
         (root / "not-a-paper.md").write_text("# keep me", encoding="utf-8")
-        args = type("Args", (), {"pool_root": str(root), "force": False})()
-        pool.cmd_import_existing(args)
+        PaperPool(str(root)).import_existing()
         self.assertTrue((root / "arxiv-2403.12550" / "paper.md").is_file())
         self.assertFalse((root / "2403.12550.md").exists())
         self.assertTrue((root / "not-a-paper.md").exists())  # untouched
@@ -134,7 +139,7 @@ class ListGetTest(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
-        pool.cmd_add(add_args(self.tmp))
+        make_pool(self.tmp).add(**add_kwargs(self.tmp))
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -143,10 +148,9 @@ class ListGetTest(unittest.TestCase):
         import contextlib
         import io as _io
 
-        args = type("Args", (), {"pool_root": str(self.tmp / "pool"), "format": "json"})()
         buffer = _io.StringIO()
         with contextlib.redirect_stdout(buffer):
-            pool.cmd_list(args)
+            make_pool(self.tmp).list_papers(as_json=True)
         records = json.loads(buffer.getvalue())
         self.assertEqual(records[0]["arxiv_id"], "2403.12550")
 
@@ -154,17 +158,15 @@ class ListGetTest(unittest.TestCase):
         import contextlib
         import io as _io
 
-        args = type("Args", (), {"paper_id": "2403.12550", "pool_root": str(self.tmp / "pool")})()
         buffer = _io.StringIO()
         with contextlib.redirect_stdout(buffer):
-            pool.cmd_get(args)
+            make_pool(self.tmp).get("2403.12550")
         meta = json.loads(buffer.getvalue())
         self.assertEqual(meta["dir_name"], "arxiv-2403.12550")
 
     def test_get_missing_paper_fails(self) -> None:
-        args = type("Args", (), {"paper_id": "9999.99999", "pool_root": str(self.tmp / "pool")})()
         with self.assertRaises(SystemExit):
-            pool.cmd_get(args)
+            make_pool(self.tmp).get("9999.99999")
 
 
 if __name__ == "__main__":

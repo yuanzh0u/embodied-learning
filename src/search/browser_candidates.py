@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Parse arXiv paper candidates from Browser-exported text, HTML, or JSON."""
+"""Parse arXiv paper candidates from Browser-exported text, HTML, or JSON.
+
+Library API: the module-level :func:`build_output` function (pure parse +
+record shaping) plus the pure helpers (``parse_payload``, ``candidate_records``,
+``parse_date``, ``normalized_text``, ...). The CLI surface owns argument
+parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/parse_browser_candidates.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 from html.parser import HTMLParser
 import json
@@ -79,17 +85,6 @@ class TextExtractor(HTMLParser):
     def text(self) -> str:
         lines = [" ".join(line.split()) for line in "".join(self.parts).splitlines()]
         return "\n".join(line for line in lines if line).strip()
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", required=True, help="Browser-exported JSON, HTML, text, or '-' for stdin.")
-    parser.add_argument("--start-date", help="Inclusive YYYY-MM-DD filter.")
-    parser.add_argument("--end-date", help="Inclusive YYYY-MM-DD filter.")
-    parser.add_argument("--source-label", default="browser-fallback")
-    parser.add_argument("--source-url", default="")
-    parser.add_argument("--output", help="Write JSON to this file instead of stdout.")
-    return parser.parse_args()
 
 
 def read_input(path: str) -> str:
@@ -316,28 +311,25 @@ def candidate_records(raw: str, source_links: list[dict[str, str]], start: str |
     )
 
 
-def main() -> int:
-    args = parse_args()
-    payload = read_input(args.input)
+def build_output(
+    payload: str,
+    *,
+    source_label: str = "browser-fallback",
+    source_url: str = "",
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, Any]:
+    """Parse one browser export into the candidate-registry-compatible JSON payload."""
     raw, payload_source_url, links = parse_payload(payload)
-    source_url = args.source_url or payload_source_url
-    candidates = candidate_records(raw, links, args.start_date, args.end_date)
-    output = {
+    candidates = candidate_records(raw, links, start_date, end_date)
+    return {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "source_label": args.source_label,
-        "source_url": source_url,
-        "start_date": args.start_date,
-        "end_date": args.end_date,
+        "source_label": source_label,
+        "source_url": source_url or payload_source_url,
+        "start_date": start_date,
+        "end_date": end_date,
         "candidate_count": len(candidates),
         "candidates": candidates,
     }
-    rendered = json.dumps(output, ensure_ascii=False, indent=2)
-    if args.output:
-        Path(args.output).write_text(rendered + "\n", encoding="utf-8")
-    else:
-        print(rendered)
-    return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())

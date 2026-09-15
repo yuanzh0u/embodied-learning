@@ -1,25 +1,17 @@
 #!/usr/bin/env python3
-"""Prioritize a large candidate registry for full-text recovery without accepting evidence."""
+"""Prioritize a large candidate registry for full-text recovery without accepting evidence.
+
+Library API: the module-level :func:`select_candidates` function (pure ranking
+and quota selection) plus ``score_candidate``/``render_markdown``. The CLI
+surface owns argument parsing and file writing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/screen_candidates.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 from typing import Any
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--candidate-registry", required=True)
-    parser.add_argument("--terms", required=True, help="Comma-separated title/abstract relevance terms.")
-    parser.add_argument("--query-label-prefix", action="append", default=[], help="Prefer discoveries whose query label starts with this prefix.")
-    parser.add_argument("--seed-evidence-jsonl", action="append", default=[], help="Previously accepted evidence used only as a priority seed.")
-    parser.add_argument("--limit", type=int, default=40, help="Number of candidates to queue for full-text recovery.")
-    parser.add_argument("--output-screening", required=True)
-    parser.add_argument("--output-ids", required=True)
-    parser.add_argument("--output-markdown")
-    return parser.parse_args()
 
 
 def load_seed_ids(paths: list[str]) -> set[str]:
@@ -126,21 +118,33 @@ def render_markdown(selected: list[dict[str, Any]], registry_count: int) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main() -> int:
-    args = parse_args()
-    registry = json.loads(Path(args.candidate_registry).read_text(encoding="utf-8"))
-    terms = [value.strip().lower() for value in args.terms.split(",") if value.strip()]
-    selected = select_candidates(registry, terms, args.query_label_prefix, load_seed_ids(args.seed_evidence_jsonl), args.limit)
-    if len(selected) < args.limit:
-        print(f"Only {len(selected)} candidates matched; requested {args.limit}.")
+def run(
+    candidate_registry: str,
+    terms_raw: str,
+    query_label_prefixes: list[str],
+    seed_evidence_jsonl: list[str],
+    limit: int,
+    output_screening: str,
+    output_ids: str,
+    output_markdown: str | None = None,
+) -> int:
+    """CLI-side orchestration: load the registry, select, and write all outputs.
+
+    Returns the process exit code (0 when candidates were queued, 2 otherwise).
+    """
+    registry = json.loads(Path(candidate_registry).read_text(encoding="utf-8"))
+    terms = [value.strip().lower() for value in terms_raw.split(",") if value.strip()]
+    selected = select_candidates(registry, terms, query_label_prefixes, load_seed_ids(seed_evidence_jsonl), limit)
+    if len(selected) < limit:
+        print(f"Only {len(selected)} candidates matched; requested {limit}.")
     screening = {
         "version": 1,
-        "candidate_registry": args.candidate_registry,
+        "candidate_registry": candidate_registry,
         "selection_rule": {
             "terms": terms,
-            "query_label_prefixes": args.query_label_prefix,
-            "seed_evidence_jsonl": args.seed_evidence_jsonl,
-            "limit": args.limit,
+            "query_label_prefixes": query_label_prefixes,
+            "seed_evidence_jsonl": seed_evidence_jsonl,
+            "limit": limit,
             "prior_seed_bonus": 4,
             "prior_seed_queue_cap": "25% when enough non-seed candidates match; unused capacity is backfilled",
             "note": "Priority queue only. Complete full-text recovery and paper-reader verification remain mandatory.",
@@ -159,13 +163,11 @@ def main() -> int:
             for item in selected
         ],
     }
-    Path(args.output_screening).write_text(json.dumps(screening, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    Path(args.output_ids).write_text("\n".join(str(item["candidate"].get("arxiv_id")) for item in selected) + "\n", encoding="utf-8")
-    if args.output_markdown:
-        Path(args.output_markdown).write_text(render_markdown(selected, int(registry.get("candidate_count") or 0)), encoding="utf-8")
+    Path(output_screening).write_text(json.dumps(screening, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    Path(output_ids).write_text("\n".join(str(item["candidate"].get("arxiv_id")) for item in selected) + "\n", encoding="utf-8")
+    if output_markdown:
+        Path(output_markdown).write_text(render_markdown(selected, int(registry.get("candidate_count") or 0)), encoding="utf-8")
     print(f"Queued {len(selected)} of {registry.get('candidate_count', 0)} candidates for full-text recovery.")
     return 0 if selected else 2
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())

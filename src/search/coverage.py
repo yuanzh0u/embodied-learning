@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Assess query-dimension coverage and multi-round saturation for a candidate registry."""
+"""Assess query-dimension coverage and multi-round saturation for a candidate registry.
+
+Library API: the module-level :func:`assess` function (pure assessment over
+an already-loaded plan + registry + evidence paths) plus the helpers
+``batch_saturation``/``discovery_labels``/``accepted_ids``. The CLI surface
+owns argument parsing and file writing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/assess_review_coverage.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
 from pathlib import Path
@@ -11,15 +17,6 @@ from typing import Any
 
 
 FULL_TEXT_STATUSES = {"extracted", "accepted"}
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--query-plan", required=True)
-    parser.add_argument("--candidate-registry", required=True)
-    parser.add_argument("--evidence-jsonl", action="append", default=[], help="Accepted evidence; repeatable.")
-    parser.add_argument("--output", required=True)
-    return parser.parse_args()
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -157,14 +154,9 @@ def assess(plan: dict[str, Any], registry: dict[str, Any], evidence_paths: list[
     }
 
 
-def main() -> int:
-    args = parse_args()
-    result = assess(
-        load_json(Path(args.query_plan)),
-        load_json(Path(args.candidate_registry)),
-        [Path(path) for path in args.evidence_jsonl],
-    )
-    output = Path(args.output)
+def run(query_plan: Path, candidate_registry: Path, evidence_jsonl: list[Path], output: Path) -> int:
+    """CLI-side orchestration: load inputs, assess, and write the coverage report."""
+    result = assess(load_json(query_plan), load_json(candidate_registry), evidence_jsonl)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     state = "ready" if result["stop_assessment"]["ready_to_stop"] else "continue"
@@ -172,5 +164,3 @@ def main() -> int:
     return 0
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Fetch/cache arXiv HTML and extract section-aware text, ranked sections, term matches, and citation contexts.
 
+Library API: :class:`HtmlExtraction` (one CLI-configured extraction run) plus
+the module-level helpers (HTML parsers, term matching, section ranking,
+citation resolution). The CLI surface owns argument parsing and lives in the
+skill entry ``skills/embodied-ai-literature-hub/scripts/extract_arxiv_html.py``.
+
 LaTeXML pages (arxiv.org/html) are parsed into a section tree with paragraph
 locators; term matches anchor to `section path ¶ paragraph id`, sections are
 ranked by term density for selective full-text reading, and in-text citations
@@ -10,14 +15,12 @@ degrade to the legacy flat extraction (`structure: "flat"`).
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 from html.parser import HTMLParser
 import json
 import math
 import os
 import re
-import sys
 import tempfile
 import urllib.error
 import urllib.request
@@ -335,43 +338,81 @@ class LatexmlParser(HTMLParser):
         return references
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paper-id", help="arXiv ID, with or without version.")
-    parser.add_argument("--html-url", help="HTML URL. Defaults to https://arxiv.org/html/<paper-id>")
-    parser.add_argument("--terms", help="Comma-separated terms to locate and rank sections by.")
-    parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR)
-    parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--max-chars", type=int, default=0, help="0 means all extracted text.")
-    parser.add_argument("--include-text", action="store_true", help="Include full extracted text in JSON output.")
-    parser.add_argument("--top-sections", type=int, default=8, help="How many ranked sections to report.")
-    parser.add_argument(
-        "--include-section-text",
-        action="store_true",
-        help="Include full text for each ranked section (for selective deep reading).",
-    )
-    parser.add_argument("--output", help="Write JSON to this file instead of stdout.")
-    return parser.parse_args()
+class HtmlExtraction:
+    """One CLI-configured HTML extraction run against a single paper.
+
+    Options are explicit constructor parameters (the CLI entry translates
+    argparse into these); call :meth:`run` to fetch/parse and emit the JSON
+    payload. The kwargs-only parameter names mirror the old CLI flag names.
+    """
+
+    def __init__(
+        self,
+        *,
+        paper_id: str = "",
+        html_url: str | None = None,
+        terms: str | None = None,
+        cache_dir: str | Path = DEFAULT_CACHE_DIR,
+        timeout: float = 30.0,
+        max_chars: int = 0,
+        include_text: bool = False,
+        top_sections: int = 8,
+        include_section_text: bool = False,
+        output: str | None = None,
+    ) -> None:
+        self.paper_id = paper_id
+        self.html_url = html_url
+        self.terms = terms
+        self.cache_dir = cache_dir
+        self.timeout = timeout
+        self.max_chars = max_chars
+        self.include_text = include_text
+        self.top_sections = top_sections
+        self.include_section_text = include_section_text
+        self.output = output
+
+    def url(self) -> str:
+        if self.html_url:
+            return self.html_url
+        if not self.paper_id:
+            raise SystemExit("Provide --paper-id or --html-url.")
+        return f"https://arxiv.org/html/{normalize_id(self.paper_id)}"
+
+    def path(self, url: str) -> Path:
+        base = normalize_id(self.paper_id or url)
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", base)
+        return Path(self.cache_dir).expanduser() / f"{safe}.html"
+
+    def run(self) -> dict[str, object]:
+        """Fetch (or read from cache), parse, and return the extraction payload."""
+        url = self.url()
+        target = self.path(url)
+        available, html = fetch_html(url, target, self.timeout)
+        output = build_output(
+            url,
+            target,
+            available,
+            html,
+            paper_id=self.paper_id,
+            terms=self.terms,
+            max_chars=self.max_chars,
+            include_text=self.include_text,
+            top_sections=self.top_sections,
+            include_section_text=self.include_section_text,
+        )
+        rendered = json.dumps(output, ensure_ascii=False, indent=2)
+        if self.output:
+            with open(self.output, "w", encoding="utf-8") as handle:
+                handle.write(rendered + "\n")
+        else:
+            print(rendered)
+        return output
 
 
 def normalize_id(value: str) -> str:
     value = value.rsplit("/", 1)[-1]
     value = value.removesuffix(".html")
     return re.sub(r"v\d+$", "", value)
-
-
-def html_url(args: argparse.Namespace) -> str:
-    if args.html_url:
-        return args.html_url
-    if not args.paper_id:
-        raise SystemExit("Provide --paper-id or --html-url.")
-    return f"https://arxiv.org/html/{normalize_id(args.paper_id)}"
-
-
-def cache_path(args: argparse.Namespace, url: str) -> Path:
-    base = normalize_id(args.paper_id or url)
-    safe = re.sub(r"[^A-Za-z0-9._-]+", "_", base)
-    return Path(args.cache_dir).expanduser() / f"{safe}.html"
 
 
 def fetch_html(url: str, target: Path, timeout: float) -> tuple[bool, str]:
@@ -595,11 +636,28 @@ def extract_structured(html: str) -> LatexmlParser | None:
     return parser if parser.sections else None
 
 
-def build_output(args: argparse.Namespace, url: str, target: Path, available: bool, html: str) -> dict[str, object]:
-    terms = parse_terms(args.terms)
+def build_output(
+    url: str,
+    target: Path,
+    available: bool,
+    html: str,
+    *,
+    paper_id: str = "",
+    terms: str | None = None,
+    max_chars: int = 0,
+    include_text: bool = False,
+    top_sections: int = 8,
+    include_section_text: bool = False,
+) -> dict[str, object]:
+    """Build the unified extraction payload from fetched HTML.
+
+    Option values are explicit keyword parameters (the CLI entry translates
+    argparse into these); the extraction tier options mirror the old flags.
+    """
+    terms_list = parse_terms(terms)
     output: dict[str, object] = {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "paper_id": normalize_id(args.paper_id or url),
+        "paper_id": normalize_id(paper_id or url),
         "html_url": url,
         "available": available,
         "cache_file": str(target) if available else "",
@@ -613,13 +671,13 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
         flat = FlatHTMLParser()
         flat.feed(html)
         text = flat.text()
-        if args.max_chars:
-            text = text[: args.max_chars]
+        if max_chars:
+            text = text[:max_chars]
         output.update(
             {
                 "structure": "flat",
                 "text_chars": len(text),
-                "term_matches": flat_term_matches(text, terms) if text else [],
+                "term_matches": flat_term_matches(text, terms_list) if text else [],
                 "reference_hints": flat_reference_hints(text) if text else [],
                 "figures": [],
                 "tables": [],
@@ -627,13 +685,13 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
                 "references": [],
             }
         )
-        if args.include_text:
+        if include_text:
             output["text"] = text
         return output
 
     sections = structured.sections
-    ranked = rank_sections(sections, terms, args.top_sections) if terms else []
-    if args.include_section_text:
+    ranked = rank_sections(sections, terms_list, top_sections) if terms_list else []
+    if include_section_text:
         by_index = {int(section["index"]): section for section in sections}
         for entry in ranked:
             entry["text"] = str(by_index[int(entry["section_index"])]["text"])
@@ -656,7 +714,7 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
             "text_chars": sum(int(section["char_count"]) for section in sections),
             "sections": section_meta,
             "ranked_sections": ranked,
-            "term_matches": find_term_matches(sections, terms) if terms else [],
+            "term_matches": find_term_matches(sections, terms_list) if terms_list else [],
             "citation_contexts": citation_contexts(structured),
             "reference_hints": reference_hints_from_bib(structured.bibitems),
             "figures": structured.figures,
@@ -665,28 +723,9 @@ def build_output(args: argparse.Namespace, url: str, target: Path, available: bo
             "references": structured.references(),
         }
     )
-    if args.include_text:
+    if include_text:
         full_text = "\n\n".join(f"## {section['title']}\n{section['text']}" for section in sections if section["text"])
-        if args.max_chars:
-            full_text = full_text[: args.max_chars]
+        if max_chars:
+            full_text = full_text[:max_chars]
         output["text"] = full_text
     return output
-
-
-def main() -> int:
-    args = parse_args()
-    url = html_url(args)
-    target = cache_path(args, url)
-    available, html = fetch_html(url, target, args.timeout)
-    output = build_output(args, url, target, available, html)
-    rendered = json.dumps(output, ensure_ascii=False, indent=2)
-    if args.output:
-        with open(args.output, "w", encoding="utf-8") as handle:
-            handle.write(rendered + "\n")
-    else:
-        print(rendered)
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

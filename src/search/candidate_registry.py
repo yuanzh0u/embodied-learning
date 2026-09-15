@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Merge multi-round arXiv/API/browser discovery into one deduplicated candidate registry."""
+"""Merge multi-round arXiv/API/browser discovery into one deduplicated candidate registry.
+
+Library API: the module-level :func:`build_registry` function (pure merge of
+discovery JSON files into the registry dict) plus the per-channel loaders
+(``load_api_results``, ``load_browser_results``, ...). The CLI surface owns
+argument parsing and file writing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
 import re
@@ -20,22 +26,6 @@ ALLOWED_STATUSES = {
     "rejected",
     "unavailable",
 }
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--search-result", action="append", default=[], help="search_arxiv.py JSON; repeat by round.")
-    parser.add_argument(
-        "--semantic-scholar-result",
-        action="append",
-        default=[],
-        help="search_semantic_scholar.py JSON; repeat by round.",
-    )
-    parser.add_argument("--browser-result", action="append", default=[], help="parse_browser_candidates.py JSON; repeatable.")
-    parser.add_argument("--citation-result", action="append", default=[], help="expand_via_citations.py JSON; repeatable.")
-    parser.add_argument("--screening-file", help="Optional JSON candidate/status updates.")
-    parser.add_argument("--output", required=True)
-    return parser.parse_args()
 
 
 def normalize_id(value: object) -> str:
@@ -256,25 +246,29 @@ def build_registry(
     }
 
 
-def main() -> int:
-    args = parse_args()
-    if not args.search_result and not args.browser_result and not args.citation_result and not args.semantic_scholar_result:
+def run(
+    search_results: list[Path],
+    browser_results: list[Path],
+    citation_results: list[Path],
+    semantic_scholar_results: list[Path],
+    screening_file: Path | None,
+    output: Path,
+) -> int:
+    """CLI-side orchestration: validate inputs, build, and write the registry file."""
+    if not search_results and not browser_results and not citation_results and not semantic_scholar_results:
         raise SystemExit(
             "provide at least one --search-result, --semantic-scholar-result, --browser-result, or --citation-result"
         )
     result = build_registry(
-        [Path(path) for path in args.search_result],
-        [Path(path) for path in args.browser_result],
-        Path(args.screening_file) if args.screening_file else None,
-        [Path(path) for path in args.citation_result],
-        [Path(path) for path in args.semantic_scholar_result],
+        search_results,
+        browser_results,
+        screening_file,
+        citation_results,
+        semantic_scholar_results,
     )
-    output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"wrote candidate registry: {output} ({result['candidate_count']} unique papers)")
     return 0
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())

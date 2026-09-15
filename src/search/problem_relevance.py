@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 """Rank papers by problem relevance to open research questions.
 
+Library API: :class:`ProblemRelevanceRetrieval` (multi-round expansion +
+BM25 retrieval) plus the module-level pure helpers (``tokenize``,
+``bm25_field``, ``build_index``, ``score_document``, ``retrieve``,
+``extract_judgment_surface``, ``passes_field_gates``, ...). The CLI surface
+owns argument parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/rank_problem_relevance.py``.
+
 Given a review-in-progress (a set of open research questions it has not fully
-answered, plus its existing papers as seeds), this script runs a **two-stage
+answered, plus its existing papers as seeds), this library runs a **two-stage
 budget funnel** so the expensive steps only ever touch a few papers:
 
 1. **Fetch** -- multi-round citation expansion from the seeds (Semantic Scholar),
@@ -12,11 +19,11 @@ budget funnel** so the expensive steps only ever touch a few papers:
 
 2. **Retrieve** -- a sparse lexical retriever (BM25) that treats the questions
    as the query and each candidate's judgment surface as a multi-field document,
-   then emits the top ``--target-retrieved`` papers *with an explanation* of why
+   then emits the top ``target_retrieved`` papers *with an explanation* of why
    each one is relevant (which question, which terms, which field, and a snippet).
    This is the "regular method": relevance to the task is shown, not asserted.
 
-The script is deliberately only stages 1--2. Stages 3--4 (rank the ~50 by
+The library is deliberately only stages 1--2. Stages 3--4 (rank the ~50 by
 reading their surfaces down to ~20, then hand ~10 to ``$embodied-ai-paper-reader``
 for full-text reading) are agent-mediated and documented in SKILL.md -- see
 ``references/retrieval-method.md`` and ``references/problem-relevance-rubric.md``.
@@ -25,13 +32,12 @@ BM25 rather than dense embeddings because this repo is stdlib-only; sparse
 lexical retrieval is deterministic, explainable, and needs no model weights.
 
 Retry/backoff, arXiv-id normalization, and the citation-neighbor coupling filter
-are copied from ``expand_via_citations.py`` / ``rank_influential_papers.py`` so
-behavior under rate limiting is identical.
+are copied from the citation-expansion / influence-ranking libraries so behavior
+under rate limiting is identical.
 """
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
 import math
@@ -96,47 +102,261 @@ RELATED_WORK_KEYWORDS = (
 
 
 # Cross-layer import: the fetch layer owns the arXiv HTML extractor.
-from src.fetch import html as _ARXIV_HTML
+from src.fetch import html as _ARXIV_HTML  # noqa: E402
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--question", action="append", default=[], help="Open research question. May be repeated.")
-    parser.add_argument("--seed-id", action="append", default=[], help="Seed arXiv ID. May be repeated.")
-    parser.add_argument("--seed-id-file", help="File with one arXiv ID per line.")
-    parser.add_argument("--seed-registry", help="candidate-registry.json to pull seeds from by status.")
-    parser.add_argument("--seed-status", action="append", default=[],
-                        help="Registry status treated as a seed. May be repeated; default accepted,full-text-queued,extracted.")
-    parser.add_argument("--exclude-id-file", action="append", default=[],
-                        help="File of arXiv IDs to exclude from results (e.g. papers already read in the review).")
-    parser.add_argument("--rounds", type=int, default=2, help="Citation-expansion rounds.")
-    parser.add_argument("--direction", choices=["references", "citations", "both"], default="both")
-    parser.add_argument("--max-per-seed-per-direction", type=int, default=200, help="Per-request neighbor cap (API max 1000).")
-    parser.add_argument("--min-shared-seeds", type=int, default=None,
-                        help="Candidates must connect to at least this many seeds. Default: 2 if >=2 seeds, else 1.")
-    parser.add_argument("--max-total-candidates", type=int, default=400, help="Cap on the corpus before retrieval.")
-    parser.add_argument("--top-k-per-round", type=int, default=20, help="Candidates carried forward as next round's seeds.")
-    parser.add_argument("--max-fulltext-per-round", type=int, default=40, help="Cap on arXiv HTML judgment-surface fetches per round.")
-    parser.add_argument("--target-retrieved", type=int, default=50, help="How many papers to emit after BM25 retrieval.")
-    parser.add_argument("--min-year", type=int, default=None, help="Drop papers published before this year (inclusive).")
-    parser.add_argument("--require-terms", default=None,
-                        help="Comma-separated terms; keep a candidate only if at least one appears (case-insensitive) in title+abstract.")
-    parser.add_argument("--must-terms", default=None,
-                        help="Comma-separated terms; a candidate is DROPPED unless at least one appears in title+abstract.")
-    parser.add_argument("--field-weights", default=DEFAULT_FIELD_WEIGHTS,
-                        help="Comma-separated field=weight for BM25 multi-field scoring.")
-    parser.add_argument("--output", help="Retrieved JSON. Defaults to stdout.")
-    parser.add_argument("--markdown-output", help="Retrieval table + explanation Markdown.")
-    parser.add_argument("--sleep-seconds", type=float, default=1.0, help="Delay between network phases.")
-    parser.add_argument("--timeout", type=float, default=20.0, help="Per-request timeout in seconds.")
-    parser.add_argument("--retries", type=int, default=MAX_RETRIES, help="Retries per request. Capped at 3.")
-    parser.add_argument("--retry-base-seconds", type=float, default=5.0)
-    parser.add_argument("--retry-max-seconds", type=float, default=60.0)
-    parser.add_argument("--fail-fast", action="store_true", help="Abort on first failed request.")
-    parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR, help="arXiv HTML cache directory.")
-    parser.add_argument("--user-agent", default="embodied-ai-literature-hub/1.0 (local research workflow)")
-    parser.add_argument("--api-key", default=None, help="Semantic Scholar API key. Falls back to S2_API_KEY env var.")
-    return parser.parse_args()
+class ProblemRelevanceRetrieval:
+    """One two-stage problem-relevance run (expansion + BM25 retrieval).
+
+    Options are explicit constructor parameters (the CLI entry translates
+    argparse into these); call :meth:`run` with no arguments.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: list[str] | None = None,
+        seed_id: list[str] | None = None,
+        seed_id_file: str | None = None,
+        seed_registry: str | None = None,
+        seed_status: list[str] | None = None,
+        exclude_id_file: list[str] | None = None,
+        rounds: int = 2,
+        direction: str = "both",
+        max_per_seed_per_direction: int = 200,
+        min_shared_seeds: int | None = None,
+        max_total_candidates: int = 400,
+        top_k_per_round: int = 20,
+        max_fulltext_per_round: int = 40,
+        target_retrieved: int = 50,
+        min_year: int | None = None,
+        require_terms: str | None = None,
+        must_terms: str | None = None,
+        field_weights: str = DEFAULT_FIELD_WEIGHTS,
+        output: str | None = None,
+        markdown_output: str | None = None,
+        sleep_seconds: float = 1.0,
+        timeout: float = 20.0,
+        retries: int = MAX_RETRIES,
+        retry_base_seconds: float = 5.0,
+        retry_max_seconds: float = 60.0,
+        fail_fast: bool = False,
+        cache_dir: str = DEFAULT_CACHE_DIR,
+        user_agent: str = "embodied-ai-literature-hub/1.0 (local research workflow)",
+        api_key: str | None = None,
+    ) -> None:
+        self.question = list(question or [])
+        self.seed_id = list(seed_id or [])
+        self.seed_id_file = seed_id_file
+        self.seed_registry = seed_registry
+        self.seed_status = list(seed_status or [])
+        self.exclude_id_file = list(exclude_id_file or [])
+        self.rounds = rounds
+        self.direction = direction
+        self.max_per_seed_per_direction = max_per_seed_per_direction
+        self.min_shared_seeds = min_shared_seeds
+        self.max_total_candidates = max_total_candidates
+        self.top_k_per_round = top_k_per_round
+        self.max_fulltext_per_round = max_fulltext_per_round
+        self.target_retrieved = target_retrieved
+        self.min_year = min_year
+        self.require_terms = require_terms
+        self.must_terms = must_terms
+        self.field_weights = field_weights
+        self.output = output
+        self.markdown_path = markdown_output
+        self.sleep_seconds = sleep_seconds
+        self.timeout = timeout
+        self.retries = retries
+        self.retry_base_seconds = retry_base_seconds
+        self.retry_max_seconds = retry_max_seconds
+        self.fail_fast = fail_fast
+        self.cache_dir = cache_dir
+        self.user_agent = user_agent
+        self.api_key = api_key
+
+    # -- request plumbing ---------------------------------------------------
+
+    def request_options(self) -> dict[str, object]:
+        return {
+            "user_agent": self.user_agent,
+            "api_key": self.api_key,
+            "retries": self.retries,
+            "retry_base_seconds": self.retry_base_seconds,
+            "retry_max_seconds": self.retry_max_seconds,
+            "timeout": self.timeout,
+        }
+
+    def fetch_json(self, url: str, data: bytes | None = None) -> dict:
+        return fetch_json(url, data=data, **self.request_options())  # type: ignore[arg-type]
+
+    # -- stage 1 helpers ----------------------------------------------------
+
+    def passes_field_gates(self, title: str, abstract: str) -> bool:
+        """Hard (binary) gates on title+abstract: --require-terms (OR), --must-terms (AND)."""
+        require = [t.strip().lower() for t in (self.require_terms or "").split(",") if t.strip()]
+        must = [t.strip().lower() for t in (self.must_terms or "").split(",") if t.strip()]
+        if not require and not must:
+            return True
+        text = f"{title} {abstract}".lower()
+        if must and not any(t in text for t in must):
+            return False
+        if require and not any(t in text for t in require):
+            return False
+        return True
+
+    def collect_seed_ids(self) -> list[str]:
+        ids = list(self.seed_id or [])
+        if self.seed_id_file:
+            ids.extend(load_ids_from_file(self.seed_id_file))
+        if self.seed_registry:
+            statuses = set(self.seed_status) if self.seed_status else set(DEFAULT_SEED_STATUSES)
+            ids.extend(load_seed_ids_from_registry(self.seed_registry, statuses))
+        return sorted({normalize_arxiv_id(i) for i in ids if normalize_arxiv_id(i)})
+
+    def collect_exclude_ids(self, seed_ids: list[str]) -> set[str]:
+        excluded = set(seed_ids)  # seeds are always excluded from results
+        for path in self.exclude_id_file:
+            excluded.update(load_ids_from_file(path))
+        return excluded
+
+    def run_round(self, seed_ids: list[str]) -> tuple[list[dict], dict[str, dict], int, int]:
+        """Fetch neighbors for a seed set and return (scored candidates, paper_meta, excluded, errors)."""
+        seed_set = set(seed_ids)
+        seed_references: dict[str, set[str]] = {}
+        seed_citations: dict[str, set[str]] = {}
+        paper_meta: dict[str, dict] = {}
+        excluded = 0
+        errors = 0
+        directions = ["references", "citations"] if self.direction == "both" else [self.direction]
+        for seed_id in seed_ids:
+            for direction in directions:
+                try:
+                    payload = self.fetch_json(neighbor_url(seed_id, direction, self.max_per_seed_per_direction))
+                    papers, _excluded = extract_neighbor_papers(direction, payload)
+                    excluded += _excluded
+                except Exception as exc:  # pragma: no cover - network dependent
+                    if self.fail_fast:
+                        raise
+                    errors += 1
+                    papers = []
+                bucket = seed_references if direction == "references" else seed_citations
+                ids = bucket.setdefault(seed_id, set())
+                for paper in papers:
+                    arxiv_id = paper["arxiv_id"]
+                    ids.add(arxiv_id)
+                    existing = paper_meta.setdefault(arxiv_id, dict(paper))
+                    for field in ("title", "abstract", "published", "authors"):
+                        if not existing.get(field) and paper.get(field):
+                            existing[field] = paper[field]
+                if self.sleep_seconds > 0:
+                    time.sleep(self.sleep_seconds)
+        scored = coupling_scores(seed_references, seed_citations, seed_set)
+        return scored, paper_meta, excluded, errors
+
+    def html_cache_path(self, arxiv_id: str) -> Path:
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", arxiv_id)
+        return Path(self.cache_dir).expanduser() / f"{safe}.html"
+
+    def fetch_html(self, arxiv_id: str) -> tuple[bool, str]:
+        """Return (available, html) with on-disk caching; 404/410 count as unavailable."""
+        target = self.html_cache_path(arxiv_id)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists() and target.stat().st_size > 0:
+            return True, target.read_text(encoding="utf-8", errors="replace")
+        url = f"https://arxiv.org/html/{normalize_arxiv_id(arxiv_id)}"
+        try:
+            payload = _request(url, **self.request_options())  # type: ignore[arg-type]
+        except RuntimeError as exc:  # pragma: no cover - network dependent
+            # A 404 raised inside _request surfaces as a RuntimeError here; treat as unavailable.
+            if "404" in str(exc) or "410" in str(exc):
+                return False, ""
+            raise
+        text = payload.decode("utf-8", errors="replace")
+        target.write_text(text, encoding="utf-8")
+        return True, text
+
+    def fetch_judgment_surface(self, arxiv_id: str) -> dict | None:
+        """Extract the judgment surface from a paper's arXiv HTML, or None if unavailable/flat."""
+        try:
+            available, html = self.fetch_html(arxiv_id)
+        except Exception:  # pragma: no cover - network dependent
+            return None
+        if not available:
+            return None
+        structured = _ARXIV_HTML.extract_structured(html)
+        if structured is None:
+            return None
+        return extract_judgment_surface(structured.sections)
+
+    # -- orchestration ------------------------------------------------------
+
+    def run(self) -> int:
+        questions = [q.strip() for q in self.question if q and q.strip()]
+        if not questions:
+            raise SystemExit("provide at least one --question")
+        questions = [{"text": q, "terms": tokenize(q)} for q in questions]
+
+        seed_ids = self.collect_seed_ids()
+        if not seed_ids:
+            raise SystemExit("provide at least one seed via --seed-id/--seed-id-file/--seed-registry")
+        excluded_ids = self.collect_exclude_ids(seed_ids)
+
+        field_weights = parse_field_weights(self.field_weights)
+
+        corpus: list[dict] = []
+        seen: set[str] = set(seed_ids) | excluded_ids
+        current_seeds = seed_ids
+        errors: list[dict] = []
+
+        for round_num in range(1, self.rounds + 1):
+            scored, paper_meta, _excluded, _errors = self.run_round(current_seeds)
+            if _errors:
+                errors.append({"round": round_num, "request_errors": _errors})
+
+            min_shared = self.min_shared_seeds if self.min_shared_seeds is not None else default_min_shared_seeds(len(current_seeds))
+            survivors = [s for s in scored if s["shared_seed_count"] >= min_shared]
+
+            # Hard gates + dedup, then cap full-text fetch + carry-forward.
+            survivors = [s for s in survivors if s["arxiv_id"] not in seen]
+            survivors = [
+                s for s in survivors
+                if self.passes_field_gates(paper_meta.get(s["arxiv_id"], {}).get("title", ""),
+                                           paper_meta.get(s["arxiv_id"], {}).get("abstract", ""))
+                and (self.min_year is None or year_of(paper_meta.get(s["arxiv_id"], {}).get("published")) is None
+                     or year_of(paper_meta.get(s["arxiv_id"], {}).get("published")) >= self.min_year)
+            ]
+            # Rank by bibliographic coupling for carry-forward and full-text budget.
+            survivors.sort(key=lambda s: (-s["shared_seed_count"], s["arxiv_id"]))
+
+            for coupling in survivors[: self.max_fulltext_per_round]:
+                surface = self.fetch_judgment_surface(coupling["arxiv_id"])
+                corpus.append(build_corpus_entry(paper_meta.get(coupling["arxiv_id"], {}), coupling, round_num, surface))
+                seen.add(coupling["arxiv_id"])
+                if self.sleep_seconds > 0:
+                    time.sleep(self.sleep_seconds)
+
+            if len(corpus) >= self.max_total_candidates:
+                break
+
+            # Carry the top coupling-coupled candidates forward as next round's seeds.
+            current_seeds = [s["arxiv_id"] for s in survivors[: self.top_k_per_round]]
+            if not current_seeds:
+                break
+
+        retrieved, truncated, _index = retrieve(corpus, questions, field_weights, self.target_retrieved)
+        output = build_output(questions, field_weights, retrieved, self, len(corpus), truncated, errors)
+        write_json(self.output, output)
+        if self.markdown_path:
+            write_text(self.markdown_path, markdown_output(questions, field_weights, retrieved, truncated))
+
+        print(
+            f"problem-relevance retrieval from {len(seed_ids)} seed(s) over {self.rounds} round(s): "
+            f"{len(corpus)} corpus papers, top {len(retrieved)} retrieved ({truncated} truncated), "
+            f"{len(errors)} round error group(s)",
+            file=sys.stderr,
+        )
+        return 0
 
 
 def stable_now() -> str:
@@ -171,7 +391,8 @@ def tokenize(text: str) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# Network: retry/backoff copied from search_arxiv.py / expand_via_citations.py
+# Network: retry/backoff copied from search_arxiv.py / citation_expansion.py
+# (explicit params; the class methods pass their own values in)
 # ---------------------------------------------------------------------------
 
 
@@ -198,38 +419,67 @@ def is_retryable(exc: Exception) -> bool:
     return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
 
 
-def retry_wait_seconds(exc: Exception, attempt: int, args: argparse.Namespace) -> float:
+def retry_wait_seconds(exc: Exception, attempt: int, retry_base_seconds: float, retry_max_seconds: float) -> float:
     retry_after = retry_after_seconds(exc)
     if retry_after is not None:
-        return max(0.0, min(retry_after, args.retry_max_seconds))
-    return max(0.0, min(args.retry_base_seconds * (2**attempt), args.retry_max_seconds))
+        return max(0.0, min(retry_after, retry_max_seconds))
+    return max(0.0, min(retry_base_seconds * (2**attempt), retry_max_seconds))
 
 
-def _request(url: str, args: argparse.Namespace, data: bytes | None = None) -> bytes:
-    headers = {"User-Agent": args.user_agent}
+def _request(
+    url: str,
+    *,
+    user_agent: str,
+    api_key: str | None = None,
+    retries: int = MAX_RETRIES,
+    retry_base_seconds: float = 5.0,
+    retry_max_seconds: float = 60.0,
+    timeout: float = 20.0,
+    data: bytes | None = None,
+) -> bytes:
+    headers = {"User-Agent": user_agent}
     if data is not None:
         headers["Content-Type"] = "application/json"
         headers["Accept"] = "application/json"
-    if getattr(args, "api_key", None):
-        headers["x-api-key"] = args.api_key
+    if api_key:
+        headers["x-api-key"] = api_key
     request = urllib.request.Request(url, data=data, headers=headers)
     last_error: Exception | None = None
-    retries = bounded_retries(args.retries)
-    for attempt in range(retries + 1):
+    capped_retries = bounded_retries(retries)
+    for attempt in range(capped_retries + 1):
         try:
-            with urllib.request.urlopen(request, timeout=args.timeout) as response:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
                 return response.read()
         except Exception as exc:  # pragma: no cover - network dependent
             last_error = exc
-            if attempt < retries and is_retryable(exc):
-                time.sleep(retry_wait_seconds(exc, attempt, args))
+            if attempt < capped_retries and is_retryable(exc):
+                time.sleep(retry_wait_seconds(exc, attempt, retry_base_seconds, retry_max_seconds))
                 continue
             break
     raise RuntimeError(f"request to {url} failed: {last_error}") from last_error
 
 
-def fetch_json(url: str, args: argparse.Namespace, data: bytes | None = None) -> dict:
-    raw = _request(url, args, data=data)
+def fetch_json(
+    url: str,
+    *,
+    user_agent: str,
+    api_key: str | None = None,
+    retries: int = MAX_RETRIES,
+    retry_base_seconds: float = 5.0,
+    retry_max_seconds: float = 60.0,
+    timeout: float = 20.0,
+    data: bytes | None = None,
+) -> dict:
+    raw = _request(
+        url,
+        user_agent=user_agent,
+        api_key=api_key,
+        retries=retries,
+        retry_base_seconds=retry_base_seconds,
+        retry_max_seconds=retry_max_seconds,
+        timeout=timeout,
+        data=data,
+    )
     try:
         return json.loads(raw)
     except json.JSONDecodeError as exc:  # pragma: no cover - data dependent
@@ -291,20 +541,6 @@ def year_of(published: object) -> int | None:
         return None
 
 
-def passes_field_gates(title: str, abstract: str, args: argparse.Namespace) -> bool:
-    """Hard (binary) gates on title+abstract: --require-terms (OR), --must-terms (AND)."""
-    require = [t.strip().lower() for t in (args.require_terms or "").split(",") if t.strip()]
-    must = [t.strip().lower() for t in (args.must_terms or "").split(",") if t.strip()]
-    if not require and not must:
-        return True
-    text = f"{title} {abstract}".lower()
-    if must and not any(t in text for t in must):
-        return False
-    if require and not any(t in text for t in require):
-        return False
-    return True
-
-
 def coupling_scores(
     seed_references: dict[str, set[str]], seed_citations: dict[str, set[str]], seed_ids: set[str]
 ) -> list[dict]:
@@ -364,44 +600,6 @@ def extract_judgment_surface(sections: list[dict]) -> dict:
     surface = {key: "\n\n".join(parts) for key, parts in buckets.items()}
     surface["complete"] = bool(surface["abstract"] or surface["introduction"] or surface["related_work"])
     return surface
-
-
-def html_cache_path(args: argparse.Namespace, arxiv_id: str) -> Path:
-    safe = re.sub(r"[^A-Za-z0-9._-]+", "_", arxiv_id)
-    return Path(args.cache_dir).expanduser() / f"{safe}.html"
-
-
-def fetch_html(arxiv_id: str, args: argparse.Namespace) -> tuple[bool, str]:
-    """Return (available, html) with on-disk caching; 404/410 count as unavailable."""
-    target = html_cache_path(args, arxiv_id)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists() and target.stat().st_size > 0:
-        return True, target.read_text(encoding="utf-8", errors="replace")
-    url = f"https://arxiv.org/html/{normalize_arxiv_id(arxiv_id)}"
-    try:
-        payload = _request(url, args)
-    except RuntimeError as exc:  # pragma: no cover - network dependent
-        # A 404 raised inside _request surfaces as a RuntimeError here; treat as unavailable.
-        if "404" in str(exc) or "410" in str(exc):
-            return False, ""
-        raise
-    text = payload.decode("utf-8", errors="replace")
-    target.write_text(text, encoding="utf-8")
-    return True, text
-
-
-def fetch_judgment_surface(arxiv_id: str, args: argparse.Namespace) -> dict | None:
-    """Extract the judgment surface from a paper's arXiv HTML, or None if unavailable/flat."""
-    try:
-        available, html = fetch_html(arxiv_id, args)
-    except Exception:  # pragma: no cover - network dependent
-        return None
-    if not available:
-        return None
-    structured = _ARXIV_HTML.extract_structured(html)
-    if structured is None:
-        return None
-    return extract_judgment_surface(structured.sections)
 
 
 # ---------------------------------------------------------------------------
@@ -614,7 +812,7 @@ def build_explanation(item: dict, field_weights: dict[str, float]) -> list[dict]
 
 
 # ---------------------------------------------------------------------------
-# CLI orchestration
+# Seed loading + output helpers
 # ---------------------------------------------------------------------------
 
 
@@ -637,58 +835,6 @@ def load_seed_ids_from_registry(path: str, statuses: set[str]) -> list[str]:
             if arxiv_id:
                 ids.append(arxiv_id)
     return ids
-
-
-def collect_seed_ids(args: argparse.Namespace) -> list[str]:
-    ids = list(args.seed_id or [])
-    if args.seed_id_file:
-        ids.extend(load_ids_from_file(args.seed_id_file))
-    if args.seed_registry:
-        statuses = set(args.seed_status) if args.seed_status else set(DEFAULT_SEED_STATUSES)
-        ids.extend(load_seed_ids_from_registry(args.seed_registry, statuses))
-    return sorted({normalize_arxiv_id(i) for i in ids if normalize_arxiv_id(i)})
-
-
-def collect_exclude_ids(args: argparse.Namespace, seed_ids: list[str]) -> set[str]:
-    excluded = set(seed_ids)  # seeds are always excluded from results
-    for path in args.exclude_id_file:
-        excluded.update(load_ids_from_file(path))
-    return excluded
-
-
-def run_round(seed_ids: list[str], args: argparse.Namespace) -> tuple[list[dict], dict[str, dict], int, int]:
-    """Fetch neighbors for a seed set and return (scored candidates, paper_meta, excluded, errors)."""
-    seed_set = set(seed_ids)
-    seed_references: dict[str, set[str]] = {}
-    seed_citations: dict[str, set[str]] = {}
-    paper_meta: dict[str, dict] = {}
-    excluded = 0
-    errors = 0
-    directions = ["references", "citations"] if args.direction == "both" else [args.direction]
-    for seed_id in seed_ids:
-        for direction in directions:
-            try:
-                payload = fetch_json(neighbor_url(seed_id, direction, args.max_per_seed_per_direction), args)
-                papers, _excluded = extract_neighbor_papers(direction, payload)
-                excluded += _excluded
-            except Exception as exc:  # pragma: no cover - network dependent
-                if args.fail_fast:
-                    raise
-                errors += 1
-                papers = []
-            bucket = seed_references if direction == "references" else seed_citations
-            ids = bucket.setdefault(seed_id, set())
-            for paper in papers:
-                arxiv_id = paper["arxiv_id"]
-                ids.add(arxiv_id)
-                existing = paper_meta.setdefault(arxiv_id, dict(paper))
-                for field in ("title", "abstract", "published", "authors"):
-                    if not existing.get(field) and paper.get(field):
-                        existing[field] = paper[field]
-            if args.sleep_seconds > 0:
-                time.sleep(args.sleep_seconds)
-    scored = coupling_scores(seed_references, seed_citations, seed_set)
-    return scored, paper_meta, excluded, errors
 
 
 def build_corpus_entry(paper_meta: dict, coupling: dict, round_num: int,
@@ -789,7 +935,7 @@ def write_text(path: str | None, text: str) -> None:
 
 
 def build_output(questions: list[dict], field_weights: dict[str, float], retrieved: list[dict],
-                 args: argparse.Namespace, corpus_size: int, truncated: int,
+                 worker: ProblemRelevanceRetrieval, corpus_size: int, truncated: int,
                  errors: list[dict]) -> dict:
     return {
         "generated_at": stable_now(),
@@ -798,12 +944,12 @@ def build_output(questions: list[dict], field_weights: dict[str, float], retriev
         "field_weights": field_weights,
         "k1": K1,
         "b": B,
-        "seeds": sorted(collect_seed_ids(args)),
-        "rounds": args.rounds,
-        "direction": args.direction,
-        "min_year": args.min_year,
-        "require_terms": args.require_terms,
-        "must_terms": args.must_terms,
+        "seeds": sorted(worker.collect_seed_ids()),
+        "rounds": worker.rounds,
+        "direction": worker.direction,
+        "min_year": worker.min_year,
+        "require_terms": worker.require_terms,
+        "must_terms": worker.must_terms,
         "corpus_size": corpus_size,
         "retrieved_count": len(retrieved),
         "truncated_count": truncated,
@@ -813,79 +959,3 @@ def build_output(questions: list[dict], field_weights: dict[str, float], retriev
             for item in retrieved
         ],
     }
-
-
-def main() -> int:
-    args = parse_args()
-    if not args.api_key:
-        args.api_key = os.environ.get("S2_API_KEY")
-
-    questions = [q.strip() for q in args.question if q and q.strip()]
-    if not questions:
-        raise SystemExit("provide at least one --question")
-    questions = [{"text": q, "terms": tokenize(q)} for q in questions]
-
-    seed_ids = collect_seed_ids(args)
-    if not seed_ids:
-        raise SystemExit("provide at least one seed via --seed-id/--seed-id-file/--seed-registry")
-    excluded_ids = collect_exclude_ids(args, seed_ids)
-
-    field_weights = parse_field_weights(args.field_weights)
-
-    corpus: list[dict] = []
-    seen: set[str] = set(seed_ids) | excluded_ids
-    current_seeds = seed_ids
-    errors: list[dict] = []
-
-    for round_num in range(1, args.rounds + 1):
-        scored, paper_meta, _excluded, _errors = run_round(current_seeds, args)
-        if _errors:
-            errors.append({"round": round_num, "request_errors": _errors})
-
-        min_shared = args.min_shared_seeds if args.min_shared_seeds is not None else default_min_shared_seeds(len(current_seeds))
-        survivors = [s for s in scored if s["shared_seed_count"] >= min_shared]
-
-        # Hard gates + dedup, then cap full-text fetch + carry-forward.
-        survivors = [s for s in survivors if s["arxiv_id"] not in seen]
-        survivors = [
-            s for s in survivors
-            if passes_field_gates(paper_meta.get(s["arxiv_id"], {}).get("title", ""),
-                                  paper_meta.get(s["arxiv_id"], {}).get("abstract", ""), args)
-            and (args.min_year is None or year_of(paper_meta.get(s["arxiv_id"], {}).get("published")) is None
-                 or year_of(paper_meta.get(s["arxiv_id"], {}).get("published")) >= args.min_year)
-        ]
-        # Rank by bibliographic coupling for carry-forward and full-text budget.
-        survivors.sort(key=lambda s: (-s["shared_seed_count"], s["arxiv_id"]))
-
-        for coupling in survivors[: args.max_fulltext_per_round]:
-            surface = fetch_judgment_surface(coupling["arxiv_id"], args)
-            corpus.append(build_corpus_entry(paper_meta.get(coupling["arxiv_id"], {}), coupling, round_num, surface))
-            seen.add(coupling["arxiv_id"])
-            if args.sleep_seconds > 0:
-                time.sleep(args.sleep_seconds)
-
-        if len(corpus) >= args.max_total_candidates:
-            break
-
-        # Carry the top coupling-coupled candidates forward as next round's seeds.
-        current_seeds = [s["arxiv_id"] for s in survivors[: args.top_k_per_round]]
-        if not current_seeds:
-            break
-
-    retrieved, truncated, _index = retrieve(corpus, questions, field_weights, args.target_retrieved)
-    output = build_output(questions, field_weights, retrieved, args, len(corpus), truncated, errors)
-    write_json(args.output, output)
-    if args.markdown_output:
-        write_text(args.markdown_output, markdown_output(questions, field_weights, retrieved, truncated))
-
-    print(
-        f"problem-relevance retrieval from {len(seed_ids)} seed(s) over {args.rounds} round(s): "
-        f"{len(corpus)} corpus papers, top {len(retrieved)} retrieved ({truncated} truncated), "
-        f"{len(errors)} round error group(s)",
-        file=sys.stderr,
-    )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -1,28 +1,22 @@
 #!/usr/bin/env python3
-"""Project verified paper-note evidence cards into Hub-compatible JSONL events."""
+"""Project verified paper-note evidence cards into Hub-compatible JSONL events.
+
+Library API: stateless explicit-parameter functions (:func:`project`,
+:func:`normalize_authors`, :func:`author_key`, :func:`load_object`). Consumers
+import this module directly — migrate_review_runs.py calls ``project``. The CLI
+surface owns argument parsing and lives in the skill entry
+``skills/embodied-ai-paper-reader/scripts/project_evidence_events.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
-import importlib.util
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
 
 from src.knowledge import paper_note as validator
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paper-note", required=True)
-    parser.add_argument("--audit", required=True, help="Passing audit JSON from audit_claim_support.py.")
-    parser.add_argument("--id-prefix", required=True)
-    parser.add_argument("--start-seq", type=int, default=1)
-    parser.add_argument("--output", required=True)
-    return parser.parse_args()
 
 
 def load_object(path: Path) -> dict[str, Any]:
@@ -120,23 +114,3 @@ def project(note: dict[str, Any], audit: dict[str, Any], prefix: str, start_seq:
         }
         events.append(event)
     return events
-
-
-def main() -> int:
-    args = parse_args()
-    try:
-        note = load_object(Path(args.paper_note))
-        audit = load_object(Path(args.audit))
-        events = project(note, audit, args.id_prefix, args.start_seq)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"evidence projection blocked: {exc}", file=sys.stderr)
-        return 2
-    target = Path(args.output)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("\n".join(json.dumps(event, ensure_ascii=False) for event in events) + "\n", encoding="utf-8")
-    print(f"Projected {len(events)} verified evidence event(s): {target}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

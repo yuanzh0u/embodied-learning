@@ -32,8 +32,10 @@ class DummyResponse:
         return self.payload
 
 
-def args_with_retries(retries: int) -> argparse.Namespace:
-    return argparse.Namespace(
+def args_with_retries(retries: int) -> search_arxiv.ArxivSearch:
+    return search_arxiv.ArxivSearch(
+        start_date="2024-01-01",
+        end_date="2024-12-31",
         max_results=1,
         sort_by="submittedDate",
         sort_order="descending",
@@ -45,11 +47,11 @@ def args_with_retries(retries: int) -> argparse.Namespace:
     )
 
 
-def args_with_retry_waits(base_seconds: float, max_seconds: float) -> argparse.Namespace:
-    args = args_with_retries(3)
-    args.retry_base_seconds = base_seconds
-    args.retry_max_seconds = max_seconds
-    return args
+def args_with_retry_waits(base_seconds: float, max_seconds: float) -> search_arxiv.ArxivSearch:
+    searcher = args_with_retries(3)
+    searcher.retry_base_seconds = base_seconds
+    searcher.retry_max_seconds = max_seconds
+    return searcher
 
 
 def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPError:
@@ -65,7 +67,7 @@ class SearchArxivRetryTest(unittest.TestCase):
         with mock.patch.object(search_arxiv.urllib.request, "urlopen", side_effect=[error, error, error, error]) as urlopen:
             with mock.patch.object(search_arxiv.time, "sleep") as sleep:
                 with self.assertRaises(RuntimeError):
-                    search_arxiv.fetch("all:robot", args_with_retries(99))
+                    args_with_retries(99).fetch("all:robot")
 
         self.assertEqual(urlopen.call_count, 4)
         self.assertEqual([call.args[0] for call in sleep.call_args_list], [7.0, 7.0, 7.0])
@@ -77,7 +79,7 @@ class SearchArxivRetryTest(unittest.TestCase):
             side_effect=[http_error(429, retry_after="2"), DummyResponse(b"<feed />")],
         ) as urlopen:
             with mock.patch.object(search_arxiv.time, "sleep") as sleep:
-                payload = search_arxiv.fetch("all:robot", args_with_retries(3))
+                payload = args_with_retries(3).fetch("all:robot")
 
         self.assertEqual(payload, b"<feed />")
         self.assertEqual(urlopen.call_count, 2)
@@ -87,18 +89,18 @@ class SearchArxivRetryTest(unittest.TestCase):
         with mock.patch.object(search_arxiv.urllib.request, "urlopen", side_effect=http_error(400)) as urlopen:
             with mock.patch.object(search_arxiv.time, "sleep") as sleep:
                 with self.assertRaisesRegex(RuntimeError, "after 1 attempt"):
-                    search_arxiv.fetch("bad-query", args_with_retries(3))
+                    args_with_retries(3).fetch("bad-query")
 
         self.assertEqual(urlopen.call_count, 1)
         sleep.assert_not_called()
 
     def test_retry_wait_is_never_negative(self) -> None:
         self.assertEqual(
-            search_arxiv.retry_wait_seconds(http_error(429, retry_after="7"), 0, args_with_retry_waits(5, -1)),
+            args_with_retry_waits(5, -1).retry_wait_seconds(http_error(429, retry_after="7"), 0),
             0.0,
         )
         self.assertEqual(
-            search_arxiv.retry_wait_seconds(TimeoutError("timeout"), 0, args_with_retry_waits(-5, 60)),
+            args_with_retry_waits(-5, 60).retry_wait_seconds(TimeoutError("timeout"), 0),
             0.0,
         )
 

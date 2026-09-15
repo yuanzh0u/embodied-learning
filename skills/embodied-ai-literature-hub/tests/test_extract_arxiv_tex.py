@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
 import io
 import json
@@ -90,7 +89,7 @@ The outcome improves by a large margin. UMI again.
 """
 
 
-def tex_args(**overrides: object) -> argparse.Namespace:
+def tex_args(**overrides: object) -> tex.TexExtraction:
     values: dict[str, object] = {
         "paper_id": "2403.12550",
         "transport": "s3-tex",
@@ -106,7 +105,7 @@ def tex_args(**overrides: object) -> argparse.Namespace:
         "markdown_output": None,
     }
     values.update(overrides)
-    return argparse.Namespace(**values)
+    return tex.TexExtraction(**values)
 
 
 class Arxiv2mdTransportTest(unittest.TestCase):
@@ -133,7 +132,7 @@ class Arxiv2mdTransportTest(unittest.TestCase):
                 return markdown_payload, "200"
             return json.dumps({"title": "Sample Paper"}), "200"
         with mock.patch.object(tex, "_curl_get", side_effect=fake_curl):
-            output = tex.run(tex_args(transport="arxiv2md"))
+            output = tex_args(transport="arxiv2md").run()
         self.assertEqual("arxiv2md", output["extraction_method"])
         self.assertEqual("Sample Paper", output["title"])
         self.assertTrue(output["evidence_eligible"])
@@ -141,7 +140,7 @@ class Arxiv2mdTransportTest(unittest.TestCase):
 
     def test_run_arxiv2md_failure_is_reported_not_raised(self) -> None:
         with mock.patch.object(tex, "_curl_get", return_value=("Error: This paper does not have an HTML version", "400")):
-            output = tex.run(tex_args(transport="arxiv2md", paper_id="0501001"))
+            output = tex_args(transport="arxiv2md", paper_id="0501001").run()
         self.assertFalse(output["available"])
         self.assertFalse(output["evidence_eligible"])
         self.assertIn("arxiv2md", output["attempts"][0]["method"])
@@ -216,7 +215,7 @@ class RunTest(unittest.TestCase):
                         info = tarfile.TarInfo(name)
                         info.size = len(data)
                         archive.addfile(info, io.BytesIO(data))
-                output = tex.run(tex_args(source=str(tar_path)))
+                output = tex_args(source=str(tar_path)).run()
 
         self.assertTrue(output["available"])
         self.assertTrue(output["evidence_eligible"])
@@ -252,7 +251,7 @@ class RunTest(unittest.TestCase):
                         info = tarfile.TarInfo(name)
                         info.size = len(data)
                         archive.addfile(info, io.BytesIO(data))
-                output = tex.run(tex_args(source=str(tar_path), main_tex="other.tex"))
+                output = tex_args(source=str(tar_path), main_tex="other.tex").run()
         self.assertEqual(output["main_tex"], "other.tex")
 
     def test_low_quality_output_is_not_evidence_eligible(self) -> None:
@@ -266,7 +265,7 @@ class RunTest(unittest.TestCase):
                     info = tarfile.TarInfo("main.tex")
                     info.size = len(data)
                     archive.addfile(info, io.BytesIO(data))
-                output = tex.run(tex_args(source=str(tar_path)))
+                output = tex_args(source=str(tar_path)).run()
         self.assertFalse(output["evidence_eligible"])
         self.assertEqual(output["quality"]["grade"], "low")
 
@@ -282,7 +281,7 @@ class RunTest(unittest.TestCase):
         with mock.patch.dict(sys.modules, {"pypandoc": fake_pypandoc("", [])}):
             with mock.patch.object(das, "make_client", return_value=FakeClient()):
                 with mock.patch.object(tex, "download_arxiv_source", das):
-                    output = tex.run(tex_args(paper_id="2403.12550"))
+                    output = tex_args(paper_id="2403.12550").run()
         self.assertFalse(output["available"])
         self.assertFalse(output["evidence_eligible"])
         self.assertIn("not recoverable", output["fallback_reason"])

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
 import unittest
 from pathlib import Path
@@ -15,19 +14,18 @@ assert SPEC and SPEC.loader
 SPEC.loader.exec_module(mod)
 
 
-def args(**overrides: object) -> argparse.Namespace:
-    base = argparse.Namespace(
-        author_strategy="max-hindex",
-        code_source="abstract",
-        direction="both",
-        sleep_seconds=0.0,
-        max_per_seed_per_direction=500,
-        api_key=None,
-        weights="citation=0.40,venue=0.25,author=0.20,code=0.15",
-    )
-    for key, value in overrides.items():
-        setattr(base, key, value)
-    return base
+def ranking(**overrides: object) -> mod.InfluenceRanking:
+    values: dict[str, object] = {
+        "author_strategy": "max-hindex",
+        "code_source": "abstract",
+        "direction": "both",
+        "sleep_seconds": 0.0,
+        "max_per_seed_per_direction": 500,
+        "api_key": None,
+        "weights": "citation=0.40,venue=0.25,author=0.20,code=0.15",
+    }
+    values.update(overrides)
+    return mod.InfluenceRanking(**values)
 
 
 class NormalizeTest(unittest.TestCase):
@@ -117,22 +115,22 @@ class CodeTest(unittest.TestCase):
         self.assertTrue(mod.code_mention("We release code at github.com/foo/bar."))
 
     def test_abstract_no_mention_is_confirm_only_neutral(self) -> None:
-        result = mod.code_score("abstract", "1", "A model for X.", args())
+        result = ranking().code_score("abstract", "1", "A model for X.")
         self.assertEqual(result["score"], 0.5)
         self.assertFalse(result["known"])
 
     def test_none_source_is_neutral(self) -> None:
-        self.assertEqual(mod.code_score("none", "1", "anything", args())["score"], 0.5)
+        self.assertEqual(ranking().code_score("none", "1", "anything")["score"], 0.5)
 
     def test_pwc_positive(self) -> None:
-        with mock.patch.object(mod, "pwc_repo_count", return_value=(3, True)):
-            result = mod.code_score("pwc", "1", "x", args())
+        with mock.patch.object(mod.InfluenceRanking, "pwc_repo_count", return_value=(3, True)):
+            result = ranking(code_source="pwc").code_score("pwc", "1", "x")
         self.assertEqual(result["score"], 1.0)
         self.assertTrue(result["known"])
 
     def test_pwc_zero(self) -> None:
-        with mock.patch.object(mod, "pwc_repo_count", return_value=(0, True)):
-            result = mod.code_score("pwc", "1", "x", args())
+        with mock.patch.object(mod.InfluenceRanking, "pwc_repo_count", return_value=(0, True)):
+            result = ranking(code_source="pwc").code_score("pwc", "1", "x")
         self.assertEqual(result["score"], 0.0)
 
 
@@ -153,31 +151,32 @@ class RankTest(unittest.TestCase):
         ]
 
     def test_higher_citation_and_venue_outranks(self) -> None:
-        ranked = mod.rank_papers(self._papers(), {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, args(), 10)
+        ranked = ranking().rank_papers(self._papers(), {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, 10)
         self.assertEqual(ranked[0]["arxiv_id"], "a")
         self.assertEqual(ranked[0]["rank"], 1)
         self.assertEqual(ranked[1]["arxiv_id"], "b")
 
     def test_composite_is_weighted_sum_of_subscores(self) -> None:
-        ranked = mod.rank_papers(self._papers(), {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, args(), 10)
+        ranked = ranking().rank_papers(self._papers(), {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, 10)
         for item in ranked:
             sub = item["sub_scores"]
             expected = 0.4 * sub["citation"] + 0.25 * sub["venue"] + 0.2 * sub["author"] + 0.15 * sub["code"]
             self.assertAlmostEqual(item["composite_score"], round(min(1.0, expected), 4), places=4)
 
     def test_truncates_to_top(self) -> None:
-        ranked = mod.rank_papers(self._papers(), {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, args(), top=1)
+        ranked = ranking().rank_papers(self._papers(), {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, top=1)
         self.assertEqual(len(ranked), 1)
 
 
 class MarkdownOutputTest(unittest.TestCase):
     def test_emits_table_rows(self) -> None:
-        ranked = mod.rank_papers(
+        worker = ranking()
+        ranked = worker.rank_papers(
             [{"arxiv_id": "a", "title": "T", "abstract": "", "authors": ["x"], "published": "2015",
               "citation_count": 10, "venue": "Computer Vision and Pattern Recognition", "direction": "citations", "connected_seeds": ["s"]}],
-            {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, args(), 1,
+            {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, 1,
         )
-        md = mod.markdown_output(["s"], args(), ranked)
+        md = worker.markdown_output(["s"], ranked)
         self.assertIn("| 1 |", md)
         self.assertIn("arxiv.org/abs/a", md)
 
@@ -262,7 +261,7 @@ class YearNormalizedRankingTest(unittest.TestCase):
              "citation_count": 300, "venue": "Computer Vision and Pattern Recognition", "direction": "citations", "connected_seeds": []},
         ]
         # same venue, same (unknown) author -> citation dimension decides; velocity favors "young"
-        ranked = mod.rank_papers(papers, {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, args(), 10)
+        ranked = ranking().rank_papers(papers, {"citation": 0.4, "venue": 0.25, "author": 0.2, "code": 0.15}, {}, 10)
         self.assertEqual(ranked[0]["arxiv_id"], "young")
         # raw count still reported untouched
         self.assertEqual(ranked[0]["citation_count"], 300)
@@ -275,11 +274,11 @@ class DiscoverNeighborsTest(unittest.TestCase):
             {"data": [{"citedPaper": {"title": "P2", "externalIds": {"ArXiv": "2.2"}, "authors": [], "year": 2021}}], "next": None},
         ]
 
-        def fake_fetch(url, a, data=None):
+        def fake_fetch(url, data=None):
             return pages.pop(0)
 
-        with mock.patch.object(mod, "fetch_json", side_effect=fake_fetch):
-            papers, excluded = mod.discover_neighbors("s", "references", args(max_per_seed_per_direction=500))
+        with mock.patch.object(mod.InfluenceRanking, "fetch_json", side_effect=fake_fetch):
+            papers, excluded = ranking(max_per_seed_per_direction=500).discover_neighbors("s", "references")
 
         self.assertEqual([p["arxiv_id"] for p in papers], ["1.1", "2.2"])
         self.assertEqual(excluded, 0)
@@ -289,12 +288,12 @@ class BatchEnrichmentTest(unittest.TestCase):
     def test_maps_arxiv_ids_to_authors(self) -> None:
         payload = [{"externalIds": {"ArXiv": "1.1"}, "authors": [{"name": "a", "hIndex": 42}], "title": "T"}]
 
-        def fake_fetch(url, a, data=None):
+        def fake_fetch(url, data=None):
             self.assertIn("/paper/batch", url)
             return payload
 
-        with mock.patch.object(mod, "fetch_json", side_effect=fake_fetch):
-            out = mod.batch_enrichment(["1.1"], args())
+        with mock.patch.object(mod.InfluenceRanking, "fetch_json", side_effect=fake_fetch):
+            out = ranking().batch_enrichment(["1.1"])
 
         self.assertIn("1.1", out)
         self.assertEqual(out["1.1"]["authors"][0]["hIndex"], 42)

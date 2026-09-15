@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Validate evidence JSONL and optionally render a compact Markdown brief."""
+"""Validate evidence JSONL and optionally render a compact Markdown brief.
+
+Library API: explicit-parameter functions (:func:`load_events`,
+:func:`render_brief`, plus the institution/author normalization helpers) and
+the module-level vocabularies (``STANCES``, ``CONFIDENCE``, ``REQUIRED``).
+The CLI surface owns argument parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import collections
 import datetime as dt
 import json
 import re
-import sys
 from pathlib import Path
 
 REQUIRED = {
@@ -35,14 +40,6 @@ PRIMARY_INSTITUTION_RULES = (
     (("mit csail", "massachusetts institute of technology", "mit"), "MIT", "mit"),
 )
 SUBUNIT_PREFIXES = ("department", "school", "college", "laboratory", "lab", "center", "centre", "institute")
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--evidence-jsonl", required=True)
-    parser.add_argument("--brief-out")
-    parser.add_argument("--validate-only", action="store_true")
-    return parser.parse_args()
 
 
 def institution_key(name: str) -> str:
@@ -252,18 +249,3 @@ def render_brief(events: list[dict[str, object]]) -> str:
         ]
     )
     return "\n".join(lines) + "\n"
-
-
-def main() -> int:
-    args = parse_args()
-    events = load_events(Path(args.evidence_jsonl))
-    result = {"valid": True, "event_count": len(events)}
-    if args.brief_out and not args.validate_only:
-        Path(args.brief_out).write_text(render_brief(events), encoding="utf-8")
-        result["brief_out"] = args.brief_out
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

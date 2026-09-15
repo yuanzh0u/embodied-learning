@@ -18,7 +18,7 @@ tex = ["pypandoc"] # TeX -> Markdown parsing (extract_arxiv_tex.py); pandoc bina
 sources = ["boto3", "pypandoc"] # convenience: full TeX-source recovery chain
 
 [project.scripts]
-extract_arxiv = "src.fetch.chain:main"
+extract_arxiv = "hub_scripts.extract_arxiv_content:main"
 serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
 
 [tool.setuptools]
@@ -33,16 +33,23 @@ serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
 # time — no copied tree — so a non-editable install can bootstrap
 # <kb-root>/wiki for a new user. Wiki data (snapshots under wiki/data) is NOT
 # packaged: it is built next to the knowledge base at serve time.
-package-dir = { "wiki_scripts" = "scripts", "wiki_scripts.wiki_assets" = "wiki" }
+# The skill entry scripts are packaged as `hub_scripts` so the `extract_arxiv`
+# console script (and the src-side subprocess fallback) resolve after install.
 packages = [
     "src",
     "src.search",
     "src.fetch",
     "src.parse",
     "src.knowledge",
+    "hub_scripts",
     "wiki_scripts", "wiki_scripts.lib", "wiki_scripts.wiki_assets",
 ]
 include-package-data = false
+
+[tool.setuptools.package-dir]
+hub_scripts = "skills/embodied-ai-literature-hub/scripts"
+wiki_scripts = "scripts"
+"wiki_scripts.wiki_assets" = "wiki"
 
 [tool.setuptools.package-data]
 # The frontend shell: index.html + assets/* only. wiki/data (built snapshots)

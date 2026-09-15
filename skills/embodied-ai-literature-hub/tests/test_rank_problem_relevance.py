@@ -110,18 +110,18 @@ class FieldGatesTest(unittest.TestCase):
         self.assertIsNone(mod.year_of("nope"))
 
     def test_no_gates_passes(self) -> None:
-        args = type("A", (), {"require_terms": None, "must_terms": None})()
-        self.assertTrue(mod.passes_field_gates("title", "abstract", args))
+        worker = mod.ProblemRelevanceRetrieval()
+        self.assertTrue(worker.passes_field_gates("title", "abstract"))
 
     def test_require_terms_is_or(self) -> None:
-        args = type("A", (), {"require_terms": "egocentric,exo", "must_terms": None})()
-        self.assertTrue(mod.passes_field_gates("Ego-Exo transfer", "", args))
-        self.assertFalse(mod.passes_field_gates("Object detection", "", args))
+        worker = mod.ProblemRelevanceRetrieval(require_terms="egocentric,exo")
+        self.assertTrue(worker.passes_field_gates("Ego-Exo transfer", ""))
+        self.assertFalse(worker.passes_field_gates("Object detection", ""))
 
     def test_must_terms_is_and_gate(self) -> None:
-        args = type("A", (), {"require_terms": None, "must_terms": "third-person,exocentric"})()
-        self.assertTrue(mod.passes_field_gates("third-person views", "", args))
-        self.assertFalse(mod.passes_field_gates("egocentric only", "", args))
+        worker = mod.ProblemRelevanceRetrieval(must_terms="third-person,exocentric")
+        self.assertTrue(worker.passes_field_gates("third-person views", ""))
+        self.assertFalse(worker.passes_field_gates("egocentric only", ""))
 
 
 class CouplingTest(unittest.TestCase):

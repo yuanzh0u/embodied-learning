@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Download/cache an arXiv PDF, extract text, and OCR low-quality pages when needed."""
+"""Download/cache an arXiv PDF, extract text, and OCR low-quality pages when needed.
+
+Library API: :class:`PdfExtraction` (one CLI-configured extraction run) plus the
+module-level helpers (text/OCR quality gates, term matching, page ranking).
+The CLI surface owns argument parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/extract_arxiv_pdf.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
 import os
@@ -12,31 +17,12 @@ import shutil
 import site
 import statistics
 import subprocess
-import sys
 import tempfile
 import urllib.request
 from pathlib import Path
 
 
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "pdfs")
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paper-id", help="arXiv ID, with or without version.")
-    parser.add_argument("--pdf-url", help="PDF URL. Defaults to https://arxiv.org/pdf/<paper-id>.pdf")
-    parser.add_argument("--pdf-file", help="Use an existing local PDF instead of downloading.")
-    parser.add_argument("--terms", help="Comma-separated terms to locate in extracted text.")
-    parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR)
-    parser.add_argument("--max-pages", type=int, default=0, help="0 means all pages.")
-    parser.add_argument("--top-pages", type=int, default=8, help="Ranked topic-relevant pages to report.")
-    parser.add_argument("--ocr-mode", choices=["auto", "never", "always"], default="auto")
-    parser.add_argument("--ocr-language", default="eng", help="Tesseract language expression, e.g. eng or eng+chi_sim.")
-    parser.add_argument("--ocr-dpi", type=int, default=220)
-    parser.add_argument("--min-chars-per-page", type=int, default=180)
-    parser.add_argument("--include-pages", action="store_true", help="Include full extracted page text in JSON output.")
-    parser.add_argument("--output", help="Write JSON to this file instead of stdout.")
-    return parser.parse_args()
 
 
 def import_pypdf():
@@ -66,20 +52,6 @@ def normalize_id(value: str) -> str:
     value = value.rsplit("/", 1)[-1]
     value = value.removesuffix(".pdf")
     return re.sub(r"v\d+$", "", value)
-
-
-def pdf_url(args: argparse.Namespace) -> str:
-    if args.pdf_url:
-        return args.pdf_url
-    if not args.paper_id:
-        raise SystemExit("Provide --paper-id or --pdf-url.")
-    return f"https://arxiv.org/pdf/{normalize_id(args.paper_id)}.pdf"
-
-
-def cache_path(args: argparse.Namespace, url: str) -> Path:
-    base = normalize_id(args.paper_id or url)
-    safe = re.sub(r"[^A-Za-z0-9._-]+", "_", base)
-    return Path(args.cache_dir).expanduser() / f"{safe}.pdf"
 
 
 def download(url: str, target: Path, timeout: float = 90.0) -> None:
@@ -306,31 +278,133 @@ def reference_hints(pages: list[dict[str, object]]) -> list[dict[str, str]]:
     return hints[:60]
 
 
-def extract_pdf_document(args: argparse.Namespace) -> dict[str, object]:
-    if args.pdf_file:
-        target = Path(args.pdf_file).expanduser().resolve()
+class PdfExtraction:
+    """One CLI-configured PDF extraction run against a single paper.
+
+    Options are explicit constructor parameters (the CLI entry translates
+    argparse into these); call :meth:`run` to download/extract and emit the
+    JSON payload. The parameter names mirror the old CLI flag names.
+    """
+
+    def __init__(
+        self,
+        *,
+        paper_id: str = "",
+        pdf_url: str | None = None,
+        pdf_file: str | None = None,
+        terms: str | None = None,
+        cache_dir: str | Path = DEFAULT_CACHE_DIR,
+        max_pages: int = 0,
+        top_pages: int = 8,
+        ocr_mode: str = "auto",
+        ocr_language: str = "eng",
+        ocr_dpi: int = 220,
+        min_chars_per_page: int = 180,
+        include_pages: bool = False,
+        timeout: float = 90.0,
+        output: str | None = None,
+    ) -> None:
+        self.paper_id = paper_id
+        self.pdf_url = pdf_url
+        self.pdf_file = pdf_file
+        self.terms = terms
+        self.cache_dir = cache_dir
+        self.max_pages = max_pages
+        self.top_pages = top_pages
+        self.ocr_mode = ocr_mode
+        self.ocr_language = ocr_language
+        self.ocr_dpi = ocr_dpi
+        self.min_chars_per_page = min_chars_per_page
+        self.include_pages = include_pages
+        self.timeout = timeout
+        self.output = output
+
+    def url(self) -> str:
+        if self.pdf_url:
+            return self.pdf_url
+        if not self.paper_id:
+            raise SystemExit("Provide --paper-id or --pdf-url.")
+        return f"https://arxiv.org/pdf/{normalize_id(self.paper_id)}.pdf"
+
+    def path(self, url: str) -> Path:
+        base = normalize_id(self.paper_id or url)
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", base)
+        return Path(self.cache_dir).expanduser() / f"{safe}.pdf"
+
+    def run(self) -> dict[str, object]:
+        """Download (or reuse cache / local file), extract, and emit the payload."""
+        output = extract_pdf_document(
+            paper_id=self.paper_id,
+            pdf_url=self.pdf_url,
+            pdf_file=self.pdf_file,
+            terms=self.terms,
+            cache_dir=self.cache_dir,
+            max_pages=self.max_pages,
+            top_pages=self.top_pages,
+            ocr_mode=self.ocr_mode,
+            ocr_language=self.ocr_language,
+            ocr_dpi=self.ocr_dpi,
+            min_chars_per_page=self.min_chars_per_page,
+            include_pages=self.include_pages,
+            timeout=self.timeout,
+        )
+        rendered = json.dumps(output, ensure_ascii=False, indent=2)
+        if self.output:
+            with open(self.output, "w", encoding="utf-8") as handle:
+                handle.write(rendered + "\n")
+        else:
+            print(rendered)
+        return output
+
+
+def extract_pdf_document(
+    *,
+    paper_id: str = "",
+    pdf_url: str | None = None,
+    pdf_file: str | None = None,
+    terms: str | None = None,
+    cache_dir: str | Path = DEFAULT_CACHE_DIR,
+    max_pages: int = 0,
+    top_pages: int = 8,
+    ocr_mode: str = "auto",
+    ocr_language: str = "eng",
+    ocr_dpi: int = 220,
+    min_chars_per_page: int = 180,
+    include_pages: bool = False,
+    timeout: float = 90.0,
+) -> dict[str, object]:
+    """Extract a PDF into the unified payload; option values are explicit kwargs."""
+    if pdf_file:
+        target = Path(pdf_file).expanduser().resolve()
         if not target.is_file():
             raise FileNotFoundError(f"PDF file not found: {target}")
-        url = args.pdf_url or (f"https://arxiv.org/pdf/{normalize_id(args.paper_id)}.pdf" if args.paper_id else "")
+        url = pdf_url or (f"https://arxiv.org/pdf/{normalize_id(paper_id)}.pdf" if paper_id else "")
     else:
-        url = pdf_url(args)
-        target = cache_path(args, url)
-        download(url, target, getattr(args, "timeout", 90.0))
-    pages = extract_pages(target, args.max_pages)
-    before_ocr = text_quality(pages, args.min_chars_per_page)
+        resolved_url = pdf_url
+        if not resolved_url:
+            if not paper_id:
+                raise SystemExit("Provide --paper-id or --pdf-url.")
+            resolved_url = f"https://arxiv.org/pdf/{normalize_id(paper_id)}.pdf"
+        url = resolved_url
+        base = normalize_id(paper_id or url)
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", base)
+        target = Path(cache_dir).expanduser() / f"{safe}.pdf"
+        download(url, target, timeout)
+    pages = extract_pages(target, max_pages)
+    before_ocr = text_quality(pages, min_chars_per_page)
     ocr_pages, warnings, ocr_backend = apply_ocr(
         target,
         pages,
-        args.ocr_mode,
-        args.ocr_language,
-        args.ocr_dpi,
-        args.min_chars_per_page,
+        ocr_mode,
+        ocr_language,
+        ocr_dpi,
+        min_chars_per_page,
     )
-    quality = text_quality(pages, args.min_chars_per_page)
-    terms = [term.strip() for term in (args.terms or "").split(",") if term.strip()]
+    quality = text_quality(pages, min_chars_per_page)
+    terms_list = [term.strip() for term in (terms or "").split(",") if term.strip()]
     output: dict[str, object] = {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "paper_id": normalize_id(args.paper_id or url or target.name),
+        "paper_id": normalize_id(paper_id or url or target.name),
         "pdf_url": url,
         "cache_file": str(target),
         "available": bool(pages),
@@ -339,35 +413,19 @@ def extract_pdf_document(args: argparse.Namespace) -> dict[str, object]:
         "quality": quality,
         "quality_before_ocr": before_ocr,
         "ocr": {
-            "mode": args.ocr_mode,
+            "mode": ocr_mode,
             "backend": ocr_backend,
-            "language": args.ocr_language,
+            "language": ocr_language,
             "pages_used": ocr_pages,
             "warnings": warnings,
         },
         "needs_visual_validation": bool(ocr_pages) or quality["grade"] != "high",
         "visual_validation_pages": sorted(set(ocr_pages) | set(quality["low_text_pages"]))[:12],
         "page_count_extracted": len(pages),
-        "term_matches": find_matches(pages, terms),
-        "ranked_pages": rank_pages(pages, terms, args.top_pages, include_text=args.include_pages),
+        "term_matches": find_matches(pages, terms_list),
+        "ranked_pages": rank_pages(pages, terms_list, top_pages, include_text=include_pages),
         "reference_hints": reference_hints(pages),
     }
-    if args.include_pages:
+    if include_pages:
         output["pages"] = pages
     return output
-
-
-def main() -> int:
-    args = parse_args()
-    output = extract_pdf_document(args)
-    rendered = json.dumps(output, ensure_ascii=False, indent=2)
-    if args.output:
-        with open(args.output, "w", encoding="utf-8") as handle:
-            handle.write(rendered + "\n")
-    else:
-        print(rendered)
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

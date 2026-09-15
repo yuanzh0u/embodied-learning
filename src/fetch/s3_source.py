@@ -25,18 +25,18 @@ the paper pool or the repository.
 
 Old-style IDs (``cat/0501001``, ``math.GT/0601136``) and pre-2007-04 IDs have
 no ``src/YYMM/...`` key and are reported as ``no-source``.
+
+Library API: the module-level helpers (``source_key``, ``download_one``,
+``run_queue``, ``make_client``) take explicit parameters; the CLI surface owns
+argument parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/download_arxiv_source.py``.
 """
 
 from __future__ import annotations
 
-import argparse
 import concurrent.futures
 import datetime as dt
-import importlib.util
-import json
 import re
-import sys
-import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -74,25 +74,31 @@ def make_client(region: str = REGION, anonymous: bool = False):
     return boto3.client("s3", region_name=region)
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paper-id", action="append", default=[], help="arXiv ID. May be repeated.")
-    parser.add_argument("--paper-id-file", help="UTF-8 file with one arXiv ID per line (# comments allowed).")
-    parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR, help="Tarball cache directory.")
-    parser.add_argument("--workers", type=int, default=8, help=f"Bounded I/O workers; capped at {MAX_WORKERS}.")
-    parser.add_argument("--timeout", type=float, default=60.0, help="Per-request read timeout in seconds.")
-    parser.add_argument("--retries", type=int, default=2, help="Retries per paper after transient S3 errors. Capped at 3.")
-    parser.add_argument("--region", default=REGION, help="S3 region of the arXiv bucket.")
-    requester = parser.add_mutually_exclusive_group()
-    requester.add_argument("--requester-pays", dest="requester_pays", action="store_true", default=True,
-                           help="Sign requests with standard AWS credentials and pass RequestPayer=requester "
-                                "(default: s3://arxiv/ is a requester-pays bucket).")
-    requester.add_argument("--anonymous", dest="requester_pays", action="store_false",
-                           help="Use the botocore.UNSIGNED anonymous client (no credentials; the bucket "
-                                "currently answers AccessDenied to anonymous requests).")
-    parser.add_argument("--force", action="store_true", help="Re-download even when the cache file exists.")
-    parser.add_argument("--summary-output", help="Write the run summary JSON here.")
-    return parser.parse_args()
+class S3DownloadOptions:
+    """Options for one ``download_arxiv_source`` run.
+
+    Explicit parameters (the CLI entry translates argparse into these); shared
+    by :func:`download_one` and :func:`run_queue`.
+    """
+
+    def __init__(
+        self,
+        *,
+        cache_dir: str = DEFAULT_CACHE_DIR,
+        workers: int = 8,
+        timeout: float = 60.0,
+        retries: int = 2,
+        region: str = REGION,
+        requester_pays: bool = True,
+        force: bool = False,
+    ) -> None:
+        self.cache_dir = cache_dir
+        self.workers = workers
+        self.timeout = timeout
+        self.retries = retries
+        self.region = region
+        self.requester_pays = requester_pays
+        self.force = force
 
 
 def normalize_id(value: str) -> str:
@@ -122,19 +128,19 @@ def source_key(paper_id: str) -> str | None:
     return f"src/{yymm}/{paper_id}.tar.gz"
 
 
-def download_one(paper_id: str, args: argparse.Namespace, client: Any) -> dict[str, Any]:
+def download_one(paper_id: str, options: S3DownloadOptions, client: Any) -> dict[str, Any]:
     """Download one tarball into the cache. Zero sleep; small retry on 5xx."""
-    cache_dir = Path(args.cache_dir).expanduser()
+    cache_dir = Path(options.cache_dir).expanduser()
     key = source_key(paper_id)
     if key is None:
         return {"paper_id": paper_id, "state": "no-source", "key": "", "path": "", "bytes": 0,
                 "error": f"unsupported arXiv ID for s3://arxiv/ (old-style or pre-0704): {paper_id}"}
     target = cache_dir / f"{paper_id}.tar.gz"
-    if target.is_file() and target.stat().st_size > 0 and not args.force:
+    if target.is_file() and target.stat().st_size > 0 and not options.force:
         return {"paper_id": paper_id, "state": "cached", "key": key, "path": str(target),
                 "bytes": target.stat().st_size, "error": ""}
-    retries = max(0, min(int(args.retries), MAX_RETRIES))
-    request_payer = {"RequestPayer": "requester"} if getattr(args, "requester_pays", True) else {}
+    retries = max(0, min(int(options.retries), MAX_RETRIES))
+    request_payer = {"RequestPayer": "requester"} if options.requester_pays else {}
     last_error = ""
     for attempt in range(retries + 1):
         part = target.with_suffix(".tar.gz.part")
@@ -161,25 +167,35 @@ def download_one(paper_id: str, args: argparse.Namespace, client: Any) -> dict[s
     return {"paper_id": paper_id, "state": "error", "key": key, "path": "", "bytes": 0, "error": last_error}
 
 
-def run_queue(args: argparse.Namespace, client: Any) -> dict[str, Any]:
-    paper_ids: list[str] = []
+def dedupe_ids(paper_ids: list[str]) -> list[str]:
+    """Normalize (strip version/URL tail) and stably dedupe arXiv IDs."""
+    result: list[str] = []
     seen: set[str] = set()
-    for value in args.paper_id:
+    for value in paper_ids:
         normalized = normalize_id(value)
         if normalized and normalized not in seen:
             seen.add(normalized)
-            paper_ids.append(normalized)
-    if args.paper_id_file:
-        for paper_id in load_ids(Path(args.paper_id_file)):
-            if paper_id not in seen:
-                seen.add(paper_id)
-                paper_ids.append(paper_id)
-    if not paper_ids:
+            result.append(normalized)
+    if not result:
         raise SystemExit("provide at least one --paper-id or --paper-id-file")
-    workers = max(1, min(int(args.workers), MAX_WORKERS))
+    return result
+
+
+def collect_ids(cli_ids: list[str], id_file: str | None) -> list[str]:
+    """Dedupe repeated --paper-id values plus the IDs in --paper-id-file."""
+    paper_ids = list(cli_ids)
+    if id_file:
+        paper_ids.extend(load_ids(Path(id_file)))
+    return dedupe_ids(paper_ids)
+
+
+def run_queue(paper_ids: list[str], options: S3DownloadOptions, client: Any) -> dict[str, Any]:
+    """Run the bounded-concurrency download queue over normalized paper IDs."""
+    paper_ids = dedupe_ids(paper_ids)
+    workers = max(1, min(int(options.workers), MAX_WORKERS))
     results: list[dict[str, Any]] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {executor.submit(download_one, paper_id, args, client): paper_id for paper_id in paper_ids}
+        futures = {executor.submit(download_one, paper_id, options, client): paper_id for paper_id in paper_ids}
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             results.append(result)
@@ -195,25 +211,25 @@ def run_queue(args: argparse.Namespace, client: Any) -> dict[str, Any]:
         "paper_count": len(paper_ids),
         "workers": workers,
         "states": dict(sorted(counts.items())),
-        "cache_dir": str(Path(args.cache_dir).expanduser()),
+        "cache_dir": str(Path(options.cache_dir).expanduser()),
         "results": results,
     }
 
 
-def main() -> int:
-    args = parse_args()
-    client = make_client(args.region, anonymous=not getattr(args, "requester_pays", True))
-    summary = run_queue(args, client)
-    rendered = json.dumps(summary, ensure_ascii=False, indent=2)
-    if args.summary_output:
-        path = Path(args.summary_output)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(rendered + "\n", encoding="utf-8")
-    else:
-        print(rendered)
-    ok = summary["states"].get("downloaded", 0) + summary["states"].get("cached", 0)
-    return 0 if ok else 2
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+def collect_ids(cli_ids: list[str], id_file: str | None) -> list[str]:
+    """Normalize and stably dedupe repeated --paper-id values plus --paper-id-file."""
+    paper_ids: list[str] = []
+    seen: set[str] = set()
+    for value in cli_ids:
+        normalized = normalize_id(value)
+        if normalized and normalized not in seen:
+            seen.add(normalized)
+            paper_ids.append(normalized)
+    if id_file:
+        for paper_id in load_ids(Path(id_file)):
+            if paper_id not in seen:
+                seen.add(paper_id)
+                paper_ids.append(paper_id)
+    if not paper_ids:
+        raise SystemExit("provide at least one --paper-id or --paper-id-file")
+    return paper_ids

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
 import sys
 import io
@@ -34,7 +33,17 @@ def load_script(name: str):
     return module
 
 
+def load_entry(name: str):
+    path = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
+
+
 content = load_script("extract_arxiv_content")
+content_entry = load_entry("extract_arxiv_content")
 
 HTML_FIXTURE = """
 <html><head><title>[2403.12550] GS-ICP-SLAM</title></head><body>
@@ -47,7 +56,7 @@ HTML_FIXTURE = """
 """
 
 
-def make_args(**overrides) -> argparse.Namespace:
+def make_args(**overrides) -> content.ContentOptions:
     base = dict(
         paper_id="2403.12550",
         terms="SLAM,Gaussian",
@@ -67,10 +76,10 @@ def make_args(**overrides) -> argparse.Namespace:
         force_pdf=False,
         include_selected_text=False,
         include_full_text=False,
-        _render_markdown=False,
+        render_markdown=False,
     )
     base.update(overrides)
-    return argparse.Namespace(**base)
+    return content.ContentOptions(**base)
 
 
 class DocumentTitleTest(unittest.TestCase):
@@ -140,7 +149,7 @@ class ResolveOutputPathTest(unittest.TestCase):
             os.unlink(handle.name)
 
     def test_interactive_default_targets_tmp_md(self) -> None:
-        args = content.parse_args(["2403.12550"])
+        args = content_entry.parse_args(["2403.12550"])
         # Non-TTY under the test runner: output stays None (piped contract).
         self.assertIsNone(args.output)
 
@@ -176,23 +185,23 @@ class ResolveFormatTest(unittest.TestCase):
 
 class ParseArgsShortcutTest(unittest.TestCase):
     def test_positional_paper_id(self) -> None:
-        args = content.parse_args(["2403.12550"])
+        args = content_entry.parse_args(["2403.12550"])
         self.assertEqual("2403.12550", args.paper_id)
 
     def test_terms_optional_and_defaults(self) -> None:
-        args = content.parse_args(["2403.12550"])
+        args = content_entry.parse_args(["2403.12550"])
         self.assertIsNone(args.terms)
         self.assertEqual("never", args.ocr_mode)
         self.assertEqual("auto", args.format)
 
     def test_flag_paper_id_still_works(self) -> None:
-        args = content.parse_args(["--paper-id", "2403.12550", "--terms", "SLAM"])
+        args = content_entry.parse_args(["--paper-id", "2403.12550", "--terms", "SLAM"])
         self.assertEqual("2403.12550", args.paper_id)
         self.assertEqual("SLAM", args.terms)
 
     def test_missing_paper_id_errors(self) -> None:
         with self.assertRaises(SystemExit):
-            content.parse_args([])
+            content_entry.parse_args([])
 
 
 class BuildMarkdownTest(unittest.TestCase):
@@ -308,7 +317,7 @@ class BuildMarkdownTest(unittest.TestCase):
 class PreferredSourceChainTest(unittest.TestCase):
     """--preferred-source controls the fallback tier order; default is legacy."""
 
-    def make_chain_args(self, preferred: str) -> argparse.Namespace:
+    def make_chain_args(self, preferred: str) -> content.ContentOptions:
         # minimum_html_chars=1 makes the small fixture pass the medium gate so
         # no test in this class ever reaches the real network tier.
         return make_args(preferred_source=preferred, tex_cache_dir="/tmp/kb-test-src", minimum_html_chars=1)
@@ -364,10 +373,10 @@ class MainPlumbingTest(unittest.TestCase):
     def run_main(self, argv: list[str], *, markdown_source: dict, isatty: bool) -> tuple[int, str]:
         buf = io.StringIO()
         with mock.patch.object(content.extract_arxiv_html, "fetch_html", return_value=(True, HTML_FIXTURE)), \
-             mock.patch.object(content, "extract_content", return_value=markdown_source), \
+             mock.patch.object(content_entry, "extract_content", return_value=markdown_source), \
              mock.patch.object(sys.stdout, "isatty", return_value=isatty):
             with redirect_stdout(buf):
-                code = content.main(argv)
+                code = content_entry.main(argv)
         return code, buf.getvalue()
 
     def test_markdown_stdout_and_exit_code(self) -> None:
@@ -395,18 +404,18 @@ class MainPlumbingTest(unittest.TestCase):
         self.assertEqual(2, code)
 
     def test_markdown_forces_full_text_inclusion(self) -> None:
-        captured: dict[str, argparse.Namespace] = {}
+        captured: dict[str, content.ContentOptions] = {}
 
-        def fake_extract(args: argparse.Namespace) -> dict:
-            captured["args"] = args
+        def fake_extract(options: content.ContentOptions) -> dict:
+            captured["args"] = options
             return {"paper_id": "x", "available": True, "evidence_eligible": True, "title": "T", "text": "hi"}
 
         with mock.patch.object(content.extract_arxiv_html, "fetch_html", return_value=(True, HTML_FIXTURE)), \
-             mock.patch.object(content, "extract_content", side_effect=fake_extract), \
+             mock.patch.object(content_entry, "extract_content", side_effect=fake_extract), \
              mock.patch.object(sys.stdout, "isatty", return_value=True), \
              redirect_stdout(io.StringIO()) as buf:
-            content.main(["2403.12550", "--format", "markdown"])
-        self.assertTrue(captured["args"]._render_markdown)
+            content_entry.main(["2403.12550", "--format", "markdown"])
+        self.assertTrue(captured["args"].render_markdown)
 
 
 if __name__ == "__main__":

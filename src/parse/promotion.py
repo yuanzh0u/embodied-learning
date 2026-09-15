@@ -14,11 +14,16 @@ writes:
 
 The agent's remaining job is the intellectual one: read the digest, write the
 claim, pick the stance, and set the exact locator.
+
+Library API: explicit-parameter functions (:func:`load_paper_ids`,
+:func:`fetch_metadata`, :func:`extract_paper`, :func:`skeleton_event`,
+:func:`render_digest`) plus :func:`run_promotion`, which drives the whole
+pipeline. The CLI surface owns argument parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/promote_candidates.py``.
 """
 
 from __future__ import annotations
 
-import argparse
 import json
 import re
 import sys
@@ -28,40 +33,11 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
-
 API_URL = "https://export.arxiv.org/api/query"
 ATOM = "{http://www.w3.org/2005/Atom}"
 
 
 from src.fetch import chain as extract_arxiv_content
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paper-id", action="append", default=[], help="arXiv ID to promote. Repeatable.")
-    parser.add_argument(
-        "--paper-id-file",
-        action="append",
-        default=[],
-        help="UTF-8 file with one arXiv ID per line; blank lines and # comments are ignored. Repeatable.",
-    )
-    parser.add_argument("--topic", required=True, help="Run topic (copied into each skeleton event).")
-    parser.add_argument("--topic-id", required=True, help="Knowledge ID for these events, e.g. EA-MODEL.")
-    parser.add_argument("--id-prefix", required=True, help="Event ID prefix, e.g. EA-PVC-2026.")
-    parser.add_argument("--start-seq", type=int, default=1, help="First sequence number (use scripts/next_event_id.py).")
-    parser.add_argument("--terms", required=True, help="Comma-separated terms for section ranking.")
-    parser.add_argument("--top-sections", type=int, default=4, help="Ranked sections per paper in the digest.")
-    parser.add_argument("--cache-dir", default=extract_arxiv_content.extract_arxiv_html.DEFAULT_CACHE_DIR)
-    parser.add_argument("--pdf-cache-dir", default=extract_arxiv_content.extract_arxiv_pdf.DEFAULT_CACHE_DIR)
-    parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--ocr-mode", choices=["auto", "never", "always"], default="auto")
-    parser.add_argument("--ocr-language", default="eng")
-    parser.add_argument("--output-skeleton", required=True, help="Path for the evidence skeleton JSONL.")
-    parser.add_argument("--output-digest", required=True, help="Path for the reading digest Markdown.")
-    return parser.parse_args()
 
 
 def load_paper_ids(cli_ids: list[str], id_files: list[str]) -> list[str]:
@@ -129,7 +105,9 @@ def extract_paper(
     ocr_language: str,
 ) -> dict[str, object]:
     """Run the unified HTML/PDF/OCR extraction path and normalize digest fields."""
-    args = argparse.Namespace(
+    from src.fetch.chain import ContentOptions
+
+    args = ContentOptions(
         paper_id=paper_id,
         terms=",".join(terms),
         html_url=None,
@@ -255,14 +233,29 @@ def render_digest(
     return "\n".join(lines)
 
 
-def main() -> int:
-    args = parse_args()
-    terms = [term.strip() for term in args.terms.split(",") if term.strip()]
-    paper_ids = load_paper_ids(args.paper_id, args.paper_id_file)
-    if not paper_ids:
-        print("Provide --paper-id or --paper-id-file.", file=sys.stderr)
-        return 2
-    metadata = fetch_metadata(paper_ids, args.timeout)
+def run_promotion(
+    *,
+    paper_ids: list[str],
+    terms: list[str],
+    topic: str,
+    topic_id: str,
+    id_prefix: str,
+    start_seq: int,
+    top_sections: int,
+    cache_dir: str,
+    pdf_cache_dir: str,
+    timeout: float,
+    ocr_mode: str,
+    ocr_language: str,
+    output_skeleton: str,
+    output_digest: str,
+) -> int:
+    """Fetch metadata, extract each paper, and write the skeleton JSONL + digest.
+
+    ``paper_ids`` and ``terms`` are pre-normalized (the CLI entry derives them
+    from raw flags via :func:`load_paper_ids` and comma splitting).
+    """
+    metadata = fetch_metadata(paper_ids, timeout)
     missing = [pid for pid in paper_ids if pid not in metadata]
     if missing:
         print(f"arXiv API returned no metadata for: {', '.join(missing)}", file=sys.stderr)
@@ -270,33 +263,29 @@ def main() -> int:
     rows: list[tuple[str, dict[str, object], dict[str, object], str]] = []
     skeleton_lines: list[str] = []
     for offset, paper_id in enumerate(paper_ids):
-        event_id = f"{args.id_prefix}-{args.start_seq + offset:04d}"
+        event_id = f"{id_prefix}-{start_seq + offset:04d}"
         extraction = extract_paper(
             paper_id,
             terms,
-            args.top_sections,
-            args.cache_dir,
-            args.pdf_cache_dir,
-            args.timeout,
-            args.ocr_mode,
-            args.ocr_language,
+            top_sections,
+            cache_dir,
+            pdf_cache_dir,
+            timeout,
+            ocr_mode,
+            ocr_language,
         )
         if not extraction.get("evidence_eligible"):
             rows.append((paper_id, metadata[paper_id], extraction, event_id))
             print(f"HELD {paper_id}: no evidence-eligible full text after HTML/PDF/OCR", file=sys.stderr)
             continue
-        event = skeleton_event(args.topic, args.topic_id, event_id, metadata[paper_id], extraction)
+        event = skeleton_event(topic, topic_id, event_id, metadata[paper_id], extraction)
         skeleton_lines.append(json.dumps(event, ensure_ascii=False))
         rows.append((paper_id, metadata[paper_id], extraction, event_id))
         if offset + 1 < len(paper_ids):
             time.sleep(0.5)  # be gentle on arxiv.org/html
-    Path(args.output_skeleton).write_text("\n".join(skeleton_lines) + ("\n" if skeleton_lines else ""), encoding="utf-8")
-    Path(args.output_digest).write_text(render_digest(args.topic, rows, terms), encoding="utf-8")
-    print(f"Wrote skeleton: {args.output_skeleton} ({len(skeleton_lines)} events, claims/stances are TODO)")
-    print(f"Wrote digest:   {args.output_digest}")
+    Path(output_skeleton).write_text("\n".join(skeleton_lines) + ("\n" if skeleton_lines else ""), encoding="utf-8")
+    Path(output_digest).write_text(render_digest(topic, rows, terms), encoding="utf-8")
+    print(f"Wrote skeleton: {output_skeleton} ({len(skeleton_lines)} events, claims/stances are TODO)")
+    print(f"Wrote digest:   {output_digest}")
     print("Next: fill claim/stance/evidence.summary per event from the digest, then run write_lit_outputs.py --validate-only.")
     return 0 if skeleton_lines else 2
-
-
-if __name__ == "__main__":
-    sys.exit(main())

@@ -18,10 +18,10 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = ROOT / "src" / "parse" / "promotion.py"
-SPEC = importlib.util.spec_from_file_location("promote_candidates", SCRIPT)
-promote_candidates = importlib.util.module_from_spec(SPEC)
+SPEC = importlib.util.spec_from_file_location("promotion", SCRIPT)
+promotion = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
-SPEC.loader.exec_module(promote_candidates)
+SPEC.loader.exec_module(promotion)
 
 
 API_FEED = """<?xml version="1.0" encoding="UTF-8"?>
@@ -111,26 +111,27 @@ class PromoteCandidatesTest(unittest.TestCase):
     def run_main(self) -> tuple[list[dict], str]:
         skeleton = self.tmp / "skeleton.jsonl"
         digest = self.tmp / "digest.md"
-        argv = [
-            "promote_candidates.py",
-            "--paper-id", "2606.03784",
-            "--paper-id", "2607.00673",
-            "--topic", "感知误差与认知误差",
-            "--topic-id", "EA-MODEL",
-            "--id-prefix", "EA-PVC-2026",
-            "--start-seq", "3",
-            "--terms", "reasoning,planning",
-            "--cache-dir", str(self.tmp / "cache"),
-            "--output-skeleton", str(skeleton),
-            "--output-digest", str(digest),
-        ]
-        with mock.patch.object(promote_candidates.urllib.request, "urlopen", side_effect=fake_urlopen):
+        with mock.patch.object(promotion.urllib.request, "urlopen", side_effect=fake_urlopen):
             with mock.patch.object(
-                promote_candidates.extract_arxiv_content, "extract_content", side_effect=fake_extract_content
+                promotion.extract_arxiv_content, "extract_content", side_effect=fake_extract_content
             ):
-                with mock.patch.object(promote_candidates.time, "sleep"):
-                    with mock.patch.object(promote_candidates.sys, "argv", argv):
-                        code = promote_candidates.main()
+                with mock.patch.object(promotion.time, "sleep"):
+                    code = promotion.run_promotion(
+                        paper_ids=["2606.03784", "2607.00673"],
+                        terms=["reasoning", "planning"],
+                        topic="感知误差与认知误差",
+                        topic_id="EA-MODEL",
+                        id_prefix="EA-PVC-2026",
+                        start_seq=3,
+                        top_sections=4,
+                        cache_dir=str(self.tmp / "cache"),
+                        pdf_cache_dir=str(self.tmp / "pdf-cache"),
+                        timeout=30.0,
+                        ocr_mode="auto",
+                        ocr_language="eng",
+                        output_skeleton=str(skeleton),
+                        output_digest=str(digest),
+                    )
         self.assertEqual(0, code)
         events = [json.loads(line) for line in skeleton.read_text(encoding="utf-8").splitlines() if line]
         return events, digest.read_text(encoding="utf-8")
@@ -188,7 +189,7 @@ class PromoteCandidatesTest(unittest.TestCase):
         )
         self.assertEqual(
             ["2607.00673", "2606.03784"],
-            promote_candidates.load_paper_ids(["2607.00673v1"], [str(ids)]),
+            promotion.load_paper_ids(["2607.00673v1"], [str(ids)]),
         )
 
 

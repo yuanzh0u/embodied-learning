@@ -267,9 +267,7 @@ class QueryPlannerTests(unittest.TestCase):
             self.assertTrue(all("query" in item for item in data["queries"]))
 
             search_arxiv = load_search_module()
-            loaded = search_arxiv.load_queries(
-                argparse.Namespace(query_file=str(query_file), query=None)
-            )
+            loaded = search_arxiv.load_queries(query_file=str(query_file))
             self.assertEqual(len(loaded), len(data["queries"]))
             self.assertTrue(all({"label", "query"} <= set(item) for item in loaded))
 

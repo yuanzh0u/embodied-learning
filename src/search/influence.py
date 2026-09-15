@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Rank the most influential papers in a root paper's citation neighborhood.
 
-Unlike ``expand_via_citations.py`` (which de-noises a *multi-seed* citation
-graph by bibliographic coupling / co-citation), this script answers a single
+Library API: :class:`InfluenceRanking` (discovery, enrichment, scoring, output
+shaping) plus the module-level pure helpers (``classify_venue``,
+``parse_weights``, ``filter_papers``, ``log_normalize``, ``citations_per_year``,
+...). The CLI surface owns argument parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/rank_influential_papers.py``.
+
+Unlike the citation-expansion library (which de-noises a *multi-seed* citation
+graph by bibliographic coupling / co-citation), this library answers a single
 question: given one root paper, which of its 1-hop neighbors (what it cites and
 what cites it) are the *most influential*?
 
 Influence is a multi-dimensional score, not a raw citation count. For every
-neighbor the script assembles four signals and folds them into one weighted
+neighbor the library assembles four signals and folds them into one weighted
 composite in [0, 1]:
 
 * **citation**  -- Semantic Scholar ``citationCount``, log-normalized against
@@ -28,17 +34,15 @@ dataset / benchmark type, citation velocity, direction) are all emitted so the
 ranking is auditable. Output is candidate-level only: it is a *discovery*
 artifact, never accepted evidence.
 
-Retry/backoff is copied from ``search_arxiv.py`` so behavior under rate
+Retry/backoff is copied from ``src/search/arxiv.py`` so behavior under rate
 limiting is identical; only the target API and URLs differ.
 """
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
 import math
-import os
 import re
 import sys
 import time
@@ -106,41 +110,418 @@ _SURVEY_RE = re.compile(r"\b(?:survey|review|roadmap)\b", re.IGNORECASE)
 _DATASET_RE = re.compile(r"\b(?:dataset|benchmark|corpus)\b", re.IGNORECASE)
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed-id", action="append", default=[], help="Root arXiv ID. May be repeated.")
-    parser.add_argument("--direction", choices=["references", "citations", "both"], default="both")
-    parser.add_argument("--top", type=int, default=10, help="Number of ranked papers to emit.")
-    parser.add_argument("--max-per-seed-per-direction", type=int, default=500, help="Neighbor cap per direction (pagination walks the whole list up to this).")
-    parser.add_argument(
-        "--weights",
-        default="citation=0.40,venue=0.25,author=0.20,code=0.15",
-        help="Comma-separated dimension=weight. Normalized to sum 1 if not already.",
-    )
-    parser.add_argument("--author-strategy", choices=["max-hindex", "first-author"], default="max-hindex")
-    parser.add_argument("--code-source", choices=["pwc", "abstract", "none"], default="abstract",
-                        help="How to detect code availability. 'abstract' is a confirm-only heuristic; 'pwc' hits PapersWithCode; 'none' is neutral.")
-    parser.add_argument("--min-year", type=int, default=None,
-                        help="Drop neighbors published before this year (inclusive). Unknown-year papers are kept, not dropped.")
-    parser.add_argument("--require-terms", default=None,
-                        help="Comma-separated terms; keep a neighbor only if at least one term appears (case-insensitive) in its title+abstract.")
-    parser.add_argument("--require-title-terms", default=None,
-                        help="Comma-separated terms; keep a neighbor only if at least one term appears (case-insensitive) in its TITLE. Tighter field gate than --require-terms.")
-    parser.add_argument("--must-terms", default=None,
-                        help="Comma-separated terms; a paper is DROPPED unless at least one appears (case-insensitive) in title+abstract. A hard AND-gate on top of --require-terms/--require-title-terms (e.g. require the third-person/exo side).")
-    parser.add_argument("--paper-id-file", action="append", default=[],
-                        help="File of extra arXiv IDs (one per line) to add to the candidate pool and enrich via the batch endpoint. Repeatable. Use with expand_via_citations.py output to enlarge the pool (e.g. 2-hop downstream).")
-    parser.add_argument("--output", help="Ranked JSON. Defaults to stdout.")
-    parser.add_argument("--markdown-output", help="Ranking table Markdown.")
-    parser.add_argument("--sleep-seconds", type=float, default=1.0, help="Delay between network phases.")
-    parser.add_argument("--timeout", type=float, default=20.0, help="Per-request timeout in seconds.")
-    parser.add_argument("--retries", type=int, default=MAX_RETRIES, help="Retries per request. Capped at 3.")
-    parser.add_argument("--retry-base-seconds", type=float, default=5.0)
-    parser.add_argument("--retry-max-seconds", type=float, default=60.0)
-    parser.add_argument("--fail-fast", action="store_true", help="Abort on first failed request.")
-    parser.add_argument("--user-agent", default="embodied-ai-literature-hub/1.0 (local research workflow)")
-    parser.add_argument("--api-key", default=None, help="Semantic Scholar API key. Falls back to S2_API_KEY env var.")
-    return parser.parse_args()
+class InfluenceRanking:
+    """One influence-ranking run over a set of root (seed) arXiv IDs.
+
+    Options are explicit constructor parameters (the CLI entry translates
+    argparse into these); call :meth:`run` with no arguments.
+    """
+
+    def __init__(
+        self,
+        *,
+        seed_id: list[str] | None = None,
+        direction: str = "both",
+        top: int = 10,
+        max_per_seed_per_direction: int = 500,
+        weights: str = "citation=0.40,venue=0.25,author=0.20,code=0.15",
+        author_strategy: str = "max-hindex",
+        code_source: str = "abstract",
+        min_year: int | None = None,
+        require_terms: str | None = None,
+        require_title_terms: str | None = None,
+        must_terms: str | None = None,
+        paper_id_file: list[str] | None = None,
+        output: str | None = None,
+        markdown_output: str | None = None,
+        sleep_seconds: float = 1.0,
+        timeout: float = 20.0,
+        retries: int = MAX_RETRIES,
+        retry_base_seconds: float = 5.0,
+        retry_max_seconds: float = 60.0,
+        fail_fast: bool = False,
+        user_agent: str = "embodied-ai-literature-hub/1.0 (local research workflow)",
+        api_key: str | None = None,
+    ) -> None:
+        self.seed_id = list(seed_id or [])
+        self.direction = direction
+        self.top = top
+        self.max_per_seed_per_direction = max_per_seed_per_direction
+        self.weights = weights
+        self.author_strategy = author_strategy
+        self.code_source = code_source
+        self.min_year = min_year
+        self.require_terms = require_terms
+        self.require_title_terms = require_title_terms
+        self.must_terms = must_terms
+        self.paper_id_file = list(paper_id_file or [])
+        self.output = output
+        # Stored separately from the markdown_output() method to avoid shadowing it.
+        self.markdown_path = markdown_output
+        self.sleep_seconds = sleep_seconds
+        self.timeout = timeout
+        self.retries = retries
+        self.retry_base_seconds = retry_base_seconds
+        self.retry_max_seconds = retry_max_seconds
+        self.fail_fast = fail_fast
+        self.user_agent = user_agent
+        self.api_key = api_key
+
+    # -- request plumbing ---------------------------------------------------
+
+    def request_options(self) -> dict[str, object]:
+        return {
+            "user_agent": self.user_agent,
+            "api_key": self.api_key,
+            "retries": self.retries,
+            "retry_base_seconds": self.retry_base_seconds,
+            "retry_max_seconds": self.retry_max_seconds,
+            "timeout": self.timeout,
+        }
+
+    def fetch_json(self, url: str, data: bytes | None = None) -> dict:
+        return fetch_json(url, data=data, **self.request_options())  # type: ignore[arg-type]
+
+    # -- discovery ----------------------------------------------------------
+
+    def discover_neighbors(self, seed_id: str, direction: str) -> tuple[list[dict], int]:
+        """Walk the whole neighbor list via the `next` offset, up to the cap."""
+        papers: list[dict] = []
+        excluded = 0
+        offset = 0
+        limit = max(1, min(self.max_per_seed_per_direction, 1000))
+        while len(papers) < self.max_per_seed_per_direction:
+            payload = self.fetch_json(neighbor_url(seed_id, direction, offset, limit))
+            data = payload.get("data") or []
+            wrapper_key = "citedPaper" if direction == "references" else "citingPaper"
+            for item in data:
+                if not isinstance(item, dict):
+                    excluded += 1
+                    continue
+                inner = item.get(wrapper_key)
+                if not isinstance(inner, dict):
+                    excluded += 1
+                    continue
+                arxiv_id = arxiv_id_of(inner)
+                if not arxiv_id:
+                    excluded += 1
+                    continue
+                authors = [a.get("name") for a in inner.get("authors") or [] if isinstance(a, dict) and a.get("name")]
+                published = published_value(inner)
+                papers.append(
+                    {
+                        "arxiv_id": arxiv_id,
+                        "title": inner.get("title") or "",
+                        "abstract": inner.get("abstract") or "",
+                        "authors": authors,
+                        "published": published,
+                        "citation_count": inner.get("citationCount") or 0,
+                        "venue": inner.get("venue") or "",
+                        "direction": direction,
+                        "connected_seeds": [seed_id],
+                    }
+                )
+            next_offset = payload.get("next")
+            if not data or next_offset is None or next_offset == offset:
+                break
+            offset = int(next_offset)
+            if self.sleep_seconds > 0:
+                time.sleep(self.sleep_seconds)
+        return papers, excluded
+
+    def batch_enrichment(self, arxiv_ids: list[str]) -> dict[str, dict]:
+        """Fetch full metadata (title/abstract/year/citationCount/venue/authors+hIndex) for many
+        arXiv IDs in one batch call (chunked at 500). Used both to add author h-index to
+        discovered neighbors and to build full records for pre-discovered ``--paper-id-file`` IDs."""
+        out: dict[str, dict] = {}
+        unique = sorted({i for i in arxiv_ids if i})
+        for start in range(0, len(unique), BATCH_MAX_IDS):
+            chunk = unique[start : start + BATCH_MAX_IDS]
+            ids = [f"ARXIV:{i}" for i in chunk]
+            url = f"{API_BASE}/paper/batch?fields=" + urllib.parse.quote(ENRICH_FIELDS)
+            payload = self.fetch_json(url, data=json.dumps({"ids": ids}).encode("utf-8"))
+            for paper in payload or []:
+                if not isinstance(paper, dict):
+                    continue
+                arxiv_id = arxiv_id_of(paper)
+                if not arxiv_id:
+                    continue
+                out[arxiv_id] = {
+                    "title": paper.get("title") or "",
+                    "abstract": paper.get("abstract") or "",
+                    "published": published_value(paper),
+                    "citation_count": paper.get("citationCount") or 0,
+                    "venue": paper.get("venue") or "",
+                    "authors": paper.get("authors") or [],
+                }
+            if self.sleep_seconds > 0 and start + BATCH_MAX_IDS < len(unique):
+                time.sleep(self.sleep_seconds)
+        return out
+
+    # -- code availability --------------------------------------------------
+
+    def pwc_repo_count(self, arxiv_id: str) -> tuple[int, bool]:
+        """Return (num_repos, known). Unknown when PapersWithCode is unreachable/non-JSON."""
+        return pwc_repo_count(arxiv_id, **self.request_options())  # type: ignore[arg-type]
+
+    def code_score(self, source: str, arxiv_id: str, text: str) -> dict:
+        if source == "none":
+            return {"score": 0.5, "known": False, "note": "neutral (code-source none)"}
+        if source == "pwc":
+            num, known = self.pwc_repo_count(arxiv_id)
+            if not known:
+                return {"score": 0.5, "known": False, "note": "unknown (PapersWithCode unreachable)"}
+            return {"score": 1.0 if num > 0 else 0.0, "known": True, "note": f"{num} repo(s)"}
+        # abstract: confirm-only heuristic -- never penalizes an absent mention.
+        if code_mention(text):
+            return {"score": 1.0, "known": True, "note": "code mention in abstract/title"}
+        return {"score": 0.5, "known": False, "note": "no mention (confirm-only)"}
+
+    # -- scoring and ranking ------------------------------------------------
+
+    def score_paper(self, paper: dict, weights: dict, max_velocity: float, author_map: dict) -> dict:
+        arxiv_id = paper["arxiv_id"]
+        citation = float(paper.get("citation_count") or 0)
+        venue = classify_venue(paper.get("venue"))
+        text = f"{paper.get('title', '')} {paper.get('abstract', '')}"
+
+        enrich = author_map.get(arxiv_id, {})
+        enriched_authors = enrich.get("authors") or []
+        if not enriched_authors:
+            enriched_authors = paper.get("authors") or []
+        h_index, author_known = author_h_index(enriched_authors, self.author_strategy)
+
+        def author_name(a: object) -> str:
+            if isinstance(a, dict):
+                return a.get("name") or ""
+            return str(a or "")
+
+        author_names = [author_name(a) for a in enriched_authors if author_name(a)]
+
+        code = self.code_score(self.code_source, arxiv_id, text)
+
+        velocity = citations_per_year(citation, paper.get("published"))
+
+        sub = {
+            # Citation is year-normalized: raw count / age, log-compressed. A 2015 paper with
+            # 7000 citations had 10 years to earn them; velocity is the fair, age-aware signal.
+            "citation": log_normalize(velocity, max_velocity),
+            "venue": venue["score"],
+            "author": log_normalize(h_index, 100.0) if author_known else 0.5,
+            "code": code["score"],
+        }
+        composite = sum(weights.get(k, 0.0) * v for k, v in sub.items())
+        composite = round(min(1.0, composite), 4)
+
+        year = year_of(paper.get("published")) or 0
+
+        flags = type_flags(paper.get("title", ""))
+
+        return {
+            "arxiv_id": arxiv_id,
+            "title": paper.get("title") or "",
+            "abstract": paper.get("abstract") or "",
+            "authors": author_names,
+            "published": paper.get("published", ""),
+            "year": year,
+            "venue": venue["venue"],
+            "venue_canonical": venue["canonical"],
+            "citation_count": int(citation),
+            "citations_per_year": velocity,
+            "author_h_index": round(h_index, 1),
+            "author_known": author_known,
+            "code_known": code["known"],
+            "code_note": code["note"],
+            "is_survey": flags["is_survey"],
+            "is_dataset": flags["is_dataset"],
+            "direction": paper.get("direction", ""),
+            "connected_seeds": paper.get("connected_seeds", []),
+            "sub_scores": {k: round(v, 4) for k, v in sub.items()},
+            "composite_score": composite,
+        }
+
+    def rank_papers(self, papers: list[dict], weights: dict, author_map: dict, top: int) -> list[dict]:
+        max_velocity = max((citations_per_year(float(p.get("citation_count") or 0), p.get("published")) for p in papers), default=0.0)
+        scored = [self.score_paper(p, weights, max_velocity, author_map) for p in papers]
+        scored.sort(key=lambda item: (-item["composite_score"], -item["citation_count"], item["arxiv_id"]))
+        for rank, item in enumerate(scored[:top], start=1):
+            item["rank"] = rank
+        return scored[:top]
+
+    # -- output shaping -----------------------------------------------------
+
+    def build_output(self, seed_ids: list[str], seed_meta: dict, ranked: list[dict],
+                     candidate_count: int, excluded_no_arxiv_id: int, filtered_count: int,
+                     truncated_count: int, errors: list[dict]) -> dict:
+        return {
+            "generated_at": stable_now(),
+            "method": "multi-dimensional influence ranking (citation/yr + venue + author + code)",
+            "seeds": sorted(seed_ids),
+            "seed_meta": seed_meta,
+            "direction": self.direction,
+            "weights": self.weights,
+            "author_strategy": self.author_strategy,
+            "code_source": self.code_source,
+            "min_year": self.min_year,
+            "require_terms": self.require_terms,
+            "require_title_terms": self.require_title_terms,
+            "must_terms": self.must_terms,
+            "candidate_count": candidate_count,
+            "top_count": len(ranked),
+            "excluded_no_arxiv_id": excluded_no_arxiv_id,
+            "filtered_count": filtered_count,
+            "truncated_count": truncated_count,
+            "errors": errors,
+            "papers": ranked,
+        }
+
+    def markdown_output(self, seed_ids: list[str], ranked: list[dict]) -> str:
+        weights = parse_weights(self.weights)
+        method = (
+            f"- Method: citation ({weights.get('citation', 0):.2f}, year-normalized = count/age) + "
+            f"venue ({weights.get('venue', 0):.2f}) + author h-index ({weights.get('author', 0):.2f}) + "
+            f"code ({weights.get('code', 0):.2f}), each normalized to [0,1]."
+        )
+        lines = [
+            f"# Influence ranking: {', '.join(seed_ids)}",
+            "",
+            method,
+            f"- Direction: {self.direction} · Author strategy: {self.author_strategy} · Code source: {self.code_source}.",
+            f"- Composite = weighted sum of sub-scores. *Candidate-level only — not accepted evidence.*",
+            "",
+            "| # | arXiv | Title | Year | Venue | Cit. | Cit/yr | H-idx | Code | Composite | Dir |",
+            "|---:|---|---|---:|---|---:|---:|---:|---:|---:|:--:|",
+        ]
+        for item in ranked:
+            code_cell = ("✓" if item["code_known"] and item["sub_scores"]["code"] == 1.0
+                         else ("—" if item["code_known"] else "?"))
+            lines.append(
+                f"| {item['rank']} | [{item['arxiv_id']}](https://arxiv.org/abs/{item['arxiv_id']}) "
+                f"| {item['title']} | {item['year'] or '—'} | {item['venue_canonical']} "
+                f"| {item['citation_count']} | {item['citations_per_year']} "
+                f"| {item['author_h_index'] if item['author_known'] else '—'} "
+                f"| {code_cell} | {item['composite_score']} | {item['direction'][:3]} |"
+            )
+        return "\n".join(lines) + "\n"
+
+    # -- orchestration ------------------------------------------------------
+
+    def run(self) -> int:
+        seed_ids = sorted({normalize_arxiv_id(i) for i in self.seed_id if i})
+        if not seed_ids:
+            raise SystemExit("provide at least one --seed-id")
+
+        directions = ["references", "citations"] if self.direction == "both" else [self.direction]
+        papers: list[dict] = []
+        excluded_no_arxiv_id = 0
+        errors: list[dict] = []
+
+        for seed_id in seed_ids:
+            for direction in directions:
+                try:
+                    discovered, excluded = self.discover_neighbors(seed_id, direction)
+                except Exception as exc:  # pragma: no cover - network dependent
+                    if self.fail_fast:
+                        raise
+                    errors.append({"seed": seed_id, "direction": direction, "error": str(exc)})
+                    discovered, excluded = [], 0
+                excluded_no_arxiv_id += excluded
+                papers.extend(discovered)
+            if len(seed_ids) > 1 and self.sleep_seconds > 0:
+                time.sleep(self.sleep_seconds)
+
+        # Pre-discovered IDs (e.g. 2-hop expansion from expand_via_citations.py) enlarge the pool.
+        # They carry only an arXiv id here; full metadata is filled by batch enrichment below.
+        extra_ids: set[str] = set()
+        for path in self.paper_id_file:
+            try:
+                extra_ids.update(
+                    normalize_arxiv_id(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()
+                )
+            except OSError as exc:  # pragma: no cover - file handling
+                errors.append({"phase": "paper-id-file", "file": path, "error": str(exc)})
+
+        # Deduplicate by arXiv id, keeping the merged direction labels.
+        by_id: dict[str, dict] = {}
+        for p in papers:
+            key = p["arxiv_id"]
+            if key in seed_ids:
+                continue
+            existing = by_id.setdefault(key, dict(p))
+            for field in ("title", "abstract", "published", "venue", "citation_count"):
+                if not existing.get(field) and p.get(field):
+                    existing[field] = p[field]
+            if not existing.get("authors") and p.get("authors"):
+                existing["authors"] = p["authors"]
+            existing["connected_seeds"] = sorted(set(existing.get("connected_seeds", [])) | set(p.get("connected_seeds", [])))
+            dirs = set(existing.get("direction", "").split(",")) | {p.get("direction", "")}
+            existing["direction"] = ",".join(sorted(d for d in dirs if d))
+
+        all_ids = sorted(set(by_id.keys()) | extra_ids)
+
+        author_map: dict[str, dict] = {}
+        try:
+            if self.sleep_seconds > 0:
+                time.sleep(self.sleep_seconds)
+            author_map = self.batch_enrichment(all_ids)
+        except Exception as exc:  # pragma: no cover - network dependent
+            if self.fail_fast:
+                raise
+            errors.append({"phase": "enrichment", "error": str(exc)})
+
+        # Build candidate records: discovered papers keep their own metadata, enriched with
+        # author h-index; pre-discovered IDs are reconstructed entirely from batch metadata.
+        extra_missing = 0
+        for arxiv_id in extra_ids:
+            if arxiv_id in by_id or arxiv_id in seed_ids:
+                continue
+            meta = author_map.get(arxiv_id, {})
+            if not meta.get("title"):
+                extra_missing += 1  # not in Semantic Scholar / failed enrich — reported, not silently dropped
+                continue
+            by_id[arxiv_id] = {
+                "arxiv_id": arxiv_id,
+                "title": meta.get("title", ""),
+                "abstract": meta.get("abstract", ""),
+                "authors": meta.get("authors", []),
+                "published": meta.get("published", ""),
+                "citation_count": meta.get("citation_count", 0),
+                "venue": meta.get("venue", ""),
+                "direction": "citation-expansion",
+                "connected_seeds": [],
+            }
+
+        candidates = list(by_id.values())
+
+        # Apply the field/time scope to the combined pool (1-hop + pre-discovered), so every
+        # candidate is gated identically regardless of how it entered the pool.
+        candidates, filtered_out = filter_papers(candidates, self.min_year, self.require_terms, self.require_title_terms, self.must_terms)
+
+        weights = parse_weights(self.weights)
+        ranked = self.rank_papers(candidates, weights, author_map, self.top)
+        truncated_count = max(0, len(candidates) - self.top)
+
+        seed_meta: dict = {}
+        try:
+            url = f"{API_BASE}/paper/ARXIV:{seed_ids[0]}?fields=" + urllib.parse.quote("title,year,citationCount,venue")
+            seed_meta = self.fetch_json(url)
+        except Exception as exc:  # pragma: no cover
+            errors.append({"phase": "seed-meta", "error": str(exc)})
+
+        output = self.build_output(seed_ids, seed_meta, ranked, len(candidates), excluded_no_arxiv_id, filtered_out, truncated_count, errors)
+        write_json(self.output, output)
+        if self.markdown_path:
+            write_text(self.markdown_path, self.markdown_output(seed_ids, ranked))
+
+        print(
+            f"influence ranking from {len(seed_ids)} seed(s): {len(candidates)} candidates, "
+            f"top {len(ranked)} emitted, {excluded_no_arxiv_id} excluded (no arXiv id), "
+            f"{filtered_out} filtered (min-year / require-terms), "
+            f"{extra_missing} extra IDs unenriched, "
+            f"{truncated_count} below top, {len(errors)} error(s)",
+            file=sys.stderr,
+        )
+        return 0
 
 
 def stable_now() -> str:
@@ -303,7 +684,8 @@ def filter_papers(
 
 
 # ---------------------------------------------------------------------------
-# Network: retry/backoff copied from search_arxiv.py
+# Network: retry/backoff copied from search_arxiv.py (explicit params, no
+# option object -- the class methods pass their own values in)
 # ---------------------------------------------------------------------------
 
 
@@ -330,40 +712,69 @@ def is_retryable(exc: Exception) -> bool:
     return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
 
 
-def retry_wait_seconds(exc: Exception, attempt: int, args: argparse.Namespace) -> float:
+def retry_wait_seconds(exc: Exception, attempt: int, retry_base_seconds: float, retry_max_seconds: float) -> float:
     retry_after = retry_after_seconds(exc)
     if retry_after is not None:
-        return max(0.0, min(retry_after, args.retry_max_seconds))
-    return max(0.0, min(args.retry_base_seconds * (2**attempt), args.retry_max_seconds))
+        return max(0.0, min(retry_after, retry_max_seconds))
+    return max(0.0, min(retry_base_seconds * (2**attempt), retry_max_seconds))
 
 
-def _request(url: str, args: argparse.Namespace, data: bytes | None = None) -> bytes:
-    headers = {"User-Agent": args.user_agent}
+def _request(
+    url: str,
+    *,
+    user_agent: str,
+    api_key: str | None = None,
+    retries: int = MAX_RETRIES,
+    retry_base_seconds: float = 5.0,
+    retry_max_seconds: float = 60.0,
+    timeout: float = 20.0,
+    data: bytes | None = None,
+) -> bytes:
+    headers = {"User-Agent": user_agent}
     if data is not None:
         headers["Content-Type"] = "application/json"
         headers["Accept"] = "application/json"
-    if getattr(args, "api_key", None):
-        headers["x-api-key"] = args.api_key
+    if api_key:
+        headers["x-api-key"] = api_key
     request = urllib.request.Request(url, data=data, headers=headers)
     last_error: Exception | None = None
     attempts = 0
-    retries = bounded_retries(args.retries)
-    for attempt in range(retries + 1):
+    capped_retries = bounded_retries(retries)
+    for attempt in range(capped_retries + 1):
         attempts = attempt + 1
         try:
-            with urllib.request.urlopen(request, timeout=args.timeout) as response:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
                 return response.read()
         except Exception as exc:  # pragma: no cover - network dependent
             last_error = exc
-            if attempt < retries and is_retryable(exc):
-                time.sleep(retry_wait_seconds(exc, attempt, args))
+            if attempt < capped_retries and is_retryable(exc):
+                time.sleep(retry_wait_seconds(exc, attempt, retry_base_seconds, retry_max_seconds))
                 continue
             break
     raise RuntimeError(f"request to {url} failed after {attempts} attempt(s): {last_error}") from last_error
 
 
-def fetch_json(url: str, args: argparse.Namespace, data: bytes | None = None) -> dict:
-    raw = _request(url, args, data=data)
+def fetch_json(
+    url: str,
+    *,
+    user_agent: str,
+    api_key: str | None = None,
+    retries: int = MAX_RETRIES,
+    retry_base_seconds: float = 5.0,
+    retry_max_seconds: float = 60.0,
+    timeout: float = 20.0,
+    data: bytes | None = None,
+) -> dict:
+    raw = _request(
+        url,
+        user_agent=user_agent,
+        api_key=api_key,
+        retries=retries,
+        retry_base_seconds=retry_base_seconds,
+        retry_max_seconds=retry_max_seconds,
+        timeout=timeout,
+        data=data,
+    )
     try:
         return json.loads(raw)
     except json.JSONDecodeError as exc:  # pragma: no cover - data dependent
@@ -371,7 +782,7 @@ def fetch_json(url: str, args: argparse.Namespace, data: bytes | None = None) ->
 
 
 # ---------------------------------------------------------------------------
-# Discovery: paginate 1-hop neighbors
+# Discovery URL
 # ---------------------------------------------------------------------------
 
 
@@ -381,97 +792,34 @@ def neighbor_url(seed_id: str, direction: str, offset: int, limit: int) -> str:
     return f"{API_BASE}/paper/ARXIV:{seed_id}/{endpoint}?" + urllib.parse.urlencode(params)
 
 
-def discover_neighbors(seed_id: str, direction: str, args: argparse.Namespace) -> tuple[list[dict], int]:
-    """Walk the whole neighbor list via the `next` offset, up to the cap."""
-    papers: list[dict] = []
-    excluded = 0
-    offset = 0
-    limit = max(1, min(args.max_per_seed_per_direction, 1000))
-    while len(papers) < args.max_per_seed_per_direction:
-        payload = fetch_json(neighbor_url(seed_id, direction, offset, limit), args)
-        data = payload.get("data") or []
-        wrapper_key = "citedPaper" if direction == "references" else "citingPaper"
-        for item in data:
-            if not isinstance(item, dict):
-                excluded += 1
-                continue
-            inner = item.get(wrapper_key)
-            if not isinstance(inner, dict):
-                excluded += 1
-                continue
-            arxiv_id = arxiv_id_of(inner)
-            if not arxiv_id:
-                excluded += 1
-                continue
-            authors = [a.get("name") for a in inner.get("authors") or [] if isinstance(a, dict) and a.get("name")]
-            published = published_value(inner)
-            papers.append(
-                {
-                    "arxiv_id": arxiv_id,
-                    "title": inner.get("title") or "",
-                    "abstract": inner.get("abstract") or "",
-                    "authors": authors,
-                    "published": published,
-                    "citation_count": inner.get("citationCount") or 0,
-                    "venue": inner.get("venue") or "",
-                    "direction": direction,
-                    "connected_seeds": [seed_id],
-                }
-            )
-        next_offset = payload.get("next")
-        if not data or next_offset is None or next_offset == offset:
-            break
-        offset = int(next_offset)
-        if args.sleep_seconds > 0:
-            time.sleep(args.sleep_seconds)
-    return papers, excluded
-
-
 # ---------------------------------------------------------------------------
-# Enrichment: author h-index via the batch endpoint
+# Code availability (module-level so tests can patch it; the class method
+# forwards its own request options)
 # ---------------------------------------------------------------------------
 
 
-def batch_enrichment(arxiv_ids: list[str], args: argparse.Namespace) -> dict[str, dict]:
-    """Fetch full metadata (title/abstract/year/citationCount/venue/authors+hIndex) for many
-    arXiv IDs in one batch call (chunked at 500). Used both to add author h-index to
-    discovered neighbors and to build full records for pre-discovered ``--paper-id-file`` IDs."""
-    out: dict[str, dict] = {}
-    unique = sorted({i for i in arxiv_ids if i})
-    for start in range(0, len(unique), BATCH_MAX_IDS):
-        chunk = unique[start : start + BATCH_MAX_IDS]
-        ids = [f"ARXIV:{i}" for i in chunk]
-        url = f"{API_BASE}/paper/batch?fields=" + urllib.parse.quote(ENRICH_FIELDS)
-        payload = fetch_json(url, args, data=json.dumps({"ids": ids}).encode("utf-8"))
-        for paper in payload or []:
-            if not isinstance(paper, dict):
-                continue
-            arxiv_id = arxiv_id_of(paper)
-            if not arxiv_id:
-                continue
-            out[arxiv_id] = {
-                "title": paper.get("title") or "",
-                "abstract": paper.get("abstract") or "",
-                "published": published_value(paper),
-                "citation_count": paper.get("citationCount") or 0,
-                "venue": paper.get("venue") or "",
-                "authors": paper.get("authors") or [],
-            }
-        if args.sleep_seconds > 0 and start + BATCH_MAX_IDS < len(unique):
-            time.sleep(args.sleep_seconds)
-    return out
-
-
-# ---------------------------------------------------------------------------
-# Code availability
-# ---------------------------------------------------------------------------
-
-
-def pwc_repo_count(arxiv_id: str, args: argparse.Namespace) -> tuple[int, bool]:
+def pwc_repo_count(
+    arxiv_id: str,
+    *,
+    user_agent: str,
+    api_key: str | None = None,
+    retries: int = MAX_RETRIES,
+    retry_base_seconds: float = 5.0,
+    retry_max_seconds: float = 60.0,
+    timeout: float = 20.0,
+) -> tuple[int, bool]:
     """Return (num_repos, known). Unknown when PapersWithCode is unreachable/non-JSON."""
     url = PWC_BASE + "?" + urllib.parse.urlencode({"arxiv_id": arxiv_id})
+    options = dict(
+        user_agent=user_agent,
+        api_key=api_key,
+        retries=retries,
+        retry_base_seconds=retry_base_seconds,
+        retry_max_seconds=retry_max_seconds,
+        timeout=timeout,
+    )
     try:
-        payload = fetch_json(url, args)
+        payload = fetch_json(url, **options)
     except Exception:  # pragma: no cover - network dependent
         return 0, False
     results = payload.get("results") or []
@@ -485,162 +833,16 @@ def pwc_repo_count(arxiv_id: str, args: argparse.Namespace) -> tuple[int, bool]:
     repo_url = first.get("repositories")
     if isinstance(repo_url, str) and repo_url:
         try:
-            repo_payload = fetch_json(repo_url, args)
+            repo_payload = fetch_json(repo_url, **options)
         except Exception:  # pragma: no cover
             return 0, False
         return int(repo_payload.get("count") or len(repo_payload.get("results") or [])), True
     return 0, False
 
 
-def code_score(source: str, arxiv_id: str, text: str, args: argparse.Namespace) -> dict:
-    if source == "none":
-        return {"score": 0.5, "known": False, "note": "neutral (code-source none)"}
-    if source == "pwc":
-        num, known = pwc_repo_count(arxiv_id, args)
-        if not known:
-            return {"score": 0.5, "known": False, "note": "unknown (PapersWithCode unreachable)"}
-        return {"score": 1.0 if num > 0 else 0.0, "known": True, "note": f"{num} repo(s)"}
-    # abstract: confirm-only heuristic -- never penalizes an absent mention.
-    if code_mention(text):
-        return {"score": 1.0, "known": True, "note": "code mention in abstract/title"}
-    return {"score": 0.5, "known": False, "note": "no mention (confirm-only)"}
-
-
 # ---------------------------------------------------------------------------
-# Scoring and ranking
+# Output helpers
 # ---------------------------------------------------------------------------
-
-
-def score_paper(paper: dict, weights: dict, max_velocity: float, author_map: dict, args: argparse.Namespace) -> dict:
-    arxiv_id = paper["arxiv_id"]
-    citation = float(paper.get("citation_count") or 0)
-    venue = classify_venue(paper.get("venue"))
-    text = f"{paper.get('title', '')} {paper.get('abstract', '')}"
-
-    enrich = author_map.get(arxiv_id, {})
-    enriched_authors = enrich.get("authors") or []
-    if not enriched_authors:
-        enriched_authors = paper.get("authors") or []
-    h_index, author_known = author_h_index(enriched_authors, args.author_strategy)
-
-    def author_name(a: object) -> str:
-        if isinstance(a, dict):
-            return a.get("name") or ""
-        return str(a or "")
-
-    author_names = [author_name(a) for a in enriched_authors if author_name(a)]
-
-    code = code_score(args.code_source, arxiv_id, text, args)
-
-    velocity = citations_per_year(citation, paper.get("published"))
-
-    sub = {
-        # Citation is year-normalized: raw count / age, log-compressed. A 2015 paper with
-        # 7000 citations had 10 years to earn them; velocity is the fair, age-aware signal.
-        "citation": log_normalize(velocity, max_velocity),
-        "venue": venue["score"],
-        "author": log_normalize(h_index, 100.0) if author_known else 0.5,
-        "code": code["score"],
-    }
-    composite = sum(weights.get(k, 0.0) * v for k, v in sub.items())
-    composite = round(min(1.0, composite), 4)
-
-    year = year_of(paper.get("published")) or 0
-
-    flags = type_flags(paper.get("title", ""))
-
-    return {
-        "arxiv_id": arxiv_id,
-        "title": paper.get("title") or "",
-        "abstract": paper.get("abstract") or "",
-        "authors": author_names,
-        "published": paper.get("published", ""),
-        "year": year,
-        "venue": venue["venue"],
-        "venue_canonical": venue["canonical"],
-        "citation_count": int(citation),
-        "citations_per_year": velocity,
-        "author_h_index": round(h_index, 1),
-        "author_known": author_known,
-        "code_known": code["known"],
-        "code_note": code["note"],
-        "is_survey": flags["is_survey"],
-        "is_dataset": flags["is_dataset"],
-        "direction": paper.get("direction", ""),
-        "connected_seeds": paper.get("connected_seeds", []),
-        "sub_scores": {k: round(v, 4) for k, v in sub.items()},
-        "composite_score": composite,
-    }
-
-
-def rank_papers(papers: list[dict], weights: dict, author_map: dict, args: argparse.Namespace, top: int) -> list[dict]:
-    max_velocity = max((citations_per_year(float(p.get("citation_count") or 0), p.get("published")) for p in papers), default=0.0)
-    scored = [score_paper(p, weights, max_velocity, author_map, args) for p in papers]
-    scored.sort(key=lambda item: (-item["composite_score"], -item["citation_count"], item["arxiv_id"]))
-    for rank, item in enumerate(scored[:top], start=1):
-        item["rank"] = rank
-    return scored[:top]
-
-
-# ---------------------------------------------------------------------------
-# Output shaping
-# ---------------------------------------------------------------------------
-
-
-def build_output(seed_ids: list[str], seed_meta: dict, args: argparse.Namespace, ranked: list[dict],
-                 candidate_count: int, excluded_no_arxiv_id: int, filtered_count: int,
-                 truncated_count: int, errors: list[dict]) -> dict:
-    return {
-        "generated_at": stable_now(),
-        "method": "multi-dimensional influence ranking (citation/yr + venue + author + code)",
-        "seeds": sorted(seed_ids),
-        "seed_meta": seed_meta,
-        "direction": args.direction,
-        "weights": args.weights,
-        "author_strategy": args.author_strategy,
-        "code_source": args.code_source,
-        "min_year": args.min_year,
-        "require_terms": args.require_terms,
-        "require_title_terms": args.require_title_terms,
-        "must_terms": args.must_terms,
-        "candidate_count": candidate_count,
-        "top_count": len(ranked),
-        "excluded_no_arxiv_id": excluded_no_arxiv_id,
-        "filtered_count": filtered_count,
-        "truncated_count": truncated_count,
-        "errors": errors,
-        "papers": ranked,
-    }
-
-
-def markdown_output(seed_ids: list[str], args: argparse.Namespace, ranked: list[dict]) -> str:
-    weights = parse_weights(args.weights)
-    method = (
-        f"- Method: citation ({weights.get('citation', 0):.2f}, year-normalized = count/age) + "
-        f"venue ({weights.get('venue', 0):.2f}) + author h-index ({weights.get('author', 0):.2f}) + "
-        f"code ({weights.get('code', 0):.2f}), each normalized to [0,1]."
-    )
-    lines = [
-        f"# Influence ranking: {', '.join(seed_ids)}",
-        "",
-        method,
-        f"- Direction: {args.direction} · Author strategy: {args.author_strategy} · Code source: {args.code_source}.",
-        f"- Composite = weighted sum of sub-scores. *Candidate-level only — not accepted evidence.*",
-        "",
-        "| # | arXiv | Title | Year | Venue | Cit. | Cit/yr | H-idx | Code | Composite | Dir |",
-        "|---:|---|---|---:|---|---:|---:|---:|---:|---:|:--:|",
-    ]
-    for item in ranked:
-        code_cell = ("✓" if item["code_known"] and item["sub_scores"]["code"] == 1.0
-                     else ("—" if item["code_known"] else "?"))
-        lines.append(
-            f"| {item['rank']} | [{item['arxiv_id']}](https://arxiv.org/abs/{item['arxiv_id']}) "
-            f"| {item['title']} | {item['year'] or '—'} | {item['venue_canonical']} "
-            f"| {item['citation_count']} | {item['citations_per_year']} "
-            f"| {item['author_h_index'] if item['author_known'] else '—'} "
-            f"| {code_cell} | {item['composite_score']} | {item['direction'][:3]} |"
-        )
-    return "\n".join(lines) + "\n"
 
 
 def write_json(path: str | None, data: dict) -> None:
@@ -660,134 +862,3 @@ def write_text(path: str | None, text: str) -> None:
         output_path.write_text(text, encoding="utf-8")
     else:
         print(text)
-
-
-# ---------------------------------------------------------------------------
-# CLI orchestration
-# ---------------------------------------------------------------------------
-
-
-def main() -> int:
-    args = parse_args()
-    if not args.api_key:
-        args.api_key = os.environ.get("S2_API_KEY")
-
-    seed_ids = sorted({normalize_arxiv_id(i) for i in args.seed_id if i})
-    if not seed_ids:
-        raise SystemExit("provide at least one --seed-id")
-
-    directions = ["references", "citations"] if args.direction == "both" else [args.direction]
-    papers: list[dict] = []
-    excluded_no_arxiv_id = 0
-    errors: list[dict] = []
-
-    for seed_id in seed_ids:
-        for direction in directions:
-            try:
-                discovered, excluded = discover_neighbors(seed_id, direction, args)
-            except Exception as exc:  # pragma: no cover - network dependent
-                if args.fail_fast:
-                    raise
-                errors.append({"seed": seed_id, "direction": direction, "error": str(exc)})
-                discovered, excluded = [], 0
-            excluded_no_arxiv_id += excluded
-            papers.extend(discovered)
-        if len(seed_ids) > 1 and args.sleep_seconds > 0:
-            time.sleep(args.sleep_seconds)
-
-    # Pre-discovered IDs (e.g. 2-hop expansion from expand_via_citations.py) enlarge the pool.
-    # They carry only an arXiv id here; full metadata is filled by batch enrichment below.
-    extra_ids: set[str] = set()
-    for path in args.paper_id_file:
-        try:
-            extra_ids.update(
-                normalize_arxiv_id(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()
-            )
-        except OSError as exc:  # pragma: no cover - file handling
-            errors.append({"phase": "paper-id-file", "file": path, "error": str(exc)})
-
-    # Deduplicate by arXiv id, keeping the merged direction labels.
-    by_id: dict[str, dict] = {}
-    for p in papers:
-        key = p["arxiv_id"]
-        if key in seed_ids:
-            continue
-        existing = by_id.setdefault(key, dict(p))
-        for field in ("title", "abstract", "published", "venue", "citation_count"):
-            if not existing.get(field) and p.get(field):
-                existing[field] = p[field]
-        if not existing.get("authors") and p.get("authors"):
-            existing["authors"] = p["authors"]
-        existing["connected_seeds"] = sorted(set(existing.get("connected_seeds", [])) | set(p.get("connected_seeds", [])))
-        dirs = set(existing.get("direction", "").split(",")) | {p.get("direction", "")}
-        existing["direction"] = ",".join(sorted(d for d in dirs if d))
-
-    all_ids = sorted(set(by_id.keys()) | extra_ids)
-
-    author_map: dict[str, dict] = {}
-    try:
-        if args.sleep_seconds > 0:
-            time.sleep(args.sleep_seconds)
-        author_map = batch_enrichment(all_ids, args)
-    except Exception as exc:  # pragma: no cover - network dependent
-        if args.fail_fast:
-            raise
-        errors.append({"phase": "enrichment", "error": str(exc)})
-
-    # Build candidate records: discovered papers keep their own metadata, enriched with
-    # author h-index; pre-discovered IDs are reconstructed entirely from batch metadata.
-    extra_missing = 0
-    for arxiv_id in extra_ids:
-        if arxiv_id in by_id or arxiv_id in seed_ids:
-            continue
-        meta = author_map.get(arxiv_id, {})
-        if not meta.get("title"):
-            extra_missing += 1  # not in Semantic Scholar / failed enrich — reported, not silently dropped
-            continue
-        by_id[arxiv_id] = {
-            "arxiv_id": arxiv_id,
-            "title": meta.get("title", ""),
-            "abstract": meta.get("abstract", ""),
-            "authors": meta.get("authors", []),
-            "published": meta.get("published", ""),
-            "citation_count": meta.get("citation_count", 0),
-            "venue": meta.get("venue", ""),
-            "direction": "citation-expansion",
-            "connected_seeds": [],
-        }
-
-    candidates = list(by_id.values())
-
-    # Apply the field/time scope to the combined pool (1-hop + pre-discovered), so every
-    # candidate is gated identically regardless of how it entered the pool.
-    candidates, filtered_out = filter_papers(candidates, args.min_year, args.require_terms, args.require_title_terms, args.must_terms)
-
-    weights = parse_weights(args.weights)
-    ranked = rank_papers(candidates, weights, author_map, args, args.top)
-    truncated_count = max(0, len(candidates) - args.top)
-
-    seed_meta: dict = {}
-    try:
-        url = f"{API_BASE}/paper/ARXIV:{seed_ids[0]}?fields=" + urllib.parse.quote("title,year,citationCount,venue")
-        seed_meta = fetch_json(url, args)
-    except Exception as exc:  # pragma: no cover
-        errors.append({"phase": "seed-meta", "error": str(exc)})
-
-    output = build_output(seed_ids, seed_meta, args, ranked, len(candidates), excluded_no_arxiv_id, filtered_out, truncated_count, errors)
-    write_json(args.output, output)
-    if args.markdown_output:
-        write_text(args.markdown_output, markdown_output(seed_ids, args, ranked))
-
-    print(
-        f"influence ranking from {len(seed_ids)} seed(s): {len(candidates)} candidates, "
-        f"top {len(ranked)} emitted, {excluded_no_arxiv_id} excluded (no arXiv id), "
-        f"{filtered_out} filtered (min-year / require-terms), "
-        f"{extra_missing} extra IDs unenriched, "
-        f"{truncated_count} below top, {len(errors)} error(s)",
-        file=sys.stderr,
-    )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

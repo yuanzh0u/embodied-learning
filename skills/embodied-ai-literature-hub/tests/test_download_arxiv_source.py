@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
 import io
 import json
@@ -49,14 +48,14 @@ class FakeS3Client:
         return {"Body": FakeBody(self.objects[Key])}
 
 
-def download_args(**overrides: object) -> argparse.Namespace:
+def download_options(**overrides: object) -> "das.S3DownloadOptions":
     values: dict[str, object] = {
         "cache_dir": "/tmp/nonexistent-src-cache",
         "force": False,
         "retries": 2,
     }
     values.update(overrides)
-    return argparse.Namespace(**values)
+    return das.S3DownloadOptions(**values)
 
 
 def tarball_bytes(members: dict[str, str]) -> bytes:
@@ -95,7 +94,7 @@ class DownloadOneTest(unittest.TestCase):
     def test_downloads_tarball_and_reports_state(self) -> None:
         payload = tarball_bytes({"main.tex": "\\begin{document}hi\\end{document}"})
         client = FakeS3Client({"src/2403/2403.12550.tar.gz": payload})
-        result = das.download_one("2403.12550", download_args(cache_dir=self.cache), client)
+        result = das.download_one("2403.12550", download_options(cache_dir=self.cache), client)
         self.assertEqual(result["state"], "downloaded")
         self.assertEqual(result["bytes"], len(payload))
         self.assertTrue(Path(result["path"]).is_file())
@@ -103,22 +102,22 @@ class DownloadOneTest(unittest.TestCase):
     def test_second_call_hits_cache(self) -> None:
         payload = tarball_bytes({"main.tex": "x"})
         client = FakeS3Client({"src/2403/2403.12550.tar.gz": payload})
-        das.download_one("2403.12550", download_args(cache_dir=self.cache), client)
-        result = das.download_one("2403.12550", download_args(cache_dir=self.cache), client)
+        das.download_one("2403.12550", download_options(cache_dir=self.cache), client)
+        result = das.download_one("2403.12550", download_options(cache_dir=self.cache), client)
         self.assertEqual(result["state"], "cached")
         self.assertEqual(len(client.calls), 1)
 
     def test_404_reports_no_source_without_retry_sleep(self) -> None:
         client = FakeS3Client()
         with mock.patch.object(das.time, "sleep") as sleep:
-            result = das.download_one("2403.12550", download_args(cache_dir=self.cache), client)
+            result = das.download_one("2403.12550", download_options(cache_dir=self.cache), client)
         self.assertEqual(result["state"], "no-source")
         self.assertIn("not found", result["error"])
         sleep.assert_not_called()
 
     def test_old_style_id_is_no_source_without_network(self) -> None:
         client = FakeS3Client()
-        result = das.download_one("cat/0501001", download_args(cache_dir=self.cache), client)
+        result = das.download_one("cat/0501001", download_options(cache_dir=self.cache), client)
         self.assertEqual(result["state"], "no-source")
         self.assertEqual(client.calls, [])
 
@@ -133,15 +132,15 @@ class DownloadOneTest(unittest.TestCase):
         payload = tarball_bytes({"main.tex": "x"})
         client = FlakyClient({"src/2403/2403.12550.tar.gz": payload})
         with mock.patch.object(das.time, "sleep") as sleep:
-            result = das.download_one("2403.12550", download_args(cache_dir=self.cache), client)
+            result = das.download_one("2403.12550", download_options(cache_dir=self.cache), client)
         self.assertEqual(result["state"], "downloaded")
         self.assertEqual(sleep.call_count, 2)
 
     def test_force_redownloads_despite_cache(self) -> None:
         payload = tarball_bytes({"main.tex": "x"})
         client = FakeS3Client({"src/2403/2403.12550.tar.gz": payload})
-        das.download_one("2403.12550", download_args(cache_dir=self.cache), client)
-        result = das.download_one("2403.12550", download_args(cache_dir=self.cache, force=True), client)
+        das.download_one("2403.12550", download_options(cache_dir=self.cache), client)
+        result = das.download_one("2403.12550", download_options(cache_dir=self.cache, force=True), client)
         self.assertEqual(result["state"], "downloaded")
         self.assertEqual(len(client.calls), 2)
 
@@ -150,25 +149,20 @@ class RunQueueTest(unittest.TestCase):
     def test_queue_dedupes_and_counts_states(self) -> None:
         tmp = tempfile.TemporaryDirectory()
         try:
-            args = download_args(cache_dir=str(Path(tmp.name) / "src"))
-            args.paper_id = ["2403.12550", "2403.12550v2"]
-            args.paper_id_file = None
-            args.workers = 4
+            options = download_options(cache_dir=str(Path(tmp.name) / "src"), workers=4)
+            paper_ids = ["2403.12550", "2403.12550v2"]
             payload = tarball_bytes({"main.tex": "x"})
             client = FakeS3Client({"src/2403/2403.12550.tar.gz": payload})
-            summary = das.run_queue(args, client)
+            summary = das.run_queue(paper_ids, options, client)
             self.assertEqual(summary["paper_count"], 1)
             self.assertEqual(summary["states"], {"downloaded": 1})
         finally:
             tmp.cleanup()
 
     def test_worker_cap_is_enforced(self) -> None:
-        args = download_args()
-        args.paper_id = ["2403.12550"]
-        args.paper_id_file = None
-        args.workers = 999
+        options = download_options(workers=999)
         client = FakeS3Client()
-        summary = das.run_queue(args, client)
+        summary = das.run_queue(["2403.12550"], options, client)
         self.assertEqual(summary["workers"], das.MAX_WORKERS)
 
 

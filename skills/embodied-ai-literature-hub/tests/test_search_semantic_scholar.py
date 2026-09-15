@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import email.message
 import importlib.util
 import json
@@ -34,7 +33,7 @@ class DummyResponse:
         return self.payload
 
 
-def base_args(**overrides: object) -> argparse.Namespace:
+def base_search(**overrides: object) -> s2.SemanticScholarSearch:
     values: dict[str, object] = {
         "start_date": "2026-01-01",
         "end_date": "2026-12-31",
@@ -53,7 +52,7 @@ def base_args(**overrides: object) -> argparse.Namespace:
         "user_agent": "test-agent",
     }
     values.update(overrides)
-    return argparse.Namespace(**values)
+    return s2.SemanticScholarSearch(**values)
 
 
 def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPError:
@@ -108,19 +107,21 @@ class ParsePaperTest(unittest.TestCase):
 class FetchRetryTest(unittest.TestCase):
     def test_fetch_retries_429_with_retry_after(self) -> None:
         error = http_error(429, retry_after="7")
+        search = base_search()
         with mock.patch.object(s2.urllib.request, "urlopen", side_effect=[error, DummyResponse(b"{}")]) as urlopen:
             with mock.patch.object(s2.time, "sleep") as sleep:
-                payload = s2.fetch(s2.build_search_url("robot", 0, 10), base_args())
+                payload = search.fetch(s2.build_search_url("robot", 0, 10))
 
         self.assertEqual(payload, b"{}")
         self.assertEqual(urlopen.call_count, 2)
         sleep.assert_called_once_with(7.0)
 
     def test_fetch_does_not_retry_non_transient_errors(self) -> None:
+        search = base_search()
         with mock.patch.object(s2.urllib.request, "urlopen", side_effect=http_error(400)) as urlopen:
             with mock.patch.object(s2.time, "sleep") as sleep:
                 with self.assertRaisesRegex(RuntimeError, "after 1 attempt"):
-                    s2.fetch(s2.build_search_url("robot", 0, 10), base_args())
+                    search.fetch(s2.build_search_url("robot", 0, 10))
         self.assertEqual(urlopen.call_count, 1)
         sleep.assert_not_called()
 
@@ -133,7 +134,7 @@ class FetchRetryTest(unittest.TestCase):
 
         with mock.patch.object(s2.urllib.request, "urlopen", side_effect=fake_urlopen):
             with mock.patch.dict("os.environ", {"S2_API_KEY": "secret-key"}):
-                s2.fetch(s2.build_search_url("robot", 0, 10), base_args())
+                base_search().fetch(s2.build_search_url("robot", 0, 10))
         self.assertEqual(captured.get("X-api-key"), "secret-key")
 
 
@@ -141,18 +142,19 @@ class CacheTest(unittest.TestCase):
     def test_cache_hit_skips_urlopen(self) -> None:
         url = s2.build_search_url("robot", 0, 10)
         with tempfile.TemporaryDirectory() as tmp:
+            search = base_search(cache_dir=tmp, no_cache=False)
             s2.write_cache(tmp, url, b'{"data": []}', True)
             with mock.patch.object(s2.urllib.request, "urlopen") as urlopen:
-                payload = s2.fetch_cached(url, base_args(cache_dir=tmp, no_cache=False))
+                payload = search.fetch_cached(url)
             self.assertEqual(payload, b'{"data": []}')
             urlopen.assert_not_called()
 
     def test_no_cache_bypasses_reads_and_writes(self) -> None:
         url = s2.build_search_url("robot", 0, 10)
         with tempfile.TemporaryDirectory() as tmp:
-            args = base_args(cache_dir=tmp, no_cache=True)
+            search = base_search(cache_dir=tmp, no_cache=True)
             with mock.patch.object(s2.urllib.request, "urlopen", return_value=DummyResponse(b'{"data": []}')):
-                s2.fetch_cached(url, args)
+                search.fetch_cached(url)
             self.assertIsNone(s2.read_cache(tmp, url, True))
 
 
@@ -163,14 +165,14 @@ class CollectPapersTest(unittest.TestCase):
             search_page([entry("2605.00003", published="2027-01-01")]),  # short page ends pagination
         ]
         with mock.patch.object(s2.urllib.request, "urlopen", side_effect=[DummyResponse(p) for p in pages]):
-            papers, excluded = s2.collect_papers("robot", "core", base_args())
+            papers, excluded = base_search().collect_papers("robot", "core")
         self.assertEqual([p["arxiv_id"] for p in papers], ["2605.00001", "2605.00002"])
         self.assertEqual(excluded, 1)
 
     def test_pub_date_sort_orders_descending(self) -> None:
         page = search_page([entry("2605.00001", published="2026-02-01"), entry("2605.00002", published="2026-06-01")])
         with mock.patch.object(s2.urllib.request, "urlopen", side_effect=[DummyResponse(page)]):
-            papers, _ = s2.collect_papers("robot", "core", base_args(sort_by="pub_date"))
+            papers, _ = base_search(sort_by="pub_date").collect_papers("robot", "core")
         self.assertEqual([p["arxiv_id"] for p in papers], ["2605.00002", "2605.00001"])
 
 

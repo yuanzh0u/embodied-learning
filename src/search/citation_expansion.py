@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """Expand candidate discovery through citation relationships (Semantic Scholar).
 
-Keyword search alone under-covers a broad topic's sub-themes. This script
+Library API: :class:`CitationExpansion` (seed collection + neighbor fetch +
+coupling scoring + output shaping) plus the module-level pure helpers
+(``extract_neighbor_papers``, ``score_candidates``, ``select_candidates``,
+``extract_terms``, ``build_dynamic_suggestions``, ...). The CLI surface owns
+argument parsing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/expand_via_citations.py``.
+
+Keyword search alone under-covers a broad topic's sub-themes. This library
 chases each seed paper's references (what it cites) and citations (what
 cites it) one hop out, then keeps only the neighbors that connect to
 *multiple* seeds -- bibliographic coupling (shared references) and
@@ -15,7 +22,6 @@ round.
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import hashlib
 import json
@@ -35,7 +41,7 @@ MAX_RETRIES = 3
 TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
 DEFAULT_SEED_STATUSES = frozenset({"accepted", "full-text-queued", "extracted"})
 WRAPPER_KEY = {"references": "citedPaper", "citations": "citingPaper"}
-# Shared with search_semantic_scholar.py: same URL -> same cache entry.
+# Shared with the S2 search library: same URL -> same cache entry.
 DEFAULT_S2_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "s2")
 
 _FUNCTION_STOPWORDS = frozenset(
@@ -63,55 +69,181 @@ _GENERIC_DOMAIN_WORDS = frozenset(
 TOKEN_RE = re.compile(r"[a-zA-Z][a-zA-Z0-9\-]{2,}")
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed-id", action="append", default=[], help="Seed arXiv ID. May be repeated.")
-    parser.add_argument("--seed-id-file", help="File with one arXiv ID per line.")
-    parser.add_argument("--seed-registry", help="candidate-registry.json to pull seeds from by status.")
-    parser.add_argument(
-        "--seed-status",
-        action="append",
-        default=[],
-        help="Registry status treated as a seed. May be repeated; default accepted,full-text-queued,extracted.",
-    )
-    parser.add_argument("--direction", choices=["references", "citations", "both"], default="both")
-    parser.add_argument("--max-per-seed-per-direction", type=int, default=200, help="Per-request neighbor cap (API max 1000).")
-    parser.add_argument(
-        "--min-shared-seeds",
-        type=int,
-        default=None,
-        help="Candidates must connect to at least this many seeds. Default: 2 if >=2 seeds, else 1.",
-    )
-    parser.add_argument("--max-total-candidates", type=int, default=200, help="Cap after ranking by shared-seed count.")
-    parser.add_argument("--include-below-threshold-output", help="Also write candidates below the shared-seed threshold here.")
-    parser.add_argument("--start-date", help="Optional YYYY-MM-DD; coarse year-level filter on discovered papers.")
-    parser.add_argument("--end-date", help="Optional YYYY-MM-DD; coarse year-level filter on discovered papers.")
-    parser.add_argument("--top-terms", type=int, default=20)
-    parser.add_argument("--min-doc-frequency", type=int, default=2)
-    parser.add_argument("--extra-stopwords-file", help="Extra stopwords, one per line.")
-    parser.add_argument("--batch-label", help="Stable round label stored for candidate-registry saturation analysis.")
-    parser.add_argument("--output", help="Candidate-registry-compatible JSON. Defaults to stdout.")
-    parser.add_argument("--graph-output", help="Citation edges + seed-similarity JSON.")
-    parser.add_argument("--dynamic-output", help="query-planner --dynamic-file compatible JSON.")
-    parser.add_argument("--sleep-seconds", type=float, default=0.1, help="Delay between seeds.")
-    parser.add_argument("--timeout", type=float, default=20.0, help="Per-request timeout in seconds.")
-    parser.add_argument("--retries", type=int, default=MAX_RETRIES, help="Retries per request after transient failures. Capped at 3.")
-    parser.add_argument("--retry-base-seconds", type=float, default=5.0, help="Base wait before retrying transient failures.")
-    parser.add_argument("--retry-max-seconds", type=float, default=60.0, help="Maximum wait before a single retry.")
-    parser.add_argument("--fail-fast", action="store_true", help="Abort on the first failed seed/direction request.")
-    parser.add_argument(
-        "--user-agent",
-        default="embodied-ai-literature-hub/1.0 (local research workflow)",
-        help="HTTP User-Agent sent to Semantic Scholar.",
-    )
-    parser.add_argument("--api-key", default=None, help="Semantic Scholar API key. Falls back to the S2_API_KEY env var.")
-    parser.add_argument(
-        "--cache-dir",
-        default=DEFAULT_S2_CACHE_DIR,
-        help="Semantic Scholar response cache, shared with search_semantic_scholar.py.",
-    )
-    parser.add_argument("--no-cache", action="store_true", help="Bypass the response cache for reads and writes.")
-    return parser.parse_args()
+class CitationExpansion:
+    """One citation-expansion run over a set of seed arXiv IDs.
+
+    Options are explicit constructor parameters (the CLI entry translates
+    argparse into these); call :meth:`run` with no arguments.
+    """
+
+    def __init__(
+        self,
+        *,
+        seed_id: list[str] | None = None,
+        seed_id_file: str | None = None,
+        seed_registry: str | None = None,
+        seed_status: list[str] | None = None,
+        direction: str = "both",
+        max_per_seed_per_direction: int = 200,
+        min_shared_seeds: int | None = None,
+        max_total_candidates: int = 200,
+        include_below_threshold_output: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        top_terms: int = 20,
+        min_doc_frequency: int = 2,
+        extra_stopwords_file: str | None = None,
+        batch_label: str | None = None,
+        output: str | None = None,
+        graph_output: str | None = None,
+        dynamic_output: str | None = None,
+        sleep_seconds: float = 0.1,
+        timeout: float = 20.0,
+        retries: int = MAX_RETRIES,
+        retry_base_seconds: float = 5.0,
+        retry_max_seconds: float = 60.0,
+        fail_fast: bool = False,
+        user_agent: str = "embodied-ai-literature-hub/1.0 (local research workflow)",
+        api_key: str | None = None,
+        cache_dir: str = DEFAULT_S2_CACHE_DIR,
+        no_cache: bool = False,
+    ) -> None:
+        self.seed_id = list(seed_id or [])
+        self.seed_id_file = seed_id_file
+        self.seed_registry = seed_registry
+        self.seed_status = list(seed_status or [])
+        self.direction = direction
+        self.max_per_seed_per_direction = max_per_seed_per_direction
+        self.min_shared_seeds = min_shared_seeds
+        self.max_total_candidates = max_total_candidates
+        self.include_below_threshold_output = include_below_threshold_output
+        self.start_date = start_date
+        self.end_date = end_date
+        self.top_terms = top_terms
+        self.min_doc_frequency = min_doc_frequency
+        self.extra_stopwords_file = extra_stopwords_file
+        self.batch_label = batch_label
+        self.output = output
+        self.graph_output = graph_output
+        self.dynamic_output = dynamic_output
+        self.sleep_seconds = sleep_seconds
+        self.timeout = timeout
+        self.retries = retries
+        self.retry_base_seconds = retry_base_seconds
+        self.retry_max_seconds = retry_max_seconds
+        self.fail_fast = fail_fast
+        self.user_agent = user_agent
+        self.api_key = api_key
+        self.cache_dir = cache_dir
+        self.no_cache = no_cache
+
+    def run(self) -> int:
+        seed_ids = self.collect_seed_ids()
+        if not seed_ids:
+            raise SystemExit("provide at least one seed via --seed-id/--seed-id-file/--seed-registry")
+
+        directions = ["references", "citations"] if self.direction == "both" else [self.direction]
+        fetched: dict[tuple[str, str], list[dict]] = {}
+        excluded_no_arxiv_id = 0
+        errors: list[dict] = []
+
+        for index, seed_id in enumerate(seed_ids):
+            for direction in directions:
+                try:
+                    payload = self.fetch_cached(seed_id, direction)
+                    raw = json.loads(payload)
+                    papers, excluded = extract_neighbor_papers(direction, raw)
+                except Exception as exc:  # pragma: no cover - network dependent
+                    if self.fail_fast:
+                        raise
+                    errors.append({"seed": seed_id, "direction": direction, "error": str(exc)})
+                    papers, excluded = [], 0
+                excluded_no_arxiv_id += excluded
+                fetched[(seed_id, direction)] = filter_by_date(papers, self.start_date, self.end_date)
+            if index < len(seed_ids) - 1 and self.sleep_seconds > 0:
+                time.sleep(self.sleep_seconds)
+
+        seed_references, seed_citations, paper_by_id = build_seed_neighbor_sets(fetched)
+        seed_similarity = compute_seed_similarity(seed_references, seed_citations)
+        scored = score_candidates(seed_references, seed_citations, paper_by_id, set(seed_ids))
+
+        min_shared_seeds = self.min_shared_seeds if self.min_shared_seeds is not None else default_min_shared_seeds(len(seed_ids))
+        kept, below_threshold, truncated_count = select_candidates(scored, min_shared_seeds, self.max_total_candidates)
+
+        batch_label = self.batch_label or f"citation-{seed_ids[0]}"
+        candidate_output = build_candidate_output(
+            batch_label, self.direction, seed_ids, kept, len(below_threshold), truncated_count, excluded_no_arxiv_id, errors
+        )
+        write_json(self.output, candidate_output)
+
+        if self.graph_output:
+            write_json(self.graph_output, build_graph_output(seed_ids, seed_references, seed_citations, seed_similarity, excluded_no_arxiv_id))
+
+        if self.dynamic_output:
+            extra_stopwords = load_extra_stopwords(self.extra_stopwords_file)
+            terms = extract_terms(kept, self.top_terms, self.min_doc_frequency, extra_stopwords)
+            write_json(self.dynamic_output, build_dynamic_suggestions(terms, seed_ids, self.direction))
+
+        if self.include_below_threshold_output:
+            below_output = build_candidate_output(
+                f"{batch_label}-below-threshold", self.direction, seed_ids, below_threshold, 0, 0, 0, []
+            )
+            write_json(self.include_below_threshold_output, below_output)
+
+        print(
+            f"citation expansion from {len(seed_ids)} seed(s): {len(kept)} kept "
+            f"(min_shared_seeds={min_shared_seeds}), {len(below_threshold)} below threshold, "
+            f"{truncated_count} truncated, {excluded_no_arxiv_id} excluded (no arXiv id), {len(errors)} request error(s)",
+            file=sys.stderr,
+        )
+        return 0
+
+    def collect_seed_ids(self) -> list[str]:
+        ids: list[str] = list(self.seed_id or [])
+        if self.seed_id_file:
+            ids.extend(line.strip() for line in Path(self.seed_id_file).read_text(encoding="utf-8").splitlines() if line.strip())
+        if self.seed_registry:
+            statuses = set(self.seed_status) if self.seed_status else set(DEFAULT_SEED_STATUSES)
+            ids.extend(load_seed_ids_from_registry(self.seed_registry, statuses))
+        normalized = [normalize_arxiv_id(i) for i in ids]
+        return sorted({i for i in normalized if i})
+
+    def fetch(self, seed_id: str, direction: str) -> bytes:
+        url = build_neighbor_url(seed_id, direction, self.max_per_seed_per_direction)
+        headers = {"User-Agent": self.user_agent}
+        if self.api_key:
+            headers["x-api-key"] = self.api_key
+        request = urllib.request.Request(url, headers=headers)
+        last_error: Exception | None = None
+        attempts = 0
+        retries = bounded_retries(self.retries)
+        for attempt in range(retries + 1):
+            attempts = attempt + 1
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                    return response.read()
+            except Exception as exc:  # pragma: no cover - network dependent
+                last_error = exc
+                if attempt < retries and is_retryable(exc):
+                    time.sleep(retry_wait_seconds(exc, attempt, self.retry_base_seconds, self.retry_max_seconds))
+                    continue
+                break
+        raise RuntimeError(
+            f"Semantic Scholar request for {seed_id} ({direction}) failed after {attempts} attempt(s): {last_error}"
+        ) from last_error
+
+    def fetch_cached(self, seed_id: str, direction: str) -> bytes:
+        """fetch() behind the shared S2 response cache (URL-keyed, read and write)."""
+        enabled = not self.no_cache
+        url = build_neighbor_url(seed_id, direction, self.max_per_seed_per_direction)
+        path = cache_file(self.cache_dir, url)
+        if enabled and path.is_file() and path.stat().st_size > 0:
+            return path.read_bytes()
+        payload = self.fetch(seed_id, direction)
+        if enabled:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+        return payload
 
 
 def stable_now() -> str:
@@ -125,7 +257,7 @@ def normalize_arxiv_id(value: object) -> str:
 
 # ---------------------------------------------------------------------------
 # Network: retry/backoff logic copied verbatim from search_arxiv.py so this
-# script behaves identically under rate limiting; only fetch()'s URL/headers
+# library behaves identically under rate limiting; only fetch()'s URL/headers
 # differ, since the target API is Semantic Scholar, not arXiv.
 # ---------------------------------------------------------------------------
 
@@ -153,11 +285,11 @@ def is_retryable(exc: Exception) -> bool:
     return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
 
 
-def retry_wait_seconds(exc: Exception, attempt: int, args: argparse.Namespace) -> float:
+def retry_wait_seconds(exc: Exception, attempt: int, retry_base_seconds: float, retry_max_seconds: float) -> float:
     retry_after = retry_after_seconds(exc)
     if retry_after is not None:
-        return max(0.0, min(retry_after, args.retry_max_seconds))
-    return max(0.0, min(args.retry_base_seconds * (2**attempt), args.retry_max_seconds))
+        return max(0.0, min(retry_after, retry_max_seconds))
+    return max(0.0, min(retry_base_seconds * (2**attempt), retry_max_seconds))
 
 
 def build_neighbor_url(seed_id: str, direction: str, limit: int) -> str:
@@ -167,47 +299,8 @@ def build_neighbor_url(seed_id: str, direction: str, limit: int) -> str:
     return f"{API_BASE}/paper/ARXIV:{seed_id}/{endpoint}?" + urllib.parse.urlencode(params)
 
 
-def fetch(seed_id: str, direction: str, args: argparse.Namespace) -> bytes:
-    url = build_neighbor_url(seed_id, direction, args.max_per_seed_per_direction)
-    headers = {"User-Agent": args.user_agent}
-    if getattr(args, "api_key", None):
-        headers["x-api-key"] = args.api_key
-    request = urllib.request.Request(url, headers=headers)
-    last_error: Exception | None = None
-    attempts = 0
-    retries = bounded_retries(args.retries)
-    for attempt in range(retries + 1):
-        attempts = attempt + 1
-        try:
-            with urllib.request.urlopen(request, timeout=args.timeout) as response:
-                return response.read()
-        except Exception as exc:  # pragma: no cover - network dependent
-            last_error = exc
-            if attempt < retries and is_retryable(exc):
-                time.sleep(retry_wait_seconds(exc, attempt, args))
-                continue
-            break
-    raise RuntimeError(
-        f"Semantic Scholar request for {seed_id} ({direction}) failed after {attempts} attempt(s): {last_error}"
-    ) from last_error
-
-
 def cache_file(cache_dir: str, url: str) -> Path:
     return Path(cache_dir).expanduser() / f"{hashlib.sha1(url.encode('utf-8')).hexdigest()}.json"
-
-
-def fetch_cached(seed_id: str, direction: str, args: argparse.Namespace) -> bytes:
-    """fetch() behind the shared S2 response cache (URL-keyed, read and write)."""
-    enabled = not getattr(args, "no_cache", False)
-    url = build_neighbor_url(seed_id, direction, args.max_per_seed_per_direction)
-    path = cache_file(args.cache_dir, url)
-    if enabled and path.is_file() and path.stat().st_size > 0:
-        return path.read_bytes()
-    payload = fetch(seed_id, direction, args)
-    if enabled:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(payload)
-    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -551,7 +644,7 @@ def build_graph_output(
 
 
 # ---------------------------------------------------------------------------
-# CLI orchestration
+# Seed loading + output helpers
 # ---------------------------------------------------------------------------
 
 
@@ -564,17 +657,6 @@ def load_seed_ids_from_registry(path: str, statuses: set[str]) -> list[str]:
             if arxiv_id:
                 ids.append(arxiv_id)
     return ids
-
-
-def collect_seed_ids(args: argparse.Namespace) -> list[str]:
-    ids: list[str] = list(args.seed_id or [])
-    if args.seed_id_file:
-        ids.extend(line.strip() for line in Path(args.seed_id_file).read_text(encoding="utf-8").splitlines() if line.strip())
-    if args.seed_registry:
-        statuses = set(args.seed_status) if args.seed_status else set(DEFAULT_SEED_STATUSES)
-        ids.extend(load_seed_ids_from_registry(args.seed_registry, statuses))
-    normalized = [normalize_arxiv_id(i) for i in ids]
-    return sorted({i for i in normalized if i})
 
 
 def load_extra_stopwords(path: str | None) -> frozenset[str]:
@@ -592,73 +674,3 @@ def write_json(path: str | None, data: dict) -> None:
         output_path.write_text(rendered + "\n", encoding="utf-8")
     else:
         print(rendered)
-
-
-def main() -> int:
-    args = parse_args()
-    if not args.api_key:
-        args.api_key = os.environ.get("S2_API_KEY")
-
-    seed_ids = collect_seed_ids(args)
-    if not seed_ids:
-        raise SystemExit("provide at least one seed via --seed-id/--seed-id-file/--seed-registry")
-
-    directions = ["references", "citations"] if args.direction == "both" else [args.direction]
-    fetched: dict[tuple[str, str], list[dict]] = {}
-    excluded_no_arxiv_id = 0
-    errors: list[dict] = []
-
-    for index, seed_id in enumerate(seed_ids):
-        for direction in directions:
-            try:
-                payload = fetch_cached(seed_id, direction, args)
-                raw = json.loads(payload)
-                papers, excluded = extract_neighbor_papers(direction, raw)
-            except Exception as exc:  # pragma: no cover - network dependent
-                if args.fail_fast:
-                    raise
-                errors.append({"seed": seed_id, "direction": direction, "error": str(exc)})
-                papers, excluded = [], 0
-            excluded_no_arxiv_id += excluded
-            fetched[(seed_id, direction)] = filter_by_date(papers, args.start_date, args.end_date)
-        if index < len(seed_ids) - 1 and args.sleep_seconds > 0:
-            time.sleep(args.sleep_seconds)
-
-    seed_references, seed_citations, paper_by_id = build_seed_neighbor_sets(fetched)
-    seed_similarity = compute_seed_similarity(seed_references, seed_citations)
-    scored = score_candidates(seed_references, seed_citations, paper_by_id, set(seed_ids))
-
-    min_shared_seeds = args.min_shared_seeds if args.min_shared_seeds is not None else default_min_shared_seeds(len(seed_ids))
-    kept, below_threshold, truncated_count = select_candidates(scored, min_shared_seeds, args.max_total_candidates)
-
-    batch_label = args.batch_label or f"citation-{seed_ids[0]}"
-    candidate_output = build_candidate_output(
-        batch_label, args.direction, seed_ids, kept, len(below_threshold), truncated_count, excluded_no_arxiv_id, errors
-    )
-    write_json(args.output, candidate_output)
-
-    if args.graph_output:
-        write_json(args.graph_output, build_graph_output(seed_ids, seed_references, seed_citations, seed_similarity, excluded_no_arxiv_id))
-
-    if args.dynamic_output:
-        extra_stopwords = load_extra_stopwords(args.extra_stopwords_file)
-        terms = extract_terms(kept, args.top_terms, args.min_doc_frequency, extra_stopwords)
-        write_json(args.dynamic_output, build_dynamic_suggestions(terms, seed_ids, args.direction))
-
-    if args.include_below_threshold_output:
-        below_output = build_candidate_output(
-            f"{batch_label}-below-threshold", args.direction, seed_ids, below_threshold, 0, 0, 0, []
-        )
-        write_json(args.include_below_threshold_output, below_output)
-
-    print(
-        f"citation expansion from {len(seed_ids)} seed(s): {len(kept)} kept "
-        f"(min_shared_seeds={min_shared_seeds}), {len(below_threshold)} below threshold, "
-        f"{truncated_count} truncated, {excluded_no_arxiv_id} excluded (no arXiv id), {len(errors)} request error(s)",
-        file=sys.stderr,
-    )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import contextlib
 import importlib.util
-import io
 import json
 import tempfile
 import unittest
@@ -82,23 +80,19 @@ class RenderFigureTableBlockTest(unittest.TestCase):
         self.assertEqual([f["figure_id"] for f in figures], ["S3.F3"])
         self.assertEqual([t["table_id"] for t in tables], ["S1.T1"])
 
-    def test_cli_renders_requested_ids_to_stdout(self) -> None:
+    def test_load_events_reads_jsonl_and_blocks_render_to_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             evidence_path = Path(tmp) / "evidence.jsonl"
             evidence_path.write_text(json.dumps(EVENT, ensure_ascii=False) + "\n", encoding="utf-8")
-            stream = io.StringIO()
-            with contextlib.redirect_stdout(stream):
-                code = render_figure_table_block.main(
-                    [
-                        "--evidence-jsonl",
-                        str(evidence_path),
-                        "--paper-id",
-                        "2311.18259",
-                    ]
-                )
-            self.assertEqual(code, 0)
-            self.assertIn("S3.F3", stream.getvalue())
-            self.assertIn("S1.T1", stream.getvalue())
+            events = render_figure_table_block.load_events(str(evidence_path))
+        figures, tables = render_figure_table_block.find_event_figures(events, "2311.18259")
+        label = render_figure_table_block.paper_label(events[0])
+        figure_block = render_figure_table_block.render_figure(figures[0], label)
+        table_block = render_figure_table_block.render_table_block(tables[0], label)
+        self.assertIn("S3.F3", figure_block)
+        self.assertIn("Ego-Exo4D: Understanding Skilled Human Activity（arXiv 2311.18259）", figure_block)
+        self.assertIn("S1.T1", table_block)
+        self.assertIn("| Dataset | Year |", table_block)
 
 
 if __name__ == "__main__":

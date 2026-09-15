@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
-"""Validate a paper note against reading-depth and evidence-admission gates."""
+"""Validate a paper note against reading-depth and evidence-admission gates.
+
+Library API: stateless explicit-parameter functions (:func:`validate_note`,
+:func:`load_note`) plus the schema vocabularies (``MODES``, ``STATUSES``,
+``STANCES``, ``READING_RANK``, ...). Consumers import this module directly —
+``audit_claim_support`` and ``evidence_projection`` call ``validate_note``.
+
+The CLI surface owns argument parsing and lives in the skill entry
+``skills/embodied-ai-paper-reader/scripts/validate_paper_note.py``.
+"""
 
 from __future__ import annotations
 
-import argparse
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -277,37 +284,3 @@ def load_note(path: Path) -> dict[str, Any]:
     if not isinstance(note, dict):
         raise ValueError("paper note must be a JSON object")
     return note
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("paper_note")
-    parser.add_argument("--json-output")
-    return parser.parse_args()
-
-
-def main() -> int:
-    args = parse_args()
-    try:
-        note = load_note(Path(args.paper_note))
-        errors, warnings = validate_note(note)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
-        errors, warnings = [str(exc)], []
-    result = {"status": "pass" if not errors else "reject", "errors": errors, "warnings": warnings}
-    if args.json_output:
-        target = Path(args.json_output)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    if errors:
-        print(f"paper note rejected ({len(errors)} error(s)):")
-        for error in errors:
-            print(f"- {error}")
-        return 1
-    print("paper note OK")
-    for warning in warnings:
-        print(f"warning: {warning}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

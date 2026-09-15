@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Extract arXiv full text through HTML -> PDF text with quality gates.
+"""Extract arXiv full text through HTML -> markdown -> PDF with quality gates.
+
+Library API: :class:`ContentOptions` (explicit CLI-option state) +
+:func:`extract_content` (tiered fallback chain), plus the module-level helpers
+(title parsing, quality gates, markdown rendering). The chain is loaded by
+other src modules (``src/fetch/queue.py``, ``src/parse/promotion.py``), so the
+public function surface is stable. The CLI surface owns argument parsing and
+lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py``.
 
 OCR options remain for compatibility with older callers, but the current
 paper-reading workflow uses ``--ocr-mode never`` and treats scan-only PDFs as
@@ -21,14 +29,12 @@ Human-friendly shortcuts over the plain flags:
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 from html.parser import HTMLParser
 import json
 import os
 import re
 import sys
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -140,102 +146,73 @@ def document_title(html: str) -> str:
     return title.strip(" -—")
 
 
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "paper_id_pos", nargs="?",
-        help=argparse.SUPPRESS)  # shortcut: leading bare arXiv ID
-    parser.add_argument("--paper-id",
-                        help="arXiv ID (with or without version).")
-    parser.add_argument(
-        "--terms",
-        help="Comma-separated topic terms (optional for casual reading).")
-    parser.add_argument(
-        "--format",
-        choices=["auto", "json", "markdown"],
-        default="auto",
-        help=
-        "Output format. auto = markdown for .md files/terminals, JSON when piped.",
-    )
-    parser.add_argument("--html-url")
-    parser.add_argument("--pdf-url")
-    parser.add_argument("--pdf-file",
-                        help="Local PDF for testing/offline extraction.")
-    parser.add_argument("--html-cache-dir",
-                        default=extract_arxiv_html.DEFAULT_CACHE_DIR)
-    parser.add_argument("--pdf-cache-dir",
-                        default=extract_arxiv_pdf.DEFAULT_CACHE_DIR)
-    parser.add_argument(
-        "--preferred-source",
-        choices=["html", "tex", "auto"],
-        default="html",
-        help=("Full-text tier order. html (default) = html -> pdf, the legacy "
-              "chain. tex = markdown tier first (arxiv2md API by default, see "
-              "--tex-transport) -> html -> pdf. auto = html -> markdown tier "
-              "-> pdf. The markdown tier needs only curl (arxiv2md) and is "
-              "skipped gracefully when the API has no HTML for the paper."),
-    )
-    parser.add_argument(
-        "--tex-transport",
-        choices=["arxiv2md", "s3-tex"],
-        default="arxiv2md",
-        help=("Transport for the markdown tier. arxiv2md (default) = public "
-              "REST API via curl, no credentials. s3-tex = S3 TeX source "
-              "tarball + pandoc (TODO: needs AWS credentials — the "
-              "s3://arxiv/ bucket is requester-pays)."),
-    )
-    parser.add_argument("--curl-timeout", type=float, default=120.0,
-                        help="[arxiv2md] curl max time in seconds.")
-    parser.add_argument("--tex-cache-dir",
-                        default=extract_arxiv_tex_default_cache_dir(),
-                        help="[s3-tex] Cache directory for S3 TeX source tarballs.")
-    parser.add_argument("--source-tarball",
-                        help="[s3-tex] Local TeX source .tar.gz; skips the S3 download.")
-    parser.add_argument("--main-tex",
-                        help="[s3-tex] Main .tex member inside the source tarball.")
-    parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--top-sections", type=int, default=6)
-    parser.add_argument("--max-pages", type=int, default=0)
-    parser.add_argument(
-        "--ocr-mode",
-        choices=["auto", "never", "always"],
-        default="never",
-        help="Default 'never' per the full-text fallback contract.")
-    parser.add_argument("--ocr-language", default="eng")
-    parser.add_argument("--ocr-dpi", type=int, default=220)
-    parser.add_argument("--min-chars-per-page", type=int, default=180)
-    parser.add_argument("--minimum-html-chars", type=int, default=1000)
-    parser.add_argument("--force-pdf",
-                        action="store_true",
-                        help="Skip HTML and exercise PDF/OCR path.")
-    parser.add_argument("--include-selected-text", action="store_true")
-    parser.add_argument(
-        "--include-full-text",
-        action="store_true",
-        help=
-        "Include complete HTML text or every text-layer PDF page for $embodied-ai-paper-reader.",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        help=("Write result here instead of stdout. Defaults to "
-              f"{DEFAULT_OUTPUT_DIR}/<paper-id>.md; a directory gets "
-              "<paper-id>.md appended (.md implies markdown under --format auto)."
-              ),
-    )
-    args = parser.parse_args(argv)
-    if args.paper_id_pos and not args.paper_id:
-        args.paper_id = args.paper_id_pos
-    if not args.paper_id:
-        parser.error("Provide an arXiv ID, e.g. extract_arxiv 2403.12550")
-    paper_id = normalize_id(args.paper_id)
-    if args.output is None and sys.stdout.isatty():
-        args.output = f"{DEFAULT_OUTPUT_DIR}/{paper_id}.md"  # interactive default
-    args.output = resolve_output_path(args.output, paper_id)
-    return args
+class ContentOptions:
+    """CLI-option state for one :func:`extract_content` run.
+
+    Explicit constructor parameters (the CLI entry translates argparse into
+    these); attribute names mirror the old flag names. Callers may also pass
+    any attribute-compatible object (the tier runners read options through
+    ``getattr`` defaults), which keeps programmatic callers stable.
+    """
+
+    def __init__(
+        self,
+        *,
+        paper_id: str = "",
+        terms: str | None = None,
+        format: str = "auto",
+        html_url: str | None = None,
+        pdf_url: str | None = None,
+        pdf_file: str | None = None,
+        html_cache_dir: str | None = None,
+        pdf_cache_dir: str | None = None,
+        preferred_source: str = "html",
+        tex_transport: str = "arxiv2md",
+        curl_timeout: float = 120.0,
+        tex_cache_dir: str | None = None,
+        source_tarball: str | None = None,
+        main_tex: str | None = None,
+        timeout: float = 30.0,
+        top_sections: int = 6,
+        max_pages: int = 0,
+        ocr_mode: str = "never",
+        ocr_language: str = "eng",
+        ocr_dpi: int = 220,
+        min_chars_per_page: int = 180,
+        minimum_html_chars: int = 1000,
+        force_pdf: bool = False,
+        include_selected_text: bool = False,
+        include_full_text: bool = False,
+        output: str | None = None,
+        render_markdown: bool = False,
+    ) -> None:
+        self.paper_id = paper_id
+        self.terms = terms
+        self.format = format
+        self.html_url = html_url
+        self.pdf_url = pdf_url
+        self.pdf_file = pdf_file
+        self.html_cache_dir = html_cache_dir if html_cache_dir is not None else extract_arxiv_html.DEFAULT_CACHE_DIR
+        self.pdf_cache_dir = pdf_cache_dir if pdf_cache_dir is not None else extract_arxiv_pdf.DEFAULT_CACHE_DIR
+        self.preferred_source = preferred_source
+        self.tex_transport = tex_transport
+        self.curl_timeout = curl_timeout
+        self.tex_cache_dir = tex_cache_dir if tex_cache_dir is not None else extract_arxiv_tex_default_cache_dir()
+        self.source_tarball = source_tarball
+        self.main_tex = main_tex
+        self.timeout = timeout
+        self.top_sections = top_sections
+        self.max_pages = max_pages
+        self.ocr_mode = ocr_mode
+        self.ocr_language = ocr_language
+        self.ocr_dpi = ocr_dpi
+        self.min_chars_per_page = min_chars_per_page
+        self.minimum_html_chars = minimum_html_chars
+        self.force_pdf = force_pdf
+        self.include_selected_text = include_selected_text
+        self.include_full_text = include_full_text
+        self.output = output
+        self.render_markdown = render_markdown
 
 
 def resolve_output_path(output: str | None, paper_id: str) -> str | None:
@@ -250,12 +227,12 @@ def resolve_output_path(output: str | None, paper_id: str) -> str | None:
     return str(path)
 
 
-def resolve_format(args: argparse.Namespace) -> str:
+def resolve_format(options: ContentOptions) -> str:
     """auto: markdown for terminals or .md outputs, JSON when piped or .json."""
-    if args.format != "auto":
-        return args.format
-    if args.output:
-        return "markdown" if args.output.lower().endswith(".md") else "json"
+    if options.format != "auto":
+        return options.format
+    if options.output:
+        return "markdown" if options.output.lower().endswith(".md") else "json"
     return "markdown" if sys.stdout.isatty() else "json"
 
 
@@ -278,28 +255,30 @@ def html_quality(output: dict[str, Any],
     return {"grade": grade, "text_chars": chars, "structure": structure}
 
 
-def try_html(args: argparse.Namespace,
+def try_html(options: ContentOptions,
              terms: list[str],
              want_full_text: bool | None = None) -> dict[str, Any]:
-    url = args.html_url or f"https://arxiv.org/html/{normalize_id(args.paper_id)}"
-    target = Path(args.html_cache_dir).expanduser(
-    ) / f"{normalize_id(args.paper_id)}.html"
-    available, html = extract_arxiv_html.fetch_html(url, target, args.timeout)
+    url = options.html_url or f"https://arxiv.org/html/{normalize_id(options.paper_id)}"
+    target = Path(options.html_cache_dir).expanduser(
+    ) / f"{normalize_id(options.paper_id)}.html"
+    available, html = extract_arxiv_html.fetch_html(url, target, options.timeout)
     if want_full_text is None:
-        want_full_text = bool(getattr(args, "include_full_text", False))
-    html_args = argparse.Namespace(
-        paper_id=args.paper_id,
+        want_full_text = bool(getattr(options, "include_full_text", False))
+    output = extract_arxiv_html.build_output(
+        url,
+        target,
+        available,
+        html,
+        paper_id=options.paper_id,
         terms=",".join(terms),
         max_chars=0,
         include_text=want_full_text,
-        top_sections=args.top_sections,
+        top_sections=options.top_sections,
         include_section_text=bool(
-            getattr(args, "include_selected_text", False) or want_full_text),
+            getattr(options, "include_selected_text", False) or want_full_text),
     )
-    output = extract_arxiv_html.build_output(html_args, url, target, available,
-                                             html)
     output["title"] = document_title(html) if available else ""
-    output["quality"] = html_quality(output, args.minimum_html_chars)
+    output["quality"] = html_quality(output, options.minimum_html_chars)
     output["extraction_method"] = f"html-{output.get('structure')}"
     output["source_format"] = "html"
     output["evidence_eligible"] = bool(
@@ -309,27 +288,26 @@ def try_html(args: argparse.Namespace,
     return output
 
 
-def try_pdf(args: argparse.Namespace,
+def try_pdf(options: ContentOptions,
             terms: list[str],
             want_full_text: bool | None = None) -> dict[str, Any]:
     if want_full_text is None:
-        want_full_text = bool(getattr(args, "include_full_text", False))
-    pdf_args = argparse.Namespace(
-        paper_id=args.paper_id,
-        pdf_url=args.pdf_url,
-        pdf_file=args.pdf_file,
-        cache_dir=args.pdf_cache_dir,
-        max_pages=args.max_pages,
-        top_pages=args.top_sections,
-        ocr_mode=args.ocr_mode,
-        ocr_language=args.ocr_language,
-        ocr_dpi=args.ocr_dpi,
-        min_chars_per_page=args.min_chars_per_page,
+        want_full_text = bool(getattr(options, "include_full_text", False))
+    output = extract_arxiv_pdf.extract_pdf_document(
+        paper_id=options.paper_id,
+        pdf_url=options.pdf_url,
+        pdf_file=options.pdf_file,
+        cache_dir=options.pdf_cache_dir,
+        max_pages=getattr(options, "max_pages", 0),
+        top_pages=options.top_sections,
+        ocr_mode=options.ocr_mode,
+        ocr_language=options.ocr_language,
+        ocr_dpi=options.ocr_dpi,
+        min_chars_per_page=options.min_chars_per_page,
         include_pages=bool(
-            getattr(args, "include_selected_text", False) or want_full_text),
+            getattr(options, "include_selected_text", False) or want_full_text),
         terms=",".join(terms),
     )
-    output = extract_arxiv_pdf.extract_pdf_document(pdf_args)
     output["title"] = ""
     output["source_format"] = "pdf"
     output["selected_passages"] = output.get("ranked_pages", [])
@@ -340,41 +318,42 @@ def try_pdf(args: argparse.Namespace,
     return output
 
 
-def try_tex(args: argparse.Namespace, terms: list[str]) -> dict[str, Any]:
+def try_tex(options: ContentOptions, terms: list[str]) -> dict[str, Any]:
     """Markdown tier via extract_arxiv_tex: arxiv2md API (default) or s3-tex."""
     tex = _load_tex_tier()
-    tex_args = argparse.Namespace(
-        paper_id=args.paper_id,
-        transport=getattr(args, "tex_transport", "arxiv2md"),
-        curl_timeout=getattr(args, "curl_timeout", 120.0),
-        source=getattr(args, "source_tarball", None),
-        source_cache_dir=getattr(args, "tex_cache_dir", None)
+    tex_options = tex.TexExtraction(
+        paper_id=options.paper_id,
+        transport=getattr(options, "tex_transport", "arxiv2md"),
+        curl_timeout=getattr(options, "curl_timeout", 120.0),
+        source=getattr(options, "source_tarball", None),
+        source_cache_dir=getattr(options, "tex_cache_dir", None)
         or tex.DEFAULT_SOURCE_CACHE_DIR,
-        main_tex=getattr(args, "main_tex", None),
+        main_tex=getattr(options, "main_tex", None),
         terms=",".join(terms),
-        minimum_chars=args.minimum_html_chars,
+        minimum_chars=options.minimum_html_chars,
         to=tex.DEFAULT_TO,
         pandoc_timeout=60.0,
         output=None,
         markdown_output=None,
     )
-    output = tex.run(tex_args)
+    output = tex_options.run()
     return output
 
 
-def extract_content(args: argparse.Namespace) -> dict[str, Any]:
+def extract_content(options: ContentOptions) -> dict[str, Any]:
     terms = [
-        term.strip() for term in (args.terms or "").split(",") if term.strip()
+        term.strip() for term in (options.terms or "").split(",") if term.strip()
     ]
     # Markdown rendering needs readable content even when no include flag was passed.
     want_full_text = bool(
-        getattr(args, "include_full_text", False)
-        or getattr(args, "_render_markdown", False))
+        getattr(options, "include_full_text", False)
+        or getattr(options, "render_markdown", False)
+        or getattr(options, "_render_markdown", False))
     attempts: list[dict[str, Any]] = []
-    preferred = getattr(args, "preferred_source", "html") or "html"
+    preferred = getattr(options, "preferred_source", "html") or "html"
 
     def run_html() -> dict[str, Any]:
-        html = try_html(args, terms, want_full_text=want_full_text)
+        html = try_html(options, terms, want_full_text=want_full_text)
         attempts.append({
             "method": html["extraction_method"],
             "available": html.get("available", False),
@@ -383,7 +362,7 @@ def extract_content(args: argparse.Namespace) -> dict[str, Any]:
         return html
 
     def run_tex() -> dict[str, Any]:
-        tex = try_tex(args, terms)
+        tex = try_tex(options, terms)
         attempts.append({
             "method": tex.get("extraction_method", "tex-pandoc"),
             "available": tex.get("available", False),
@@ -392,7 +371,7 @@ def extract_content(args: argparse.Namespace) -> dict[str, Any]:
         return tex
 
     def run_pdf() -> dict[str, Any]:
-        pdf = try_pdf(args, terms, want_full_text=want_full_text)
+        pdf = try_pdf(options, terms, want_full_text=want_full_text)
         attempts.append({
             "method":
             pdf.get("extraction_method", "pdf"),
@@ -416,7 +395,7 @@ def extract_content(args: argparse.Namespace) -> dict[str, Any]:
 
     fallback_reason = ""
     for tier_name, runner in tiers:
-        if tier_name == "pdf" and args.force_pdf:
+        if tier_name == "pdf" and options.force_pdf:
             fallback_reason = "PDF path forced by caller."
         try:
             output = runner()
@@ -446,7 +425,7 @@ def extract_content(args: argparse.Namespace) -> dict[str, Any]:
 
     return {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "paper_id": normalize_id(args.paper_id),
+        "paper_id": normalize_id(options.paper_id),
         "available": False,
         "source_format": "metadata-only",
         "extraction_method": "unavailable",
@@ -594,17 +573,16 @@ def build_markdown(output: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
-    output_format = resolve_format(args)
-    setattr(args, "_render_markdown", output_format == "markdown")
-    output = extract_content(args)
+def emit(options: ContentOptions, output: dict[str, Any], output_format: str | None = None) -> None:
+    """Write/print the extraction result (markdown or JSON). CLI-side plumbing."""
+    if output_format is None:
+        output_format = resolve_format(options)
     if output_format == "markdown":
         rendered = build_markdown(output)
     else:
         rendered = json.dumps(output, ensure_ascii=False, indent=2)
-    if args.output:
-        path = Path(args.output)
+    if options.output:
+        path = Path(options.output)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(rendered + "\n", encoding="utf-8")
         if output_format == "markdown" and sys.stdout.isatty():
@@ -614,8 +592,3 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr)
     else:
         print(rendered)
-    return 0 if output.get("evidence_eligible") else 2
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

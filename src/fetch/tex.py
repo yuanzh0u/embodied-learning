@@ -17,16 +17,20 @@ Both paths produce the same unified extraction JSON
 (``extraction_method: "tex-pandoc"`` for s3-tex, ``"arxiv2md"`` for the API,
 both with ``source_format: "tex"``-style markdown semantics: authoritative
 text, no visual validation) plus a markdown sidecar.
+
+Library API: :class:`TexExtraction` (one CLI-configured extraction run) plus
+the module-level helpers (tarball safety, main-Tex discovery, quality
+assessment, arxiv2md transport). The CLI surface owns argument parsing and
+lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/extract_arxiv_tex.py``.
 """
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
 import re
 import subprocess
-import sys
 import tarfile
 import tempfile
 from pathlib import Path
@@ -50,25 +54,6 @@ ARXIV2MD_PARAMS = "remove_refs=false&remove_toc=false&remove_citations=false"
 MATH_TOKEN_RE = re.compile(r"\$[^$\n]+\$|\\\(|\\\[|\$\$")
 TABLE_SEPARATOR_RE = re.compile(r"^\|?[\s:|-]+\|[\s:|-]*$")
 
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paper-id", help="arXiv ID; fetches full text via the selected transport.")
-    parser.add_argument("--transport", choices=["arxiv2md", "s3-tex"], default="arxiv2md",
-                        help="arxiv2md = public REST API via curl (default, no credentials); "
-                             "s3-tex = S3 tarball + pandoc (TODO: needs AWS credentials).")
-    parser.add_argument("--source", help="[s3-tex] Local .tar.gz source package (skips the S3 download).")
-    parser.add_argument("--source-cache-dir", default=DEFAULT_SOURCE_CACHE_DIR)
-    parser.add_argument("--main-tex", help="[s3-tex] Main .tex member name; overrides automatic discovery.")
-    parser.add_argument("--terms", help="Comma-separated topic terms for term matching (optional).")
-    parser.add_argument("--minimum-chars", type=int, default=1000, help="Minimum markdown chars for medium quality.")
-    parser.add_argument("--to", default=DEFAULT_TO, help="[s3-tex] Pandoc target format (default preserves $...$ math and pipe tables).")
-    parser.add_argument("--pandoc-timeout", type=float, default=60.0, help="[s3-tex] pypandoc.convert_file timeout budget hint.")
-    parser.add_argument("--curl-timeout", type=float, default=120.0, help="[arxiv2md] curl max time in seconds.")
-    parser.add_argument("--output", help="Write the extraction JSON here instead of stdout.")
-    parser.add_argument("--markdown-output", help="Write the converted Markdown here; defaults to <output>.md alongside the JSON.")
-    return parser.parse_args()
 
 
 def import_pypandoc():
@@ -300,13 +285,24 @@ def latex_title(main_tex_text: str) -> str:
     return ""
 
 
-def build_output(args: argparse.Namespace, markdown: str, main_tex: str, cache_file: str, tex_title: str = "", method: str = "tex-pandoc") -> dict[str, Any]:
-    terms = [term.strip() for term in (args.terms or "").split(",") if term.strip()]
-    quality = assess_quality(markdown, args.minimum_chars)
+def build_output(
+    markdown: str,
+    main_tex: str,
+    cache_file: str,
+    *,
+    paper_id: str = "",
+    terms: str | None = None,
+    minimum_chars: int = 1000,
+    tex_title: str = "",
+    method: str = "tex-pandoc",
+) -> dict[str, Any]:
+    """Build the unified extraction payload; option values are explicit kwargs."""
+    terms_list = [term.strip() for term in (terms or "").split(",") if term.strip()]
+    quality = assess_quality(markdown, minimum_chars)
     available = quality["grade"] in {"high", "medium"}
     return {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "paper_id": normalize_id(args.paper_id or (args.source or "")),
+        "paper_id": normalize_id(paper_id),
         "available": available,
         "cache_file": cache_file,
         "structure": "markdown",
@@ -316,7 +312,7 @@ def build_output(args: argparse.Namespace, markdown: str, main_tex: str, cache_f
         "main_tex": main_tex,
         "title": tex_title or document_title(markdown),
         "sections": markdown_sections(markdown),
-        "term_matches": markdown_term_matches(markdown, terms) if terms else [],
+        "term_matches": markdown_term_matches(markdown, terms_list) if terms_list else [],
         "selected_passages": [],
         "reference_hints": [],
         "text": markdown,
@@ -329,10 +325,10 @@ def build_output(args: argparse.Namespace, markdown: str, main_tex: str, cache_f
     }
 
 
-def unavailable_output(args: argparse.Namespace, method: str, error: str) -> dict[str, Any]:
+def unavailable_output(paper_id: str, method: str, error: str) -> dict[str, Any]:
     return {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "paper_id": normalize_id(args.paper_id or (args.source or "")),
+        "paper_id": normalize_id(paper_id),
         "available": False,
         "source_format": "tex",
         "extraction_method": method,
@@ -392,56 +388,107 @@ def _curl_get(url: str, curl_timeout: float) -> tuple[str, str]:
     return body.strip(), code.strip()
 
 
-def run(args: argparse.Namespace) -> dict[str, Any]:
-    if args.transport == "arxiv2md":
-        if not args.paper_id:
-            raise SystemExit("--transport arxiv2md requires --paper-id")
-        paper_id = normalize_id(args.paper_id)
-        try:
-            markdown, title = fetch_arxiv2md(paper_id, args.curl_timeout)
-        except RuntimeError as exc:
-            return unavailable_output(args, "arxiv2md", str(exc))
-        return build_output(args, markdown, "", f"{ARXIV2MD_API}?url={paper_id}", tex_title=title, method="arxiv2md")
+class TexExtraction:
+    """One CLI-configured Markdown-tier extraction run for a single paper.
 
-    # s3-tex transport: requester-pays S3 tarball + pandoc conversion (TODO: needs AWS credentials)
-    return run_s3_tex(args)
+    Options are explicit constructor parameters (the CLI entry translates
+    argparse into these); call :meth:`run` to fetch/convert and emit the JSON
+    payload. The parameter names mirror the old CLI flag names.
+    """
 
+    def __init__(
+        self,
+        *,
+        paper_id: str = "",
+        transport: str = "arxiv2md",
+        source: str | None = None,
+        source_cache_dir: str = DEFAULT_SOURCE_CACHE_DIR,
+        main_tex: str | None = None,
+        terms: str | None = None,
+        minimum_chars: int = 1000,
+        to: str = DEFAULT_TO,
+        pandoc_timeout: float = 60.0,
+        curl_timeout: float = 120.0,
+        output: str | None = None,
+        markdown_output: str | None = None,
+    ) -> None:
+        self.paper_id = paper_id
+        self.transport = transport
+        self.source = source
+        self.source_cache_dir = source_cache_dir
+        self.main_tex = main_tex
+        self.terms = terms
+        self.minimum_chars = minimum_chars
+        self.to = to
+        self.pandoc_timeout = pandoc_timeout
+        self.curl_timeout = curl_timeout
+        self.output = output
+        self.markdown_output = markdown_output
 
-def run_s3_tex(args: argparse.Namespace) -> dict[str, Any]:
-    pypandoc = import_pypandoc()
-    if args.source:
-        tar_path = Path(args.source).expanduser()
-    elif args.paper_id:
-        downloader = download_arxiv_source
-        paper_id = normalize_id(args.paper_id)
-        download_args = argparse.Namespace(
-            paper_id=[paper_id],
-            paper_id_file=None,
-            cache_dir=args.source_cache_dir,
-            workers=1,
-            timeout=60.0,
-            retries=2,
-            region=downloader.REGION,
-            force=False,
-            summary_output=None,
-        )
-        client = downloader.make_client(downloader.REGION)
-        result = downloader.download_one(paper_id, download_args, client)
-        if result["state"] not in {"downloaded", "cached"}:
-            return unavailable_output(args, "tex-pandoc", result["error"])
-        tar_path = Path(result["path"])
-    else:
-        raise SystemExit("provide --paper-id or --source")
+    def run(self) -> dict[str, Any]:
+        """Fetch markdown (arxiv2md) or convert TeX (s3-tex) and build the payload."""
+        if self.transport == "arxiv2md":
+            if not self.paper_id:
+                raise SystemExit("--transport arxiv2md requires --paper-id")
+            paper_id = normalize_id(self.paper_id)
+            try:
+                markdown, title = fetch_arxiv2md(paper_id, self.curl_timeout)
+            except RuntimeError as exc:
+                return unavailable_output(self.paper_id, "arxiv2md", str(exc))
+            return build_output(
+                markdown,
+                "",
+                f"{ARXIV2MD_API}?url={paper_id}",
+                paper_id=self.paper_id,
+                terms=self.terms,
+                minimum_chars=self.minimum_chars,
+                tex_title=title,
+                method="arxiv2md",
+            )
+        # s3-tex transport: requester-pays S3 tarball + pandoc conversion (TODO: needs AWS credentials)
+        return self.run_s3_tex()
 
-    with tempfile.TemporaryDirectory(prefix="arxiv-tex-") as tmp:
-        tmp_dir = Path(tmp)
-        extracted = safe_extract(tar_path, tmp_dir)
-        main_tex = find_main_tex(extracted, args.main_tex, root=tmp_dir)
-        if main_tex is None:
-            raise ValueError("no .tex member with \\begin{document}; use --main-tex to point at one")
-        main_tex_text = (tmp_dir / main_tex).read_text(encoding="utf-8", errors="replace")
-        markdown = convert_to_markdown(pypandoc, tmp_dir / main_tex, args.to).strip()
-        return build_output(args, markdown, main_tex, str(tar_path), tex_title=latex_title(main_tex_text), method="tex-pandoc")
+    def run_s3_tex(self) -> dict[str, Any]:
+        """S3 TeX transport: tarball -> safe extract -> pandoc -> unified payload."""
+        pypandoc = import_pypandoc()
+        if self.source:
+            tar_path = Path(self.source).expanduser()
+        elif self.paper_id:
+            paper_id = normalize_id(self.paper_id)
+            download_options = download_arxiv_source.S3DownloadOptions(
+                cache_dir=self.source_cache_dir,
+                workers=1,
+                timeout=60.0,
+                retries=2,
+                region=download_arxiv_source.REGION,
+                force=False,
+            )
+            client = download_arxiv_source.make_client(download_options.region)
+            result = download_arxiv_source.download_one(paper_id, download_options, client)
+            if result["state"] not in {"downloaded", "cached"}:
+                return unavailable_output(self.paper_id, "tex-pandoc", result["error"])
+            tar_path = Path(result["path"])
+        else:
+            raise SystemExit("provide --paper-id or --source")
+
+        with tempfile.TemporaryDirectory(prefix="arxiv-tex-") as tmp:
+            tmp_dir = Path(tmp)
+            extracted = safe_extract(tar_path, tmp_dir)
+            main_tex = find_main_tex(extracted, self.main_tex, root=tmp_dir)
+            if main_tex is None:
+                raise ValueError("no .tex member with \\begin{document}; use --main-tex to point at one")
+            main_tex_text = (tmp_dir / main_tex).read_text(encoding="utf-8", errors="replace")
+            markdown = convert_to_markdown(pypandoc, tmp_dir / main_tex, self.to).strip()
+            return build_output(
+                markdown,
+                main_tex,
+                str(tar_path),
+                paper_id=self.paper_id,
+                terms=self.terms,
+                minimum_chars=self.minimum_chars,
+                tex_title=latex_title(main_tex_text),
+                method="tex-pandoc",
+            )
 
 
 def write_markdown_sidecar(output_path: str | None, markdown: str, explicit: str | None) -> None:
@@ -455,19 +502,13 @@ def write_markdown_sidecar(output_path: str | None, markdown: str, explicit: str
     path.write_text(markdown + "\n", encoding="utf-8")
 
 
-def main() -> int:
-    args = parse_args()
-    output = run(args)
+def emit(output: dict[str, Any], output_path: str | None, markdown_output: str | None) -> None:
+    """Write/print the extraction JSON and its Markdown sidecar (CLI-side)."""
     rendered = json.dumps(output, ensure_ascii=False, indent=2)
-    if args.output:
-        path = Path(args.output)
+    if output_path:
+        path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(rendered + "\n", encoding="utf-8")
-        write_markdown_sidecar(args.output, str(output.get("text") or ""), args.markdown_output)
+        write_markdown_sidecar(output_path, str(output.get("text") or ""), markdown_output)
     else:
         print(rendered)
-    return 0 if output.get("evidence_eligible") else 2
-
-
-if __name__ == "__main__":
-    sys.exit(main())

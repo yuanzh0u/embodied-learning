@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
 import unittest
 from pathlib import Path
@@ -253,11 +252,10 @@ class FormulaReferenceTest(unittest.TestCase):
         self.assertIn("Scan matching survey", references[0]["text"])
 
     def test_build_output_includes_formulas_and_references(self) -> None:
-        args = argparse.Namespace(
-            paper_id="2403.12550", terms="", max_chars=0, include_text=False,
-            top_sections=3, include_section_text=False,
+        output = extract_arxiv_html.build_output(
+            "https://arxiv.org/html/2403.12550", Path("cached.html"), True, FIG_TABLE_FIXTURE,
+            paper_id="2403.12550", top_sections=3,
         )
-        output = extract_arxiv_html.build_output(args, "https://arxiv.org/html/2403.12550", Path("cached.html"), True, FIG_TABLE_FIXTURE)
         self.assertEqual(2, len(output["formulas"]))
         self.assertEqual(1, len(output["references"]))
 
