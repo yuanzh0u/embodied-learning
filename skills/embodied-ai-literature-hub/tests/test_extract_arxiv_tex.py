@@ -12,16 +12,21 @@ import tempfile
 import types
 import unittest
 from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))  # the tex module imports src.* at load time
+from pathlib import Path
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "extract_arxiv_tex.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "legacy" / "extract_arxiv_tex.py"
 SPEC = importlib.util.spec_from_file_location("extract_arxiv_tex", SCRIPT_PATH)
 tex = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(tex)
 
-DOWNLOADER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "download_arxiv_source.py"
+DOWNLOADER_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "legacy" / "download_arxiv_source.py"
 DOWN_SPEC = importlib.util.spec_from_file_location("download_arxiv_source", DOWNLOADER_PATH)
 das = importlib.util.module_from_spec(DOWN_SPEC)
 assert DOWN_SPEC and DOWN_SPEC.loader
@@ -276,7 +281,7 @@ class RunTest(unittest.TestCase):
 
         with mock.patch.dict(sys.modules, {"pypandoc": fake_pypandoc("", [])}):
             with mock.patch.object(das, "make_client", return_value=FakeClient()):
-                with mock.patch.object(tex, "load_sibling", return_value=das):
+                with mock.patch.object(tex, "download_arxiv_source", das):
                     output = tex.run(tex_args(paper_id="2403.12550"))
         self.assertFalse(output["available"])
         self.assertFalse(output["evidence_eligible"])

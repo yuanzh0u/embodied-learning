@@ -15,13 +15,15 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[3]
 HUB_SCRIPTS = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
-PLANNER = HUB_SCRIPTS / "build_query_plan.py"
-SEARCH = HUB_SCRIPTS / "search_arxiv.py"
+PLANNER_ENTRY = HUB_SCRIPTS / "build_query_plan.py"  # thin entry, used via subprocess
+LEGACY_SEARCH = ROOT / "src" / "search" / "legacy"
+PLANNER = LEGACY_SEARCH / "build_query_plan.py"  # implementation module for spec-loading
+SEARCH = LEGACY_SEARCH / "search_arxiv.py"
 
 
 def run_json(*args: str) -> dict:
     completed = subprocess.run(
-        [sys.executable, str(PLANNER), *args],
+        [sys.executable, str(PLANNER_ENTRY), *args],
         check=True,
         cwd=ROOT,
         text=True,
@@ -40,13 +42,11 @@ def load_search_module():
 
 
 def load_planner_module():
-    # build_query_plan.py does `from query_taxonomy import ...`, which needs its
-    # own directory on sys.path (subprocess invocation gets this for free since
-    # Python adds the script's directory automatically; direct exec_module here
-    # does not).
-    scripts_dir = str(PLANNER.parent)
-    if scripts_dir not in sys.path:
-        sys.path.insert(0, scripts_dir)
+    # build_query_plan.py does `from src.search.legacy.query_taxonomy import ...`,
+    # which needs the repo root on sys.path (subprocess invocation gets this for
+    # free since the thin entry inserts it; direct exec_module here does not).
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
     spec = importlib.util.spec_from_file_location("build_query_plan", PLANNER)
     if spec is None or spec.loader is None:
         raise RuntimeError("Unable to load build_query_plan module")
@@ -251,7 +251,7 @@ class QueryPlannerTests(unittest.TestCase):
             subprocess.run(
                 [
                     sys.executable,
-                    str(PLANNER),
+                    str(PLANNER_ENTRY),
                     "--topic",
                     "VLA 微调数据",
                     "--output",
@@ -343,10 +343,9 @@ class WeakAliasConfidenceTests(unittest.TestCase):
     the weak ids in knowledge_ids for run-manifest routing context."""
 
     def setUp(self) -> None:
-        scripts_dir = str(HUB_SCRIPTS)
-        if scripts_dir not in sys.path:
-            sys.path.insert(0, scripts_dir)
-        import query_taxonomy
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
+        from src.search.legacy import query_taxonomy
 
         self.taxonomy = query_taxonomy
 

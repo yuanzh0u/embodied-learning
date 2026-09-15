@@ -7,8 +7,8 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "extract_arxiv_html.py"
+ROOT = Path(__file__).resolve().parents[3]
+SCRIPT = ROOT / "src" / "fetch" / "legacy" / "extract_arxiv_html.py"
 SPEC = importlib.util.spec_from_file_location("extract_arxiv_html", SCRIPT)
 extract_arxiv_html = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

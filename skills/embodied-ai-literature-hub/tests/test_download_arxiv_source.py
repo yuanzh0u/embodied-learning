@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "download_arxiv_source.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "fetch" / "legacy" / "download_arxiv_source.py"
 SPEC = importlib.util.spec_from_file_location("download_arxiv_source", SCRIPT_PATH)
 das = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

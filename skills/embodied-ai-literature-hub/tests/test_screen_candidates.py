@@ -6,8 +6,8 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("screen_candidates", ROOT / "scripts" / "screen_candidates.py")
+ROOT = Path(__file__).resolve().parents[3]
+SPEC = importlib.util.spec_from_file_location("screen_candidates", ROOT / "src" / "search" / "legacy" / "screen_candidates.py")
 screen_candidates = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(screen_candidates)

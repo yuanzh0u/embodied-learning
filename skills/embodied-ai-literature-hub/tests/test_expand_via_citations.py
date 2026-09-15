@@ -12,7 +12,7 @@ import urllib.error
 from pathlib import Path
 from unittest import mock
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "expand_via_citations.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "search" / "legacy" / "expand_via_citations.py"
 SPEC = importlib.util.spec_from_file_location("expand_via_citations", SCRIPT_PATH)
 mod = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

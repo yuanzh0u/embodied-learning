@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("extract_content_queue", ROOT / "scripts" / "extract_content_queue.py")
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))  # modules under src/ import src.* at load time
+
+ROOT = Path(__file__).resolve().parents[3]
+SPEC = importlib.util.spec_from_file_location("extract_content_queue", ROOT / "src" / "fetch" / "legacy" / "extract_content_queue.py")
 extract_content_queue = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(extract_content_queue)

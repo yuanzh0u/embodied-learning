@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "search_semantic_scholar.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "src" / "search" / "legacy" / "search_semantic_scholar.py"
 SPEC = importlib.util.spec_from_file_location("search_semantic_scholar", SCRIPT_PATH)
 s2 = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

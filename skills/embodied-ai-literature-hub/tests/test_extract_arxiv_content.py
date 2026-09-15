@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import sys
 import io
 import json
 import os
@@ -12,14 +13,18 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))  # modules under src/ import src.* at load time
 from unittest import mock
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def load_script(name: str):
-    path = ROOT / "scripts" / f"{name}.py"
+    path = ROOT / "src" / "fetch" / "legacy" / f"{name}.py"
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader

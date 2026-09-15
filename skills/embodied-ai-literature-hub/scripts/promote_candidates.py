@@ -19,7 +19,6 @@ claim, pick the stance, and set the exact locator.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import re
 import sys
@@ -29,20 +28,15 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-SCRIPTS_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
 API_URL = "https://export.arxiv.org/api/query"
 ATOM = "{http://www.w3.org/2005/Atom}"
 
 
-def load_sibling(name: str):
-    spec = importlib.util.spec_from_file_location(name, SCRIPTS_DIR / f"{name}.py")
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
-
-
-extract_arxiv_content = load_sibling("extract_arxiv_content")
+from src.fetch.legacy import extract_arxiv_content
 
 
 def parse_args() -> argparse.Namespace:

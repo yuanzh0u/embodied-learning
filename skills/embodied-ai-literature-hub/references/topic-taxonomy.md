@@ -19,7 +19,8 @@ source:
 - arXiv compatibility
 
 This reference explains the deterministic taxonomy in
-`scripts/query_taxonomy.py`. It is the static baseline for query planning; live
+`src/search/legacy/query_taxonomy.py` (a pure library module — import it, there
+is no CLI). It is the static baseline for query planning; live
 web calibration may add terms later, but should not replace these stable keys.
 
 ## Query Entry Schema
