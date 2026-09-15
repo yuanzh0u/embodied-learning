@@ -10,7 +10,7 @@ reason. Deduplicate on base arXiv ID while preserving all query labels and
 discovery batches.
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py build-candidate-registry \
   --search-result work/<run>/search-round-1.json \
   --search-result work/<run>/search-round-2.json \
   --browser-result work/<run>/browser-round-3.json \
@@ -23,7 +23,7 @@ python3 skills/embodied-ai-literature-hub/scripts/build_candidate_registry.py \
 Run after each search/screening round:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/assess_review_coverage.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py assess-review-coverage \
   --query-plan work/<run>/query-plan.json \
   --candidate-registry work/<run>/candidate-registry.json \
   --evidence-jsonl work/<run>/evidence.jsonl \

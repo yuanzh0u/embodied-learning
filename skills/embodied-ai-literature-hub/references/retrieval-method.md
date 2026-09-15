@@ -1,6 +1,6 @@
 # Retrieval Method (the "regular method")
 
-`rank_problem_relevance.py` filters the fetched corpus to `--target-retrieved` papers with
+`search.py rank-problem-relevance` filters the fetched corpus to `--target-retrieved` papers with
 a **sparse lexical retriever** — Okapi BM25 — and, for each surviving paper, emits an
 **explanation** of its relevance. This is the RAG retrieval step: the questions are the
 query, each paper is a document, and the retriever scores how well each document answers

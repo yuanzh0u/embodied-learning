@@ -57,7 +57,7 @@ tags: [ingestion, workflow, agent-process]
 
 单篇论文的全文与阅读笔记可归档到本地公共论文池（默认 `~/Documents/arxiv/pool`，仓库之外，每篇一目录、按 arXiv id/DOI 唯一命名），跨主题复用时不再随 run 重复存档：
 
-- 池子登记：`python skills/embodied-ai-literature-hub/scripts/pool_add_paper.py add --extraction <extraction.json> --note <note.md>`
+- 池子登记：`python skills/embodied-ai-literature-hub/scripts/knowledge.py pool-add-paper add --extraction <extraction.json> --note <note.md>`
 - 主题卡引用池子论文时，`source` 用 `POOL-*` 前缀 + 语义锚 locator，不做 `sources.md` 登记：
 
   ```yaml

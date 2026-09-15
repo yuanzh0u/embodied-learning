@@ -97,7 +97,7 @@ per evidence event.
 ]
 ```
 
-The `render_figure_table_block.py` helper in the literature-hub skill turns these records
+The `parse.py render-figure-table-block` helper in the literature-hub skill turns these records
 into markdown snippets for the review deliverables (figures render as `![caption](image_url)`
 which the research wiki displays as a real `<img>`; tables render as a markdown grid).
 

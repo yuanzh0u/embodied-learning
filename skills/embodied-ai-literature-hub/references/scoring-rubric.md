@@ -1,6 +1,6 @@
 # Scoring Rubric
 
-`rank_influential_papers.py` scores every 1-hop neighbor of a root paper with a
+`search.py rank-influential-papers` scores every 1-hop neighbor of a root paper with a
 weighted composite in `[0, 1]`. Each dimension is normalized independently so no
 single raw magnitude (e.g. a 10,000-citation paper) can swamp the others.
 

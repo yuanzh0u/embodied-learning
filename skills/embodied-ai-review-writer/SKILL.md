@@ -43,10 +43,10 @@ If the brief says `Writing readiness: preliminary` or its coverage gate is block
    - **If you stop for any reason before settling** (search failed, evidence insufficient, out of time), leave the run `in-progress` in `work/` and TELL THE USER explicitly that the run is unfinished, listing the missing steps. A silently abandoned run that looks like a deliverable is a contract violation; an honestly declared partial run is fine.
    - `knowledge/index.md`, `knowledge/embodied-ai/index.md`, and only the relevant topic cards.
 2. Build and widen the candidate pool (via `$embodied-ai-literature-hub`):
-   - Generate a mode-aware query plan with the Hub's in-skill planning step (`build_query_plan.py`).
-   - Search in multiple API/Browser batches; merge them with `build_candidate_registry.py`.
+   - Generate a mode-aware query plan with the Hub's in-skill planning step (`search.py build-query-plan`).
+   - Search in multiple API/Browser batches; merge them with `search.py build-candidate-registry`.
    - Screen titles/abstracts for priority only. Candidate count is not evidence count.
-   - Run `assess_review_coverage.py` after every batch. Continue until all floors, all dimensions, and consecutive saturation rounds pass.
+   - Run `search.py assess-review-coverage` after every batch. Continue until all floors, all dimensions, and consecutive saturation rounds pass.
 3. Recover, read, and verify full text:
    - Use the Hub's unified `extract_arxiv_content.py`: HTML -> text-layer PDF, with `--ocr-mode never --include-full-text`.
    - Keep scan-only or otherwise unrecoverable papers in the registry as `unavailable` rather than silently dropping them.
