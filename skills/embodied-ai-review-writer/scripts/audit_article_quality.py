@@ -373,6 +373,18 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
             "mechanism": r"^#{2,3}\s+.*(?:机制|问题.*(?:出在哪|在哪里)|为什么.*(?:失败|失效)|因果链|真正发生)",
             "boundary": r"^## .*?(边界|什么时候.*不成立|限制)",
         }
+    elif style == "quickread":
+        if zh_count < 300:
+            add(findings, "error", path, "quickread-length", f"Quick-read card has only {zh_count} Chinese characters; expected at least 300")
+        elif zh_count > 1400:
+            add(findings, "warning", path, "quickread-length", f"Quick-read card has {zh_count} Chinese characters; consider tightening below 1400")
+        required = {
+            "positioning": r"^## .*?一句话定位",
+            "method": r"^## .*?方法步骤",
+            "limits": r"^## .*?局限与边界",
+        }
+        if re.search(r"^\|.*\|", text, flags=re.MULTILINE):
+            add(findings, "warning", path, "quickread-table", "card contains a table row; the wiki inline reader cannot render tables")
     else:
         if zh_count < 300:
             add(findings, "error", path, "xiaohongshu-length", f"Xiaohongshu body has only {zh_count} Chinese characters; expected at least 300")
@@ -393,8 +405,8 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
             add(findings, "error", path, f"section-{rule}", f"missing required {style} section: {rule}")
 
     unique_links = set(ARXIV_LINK_RE.findall(text))
-    minimum_links = {"memo": 5, "zhihu": 3, "xiaohongshu": 3}[style]
-    maximum_links = {"memo": None, "zhihu": 12, "xiaohongshu": 5}[style]
+    minimum_links = {"memo": 5, "zhihu": 3, "xiaohongshu": 3, "quickread": 1}[style]
+    maximum_links = {"memo": None, "zhihu": 12, "xiaohongshu": 5, "quickread": 1}[style]
     if len(unique_links) < minimum_links:
         add(
             findings,
@@ -406,7 +418,7 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
     if maximum_links is not None and len(unique_links) > maximum_links:
         add(
             findings,
-            "error" if style == "xiaohongshu" else "warning",
+            "error" if style in {"xiaohongshu", "quickread"} else "warning",
             path,
             "source-selection",
             f"{style} cites {len(unique_links)} unique arXiv papers; maximum reader-facing budget is {maximum_links}",
@@ -414,7 +426,7 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
 
     links = len(ARXIV_LINK_RE.findall(body))
     paragraphs = len([item for item in re.split(r"\n\s*\n", body) if item.strip() and not item.lstrip().startswith("#")])
-    if paragraphs and links / paragraphs > {"memo": 2.5, "zhihu": 1.5, "xiaohongshu": 1.2}[style]:
+    if paragraphs and links / paragraphs > {"memo": 2.5, "zhihu": 1.5, "xiaohongshu": 1.2, "quickread": 1.0}[style]:
         add(findings, "warning", path, "citation-density", f"body has {links} arXiv links across {paragraphs} prose blocks")
 
     return text, findings
@@ -439,6 +451,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--memo", help="Scientific memo Markdown path.")
     parser.add_argument("--zhihu", help="Zhihu explainer Markdown path.")
     parser.add_argument("--xiaohongshu", help="Xiaohongshu post Markdown path.")
+    parser.add_argument("--quickread", help="Single-paper quick-read card Markdown path.")
     parser.add_argument("--min-chinese-share", type=float, default=0.65)
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
     return parser.parse_args()
@@ -446,23 +459,28 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    if args.bundle_dir:
-        root = Path(args.bundle_dir)
-        memo_path = Path(args.memo) if args.memo else root / "scientific-memo_keyan.md"
-        zhihu_path = Path(args.zhihu) if args.zhihu else root / "zhihu-explainer_zhihu.md"
-        xhs_path = Path(args.xiaohongshu) if args.xiaohongshu else root / "xiaohongshu-post_xiaohongshu.md"
+    if args.quickread:
+        if args.bundle_dir or args.memo or args.zhihu or args.xiaohongshu:
+            raise SystemExit("--quickread audits a single-paper card and cannot be combined with bundle flags")
+        findings = audit_file(Path(args.quickread), "quickread", args.min_chinese_share)[1]
     else:
-        if not (args.memo and args.zhihu and args.xiaohongshu):
-            raise SystemExit("provide --bundle-dir or all of --memo/--zhihu/--xiaohongshu")
-        memo_path, zhihu_path, xhs_path = Path(args.memo), Path(args.zhihu), Path(args.xiaohongshu)
+        if args.bundle_dir:
+            root = Path(args.bundle_dir)
+            memo_path = Path(args.memo) if args.memo else root / "scientific-memo_keyan.md"
+            zhihu_path = Path(args.zhihu) if args.zhihu else root / "zhihu-explainer_zhihu.md"
+            xhs_path = Path(args.xiaohongshu) if args.xiaohongshu else root / "xiaohongshu-post_xiaohongshu.md"
+        else:
+            if not (args.memo and args.zhihu and args.xiaohongshu):
+                raise SystemExit("provide --bundle-dir, --quickread, or all of --memo/--zhihu/--xiaohongshu")
+            memo_path, zhihu_path, xhs_path = Path(args.memo), Path(args.zhihu), Path(args.xiaohongshu)
 
-    memo, findings = audit_file(memo_path, "memo", args.min_chinese_share)
-    zhihu, more = audit_file(zhihu_path, "zhihu", args.min_chinese_share)
-    findings.extend(more)
-    xhs, more = audit_file(xhs_path, "xiaohongshu", args.min_chinese_share)
-    findings.extend(more)
-    if memo and zhihu:
-        findings.extend(overlap_findings(memo_path, memo, zhihu_path, zhihu))
+        memo, findings = audit_file(memo_path, "memo", args.min_chinese_share)
+        zhihu, more = audit_file(zhihu_path, "zhihu", args.min_chinese_share)
+        findings.extend(more)
+        xhs, more = audit_file(xhs_path, "xiaohongshu", args.min_chinese_share)
+        findings.extend(more)
+        if memo and zhihu:
+            findings.extend(overlap_findings(memo_path, memo, zhihu_path, zhihu))
 
     if args.json:
         print(json.dumps({"ok": not any(item.severity == "error" for item in findings), "findings": [asdict(item) for item in findings]}, ensure_ascii=False, indent=2))

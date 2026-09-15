@@ -13,6 +13,7 @@ from functools import partial
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "serve_research_wiki.py"
@@ -1071,6 +1072,107 @@ class PaperChatEndpointTest(ChatServerHarness):
         self.assertEqual(status, HTTPStatus.OK)
         self.assertEqual(payload["messages"], [])
         self.assertEqual(payload["deep_read_status"], "pass")
+
+
+class QuickReadEndpointTest(ChatServerHarness):
+    """The 速读 routes: state probe (no article / with article / bad id) and
+    the SSE generate endpoint backed by a stubbed quick_read_paper.py run."""
+
+    def seed_pool(self, paper_id: str = "2402.10329", *, with_article: bool = False):
+        pool_dir = self.kb_root / "pool" / f"arxiv-{paper_id}"
+        pool_dir.mkdir(parents=True, exist_ok=True)
+        (pool_dir / "extraction.json").write_text("{}", encoding="utf-8")
+        (pool_dir / "note.json").write_text("{}", encoding="utf-8")
+        (pool_dir / "note.json.audit.json").write_text(json.dumps({"status": "pass"}), encoding="utf-8")
+        if with_article:
+            card = "# 速读：测试\n\narXiv:2402.10329 · method\n\n## 一句话定位\n\n测试内容。\n\n" \
+                   "## 链接\n\n[arXiv:2402.10329](https://arxiv.org/abs/2402.10329)\n"
+            (pool_dir / "quick-read_sudu.md").write_text(card, encoding="utf-8")
+        return pool_dir
+
+    def test_state_reports_unpooled_paper(self):
+        status, payload, _ = self.request("GET", "/api/paper/quickread/state?id=2402.10329")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertFalse(payload["pooled"])
+        self.assertIsNone(payload["deep_read_status"])
+        self.assertFalse(payload["quick_read"])
+        self.assertEqual(payload["markdown"], "")
+        self.assertIn("agent_available", payload)
+
+    def test_state_reports_pooled_card(self):
+        self.seed_pool(with_article=True)
+        status, payload, _ = self.request("GET", "/api/paper/quickread/state?id=2402.10329")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertTrue(payload["pooled"])
+        self.assertEqual(payload["deep_read_status"], "pass")
+        self.assertTrue(payload["quick_read"])
+        self.assertIn("## 一句话定位", payload["markdown"])
+        self.assertIsNotNone(payload["updated_at"])
+
+    def test_state_bad_id_rejected(self):
+        status, payload, _ = self.request("GET", "/api/paper/quickread/state?id=not-an-id")
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_generate_streams_sse_and_delivers_markdown(self):
+        self.seed_pool()
+
+        def fake_popen(command, **kwargs):
+            # The stub run reports success; the article file must already
+            # exist for the handler to read it back.
+            pool_dir = self.kb_root / "pool" / "arxiv-2402.10329"
+            (pool_dir / "quick-read_sudu.md").write_text(
+                "# 速读：生成结果\n\n## 一句话定位\n\n新卡。\n", encoding="utf-8"
+            )
+            return FakeProcess(returncode=0, lines=["[PAPER-CHAT] pool 命中", "[QUICK-READ] 速读卡已写入"])
+
+        with mock.patch.object(server_module.subprocess, "Popen", side_effect=fake_popen):
+            status, raw, headers = self._collect_sse(
+                self.request("POST", "/api/paper/quickread", {"arxiv_id": "2402.10329"})
+            )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        kinds = [event["type"] for event in events]
+        self.assertIn("stage", kinds)
+        self.assertEqual(kinds[-1], "quickread_done")
+        done = events[-1]
+        self.assertEqual(done["arxiv_id"], "2402.10329")
+        self.assertIn("生成结果", done["markdown"])
+        # Both progress prefixes are forwarded.
+        details = [event["detail"] for event in events if event["type"] == "stage"]
+        self.assertTrue(any("pool 命中" in detail for detail in details))
+        self.assertTrue(any("速读卡已写入" in detail for detail in details))
+
+    def test_generate_failure_reports_topic_error(self):
+        self.seed_pool()
+        with mock.patch.object(server_module.subprocess, "Popen",
+                               return_value=FakeProcess(returncode=3, lines=[])):
+            status, raw, _ = self._collect_sse(
+                self.request("POST", "/api/paper/quickread", {"arxiv_id": "2402.10329"})
+            )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        self.assertEqual(events[-1]["type"], "topic_error")
+        self.assertIn("失败", events[-1]["message"])
+
+    def test_generate_bad_id_rejected(self):
+        status, payload, _ = self.request("POST", "/api/paper/quickread", {"arxiv_id": "garbage"})
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+
+class FakeProcess:
+    """subprocess.Popen stand-in for the quick-read generation stub."""
+
+    def __init__(self, *, returncode: int, lines: list[str]):
+        self.returncode = returncode
+        self._lines = lines
+        self.stdout = iter(lines)
+        self.stderr = iter([])
+
+    def wait(self, timeout=None):
+        return self.returncode
+
+    def kill(self):
+        pass
 
 
 if __name__ == "__main__":

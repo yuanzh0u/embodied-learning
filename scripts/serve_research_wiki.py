@@ -30,6 +30,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from build_research_wiki import resolve_snapshot_directory  # noqa: E402
 from init_run import run_folder_name, slugify_topic  # noqa: E402
+from lib.agent_invoke import resolve_cli as agent_cli_available  # noqa: E402
 sys.path.insert(0, str(SCRIPT_DIR.parent))  # repo root, for the embodied_learning package
 from embodied_learning.knowledge import arxiv_reader  # noqa: E402
 import wiki_chat  # noqa: E402
@@ -313,6 +314,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
         if path == "/api/paper/chat/state":
             self._handle_paper_chat_state()
             return
+        if path == "/api/paper/quickread/state":
+            self._handle_quick_read_state()
+            return
         if path == "/api/workflow/state":
             self._handle_workflow_state()
             return
@@ -364,6 +368,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
             return
         if path == "/api/paper/chat":
             self._handle_paper_chat()
+            return
+        if path == "/api/paper/quickread":
+            self._handle_quick_read_generate()
             return
         if path == "/api/paper/chat/reset":
             self._handle_paper_chat_reset()
@@ -631,6 +638,128 @@ class WikiHandler(SimpleHTTPRequestHandler):
             return str(json.loads(audit_path.read_text(encoding="utf-8")).get("status") or "") or None
         except (OSError, json.JSONDecodeError):
             return None
+
+    def _quick_read_article_path(self, paper_id: str) -> Path:
+        return pool_root(self.kb_root) / f"arxiv-{paper_id}" / "quick-read_sudu.md"
+
+    def _handle_quick_read_state(self) -> None:
+        """Capability + article probe for the reader's 速读 tab. Independent of
+        the chat config — browsing a pooled card needs no claude CLI."""
+
+        query = parse_qs(urlparse(self.path).query)
+        raw_id = (query.get("id") or [""])[0]
+        if not raw_id:
+            self._send_json(HTTPStatus.OK, {"enabled": True})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(raw_id)
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        pool_dir = pool_root(self.kb_root) / f"arxiv-{paper_id}"
+        article_path = self._quick_read_article_path(paper_id)
+        markdown = ""
+        updated_at = None
+        if article_path.is_file():
+            try:
+                markdown = article_path.read_text(encoding="utf-8", errors="replace")
+                updated_at = dt.datetime.fromtimestamp(
+                    article_path.stat().st_mtime, tz=dt.timezone.utc
+                ).isoformat()
+            except OSError:
+                markdown = ""
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "enabled": True,
+                "arxiv_id": paper_id,
+                "pooled": (pool_dir / "extraction.json").is_file(),
+                "deep_read_status": self._pool_deep_read_status(pool_dir),
+                "quick_read": bool(markdown.strip()),
+                "markdown": markdown,
+                "agent_available": agent_cli_available() is not None,
+                "updated_at": updated_at,
+            },
+        )
+
+    def _handle_quick_read_generate(self) -> None:
+        """Generate (or regenerate) the single-paper quick-read card. Streams
+        [QUICK-READ]/[PAPER-CHAT] progress from scripts/quick_read_paper.py as
+        SSE; only exit 0 counts — exit 3 means deep-read unavailable."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(str(body.get("arxiv_id") or ""))
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        key = f"quickread-{paper_id}"
+        if not acquire_chat_lock(key):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该论文已有速读生成正在进行，请稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            self._write_sse_event({"type": "stage", "stage": "quickread", "detail": f"开始生成速读卡 {paper_id}…"})
+            ok = self._run_quick_read_generation(paper_id)
+            if not ok:
+                self._write_sse_event(
+                    {
+                        "type": "topic_error",
+                        "message": f"速读卡生成失败：论文 {paper_id} 未通过深读审计或写作出错，请稍后重试。",
+                    }
+                )
+                return
+            article_path = self._quick_read_article_path(paper_id)
+            try:
+                markdown = article_path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                markdown = ""
+            if not markdown.strip():
+                self._write_sse_event({"type": "topic_error", "message": "速读卡写入为空，请稍后重试。"})
+                return
+            self._write_sse_event({"type": "quickread_done", "arxiv_id": paper_id, "markdown": markdown})
+        finally:
+            release_chat_lock(key)
+
+    def _run_quick_read_generation(self, paper_id: str) -> bool:
+        """Run quick_read_paper.py, forwarding both [QUICK-READ] and
+        [PAPER-CHAT] progress lines (the reused pool/deep-read stages print
+        the latter). Deep read (420s) + article (300s) + slack → 900s.
+        Unlike paper preparation, only returncode 0 is success: exit 3 means
+        no audited deep-read note, so no card may be written."""
+
+        command = [
+            sys.executable,
+            str(SCRIPT_DIR / "quick_read_paper.py"),
+            "--arxiv-id", paper_id,
+            "--kb-root", str(self.kb_root),
+        ]
+        try:
+            process = subprocess.Popen(
+                command, cwd=str(self.kb_root), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                detail = line.strip()
+                for prefix in ("[QUICK-READ] ", "[PAPER-CHAT] "):
+                    if detail.startswith(prefix):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "quickread", "detail": detail.removeprefix(prefix)}
+                        )
+                        break
+            try:
+                returncode = process.wait(timeout=900)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+                returncode = -1
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return returncode == 0
+
 
     def _handle_paper_chat(self) -> None:
         """One conversational turn about a single arXiv paper. On first contact

@@ -504,6 +504,118 @@ class AuditArticleQualityTests(unittest.TestCase):
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         self.assertEqual("editorial quality audit OK\n", completed.stdout)
 
+    def write_quickread_card(self, root: Path, *, title: str = "速读：GraphReg 点云配准特征学习") -> str:
+        card = f"""# {title}
+
+arXiv:2302.01109 · method
+
+## 一句话定位
+
+GraphReg 用图神经网络直接在动态点云上学习配准特征，端到端预测帧间刚体变换，在多个室内基准上超过 ICP 与已有深度基线，这一优越性主张可以被复现实验证伪。
+
+## 问题与动机
+
+传统 ICP 类方法在大位移、噪声与局部形变下容易收敛到错误的局部最优，而已有深度方法多在投影深度图上操作，损失了几何细节。论文声称直接在原始点云的图表达上做特征学习，可以同时保留细节并对大位移更鲁棒。
+
+## 方法步骤
+
+1. 为每帧点云构建局部邻接图，边特征编码相对几何关系
+2. 在图上进行多层消息传递，学习逐点配准特征
+3. 由聚合特征预测帧间旋转与平移残差
+4. 迭代细化直至变换收敛
+
+## 关键结果与数字
+
+- 配准误差低于对比基线（rotation error 降低）
+- 在标准室内基准上保持稳定表现（multiple benchmarks）
+
+## 三分法评价
+
+- 创新点：直接在原始点云图表达上学习配准特征，而非投影深度图
+- 性能：声称超过 ICP 类与已有深度基线，读者推断需复核具体设置
+- 工作量：论文未给出
+
+## 局限与边界
+
+- 论文承认：笔记未提取到作者自述局限的逐字记录
+- 读者推断：验证可能集中在室内场景，尚未证明在户外大场景与极端密度差异下成立
+
+## 链接
+
+[arXiv:2302.01109](https://arxiv.org/abs/2302.01109)
+"""
+        path = root / "quick-read_sudu.md"
+        path.write_text(card, encoding="utf-8")
+        return path
+
+    def run_quickread_audit(self, card_path: Path) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(SCRIPT), "--quickread", str(card_path)],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+        )
+
+    def test_quickread_card_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            card_path = self.write_quickread_card(Path(tmpdir))
+            completed = self.run_quickread_audit(card_path)
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("editorial quality audit OK", completed.stdout)
+
+    def test_quickread_missing_boundary_section_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            card_path = self.write_quickread_card(Path(tmpdir))
+            card_path.write_text(
+                card_path.read_text(encoding="utf-8").replace("## 局限与边界", "## 其他边界"),
+                encoding="utf-8",
+            )
+            completed = self.run_quickread_audit(card_path)
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("section-limits", completed.stdout)
+
+    def test_quickread_too_short_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            card_path = self.write_quickread_card(Path(tmpdir))
+            card_path.write_text(
+                "# 速读：极简卡\n\narXiv:2302.01109 · method\n\n## 一句话定位\n\nGraphReg 预测帧间变换。\n\n"
+                "## 方法步骤\n\n1. 建图\n2. 传递\n\n## 关键结果与数字\n\n- 误差降低\n\n"
+                "## 三分法评价\n\n- 创新点：图建模\n- 性能：超基线\n- 工作量：论文未给出\n\n"
+                "## 局限与边界\n\n- 论文承认：无\n- 读者推断：可能仅限室内\n\n"
+                "## 链接\n\n[arXiv:2302.01109](https://arxiv.org/abs/2302.01109)\n",
+                encoding="utf-8",
+            )
+            completed = self.run_quickread_audit(card_path)
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("quickread-length", completed.stdout)
+
+    def test_quickread_second_arxiv_link_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            card_path = self.write_quickread_card(Path(tmpdir))
+            card_path.write_text(
+                card_path.read_text(encoding="utf-8").replace(
+                    "（rotation error 降低）",
+                    "（rotation error 降低，见 [对比研究](https://arxiv.org/abs/2603.09056)）",
+                ),
+                encoding="utf-8",
+            )
+            completed = self.run_quickread_audit(card_path)
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("source-selection", completed.stdout)
+
+    def test_quickread_table_row_warns_but_other_errors_dominate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            card_path = self.write_quickread_card(Path(tmpdir))
+            card_path.write_text(
+                card_path.read_text(encoding="utf-8").replace("## 局限与边界", "## 边界")
+                + "\n| 方法 | 误差 |\n|---|---|\n",
+                encoding="utf-8",
+            )
+            completed = self.run_quickread_audit(card_path)
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("quickread-table", completed.stdout)
+        self.assertIn("section-limits", completed.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,6 +16,8 @@ Default final deliverable: three Markdown files under a new `work/literature-rev
 - `zhihu-explainer_zhihu.md`: 知乎科普帖/专家解释帖风格。
 - `xiaohongshu-post_xiaohongshu.md`: 小红书网文/KOL 洞察帖风格。
 
+A fourth style exists outside the review bundle: `quick-read_sudu.md`（速读卡，see [quick-read.md](references/quick-read.md)）is a **single-paper pool artifact**, not a literature-review deliverable. Its inputs are one paper's deep-read `note.json` + `paper.md` from the public pool — never a writing brief — and it is generated per paper by `scripts/quick_read_paper.py`; it never appears inside a `literature-review-<topic>-<date>/` folder.
+
 **Division of labor:** `build_review_packet.py` is a briefing generator, not an author. It emits `review-packet.md` + `writing-brief.md` + `evidence-appendix.md`; the writing stage writes and editorially audits the three reader-facing files. Never present mechanical renders (`*.scaffold.md`) as finished articles.
 
 ## Required inputs
@@ -126,6 +128,7 @@ Then hand the validated brief to the writing workflow below (mandatory for prose
 - Scientific research memo: read [scientific-memo.md](references/scientific-memo.md).
 - Zhihu expert explainer: read [zhihu-explainer.md](references/zhihu-explainer.md).
 - Xiaohongshu insight post: read [xiaohongshu-post.md](references/xiaohongshu-post.md).
+- Quick-read card (single paper): read [quick-read.md](references/quick-read.md).
 - Always read [editorial-quality-rubric.md](references/editorial-quality-rubric.md) and [citation-projection.md](references/citation-projection.md).
 
 For a full bundle, read all three style references, but plan and draft each article independently from the brief. Never derive Zhihu or Xiaohongshu prose by shortening the scientific memo.
@@ -205,12 +208,13 @@ After migration, read all three articles again. Removing an unreadable citation 
   - `scientific-memo_keyan.md`
   - `zhihu-explainer_zhihu.md`
   - `xiaohongshu-post_xiaohongshu.md`
+- Quick-read cards are bounded by exactly one paper: every claim, number, and judgment must come from that paper's deep-read note or its own full text; citing any other paper disqualifies the card. The card is a pool artifact (`quick-read_sudu.md` in `pool/arxiv-<id>/`), never a bundle deliverable.
 
 ## References
 
 - Read [review-contract.md](references/review-contract.md) before drafting or auditing a full review.
 - Read [templates.md](references/templates.md) for the briefing-to-writer handoff.
-- Load only the selected style guidance for drafting: [scientific-memo.md](references/scientific-memo.md), [zhihu-explainer.md](references/zhihu-explainer.md), [xiaohongshu-post.md](references/xiaohongshu-post.md), plus always [editorial-quality-rubric.md](references/editorial-quality-rubric.md) and [citation-projection.md](references/citation-projection.md).
+- Load only the selected style guidance for drafting: [scientific-memo.md](references/scientific-memo.md), [zhihu-explainer.md](references/zhihu-explainer.md), [xiaohongshu-post.md](references/xiaohongshu-post.md), [quick-read.md](references/quick-read.md) (single-paper cards only), plus always [editorial-quality-rubric.md](references/editorial-quality-rubric.md) and [citation-projection.md](references/citation-projection.md).
 
 ## Completion standard
 

@@ -68,6 +68,9 @@ python3 skills/embodied-ai-review-writer/scripts/build_review_packet.py --topic 
   --knowledge-id EA-DATA --evidence-jsonl /tmp/evidence.jsonl
 # Local public paper pool (default ~/Documents/arxiv/pool, outside the repo): one folder per paper
 python3 skills/embodied-ai-literature-hub/scripts/pool_add_paper.py add --extraction /tmp/extraction.json
+# Single-paper quick-read card (速读): ensures pooled + deep-read, then writes
+# quick-read_sudu.md into the pool dir (wiki reader 速读 tab browses it)
+python3 scripts/quick_read_paper.py --arxiv-id 2302.01109
 ```
 
 The paper pool is a local store outside the repository (`~/Documents/arxiv/pool` by default) where

@@ -42,6 +42,10 @@
     dataBase: "data",
     snapshotId: "legacy",
     pointerResolved: false,
+    // Quick-read (速读) tab state: markdown cache keyed by paper id, plus the
+    // id currently generating. Memory only — never persisted.
+    quickRead: new Map(),
+    quickReadGenerating: null,
     chat: {
       open: false,
       serverEnabled: false,
@@ -150,6 +154,8 @@
     readerViewId: el("reader-view-id"),
     readerViewTitle: el("reader-view-title"),
     readerBack: el("reader-back-button"),
+    readerQuickReadTab: el("reader-quickread-tab"),
+    readerQuickReadBody: el("reader-quickread-body"),
     readerOpenExternal: el("reader-open-external"),
     readerProgress: el("reader-progress"),
     readerProgressBar: el("reader-progress-bar"),
@@ -1337,6 +1343,7 @@
     if (state.readerAbort) state.readerAbort.abort();
     const controller = new AbortController();
     state.readerAbort = controller;
+    resetQuickReadTab();
     showReaderSkeleton(paperId);
 
     // Warm cache: paint instantly, no fetch at all.
@@ -1407,6 +1414,108 @@
     if (state.readerAbort) state.readerAbort.abort();
     if (state.topic) setRoute(state.topic.id, state.version, false);
     else setRouteHash("#/");
+  }
+
+  // ---- quick-read (速读) tab ------------------------------------------------
+  // The reader shows either the paper document or its single-paper quick-read
+  // card. The card is generated server-side by quick_read_paper.py (pooled,
+  // deep-read gated); the tab loads lazily on first click.
+
+  function resetQuickReadTab() {
+    nodes.readerQuickReadTab.setAttribute("aria-pressed", "false");
+    nodes.readerQuickReadTab.classList.remove("is-active");
+    nodes.readerQuickReadBody.hidden = true;
+    nodes.readerQuickReadBody.innerHTML = "";
+    nodes.articleBody.hidden = false;
+  }
+
+  function switchReaderTab(showQuickRead) {
+    nodes.readerQuickReadTab.setAttribute("aria-pressed", String(showQuickRead));
+    nodes.readerQuickReadTab.classList.toggle("is-active", showQuickRead);
+    nodes.readerQuickReadBody.hidden = !showQuickRead;
+    nodes.articleBody.hidden = showQuickRead;
+  }
+
+  function renderQuickReadCard(paperId, markdown) {
+    nodes.readerQuickReadBody.innerHTML = markdown ? renderChatMarkdown(markdown) : "";
+    bindReaderLinks(nodes.readerQuickReadBody);
+  }
+
+  function quickReadPlaceholder(paperId, payload) {
+    const agentReady = payload?.agent_available !== false;
+    const deepStatus = payload?.deep_read_status || "未深读";
+    return `
+      <div class="quickread-placeholder">
+        <p><strong>还没有这篇论文的速读卡。</strong></p>
+        <p>速读基于已审计的深读笔记生成（当前深读状态：${escapeHtml(deepStatus)}），首次生成约需 1-3 分钟。</p>
+        <button type="button" id="quickread-generate-button" ${agentReady ? "" : "disabled"}>生成速读</button>
+        ${agentReady ? "" : '<p class="reader-load-error">claude CLI 不可用，无法生成速读。</p>'}
+      </div>`;
+  }
+
+  async function loadQuickReadState(paperId) {
+    if (state.quickRead.has(paperId)) {
+      renderQuickReadCard(paperId, state.quickRead.get(paperId));
+      return;
+    }
+    nodes.readerQuickReadBody.innerHTML = '<p class="reader-load-error">正在检查速读缓存…</p>';
+    try {
+      const response = await fetch(`api/paper/quickread/state?id=${encodeURIComponent(paperId)}`);
+      if (!response.ok) throw new Error(`状态读取失败（${response.status}）`);
+      const payload = await response.json();
+      if (payload.quick_read && payload.markdown) {
+        state.quickRead.set(paperId, payload.markdown);
+        renderQuickReadCard(paperId, payload.markdown);
+        return;
+      }
+      nodes.readerQuickReadBody.innerHTML = quickReadPlaceholder(paperId, payload);
+      const button = nodes.readerQuickReadBody.querySelector("#quickread-generate-button");
+      if (button) button.addEventListener("click", () => generateQuickRead(paperId));
+    } catch (error) {
+      nodes.readerQuickReadBody.innerHTML =
+        `<p class="reader-load-error">速读状态读取失败：${escapeHtml(error.message)}</p>`;
+    }
+  }
+
+  async function generateQuickRead(paperId) {
+    if (state.quickReadGenerating) return;
+    state.quickReadGenerating = paperId;
+    nodes.readerProgress.hidden = false;
+    nodes.readerProgressBar.style.width = "30%";
+    nodes.readerProgressLabel.textContent = "正在生成速读（深读校验 → 写作简报 → 成稿）…";
+    const button = nodes.readerQuickReadBody.querySelector("#quickread-generate-button");
+    if (button) { button.disabled = true; button.textContent = "生成中…"; }
+    try {
+      const response = await fetch("api/paper/quickread", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ arxiv_id: paperId }),
+      });
+      if (response.status === 409) {
+        showToast("该论文已有速读生成正在进行，请稍候。");
+        return;
+      }
+      if (!response.ok) throw new Error(`生成请求失败（${response.status}）`);
+      await consumeSSE(response, (event) => {
+        if (event.type === "stage") {
+          nodes.readerProgressLabel.textContent = event.detail || "正在生成速读…";
+        } else if (event.type === "quickread_done") {
+          state.quickRead.set(paperId, event.markdown);
+          renderQuickReadCard(paperId, event.markdown);
+        } else if (event.type === "topic_error") {
+          nodes.readerQuickReadBody.innerHTML =
+            `<p class="reader-load-error">${escapeHtml(event.message || "速读生成失败")}</p>`;
+        }
+      });
+    } catch (error) {
+      nodes.readerQuickReadBody.innerHTML =
+        `<p class="reader-load-error">速读生成失败：${escapeHtml(error.message)}</p>`;
+    } finally {
+      state.quickReadGenerating = null;
+      nodes.readerProgressBar.style.width = "100%";
+      nodes.readerProgressLabel.textContent = "速读完成";
+      setTimeout(() => { nodes.readerProgress.hidden = true; }, 600);
+    }
   }
 
   // ---- selection → @-quote context ----------------------------------------
@@ -2154,6 +2263,14 @@
   function bindEvents() {
     window.addEventListener("hashchange", route);
     nodes.readerBack.addEventListener("click", closeReaderToTopic);
+    nodes.readerQuickReadTab.addEventListener("click", () => {
+      const paperId = parsePaperRoute();
+      if (!paperId) return;
+      const showQuickRead = nodes.readerQuickReadBody.hidden;
+      switchReaderTab(showQuickRead);
+      // Lazy: fetch the card (or placeholder) only when the tab is opened.
+      if (showQuickRead) loadQuickReadState(paperId);
+    });
     window.addEventListener("scroll", updateProgress, { passive: true });
     mobileNavigationQuery.addEventListener("change", syncSidebarForViewport);
     nodes.sidebarToggle.addEventListener("click", () => sidebarIsOpen() ? closeSidebar() : openSidebar());
