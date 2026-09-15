@@ -44,10 +44,10 @@ python3 skills/embodied-ai-paper-reader/scripts/build_reading_packet.py \
 6. **Validate and audit.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/validate_paper_note.py \
+python3 skills/embodied-ai-paper-reader/scripts/note_tools.py validate-paper-note \
   work/<run>/paper-notes/2402.10329.json
 
-python3 skills/embodied-ai-paper-reader/scripts/audit_claim_support.py \
+python3 skills/embodied-ai-paper-reader/scripts/note_tools.py audit-claim-support \
   --paper-note work/<run>/paper-notes/2402.10329.json \
   --extraction work/<run>/extractions/2402.10329.json \
   --output work/<run>/paper-notes/2402.10329.audit.json
@@ -56,7 +56,7 @@ python3 skills/embodied-ai-paper-reader/scripts/audit_claim_support.py \
 7. **Project evidence only after the gates pass.** Read [evidence-projection.md](references/evidence-projection.md).
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/project_evidence_events.py \
+python3 skills/embodied-ai-paper-reader/scripts/note_tools.py project-evidence-events \
   --paper-note work/<run>/paper-notes/2402.10329.json \
   --audit work/<run>/paper-notes/2402.10329.audit.json \
   --id-prefix EA-DATA-2026 --start-seq 1 \

@@ -376,15 +376,15 @@ class WorkflowDriverContractTest(unittest.TestCase):
         self.assertIn("run_review_pipeline.py", prompt)
         self.assertIn("pipeline-summary.json", prompt)
         self.assertIn("不要手动执行任何检索/抽取/筛选/深读/投影命令", prompt)
-        self.assertIn("search_arxiv.py", prompt)  # named among banned commands
-        self.assertIn("search_semantic_scholar.py", prompt)
+        self.assertIn("search.py search-arxiv", prompt)  # named among banned commands
+        self.assertIn("search.py search-semantic-scholar", prompt)
 
     def test_workflow_prompt_parallel_deep_reading_contract(self):
         prompt = wiki_chat.WORKFLOW_SYSTEM_PROMPT
         # Deep reading now runs inside the driver; the agent must not redo it.
         self.assertIn("论文深读（速记骨架+审计）与证据投影已由驱动脚本", prompt)
         self.assertIn("不要派发深读 subagent", prompt)
-        self.assertIn("不要跑 project_evidence_events.py", prompt)
+        self.assertIn("不要跑 note_tools.py project-evidence-events", prompt)
         # Outline/writing remain the agent's judgment work.
         self.assertIn("build_review_packet.py", prompt)
         self.assertIn("check_run_bundle.py", prompt)

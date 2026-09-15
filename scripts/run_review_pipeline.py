@@ -315,7 +315,7 @@ def outputs_exist(*paths: Path) -> bool:
     return all(path.is_file() and path.stat().st_size > 0 for path in paths)
 
 
-PROJECT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "project_evidence_events.py"
+PROJECT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "note_tools.py"
 
 
 def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
@@ -348,7 +348,7 @@ def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) ->
             continue
         output = evidence_dir / f"{note_path.stem}.jsonl"
         result = run_command([
-            sys.executable, str(PROJECT_SCRIPT),
+            sys.executable, str(PROJECT_SCRIPT), "project-evidence-events",
             "--paper-note", str(note_path),
             "--audit", str(audit_path),
             "--id-prefix", id_prefix,
