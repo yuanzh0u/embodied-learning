@@ -57,7 +57,7 @@ def validate(root: Path) -> None:
             run(
                 [
                     sys.executable,
-                    "skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py",
+                    "skills/embodied-ai-literature-hub/scripts/parse.py", "write-lit-outputs",
                     "--evidence-jsonl",
                     str(evidence_path.relative_to(root)),
                     "--validate-only",

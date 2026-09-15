@@ -15,7 +15,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[3]
 HUB_SCRIPTS = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
-PLANNER_ENTRY = HUB_SCRIPTS / "build_query_plan.py"  # thin entry, used via subprocess
+PLANNER_ENTRY = HUB_SCRIPTS / "search.py"  # grouped entry, used via subprocess
 SRC_SEARCH = ROOT / "embodied_learning" / "search" 
 PLANNER = SRC_SEARCH / "query_plan.py"  # implementation module for spec-loading
 SEARCH = SRC_SEARCH / "arxiv.py"
@@ -23,7 +23,7 @@ SEARCH = SRC_SEARCH / "arxiv.py"
 
 def run_json(*args: str) -> dict:
     completed = subprocess.run(
-        [sys.executable, str(PLANNER_ENTRY), *args],
+        [sys.executable, str(PLANNER_ENTRY), "build-query-plan", *args],
         check=True,
         cwd=ROOT,
         text=True,
@@ -251,7 +251,7 @@ class QueryPlannerTests(unittest.TestCase):
             subprocess.run(
                 [
                     sys.executable,
-                    str(PLANNER_ENTRY),
+                    str(PLANNER_ENTRY), "build-query-plan",
                     "--topic",
                     "VLA 微调数据",
                     "--output",

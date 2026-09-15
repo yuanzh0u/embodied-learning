@@ -84,8 +84,8 @@ def ensure_extraction(paper_id: str, pool_root: Path, force: bool) -> bool:
         return False
     add = run(
         [
-            sys.executable, str(HUB_SCRIPTS / "pool_add_paper.py"),
-            "add", "--extraction", str(output), "--pool-root", str(pool_root),
+            sys.executable, str(HUB_SCRIPTS / "knowledge.py"),
+            "pool-add-paper", "add", "--extraction", str(output), "--pool-root", str(pool_root),
         ],
         timeout=60.0,
     )
