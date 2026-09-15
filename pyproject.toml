@@ -18,25 +18,29 @@ tex = ["pypandoc"] # TeX -> Markdown parsing (extract_arxiv_tex.py); pandoc bina
 sources = ["boto3", "pypandoc"] # convenience: full TeX-source recovery chain
 
 [project.scripts]
-extract_arxiv = "extract_arxiv_content:main"
+extract_arxiv = "src.fetch.legacy.extract_arxiv_content:main"
 serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
 
 [tool.setuptools]
-# Two module roots in one distribution: the hub's flat extractor modules, and
-# the top-level wiki scripts as the `wiki_scripts` package (repo scripts/,
-# including the shared `lib/` helpers). The repo's wiki/ frontend shell is
-# mapped in as `wiki_scripts.wiki_assets` at build time — no copied tree — so a
-# non-editable install can bootstrap <kb-root>/wiki for a new user. Wiki data
-# (snapshots under wiki/data) is NOT packaged: it is built next to the
-# knowledge base at serve time.
-package-dir = { "" = "skills/embodied-ai-literature-hub/scripts", "wiki_scripts" = "scripts", "wiki_scripts.wiki_assets" = "wiki" }
-packages = ["wiki_scripts", "wiki_scripts.lib", "wiki_scripts.wiki_assets"]
-py-modules = [
-    "extract_arxiv_content",
-    "extract_arxiv_html",
-    "extract_arxiv_pdf",
-    "extract_arxiv_tex",
-    "download_arxiv_source",
+# Two module roots in one distribution: the arXiv data-processing `src` package
+# (repo src/, with search/fetch/parse/knowledge layers), and the top-level wiki
+# scripts as the `wiki_scripts` package (repo scripts/, including the shared
+# `lib/` helpers). `src` is deliberately NOT aliased to a distribution name:
+# CI and all thin entries run uninstalled and import `src.*` directly, so the
+# in-repo and installed import names must match. Fine for a repo-private
+# distribution; rename the directory if this ever ships to an index. The repo's
+# wiki/ frontend shell is mapped in as `wiki_scripts.wiki_assets` at build
+# time — no copied tree — so a non-editable install can bootstrap
+# <kb-root>/wiki for a new user. Wiki data (snapshots under wiki/data) is NOT
+# packaged: it is built next to the knowledge base at serve time.
+package-dir = { "wiki_scripts" = "scripts", "wiki_scripts.wiki_assets" = "wiki" }
+packages = [
+    "src",
+    "src.search", "src.search.legacy",
+    "src.fetch", "src.fetch.legacy",
+    "src.parse", "src.parse.legacy",
+    "src.knowledge", "src.knowledge.legacy",
+    "wiki_scripts", "wiki_scripts.lib", "wiki_scripts.wiki_assets",
 ]
 include-package-data = false
 
