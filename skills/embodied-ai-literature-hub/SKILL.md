@@ -143,19 +143,7 @@ Epistemic boundaries: output is **candidate-level discovery**. BM25 is **lexical
    - For queues spanning many papers, use `scripts/extract_content_queue.py --paper-id-file ... --workers 2`. It checkpoints one JSON result per paper, resumes existing results, caps concurrency at four, and enforces a hard per-paper subprocess timeout; it does not create evidence events.
 5. Hand complete papers to `$embodied-ai-paper-reader`:
    - The paper reader owns structure mapping, question-driven deep reading, critical appraisal, claim verification, paper notes, and evidence-event projection.
-   - `scripts/promote_candidates.py` is a workflow-v2 compatibility path only. Its ranked digest and one-event skeleton do not satisfy the new deep-reading contract and must not create new workflow-v3 evidence.
    - Use `references/evidence-schema.md` only to validate the compatible events projected by the paper reader.
-
-```bash
-python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py \
-  --paper-id 2606.03784 --paper-id 2607.00673 \
-  --topic "..." --topic-id EA-MODEL \
-  --id-prefix EA-XXX-2026 --start-seq 1 \
-   --terms reasoning,planning,failure \
-  --ocr-mode never \
-  --output-skeleton work/<run>/evidence-skeleton.jsonl \
-  --output-digest work/<run>/promotion-digest.md
-```
 
 For large screened queues, put one arXiv ID per line in a UTF-8 file and use
 `--paper-id-file work/<run>/full-text-queue.txt`; the file input is repeatable

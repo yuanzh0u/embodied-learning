@@ -61,9 +61,6 @@ python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_html.py --paper-
 # `--transport s3-tex` = S3 tarball + pandoc, TODO pending AWS credentials — requester-pays bucket)
 python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --paper-id 2402.10329 \
   --terms UMI,data --preferred-source auto --include-full-text --output /tmp/extraction.json
-python3 skills/embodied-ai-literature-hub/scripts/promote_candidates.py --paper-id 2402.10329 \
-  --topic "..." --topic-id EA-DATA --id-prefix EA-XXX-2026 --terms UMI,data \
-  --output-skeleton /tmp/skeleton.jsonl --output-digest /tmp/digest.md   # candidate→evidence promotion
 python3 skills/embodied-ai-review-writer/scripts/build_review_packet.py --topic "..." \
   --knowledge-id EA-DATA --evidence-jsonl /tmp/evidence.jsonl
 # Local public paper pool (default ~/Documents/arxiv/pool, outside the repo): one folder per paper

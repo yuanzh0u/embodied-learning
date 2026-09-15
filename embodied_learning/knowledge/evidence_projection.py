@@ -3,7 +3,6 @@
 
 Library API: stateless explicit-parameter functions (:func:`project`,
 :func:`normalize_authors`, :func:`author_key`, :func:`load_object`). Consumers
-import this module directly — migrate_review_runs.py calls ``project``. The CLI
 surface owns argument parsing and lives in the skill entry
 ``skills/embodied-ai-paper-reader/scripts/project_evidence_events.py``.
 """

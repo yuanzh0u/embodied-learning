@@ -167,19 +167,6 @@ python3 skills/embodied-ai-review-writer/scripts/audit_zhihu_corpus.py \
 
 9. **Settle with the full evidence gates.** Run the settlement workflow in "Run lifecycle and gates" above: `scripts/audit_citations.py` and `scripts/check_run_bundle.py` before status flip. Editorial gates complement evidence gates; neither substitutes for the other.
 
-## Migrating an existing three-style bundle
-
-When a paper-reader migration replaces an old evidence set, preserve mature prose only where its cited papers remain accepted. Drop whole unsupported prose blocks, add manually authored replacement arguments from the new brief, rebuild compact references, and regenerate the trace map. The helper below performs the mechanical parts; `article-updates.json` remains a manually written editorial input, not a claim generator:
-
-```bash
-python3 skills/embodied-ai-review-writer/scripts/migrate_reader_backed_articles.py \
-  --draft-root work/paper-reader-migration/draft-runs \
-  --source-root evidence \
-  --updates work/paper-reader-migration/article-updates.json
-```
-
-After migration, read all three articles again. Removing an unreadable citation is not enough if its unsupported claim remains in plain text. Run `build_trace_map.py`, `audit_article_quality.py`, and `audit_citations.py` on every migrated run.
-
 ## Hard rules
 
 - Treat the brief, claim map, stance buckets, and evidence appendix as inputs, never as article body.
