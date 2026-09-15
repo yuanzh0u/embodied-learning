@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "audit_article_quality.py"
+SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
 
 
 class AuditArticleQualityTests(unittest.TestCase):
@@ -109,7 +109,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             root = Path(tmpdir)
             self.write_good_bundle(root)
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -135,7 +135,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -163,7 +163,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             for name in ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"]:
                 (root / name).write_text(bad, encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -183,7 +183,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -203,7 +203,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -221,7 +221,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             text = text.replace("复杂接触任务才更需要精细质量治理。", "复杂接触任务才更需要精细质量治理（inference）。")
             zhihu.write_text(text, encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -241,7 +241,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -260,7 +260,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             text = text.replace("：展示恢复片段为什么可能比整条成功轨迹更有价值。", "")
             zhihu.write_text(text, encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -282,7 +282,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             )
             zhihu.write_text(text, encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -302,7 +302,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             text = zhihu.read_text(encoding="utf-8").replace(segment * 20, segment * 10)
             zhihu.write_text(text, encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -323,7 +323,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             text = zhihu.read_text(encoding="utf-8").replace(segment * 20, segment * 60)
             zhihu.write_text(text, encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -342,7 +342,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -363,7 +363,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -397,7 +397,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -416,7 +416,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -434,7 +434,7 @@ class AuditArticleQualityTests(unittest.TestCase):
             text = text.replace("## 真实机制", "## 问题到底出在哪")
             zhihu.write_text(text, encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -454,7 +454,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -474,7 +474,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -496,7 +496,7 @@ class AuditArticleQualityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,

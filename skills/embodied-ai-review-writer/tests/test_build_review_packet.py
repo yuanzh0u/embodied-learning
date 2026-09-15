@@ -79,7 +79,7 @@ class BuildReviewPacketTests(unittest.TestCase):
         self.assertIn("expert-explainer", skill_doc)
         self.assertIn("kol-thread", skill_doc)
         self.assertIn("$embodied-ai-review-writer", skill_doc)
-        self.assertIn("audit_article_quality.py", skill_doc)
+        self.assertIn("writing_audit.py audit-article-quality", skill_doc)
 
     def test_default_time_range_is_recent_half_year(self) -> None:
         self.assertEqual(

@@ -78,7 +78,7 @@ def validate(root: Path) -> None:
         run(
             [
                 sys.executable,
-                "skills/embodied-ai-review-writer/scripts/audit_article_quality.py",
+                "skills/embodied-ai-review-writer/scripts/writing_audit.py", "audit-article-quality",
                 "--bundle-dir",
                 relative_run_dir,
             ],

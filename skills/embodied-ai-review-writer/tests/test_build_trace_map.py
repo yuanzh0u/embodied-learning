@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "build_trace_map.py"
+SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
 
 
 class BuildTraceMapTests(unittest.TestCase):
@@ -36,7 +36,7 @@ class BuildTraceMapTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "build-trace-map",
                     "--evidence-jsonl",
                     str(evidence),
                     "--article",
@@ -69,7 +69,7 @@ class BuildTraceMapTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "build-trace-map",
                     "--evidence-jsonl",
                     str(evidence),
                     "--article",

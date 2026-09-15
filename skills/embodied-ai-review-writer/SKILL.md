@@ -56,14 +56,14 @@ If the brief says `Writing readiness: preliminary` or its coverage gate is block
    - Use candidate lists only for search coverage, not accepted claims; use fallback source-tier JSON only as review-packet context, not Hub evidence JSONL.
    - **Articles cite verified evidence only.** If the synthesis needs a candidate paper, recover its complete text, read it with `$embodied-ai-paper-reader`, audit it, and project its events before writing.
 7. Settle the run:
-   - Validate the evidence JSONL: `python3 skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py --evidence-jsonl <file> --validate-only`.
+   - Validate the evidence JSONL: `python3 skills/embodied-ai-literature-hub/scripts/parse.py write-lit-outputs --evidence-jsonl <file> --validate-only`.
    - Flip `run.json` `status` from `in-progress` to `settled`.
    - Copy accepted assets into `evidence/literature-review-<topic>-<date>/`: every used evidence JSONL, final articles, appendix, source draft, query plan, candidate registry, and coverage report. Full texts/extraction payloads stay in cache/`work/`.
    - Cross-run evidence is supported but must be recorded: `run.json` lists `source_runs` (the prior runs whose evidence was combined) and `event_count` equals the deduplicated count actually available to the articles. Never cite an event that is not in the settled evidence set.
    - Audit before settling — all gates must pass:
      - `python3 scripts/check_run_bundle.py <run-dir>` (bundle completeness: three styles or a declared `style`+`scope_note`, self-contained evidence, standard run.json schema).
      - `python3 scripts/audit_citations.py --article <each article> --appendix <appendix> --evidence-jsonl <each evidence file> --run-json <run.json>` (no dead anchors, no citations outside the loaded evidence).
-     - `python3 skills/embodied-ai-review-writer/scripts/audit_article_quality.py --bundle-dir <run-dir>` (reader-facing editorial quality and cross-style differentiation).
+     - `python3 skills/embodied-ai-review-writer/scripts/writing_audit.py audit-article-quality --bundle-dir <run-dir>` (reader-facing editorial quality and cross-style differentiation).
    - `check_run_bundle.py` enforces the v2 coverage artifacts and refuses settlement while `ready_to_stop=false`.
 
 For a legacy multi-run paper-reader upgrade, keep every old settled run immutable. Build and audit the replacement under `work/`, then publish it under a new suffixed directory such as `literature-review-<topic>-<date>-reader-v1`. The replacement run must include `paper-notes/`, `claim-support-audits/`, `reading-ledger.jsonl`, `reading-summary.json`, their indexes, regenerated evidence/brief/appendix/trace map, and all three audited articles. Only switch it to `settled` after all reading, citation, editorial, and bundle gates pass.
@@ -119,7 +119,7 @@ python skills/embodied-ai-review-writer/scripts/build_review_packet.py \
 
 Use `--output -` only when the user explicitly wants inline Markdown or stdout for another tool.
 
-Then hand the validated brief to the writing workflow below (mandatory for prose deliverables): pass `writing-brief.md`, `evidence-appendix.md`, every accepted evidence JSONL, and the requested style(s); save the exact deliverable filenames in the same run folder; generate `trace-map.json`, then run `audit_article_quality.py`. A traceable scaffold is not an article.
+Then hand the validated brief to the writing workflow below (mandatory for prose deliverables): pass `writing-brief.md`, `evidence-appendix.md`, every accepted evidence JSONL, and the requested style(s); save the exact deliverable filenames in the same run folder; generate `trace-map.json`, then run `writing_audit.py audit-article-quality`. A traceable scaffold is not an article.
 
 ## Load only the selected style guidance
 
@@ -144,14 +144,14 @@ With a validated brief in hand (from the briefing step above or supplied by the 
 8. **Run deterministic gates.** Build the trace map, then audit the three outputs:
 
 ```bash
-python3 skills/embodied-ai-review-writer/scripts/build_trace_map.py \
+python3 skills/embodied-ai-review-writer/scripts/writing_audit.py build-trace-map \
   --evidence-jsonl <run>/evidence.jsonl \
   --article <run>/scientific-memo_keyan.md \
   --article <run>/zhihu-explainer_zhihu.md \
   --article <run>/xiaohongshu-post_xiaohongshu.md \
   --output <run>/trace-map.json
 
-python3 skills/embodied-ai-review-writer/scripts/audit_article_quality.py \
+python3 skills/embodied-ai-review-writer/scripts/writing_audit.py audit-article-quality \
   --memo <run>/scientific-memo_keyan.md \
   --zhihu <run>/zhihu-explainer_zhihu.md \
   --xiaohongshu <run>/xiaohongshu-post_xiaohongshu.md
@@ -160,7 +160,7 @@ python3 skills/embodied-ai-review-writer/scripts/audit_article_quality.py \
 For a published Zhihu collection, also audit corpus-level repetition, template concentration, and accessibility distributions:
 
 ```bash
-python3 skills/embodied-ai-review-writer/scripts/audit_zhihu_corpus.py \
+python3 skills/embodied-ai-review-writer/scripts/writing_audit.py audit-zhihu-corpus \
   --topics-dir wiki/data/topics \
   --project-root .
 ```
