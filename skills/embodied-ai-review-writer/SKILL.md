@@ -61,6 +61,7 @@ If the brief says `Writing readiness: preliminary` or its coverage gate is block
    - Validate the evidence JSONL: `python3 skills/embodied-ai-literature-hub/scripts/parse.py write-lit-outputs --evidence-jsonl <file> --validate-only`.
    - Flip `run.json` `status` from `in-progress` to `settled`.
    - Copy accepted assets into `evidence/literature-review-<topic>-<date>/`: every used evidence JSONL, final articles, appendix, source draft, query plan, candidate registry, and coverage report. Full texts/extraction payloads stay in cache/`work/`.
+   - **Publish (settle is not the last step):** register the run in the owning knowledge base's `knowledge/literature-review-catalog.md` (one row: ID, topic, scale triple 候选/全文/精读, links to run/packet/articles), then rebuild that KB's wiki snapshot with `python3 scripts/build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data` and verify the served `/data/current.json` topic count increased. The two knowledge bases: this repo (embodied-AI topics) and the local KB at `~/Documents/arxiv` (LiDAR/SLAM/calibration/point-cloud topics — runs live there, not in the repo). A settled-but-unregistered run is invisible to readers.
    - Cross-run evidence is supported but must be recorded: `run.json` lists `source_runs` (the prior runs whose evidence was combined) and `event_count` equals the deduplicated count actually available to the articles. Never cite an event that is not in the settled evidence set.
    - Audit before settling — all gates must pass:
      - `python3 scripts/check_run_bundle.py <run-dir>` (bundle completeness: three styles or a declared `style`+`scope_note`, self-contained evidence, standard run.json schema).
@@ -205,4 +206,13 @@ python3 skills/embodied-ai-review-writer/scripts/writing_audit.py audit-zhihu-co
 
 ## Completion standard
 
-Finish only when the evidence gates pass, the editorial audit passes, and a manual read confirms that the three outputs sound like three publications for three audiences rather than three views of one database. The natural-writing pass must improve clarity without changing the evidence surface.
+Finish only when the evidence gates pass, the editorial audit passes, the run is registered in the
+owning KB's `literature-review-catalog.md` with its wiki snapshot rebuilt, and a manual read confirms
+that the three outputs sound like three publications for three audiences rather than three views of
+one database. The natural-writing pass must improve clarity without changing the evidence surface.
+
+**One-turn rule:** from a validated brief (or a driver-produced `pipeline-summary.json`), run
+packet → writing → audit → settle → publish in the same turn. Do not stop to wait for outline
+confirmation. The only sanctioned early stop is retrieval failure or insufficient evidence
+(coverage/saturation unmet, accepted evidence below the mode floor, deep-read failures that gut the
+evidence base): leave the run `in-progress`, tell the user explicitly what is missing, and stop.

@@ -325,7 +325,9 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("work/literature-review-demo-20260908", prompt)
         self.assertNotIn(str(kb_root), prompt)
 
-    def test_checkpoint_instruction_present(self):
+    def test_no_outline_checkpoint_in_workflow_prompt(self):
+        """The workflow runs packet → settle in one turn; the outline
+        stop-and-wait checkpoint is gone. Only insufficient-evidence stops."""
         with tempfile.TemporaryDirectory() as tmp:
             kb_root = Path(tmp).resolve()
             run_dir = kb_root / "work" / "literature-review-x"
@@ -336,24 +338,43 @@ class BuildWorkflowPromptTest(unittest.TestCase):
                 kb_root=kb_root,
                 pipeline_root=Path("/repo"),
             )
-        self.assertIn("立即停止本轮回复", prompt)
+        self.assertNotIn("立即停止本轮回复", prompt)
+        self.assertNotIn("等待用户确认", prompt)
+        self.assertIn("一气呵成", prompt)
+        self.assertIn("检索失败或文献不足", prompt)
+
+    def test_workflow_prompt_requires_publish_steps(self):
+        """Settle includes catalog registration + wiki rebuild, not just
+        copying into evidence/."""
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp).resolve()
+            run_dir = kb_root / "work" / "literature-review-x"
+            run_dir.mkdir(parents=True)
+            prompt = wiki_chat.build_workflow_prompt(
+                params={"topic": "x"},
+                run_dir=run_dir,
+                kb_root=kb_root,
+                pipeline_root=Path("/repo"),
+            )
+        self.assertIn("literature-review-catalog.md", prompt)
+        self.assertIn("build_research_wiki.py", prompt)
 
     def test_continuation_prompt_carries_feedback(self):
         prompt = wiki_chat.build_continuation_prompt(feedback="补充一下评测部分", stage="packet")
         self.assertIn("补充一下评测部分", prompt)
         self.assertIn("[STAGE:writing]", prompt)
         no_feedback = wiki_chat.build_continuation_prompt(feedback="  ", stage="packet")
-        self.assertIn("无，按现有大纲继续", no_feedback)
+        self.assertIn("无，按现有证据继续", no_feedback)
 
-    def test_continuation_prompt_before_checkpoint_finishes_mining(self):
+    def test_continuation_prompt_mid_pipeline_runs_through_settle(self):
         """A run parked mid-pipeline (e.g. mining was interrupted) resumes its
-        current stage and re-stops at the outline checkpoint — it must NOT
-        jump to writing."""
+        current stage and continues through settle in the same turn — no
+        outline checkpoint to stop at."""
         prompt = wiki_chat.build_continuation_prompt(stage="mining")
         self.assertIn("从磁盘已有进度继续当前阶段", prompt)
-        self.assertIn("[STAGE:packet]", prompt)
-        self.assertIn("不要自行撰写成稿", prompt)
-        self.assertNotIn("[STAGE:writing]", prompt)
+        self.assertIn("[STAGE:writing]", prompt)
+        self.assertNotIn("等待用户确认", prompt)
+        self.assertIn("literature-review-catalog.md", prompt)
 
     def test_continuation_prompt_honors_target_style(self):
         single = wiki_chat.build_continuation_prompt(target_style="scientific-memo", stage="packet")

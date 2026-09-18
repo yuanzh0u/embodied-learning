@@ -10,7 +10,10 @@ Single-paper pipeline, sibling of prepare_paper_chat.py:
                       into quick-read-brief.md (deterministic, cheap)
     4. article      — one-shot agent drafts the card from the brief + style
                       reference between sentinels; the script (never the
-                      agent) writes pool/arxiv-<id>/quick-read_sudu.md
+                      agent) writes pool/arxiv-<id>/quick-read_sudu.md.
+                      Invalid output gets one retry; every rejected output is
+                      dumped verbatim to quick-read-agent-raw.txt (with the
+                      rejection reason in the log) for post-hoc diagnosis.
     5. audit        — optional editorial audit (warnings only, non-fatal)
 
 Exit codes: 0 card written (or cache hit), 3 deep-read unavailable
@@ -36,6 +39,7 @@ from prepare_paper_chat import ensure_deep_read, ensure_extraction, normalize_ar
 
 ARTICLE_NAME = "quick-read_sudu.md"
 BRIEF_NAME = "quick-read-brief.md"
+RAW_DUMP_NAME = "quick-read-agent-raw.txt"
 ARTICLE_TIMEOUT_S = 300.0
 AUDIT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
 STYLE_REFERENCE = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "references" / "quick-read.md"
@@ -217,6 +221,20 @@ def extract_article(raw: str, paper_id: str) -> str | None:
     return article + "\n"
 
 
+def describe_rejection(raw: str, paper_id: str) -> str:
+    """Say which extract_article check failed, for the dump log line."""
+    start = raw.find(ARTICLE_OPEN)
+    end = raw.find(ARTICLE_CLOSE)
+    if start < 0 or end <= start:
+        return "哨兵缺失或顺序错误"
+    body = raw[start + len(ARTICLE_OPEN) : end].strip()
+    if len(body) < 300:
+        return "正文不足 300 字符"
+    if f"arxiv.org/abs/{paper_id}" not in body:
+        return "缺少 arXiv 链接"
+    return "包含表格行"
+
+
 def audit_article(path: Path) -> None:
     """Editorial audit; findings are warnings only and never change the exit code."""
     result = subprocess.run(
@@ -295,18 +313,29 @@ def main(argv: list[str] | None = None) -> int:
         log("claude CLI 不存在，无法写作速读卡")
         return 1
     log("速读写作 agent 启动…")
-    try:
-        completed = run_one_shot_agent(
-            build_agent_prompt(paper_id, pool_dir),
-            timeout_s=ARTICLE_TIMEOUT_S,
-            cli=cli,
-        )
-    except subprocess.TimeoutExpired:
-        log(f"速读写作 agent 超时（{ARTICLE_TIMEOUT_S:.0f}s）")
-        return 1
-    article = extract_article(completed.stdout or "", paper_id)
+    raw_dump_path = pool_dir / RAW_DUMP_NAME
+    article = None
+    for attempt in (1, 2):
+        if attempt == 2:
+            log("第 1 次输出无效，重试…")
+        try:
+            completed = run_one_shot_agent(
+                build_agent_prompt(paper_id, pool_dir),
+                timeout_s=ARTICLE_TIMEOUT_S,
+                cli=cli,
+            )
+        except subprocess.TimeoutExpired:
+            log(f"速读写作 agent 超时（{ARTICLE_TIMEOUT_S:.0f}s）")
+            return 1
+        article = extract_article(completed.stdout or "", paper_id)
+        if article is not None:
+            break
+        raw = completed.stdout or ""
+        # Dump verbatim before rejecting — without this the failure is undiagnosable.
+        raw_dump_path.write_text(raw, encoding="utf-8")
+        log(f"agent 输出无效（{describe_rejection(raw, paper_id)}），已转储：{raw_dump_path}")
     if article is None:
-        log("agent 输出缺少有效速读卡（哨兵缺失或结构不合规），已丢弃")
+        log("重试后仍无有效速读卡，已丢弃")
         return 1
     article_path.write_text(article, encoding="utf-8")
     log(f"速读卡已写入：{article_path}")

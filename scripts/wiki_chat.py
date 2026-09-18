@@ -66,17 +66,23 @@ WORKFLOW_SYSTEM_PROMPT = (
     "fetch.py extract-content-queue、build_reading_packet.py、build_paper_note.py、"
     "note_tools.py project-evidence-events、run_review_pipeline.py）"
     "——重复执行只会浪费时长且可能触发限流。若 summary 显示维度、地板或深读未过，如实向用户说明，不要自行补救检索。"
-    "\n\n【你的三个判断职责】\n"
+    "\n\n【你的判断职责】\n"
     "1. 论文深读与证据投影：已由系统驱动脚本完成（速记骨架 + 审计 + 投影）。"
     "不要派发深读 subagent、不要跑 note_tools.py project-evidence-events；"
     "若 pipeline-summary.json 的 deep_read 字段显示失败篇目，如实向用户说明。\n"
-    "2. 综述包与大纲：跑 <scripts-root> 同级的 "
+    "2. 综述包：跑 <scripts-root> 同级的 "
     "build_review_packet.py（--topic … --knowledge-id … --evidence-jsonl work/<run>/evidence/*.jsonl "
-    "--review-mode … --coverage-report …），然后亲自输出综述大纲与选文摘要，"
-    "立即停止输出、结束本轮回复，等待用户确认——不要自行撰写成稿。\n"
-    "3. 成稿与审计（用户确认后续轮）：按目标风格亲自撰写成稿（review-packet 是简报不是成稿），"
+    "--review-mode … --coverage-report …）。\n"
+    "3. 成稿、审计与发布（同一轮一气呵成）：按目标风格亲自撰写成稿（review-packet 是简报不是成稿），"
     "生成 trace-map.json，逐一通过 check_run_bundle.py、audit_citations.py、writing_audit.py audit-article-quality "
-    "审计门后才允许落盘 evidence/ 并注册目录。\n"
+    "审计门后才允许落盘 evidence/；落盘后把 run.json status 改为 settled，"
+    "在 <kb-root>/knowledge/literature-review-catalog.md 登记一行（ID、主题、规模三元组、run/packet/成稿链接），"
+    "再跑 python3 <scripts-root>/build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data 重建 wiki 快照，"
+    "并核对该 KB wiki 端口 /data/current.json 的 topic 数量 +1。\n"
+    "\n【唯一允许提前停止的条件】\n"
+    "检索失败或文献不足：pipeline-summary.json 显示检索通道整体失败、coverage/saturation 未过、"
+    "或验收证据不足以支撑目标风格的成稿。此时停下并如实说明缺什么，把 run 留在 in-progress。"
+    "除此之外不要因大纲确认、风格选择等原因中途停轮等待用户——综述从综述包到 settle 一轮写完。\n"
     "\n\n在开始每个阶段前，先单独输出一行阶段标记（普通文本，不要放进代码块）："
     "[STAGE:mining] / [STAGE:packet] / [STAGE:writing] / [STAGE:audit] / [STAGE:settle]，后跟一句话进度说明。"
     "落盘到 evidence/ 后，在最终回复的单独一行输出 "
@@ -720,9 +726,13 @@ def build_workflow_prompt(
         "（产物见运行目录的 pipeline-summary.json、paper-notes/、evidence/），"
         "不要重跑任何检索/抽取/筛选/深读/投影命令。",
         "执行要求：先读 pipeline-summary.json 与 writing 输入现状，"
-        "然后直接跑 build_review_packet.py 生成综述包（[STAGE:packet]），"
-        "亲自阅读证据事件与综述包后输出大纲与选文摘要，立即停止本轮回复，等待用户确认；"
-        "不要自行撰写成稿。若 pipeline-summary 显示深读有失败篇目，如实向用户说明影响。",
+        "然后从 build_review_packet.py（[STAGE:packet]）开始一气呵成执行到 settle："
+        "亲自阅读证据事件与综述包后直接撰写成稿、过审计门、落盘 evidence/、翻 settled、"
+        "登记 knowledge/literature-review-catalog.md 并用 build_research_wiki.py 重建 wiki 快照"
+        "（[STAGE:settle]）。唯一允许提前停止的条件：检索失败或文献不足"
+        "（覆盖/饱和未过、验收证据不足以成稿），"
+        "此时停下如实说明并把 run 留在 in-progress；"
+        "若 pipeline-summary 显示深读有失败篇目，如实向用户说明影响。",
         "</workflow_request>",
     ]
     return "\n".join(lines)
@@ -731,12 +741,14 @@ def build_workflow_prompt(
 def build_continuation_prompt(
     *, feedback: str = "", target_style: str = "", stage: str = ""
 ) -> str:
-    """Resume the workflow after a pause. The prompt is stage-aware: a run
-    parked before the outline checkpoint finishes mining first; only a run
-    that already produced the packet goes straight to writing."""
+    """Resume the workflow after an interruption (crash, session end, user
+    feedback mid-run). The prompt is stage-aware: a run that never produced
+    the packet finishes the interrupted stage first; a run that already has
+    the packet goes straight to writing. There is no outline checkpoint —
+    both branches continue through settle in the same turn."""
 
     feedback = (feedback or "").strip()
-    opinion = feedback if feedback else "无，按现有大纲继续"
+    opinion = feedback if feedback else "无，按现有证据继续"
     style = (target_style or "all").strip()
     if style == "all":
         writing_clause = "撰写三种成稿（scientific-memo / zhihu / xiaohongshu）"
@@ -751,20 +763,24 @@ def build_continuation_prompt(
         }.get(style, style)
         writing_clause = f"仅撰写采访中选定的风格：{style_label}，不要写其他风格"
         parallel_clause = "单一成稿由主线程直接撰写润色，再走审计门"
+    settle_clause = (
+        "通过审计门、落盘 evidence/、把 run.json status 改为 settled，"
+        "在 knowledge/literature-review-catalog.md 登记一行，"
+        "重建 wiki 快照（build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data），"
+        "最后输出 [TOPIC:<运行目录相对路径>]。"
+    )
     if stage in ("init", "plan", "retrieval", "mining", ""):
-        # The outline checkpoint was never reached: finish the interrupted
-        # stage first, then run packet → stop at the checkpoint again.
         lines = [
             "用户发来消息。先从磁盘已有进度继续当前阶段（检查 pipeline-summary.json 与运行目录产物，"
-            "已完成的环节不要重做），完成深读与证据投影后生成综述包（[STAGE:packet]），"
-            "输出大纲与选文摘要后立即停止本轮回复，等待用户确认——不要自行撰写成稿。",
+            "已完成的环节不要重做），然后一气呵成走完剩余阶段"
+            "（[STAGE:packet] → [STAGE:writing] → [STAGE:audit] → [STAGE:settle]）："
+            + settle_clause,
             f"用户消息：{opinion}",
         ]
         return "\n".join(lines)
     lines = [
-        "用户已确认综述包大纲，请继续执行剩余阶段（[STAGE:writing] → [STAGE:audit] → "
-        f"[STAGE:settle]）：{writing_clause}、通过审计门、落盘 evidence/ 并在目录中注册，"
-        "最后输出 [TOPIC:<运行目录相对路径>]。",
+        "用户发来消息，请继续执行剩余阶段（[STAGE:writing] → [STAGE:audit] → "
+        f"[STAGE:settle]）：{writing_clause}、{settle_clause}"
         f"{parallel_clause}，尽量压缩总时长。",
         "落盘前把 run.json 的 status 改为 settled，并按实际产出声明 files.outputs；"
         + (
@@ -772,7 +788,7 @@ def build_continuation_prompt(
             if style != "all"
             else "三种成稿齐全时无需 style/scope_note 字段。"
         ),
-        f"用户对大纲的意见：{opinion}",
+        f"用户消息：{opinion}",
     ]
     return "\n".join(lines)
 

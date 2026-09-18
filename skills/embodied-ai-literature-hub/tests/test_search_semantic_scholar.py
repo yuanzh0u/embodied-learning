@@ -176,5 +176,25 @@ class CollectPapersTest(unittest.TestCase):
         self.assertEqual([p["arxiv_id"] for p in papers], ["2605.00002", "2605.00001"])
 
 
+class LoadQueriesTest(unittest.TestCase):
+    def test_repeated_query_strings_normalized_to_planner_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "plan.json"
+            path.write_text(json.dumps({"queries": [{"label": "core", "query": "robot calibration"}]}), encoding="utf-8")
+            loaded = s2.load_queries(queries=["raw query one", "raw query two"], query_file=str(path))
+        self.assertEqual(
+            loaded,
+            [
+                {"label": "core", "query": "robot calibration"},
+                {"label": "query-2", "query": "raw query one"},
+                {"label": "query-3", "query": "raw query two"},
+            ],
+        )
+
+    def test_all_string_queries_get_dict_shape(self) -> None:
+        loaded = s2.load_queries(queries=["solo"])
+        self.assertEqual(loaded, [{"label": "query-1", "query": "solo"}])
+
+
 if __name__ == "__main__":
     unittest.main()

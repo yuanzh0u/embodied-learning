@@ -221,6 +221,12 @@ def load_queries(queries: list[str] | None = None, query_file: str | None = None
             if query:
                 queries.append({"label": item.get("label", f"query-{index}"), "query": query})
         queries.extend(existing)
+    # Repeated --query values arrive as raw strings; normalize them to the
+    # planner contract shape so run() can index item["query"].
+    queries = [
+        item if isinstance(item, dict) else {"label": f"query-{index}", "query": item}
+        for index, item in enumerate(queries, start=1)
+    ]
     if not queries:
         raise SystemExit("Provide --query or --query-file.")
     return queries

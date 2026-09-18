@@ -110,12 +110,19 @@ class QuickReadPipelineTest(unittest.TestCase):
         (self.pool_dir / "paper.md").write_text("## 1 Introduction\n\nSome text.\n", encoding="utf-8")
 
     def run_main(self, argv, *, deep_status="pass", agent_stdout=None):
-        """Stub the reused ensure_* helpers plus the agent call; returns (code, captured)."""
+        """Stub the reused ensure_* helpers plus the agent call; returns (code, captured).
+        agent_stdout may be a single string (returned for every attempt) or a list
+        (one entry per agent attempt)."""
         captured = {}
+
+        outputs = agent_stdout if isinstance(agent_stdout, list) else [agent_stdout or ""]
+        seen = []
 
         def fake_agent(prompt, **kwargs):
             captured["prompt"] = prompt
-            return mock.Mock(returncode=0, stdout=agent_stdout or "", stderr="")
+            seen.append(prompt)
+            stdout = outputs[len(seen) - 1] if len(seen) <= len(outputs) else ""
+            return mock.Mock(returncode=0, stdout=stdout, stderr="")
 
         with mock.patch.object(self.module, "ensure_extraction", return_value=True) as extract, \
              mock.patch.object(self.module, "ensure_deep_read", return_value=deep_status) as deep, \
@@ -123,16 +130,18 @@ class QuickReadPipelineTest(unittest.TestCase):
              mock.patch.object(self.module, "resolve_cli", return_value="/fake/claude"), \
              mock.patch.object(self.module, "run_one_shot_agent", side_effect=fake_agent):
             code = self.module.main(argv)
-        captured.update(extract=extract, deep=deep, audit=audit)
+        captured.update(extract=extract, deep=deep, audit=audit, agent_calls=len(seen))
         return code, captured
+
+    def _valid_output(self, body="测试正文。"):
+        article = f"# 速读\n\n## 一句话定位\n\n{body * 100}\n\n## 链接\n\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})\n"
+        return f"前置说明\n{self.module.ARTICLE_OPEN}\n{article}\n{self.module.ARTICLE_CLOSE}\n后记"
 
     def test_full_pipeline_writes_card_and_json(self):
         self.seed_pool()
-        article = "# 速读\n\n## 一句话定位\n\n" + "测试正文。" * 100 + f"\n\n## 链接\n\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})\n"
-        sentinel_output = f"前置说明\n{self.module.ARTICLE_OPEN}\n{article}\n{self.module.ARTICLE_CLOSE}\n后记"
         code, captured = self.run_main(
             ["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)],
-            agent_stdout=sentinel_output,
+            agent_stdout=self._valid_output(),
         )
         self.assertEqual(code, 0)
         article_path = self.pool_dir / self.module.ARTICLE_NAME
@@ -155,11 +164,9 @@ class QuickReadPipelineTest(unittest.TestCase):
 
     def test_needs_review_is_acceptable(self):
         self.seed_pool()
-        article = "# 速读\n\n## 一句话定位\n\n" + "测试正文。" * 100 + f"\n\n## 链接\n\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})\n"
-        output = f"{self.module.ARTICLE_OPEN}\n{article}\n{self.module.ARTICLE_CLOSE}"
         code, _ = self.run_main(
             ["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)],
-            deep_status="needs-review", agent_stdout=output,
+            deep_status="needs-review", agent_stdout=self._valid_output("复审正文。"),
         )
         self.assertEqual(code, 0)
 
@@ -173,9 +180,8 @@ class QuickReadPipelineTest(unittest.TestCase):
         # run_one_shot_agent never called: its mock side_effect would have raised KeyError.
         # Now touch note.json so the cache goes stale.
         (self.pool_dir / "note.json").write_text(json.dumps(sample_note()), encoding="utf-8")
-        article = "# 速读\n\n## 一句话定位\n\n" + "重写正文。" * 100 + f"\n\n## 链接\n\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})\n"
-        output = f"{self.module.ARTICLE_OPEN}\n{article}\n{self.module.ARTICLE_CLOSE}"
-        code, _ = self.run_main(["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)], agent_stdout=output)
+        code, _ = self.run_main(["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)],
+                                agent_stdout=self._valid_output("重写正文。"))
         self.assertEqual(code, 0)
         self.assertIn("重写正文。", article_path.read_text(encoding="utf-8"))
 
@@ -183,23 +189,40 @@ class QuickReadPipelineTest(unittest.TestCase):
         self.seed_pool()
         article_path = self.pool_dir / self.module.ARTICLE_NAME
         article_path.write_text("旧卡", encoding="utf-8")
-        article = "# 速读\n\n## 一句话定位\n\n" + "强制重写。" * 100 + f"\n\n## 链接\n\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})\n"
-        output = f"{self.module.ARTICLE_OPEN}\n{article}\n{self.module.ARTICLE_CLOSE}"
         code, _ = self.run_main(
             ["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root), "--force"],
-            agent_stdout=output,
+            agent_stdout=self._valid_output("强制重写。"),
         )
         self.assertEqual(code, 0)
         self.assertIn("强制重写。", article_path.read_text(encoding="utf-8"))
 
-    def test_missing_sentinel_is_exit_1(self):
+    def test_invalid_output_dumps_raw_and_retries(self):
         self.seed_pool()
-        code, _ = self.run_main(
+        code, captured = self.run_main(
             ["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)],
-            agent_stdout="没有标记的输出",
+            agent_stdout=["没有标记的输出", self._valid_output("重试成功。")],
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(captured["agent_calls"], 2)
+        dump = self.pool_dir / self.module.RAW_DUMP_NAME
+        self.assertTrue(dump.is_file())
+        self.assertIn("没有标记的输出", dump.read_text(encoding="utf-8"))
+        self.assertIn("重试成功。", (self.pool_dir / self.module.ARTICLE_NAME).read_text(encoding="utf-8"))
+
+    def test_both_attempts_invalid_dump_kept_and_exit_1(self):
+        self.seed_pool()
+        code, captured = self.run_main(
+            ["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)],
+            agent_stdout=["第一次无效", "第二次也无效"],
         )
         self.assertEqual(code, 1)
+        self.assertEqual(captured["agent_calls"], 2)
         self.assertFalse((self.pool_dir / self.module.ARTICLE_NAME).exists())
+        dump = self.pool_dir / self.module.RAW_DUMP_NAME
+        self.assertTrue(dump.is_file())
+        # The dump keeps the LAST rejected output (the most recent failure).
+        self.assertIn("第二次也无效", dump.read_text(encoding="utf-8"))
+        self.assertNotIn("第一次无效", dump.read_text(encoding="utf-8"))
 
     def test_skip_agent_writes_brief_only(self):
         self.seed_pool()
@@ -239,6 +262,28 @@ class SentinelExtractionTest(unittest.TestCase):
         with self.subTest("wrong link"):
             self.assertIsNone(self.module.extract_article(
                 f"{self.module.ARTICLE_OPEN}\n# 速读\n\n{'正文。' * 100}\n{self.module.ARTICLE_CLOSE}", PAPER_ID))
+
+
+class DescribeRejectionTest(unittest.TestCase):
+    def setUp(self):
+        self.module = load_module()
+
+    def test_reasons_match_extract_article_checks(self):
+        good_body = "# 速读\n\n" + "正文。" * 100 + f"\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})\n"
+        with self.subTest("no sentinels"):
+            self.assertEqual(self.module.describe_rejection("plain text", PAPER_ID), "哨兵缺失或顺序错误")
+        with self.subTest("close before open"):
+            self.assertEqual(self.module.describe_rejection(
+                f"{self.module.ARTICLE_CLOSE}\n{self.module.ARTICLE_OPEN}", PAPER_ID), "哨兵缺失或顺序错误")
+        with self.subTest("too short"):
+            self.assertEqual(self.module.describe_rejection(
+                f"{self.module.ARTICLE_OPEN}\n太短\n{self.module.ARTICLE_CLOSE}", PAPER_ID), "正文不足 300 字符")
+        with self.subTest("wrong link"):
+            self.assertEqual(self.module.describe_rejection(
+                f"{self.module.ARTICLE_OPEN}\n# 速读\n\n{'正文。' * 100}\n{self.module.ARTICLE_CLOSE}", PAPER_ID), "缺少 arXiv 链接")
+        with self.subTest("table"):
+            self.assertEqual(self.module.describe_rejection(
+                f"{self.module.ARTICLE_OPEN}\n{good_body}\n| a | b |\n{self.module.ARTICLE_CLOSE}", PAPER_ID), "包含表格行")
 
 
 if __name__ == "__main__":
