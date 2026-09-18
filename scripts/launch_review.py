@@ -33,6 +33,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -97,6 +98,9 @@ def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
     ]
     if args.seed_arxiv_ids:
         command += ["--seed-arxiv-ids", args.seed_arxiv_ids]
+    for path in args.external_candidates:
+        command += ["--external-candidates", str(Path(path).expanduser())]
+    command += ["--agents-parallel", str(max(1, args.agents_parallel))]
     if args.arxiv_snapshot:
         command += ["--arxiv-snapshot", str(Path(args.arxiv_snapshot).expanduser())]
     if args.kb_root:
@@ -139,7 +143,7 @@ def run_writer(args: argparse.Namespace, run_dir: Path, prompt: str) -> None:
         handle.flush()
         result = subprocess.run(
             [cli, "-p", "--permission-mode", "bypassPermissions",
-             "--output-format", "stream-json"],
+             "--output-format", "stream-json", "--verbose"],
             input=prompt, text=True, stdout=handle, stderr=handle,
             timeout=args.writer_timeout, cwd=str(REPO_ROOT),
             env=strip_nested_claude_env(),
@@ -224,7 +228,16 @@ def verify_publish(args: argparse.Namespace, run_dir: Path, wiki: object) -> lis
             snapshot = json.loads(current.read_text(encoding="utf-8"))
             latest = sorted((kb_root / "wiki" / "data" / "snapshots").iterdir())[-1]
             manifest = json.loads((latest / "manifest.json").read_text(encoding="utf-8"))
-            if not any(run_dir.name.replace("literature-review-", "") in str(topic) for topic in manifest.get("topics", [])):
+
+            def topic_haystack(topic: object) -> str:
+                if isinstance(topic, dict):
+                    return " ".join(str(topic.get(key, "")) for key in ("topic_key", "title"))
+                return str(topic)
+
+            # The wiki indexes topics by topic_key/title (folder name without
+            # the "literature-review-" prefix and the date suffix).
+            slug = re.sub(r"-\d{8}$", "", run_dir.name.replace("literature-review-", ""))
+            if not any(slug in topic_haystack(topic) for topic in manifest.get("topics", [])):
                 problems.append("wiki 最新快照不含本 run 话题")
         except (OSError, ValueError, IndexError) as exc:
             problems.append(f"wiki 快照校验失败：{exc}")
@@ -342,6 +355,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--focus")
     parser.add_argument("--search-strategy", choices=["smart", "fast", "seeds"], default="smart")
     parser.add_argument("--seed-arxiv-ids")
+    parser.add_argument("--external-candidates", action="append", default=[],
+                        help="harvest-curated-list JSON as the candidate source; forwarded to the driver (repeatable)")
+    parser.add_argument("--agents-parallel", type=int, default=10,
+                        help="deep-read one-shot agents running concurrently (forwarded to the driver)")
     parser.add_argument("--arxiv-snapshot", help="OAI JSONL or SQLite/FTS5 db for offline arXiv retrieval")
     parser.add_argument("--kb-root", help="KB root (default: repo)")
     parser.add_argument("--knowledge-id", action="append", help="EA/ERR knowledge id; repeatable (default EA-DATA)")

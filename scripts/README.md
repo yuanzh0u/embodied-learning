@@ -97,6 +97,44 @@
 
 ---
 
+## 能力状态：三段工作流各能力在脚本层的落地情况
+
+对照 [docs/review-workflow-three-stages.md](../docs/review-workflow-three-stages.md) 的能力清单，
+逐项给出典型用法与状态。**状态标准是"无人值守可交付"**：一条命令（或一次 `launch_review.py`）
+不依赖交互会话现场调整就能跑通的算"已实现"；要人/交互会话手动串步骤或现场发挥的只能算
+"部分（组合式 SOP）"——这类是固定流程而非可交付功能。知识产出阶段（成稿、门禁、settle、
+catalog、wiki）由 launcher spawn 的 writer agent 完成，交互会话只做调度与代码维护。
+
+### 检索段
+
+| 能力 | 状态 | 典型用法 |
+|---|---|---|
+| 种子引文扩张 | 已实现 | launcher 传 `--seed-arxiv-ids`；或 `search.py expand-via-citations --seed-id <id> --direction both --output ...` |
+| 策展列表通道（awesome-list 整库收割） | 已实现（2026-09-18） | `search.py harvest-curated-list --repo <owner/repo> --resolve-db <snapshot.sqlite> --output harvest.json`（全库文本文件扫描；非 arXiv 条目先快照标题匹配、后 S2 退避解析）；launcher 传 `--external-candidates harvest.json` 跳过关键词检索；run.json 声明 `workflow_version: 1` + `selection_method: curated-list`（不走 coverage/饱和门） |
+| 引文图派生综述 | 已实现 | `search.py rank-influential-papers / rank-problem-relevance --extra-ids-file <ids.txt>` 选篇 + launcher 成稿；run.json 声明 `workflow_version: 1` + `selection_method` |
+| 选题调研（只要文献地图） | 部分（组合式 SOP） | `search.py build-query-plan → search-* → build-candidate-registry → screen-candidates → assess-review-coverage` 需手动串；driver 无"停在 coverage"的截断旗标 |
+| 文献地图维护（跨 run 候选池增量复用） | **未实现** | registry 每 run 从零建；`build-candidate-registry` 无 `--registry-input` 合并旧 run 候选池（证据层复用已有：`--select-events-file`） |
+
+### 阅读段
+
+| 能力 | 状态 | 典型用法 |
+|---|---|---|
+| 单篇速读卡 | 已实现 | `scripts/quick_read_paper.py --arxiv-id <id>`（强制入池+深读，产出 `quick-read_sudu.md`） |
+| 单篇问答 | 已实现 | wiki「论文对话」（`scripts/prepare_paper_chat.py` 备料，`serve_research_wiki.py` 服务） |
+| 批量深读（run 内） | 已实现 | driver 深读阶段并行 one-shot agents（launcher `--agents-parallel`，默认 10）；幂等：只有 audit status ∈ {pass, needs-review} 的笔记才算完成，reject/失败自动重试 |
+| 补充深读（单篇缺口） | 已实现 | `scripts/build_paper_note.py` 单篇手跑；driver 重跑自动补 |
+| 批量入池（给裸 ID 列表建库，不入 run） | 部分（SOP） | 无专门入口：循环 `quick_read_paper.py` 或走一次最小 run |
+
+### 写作段
+
+| 能力 | 状态 | 典型用法 |
+|---|---|---|
+| 完整综述（无人值守，标准入口） | 已实现 | `scripts/launch_review.py --topic ... --review-mode ... --time-range A..B [--target-style scientific-memo --scope-note ...]`：init → driver（重试+幂等续跑）→ writer agent 成稿 → 门禁（audit_citations + check_run_bundle，失败自动 continuation）→ settle → catalog/wiki 发布校验；`--run-dir` 对已有 run 续跑，`--status`/`--stop` 管生命周期 |
+| 跨 run 综合（换问题重组既有证据） | 部分（组合式 SOP） | `build_review_packet.py --select-events-file <ids> --consolidate-evidence` 后仍需 writer agent 成稿；无专用 launcher 模式 |
+| 换风格重写 / 修订成稿 | 已实现 | launcher `--target-style <style> --run-dir <已有 run>` 续跑 writer 阶段（run.json 声明单 `style`+`scope_note`） |
+
+---
+
 ## 三条典型工作流
 
 **1. 程序化出综述（无人值守，推荐入口）**

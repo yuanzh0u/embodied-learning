@@ -438,6 +438,25 @@ class WorkflowDriverContractTest(unittest.TestCase):
             self.assertIn("pipeline-summary.json", prompt)
             self.assertIn("不要重跑任何检索/抽取/筛选/深读/投影命令", prompt)
             self.assertIn("build_review_packet.py", prompt)
+            # Single-style runs carry the voice contract (memo must not drift
+            # into the zhihu-explainer register — 2026-09 regression).
+            self.assertIn("风格契约（scientific-memo）", prompt)
+            self.assertIn("references/scientific-memo.md", prompt)
+            self.assertIn("不是A，而是B", prompt)
+
+    def test_all_style_prompt_has_no_single_style_contract(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp).resolve()
+            run_dir = kb_root / "work" / "literature-review-demo-20260101"
+            run_dir.mkdir(parents=True)
+            prompt = wiki_chat.build_workflow_prompt(
+                params={"topic": "demo", "review_mode": "rapid",
+                        "time_range": "2023-01-01..2026-09-09",
+                        "target_style": "all", "focus": ""},
+                run_dir=run_dir, kb_root=kb_root,
+                pipeline_root=kb_root / "skills",
+            )
+        self.assertNotIn("风格契约", prompt)
 
     def test_extract_driver_stage_maps_to_workflow_stages(self):
         self.assertEqual(

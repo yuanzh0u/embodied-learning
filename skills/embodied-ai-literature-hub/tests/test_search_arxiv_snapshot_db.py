@@ -104,18 +104,23 @@ class BuildDbTest(unittest.TestCase):
         self.assertEqual(stamp.strftime("%Y-%m-%d"), "2023-11-27")
 
 
+ALL_COLUMNS = "{title abstract authors comments journal_ref categories}"
+
+
 class MatchExprTest(unittest.TestCase):
     def test_term_prefix(self) -> None:
         node = db_mod.parse_query("all:ego")
-        self.assertEqual(db_mod.match_expr(node), "all_ : ego*")
+        self.assertEqual(db_mod.match_expr(node), f"{ALL_COLUMNS} : ego*")
 
     def test_phrase(self) -> None:
         node = db_mod.parse_query('ti:"Ego-Exo4D"')
-        self.assertEqual(db_mod.match_expr(node), 'ti : "ego exo4d"')
+        self.assertEqual(db_mod.match_expr(node), 'title : "ego exo4d"')
 
     def test_andnot(self) -> None:
         node = db_mod.parse_query("all:ego ANDNOT ti:driving")
-        self.assertEqual(db_mod.match_expr(node), "all_ : ego* ANDNOT ti : driving*")
+        self.assertEqual(
+            db_mod.match_expr(node), f"{ALL_COLUMNS} : ego* ANDNOT title : driving*"
+        )
 
     def test_date_range_extracted(self) -> None:
         node = db_mod.parse_query("submittedDate:[202001010000 TO 202312312359]")
@@ -155,6 +160,51 @@ class SnapshotDbSearchTest(unittest.TestCase):
         self.assertEqual(result["snapshot_backend"], "sqlite-fts5")
         for key in ("generated_at", "batch", "queries", "paper_count", "papers"):
             self.assertIn(key, result)
+
+    def test_external_content_stores_text_once(self) -> None:
+        import sqlite3
+        connection = sqlite3.connect(self.db)
+        ddl = connection.execute(
+            "SELECT sql FROM sqlite_master WHERE name='fts'"
+        ).fetchone()[0]
+        self.assertIn("content='papers'", ddl)
+        self.assertNotIn("CREATE TABLE fts_content", ddl)
+        connection.close()
+
+    def test_parallel_queries_merge_labels(self) -> None:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            output = handle.name
+        search = db_mod.SnapshotDbSearch(
+            db_path=self.db, start_date="2016-09-17", end_date="2026-09-17", output=output
+        )
+        code = search.run([
+            {"label": "a", "query": "all:egocentric"},
+            {"label": "b", "query": "abs:dataset"},
+        ])
+        self.assertEqual(code, 0)
+        with open(output) as handle:
+            result = json.load(handle)
+        by_id = {p["arxiv_id"]: p for p in result["papers"]}
+        self.assertIn("2311.18259", by_id)
+        self.assertIn("a,b", by_id["2311.18259"]["query_label"])
+        self.assertEqual([q["label"] for q in result["queries"]], ["a", "b"])
+
+    def test_rejects_pre_external_content_schema(self) -> None:
+        import sqlite3
+        with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as handle:
+            db = handle.name
+        connection = sqlite3.connect(db)
+        connection.executescript(
+            "CREATE VIRTUAL TABLE fts USING fts5(all_, ti, id UNINDEXED);"
+        )
+        connection.close()
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            output = handle.name
+        search = db_mod.SnapshotDbSearch(
+            db_path=db, start_date="2016-09-17", end_date="2026-09-17", output=output
+        )
+        with self.assertRaises(SystemExit):
+            search.run([{"label": "q1", "query": "all:ego"}])
 
 
 if __name__ == "__main__":

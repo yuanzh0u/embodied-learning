@@ -9,9 +9,17 @@ module; FTS5 ships with CPython on CPython's Linux/Windows/macOS builds.
 Schema:
     papers(id TEXT PRIMARY KEY, rowid-map via INTEGER PRIMARY KEY, title,
            abstract, authors, comments, journal_ref, categories,
-           v1_date INTEGER, update_date TEXT, authors_parsed TEXT)
-    fts(all_, ti, abs_, au, cat, comments, jr, id UNINDEXED)
-with ``fts.rowid == papers.rowid``.
+           v1_date INTEGER, update_date, authors_parsed)
+    fts(title, abstract, authors, comments, journal_ref, categories, id UNINDEXED)
+with ``content='papers'`` (external content) and ``fts.rowid == papers.rowid``:
+the FTS virtual table stores only the inverted index, and column values are
+read live from ``papers`` by column name — the full text lives exactly once,
+so the database is roughly half the size of the naive layout while the query
+path (index scan + ``papers`` rowid lookup) is unchanged.
+
+Queries run on a small thread pool: each query is an independent read-only
+SELECT, ``sqlite3`` releases the GIL while executing, and SQLite tolerates
+concurrent readers, so batch wall-clock is the slowest query, not the sum.
 
 Query translation reuses the arXiv-syntax parser from
 :mod:`embodied_learning.search.arxiv_snapshot`; nodes map onto FTS5 ``MATCH``
@@ -41,7 +49,17 @@ from embodied_learning.search.arxiv_snapshot import (
     submitted_date,
 )
 
-FTS_COLUMNS = {"all": "all_", "ti": "ti", "abs": "abs_", "au": "au", "co": "comments", "jr": "jr", "cat": "cat", "id": "id"}
+FTS_COLUMNS = {
+    # "all" spans every searchable column (id is UNINDEXED, same as before).
+    "all": "{title abstract authors comments journal_ref categories}",
+    "ti": "title",
+    "abs": "abstract",
+    "au": "authors",
+    "co": "comments",
+    "jr": "journal_ref",
+    "cat": "categories",
+    "id": "id",
+}
 
 
 # ---- one-time conversion ----------------------------------------------------
@@ -55,8 +73,13 @@ CREATE TABLE IF NOT EXISTS papers (
     v1_date INTEGER, update_date TEXT, authors_parsed TEXT
 );
 CREATE INDEX IF NOT EXISTS papers_v1_date ON papers(v1_date);
+-- External content: only the inverted index lives here; values are read from
+-- ``papers`` by column name at query time. ``rebuild`` builds the index from
+-- the content table after the paper rows are inserted.
 CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
-    all_, ti, abs_, au, cat, comments, jr, id UNINDEXED
+    title, abstract, authors, comments, journal_ref, categories,
+    id UNINDEXED,
+    content='papers', content_rowid='rowid_alias'
 );
 """
 
@@ -76,7 +99,6 @@ def build_db(jsonl_path: str, db_path: str, progress_every: int = 500_000) -> in
     next_rowid = 0
     seen_ids: set[str] = set()
     paper_rows: list[tuple[Any, ...]] = []
-    fts_rows: list[tuple[Any, ...]] = []
 
     def flush() -> None:
         connection.executemany(
@@ -85,13 +107,7 @@ def build_db(jsonl_path: str, db_path: str, progress_every: int = 500_000) -> in
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             paper_rows,
         )
-        connection.executemany(
-            "INSERT INTO fts(rowid, all_, ti, abs_, au, cat, comments, jr, id)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            fts_rows,
-        )
         paper_rows.clear()
-        fts_rows.clear()
 
     with open(jsonl_path, "r", encoding="utf-8") as handle:
         for line in handle:
@@ -122,12 +138,6 @@ def build_db(jsonl_path: str, db_path: str, progress_every: int = 500_000) -> in
                 next_rowid, arxiv_id, title, abstract, authors, comments, journal_ref,
                 categories, v1_date, update_date, authors_parsed,
             ))
-            all_text = " ".join((title, abstract, authors, comments, journal_ref, categories, arxiv_id))
-            fts_rows.append((
-                next_rowid,
-                " ".join(all_text.split()).lower(), title.lower(), abstract.lower(),
-                authors.lower(), categories.lower(), comments.lower(), journal_ref.lower(), arxiv_id,
-            ))
             if len(paper_rows) >= 10_000:
                 flush()
             if scanned % progress_every == 0:
@@ -135,6 +145,7 @@ def build_db(jsonl_path: str, db_path: str, progress_every: int = 500_000) -> in
     if paper_rows:
         flush()
     connection.commit()
+    connection.execute("INSERT INTO fts(fts) VALUES ('rebuild')")
     connection.execute("INSERT INTO fts(fts) VALUES ('optimize')")
     connection.commit()
     connection.close()
@@ -211,8 +222,25 @@ def _split_date_range(node: Any) -> tuple[str, str | None, str | None]:
 
 # ---- batch search -----------------------------------------------------------
 
+def _ensure_schema(connection: sqlite3.Connection) -> None:
+    """Refuse pre-external-content databases (they have the old fts columns)."""
+    ddl = connection.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='fts'"
+    ).fetchone()
+    if ddl and "content='papers'" not in (ddl[0] or ""):
+        raise SystemExit(
+            "snapshot database uses the old schema (fts stores full text); rebuild it"
+            " with `search.py build-snapshot-db --snapshot-jsonl <jsonl> --db <new-path>`"
+        )
+
+
 class SnapshotDbSearch:
-    """Same run() contract as :class:`SnapshotArxivSearch`, backed by SQLite."""
+    """Same run() contract as :class:`SnapshotArxivSearch`, backed by SQLite.
+
+    Queries execute on a thread pool (one read-only connection per worker);
+    results merge in the main thread in original query order, so output is
+    identical to serial execution.
+    """
 
     def __init__(
         self,
@@ -235,70 +263,100 @@ class SnapshotDbSearch:
         self.sort_order = sort_order
         self.output = output
 
-    def run(self, queries: list[dict[str, str]]) -> int:
+    def _run_query(
+        self, connection: sqlite3.Connection, item: dict[str, str]
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         from embodied_learning.search.arxiv import with_date_filter  # noqa: E402
 
-        connection = sqlite3.connect(self.db_path)
-        connection.row_factory = sqlite3.Row
+        effective = with_date_filter(item["query"], self.start_date, self.end_date)
+        node = parse_query(effective)
+        try:
+            sql_expr, lo_iso, hi_iso = _split_date_range(node)
+        except ValueError as exc:
+            meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": str(exc)}
+            return meta, []
+        sql = "SELECT p.* FROM papers p"
+        params: list[Any] = []
+        if sql_expr:
+            sql += " JOIN fts f ON f.rowid = p.rowid_alias WHERE fts MATCH ?"
+            params.append(sql_expr)
+        else:
+            sql += " WHERE 1=1"
+        if lo_iso:
+            sql += " AND p.v1_date >= ? AND p.v1_date <= ?"
+            low = dt.datetime.fromisoformat(lo_iso).timestamp()
+            high = dt.datetime.fromisoformat(hi_iso).timestamp()
+            params += [int(low), int(high)]
+        sql += " ORDER BY p.v1_date DESC, p.id LIMIT ?"
+        params.append(self.max_results)
+        try:
+            rows = connection.execute(sql, params).fetchall()
+        except sqlite3.OperationalError as exc:
+            meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": f"fts match failed: {exc}"}
+            return meta, []
+        papers = []
+        for row in rows:
+            record = {
+                "id": row["id"],
+                "title": row["title"],
+                "abstract": row["abstract"],
+                "authors": row["authors"],
+                "comments": row["comments"],
+                "journal-ref": row["journal_ref"],
+                "categories": row["categories"],
+                "versions": [{"version": "v1", "created": None}],
+                "update_date": row["update_date"],
+                "authors_parsed": json.loads(row["authors_parsed"] or "[]"),
+                "_v1_date": row["v1_date"],
+            }
+            paper = record_to_paper(record, item["label"], effective)
+            papers.append(paper)
+        # record_to_paper falls back to update_date when v1 created is None;
+        # restore the exact stored v1 timestamp for the published field.
+        for paper, row in zip(papers, rows):
+            if row["v1_date"]:
+                paper["published"] = dt.datetime.fromtimestamp(
+                    row["v1_date"], tz=dt.timezone.utc
+                ).strftime("%Y-%m-%dT%H:%M:%SZ")
+        meta = {"label": item["label"], "query": item["query"], "result_count": len(papers)}
+        return meta, papers
+
+    def run(self, queries: list[dict[str, str]], max_workers: int = 8) -> int:
+        from concurrent.futures import ThreadPoolExecutor
+
+        probe = sqlite3.connect(self.db_path)
+        try:
+            _ensure_schema(probe)
+        finally:
+            probe.close()
+
+        def worker(item: dict[str, str]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+            connection = sqlite3.connect(self.db_path)
+            connection.row_factory = sqlite3.Row
+            try:
+                return self._run_query(connection, item)
+            finally:
+                connection.close()
+
+        # sqlite3 releases the GIL during execution, so threads give real
+        # parallelism for FTS scans; map() keeps original query order.
+        if len(queries) > 1:
+            workers = max(1, min(max_workers, len(queries)))
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                outcomes = list(pool.map(worker, queries))
+        else:
+            outcomes = [worker(item) for item in queries]
+
         papers_by_id: dict[str, dict[str, Any]] = {}
         query_results = []
-        for item in queries:
-            effective = with_date_filter(item["query"], self.start_date, self.end_date)
-            node = parse_query(effective)
-            try:
-                sql_expr, lo_iso, hi_iso = _split_date_range(node)
-            except ValueError as exc:
-                query_results.append({"label": item["label"], "query": item["query"], "result_count": 0, "error": str(exc)})
-                continue
-            sql = "SELECT p.* FROM papers p"
-            params: list[Any] = []
-            if sql_expr:
-                sql += " JOIN fts f ON f.rowid = p.rowid_alias WHERE fts MATCH ?"
-                params.append(sql_expr)
-            else:
-                sql += " WHERE 1=1"
-            if lo_iso:
-                sql += " AND p.v1_date >= ? AND p.v1_date <= ?"
-                low = dt.datetime.fromisoformat(lo_iso).timestamp()
-                high = dt.datetime.fromisoformat(hi_iso).timestamp()
-                params += [int(low), int(high)]
-            sql += " ORDER BY p.v1_date DESC, p.id LIMIT ?"
-            params.append(self.max_results)
-            try:
-                rows = connection.execute(sql, params).fetchall()
-            except sqlite3.OperationalError as exc:
-                query_results.append({"label": item["label"], "query": item["query"], "result_count": 0, "error": f"fts match failed: {exc}"})
-                continue
-            papers = []
-            for row in rows:
-                record = {
-                    "id": row["id"],
-                    "title": row["title"],
-                    "abstract": row["abstract"],
-                    "authors": row["authors"],
-                    "comments": row["comments"],
-                    "journal-ref": row["journal_ref"],
-                    "categories": row["categories"],
-                    "versions": [{"version": "v1", "created": None}],
-                    "update_date": row["update_date"],
-                    "authors_parsed": json.loads(row["authors_parsed"] or "[]"),
-                    "_v1_date": row["v1_date"],
-                }
-                paper = record_to_paper(record, item["label"], effective)
-                papers.append(paper)
-            # record_to_paper falls back to update_date when v1 created is None;
-            # restore the exact stored v1 timestamp for the published field.
-            for paper, row in zip(papers, rows):
-                if row["v1_date"]:
-                    paper["published"] = dt.datetime.fromtimestamp(
-                        row["v1_date"], tz=dt.timezone.utc
-                    ).strftime("%Y-%m-%dT%H:%M:%SZ")
-            query_results.append({"label": item["label"], "query": item["query"], "result_count": len(papers)})
+        for meta, papers in outcomes:
+            query_results.append(meta)
+            label = meta["label"]
             for paper in papers:
                 existing = papers_by_id.setdefault(str(paper["arxiv_id"]), paper)
                 if existing is not paper:
                     labels = set(str(existing.get("query_label", "")).split(","))
-                    labels.add(item["label"])
+                    labels.add(label)
                     existing["query_label"] = ",".join(sorted(label for label in labels if label))
 
         output = {
@@ -320,5 +378,4 @@ class SnapshotDbSearch:
                 file_handle.write(rendered + "\n")
         else:
             print(rendered)
-        connection.close()
         return 0

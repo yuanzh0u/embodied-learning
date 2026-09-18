@@ -322,6 +322,32 @@ class SearchStrategyTest(DriverPipelineTest):
         self.assertEqual(summary["seed_ids"], ["2402.14207"])
         self.assertNotIn("search-arxiv", " ".join(" ".join(c) for c in self.commands))
 
+    def test_external_candidates_skip_retrieval_and_feed_registry(self):
+        harvest = Path(self.tmp.name) / "harvest.json"
+        harvest.write_text(
+            json.dumps({
+                "batch": "curated-list:demo/repo",
+                "source_label": "curated-list:demo/repo",
+                "candidates": [{"arxiv_id": "2311.18259", "title": "Ego-Exo4D", "context": "c"}],
+            }),
+            encoding="utf-8",
+        )
+        code, summary = self.run_driver(
+            self.argv("--no-terms-agent", "--external-candidates", str(harvest))
+        )
+        self.assertEqual(code, 0)
+        names = self.stage_names()
+        self.assertNotIn("search-arxiv", names)  # keyword retrieval replaced by the list
+        self.assertEqual(names[0], "build-query-plan")  # plan still runs (knowledge IDs + coverage)
+        registry = next(c for c in self.commands if "build-candidate-registry" in " ".join(c))
+        self.assertEqual(registry[registry.index("--curated-list-result") + 1], str(harvest))
+        self.assertEqual(summary["external_candidates"], [str(harvest)])
+
+    def test_external_candidates_missing_file_rejected(self):
+        code = self.driver.main(self.argv("--no-terms-agent", "--external-candidates", "/nonexistent.json"))
+        self.assertEqual(code, 2)
+        self.assertEqual(self.commands, [])  # rejected before any stage ran
+
     def test_smart_strategy_with_seeds_runs_citation_expansion(self):
         argv = self.argv(
             "--skip-s2", "--no-terms-agent", "--search-strategy", "smart",

@@ -364,6 +364,10 @@ def _build_candidate_registry_parse_args(argv: list[str] | None = None) -> argpa
     )
     parser.add_argument("--browser-result", action="append", default=[], help="parse_browser_candidates.py JSON; repeatable.")
     parser.add_argument("--citation-result", action="append", default=[], help="expand_via_citations.py JSON; repeatable.")
+    parser.add_argument(
+        "--curated-list-result", action="append", default=[],
+        help="harvest-curated-list.py JSON (channel recorded as curated-list); repeatable.",
+    )
     parser.add_argument("--screening-file", help="Optional JSON candidate/status updates.")
     parser.add_argument("--output", required=True)
     return parser.parse_args(argv)
@@ -378,6 +382,7 @@ def _build_candidate_registry_main(argv: list[str] | None = None) -> int:
         [Path(path) for path in args.semantic_scholar_result],
         Path(args.screening_file) if args.screening_file else None,
         Path(args.output),
+        [Path(path) for path in args.curated_list_result],
     )
 
 # ---- screen-candidates (was scripts/screen_candidates.py) -----------------------
@@ -662,6 +667,57 @@ def _build_snapshot_db_main(argv: list[str] | None = None) -> int:
     return build_snapshot_db(args.snapshot_jsonl, args.db, progress_every=args.progress_every)
 
 
+# ---- harvest-curated-list (GitHub awesome-list repo -> candidates JSON) ------
+
+
+import argparse
+
+from embodied_learning.search import curated_list  # noqa: E402
+
+
+def _harvest_curated_list_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=curated_list.__doc__.splitlines()[0])
+    parser.add_argument("--repo", required=True, help="GitHub repo slug, e.g. player0718/awesome-ego-video-datasets.")
+    parser.add_argument("--ref", default="main", help="Git ref to scan (default: main).")
+    parser.add_argument(
+        "--no-resolve", action="store_true",
+        help="Skip best-effort title resolution for entries without arXiv links.",
+    )
+    parser.add_argument(
+        "--resolve-db",
+        help="Offline title resolution against this snapshot SQLite/FTS5 database "
+        "(tried before the Semantic Scholar lookup).",
+    )
+    parser.add_argument("--sleep-seconds", type=float, default=1.0, help="Delay between S2 title lookups.")
+    parser.add_argument("--timeout", type=float, default=30.0, help="Per-request timeout in seconds.")
+    parser.add_argument("--output", help="Write JSON to this file instead of stdout.")
+    return parser.parse_args(argv)
+
+
+def _harvest_curated_list_main(argv: list[str] | None = None) -> int:
+    import json
+
+    args = _harvest_curated_list_parse_args(argv)
+    payload = curated_list.harvest(
+        args.repo,
+        ref=args.ref,
+        resolve_missing=not args.no_resolve,
+        resolve_db=args.resolve_db,
+        sleep_seconds=args.sleep_seconds,
+        timeout=args.timeout,
+    )
+    rendered = json.dumps(payload, ensure_ascii=False, indent=2)
+    if args.output:
+        Path(args.output).write_text(rendered + "\n", encoding="utf-8")
+        print(
+            f"harvested {len(payload['candidates'])} candidates (+{len(payload['unresolved'])} unresolved) "
+            f"from {len(payload['files_scanned'])} files -> {args.output}"
+        )
+    else:
+        print(rendered)
+    return 0
+
+
 # ---- dispatch ----------------------------------------------------------------
 
 _SUBCOMMANDS = {
@@ -676,6 +732,7 @@ _SUBCOMMANDS = {
     "rank-influential-papers": _rank_influential_papers_main,
     "rank-problem-relevance": _rank_problem_relevance_main,
     "parse-browser-candidates": _parse_browser_candidates_main,
+    "harvest-curated-list": _harvest_curated_list_main,
 }
 
 

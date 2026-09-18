@@ -2,7 +2,7 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-08-14
+updated: 2026-09-18
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
@@ -73,6 +73,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | ID | 综合问题 | 主要知识卡 | 规模 | 审计入口 |
 |---|---|---|---:|---|
 | LR-VLA-WM-SHIFT | 近一年为何说反应式 VLA 已死、世界模型当立 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN | 1,547 / 175 / 28 | [run](../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/run.json) · [packet](../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/review-packet.md) |
+| LR-VLA-DEAD-DEBATE | VLA 已死之辩：反应式 VLA 的能力边界与世界模型融合栈（复用 LR-VLA-WM-SHIFT 证据的科研备忘录单风格 run） | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN | 1,547 / 175 / 28 | [run](../evidence/literature-review-vla已死之辩-反应式vla的能力边界与世界模型融合栈-20260918/run.json) · [memo](../evidence/literature-review-vla已死之辩-反应式vla的能力边界与世界模型融合栈-20260918/scientific-memo_keyan.md) · [appendix](../evidence/literature-review-vla已死之辩-反应式vla的能力边界与世界模型融合栈-20260918/evidence-appendix.md) |
 | LR-WM-TASKS | 近一年世界视频模型最可靠的应用任务 | EA-MODEL, EA-EVAL, EA-4D | 1,589 / 175 / 30 | [run](../evidence/literature-review-近一年世界视频模型最可靠的应用任务-20260719/run.json) · [packet](../evidence/literature-review-近一年世界视频模型最可靠的应用任务-20260719/review-packet.md) |
 | LR-VLA-BREAKTHROUGH-HY1 | 近半年 VLA 在具身领域最大的技术突破 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN | 1,246 / 161 / 27 | [run](../evidence/literature-review-近半年vla在具身领域最大的技术突破-20260719/run.json) · [packet](../evidence/literature-review-近半年vla在具身领域最大的技术突破-20260719/review-packet.md) |
 | LR-MULTIMODAL-TRAINING-YEAR | 近一年触觉、力觉、视觉、语言等多模态数据在具身机器人训练方法中的演进 | EA-SENSOR, EA-MODEL, EA-ALIGN, EA-XEMBODIMENT, EA-DATA | 1,789 / 247 / 42 | [run](../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/run.json) · [packet](../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/review-packet.md) |

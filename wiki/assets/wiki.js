@@ -1250,6 +1250,10 @@
     nodes.readingMeta.hidden = on;
     nodes.articleFooter.hidden = on;
     nodes.tocPanel.hidden = on;
+    // Leaving the reader must also undo switchReaderTab(true): otherwise the
+    // 速读 card stays visible (and #article-body stays hidden) on top of
+    // every subsequently rendered topic card.
+    if (!on) resetQuickReadTab();
   }
 
   function showReaderSkeleton(paperId) {

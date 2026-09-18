@@ -127,7 +127,19 @@ def load_semantic_scholar_results(paths: list[Path], registry: dict[str, dict[st
     return batches
 
 
-def load_browser_results(paths: list[Path], registry: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def load_browser_results(
+    paths: list[Path],
+    registry: dict[str, dict[str, Any]],
+    *,
+    channel: str = "browser",
+    default_label: str = "browser-fallback",
+) -> list[dict[str, Any]]:
+    """Merge parse_browser_candidates-shaped JSON into the registry.
+
+    ``channel``/``default_label`` let curated-list harvests share this loader
+    while being recorded truthfully (``channel="curated-list"``) instead of
+    masquerading as unplanned browser fallback noise.
+    """
     batches: list[dict[str, Any]] = []
     for index, path in enumerate(paths, start=1):
         data = load_json(path)
@@ -145,9 +157,9 @@ def load_browser_results(paths: list[Path], registry: dict[str, dict[str, Any]])
             context = str(raw.get("context") or "")
             if context and not record.get("discovery_context"):
                 record["discovery_context"] = context
-            labels = [str(data.get("source_label") or "browser-fallback")]
-            add_discovery(record, batch=batch, channel="browser", labels=labels, source=str(path))
-        batches.append({"batch": batch, "channel": "browser", "candidate_ids": sorted(set(ids)), "source": str(path)})
+            labels = [str(data.get("source_label") or default_label)]
+            add_discovery(record, batch=batch, channel=channel, labels=labels, source=str(path))
+        batches.append({"batch": batch, "channel": channel, "candidate_ids": sorted(set(ids)), "source": str(path)})
     return batches
 
 
@@ -224,11 +236,15 @@ def build_registry(
     screening_file: Path | None = None,
     citation_results: list[Path] | None = None,
     semantic_scholar_results: list[Path] | None = None,
+    curated_list_results: list[Path] | None = None,
 ) -> dict[str, Any]:
     registry: dict[str, dict[str, Any]] = {}
     batches = load_api_results(search_results, registry)
     batches.extend(load_semantic_scholar_results(semantic_scholar_results or [], registry))
     batches.extend(load_browser_results(browser_results, registry))
+    batches.extend(load_browser_results(
+        curated_list_results or [], registry, channel="curated-list", default_label="curated-list",
+    ))
     batches.extend(load_citation_results(citation_results or [], registry))
     apply_screening(registry, load_screening(screening_file))
     candidates = [registry[key] for key in sorted(registry)]
@@ -253,11 +269,15 @@ def run(
     semantic_scholar_results: list[Path],
     screening_file: Path | None,
     output: Path,
+    curated_list_results: list[Path] | None = None,
 ) -> int:
     """CLI-side orchestration: validate inputs, build, and write the registry file."""
-    if not search_results and not browser_results and not citation_results and not semantic_scholar_results:
+    if not any((
+        search_results, browser_results, citation_results, semantic_scholar_results, curated_list_results,
+    )):
         raise SystemExit(
-            "provide at least one --search-result, --semantic-scholar-result, --browser-result, or --citation-result"
+            "provide at least one --search-result, --semantic-scholar-result, --browser-result, "
+            "--citation-result, or --curated-list-result"
         )
     result = build_registry(
         search_results,
@@ -265,6 +285,7 @@ def run(
         screening_file,
         citation_results,
         semantic_scholar_results,
+        curated_list_results,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

@@ -40,7 +40,7 @@ class SearchCliDispatchTest(unittest.TestCase):
             )
         self.assertEqual(code, 0)
         run.assert_called_once_with(
-            [Path("/tmp/s.json")], [], [], [Path("/tmp/s2.json")], None, Path("/tmp/o.json")
+            [Path("/tmp/s.json")], [], [], [Path("/tmp/s2.json")], None, Path("/tmp/o.json"), []
         )
 
     def test_screen_candidates_dispatches_to_screening_run(self):

@@ -116,6 +116,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="",
         help="Comma/space-separated arXiv IDs used as citation-expansion seeds (optional).",
     )
+    parser.add_argument(
+        "--external-candidates",
+        action="append",
+        default=[],
+        help=(
+            "harvest-curated-list JSON used AS the candidate source (repeatable). Keyword "
+            "retrieval (S2 + arXiv) is skipped; the plan stage still runs for knowledge IDs "
+            "and the coverage report. For curated-list runs declare workflow_version 1 + "
+            "selection_method in run.json — no coverage/saturation gate applies."
+        ),
+    )
     parser.add_argument("--skip-s2", action="store_true", help="Skip the best-effort Semantic Scholar source.")
     parser.add_argument(
         "--arxiv-snapshot",
@@ -430,6 +441,18 @@ def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) ->
     log(stage_line("project", f"{projected} 条证据事件（前缀 {id_prefix}）"))
 
 
+def _audited_note(note_path: Path, audit_path: Path | None = None) -> bool:
+    """A note counts as done only when its audit actually passed — reject/failed
+    stubs (empty note + status: reject audit) must stay retryable."""
+    audit_path = audit_path or note_path.with_name(note_path.stem + ".audit.json")
+    if not note_path.is_file() or not audit_path.is_file():
+        return False
+    try:
+        return json.loads(audit_path.read_text(encoding="utf-8")).get("status") in {"pass", "needs-review"}
+    except (OSError, ValueError):
+        return False
+
+
 def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, summary_extra: dict) -> None:
     """Per-paper skeleton agents (parallel one-shot claude) + local assembly.
 
@@ -452,8 +475,13 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
     todo = [
         paper_id
         for paper_id in order
-        if not (pool_root / f"arxiv-{paper_id}" / "note.json.audit.json").is_file()
-        or not (notes_dir / f"{paper_id}.json").is_file()
+        if not (
+            _audited_note(notes_dir / f"{paper_id}.json")
+            and _audited_note(
+                pool_root / f"arxiv-{paper_id}" / "note.json",
+                pool_root / f"arxiv-{paper_id}" / "note.json.audit.json",
+            )
+        )
     ]
     reused = len(order) - len(todo)
     if reused:
@@ -627,6 +655,10 @@ def main(argv: list[str] | None = None) -> int:
     if not (run_dir / "run.json").is_file():
         print(f"run.json not found in {run_dir}", file=sys.stderr)
         return 2
+    for path in args.external_candidates:
+        if not Path(path).is_file():
+            print(f"external candidates file not found: {path}", file=sys.stderr)
+            return 2
     run_json_path = run_dir / "run.json"
 
     started = time.monotonic()
@@ -671,7 +703,7 @@ def main(argv: list[str] | None = None) -> int:
         # queries (the stage whose absence sank the pure-Chinese topics on
         # 2026-09-11). Failure is non-fatal — the plan falls back to generic.
         dynamic_source = "merged-from-disk"
-        if args.search_strategy == "smart" and not args.no_dynamic_agent:
+        if args.search_strategy == "smart" and not args.no_dynamic_agent and not args.external_candidates:
             agent_payload = agent_dynamic_queries(
                 args.topic, args.focus, seed_ids, args.dynamic_timeout, cli
             )
@@ -692,6 +724,8 @@ def main(argv: list[str] | None = None) -> int:
         summary_extra["dynamic_source"] = dynamic_source
         summary_extra["seed_ids"] = seed_ids
         summary_extra["search_strategy"] = args.search_strategy
+        if args.external_candidates:
+            summary_extra["external_candidates"] = args.external_candidates
 
         def plan_cmd_builder() -> list[str]:  # noqa: E306
             return [
@@ -735,7 +769,11 @@ def main(argv: list[str] | None = None) -> int:
         s2_detail = "skipped (--skip-s2)"
         s2_process = None
         seeds_strategy = args.search_strategy == "seeds"
-        skip_arxiv = seeds_strategy and bool(seed_ids)
+        external_only = bool(args.external_candidates)
+        skip_arxiv = (seeds_strategy and bool(seed_ids)) or external_only
+        if external_only:
+            log(f"[DRIVER] 外注候选模式：跳过关键词检索，registry 只收 --external-candidates "
+                f"({len(args.external_candidates)} 个文件)")
         if not skip_arxiv:
             if not args.skip_s2:
                 s2_cmd = lambda: [  # noqa: E731
@@ -802,7 +840,11 @@ def main(argv: list[str] | None = None) -> int:
                 except (json.JSONDecodeError, OSError):
                     pass
         else:
-            arxiv_detail = "skipped (seeds strategy: citation-graph expansion replaces keyword retrieval)"
+            arxiv_detail = (
+                "skipped (external candidates replace keyword retrieval)"
+                if external_only
+                else "skipped (seeds strategy: citation-graph expansion replaces keyword retrieval)"
+            )
             log(stage_line("retrieval-arxiv", arxiv_detail))
         summary_extra["s2_detail"] = s2_detail
         mark("retrieval", begun)
@@ -853,6 +895,8 @@ def main(argv: list[str] | None = None) -> int:
                 command += ["--semantic-scholar-result", str(s2_output)]
             if citation_output.is_file():
                 command += ["--citation-result", str(citation_output)]
+            for path in args.external_candidates:
+                command += ["--curated-list-result", str(path)]
             return command
         run_stage("registry", [registry_output], args.force, registry_cmd)
         mark("registry", begun)

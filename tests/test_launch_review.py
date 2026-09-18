@@ -97,6 +97,28 @@ class VerifyPublishTest(unittest.TestCase):
             self.assertTrue(any("catalog" in problem for problem in problems))
             self.assertTrue(any("wiki" in problem for problem in problems))
 
+    def test_topic_matched_by_key_without_date_suffix(self) -> None:
+        """The wiki indexes topics by topic_key/title (no date suffix); a folder
+        name with `-20260101` must still match — regression for the false
+        'wiki 最新快照不含本 run 话题' report on settled runs."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            kb_root = tmp / "kb"
+            run_dir = kb_root / "work" / "literature-review-ego-视频数据集全景-20260918"
+            run_dir.mkdir(parents=True)
+            (kb_root / "knowledge").mkdir(parents=True)
+            catalog = kb_root / "knowledge" / "literature-review-catalog.md"
+            catalog.write_text("literature-review-ego-视频数据集全景-20260918", encoding="utf-8")
+            snapshots = kb_root / "wiki" / "data" / "snapshots" / "snap1"
+            snapshots.mkdir(parents=True)
+            (snapshots / "manifest.json").write_text(json.dumps({"topics": [
+                {"topic_key": "ego-视频数据集全景", "title": "ego 视频数据集全景"},
+            ]}), encoding="utf-8")
+            (kb_root / "wiki" / "data" / "current.json").write_text("{}", encoding="utf-8")
+            args = argparse_namespace(kb_root=str(kb_root))
+            problems = launcher.verify_publish(args, run_dir, launcher.load_wiki_prompts())
+            self.assertEqual([p for p in problems if "wiki" in p], [])
+
 
 def argparse_namespace(**kwargs):
     import argparse

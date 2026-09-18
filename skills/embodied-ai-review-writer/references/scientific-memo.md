@@ -34,7 +34,10 @@ Use this style for researchers, technical leads, and project decision-makers. Th
 ## Reject the draft when
 
 - A Claim Map or evidence inventory is the largest section.
-- The thesis is merely “the topic is complex” or “more evidence is needed”.
+- The thesis is merely “the topic is complex” or “more evidence needed”.
 - Sections are stance buckets rather than arguments.
 - The memo contains writer instructions, raw event claims, or English abstract fragments.
 - Removing citations leaves no coherent argument.
+- The title is a suspense or antithesis headline (“不是A，而是B”, “瓶颈转移到…”, “从X到Y的逆袭”) instead of a neutral statement of the research object.
+- The memo opens with a bold TL;DR/slogan paragraph in the zhihu-explainer voice, or narrates the literature as a dramatic evolution arc (“第一代→第二代→第三阶段”) instead of arguing mechanisms against evidence.
+- Bold emphasis is used for punchlines rather than genuinely load-bearing terms.

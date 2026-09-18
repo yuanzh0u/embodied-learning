@@ -685,6 +685,33 @@ def extract_topic_marker(text: str) -> str | None:
     return None
 
 
+# Per-style voice contracts injected into writer prompts. The writing brief is
+# style-agnostic and speaks in tension/thesis language (the zhihu register), so
+# without an explicit contract the one-shot writer drifts every style toward
+# the zhihu-explainer voice (suspense headline, bold "不是A而是B" opening) —
+# observed on both 2026-09-17 and 2026-09-18 scientific memos.
+STYLE_VOICE_CONTRACTS = {
+    "scientific-memo": (
+        "风格契约（scientific-memo）：动笔前先读"
+        " <skills-root>/embodied-ai-review-writer/references/scientific-memo.md，"
+        "并逐条执行其 Voice 段——中性研究声音、无修辞戏剧、无条件限定不得删除。"
+        "writing-brief 里的'中心论点候选/张力对'只是素材提炼指引，不是成稿声音样板。"
+        "硬性禁令：标题必须是研究对象的中性陈述，不得用悬念/转折式标题；"
+        "开头不得出现加粗的'不是A，而是B'式口号段；"
+        "正文不得使用知乎解释稿的演化弧叙事口吻。混入即返工。"
+    ),
+    "expert-explainer": (
+        "风格契约（expert-explainer）：动笔前先读"
+        " <skills-root>/embodied-ai-review-writer/references/zhihu-explainer.md 并执行其契约："
+        "question-led 标题、TL;DR、机制先行、延伸阅读带编辑注。"
+    ),
+    "kol-thread": (
+        "风格契约（kol-thread）：动笔前先读"
+        " <skills-root>/embodied-ai-review-writer/references/xiaohongshu-post.md 并执行其契约。"
+    ),
+}
+
+
 def build_workflow_prompt(
     *,
     params: dict,
@@ -717,6 +744,11 @@ def build_workflow_prompt(
         f"检索策略：{params.get('search_strategy', 'smart')}",
         f"种子论文：{params.get('seed_arxiv_ids') or '无'}",
         f"目标风格：{params.get('target_style', 'all')}",
+        *(
+            [STYLE_VOICE_CONTRACTS[str(params.get("target_style"))]]
+            if str(params.get("target_style") or "") in STYLE_VOICE_CONTRACTS
+            else []
+        ),
         f"关注重点：{params.get('focus') or '无'}",
         f"运行目录（已由系统创建，status: in-progress）：{rel(run_dir)}/",
         f"skills 根目录（SKILL.md 所在，读技能与脚本用）：<skills-root>={skills_rel}",
@@ -761,7 +793,10 @@ def build_continuation_prompt(
             "expert-explainer": "知乎解释版（zhihu-explainer_zhihu.md）",
             "kol-thread": "小红书版（xiaohongshu-post_xiaohongshu.md）",
         }.get(style, style)
-        writing_clause = f"仅撰写采访中选定的风格：{style_label}，不要写其他风格"
+        writing_clause = (
+            f"仅撰写采访中选定的风格：{style_label}，不要写其他风格。"
+            + (STYLE_VOICE_CONTRACTS[style] if style in STYLE_VOICE_CONTRACTS else "")
+        )
         parallel_clause = "单一成稿由主线程直接撰写润色，再走审计门"
     settle_clause = (
         "通过审计门、落盘 evidence/、把 run.json status 改为 settled，"
