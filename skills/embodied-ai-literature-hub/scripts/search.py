@@ -107,6 +107,8 @@ def _build_query_plan_main(argv: list[str] | None = None) -> int:
 import argparse
 
 from embodied_learning.search.arxiv import MAX_RETRIES, ArxivSearch, load_queries  # noqa: E402
+from embodied_learning.search.arxiv_snapshot import SnapshotArxivSearch  # noqa: E402
+from embodied_learning.search.arxiv_snapshot_db import SnapshotDbSearch, build_db as build_snapshot_db  # noqa: E402
 
 
 def _search_arxiv_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -130,12 +132,43 @@ def _search_arxiv_parse_args(argv: list[str] | None = None) -> argparse.Namespac
         default="embodied-ai-literature-hub/1.0 (local research workflow)",
         help="HTTP User-Agent sent to arXiv.",
     )
+    parser.add_argument(
+        "--metadata-snapshot",
+        help="Offline retrieval: path to a local arXiv metadata OAI snapshot "
+        "(JSONL, one record per line). Replaces live API calls entirely.",
+    )
     parser.add_argument("--output", help="Write JSON to this file instead of stdout.")
     return parser.parse_args(argv)
 
 
 def _search_arxiv_main(argv: list[str] | None = None) -> int:
     args = _search_arxiv_parse_args(argv)
+    queries = load_queries(queries=args.query, query_file=args.query_file)
+    snapshot = args.metadata_snapshot
+    if snapshot and snapshot.endswith((".sqlite", ".sqlite3", ".db")):
+        search = SnapshotDbSearch(
+            db_path=snapshot,
+            start_date=args.start_date,
+            end_date=args.end_date,
+            max_results=args.max_results,
+            batch_label=args.batch_label or "",
+            sort_by=args.sort_by,
+            sort_order=args.sort_order,
+            output=args.output,
+        )
+        return search.run(queries)
+    if snapshot:
+        search = SnapshotArxivSearch(
+            snapshot_path=args.metadata_snapshot,
+            start_date=args.start_date,
+            end_date=args.end_date,
+            max_results=args.max_results,
+            batch_label=args.batch_label or "",
+            sort_by=args.sort_by,
+            sort_order=args.sort_order,
+            output=args.output,
+        )
+        return search.run(queries)
     search = ArxivSearch(
         start_date=args.start_date,
         end_date=args.end_date,
@@ -152,7 +185,7 @@ def _search_arxiv_main(argv: list[str] | None = None) -> int:
         user_agent=args.user_agent,
         output=args.output,
     )
-    return search.run(load_queries(queries=args.query, query_file=args.query_file))
+    return search.run(queries)
 
 # ---- search-semantic-scholar (was scripts/search_semantic_scholar.py) -----------------
 
@@ -314,7 +347,10 @@ def _expand_via_citations_main(argv: list[str] | None = None) -> int:
 
 import argparse
 
-from embodied_learning.search.candidate_registry import run  # noqa: E402
+# Import the whole module, not `run`: three consolidated sections each have a
+# module-level `run`, and a bare `from ... import run` would silently rebind the
+# shared global so every handler below called the wrong one (coverage.run won).
+from embodied_learning.search import candidate_registry  # noqa: E402
 
 
 def _build_candidate_registry_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -335,7 +371,7 @@ def _build_candidate_registry_parse_args(argv: list[str] | None = None) -> argpa
 
 def _build_candidate_registry_main(argv: list[str] | None = None) -> int:
     args = _build_candidate_registry_parse_args(argv)
-    return run(
+    return candidate_registry.run(
         [Path(path) for path in args.search_result],
         [Path(path) for path in args.browser_result],
         [Path(path) for path in args.citation_result],
@@ -349,7 +385,7 @@ def _build_candidate_registry_main(argv: list[str] | None = None) -> int:
 
 import argparse
 
-from embodied_learning.search.screening import run  # noqa: E402
+from embodied_learning.search import screening  # noqa: E402
 
 
 def _screen_candidates_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -367,7 +403,7 @@ def _screen_candidates_parse_args(argv: list[str] | None = None) -> argparse.Nam
 
 def _screen_candidates_main(argv: list[str] | None = None) -> int:
     args = _screen_candidates_parse_args(argv)
-    return run(
+    return screening.run(
         candidate_registry=args.candidate_registry,
         terms_raw=args.terms,
         query_label_prefixes=args.query_label_prefix,
@@ -383,7 +419,7 @@ def _screen_candidates_main(argv: list[str] | None = None) -> int:
 
 import argparse
 
-from embodied_learning.search.coverage import run  # noqa: E402
+from embodied_learning.search import coverage  # noqa: E402
 
 
 def _assess_review_coverage_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -397,7 +433,7 @@ def _assess_review_coverage_parse_args(argv: list[str] | None = None) -> argpars
 
 def _assess_review_coverage_main(argv: list[str] | None = None) -> int:
     args = _assess_review_coverage_parse_args(argv)
-    return run(
+    return coverage.run(
         Path(args.query_plan),
         Path(args.candidate_registry),
         [Path(path) for path in args.evidence_jsonl],
@@ -607,8 +643,30 @@ def _parse_browser_candidates_main(argv: list[str] | None = None) -> int:
 
 
 
+# ---- build-snapshot-db (one-time JSONL -> SQLite/FTS5 conversion) ----------
+
+def _build_snapshot_db_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Convert an arXiv metadata OAI snapshot JSONL into a local "
+        "SQLite/FTS5 database; search-arxiv --metadata-snapshot then queries it in "
+        "seconds instead of re-scanning the 5 GB JSONL."
+    )
+    parser.add_argument("--snapshot-jsonl", required=True, help="Path to arxiv-metadata-oai-snapshot.json (JSONL).")
+    parser.add_argument("--db", required=True, help="Output SQLite database path (must not exist).")
+    parser.add_argument("--progress-every", type=int, default=500_000, help="Print a progress line every N records.")
+    return parser.parse_args(argv)
+
+
+def _build_snapshot_db_main(argv: list[str] | None = None) -> int:
+    args = _build_snapshot_db_parse_args(argv)
+    return build_snapshot_db(args.snapshot_jsonl, args.db, progress_every=args.progress_every)
+
+
+# ---- dispatch ----------------------------------------------------------------
+
 _SUBCOMMANDS = {
     "build-query-plan": _build_query_plan_main,
+    "build-snapshot-db": _build_snapshot_db_main,
     "search-arxiv": _search_arxiv_main,
     "search-semantic-scholar": _search_semantic_scholar_main,
     "expand-via-citations": _expand_via_citations_main,
