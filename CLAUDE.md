@@ -12,7 +12,8 @@ order — read it before loading knowledge files.
 ## Commands
 
 The interpreter is `python3` (`python` is not on PATH). Scripts are **stdlib-only Python 3** — there
-is no build, lint, install, or dependency step. Run any script with `--help` to see its contract.
+is no build, lint, install, or dependency step. The full script map (purpose, categories,
+relationships, workflows) lives in `scripts/README.md`. Run any script with `--help` to see its contract.
 Optionally, `pip install .` (editable `-e .` also works) registers the `extract_arxiv` console command
 (human-readable `--format markdown` included) and `serve_research_wiki`, which serves the local
 research Wiki and defaults to the local knowledge base at `~/Documents/arxiv` (override with
@@ -37,9 +38,22 @@ Knowledge-base integrity and ID allocation (top-level `scripts/`):
 python3 scripts/check_kb_links.py            # broken links, unregistered source IDs, line-number locators
 python3 scripts/next_event_id.py --prefix EA-TWM-2026   # next collision-free evidence event ID
 python3 scripts/init_run.py --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
+python3 scripts/run_review_pipeline.py --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents) -> projection -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
 python3 scripts/check_run_bundle.py <run-dir>           # bundle completeness gate (pre-settle)
 python3 scripts/audit_citations.py --article ... --appendix ... --evidence-jsonl ...   # citation gate
 ```
+
+**Literature review runs are driver-first.** Default to `run_review_pipeline.py` for every
+mechanical stage instead of hand-running search/extraction/deep-read steps (it encodes rate-limit
+degradation, dynamic-query merging, and skeleton-agent deep reading). Claude sessions own only the
+judgment stages (packet → writing → audit gates → settle) and run them **in one turn** — no
+outline stop-and-wait checkpoint; the only sanctioned early stop is retrieval failure or
+insufficient evidence (leave the run `in-progress` and say what is missing). Settling a run is
+not the last step: after `check_run_bundle.py` passes and status flips to `settled`, register the
+run in `knowledge/literature-review-catalog.md` (or the local KB's catalog, e.g.
+`~/Documents/arxiv/knowledge/literature-review-catalog.md` for LiDAR/SLAM/calibration topics) and
+rebuild the wiki snapshot (`scripts/build_research_wiki.py --kb-root <kb-root> --output
+<kb-root>/wiki/data`) — an unregistered run is invisible in the wiki.
 
 Note: repo-wide `unittest discover -s skills` finds **0 tests** — the hyphenated skill directories
 are not importable packages and have no `__init__.py`. Always scope to a `*/tests` directory or a file.
@@ -54,6 +68,10 @@ python3 skills/embodied-ai-literature-hub/scripts/search.py search-semantic-scho
   --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/s2-candidates.json   # default metadata-search backend
 python3 skills/embodied-ai-literature-hub/scripts/search.py search-arxiv --query-file /tmp/plan.json \
   --start-date 2023-01-01 --end-date 2026-06-06 --output /tmp/candidates.json
+# Offline retrieval (no network): pass --metadata-snapshot with an OAI JSONL snapshot, or a
+# SQLite/FTS5 database built once via `search.py build-snapshot-db --snapshot-jsonl <jsonl> --db <db>`
+# (seconds per round vs minutes; db at ~/Documents/arxiv/arxiv-metadata-oai-snapshot.sqlite).
+# run_review_pipeline.py forwards the same choice as --arxiv-snapshot.
 python3 skills/embodied-ai-literature-hub/scripts/search.py build-candidate-registry \
   --semantic-scholar-result /tmp/s2-candidates.json --search-result /tmp/candidates.json --output work/<run>/registry.json
 python3 skills/embodied-ai-literature-hub/scripts/fetch.py extract-arxiv-html --paper-id 2402.10329 --terms UMI,data
@@ -128,6 +146,15 @@ deliberate — do not blur them:
 
 Add new material via `knowledge/ingestion-guide.md` (register source → extract to card → update index).
 Run `python3 scripts/check_kb_links.py` after editing knowledge files.
+
+**Local KB first (`~/Documents/arxiv`).** The canonical working knowledge base is the local KB at
+`~/Documents/arxiv` (its own `knowledge/`, `evidence/`, `pool/`, `work/`); two KB roots exist and
+topics choose the root (e.g. LiDAR/SLAM/calibration topics are already local-KB only). New
+knowledge outputs — settled runs, topic cards, pool papers, deep-read notes, wiki snapshots — are
+work content and belong in the local KB; when the in-repo `knowledge/` tree and the local KB
+disagree, prefer the local KB. The repo (and the `local-db` branch in particular) records **code
+changes only**; never commit knowledge-bearing artifacts here (`pool/` is gitignored as a guard —
+a pool dir inside the repo is a mis-resolved default, migrate it out and delete it).
 
 ## Conventions and invariants
 

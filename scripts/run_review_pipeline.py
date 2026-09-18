@@ -117,6 +117,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Comma/space-separated arXiv IDs used as citation-expansion seeds (optional).",
     )
     parser.add_argument("--skip-s2", action="store_true", help="Skip the best-effort Semantic Scholar source.")
+    parser.add_argument(
+        "--arxiv-snapshot",
+        help="Offline arXiv retrieval: path to a local metadata OAI snapshot (JSONL). "
+        "Passed to search-arxiv --metadata-snapshot; no live arXiv API calls.",
+    )
     parser.add_argument("--no-terms-agent", action="store_true", help="Use mechanical terms only (skip the one-shot claude call).")
     parser.add_argument("--no-dynamic-agent", action="store_true", help="Skip the one-shot dynamic-query agent (smart strategy).")
     parser.add_argument("--terms-timeout", type=float, default=TERMS_AGENT_TIMEOUT_S)
@@ -316,6 +321,65 @@ def outputs_exist(*paths: Path) -> bool:
 
 
 PROJECT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "note_tools.py"
+
+
+def build_screening_updates(screening_path: Path, extraction_summary_path: Path) -> list[dict] | None:
+    """Merge extraction results into screening statuses for registry rebuild.
+
+    The in-pipeline screening stage emits ``full-text-queued`` statuses that
+    predate extraction; ``build-candidate-registry --screening-file`` needs
+    ``extracted`` + ``extraction.evidence_eligible`` for the full-text floor to
+    count recovered papers. Returns None when either input is missing."""
+    if not screening_path.is_file() or not extraction_summary_path.is_file():
+        return None
+    screening = json.loads(screening_path.read_text(encoding="utf-8"))
+    extraction = {
+        str(result.get("paper_id")): result
+        for result in json.loads(extraction_summary_path.read_text(encoding="utf-8")).get("results", [])
+        if isinstance(result, dict) and result.get("paper_id")
+    }
+    updates = []
+    for entry in screening.get("candidates", []):
+        result = extraction.get(str(entry.get("arxiv_id")))
+        if result and result.get("evidence_eligible"):
+            entry = dict(entry)
+            entry["status"] = "extracted"
+            entry["extraction"] = {"evidence_eligible": True, "path": result.get("path")}
+        updates.append(entry)
+    return updates
+
+
+def finalize_coverage(run_dir: Path, registry_command: list[str], coverage_output: Path) -> str:
+    """Post-deep-read coverage reassessment (idempotent, cheap).
+
+    The in-pipeline coverage stage runs before extraction/deep-read, so its
+    full-text and accepted-paper floors are always stale-mid-run. After
+    projection: rebuild the registry with extraction statuses merged in, then
+    re-run assess-review-coverage with the projected evidence JSONL."""
+    evidence_files = sorted((run_dir / "evidence").glob("*.jsonl"))
+    if not evidence_files:
+        return "skipped (no evidence projected)"
+    detail = "ok"
+    updates = build_screening_updates(run_dir / "screening.json", run_dir / "extraction-summary.json")
+    if updates:
+        updates_path = run_dir / "screening-updates.json"
+        updates_path.write_text(
+            json.dumps({"version": 1, "candidates": updates}, ensure_ascii=False, indent=1) + "\n",
+            encoding="utf-8",
+        )
+        result = run_command(list(registry_command) + ["--screening-file", str(updates_path)])
+        if result.returncode:
+            detail = f"degraded: registry rebuild exit {result.returncode}"
+    command = [sys.executable, str(PLANNER_SCRIPT), "assess-review-coverage",
+               "--query-plan", str(run_dir / "query-plan.json"),
+               "--candidate-registry", str(run_dir / "candidate-registry.json")]
+    for evidence_file in evidence_files:
+        command += ["--evidence-jsonl", str(evidence_file)]
+    command += ["--output", str(coverage_output)]
+    result = run_command(command)
+    if result.returncode:
+        detail = f"degraded: coverage reassessment exit {result.returncode}"
+    return detail
 
 
 def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
@@ -710,6 +774,7 @@ def main(argv: list[str] | None = None) -> int:
                 "--start-date", start_date,
                 "--end-date", end_date,
                 "--batch-label", "r1",
+                *([] if not args.arxiv_snapshot else ["--metadata-snapshot", args.arxiv_snapshot]),
                 "--output", str(arxiv_output),
             ]
             # arXiv 429s return exit 0 with zero results; a screening over an empty
@@ -897,6 +962,11 @@ def main(argv: list[str] | None = None) -> int:
             begun = time.monotonic()
             project_evidence(run_dir, run_json_path, summary_extra)
             mark("project", begun)
+            # ---- coverage finalize: statuses + evidence-aware reassessment
+            begun = time.monotonic()
+            summary_extra["coverage_final"] = finalize_coverage(run_dir, registry_cmd(), coverage_output)
+            mark("coverage-final", begun)
+            log(stage_line("coverage-final", summary_extra["coverage_final"]))
 
         # ---- summary ----------------------------------------------------
         registry = json.loads(registry_output.read_text(encoding="utf-8"))
