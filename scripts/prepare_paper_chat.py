@@ -23,19 +23,37 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-HUB_SCRIPTS = REPO_ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
-from lib.agent_invoke import (  # noqa: E402
-    build_skeleton_prompt,
-    pool_root_for,
-    read_skeleton_output,
-    resolve_cli,
-    run_one_shot_agent,
-)
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root (embodied_learning)
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+try:
+    from lib.agent_invoke import (  # noqa: E402
+        build_skeleton_prompt,
+        pool_root_for,
+        read_skeleton_output,
+        resolve_cli,
+        run_one_shot_agent,
+    )
+    from lib.layout import find_roots  # noqa: E402
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.agent_invoke import (  # noqa: E402
+        build_skeleton_prompt,
+        pool_root_for,
+        read_skeleton_output,
+        resolve_cli,
+        run_one_shot_agent,
+    )
+    from wiki_scripts.lib.layout import find_roots  # noqa: E402
+
+_REPO_ROOT, _SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
+if _REPO_ROOT is not None and str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))  # repo root (embodied_learning)
+HUB_SCRIPTS = _SKILLS_ROOT / "embodied-ai-literature-hub" / "scripts"
 from embodied_learning.knowledge.arxiv_reader import parse_arxiv_id  # noqa: E402
-from run_review_pipeline import deep_read_paper  # noqa: E402
+try:
+    from run_review_pipeline import deep_read_paper  # noqa: E402
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.run_review_pipeline import deep_read_paper  # noqa: E402
 
 SKELETON_TIMEOUT_S = 420.0
 
@@ -56,7 +74,7 @@ def normalize_arxiv_id(raw: str) -> str:
 
 def run(command: list[str], *, timeout: float) -> subprocess.CompletedProcess:
     return subprocess.run(
-        command, cwd=str(REPO_ROOT), text=True, capture_output=True, timeout=timeout, check=False
+        command, cwd=str(SCRIPTS_DIR), text=True, capture_output=True, timeout=timeout, check=False
     )
 
 

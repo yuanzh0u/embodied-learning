@@ -14,10 +14,19 @@ order — read it before loading knowledge files.
 The interpreter is `python3` (`python` is not on PATH). Scripts are **stdlib-only Python 3** — there
 is no build, lint, install, or dependency step. The full script map (purpose, categories,
 relationships, workflows) lives in `scripts/README.md`. Run any script with `--help` to see its contract.
-Optionally, `pip install .` (editable `-e .` also works) registers the `extract_arxiv` console command
-(human-readable `--format markdown` included) and `serve_research_wiki`, which serves the local
-research Wiki and defaults to the local knowledge base at `~/Documents/arxiv` (override with
-`--kb-root`; falls back to the repo catalog). Install is not required for any pipeline step.
+Optionally, `pip install .` (editable `-e .` also works) registers `extract_arxiv`,
+`serve_research_wiki`, `run_review_pipeline`, `launch_review`, and `quick_read_paper`. The wheel is
+**self-contained**: it bundles the three-skill tree (`SKILL.md`/references/agents/scripts, packaged
+as `wiki_scripts.skills`), so an installed environment matches a repo checkout — path resolution
+goes through `scripts/lib/layout.py` (repo checkout vs site-packages), never `parent.parent`
+guesses. The installed layout: the `wiki_scripts` package dir IS the scripts root and contains the
+bundled `skills/`. Spawned headless `claude -p` agents (driver, writer, chat) run with
+`cwd=<kb-root>` and an isolated `CLAUDE_CONFIG_DIR` (`~/.cache/embodied-learning/claude-config`,
+credentials auto-seeded) so they cannot read the launching session's memory or any repo —
+see `scripts/lib/agent_invoke.py` (`isolated_claude_env` / `claude_auth_ready`).
+`serve_research_wiki` serves the local research Wiki and defaults to the local knowledge base at
+`~/Documents/arxiv` (override with `--kb-root`; falls back to the repo catalog). Install is not
+required for any pipeline step.
 
 Tests are stdlib `unittest` (network is mocked with `unittest.mock`; no live arXiv calls):
 

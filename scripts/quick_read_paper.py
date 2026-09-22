@@ -32,18 +32,29 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
-from lib.agent_invoke import pool_root_for, resolve_cli, run_one_shot_agent  # noqa: E402
-from prepare_paper_chat import ensure_deep_read, ensure_extraction, normalize_arxiv_id  # noqa: E402
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+try:
+    from lib.agent_invoke import pool_root_for, resolve_cli, run_one_shot_agent  # noqa: E402
+    from lib.layout import find_roots  # noqa: E402
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.agent_invoke import pool_root_for, resolve_cli, run_one_shot_agent  # noqa: E402
+    from wiki_scripts.lib.layout import find_roots  # noqa: E402
+try:
+    from prepare_paper_chat import ensure_deep_read, ensure_extraction, normalize_arxiv_id  # noqa: E402
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.prepare_paper_chat import ensure_deep_read, ensure_extraction, normalize_arxiv_id  # noqa: E402
+
+_REPO_ROOT, SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
 
 ARTICLE_NAME = "quick-read_sudu.md"
 BRIEF_NAME = "quick-read-brief.md"
 RAW_DUMP_NAME = "quick-read-agent-raw.txt"
 ARTICLE_TIMEOUT_S = 300.0
-AUDIT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
-STYLE_REFERENCE = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "references" / "quick-read.md"
-CITATION_REFERENCE = REPO_ROOT / "skills" / "embodied-ai-review-writer" / "references" / "citation-projection.md"
+AUDIT_SCRIPT = SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
+STYLE_REFERENCE = SKILLS_ROOT / "embodied-ai-review-writer" / "references" / "quick-read.md"
+CITATION_REFERENCE = SKILLS_ROOT / "embodied-ai-review-writer" / "references" / "citation-projection.md"
 ARTICLE_OPEN = "<<<QUICK-READ-ARTICLE>>>"
 ARTICLE_CLOSE = "<<<END-QUICK-READ-ARTICLE>>>"
 
@@ -239,7 +250,7 @@ def audit_article(path: Path) -> None:
     """Editorial audit; findings are warnings only and never change the exit code."""
     result = subprocess.run(
         [sys.executable, str(AUDIT_SCRIPT), "audit-article-quality", "--quickread", str(path), "--json"],
-        cwd=str(REPO_ROOT), text=True, capture_output=True, timeout=60.0, check=False,
+        cwd=str(SCRIPTS_DIR), text=True, capture_output=True, timeout=60.0, check=False,
     )
     try:
         findings = json.loads(result.stdout or "{}").get("findings", [])

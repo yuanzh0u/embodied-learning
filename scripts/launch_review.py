@@ -40,33 +40,45 @@ import sys
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
-sys.path.insert(0, str(REPO_ROOT))
-from lib.agent_invoke import run_one_shot_agent, resolve_cli  # noqa: E402
-from lib.review_runs import STYLE_TO_FILE  # noqa: E402
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+try:
+    from lib.agent_invoke import (  # noqa: E402
+        DRIVER_AGENT_MODEL,
+        claude_auth_ready,
+        isolated_claude_env,
+        resolve_cli,
+        run_one_shot_agent,
+    )
+    from lib.layout import default_kb_root, find_roots  # noqa: E402
+    from lib.review_runs import STYLE_TO_FILE  # noqa: E402
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.agent_invoke import (  # noqa: E402
+        DRIVER_AGENT_MODEL,
+        claude_auth_ready,
+        isolated_claude_env,
+        resolve_cli,
+        run_one_shot_agent,
+    )
+    from wiki_scripts.lib.layout import default_kb_root, find_roots  # noqa: E402
+    from wiki_scripts.lib.review_runs import STYLE_TO_FILE  # noqa: E402
 
+_REPO_ROOT, SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
 STYLE_VALUES = tuple(STYLE_TO_FILE)
 LAUNCH_DIRNAME = ".launch"
-NESTED_CLAUDE_ENV_KEYS = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_SSE_PORT")
 CATALOG_PATH = Path("knowledge/literature-review-catalog.md")
 
 
 def load_wiki_prompts():
     """Importlib-load build_workflow_prompt / build_continuation_prompt from
-    scripts/wiki_chat.py without standing up the chat server."""
-    spec = importlib.util.spec_from_file_location("wiki_chat_lib", REPO_ROOT / "scripts" / "wiki_chat.py")
+    wiki_chat without standing up the chat server."""
+    wiki_chat_path = SCRIPTS_ROOT / "wiki_chat.py"
+    spec = importlib.util.spec_from_file_location("wiki_chat_lib", wiki_chat_path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
     spec.loader.exec_module(module)
     return module
-
-
-def strip_nested_claude_env() -> dict:
-    env = dict(os.environ)
-    for key in NESTED_CLAUDE_ENV_KEYS:
-        env.pop(key, None)
-    return env
 
 
 def stage_done(run_dir: Path, stage: str) -> bool:
@@ -83,11 +95,23 @@ def log(message: str) -> None:
     print(f"[LAUNCH] {message}", flush=True)
 
 
+def pipeline_root() -> Path:
+    """Root that wiki_chat.resolve_pipeline_layout understands: the repo root
+    on a checkout, the installed wiki_scripts dir (which contains skills/) on
+    a wheel install."""
+    return _REPO_ROOT if _REPO_ROOT is not None else SCRIPTS_ROOT
+
+
+def resolve_kb_root(args: argparse.Namespace) -> Path:
+    return Path(args.kb_root).expanduser().resolve() if args.kb_root else default_kb_root()
+
+
 def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
     """Run the mechanical driver with bounded retries; idempotent stages make
     each retry a resume."""
+    kb_root = resolve_kb_root(args)
     command = [
-        sys.executable, str(REPO_ROOT / "scripts" / "run_review_pipeline.py"),
+        sys.executable, str(SCRIPTS_ROOT / "run_review_pipeline.py"),
         "--run-dir", str(run_dir),
         "--topic", args.topic,
         "--review-mode", args.review_mode,
@@ -107,7 +131,7 @@ def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
         command += ["--kb-root", str(Path(args.kb_root).expanduser())]
     for attempt in range(1, args.mechanical_retries + 1):
         log(f"mechanical driver attempt {attempt}/{args.mechanical_retries}")
-        result = subprocess.run(command, cwd=str(REPO_ROOT), env=strip_nested_claude_env())
+        result = subprocess.run(command, cwd=str(kb_root), env=isolated_claude_env())
         if result.returncode == 0:
             return
         log(f"driver exit {result.returncode}; cooling down 60s before retry")
@@ -127,8 +151,24 @@ def writer_prompt(run_dir: Path, args: argparse.Namespace, wiki: object) -> str:
     }
     return wiki.build_workflow_prompt(
         params=params, run_dir=run_dir,
-        kb_root=Path(args.kb_root or REPO_ROOT).expanduser().resolve(),
-        pipeline_root=REPO_ROOT / "skills",
+        kb_root=resolve_kb_root(args),
+        pipeline_root=pipeline_root(),
+    )
+
+
+def resolve_writer_model(args: argparse.Namespace) -> str:
+    """Pin the spawned writer's model. Without --model the spawned ``claude -p``
+    resolves its own default, which can fall back to an expensive frontier
+    model mid-session (opus-4-8 was billed on 2026-09-18). Priority: explicit
+    flag > ANTHROPIC_MODEL > the driver's pinned fast model. Deliberately does
+    NOT consult CLAUDE_CODE_SUBAGENT_MODEL: shell profiles export it globally
+    (e.g. the "-cc" SKU), and treating it as an intent signal made the pinned
+    default unreachable. Subagent consistency is handled at spawn time instead
+    (isolated_claude_env strips the var so Task subagents inherit this model)."""
+    return (
+        getattr(args, "writer_model", None)
+        or os.environ.get("ANTHROPIC_MODEL")
+        or DRIVER_AGENT_MODEL
     )
 
 
@@ -136,17 +176,22 @@ def run_writer(args: argparse.Namespace, run_dir: Path, prompt: str) -> None:
     cli = resolve_cli()
     if not cli:
         raise RuntimeError("claude CLI not found; writer stage cannot run")
+    env = isolated_claude_env()
+    auth_problem = claude_auth_ready(env)
+    if auth_problem:
+        raise RuntimeError(auth_problem)
+    model = resolve_writer_model(args)
     writer_log = run_dir / LAUNCH_DIRNAME / "writer.log"
-    log(f"writer agent starting (log: {writer_log})")
+    log(f"writer agent starting (model: {model}, log: {writer_log})")
     with open(writer_log, "a", encoding="utf-8") as handle:
-        handle.write(f"\n===== writer round {time.strftime('%Y-%m-%dT%H:%M:%S')} =====\n")
+        handle.write(f"\n===== writer round {time.strftime('%Y-%m-%dT%H:%M:%S')} (model: {model}) =====\n")
         handle.flush()
         result = subprocess.run(
-            [cli, "-p", "--permission-mode", "bypassPermissions",
+            [cli, "-p", "--model", model, "--permission-mode", "bypassPermissions",
              "--output-format", "stream-json", "--verbose"],
             input=prompt, text=True, stdout=handle, stderr=handle,
-            timeout=args.writer_timeout, cwd=str(REPO_ROOT),
-            env=strip_nested_claude_env(),
+            timeout=args.writer_timeout, cwd=str(resolve_kb_root(args)),
+            env=env,
         )
     if result.returncode:
         raise RuntimeError(f"writer agent exit {result.returncode} (see {writer_log})")
@@ -157,14 +202,50 @@ def prepare_gate_inputs(run_dir: Path) -> None:
     agent did not."""
     evidence_dir = run_dir / "evidence"
     merged = run_dir / "evidence-all.jsonl"
+    canonical = run_dir / "evidence.jsonl"
     if evidence_dir.is_dir() and not merged.is_file():
         lines: list[str] = []
         for evidence_file in sorted(evidence_dir.glob("*.jsonl")):
             lines.extend(line for line in evidence_file.read_text(encoding="utf-8").splitlines() if line.strip())
         merged.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    canonical = run_dir / "evidence.jsonl"
+    elif not evidence_dir.is_dir() and not merged.is_file() and canonical.is_file():
+        # Flat runs keep canonical evidence at the run root with no evidence/
+        # subdir to merge; the gates still read the merged path.
+        merged.write_text(canonical.read_text(encoding="utf-8"), encoding="utf-8")
     if merged.is_file() and not canonical.is_file():
         canonical.write_text(merged.read_text(encoding="utf-8"), encoding="utf-8")
+
+
+MEMO_FORMAT_RULE_IDS = {
+    # _article_quality reports these as warnings (pre-contract settled runs
+    # must keep passing validate_current_reviews); for a freshly written run
+    # they are hard gate problems — the wiki renders memo superscripts into
+    # reading links and inline arXiv links break that rendering.
+    "memo-inline-arxiv-link",
+    "memo-superscript-citations",
+    "memo-grouped-citation",
+}
+
+
+def memo_format_problems(run_dir: Path) -> list[str]:
+    memo = run_dir / "scientific-memo_keyan.md"
+    if not memo.is_file():
+        return []
+    result = subprocess.run(
+        [sys.executable,
+         str(pipeline_root() / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"),
+         "audit-article-quality", "--memo", str(memo), "--json"],
+        capture_output=True, text=True, cwd=str(pipeline_root()),
+    )
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError:
+        return [f"editorial quality audit did not emit JSON (exit {result.returncode}): {(result.stderr or '')[-200:]}"]
+    return [
+        f"{finding['rule']}: {finding['message']}"
+        for finding in payload.get("findings", [])
+        if finding.get("rule") in MEMO_FORMAT_RULE_IDS
+    ]
 
 
 def collect_gate_problems(run_dir: Path) -> list[str]:
@@ -172,18 +253,19 @@ def collect_gate_problems(run_dir: Path) -> list[str]:
     prepare_gate_inputs(run_dir)
     if not (run_dir / "scientific-memo_keyan.md").is_file() and not (run_dir / "zhihu-explainer_zhihu.md").is_file():
         return ["run 目录没有成稿（scientific-memo_keyan.md / zhihu-explainer_zhihu.md 均缺失）"]
+    problems.extend(memo_format_problems(run_dir))
     audit = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "audit_citations.py"),
+        [sys.executable, str(SCRIPTS_ROOT / "audit_citations.py"),
          "--article", str(run_dir / "scientific-memo_keyan.md"),
          "--appendix", str(run_dir / "evidence-appendix.md"),
          "--evidence-jsonl", str(run_dir / "evidence-all.jsonl")],
-        capture_output=True, text=True, cwd=str(REPO_ROOT),
+        capture_output=True, text=True,
     )
     if audit.returncode:
         problems.extend(line for line in audit.stdout.splitlines() if line.strip())
     bundle = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "check_run_bundle.py"), str(run_dir)],
-        capture_output=True, text=True, cwd=str(REPO_ROOT),
+        [sys.executable, str(SCRIPTS_ROOT / "check_run_bundle.py"), str(run_dir)],
+        capture_output=True, text=True,
     )
     if bundle.returncode:
         problems.extend(line for line in bundle.stdout.splitlines() if line.strip())
@@ -216,7 +298,7 @@ def verify_publish(args: argparse.Namespace, run_dir: Path, wiki: object) -> lis
     """Post-settle publish checks; fix what is mechanically fixable, report
     what needs eyes."""
     problems: list[str] = []
-    kb_root = Path(args.kb_root or REPO_ROOT).resolve()
+    kb_root = resolve_kb_root(args)
     catalog = kb_root / CATALOG_PATH
     if not catalog.is_file() or run_dir.name not in catalog.read_text(encoding="utf-8"):
         problems.append(f"catalog 未登记本 run：{catalog} 缺少 {run_dir.name}")
@@ -255,14 +337,16 @@ def launch(args: argparse.Namespace) -> int:
 
     # fresh launch: create the run birth certificate via init_run.py
     if run_dir is None:
+        kb_root = resolve_kb_root(args)
         init_command = [
-            sys.executable, str(REPO_ROOT / "scripts" / "init_run.py"),
+            sys.executable, str(SCRIPTS_ROOT / "init_run.py"),
             "--topic", args.topic, "--review-mode", args.review_mode,
             "--time-range", args.time_range,
+            "--work-dir", str(kb_root / "work"),
         ]
         for kid in (args.knowledge_id or ["EA-DATA"]):
             init_command += ["--knowledge-id", kid]
-        init = subprocess.run(init_command, capture_output=True, text=True, cwd=str(REPO_ROOT))
+        init = subprocess.run(init_command, capture_output=True, text=True, cwd=str(kb_root))
         if init.returncode:
             print(init.stderr, file=sys.stderr)
             return 1
@@ -312,7 +396,7 @@ def launch(args: argparse.Namespace) -> int:
         return 0
     except (RuntimeError, subprocess.TimeoutExpired) as exc:
         log(f"FAILED: {exc}")
-        log(f"resume with: python3 scripts/launch_review.py --resume --run-dir {run_dir}")
+        log(f"resume with: launch_review --resume --run-dir {run_dir}")
         return 1
 
 
@@ -360,7 +444,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--agents-parallel", type=int, default=10,
                         help="deep-read one-shot agents running concurrently (forwarded to the driver)")
     parser.add_argument("--arxiv-snapshot", help="OAI JSONL or SQLite/FTS5 db for offline arXiv retrieval")
-    parser.add_argument("--kb-root", help="KB root (default: repo)")
+    parser.add_argument("--kb-root", help=f"KB root (default: {default_kb_root()})")
     parser.add_argument("--knowledge-id", action="append", help="EA/ERR knowledge id; repeatable (default EA-DATA)")
     parser.add_argument("--target-style", default="scientific-memo",
                         help="writer 交付风格（all=三风格；scientific-memo/expert-explainer/kol-thread/survey）")
@@ -370,6 +454,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mechanical-retries", type=int, default=3)
     parser.add_argument("--max-agent-retries", type=int, default=2)
     parser.add_argument("--writer-timeout", type=float, default=5400.0)
+    parser.add_argument(
+        "--writer-model", default=None,
+        help="Model for the spawned writer agent (default: ANTHROPIC_MODEL env > "
+        "CLAUDE_CODE_SUBAGENT_MODEL env > the driver's pinned fast model). "
+        "Pin it — an unpinned claude -p can fall back to an expensive frontier model.",
+    )
     parser.add_argument("--status", action="store_true")
     parser.add_argument("--stop", action="store_true")
     args = parser.parse_args(argv)

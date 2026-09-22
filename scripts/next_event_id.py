@@ -9,13 +9,17 @@ import re
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+try:
+    from lib.layout import default_kb_root
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.layout import default_kb_root
+
 EVENT_ID = re.compile(r"^(?P<prefix>.+)-(?P<seq>\d{4})$")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--evidence-dir", default=str(REPO_ROOT / "evidence"), help="Evidence layer root.")
+    parser.add_argument("--evidence-dir", default=str(default_kb_root() / "evidence"), help="Evidence layer root.")
     parser.add_argument("--prefix", help="Only report this event-ID prefix, e.g. EA-TWM-2026.")
     parser.add_argument("--json", action="store_true", help="Emit JSON instead of text.")
     return parser.parse_args()

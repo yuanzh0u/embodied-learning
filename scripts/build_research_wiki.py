@@ -25,25 +25,42 @@ from pathlib import Path
 from typing import Callable, Iterator
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[1]  # cosmetic: KB-relative rendering root on a checkout
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from lib.jsonio import atomic_write_json  # noqa: E402
-from lib.markdown_semantics import (  # noqa: E402
-    first_heading,
-    markdown_to_plain,
-    render_markdown,
-    strip_frontmatter,
-)
+try:
+    from lib.jsonio import atomic_write_json  # noqa: E402
+    from lib.layout import default_kb_root  # noqa: E402
+    from lib.markdown_semantics import (  # noqa: E402
+        first_heading,
+        markdown_to_plain,
+        render_markdown,
+        strip_frontmatter,
+    )
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.jsonio import atomic_write_json  # noqa: E402
+    from wiki_scripts.lib.layout import default_kb_root  # noqa: E402
+    from wiki_scripts.lib.markdown_semantics import (  # noqa: E402
+        first_heading,
+        markdown_to_plain,
+        render_markdown,
+        strip_frontmatter,
+    )
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root (embodied_learning)
 from embodied_learning.knowledge import arxiv_reader  # noqa: E402
-from lib.review_runs import STYLE_TO_FILE, load_catalog_runs  # noqa: E402
+try:
+    from lib.review_runs import STYLE_TO_FILE, catalog_run_paths, load_catalog_runs  # noqa: E402
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.review_runs import STYLE_TO_FILE, catalog_run_paths, load_catalog_runs  # noqa: E402
 
 
-DEFAULT_SOURCE = REPO_ROOT / "knowledge" / "literature-review-catalog.md"
-DEFAULT_OUTPUT = REPO_ROOT / "wiki" / "data"
+# Bare-CLI fallbacks only; serve_research_wiki and the writer agent always pass
+# --kb-root/--source/--output explicitly. Default to the local KB, not the
+# package tree (a wheel install has no knowledge/ to read from).
+DEFAULT_SOURCE = default_kb_root() / "knowledge" / "literature-review-catalog.md"
+DEFAULT_OUTPUT = default_kb_root() / "wiki" / "data"
 
 VERSION_FILES = {
     "keyan": ("科研备忘录", "scientific-memo_keyan.md"),
@@ -345,14 +362,23 @@ def link_citation_superscripts(html_text: str, references: dict[str, str]) -> st
 
 def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
     # Three styles by default; a run.json declaring a reduced scope publishes
-    # only its own deliverable (mirrors check_run_bundle's style gate).
+    # only its own deliverable (mirrors check_run_bundle's style gate). The
+    # declaration is the required minimum, not a cap: a run may ship extra
+    # deliverables (e.g. a memo regenerated alongside an earlier zhihu
+    # draft), and every deliverable actually on disk is published.
     manifest = read_run_manifest(candidate.directory) or {}
     declared_style = str(manifest.get("style") or "")
-    version_keys = (
-        [_STYLE_VERSION_KEYS[declared_style]]
-        if declared_style in _STYLE_VERSION_KEYS
-        else list(VERSION_FILES)
-    )
+
+    def version_file(key: str) -> Path:
+        return candidate.directory / VERSION_FILES[key][1]
+
+    if declared_style in _STYLE_VERSION_KEYS:
+        primary = _STYLE_VERSION_KEYS[declared_style]
+        version_keys = [primary] + [
+            key for key in VERSION_FILES if key != primary and version_file(key).is_file()
+        ]
+    else:
+        version_keys = [key for key in VERSION_FILES if version_file(key).is_file()] or list(VERSION_FILES)
     markdown_by_version = {
         key: _read_text(candidate.directory / VERSION_FILES[key][1])
         for key in version_keys
@@ -377,6 +403,9 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
             "label": label,
             "article_title": first_heading(markdown) or title,
             "html": rendered,
+            # Raw source kept alongside the render so the reader page can
+            # export the selected style as Markdown without server support.
+            "markdown": markdown,
             "toc": toc,
             "characters": len(plain),
             "source_file": filename,
@@ -449,8 +478,20 @@ def write_json(path: Path, value: object, *, compact: bool = False) -> None:
 
 def build_snapshot(source: Path, output: Path) -> dict[str, object]:
     selected, stats = discover_topics(source)
+    empty_library = False
     if not selected:
-        raise RuntimeError("没有发现同时包含三种成稿的完整话题，保留现有快照。")
+        routed = (
+            catalog_run_paths(source.parent.parent, source)
+            if source.is_file()
+            else [path for path in source.iterdir() if path.is_dir()]
+        )
+        if routed:
+            # Runs exist but none publishes (incomplete triplets): keep the
+            # previous snapshot rather than wiping it with an empty one.
+            raise RuntimeError("没有发现同时包含三种成稿的完整话题，保留现有快照。")
+        # First-run shape: a catalog that routes zero runs publishes a real
+        # empty index so a cold-start wiki serves a valid snapshot.
+        empty_library = True
 
     topics_dir = output / "topics"
     topics_dir.mkdir(parents=True, exist_ok=True)
@@ -488,6 +529,10 @@ def build_snapshot(source: Path, output: Path) -> dict[str, object]:
         "fields": [{"name": name, "count": count} for name, count in sorted(fields.items())],
         "topics": manifest_topics,
     }
+    if empty_library:
+        # Sentinel: validate_snapshot tolerates zero topics only for this
+        # first-run shape; a normal publish that loses its topics still fails.
+        manifest["empty_library"] = True
     search_index = {"generated_at": generated_at, "topics": search_topics}
     write_json(output / "manifest.json", manifest)
     write_json(output / "search-index.json", search_index, compact=True)
@@ -500,7 +545,9 @@ def validate_snapshot(output: Path) -> dict[str, object]:
         raise RuntimeError(f"缺少发布索引：{manifest_path}")
     manifest = json.loads(_read_text(manifest_path))
     topics = manifest.get("topics")
-    if not isinstance(topics, list) or not topics:
+    if not isinstance(topics, list):
+        raise RuntimeError("发布索引中没有话题。")
+    if not topics and not manifest.get("empty_library"):
         raise RuntimeError("发布索引中没有话题。")
     seen_keys: set[str] = set()
     expected_topic_files: set[str] = set()

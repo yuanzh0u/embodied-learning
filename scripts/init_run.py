@@ -16,7 +16,10 @@ import re
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+try:
+    from lib.layout import default_kb_root
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.layout import default_kb_root
 
 
 def parse_args() -> argparse.Namespace:
@@ -31,7 +34,7 @@ def parse_args() -> argparse.Namespace:
         help="Review-depth contract. Targets are floors; stopping remains coverage/saturation based.",
     )
     parser.add_argument("--date", help="Run date YYYYMMDD for the folder name (default: today).")
-    parser.add_argument("--work-dir", default=str(REPO_ROOT / "work"), help="Parent directory for the run folder.")
+    parser.add_argument("--work-dir", default=str(default_kb_root() / "work"), help="Parent directory for the run folder.")
     parser.add_argument("--force", action="store_true", help="Overwrite an existing run.json in the target folder.")
     return parser.parse_args()
 

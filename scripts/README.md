@@ -172,8 +172,10 @@ python3 scripts/quick_read_paper.py --arxiv-id 2311.18259   # 入池+深读+速�
 ## 约定与不变量
 
 - **全部 stdlib-only Python 3**（解释器 `python3`，`python` 不在 PATH）；每个脚本的合同用 `--help` 查看。
+- **布局解析只走 `lib/layout.py`**：仓库检出与 wheel 安装（`wiki_scripts` 包目录自带打包的 `skills/` 树）两种布局都成立；禁止新增 `Path(__file__).parent.parent` 式的 REPO_ROOT 猜测——装到 site-packages 后全部失准。wheel 是自包含的：`pyproject.toml` 把 `skills/` 打成 `wiki_scripts.skills` 包数据（SKILL.md/references/agents/scripts，tests 不进包）。
+- **spawn 的 claude 代理必须隔离**：cwd=kb_root、env 走 `lib/agent_invoke.py` 的 `isolated_claude_env()`（剥 `CLAUDECODE` / `CLAUDE_CODE_ENTRYPOINT` / `CLAUDE_CODE_SSE_PORT` + 重定向 `CLAUDE_CONFIG_DIR` 到 `~/.cache/embodied-learning/claude-config`，凭据自动播种）——代理只能看到 KB 与打包内容，看不到 launcher 会话的记忆/代码库；认证缺失用 `claude_auth_ready()` 提前报错。
 - 中间产物只进 gitignored 的 `work/`；settle 时按 run.json 的 `files` 清单拷核心文件进 `evidence/`（大 registry 需瘦身，见 run 内的 slim 说明）。
 - driver 的 stdout 协议行 `[DRIVER-STAGE:<name>] ok <detail>` 与 `[PAPER] <id> ...` 是 wiki 工作流和外部监控的解析面，改格式需同步 `wiki_chat.py` 的映射。
 - 离线检索：`--arxiv-snapshot` 接受 OAI JSONL 或 `search.py build-snapshot-db` 产出的 SQLite/FTS5 库；arXiv API 有 406 间歇封禁（curl 可过而 urllib 被拒），联网检索前先读 `scripts/lib/agent_invoke.py` 注释与记忆条目。
-- 嵌套 claude 防护：凡从脚本里 spawn `claude -p`，必须剥掉 `CLAUDECODE` / `CLAUDE_CODE_ENTRYPOINT` / `CLAUDE_CODE_SSE_PORT`（`launch_review.py` 的 `strip_nested_claude_env` 是参考实现）。
+- 嵌套 claude 防护：凡从脚本里 spawn `claude -p`，必须剥掉 `CLAUDECODE` / `CLAUDE_CODE_ENTRYPOINT` / `CLAUDE_CODE_SSE_PORT`（`lib/agent_invoke.py` 的 `isolated_claude_env` 是唯一参考实现）。
 - settle ≠ 完事：`check_run_bundle` 过 + status 翻 settled 之后，必须登记 `knowledge/literature-review-catalog.md` 并重建 wiki 快照，否则该 run 对读者不可见。
