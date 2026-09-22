@@ -20,6 +20,8 @@ A fourth style exists outside the review bundle: `quick-read_sudu.md`（速读�
 
 **Division of labor:** `build_review_packet.py` is a briefing generator, not an author. It emits `review-packet.md` + `writing-brief.md` + `evidence-appendix.md`; the writing stage writes and editorially audits the three reader-facing files. Never present mechanical renders (`*.scaffold.md`) as finished articles.
 
+**Figures are part of the deliverable.** Evidence events may carry `evidence.figures[]/tables[]` (joined from the deep-read flow); `build_review_packet.py` renders them into the brief's 可用图表 section and the appendix. The writing stage must embed those ready-made blocks in each style within its cap (memo ≤4 图+1 表 / zhihu ≤2 / xiaohongshu ≤1 — see each style reference's Figures section). Figure source discipline equals citation discipline: only `evidence`-carried figures, URLs and captions copied verbatim, never invented.
+
 ## Required inputs
 
 - Topic or review question.

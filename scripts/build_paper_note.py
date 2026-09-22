@@ -202,6 +202,46 @@ def best_verbatim_window(surface: str, quote: str, max_words: int = 60) -> str:
 # Skeleton → note assembly
 # ---------------------------------------------------------------------------
 
+def card_figures(
+    arxiv_id: str, raw: dict[str, Any], extraction: dict[str, Any], index: int, problems: list[str]
+) -> dict[str, Any]:
+    """Join the agent's figure/table picks against the extraction records and
+    return note-level ``figures``/``tables`` keys (or {} when the card has
+    none). The agent only supplies ids + usage; caption/URL/rows come from the
+    extraction, and unknown ids are dropped (anti-hallucination)."""
+
+    usage = str(raw.get("figure_usage") or "").strip()
+    picked: dict[str, Any] = {}
+    kind_by_id: dict[str, tuple[str, dict[str, Any]]] = {}
+    for kind, key in (("figures", "figure_id"), ("tables", "table_id")):
+        for record in extraction.get(kind) or []:
+            if isinstance(record, dict) and record.get("id"):
+                kind_by_id[str(record["id"])] = (kind, record)
+    for key, out_key, label in (
+        ("figure_id", "figures", "figure"),
+        ("table_id", "tables", "table"),
+    ):
+        wanted = str(raw.get(key) or "").strip()
+        if not wanted:
+            continue
+        kind, record = kind_by_id.get(wanted, (kind, {}))
+        if not record:
+            problems.append(f"card {index}: {label} {wanted!r} not in extraction — dropped")
+            continue
+        entry: dict[str, Any] = {
+            f"{label}_id": wanted,
+            "caption": str(record.get("caption") or ""),
+            "section": str(record.get("section") or ""),
+            "usage": usage or "作者用该图/表支撑对应主张（深读未展开用途说明）。",
+        }
+        if kind == "figures":
+            entry["image_url"] = str(record.get("image_url") or "")
+        else:
+            entry["rows"] = record.get("rows") if isinstance(record.get("rows"), list) else []
+        picked.setdefault(out_key, []).append(entry)
+    return picked
+
+
 def assemble_note(
     skeleton: dict[str, Any], extraction: dict[str, Any], pool_dir: Path, *, max_cards: int = 4
 ) -> tuple[dict[str, Any], list[str]]:
@@ -378,6 +418,7 @@ def assemble_note(
                     "checked_against": "full-text",
                     "rationale": "脚本组装：quote 已在定位节内做归一化精确匹配后逐字录入。",
                 },
+                **card_figures(arxiv_id, raw, extraction, index, problems),
             }
         )
 

@@ -45,6 +45,19 @@ def normalize_authors(authors: list[Any]) -> list[dict[str, Any]]:
     return result
 
 
+def card_visuals(card: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """Pass the note card's joined figures/tables through to the event's
+    ``evidence`` (schema-optional keys; the writer's packet renders them into
+    the brief/appendix and the deliverables pick from there)."""
+
+    visuals: dict[str, list[dict[str, Any]]] = {}
+    for key in ("figures", "tables"):
+        items = card.get(key)
+        if isinstance(items, list) and items:
+            visuals[key] = items
+    return visuals
+
+
 def project(note: dict[str, Any], audit: dict[str, Any], prefix: str, start_seq: int) -> list[dict[str, Any]]:
     errors, _ = validator.validate_note(note)
     if errors:
@@ -94,6 +107,7 @@ def project(note: dict[str, Any], audit: dict[str, Any], prefix: str, start_seq:
                     "visual_validation": visual_validation,
                     "visual_validation_pages": [],
                 },
+                **card_visuals(card),
             },
             "confidence": card["confidence"],
             "core_citations": note.get("core_citations", []),

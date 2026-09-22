@@ -60,6 +60,68 @@ def event_for_paper(event_id: str, arxiv_id: str) -> dict[str, object]:
     return event
 
 
+FIGURE = {
+    "figure_id": "S3.F3",
+    "caption": "The Aria device used for egocentric recordings.",
+    "image_url": "https://arxiv.org/html/2604.14089v1/figs/aria.png",
+    "section": "3 Setup",
+    "usage": "作者用该图展示采集 rig。",
+}
+TABLE = {
+    "table_id": "S1.T1",
+    "caption": "Dataset comparison.",
+    "section": "3 Setup",
+    "rows": [["Dataset", "Year"], ["Ego-Exo4D", "2023"]],
+    "usage": "作者用该表对比数据集。",
+}
+
+
+def event_with_figures(event_id: str) -> dict[str, object]:
+    event = sample_event(event_id, "support")
+    event["evidence"] = {  # type: ignore[index]
+        **event["evidence"],  # type: ignore[index]
+        "figures": [FIGURE],
+        "tables": [TABLE],
+    }
+    return event
+
+
+class FigureSurfaceTests(unittest.TestCase):
+    """evidence.figures/tables render into the appendix and the writing
+    brief's 可用图表 section, so the deliverables actually embed images."""
+
+    def test_appendix_renders_figure_and_table_blocks(self) -> None:
+        markdown = build_review_packet.render_evidence_appendix(
+            "demo", [event_with_figures("EA-DATA-2026-0001")], "2026-01-01..2026-06-01"
+        )
+        self.assertIn(f"![{FIGURE['caption']}]({FIGURE['image_url']})", markdown)
+        self.assertIn(f"> 用法：{FIGURE['usage']}（UMI-3D（arXiv 2604.14089），S3.F3）", markdown)
+        self.assertIn("| Dataset | Year |", markdown)
+        self.assertIn(f"> 用法：{TABLE['usage']}（UMI-3D（arXiv 2604.14089），S1.T1）", markdown)
+
+    def test_appendix_without_visuals_stays_clean(self) -> None:
+        markdown = build_review_packet.render_evidence_appendix(
+            "demo", [sample_event("EA-DATA-2026-0002", "support")], None
+        )
+        self.assertNotIn("![", markdown)
+
+    def test_brief_lists_available_visuals_with_caps(self) -> None:
+        events = [event_with_figures("EA-DATA-2026-0001"), sample_event("EA-DATA-2026-0002", "limit")]
+        brief = build_review_packet.render_writing_brief(
+            "demo topic", ["EA-DATA"], events, ["src-arxiv"]
+        )
+        self.assertIn("## 可用图表", brief)
+        self.assertIn("科研备忘录 ≤4 图 + 1 表", brief)
+        self.assertIn(f"![{FIGURE['caption']}]({FIGURE['image_url']})", brief)
+        self.assertIn("EA-DATA-2026-0001", brief)
+        # The empty case tells the writer to stay text-only, not to invent images.
+        empty = build_review_packet.render_writing_brief(
+            "demo topic", ["EA-DATA"], [sample_event("EA-DATA-2026-0003", "support")], ["src-arxiv"]
+        )
+        self.assertIn("没有携带可用图表", empty)
+        self.assertIn("不要自造图片", empty)
+
+
 class BuildReviewPacketTests(unittest.TestCase):
     def test_skill_docs_describe_default_readable_markdown_and_styles(self) -> None:
         skill_doc = (ROOT / "skills" / "embodied-ai-review-writer" / "SKILL.md").read_text(encoding="utf-8")

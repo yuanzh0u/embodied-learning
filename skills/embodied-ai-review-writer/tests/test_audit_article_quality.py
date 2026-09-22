@@ -17,7 +17,7 @@ class AuditArticleQualityTests(unittest.TestCase):
     def write_good_bundle(self, root: Path) -> None:
         memo_mechanism = (
             "机器人数据质量不是数据文件的固定属性，而是样本、目标任务、动作接口和闭环收益之间的关系。"
-            "多篇研究从轨迹筛选、任务覆盖、恢复片段和跨本体适配给出互补证据。"
+            "多篇研究从轨迹筛选、任务覆盖、恢复片段和跨本体适配给出互补证据。^[1]^ ^[2]^ ^[3]^ ^[4]^ ^[5]^"
             "这些结果共同支持以目标效用为中心的判断，但不同任务对质量信号的排序并不相同。"
         )
         memo = f"""# 具身数据质量研究备忘录
@@ -116,6 +116,63 @@ class AuditArticleQualityTests(unittest.TestCase):
             )
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         self.assertIn("editorial quality audit OK", completed.stdout)
+
+    def test_figures_available_warning(self) -> None:
+        """Evidence carries figures but a style draft embeds none → warning
+        (never error); embedding one silences it. No --evidence-jsonl → silent."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            self.write_good_bundle(root)
+            evidence = root / "evidence-all.jsonl"
+            import json as json_module
+
+            evidence.write_text(
+                json_module.dumps({
+                    "event_id": "EA-DATA-2026-0001",
+                    "evidence": {"figures": [{
+                        "figure_id": "S3.F3", "caption": "Aria rig",
+                        "image_url": "https://arxiv.org/html/2311.18259v4/figs/aria.png",
+                        "section": "3 Setup", "usage": "作者用该图展示采集 rig。",
+                    }]},
+                }),
+                encoding="utf-8",
+            )
+            warned = subprocess.run(
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root),
+                 "--evidence-jsonl", str(evidence)],
+                cwd=ROOT, text=True, capture_output=True,
+            )
+            self.assertEqual(0, warned.returncode, warned.stdout + warned.stderr)
+            self.assertIn("figures-available", warned.stdout)
+            self.assertIn("OK with warnings", warned.stdout)
+
+            # Embedding the figure in the memo clears its warning (others still warn).
+            memo = root / "scientific-memo_keyan.md"
+            memo.write_text(
+                memo.read_text(encoding="utf-8")
+                + "\n![Aria rig](https://arxiv.org/html/2311.18259v4/figs/aria.png)\n\n"
+                + "> 用法：作者用该图展示采集 rig。（Ego-Exo4D，S3.F3）\n",
+                encoding="utf-8",
+            )
+            partial = subprocess.run(
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root),
+                 "--evidence-jsonl", str(evidence), "--json"],
+                cwd=ROOT, text=True, capture_output=True,
+            )
+            self.assertEqual(0, partial.returncode, partial.stdout + partial.stderr)
+            figures_findings = [
+                item for item in
+                __import__("json").loads(partial.stdout)["findings"]
+                if item["rule"] == "figures-available"
+            ]
+            self.assertEqual(2, len(figures_findings))  # memo cleared; zhihu/xhs still warn
+
+            # Without the flag the check never fires.
+            silent = subprocess.run(
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root), "--json"],
+                cwd=ROOT, text=True, capture_output=True,
+            )
+            self.assertNotIn("figures-available", silent.stdout)
 
     def test_chinese_share_ignores_markdown_citation_titles(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

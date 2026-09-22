@@ -27,6 +27,23 @@ The writer then loads its style-specific reference:
 - Zhihu explainer → [zhihu-explainer.md](zhihu-explainer.md)
 - Xiaohongshu post → [xiaohongshu-post.md](xiaohongshu-post.md)
 
+## Figure and table blocks
+
+Every evidence-carried figure is embedded as a markdown image plus a usage
+blockquote; tables use the brief's ready-made grid. Source discipline: only
+figures listed in the writing brief's 可用图表 section (i.e. present in
+`evidence.figures[]/tables[]`) — never a self-invented or web-searched URL.
+
+```markdown
+![Overview of the recording procedure](https://arxiv.org/html/2311.18259v4/.../rig.jpg)
+
+> 用法：作者用该图总览整个采集流程。（Ego-Exo4D，S7.F28）
+```
+
+Per-style caps (upper bounds, not quotas): scientific-memo ≤4 figures + 1
+table, zhihu ≤2, xiaohongshu ≤1, evidence appendix takes everything. Do not
+put event-ID tokens (`EA-…-NNNN`) in alt text or captions.
+
 ## Non-deliverables
 
 The following remain internal inputs and must never be renamed or presented as final articles:

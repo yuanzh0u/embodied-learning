@@ -124,6 +124,37 @@ def render_structure(extraction: dict[str, Any], source_format: str) -> list[str
     return ["- No machine-readable outline; map headings manually from the complete text."]
 
 
+def render_figure_inventory(extraction: dict[str, Any]) -> list[str]:
+    """One line per figure/table so the reading agent knows what is available
+    to attach to evidence cards (by id — the join happens at note assembly)."""
+
+    lines: list[str] = []
+    figures = extraction.get("figures")
+    if isinstance(figures, list):
+        for figure in figures:
+            if not isinstance(figure, dict):
+                continue
+            caption = str(figure.get("caption") or "").strip()
+            section = str(figure.get("section") or "").strip()
+            marked = "（有图）" if str(figure.get("image_url") or "").strip() else ""
+            line = f"- 图 {figure.get('id')}{marked}: {caption or '（无题注）'}"
+            lines.append(f"{line} — {section}" if section else line)
+    tables = extraction.get("tables")
+    if isinstance(tables, list):
+        for table in tables:
+            if not isinstance(table, dict):
+                continue
+            caption = str(table.get("caption") or "").strip()
+            rows = table.get("rows")
+            row_note = f"，{len(rows)} 行" if isinstance(rows, list) and rows else ""
+            section = str(table.get("section") or "").strip()
+            line = f"- 表 {table.get('id')}{row_note}: {caption or '（无题注）'}"
+            lines.append(f"{line} — {section}" if section else line)
+    if lines:
+        return ["## Available figures and tables", "", *lines, ""]
+    return []
+
+
 def note_template(
     paper: dict[str, Any],
     extraction: dict[str, Any],
@@ -203,6 +234,7 @@ def main() -> int:
         "",
         *render_structure(extraction, source_format),
         "",
+        *render_figure_inventory(extraction),
         "## Complete extracted text",
         "",
         text,

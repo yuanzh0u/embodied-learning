@@ -31,6 +31,16 @@ Use this style for researchers, technical leads, and project decision-makers. Th
 - Preserve calibrated qualification. A shorter sentence is not better if it erases the task, dataset, embodiment, time-range, or evaluation condition under which a claim holds.
 - Treat technical punctuation as semantic. Keep compounds such as “深度—尺度歧义” and other established notation when a dash expresses a real relation.
 
+## Figures
+
+- 配额：≤4 图 + 1 表（上限，不是配额指标；证据事件没带图就保持纯文字）。
+- 图源纪律：只允许使用 writing-brief「可用图表」段列出的 evidence 事件图表——URL 与题注照抄，
+  禁止自造、外搜或引用未进入证据层的图片。
+- 格式：`![题注](image_url)` 空行后跟 `> 用法：<中文一句话>（论文短名，locator）`；
+  插入位置为该图所支撑的论证段之后。表格用 brief 里的现成 markdown 网格。
+- memo 正文禁止的是 `arxiv.org/abs/` 链接（引文格式约束）；`arxiv.org/html/...` 图片 URL
+  不受此限——它是图源，不是叙述性链接。图注/alt 文本中不得出现事件 ID 形 token（`EA-…-NNNN`）。
+
 ## Reject the draft when
 
 - A Claim Map or evidence inventory is the largest section.

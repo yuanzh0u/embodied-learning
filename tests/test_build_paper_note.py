@@ -150,6 +150,45 @@ class BuildPaperNoteTest(unittest.TestCase):
         note, _ = self.mod.assemble_note(self.skeleton(cards=cards), self.extraction, Path("/tmp"))
         self.assertLessEqual(len(note["evidence_cards"]), 4)
 
+    def test_card_figure_ids_join_extraction_records(self):
+        self.extraction["figures"] = [
+            {
+                "id": "S3.F3",
+                "caption": "The Aria device used for egocentric recordings.",
+                "image_url": "https://arxiv.org/html/2401.00001v2/figs/aria.png",
+                "section": "3 Method",
+            }
+        ]
+        self.extraction["tables"] = [
+            {"id": "S4.T1", "caption": "PSNR comparison.", "section": "4.1 Quantitative Results",
+             "rows": [["Method", "PSNR"], ["Ours", "29.03"]]}
+        ]
+        skeleton = self.skeleton()
+        skeleton["cards"][0]["figure_id"] = "S3.F3"
+        skeleton["cards"][0]["figure_usage"] = "作者用该图展示标定 rig。"
+        skeleton["cards"][1]["table_id"] = "S4.T1"
+        skeleton["cards"][1]["figure_usage"] = "作者用该表对比 PSNR。"
+        note, problems = self.mod.assemble_note(skeleton, self.extraction, Path("/tmp"))
+        self.assertEqual(problems, [])
+        first = note["evidence_cards"][0]["figures"][0]
+        self.assertEqual(first["figure_id"], "S3.F3")
+        self.assertEqual(first["image_url"], "https://arxiv.org/html/2401.00001v2/figs/aria.png")
+        self.assertEqual(first["caption"], "The Aria device used for egocentric recordings.")
+        self.assertEqual(first["usage"], "作者用该图展示标定 rig。")
+        second = note["evidence_cards"][1]["tables"][0]
+        self.assertEqual(second["table_id"], "S4.T1")
+        self.assertEqual(second["rows"], [["Method", "PSNR"], ["Ours", "29.03"]])
+        # The URL/caption/rows come from the extraction; the agent never invents them.
+        self.assertNotIn("figures", note["evidence_cards"][1])
+
+    def test_unknown_figure_ids_are_dropped(self):
+        skeleton = self.skeleton()
+        skeleton["cards"][0]["figure_id"] = "S9.F99"  # hallucinated
+        skeleton["cards"][0]["figure_usage"] = "不存在"
+        note, problems = self.mod.assemble_note(skeleton, self.extraction, Path("/tmp"))
+        self.assertNotIn("figures", note["evidence_cards"][0])
+        self.assertTrue(any("S9.F99" in problem for problem in problems))
+
 
 if __name__ == "__main__":
     unittest.main()

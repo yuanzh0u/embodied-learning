@@ -57,6 +57,12 @@ Keep TL;DR and a visible boundary, but vary section names and order when clarity
 - Keep necessary caveats in the answer. Natural prose may compress them, but must not turn a conditional finding into a universal conclusion.
 - Consider one original schematic when the explanation has at least three dependent stages, branches, or repeated-field comparisons. Label it as a schematic and do not add unsupported facts.
 
+## Figures
+
+- 配额：≤2 图。只从 writing-brief「可用图表」段取（URL/题注照抄，禁止自造图片 URL）。
+- 格式：`![题注](image_url)` + `> 用法：<一句话>（论文短名）`，紧跟被解释的机制段之后。
+- 机制图/流程图优先；没有可用图就纯文字，不要为凑数放 teaser。
+
 ## Reject the draft when
 
 - More than a quarter of substantive lines are shared verbatim with the scientific memo.

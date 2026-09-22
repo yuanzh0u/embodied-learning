@@ -306,6 +306,42 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
     if style == "memo":
         if zh_count < 1800:
             add(findings, "error", path, "memo-length", f"memo has only {zh_count} Chinese characters before references; expected at least 1800")
+        # Citation format contract: the wiki renders ^[n]^ superscripts into
+        # clickable reading links via the References list — inline arXiv links
+        # in the body break that rendering (2026-09-18 regression on both
+        # headless ego runs). Severity stays "warning" here so pre-contract
+        # settled runs still pass validate_current_reviews; the launcher gate
+        # upgrades these rule IDs to hard failures for newly written runs.
+        inline_arxiv = ARXIV_LINK_RE.findall(body)
+        if inline_arxiv:
+            add(
+                findings,
+                "warning",
+                path,
+                "memo-inline-arxiv-link",
+                f"memo body has {len(inline_arxiv)} inline arXiv link(s); cite with superscript markers ^[1]^"
+                " (one marker per citation, never ^[1,2]^) and list arXiv links only under References",
+            )
+        superscripts = len(re.findall(r"\^\[\d+\]\^", body))
+        if superscripts < 5:
+            add(
+                findings,
+                "warning",
+                path,
+                "memo-superscript-citations",
+                f"memo body has only {superscripts} superscript citation marker(s) ^[n]^; expected at least 5"
+                " (each citation carries its own bracketed marker)",
+            )
+        grouped = [marker for marker in re.findall(r"\^\[[\d,\s]+\]\^", body) if "," in marker]
+        if grouped:
+            add(
+                findings,
+                "error",
+                path,
+                "memo-grouped-citation",
+                f"memo body groups multiple numbers into one marker ({', '.join(grouped[:3])});"
+                " write consecutive markers ^[1]^ ^[2]^ instead of ^[1,2]^",
+            )
         required = {
             "boundary": r"^## .*?(研究边界|研究范围)",
             "thesis": r"^## .*?(中心判断|核心结论|中心论点)",
@@ -445,6 +481,50 @@ def overlap_findings(memo_path: Path, memo: str, zhihu_path: Path, zhihu: str) -
     return findings
 
 
+def evidence_visual_event_count(path: str | None) -> int:
+    """Number of evidence events carrying figures[]/tables[]."""
+    if not path:
+        return 0
+    count = 0
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                evidence = event.get("evidence") or {}
+                if not isinstance(evidence, dict):
+                    continue
+                if any(isinstance(evidence.get(key), list) and evidence.get(key) for key in ("figures", "tables")):
+                    count += 1
+    except OSError:
+        return 0
+    return count
+
+
+def figures_available_findings(
+    labeled: list[tuple[str, Path, str]], visual_events: int, findings: list[Finding]
+) -> None:
+    """Warning (never error): the evidence carries figures but a style draft
+    embeds none — expressiveness gap, not a correctness failure (some topics
+    legitimately have no usable figures)."""
+    if visual_events == 0:
+        return
+    for style, path, text in labeled:
+        if "![" not in text:
+            add(
+                findings,
+                "warning",
+                path,
+                "figures-available",
+                f"evidence carries figures ({visual_events} events) but the {style} draft embeds none; "
+                "use the writing-brief 可用图表 blocks",
+            )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle-dir", help="Directory containing the three standard article filenames.")
@@ -452,6 +532,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--zhihu", help="Zhihu explainer Markdown path.")
     parser.add_argument("--xiaohongshu", help="Xiaohongshu post Markdown path.")
     parser.add_argument("--quickread", help="Single-paper quick-read card Markdown path.")
+    parser.add_argument("--evidence-jsonl", help="Evidence JSONL; enables the figures-available warning.")
     parser.add_argument("--min-chinese-share", type=float, default=0.65)
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
     return parser.parse_args()
@@ -463,6 +544,13 @@ def main() -> int:
         if args.bundle_dir or args.memo or args.zhihu or args.xiaohongshu:
             raise SystemExit("--quickread audits a single-paper card and cannot be combined with bundle flags")
         findings = audit_file(Path(args.quickread), "quickread", args.min_chinese_share)[1]
+    elif args.memo and not (args.bundle_dir or args.zhihu or args.xiaohongshu):
+        # Single-style runs declare style+scope_note and may ship the memo
+        # alone — auditing it must not require the full triplet.
+        memo_text, findings = audit_file(Path(args.memo), "memo", args.min_chinese_share)
+        figures_available_findings(
+            [("memo", Path(args.memo), memo_text)], evidence_visual_event_count(args.evidence_jsonl), findings
+        )
     else:
         if args.bundle_dir:
             root = Path(args.bundle_dir)
@@ -479,6 +567,15 @@ def main() -> int:
         findings.extend(more)
         xhs, more = audit_file(xhs_path, "xiaohongshu", args.min_chinese_share)
         findings.extend(more)
+        figures_available_findings(
+            [
+                ("memo", memo_path, memo),
+                ("zhihu", zhihu_path, zhihu),
+                ("xiaohongshu", xhs_path, xhs),
+            ],
+            evidence_visual_event_count(args.evidence_jsonl),
+            findings,
+        )
         if memo and zhihu:
             findings.extend(overlap_findings(memo_path, memo, zhihu_path, zhihu))
 

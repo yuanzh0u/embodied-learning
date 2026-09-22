@@ -157,6 +157,50 @@ def valid_note(card_count: int = 1, status: str = "accepted") -> dict:
     }
 
 
+class CardVisualsTest(unittest.TestCase):
+    """Evidence cards may carry figures/tables joined at note assembly; the
+    projection must copy them onto the event's evidence (the writer's packet
+    renders them into the brief/appendix)."""
+
+    def test_projection_passes_card_visuals_through(self) -> None:
+        figure = {
+            "figure_id": "S3.F3",
+            "caption": "The Aria device used for egocentric recordings.",
+            "image_url": "https://arxiv.org/html/2311.18259v4/figs/aria/aria.png",
+            "section": "3 Ego-Exo4D dataset",
+            "usage": "作者用该图展示采集 rig。",
+        }
+        table = {
+            "table_id": "S1.T1",
+            "caption": "Dataset comparison.",
+            "section": "3 Ego-Exo4D dataset",
+            "rows": [["Dataset", "Year"], ["Ego-Exo4D", "2023"]],
+            "usage": "作者用该表对比数据集。",
+        }
+        note = valid_note()
+        note["evidence_cards"][0]["figures"] = [figure]
+        note["evidence_cards"][0]["tables"] = [table]
+        audit = audit_support.audit(note, extraction())
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual(1, len(events))
+        self.assertEqual([figure], events[0]["evidence"]["figures"])
+        self.assertEqual([table], events[0]["evidence"]["tables"])
+
+    def test_projection_without_visuals_keeps_evidence_shape(self) -> None:
+        note = valid_note()
+        audit = audit_support.audit(note, extraction())
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertNotIn("figures", events[0]["evidence"])
+        self.assertNotIn("tables", events[0]["evidence"])
+
+    def test_card_visuals_ignores_empty_lists(self) -> None:
+        self.assertEqual({}, projector.card_visuals({"figures": [], "tables": []}))
+        self.assertEqual(
+            {"figures": [{"figure_id": "S1.F1"}]},
+            projector.card_visuals({"figures": [{"figure_id": "S1.F1"}], "tables": []}),
+        )
+
+
 class PaperReaderTest(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()

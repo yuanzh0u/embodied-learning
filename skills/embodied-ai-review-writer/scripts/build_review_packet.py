@@ -21,7 +21,14 @@ from pathlib import Path
 from typing import Any
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[3]  # repo checkout only; installed runs take --work-dir or cwd
+_CWD = Path.cwd()
+sys.path.insert(0, str(REPO_ROOT))  # repo root, for the embodied_learning package
+from embodied_learning.parse.figure_table import (  # noqa: E402
+    paper_label,
+    render_figure,
+    render_table_block,
+)
 STANCE_ORDER = ["support", "conditional", "limit", "gap"]
 FORMAL_SOURCE_THRESHOLD = 5
 REVIEW_MODE_SOURCE_FLOORS = {"rapid": 8, "scoping": 15, "systematic": 30}
@@ -870,6 +877,7 @@ def render_writing_brief(
             )
     else:
         lines.append("- 无 limit/conditional/gap 事件;声明证据一致性本身即是 caveat。")
+    lines.extend(["", *render_available_visuals(events)])
     lines.extend(
         [
             "",
@@ -927,8 +935,51 @@ def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_rang
         if authors:
             lines.append(f"- Authors: {md_escape(authors)}")
         lines.append("")
+        label = paper_label(event)
+        for figure in evidence.get("figures") or []:
+            if isinstance(figure, dict):
+                lines.extend([render_figure(figure, label), ""])
+        for table in evidence.get("tables") or []:
+            if isinstance(table, dict):
+                lines.extend([render_table_block(table, label), ""])
     lines.extend(["## References", "", render_references(events).rstrip(), ""])
     return "\n".join(lines)
+
+
+FIGURE_CAPS_NOTE = (
+    "每风格配额（上限，不是下限）：科研备忘录 ≤4 图 + 1 表；知乎解释版 ≤2 图；"
+    "小红书版 ≤1 图；evidence-appendix 全量保留。"
+    "图只能来自下面列出的 evidence 事件图表（URL 与题注照抄，禁止自造或外搜图片）；"
+    "插入位置：紧跟其支撑的段落之后；无合适图就少配或不配，禁止为凑数放 teaser/logo。"
+)
+
+
+def render_available_visuals(events: list[dict[str, Any]]) -> list[str]:
+    """The writing brief's 可用图表 section: ready-to-paste markdown blocks for
+    every event-carried figure/table, so the deliverables actually embed
+    images instead of staying text-only."""
+
+    lines = ["## 可用图表", "", FIGURE_CAPS_NOTE, ""]
+    blocks: list[str] = []
+    for event in sorted(events, key=event_sort_key):
+        evidence = event.get("evidence") or {}
+        if not isinstance(evidence, dict):
+            continue
+        figures = [item for item in evidence.get("figures") or [] if isinstance(item, dict)]
+        tables = [item for item in evidence.get("tables") or [] if isinstance(item, dict)]
+        if not figures and not tables:
+            continue
+        label = paper_label(event)
+        claim = truncate(event.get("claim"), 120)
+        blocks.append(f"### {md_escape(event.get('event_id'))} — {md_escape(claim)}")
+        blocks.append("")
+        for figure in figures:
+            blocks.extend([render_figure(figure, label), ""])
+        for table in tables:
+            blocks.extend([render_table_block(table, label), ""])
+    if not blocks:
+        return ["## 可用图表", "", "- 本批证据事件没有携带可用图表（深读未选出或论文无外链图）；三种风格按纯文本成稿，不要自造图片。", ""]
+    return lines + blocks
 
 
 def render_style_menu(
@@ -1370,7 +1421,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="With --style all, additionally emit *.scaffold.md mechanical renders of the three formal styles.",
     )
-    parser.add_argument("--work-dir", default=str(REPO_ROOT / "work"), help="Directory for default review project folders.")
+    parser.add_argument("--work-dir", default=str(_CWD / "work"), help="Directory for default review project folders.")
     parser.add_argument("--output", help="Write Markdown artifact to this path. Use '-' for stdout. Defaults to work/<project>/ when omitted.")
     return parser
 
