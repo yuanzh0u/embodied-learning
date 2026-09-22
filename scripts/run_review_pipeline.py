@@ -38,31 +38,73 @@ import time
 import concurrent.futures
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
-sys.path.insert(0, str(REPO_ROOT))  # repo root (embodied_learning)
-from lib.agent_invoke import (  # noqa: E402
-    DRIVER_AGENT_MODEL,
-    build_skeleton_prompt,
-    pool_root_for,
-    read_skeleton_output,
-    resolve_cli,
-    run_one_shot_agent,
-)
-HUB_SCRIPTS = REPO_ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+try:
+    from lib.agent_invoke import (  # noqa: E402
+        DRIVER_AGENT_MODEL,
+        build_skeleton_prompt,
+        pool_root_for,
+        read_skeleton_output,
+        resolve_cli,
+        run_one_shot_agent,
+    )
+    from lib.layout import default_kb_root, find_roots  # noqa: E402
+except ImportError:  # installed console-script entry: package import path
+    from wiki_scripts.lib.agent_invoke import (  # noqa: E402
+        DRIVER_AGENT_MODEL,
+        build_skeleton_prompt,
+        pool_root_for,
+        read_skeleton_output,
+        resolve_cli,
+        run_one_shot_agent,
+    )
+    from wiki_scripts.lib.layout import default_kb_root, find_roots  # noqa: E402
+
+_REPO_ROOT, SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
+if _REPO_ROOT is not None and str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))  # repo root (embodied_learning)
+HUB_SCRIPTS = SKILLS_ROOT / "embodied-ai-literature-hub" / "scripts"
 PLANNER_SCRIPT = HUB_SCRIPTS / "search.py"
-PACKET_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "build_reading_packet.py"
+PACKET_SCRIPT = SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "build_reading_packet.py"
 
 REVIEW_MODES = {"rapid", "scoping", "systematic"}
 SCREEN_LIMITS = {"rapid": 24, "scoping": 40, "systematic": 80}
 SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
-S2_BUDGET_S = 90.0  # best-effort source: give up rather than retry into a 429 storm
+S2_BUDGET_S = 240.0  # best-effort source: give up rather than retry into a 429 storm
+# S2 requests run at a 3s pace: the API 429s aggressively, and a degraded S2
+# channel costs more (retry rounds, thinner registries) than the seconds saved.
+S2_SLEEP_S = "3.0"
 TERMS_AGENT_TIMEOUT_S = 90.0
 DYNAMIC_AGENT_TIMEOUT_S = 240.0  # 10-20 structured queries take the one-shot agent ~2-4min
 FALLBACK_STOPWORDS = {
     "的", "在", "和", "与", "或", "对", "从", "到", "了", "是",
     "the", "a", "an", "of", "for", "and", "to", "in", "on", "with", "via",
 }
+
+
+# Spawn cwd for stage subprocesses and one-shot agents; main() pins this to
+# the KB root so relative defaults and the agents' CLAUDE.md discovery both
+# resolve against the KB, never the repo or site-packages.
+DRIVER_CWD = Path.cwd()
+
+
+QUEUE_LINE_RE = re.compile(r"^(OK|HELD) (\S+) \((\d+)/(\d+)\)$")
+
+
+def extraction_queue_line(line: str) -> None:
+    """Translate one extract-content-queue stdout line: per-paper OK/HELD
+    becomes a progress tick (HELD additionally notes why it matters); any
+    other line (summary, warnings) stays a plain dialog line."""
+    match = QUEUE_LINE_RE.match(line.strip())
+    if match:
+        state, paper_id, done_s, total_s = match.groups()
+        log(f"[DRIVER-PROGRESS:extract:{done_s}/{total_s}]")
+        if state == "HELD":
+            log(f"[PAPER] {paper_id} 全文不满足证据条件（HELD）")
+    else:
+        log(f"[DRIVER] 全文抽取 {line}")
 
 
 def stage_line(name: str, detail: str = "") -> str:
@@ -79,7 +121,7 @@ def log(message: str) -> None:
 def run_command(command: list[str], *, timeout: float | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         command,
-        cwd=str(REPO_ROOT),
+        cwd=str(DRIVER_CWD),
         text=True,
         capture_output=True,
         timeout=timeout,
@@ -103,7 +145,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--review-mode", choices=sorted(REVIEW_MODES), default="rapid")
     parser.add_argument("--time-range", default=f"2023-01-01..{today}")
     parser.add_argument("--focus", default="", help="Interview focus text; feeds the terms selection.")
-    parser.add_argument("--kb-root", default=".", help="Knowledge base root (run dir parent conventions).")
+    parser.add_argument("--kb-root", default=str(default_kb_root()), help="Knowledge base root (run dir parent conventions).")
     parser.add_argument(
         "--search-strategy",
         choices=sorted(SEARCH_STRATEGIES),
@@ -331,7 +373,7 @@ def outputs_exist(*paths: Path) -> bool:
     return all(path.is_file() and path.stat().st_size > 0 for path in paths)
 
 
-PROJECT_SCRIPT = REPO_ROOT / "skills" / "embodied-ai-paper-reader" / "scripts" / "note_tools.py"
+PROJECT_SCRIPT = SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "note_tools.py"
 
 
 def build_screening_updates(screening_path: Path, extraction_summary_path: Path) -> list[dict] | None:
@@ -489,6 +531,7 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
     log(f"[DRIVER] 深读开始：{len(todo)} 篇并行（每批 {args.agents_parallel}）")
 
     passed = needs_review = failed = 0
+    done = reused  # reused notes count toward the progress bar
     papers = list(todo)
     for batch_start in range(0, len(papers), args.agents_parallel):
         chunk = papers[batch_start : batch_start + args.agents_parallel]
@@ -497,17 +540,21 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
             for paper_id in chunk:
                 if not (pool_root / f"arxiv-{paper_id}" / "extraction.json").is_file():
                     futures[paper_id] = None
+                    done += 1
+                    failed += 1  # consistent with the pre-2026-09 summary semantics
+                    log(f"[DRIVER-PROGRESS:deep-read:{done}/{len(order)}]")
                     log(f"[PAPER] {paper_id} 未入池，跳过")
                     continue
-                log(f"[PAPER] {paper_id} 深读 agent 启动")
                 futures[paper_id] = executor.submit(
                     deep_read_paper, paper_id, pool_root, cli,
                     agent_timeout_s=args.agent_timeout,
                     skeleton_path=run_dir / f"skel-{paper_id}.json",
                 )
             for paper_id, future in futures.items():
+                if future is None:
+                    continue  # counted when skipped at submission
                 try:
-                    outcome = future.result() if future is not None else "failed"
+                    outcome = future.result()
                 except Exception as exc:  # noqa: BLE001 - per-paper isolation
                     outcome = "failed"
                     log(f"[PAPER] {paper_id} agent 异常：{exc}")
@@ -517,9 +564,12 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                     shutil.copyfile(pooled_note, notes_dir / f"{paper_id}.json")
                     if pooled_audit.is_file():
                         shutil.copyfile(pooled_audit, notes_dir / f"{paper_id}.audit.json")
+                done += 1
+                log(f"[DRIVER-PROGRESS:deep-read:{done}/{len(order)}]")
+                # Only exceptions to the norm go to the dialog; steady progress
+                # lives on the progress bar.
                 if outcome == "pass":
                     passed += 1
-                    log(f"[PAPER] {paper_id} 审计通过")
                 elif outcome == "needs-review":
                     needs_review += 1
                     log(f"[PAPER] {paper_id} 审计 needs-review（可用）")
@@ -534,7 +584,8 @@ def run_skeleton_agent(cli: str, paper_id: str, pool_root: Path, timeout_s: floa
     """One one-shot claude call returning the paper's claim skeleton."""
     try:
         result = run_one_shot_agent(
-            build_skeleton_prompt(paper_id, pool_root), timeout_s=timeout_s, cli=cli
+            build_skeleton_prompt(paper_id, pool_root), timeout_s=timeout_s, cli=cli,
+            cwd=DRIVER_CWD,
         )
     except (subprocess.TimeoutExpired, OSError):
         return None
@@ -563,7 +614,7 @@ def deep_read_paper(
         skeleton_path = Path(tempfile.gettempdir()) / f"skel-{paper_id}-{os.getpid()}.json"
     skeleton_path.write_text(json.dumps(skeleton, ensure_ascii=False), encoding="utf-8")
     result = run_command([
-        sys.executable, str(REPO_ROOT / "scripts" / "build_paper_note.py"),
+        sys.executable, str(SCRIPTS_ROOT / "build_paper_note.py"),
         "--arxiv-id", paper_id,
         "--skeleton", str(skeleton_path),
         "--pool-root", str(pool_root.parent),
@@ -612,6 +663,18 @@ def pool_seed(summary_extra: dict, screening_ids: Path, run_dir: Path, args) -> 
     summary_extra["pool_seeded"] = cold
 
 
+def command_label(command: list[str]) -> str:
+    """Human label for a spawned command: the script basename plus its
+    subcommand (``python3 …/search.py search-arxiv`` → ``search.py search-arxiv``)."""
+    for index, item in enumerate(command):
+        if item.endswith(".py"):
+            label = Path(item).name
+            if index + 1 < len(command) and not command[index + 1].startswith("-"):
+                label += f" {command[index + 1]}"
+            return label
+    return Path(command[0]).name if command else "?"
+
+
 def run_stage(
     name: str,
     outputs: list[Path],
@@ -619,23 +682,65 @@ def run_stage(
     command_builder: "callable",
     *,
     timeout: float | None = None,
+    stream: bool = False,
+    on_line: "callable | None" = None,
 ) -> str:
     """Idempotent stage runner: skip when outputs exist, else run the built
-    command and verify the outputs landed."""
+    command and verify the outputs landed. ``stream=True`` forwards the child's
+    stdout line by line through ``on_line`` so long stages (full-text
+    extraction) report per-paper progress into the wiki dialog instead of
+    buffering until completion."""
     if not force and outputs_exist(*outputs):
         detail = "skipped (outputs present)"
         log(stage_line(name, detail))
         return detail
     command = command_builder()
-    result = run_command(command, timeout=timeout)
+    if stream:
+        captured: list[str] = []
+        process = subprocess.Popen(
+            command, cwd=str(DRIVER_CWD), text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        )
+        assert process.stdout is not None
+        for line in process.stdout:
+            stripped = line.rstrip()
+            captured.append(stripped)
+            if stripped and on_line:
+                on_line(stripped)
+        try:
+            returncode = process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+            returncode = -1
+        result = subprocess.CompletedProcess(command, returncode, "\n".join(captured[-10:]), "")
+    else:
+        result = run_command(command, timeout=timeout)
     if result.returncode:
         raise fail(name, f"exit {result.returncode}: {(result.stderr or result.stdout)[-400:]}")
     missing = [str(path) for path in outputs if not outputs_exist(path)]
     if missing:
         raise fail(name, f"outputs missing after run: {', '.join(missing)}")
-    detail = f"ran: {Path(command[0]).name}"
+    detail = f"ran: {command_label(command)}"
     log(stage_line(name, detail))
     return detail
+
+
+SNAPSHOT_BASENAMES = (
+    "arxiv-metadata-oai-snapshot.sqlite",  # SQLite/FTS5 (build-snapshot-db) — preferred
+    "arxiv-metadata-oai-snapshot.jsonl",   # raw OAI JSONL
+)
+
+
+def autodetect_snapshot(kb_root: Path) -> Path | None:
+    """Find a local arXiv metadata snapshot under the KB root. Offline
+    retrieval is the default: live arXiv API calls intermittently 406/429, so
+    the workflow only goes online when no snapshot exists (and says so)."""
+    for basename in SNAPSHOT_BASENAMES:
+        candidate = kb_root / basename
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 def write_sync(run_json_path: Path, mutate) -> None:
@@ -645,7 +750,11 @@ def write_sync(run_json_path: Path, mutate) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    global DRIVER_CWD
     args = parse_args(argv)
+    kb_root = Path(args.kb_root).expanduser().resolve()
+    args.kb_root = kb_root
+    DRIVER_CWD = kb_root
     try:
         start_date, end_date = parse_time_range(args.time_range)
     except ValueError as exc:
@@ -660,6 +769,17 @@ def main(argv: list[str] | None = None) -> int:
             print(f"external candidates file not found: {path}", file=sys.stderr)
             return 2
     run_json_path = run_dir / "run.json"
+
+    log("[DRIVER-PHASE:plan] 查询规划与检索词生成")
+    if not args.arxiv_snapshot:
+        detected = autodetect_snapshot(kb_root)
+        if detected:
+            args.arxiv_snapshot = str(detected)
+            log(f"[DRIVER] 使用本地 arXiv 快照离线检索：{detected}")
+        else:
+            log("[DRIVER-WARN] 本地 KB 未找到 arXiv 元数据快照"
+                "（arxiv-metadata-oai-snapshot.sqlite/.jsonl），arXiv 检索将直连 API（406/429 风险）。"
+                "建议先离线建库：search.py build-snapshot-db")
 
     started = time.monotonic()
     stage_seconds: dict[str, float] = {}
@@ -763,6 +883,7 @@ def main(argv: list[str] | None = None) -> int:
 
         # ---- retrieval: S2 best-effort + arXiv single process -----------
         begun = time.monotonic()
+        log("[DRIVER-PHASE:retrieval] 开始检索（Semantic Scholar + arXiv）")
         s2_output = run_dir / "search-semantic-scholar.json"
         arxiv_output = run_dir / "search-arxiv.json"
         citation_output = run_dir / "citation-expansion.json"
@@ -781,15 +902,15 @@ def main(argv: list[str] | None = None) -> int:
                     "--query-file", str(run_dir / "query-plan.json"),
                     "--start-date", start_date,
                     "--end-date", end_date,
-                    "--sleep-seconds", "1.0",
+                    "--sleep-seconds", S2_SLEEP_S,
                     "--retries", "1",
-                    "--retry-max-seconds", "20",
+                    "--retry-max-seconds", "30",
                     "--timeout", "20.0",
                     "--output", str(s2_output),
                 ]
                 try:
                     s2_process = subprocess.Popen(
-                        s2_cmd(), cwd=str(REPO_ROOT), text=True,
+                        s2_cmd(), cwd=str(DRIVER_CWD), text=True,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                     )
                     try:
@@ -861,7 +982,7 @@ def main(argv: list[str] | None = None) -> int:
                 "--max-total-candidates", "200",
                 "--start-date", start_date,
                 "--end-date", end_date,
-                "--sleep-seconds", "1.0",
+                "--sleep-seconds", S2_SLEEP_S,
                 "--graph-output", str(run_dir / "citation-graph.json"),
                 "--output", str(citation_output),
             ]
@@ -883,6 +1004,7 @@ def main(argv: list[str] | None = None) -> int:
 
         # ---- registry ---------------------------------------------------
         begun = time.monotonic()
+        log("[DRIVER-PHASE:mining] 候选注册、筛选与全文挖掘")
         registry_output = run_dir / "candidate-registry.json"
         def registry_cmd():
             command = [
@@ -900,6 +1022,11 @@ def main(argv: list[str] | None = None) -> int:
             return command
         run_stage("registry", [registry_output], args.force, registry_cmd)
         mark("registry", begun)
+        try:
+            registry_size = len(json.loads(registry_output.read_text(encoding="utf-8")).get("candidates") or [])
+            log(f"[DRIVER] 候选注册表合并完成：{registry_size} 篇去重候选")
+        except (json.JSONDecodeError, OSError):
+            pass
 
         # ---- screening + coverage (joins the terms thread) --------------
         begun = time.monotonic()
@@ -956,6 +1083,7 @@ def main(argv: list[str] | None = None) -> int:
         # ---- full-text extraction --------------------------------------
         begun = time.monotonic()
         extraction_summary = run_dir / "extraction-summary.json"
+        log(f"[DRIVER] 开始全文抽取（HTML→Markdown，最长 30 分钟，候选 {len(screened_ids)} 篇）…")
         extraction_cmd = lambda: [  # noqa: E731
             sys.executable, str(HUB_SCRIPTS / "fetch.py"), "extract-content-queue",
             "--paper-id-file", str(screening_ids),
@@ -966,7 +1094,10 @@ def main(argv: list[str] | None = None) -> int:
             "--include-full-text",
             "--summary-output", str(extraction_summary),
         ]
-        run_stage("extraction", [extraction_summary], args.force, extraction_cmd, timeout=1800.0)
+        run_stage(
+            "extraction", [extraction_summary], args.force, extraction_cmd, timeout=1800.0,
+            stream=True, on_line=extraction_queue_line,
+        )
         mark("extraction", begun)
         pool_seed(summary_extra, screening_ids, run_dir, args)
 
@@ -976,11 +1107,14 @@ def main(argv: list[str] | None = None) -> int:
         packets_dir.mkdir(parents=True, exist_ok=True)
         packet_count = 0
         extraction_files = sorted((run_dir / "extractions").glob("*.json"))
+        if extraction_files:
+            log(f"[DRIVER] 生成阅读包（{len(extraction_files)} 篇抽取结果）…")
         for extraction_path in extraction_files:
             paper_id = extraction_path.stem
             packet_output = packets_dir / f"{paper_id}.md"
             if not args.force and packet_output.is_file() and packet_output.stat().st_size > 0:
                 packet_count += 1
+                log(f"[DRIVER-PROGRESS:packets:{packet_count}/{len(extraction_files)}]")
                 continue
             result = run_command([
                 sys.executable, str(PACKET_SCRIPT),
@@ -993,8 +1127,9 @@ def main(argv: list[str] | None = None) -> int:
             if result.returncode:
                 # One unrecoverable paper must not sink the queue.
                 log(f"[DRIVER-WARN] packet {paper_id}: exit {result.returncode}")
-                continue
-            packet_count += 1
+            else:
+                packet_count += 1
+            log(f"[DRIVER-PROGRESS:packets:{packet_count}/{len(extraction_files)}]")
         mark("packets", begun)
         log(stage_line("packets", f"{packet_count}/{len(extraction_files)} packets"))
 

@@ -391,16 +391,20 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertIn("stage", [e["type"] for e in events])
         self.assertEqual(events[-1]["type"], "awaiting_input")
         self.assertEqual(events[-1]["stage"], "packet")
+        # The park is a recovery path: the exhausted auto-continuation says so
+        # instead of pretending an outline is awaiting approval.
+        self.assertIn("自动续跑", events[-1].get("detail") or "")
         # init_run.py really created the in-progress run in the temp KB.
         run_dirs = list((self.kb_root / "work").glob("literature-review-*"))
         self.assertEqual(len(run_dirs), 1)
         manifest = json.loads((run_dirs[0] / "run.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["status"], "in-progress")
         self.assertEqual(manifest["review_mode"], "scoping")
-        # The workflow system prompt reached the turn with the placeholder
-        # roots substituted (repo checkout → absolute repo paths) and the run
-        # dir in the kickoff prompt.
-        turn = FakeTurn.instances[-1]
+        # The kickoff turn carried the workflow system prompt with the
+        # placeholder roots substituted (repo checkout → absolute repo paths)
+        # and the run dir in the kickoff prompt. (A non-settled kickoff is
+        # auto-continued, so later FakeTurn instances are continuation turns.)
+        turn = FakeTurn.instances[0]
         expected_prompt = server_module.wiki_chat.substitute_prompt_roots(
             server_module.wiki_chat.WORKFLOW_SYSTEM_PROMPT,
             skills_root=server_module.REPO_ROOT / "skills",
@@ -474,7 +478,7 @@ class WorkflowEndpointTest(ChatServerHarness):
         driver_params = self.driver_calls[0][0]
         self.assertEqual(driver_params["search_strategy"], "seeds")
         self.assertEqual(driver_params["seed_arxiv_ids"], "2402.14207, 1704.02084")
-        kickoff_prompt = FakeTurn.instances[-1].kwargs["prompt"]
+        kickoff_prompt = FakeTurn.instances[0].kwargs["prompt"]
         self.assertIn("seeds", kickoff_prompt)
 
     def test_invalid_search_strategy_rejected(self):
@@ -482,6 +486,60 @@ class WorkflowEndpointTest(ChatServerHarness):
         bad["search_strategy"] = "bogus"
         status, _, _ = self.request("POST", "/api/workflow", {"params": bad})
         self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_unsettled_segment_auto_continues_to_settle(self):
+        """One-shot contract: a segment that ends without settling (e.g. the
+        writer stops after the packet) is auto-continued in the same session —
+        no outline checkpoint, no user 继续 needed."""
+
+        def fake_settled_run():
+            run_dir = next((self.kb_root / "work").glob("literature-review-*"))
+            settled = self.kb_root / "evidence" / run_dir.name
+            shutil.copytree(run_dir, settled)
+            for name in ("scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"):
+                (settled / name).write_text("# 成稿\n", encoding="utf-8")
+            manifest = json.loads((settled / "run.json").read_text(encoding="utf-8"))
+            manifest["status"] = "settled"
+            manifest["files"] = {"evidence": "evidence.jsonl"}
+            (settled / "evidence.jsonl").write_text("", encoding="utf-8")
+            (settled / "run.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+            catalog = self.kb_root / "knowledge" / "literature-review-catalog.md"
+            catalog.write_text(
+                "# catalog\n\n| ID | 主题 | 卡 | 规模 | 审计入口 |\n|---|---|---|---:|---|\n"
+                f"| X | 演示话题 | — | — | [run](../evidence/{run_dir.name}/run.json) |\n",
+                encoding="utf-8",
+            )
+            return run_dir
+
+        sequence = [self._checkpoint_turn_events(), self._settle_turn_events()]
+        prepared = {"settled": False}
+
+        def script(turn_self, kwargs):
+            if len(FakeTurn.instances) == 2 and not prepared["settled"]:
+                # The auto-continuation turn starts after the kickoff created
+                # the run dir — stage the settled copy the publish path needs.
+                fake_settled_run()
+                prepared["settled"] = True
+            turn_self._events = sequence.pop(0) if sequence else self._settle_turn_events()
+
+        self._seed_turn_factory(script)
+        status, raw, headers = self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": "高斯溅射SLAM综述", "params": self.params()})
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        # Exactly one auto-continuation round ran, announced in the dialog…
+        auto = [e for e in events if e["type"] == "stage" and "自动继续" in str(e.get("detail") or "")]
+        self.assertEqual(len(auto), 1)
+        self.assertIn("第 1/2 轮", auto[0]["detail"])
+        # …with the continuation resuming the same session and going straight
+        # to the remaining stages.
+        self.assertEqual(len(FakeTurn.instances), 2)
+        continuation = FakeTurn.instances[1]
+        self.assertEqual(continuation.kwargs["session_id"], "ws-fresh-1")
+        self.assertIn("[STAGE:writing]", continuation.kwargs["prompt"])
+        # …and the run published without any user input.
+        self.assertEqual(events[-1]["type"], "topic_ready")
 
     def test_continuation_resumes_and_emits_topic_ready(self):
         ws_id = self.test_kickoff_creates_run_and_parks_at_checkpoint()
@@ -899,15 +957,19 @@ class NewUserKbCreationTest(unittest.TestCase):
         self.assertIn("KB-LIT-REVIEWS", catalog.read_text(encoding="utf-8"))
         self.assertTrue((kb_root / "evidence").is_dir(), "evidence/ should be created")
 
-    def test_explicit_kb_root_is_never_created(self):
+    def test_explicit_kb_root_cold_start_bootstraps(self):
+        """A brand-new (or empty) directory given via --kb-root gets the same
+        skeleton a first-run default KB gets — cold start must serve the
+        empty-library wiki instead of refusing to start."""
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        missing = Path(tmp.name) / "no-such-kb"
+        fresh = Path(tmp.name) / "fresh-kb"
 
-        code, _ = self._run_main("--kb-root", str(missing))
+        code, _ = self._run_main("--kb-root", str(fresh))
 
-        self.assertEqual(code, 1)
-        self.assertFalse(missing.exists(), "explicit --kb-root must not be auto-created")
+        self.assertEqual(code, 0)
+        self.assertTrue((fresh / "knowledge" / "literature-review-catalog.md").is_file())
+        self.assertTrue((fresh / "evidence").is_dir())
 
 
 class ChatDisabledTest(ChatServerHarness):

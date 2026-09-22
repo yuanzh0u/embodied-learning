@@ -85,6 +85,33 @@ class TermsTest(unittest.TestCase):
         self.assertEqual(terms, ["erasor"])
 
 
+class ExtractionQueueLineTest(unittest.TestCase):
+    """The extraction queue's stdout becomes progress ticks; only HELD papers
+    and summaries remain as dialog lines."""
+
+    def setUp(self):
+        self.driver = load_driver()
+
+    def test_ok_is_progress_held_is_noted(self):
+        lines: list[str] = []
+        with mock.patch.object(self.driver, "log", side_effect=lines.append):
+            self.driver.extraction_queue_line("OK 2402.10329 (3/48)")
+            self.driver.extraction_queue_line("HELD 2302.01109 (4/48)")
+            self.driver.extraction_queue_line("Recovered 47 of 48 papers; held 1.")
+        self.assertEqual(lines[0], "[DRIVER-PROGRESS:extract:3/48]")
+        self.assertEqual(lines[1], "[DRIVER-PROGRESS:extract:4/48]")
+        self.assertIn("[PAPER] 2302.01109", lines[2])
+        self.assertIn("HELD", lines[2])
+        self.assertTrue(lines[3].startswith("[DRIVER] 全文抽取 Recovered"))
+
+    def test_command_label_uses_script_and_subcommand(self):
+        self.assertEqual(
+            self.driver.command_label(["/usr/bin/python3", "/x/search.py", "search-arxiv", "--flag"]),
+            "search.py search-arxiv",
+        )
+        self.assertEqual(self.driver.command_label(["/usr/bin/python3", "/x/build_paper_note.py"]), "build_paper_note.py")
+
+
 class DriverPipelineTest(unittest.TestCase):
     """End-to-end driver run with every subprocess faked onto disk."""
 
@@ -145,6 +172,23 @@ class DriverPipelineTest(unittest.TestCase):
                 return mock.Mock(returncode=0, stdout="", stderr="")
         return mock.Mock(returncode=0, stdout="", stderr="")
 
+    def fake_popen(self, command, **kwargs):
+        """Fake for the streaming stage path (extract-content-queue): records
+        the argv, writes the stage's outputs, returns a process whose stdout
+        emits per-paper progress lines. The S2 channel must never reach Popen
+        in this harness."""
+        self.commands.append(command)
+        joined = " ".join(command)
+        if "search-semantic-scholar" in joined:
+            raise AssertionError("S2 must be skipped in this harness")
+        if "extract-content-queue" not in joined:
+            raise AssertionError(f"unexpected streaming subprocess: {joined}")
+        for name in self.STAGE_SCRIPTS["extract-content-queue"]:
+            out = self.run_dir / name
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(self._stage_payload("extract-content-queue"), encoding="utf-8")
+        return mock.Mock(stdout=iter(["OK 2402.10329 (1/2)", "HELD 2302.01109 (2/2)"]), wait=lambda timeout=None: 0)
+
     def run_driver(self, argv: list[str], *, agent_dynamic=None) -> tuple[int, dict]:
         """agent_dynamic=None keeps the default patch (agent returns None);
         pass a Mock to observe/override the dynamic-query agent."""
@@ -154,7 +198,7 @@ class DriverPipelineTest(unittest.TestCase):
             else mock.patch.object(self.driver, "agent_dynamic_queries", new=agent_dynamic)
         )
         with mock.patch.object(self.driver, "run_command", side_effect=self.fake_run), \
-             mock.patch.object(self.driver.subprocess, "Popen", side_effect=AssertionError("S2 must be skipped in this harness")), \
+             mock.patch.object(self.driver.subprocess, "Popen", side_effect=self.fake_popen), \
              mock.patch.object(self.driver.TermsSelector, "join", return_value=(["demo"], "mechanical")), \
              agent_patch, \
              mock.patch.object(self.driver.time, "sleep"), \
@@ -181,6 +225,25 @@ class DriverPipelineTest(unittest.TestCase):
                 if marker in joined:
                     names.append(marker)
         return names
+
+    def test_snapshot_autodetected_and_forwarded(self):
+        """Offline-first: a snapshot under the KB root is picked up without any
+        flag and forwarded to search-arxiv as --metadata-snapshot."""
+        snapshot = Path(self.tmp.name) / "arxiv-metadata-oai-snapshot.sqlite"
+        snapshot.write_text("", encoding="utf-8")
+        code, _ = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        self.assertEqual(code, 0)
+        arxiv_cmd = next(c for c in self.commands if "search-arxiv" in " ".join(c))
+        self.assertIn("--metadata-snapshot", arxiv_cmd)
+        self.assertEqual(arxiv_cmd[arxiv_cmd.index("--metadata-snapshot") + 1], str(snapshot))
+
+    def test_snapshot_autodetect_prefers_sqlite_and_allows_jsonl(self):
+        base = Path(self.tmp.name)
+        self.assertIsNone(self.driver.autodetect_snapshot(base))
+        (base / "arxiv-metadata-oai-snapshot.jsonl").write_text("", encoding="utf-8")
+        self.assertEqual(self.driver.autodetect_snapshot(base), base / "arxiv-metadata-oai-snapshot.jsonl")
+        (base / "arxiv-metadata-oai-snapshot.sqlite").write_text("", encoding="utf-8")
+        self.assertEqual(self.driver.autodetect_snapshot(base), base / "arxiv-metadata-oai-snapshot.sqlite")
 
     def test_full_run_stage_order_and_summary(self):
         code, summary = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
@@ -372,6 +435,7 @@ class SearchStrategyTest(DriverPipelineTest):
             return result
         with mock.patch.object(self.driver, "run_command", side_effect=fake_run_with_citation):
             with mock.patch.object(self.driver, "agent_dynamic_queries", return_value=None), \
+                 mock.patch.object(self.driver.subprocess, "Popen", side_effect=self.fake_popen), \
                  mock.patch.object(self.driver.TermsSelector, "join", return_value=(["demo"], "mechanical")), \
                  mock.patch.object(self.driver.time, "sleep"), \
                  mock.patch.object(Path, "glob", return_value=iter([])):

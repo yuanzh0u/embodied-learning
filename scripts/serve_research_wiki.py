@@ -58,8 +58,10 @@ REFRESH_LOCK = threading.Lock()
 def resolve_pipeline_root() -> Path | None:
     """The skills/ root the agent-driven pipeline reads its SKILL.mds from.
     Order: explicit --pipeline-root → the repo checkout next to the script →
-    the conventional clone location → the wheel-bundled tree
-    (site-packages/wiki_scripts/skills). None = workflow unavailable.
+    the wheel's own scripts package dir (contains init_run.py and the bundled
+    skills/) → the legacy bundled-skills-only shape. None = workflow
+    unavailable. No machine-specific fallback locations: a wheel install must
+    work from packaged files only.
 
     The result is static for the process lifetime (PIPELINE_ROOT_OVERRIDE is
     set in main() before any handler runs), so it is cached after the first
@@ -70,7 +72,7 @@ def resolve_pipeline_root() -> Path | None:
         return _PIPELINE_ROOT_CACHE
 
     bundled = SCRIPT_DIR / "skills"
-    candidates = [REPO_ROOT, Path.home() / "code" / "embodied-learning", bundled]
+    candidates = [REPO_ROOT, SCRIPT_DIR, bundled]
     if PIPELINE_ROOT_OVERRIDE is not None:
         candidates.insert(0, PIPELINE_ROOT_OVERRIDE)
     for candidate in candidates:
@@ -138,9 +140,15 @@ class ChatBadRequest(ValueError):
 # ---- literature-review workflow (STORM-style one-click survey) -----------
 # The pipeline itself is agent-driven: the local claude CLI reads the skills'
 # SKILL.mds and executes it. The server only launches it, streams its progress,
-# and holds the outline checkpoint. Workflow capability additionally requires
+# and the auto-continue rounds. Workflow capability additionally requires
 # the repo checkout (skills/ tree); wheel-only installs disable it honestly.
 WORKFLOW_CHECKPOINT_STAGE = "packet"
+# One-shot contract: a workflow segment that ends without settling is
+# auto-continued with the continuation prompt instead of parking for user
+# input — the user never answers an outline checkpoint mid-run. After this
+# many exhausted rounds (or a manual stop) the workspace parks with
+# awaiting_input for explicit recovery only.
+WORKFLOW_AUTO_CONTINUE_ROUNDS = 2
 WORKFLOW_REVIEW_MODES = {"rapid", "scoping", "systematic"}
 WORKFLOW_STYLES = {"all", "scientific-memo", "expert-explainer"}
 WORKFLOW_SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
@@ -216,10 +224,17 @@ def resolve_wiki_root(kb_root: Path) -> Path:
     return kb_wiki
 
 
+# Frontend files synced into an existing <kb-root>/wiki on every start, so
+# frontend fixes reach KBs that were bootstrapped by an older build.
+FRONTEND_SYNC_FILES = ("index.html", "assets/wiki.css", "assets/wiki.js", "assets/github-mark.svg")
+
+
 def bootstrap_wiki_frontend(target: Path) -> None:
     """First run against a KB without wiki/: copy the frontend shell from the
     wheel-bundled assets (a non-editable install) or the repo checkout, so the
-    server can serve and later refresh data/ in place next to the KB."""
+    server can serve and later refresh data/ in place next to the KB. An
+    existing copy gets stale files refreshed in place (byte-compare) — without
+    this a KB bootstrapped by an older build silently serves old JS/CSS."""
 
     candidates = [FRONTEND_ASSETS, REPO_WIKI_ROOT]
     source = next((c for c in candidates if (c / "index.html").is_file()), None)
@@ -228,6 +243,17 @@ def bootstrap_wiki_frontend(target: Path) -> None:
             f"未找到 Wiki 前端资源（{FRONTEND_ASSETS} 或 {REPO_WIKI_ROOT}）。"
             "请重新安装本软件包，或手动复制仓库的 wiki/ 目录到该路径。"
         )
+    if target.is_dir() and (target / "index.html").is_file():
+        synced: list[str] = []
+        for rel in FRONTEND_SYNC_FILES:
+            src, dst = source / rel, target / rel
+            if src.is_file() and (not dst.is_file() or dst.read_bytes() != src.read_bytes()):
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
+                synced.append(rel)
+        if synced:
+            print(f"已更新 Wiki 前端（{'、'.join(synced)}）：{target}")
+        return
     shutil.copytree(
         source,
         target,
@@ -1230,6 +1256,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": f"初始化运行目录失败：{exc}"})
                 return
             ws_id = f"ws-{secrets.token_hex(4)}"
+            ws_style = str(params.get("target_style") or "all")
             prompt = wiki_chat.build_workflow_prompt(
                 params=params,
                 run_dir=run_dir,
@@ -1280,6 +1307,34 @@ class WikiHandler(SimpleHTTPRequestHandler):
             )
 
             marker_run = wiki_chat.extract_topic_marker(full_text)
+
+            # One-shot contract: no outline stop-and-wait. A segment that ends
+            # without settling is auto-continued in the same session until it
+            # publishes or the round budget runs out.
+            auto_rounds = 0
+            while (
+                marker_run is None
+                and full_text.strip()
+                and not turn.stop_requested
+                and auto_rounds < WORKFLOW_AUTO_CONTINUE_ROUNDS
+            ):
+                auto_rounds += 1
+                stage_now = (registry.get_workspace(ws_id) or {}).get("workflow", {}).get("stage")
+                resume_stage = str(stage_now or WORKFLOW_CHECKPOINT_STAGE)
+                self._write_sse_event(
+                    {"type": "stage", "stage": resume_stage,
+                     "detail": f"上一段未完成，自动继续（第 {auto_rounds}/{WORKFLOW_AUTO_CONTINUE_ROUNDS} 轮）"}
+                )
+                session_id = (registry.get_workspace(ws_id) or {}).get("session_id")
+                continuation = wiki_chat.build_continuation_prompt(
+                    feedback="", target_style=ws_style, stage=resume_stage
+                )
+                turn, _ = self._spawn_workflow_turn(continuation, session_id, ws_model)
+                full_text = self._stream_chat_turn(
+                    key=ws_id, turn=turn, registry=registry, on_delta=on_delta,
+                )
+                marker_run = wiki_chat.extract_topic_marker(full_text)
+
             if marker_run:
                 # Settle finished: publish and hand the topic back.
                 registry.set_workflow_state(ws_id, stage="settle", awaiting_input=False)
@@ -1304,16 +1359,18 @@ class WikiHandler(SimpleHTTPRequestHandler):
                         {"type": "topic_error", "message": "综述已落盘，但快照中尚未找到新话题；请稍后手动刷新。"}
                     )
             else:
-                # Pipeline reached the outline checkpoint (or was interrupted):
-                # park the workspace and wait for the user's 继续 / feedback.
+                # Not settled, and auto-continuation either exhausted its round
+                # budget or was cut short by a manual stop: park the workspace
+                # so an explicit 继续 resumes from disk state. This is a
+                # recovery path, not a routine outline checkpoint.
                 current_stage = (self.chat_sessions.get_workspace(ws_id) or {}).get("workflow", {}).get("stage")
-                stopped = not turn.stop_requested
-                if stopped:
-                    registry.set_workflow_state(
-                        ws_id, stage=current_stage or WORKFLOW_CHECKPOINT_STAGE, awaiting_input=True
-                    )
+                registry.set_workflow_state(
+                    ws_id, stage=current_stage or WORKFLOW_CHECKPOINT_STAGE, awaiting_input=True
+                )
+                if turn.stop_requested:
                     self._write_sse_event(
-                        {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE}
+                        {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                         "detail": "已手动停止。回复「继续」从中断处继续。"}
                     )
                 elif not full_text.strip():
                     # Segment produced nothing and wasn't user-stopped (claude
@@ -1325,6 +1382,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
                             "message": "本段没有产生任何输出（claude 可能无响应或会话已失效）。"
                             "请点击 ⟳ 新对话后重新发起，或稍后重试。",
                         }
+                    )
+                else:
+                    self._write_sse_event(
+                        {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                         "detail": f"自动续跑 {WORKFLOW_AUTO_CONTINUE_ROUNDS} 轮仍未落盘，已暂停。"
+                                   "回复「继续」从中断处继续，或检查运行目录排查问题。"}
                     )
         finally:
             _set_current_chat(None)
@@ -1385,18 +1448,35 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 {"type": "status", "stage": "driver", "detail": "正在运行固定流程（检索/抽取/深读）"}
             )
             assert driver.stdout is not None
+            current_stage = "plan"  # free-form lines attribute to the latest phase
             for line in driver.stdout:
                 mapped = wiki_chat.extract_driver_stage(line)
                 if mapped:
                     stage, detail = mapped
+                    current_stage = stage
                     registry.set_workflow_state(ws_id, stage=stage, awaiting_input=False)
                     self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
                     continue
+                phase = wiki_chat.extract_driver_phase(line)
+                if phase:
+                    stage, detail = phase
+                    current_stage = stage
+                    registry.set_workflow_state(ws_id, stage=stage, awaiting_input=False)
+                    self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+                    continue
+                progress = wiki_chat.extract_driver_progress(line)
+                if progress:
+                    name, done, total, detail = progress
+                    self._write_sse_event(
+                        {"type": "progress", "stage": current_stage, "name": name,
+                         "done": done, "total": total, "detail": detail}
+                    )
+                    continue
                 detail = wiki_chat.extract_driver_detail(line)
                 if detail:
-                    # Free-form progress lines (per-paper reads, assembly
-                    # results) land in the dialog so the user sees movement.
-                    self._write_sse_event({"type": "stage", "stage": "mining", "detail": detail})
+                    # Free-form progress lines land in the dialog so the user
+                    # sees movement — attributed to the phase they belong to.
+                    self._write_sse_event({"type": "stage", "stage": current_stage, "detail": detail})
             try:
                 returncode = driver.wait(timeout=WORKFLOW_DRIVER_TIMEOUT_S)
             except subprocess.TimeoutExpired:
@@ -1657,13 +1737,13 @@ def main() -> int:
         PIPELINE_ROOT_OVERRIDE = args.pipeline_root.expanduser().resolve()
     if args.kb_root is not None:
         # An explicit --kb-root is authoritative: never fall back to defaults.
+        # Cold start is supported: an empty/new directory gets the same
+        # skeleton a first-run default KB gets (knowledge/ + starter catalog
+        # + evidence/), so the wiki serves its empty-library state instead of
+        # refusing to start.
         kb_root = args.kb_root.expanduser().resolve()
         if not (kb_root / CATALOG_RELPATH).is_file():
-            print(
-                f"--kb-root 指定的目录缺少 {CATALOG_RELPATH}：{kb_root}",
-                file=sys.stderr,
-            )
-            return 1
+            ensure_default_kb(kb_root)
     else:
         # No explicit --kb-root and the default location has no catalog:
         # a brand-new user gets a skeleton knowledge base created in place.

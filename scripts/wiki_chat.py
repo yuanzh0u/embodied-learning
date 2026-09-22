@@ -27,6 +27,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from lib.agent_invoke import prepare_claude_config_dir  # noqa: E402
 from lib.jsonio import atomic_write_json  # noqa: E402
 
 DEFAULT_PERMISSION_MODE = "bypassPermissions"
@@ -70,12 +71,16 @@ WORKFLOW_SYSTEM_PROMPT = (
     "1. 论文深读与证据投影：已由系统驱动脚本完成（速记骨架 + 审计 + 投影）。"
     "不要派发深读 subagent、不要跑 note_tools.py project-evidence-events；"
     "若 pipeline-summary.json 的 deep_read 字段显示失败篇目，如实向用户说明。\n"
-    "2. 综述包：跑 <scripts-root> 同级的 "
-    "build_review_packet.py（--topic … --knowledge-id … --evidence-jsonl work/<run>/evidence/*.jsonl "
+    "2. 综述包：跑 <skills-root>/embodied-ai-review-writer/scripts/build_review_packet.py"
+    "（--topic … --knowledge-id … --evidence-jsonl work/<run>/evidence/*.jsonl "
     "--review-mode … --coverage-report …）。\n"
     "3. 成稿、审计与发布（同一轮一气呵成）：按目标风格亲自撰写成稿（review-packet 是简报不是成稿），"
-    "生成 trace-map.json，逐一通过 check_run_bundle.py、audit_citations.py、writing_audit.py audit-article-quality "
+    "生成 trace-map.json，逐一通过 <scripts-root>/check_run_bundle.py、<scripts-root>/audit_citations.py、"
+    "<skills-root>/embodied-ai-review-writer/scripts/writing_audit.py audit-article-quality "
+    "（加 --evidence-jsonl 以启用带图可用但成稿未落图的告警）"
     "审计门后才允许落盘 evidence/；落盘后把 run.json status 改为 settled，"
+    "成稿必须落图：writing-brief 的「可用图表」段给出带图的证据事件与现成 markdown 块，"
+    "按各风格配额把图插到所支撑的段落之后（图源只能是 evidence 携带的图，URL/题注照抄，禁止自造图片）。"
     "在 <kb-root>/knowledge/literature-review-catalog.md 登记一行（ID、主题、规模三元组、run/packet/成稿链接），"
     "再跑 python3 <scripts-root>/build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data 重建 wiki 快照，"
     "并核对该 KB wiki 端口 /data/current.json 的 topic 数量 +1。\n"
@@ -93,7 +98,8 @@ WORKFLOW_SYSTEM_PROMPT = (
     "文末「参考文献」编号列表：编号对应正文上标，每条列出论文名称（英文原题）、"
     "作者（第一作者 et al.）、年份，并附 arXiv 链接（[arXiv:2602.11323](https://arxiv.org/abs/2602.11323) 形式）"
     "——Wiki 构建时会按这条链接把正文上标解析成可点击的阅读链接。"
-    "除参考文献列表外，正文叙述中不要出现 arxiv.org 链接或 [arXiv:2402.xxxxx] 式前缀。"
+    "除参考文献列表外，正文叙述中不要出现 arxiv.org 链接或 [arXiv:2402.xxxxx] 式前缀"
+    "——但 ![](https://arxiv.org/html/...) 图片 URL 例外：它是图源，不是叙述性链接，按图表规范正常使用。"
     "知乎版与小红书版不受此约束（沿用各自的宽松风格）。"
     "\n\n若指定的运行目录已存在中间产物（extractions/、paper-notes/ 等），从磁盘已有进度继续"
     "（已通过审计的笔记直接复用，不要重读重写），只补缺失部分。"
@@ -104,16 +110,20 @@ WORKFLOW_SYSTEM_PROMPT = (
 def resolve_pipeline_layout(pipeline_root: Path) -> tuple[Path, Path]:
     """Given the pipeline root, return (skills_root, scripts_root).
 
-    Repo checkout / clone: <root>/skills/...; wheel-bundled tree: <root> IS
-    the skills/ dir itself. scripts/ sits beside skills/ when the checkout
-    has it, otherwise at <root>/../scripts (bundled layout)."""
+    Three shapes: repo checkout (``<root>/skills`` + ``<root>/scripts``), wheel
+    install where the root IS the scripts package dir (contains ``init_run.py``
+    and the bundled ``skills/``), and a bare skills/ root (the wheel's
+    ``wiki_scripts/skills`` — its parent holds the scripts)."""
 
     skills_root = pipeline_root if pipeline_root.name == "skills" else pipeline_root / "skills"
-    scripts_root = (
-        pipeline_root / "scripts"
-        if (pipeline_root / "scripts" / "init_run.py").is_file()
-        else pipeline_root.parent / "scripts"
-    )
+    if (pipeline_root / "scripts" / "init_run.py").is_file():
+        scripts_root = pipeline_root / "scripts"
+    elif (pipeline_root / "init_run.py").is_file():
+        scripts_root = pipeline_root  # installed: the wiki_scripts dir itself
+    elif pipeline_root.name == "skills" and (pipeline_root.parent / "init_run.py").is_file():
+        scripts_root = pipeline_root.parent  # installed: wiki_scripts/skills shape
+    else:
+        scripts_root = pipeline_root.parent / "scripts"
     return skills_root, scripts_root
 
 
@@ -155,7 +165,6 @@ DRIVER_STAGE_RE = re.compile(r"^\[DRIVER-STAGE:([a-z_-]+)\]\s*(.*)$")
 DRIVER_STAGE_TO_WORKFLOW = {
     "plan": "plan",
     "retrieval-arxiv": "retrieval",
-    "registry": "retrieval",
     "screening": "mining",
     "coverage": "mining",
     "extraction": "mining",
@@ -163,9 +172,35 @@ DRIVER_STAGE_TO_WORKFLOW = {
     "summary": "mining",
 }
 
+# [DRIVER-PHASE:<name>] marks the START of a driver block (plan/retrieval/
+# mining); completion keeps using [DRIVER-STAGE:*]. Without start markers,
+# free-form lines logged before the first completion line all land on the
+# default stage and the timeline shows 全文挖掘 from the first second.
+DRIVER_PHASE_RE = re.compile(r"^\[DRIVER-PHASE:([a-z_-]+)\]\s*(.*)$")
+DRIVER_PHASE_TO_WORKFLOW = {
+    "plan": "plan",
+    "retrieval": "retrieval",
+    "mining": "mining",
+}
+
+# [DRIVER-PROGRESS:<name>:<done>/<total>] — per-item progress (extraction
+# queue, reading packets, deep read). Rendered as an in-place progress bar in
+# the dialog; per-paper detail lines are deliberately NOT forwarded so the
+# dialog stays readable.
+DRIVER_PROGRESS_RE = re.compile(r"^\[DRIVER-PROGRESS:([a-z_-]+):(\d+)/(\d+)\]\s*(.*)$")
+
 # Nested-claude guard variables: the wiki server may itself run inside a Claude
 # Code session, and these would make the spawned claude refuse or misbehave.
-_STRIPRED_ENV_KEYS = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_SSE_PORT")
+# CLAUDE_CODE_SUBAGENT_MODEL is stripped for the same reason as
+# lib.agent_invoke.SPAWN_ENV_MODEL_KEYS: shell profiles export it globally, and
+# on CLI < 2.1.251 it outranks per-call model choices — dropping it lets chat/
+# workflow subagents inherit the session's --model instead.
+_STRIPRED_ENV_KEYS = (
+    "CLAUDECODE",
+    "CLAUDE_CODE_ENTRYPOINT",
+    "CLAUDE_CODE_SSE_PORT",
+    "CLAUDE_CODE_SUBAGENT_MODEL",
+)
 
 
 class ChatConfig:
@@ -410,6 +445,12 @@ class ChatTurn:
         env = dict(os.environ)
         for key in _STRIPRED_ENV_KEYS:
             env.pop(key, None)
+        # Isolate the spawned chat from the launcher session's memory and
+        # settings (same guarantee as lib.agent_invoke.isolated_claude_env;
+        # kept inline because wiki_chat is import-only and must not drag the
+        # lib package into every importer).
+        config_dir = prepare_claude_config_dir()
+        env["CLAUDE_CONFIG_DIR"] = str(config_dir)
         try:
             self._process = subprocess.Popen(
                 command,
@@ -661,6 +702,29 @@ def extract_driver_stage(line: str) -> tuple[str, str] | None:
     return DRIVER_STAGE_TO_WORKFLOW.get(match.group(1), "mining"), match.group(2).strip()
 
 
+def extract_driver_phase(line: str) -> tuple[str, str] | None:
+    """Map one ``[DRIVER-PHASE:<name>]`` start-of-block line to a workflow
+    stage plus its start detail, or None."""
+
+    match = DRIVER_PHASE_RE.match(line.strip())
+    if not match:
+        return None
+    stage = DRIVER_PHASE_TO_WORKFLOW.get(match.group(1))
+    if stage is None:
+        return None
+    return stage, match.group(2).strip()
+
+
+def extract_driver_progress(line: str) -> tuple[str, int, int, str] | None:
+    """Parse one ``[DRIVER-PROGRESS:<name>:<done>/<total>]`` line into
+    (name, done, total, detail), or None."""
+
+    match = DRIVER_PROGRESS_RE.match(line.strip())
+    if not match:
+        return None
+    return match.group(1), int(match.group(2)), int(match.group(3)), match.group(4).strip()
+
+
 def extract_driver_detail(line: str) -> str | None:
     """Free-form progress lines from the pipeline driver (per-paper reads,
     assembly results, retrieval-plan notes). Anything printed as ``[PAPER] …``,
@@ -668,7 +732,7 @@ def extract_driver_detail(line: str) -> str | None:
     lines are ignored."""
 
     stripped = line.strip()
-    for prefix in ("[PAPER]", "[DRIVER]"):
+    for prefix in ("[PAPER]", "[DRIVER]", "[DRIVER-WARN]"):
         if stripped.startswith(prefix):
             detail = stripped[len(prefix):].strip()
             return detail or None
@@ -699,15 +763,27 @@ STYLE_VOICE_CONTRACTS = {
         "硬性禁令：标题必须是研究对象的中性陈述，不得用悬念/转折式标题；"
         "开头不得出现加粗的'不是A，而是B'式口号段；"
         "正文不得使用知乎解释稿的演化弧叙事口吻。混入即返工。"
+        "\n图表（必须遵守）：writing-brief「可用图表」段有图就落图，≤4 图 + 1 表，"
+        "插在所支撑段落后，格式 `![题注](url)` + `> 用法：…`；图源只能是 evidence 携带的图，禁止自造 URL。"
+        "\n引文格式（Wiki 渲染依赖，必须遵守）：正文引用用上标编号，每条引用单独一个标记、带方括号——"
+        "单条 ^[1]^；多条时逐条并列写成 ^[1]^ ^[2]^ ^[3]^，严禁把多个编号塞进同一个标记（^[1,2,3]^ 是格式错误）。"
+        "文末「## References」编号列表：编号对应正文上标，每条列出论文名称（英文原题）、"
+        "作者（第一作者 et al.）、年份，并附 arXiv 链接（[arXiv:2602.11323](https://arxiv.org/abs/2602.11323) 形式）。"
+        "除 References 外，正文叙述中不要出现 arxiv.org 链接或 [arXiv:xxxx.xxxxx] 式前缀。"
+        "门禁会机械检查：正文出现内联 arXiv 链接、上标少于 5 个、或出现 ^[1,2]^ 分组标记都会被拒。"
     ),
     "expert-explainer": (
         "风格契约（expert-explainer）：动笔前先读"
         " <skills-root>/embodied-ai-review-writer/references/zhihu-explainer.md 并执行其契约："
         "question-led 标题、TL;DR、机制先行、延伸阅读带编辑注。"
+        "writing-brief「可用图表」段有图就落图（≤2 图），机制图优先，"
+        "格式 `![题注](url)` + `> 用法：…`；图源只能是 evidence 携带的图，禁止自造 URL。"
     ),
     "kol-thread": (
         "风格契约（kol-thread）：动笔前先读"
         " <skills-root>/embodied-ai-review-writer/references/xiaohongshu-post.md 并执行其契约。"
+        "writing-brief「可用图表」段有图就落 1 张最强洞察图，"
+        "格式 `![题注](url)` + `> 用法：…`；图源只能是 evidence 携带的图，禁止自造 URL。"
     ),
 }
 
@@ -761,7 +837,9 @@ def build_workflow_prompt(
         "然后从 build_review_packet.py（[STAGE:packet]）开始一气呵成执行到 settle："
         "亲自阅读证据事件与综述包后直接撰写成稿、过审计门、落盘 evidence/、翻 settled、"
         "登记 knowledge/literature-review-catalog.md 并用 build_research_wiki.py 重建 wiki 快照"
-        "（[STAGE:settle]）。唯一允许提前停止的条件：检索失败或文献不足"
+        "（[STAGE:settle]）。成稿落图：writing-brief「可用图表」段按各风格配额插图"
+        "（URL/题注照抄 evidence 携带的图，插在所支撑段落后），appendix 全量保留图表。"
+        "唯一允许提前停止的条件：检索失败或文献不足"
         "（覆盖/饱和未过、验收证据不足以成稿），"
         "此时停下如实说明并把 run 留在 in-progress；"
         "若 pipeline-summary 显示深读有失败篇目，如实向用户说明影响。",

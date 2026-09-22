@@ -28,6 +28,15 @@
   ];
   const CHAT_WIDTH_KEY = "wiki.chat.width";
   const CHAT_WIDTH_MIN = 340;
+  // Tool calls worth a permanent dialog line in the workflow pane (everything
+  // else only ticks the transient status spinner).
+  const WORKFLOW_LOG_TOOLS = new Set(["Bash", "Write", "Edit", "MultiEdit", "NotebookEdit", "Task"]);
+  // Per-item progress bar labels, keyed by the driver's [DRIVER-PROGRESS:name].
+  const WORKFLOW_PROGRESS_LABELS = {
+    extract: "全文抽取",
+    packets: "阅读包",
+    "deep-read": "论文深读",
+  };
   const CHAT_WIDTH_MAX = 760;
   const CHAT_DEFAULT_WIDTH = 420;
   const state = {
@@ -110,6 +119,8 @@
     readingLength: el("reading-length"),
     articleBody: el("article-body"),
     evidenceButton: el("evidence-button"),
+    exportButton: el("export-button"),
+    exportDropdown: el("export-dropdown"),
     evidenceDrawer: el("evidence-drawer"),
     evidenceTitle: el("evidence-title"),
     evidenceSource: el("evidence-source"),
@@ -139,6 +150,7 @@
     chatTitle: el("chat-title"),
     chatSessionMeta: el("chat-session-meta"),
     chatMessages: el("chat-messages"),
+  chatProgress: el("chat-progress"),
     chatStatus: el("chat-status"),
     chatForm: el("chat-form"),
     chatInput: el("chat-input"),
@@ -242,7 +254,12 @@
       }
       throw error;
     }
-    if (!Array.isArray(manifest.topics) || !manifest.topics.length) throw new Error("成果索引为空");
+    // A manifest with zero topics is still the first-run empty library, not a
+    // failure — route it to the empty-library state so the welcome view (and
+    // with it the workflow entry) stays reachable.
+    if (!Array.isArray(manifest.topics) || !manifest.topics.length) {
+      throw new MissingSnapshotError("完成第一次文献综述并刷新后，这里会出现话题列表。");
+    }
     state.manifest = manifest;
     nodes.topicCount.textContent = manifest.topics.length;
     nodes.snapshotTime.textContent = formatSnapshot(manifest.generated_at);
@@ -349,6 +366,7 @@
   function renderArticle() {
     const topic = state.topic;
     const version = topic.versions[state.version];
+    closeExportMenu();
     nodes.welcome.hidden = true;
     nodes.error.hidden = true;
     nodes.article.hidden = false;
@@ -411,6 +429,7 @@
 
   function showWelcome() {
     state.topic = null;
+    closeExportMenu();
     nodes.article.hidden = true;
     nodes.error.hidden = true;
     nodes.welcome.hidden = false;
@@ -1756,10 +1775,32 @@
     return WORKFLOW_STAGES.findIndex(([name]) => name === stage);
   }
 
+  function renderChatProgress(evt) {
+    // One fixed bar (sits above the composer, like the status line) for all
+    // per-item stages (extraction / packets / deep read): ticks update it in
+    // place instead of spamming a dialog line per paper. Hidden until a
+    // progress event arrives; the series' stage-completion line doubles as
+    // the final stats message in the dialog.
+    const label = WORKFLOW_PROGRESS_LABELS[evt.name]
+      || WORKFLOW_STAGES.find(([name]) => name === evt.stage)?.[1]
+      || evt.stage;
+    nodes.chatProgress.hidden = false;
+    nodes.chatProgress.querySelector(".chat-progress-label").textContent = label;
+    const pct = evt.total > 0 ? Math.min(100, Math.round((evt.done * 100) / evt.total)) : 0;
+    nodes.chatProgress.querySelector(".chat-progress-fill").style.width = `${pct}%`;
+    nodes.chatProgress.querySelector(".chat-progress-count").textContent = `${evt.done}/${evt.total}`;
+    nodes.chatProgress.title = evt.detail || "";
+  }
+
+  function hideChatProgress() {
+    nodes.chatProgress.hidden = true;
+  }
+
   function renderTimeline() {
     let timeline = nodes.chatMessages.querySelector(".chat-timeline");
     if (!workflowMode()) {
       timeline?.remove();
+      hideChatProgress();
       return;
     }
     const activeIndex = state.chat.stage === null ? -1 : stageIndex(state.chat.stage);
@@ -1810,19 +1851,49 @@
       state.chat.stage = evt.stage;
       state.chat.awaitingInput = false;
       renderTimeline();
-      if (evt.detail) setChatStatus(`${evt.detail}…`);
+      // A stage transition closes the current per-item bar; its completion
+      // detail (counts, pass/fail stats) is the series' summary message.
+      hideChatProgress();
+      const text = (evt.detail || "").replace(/^ok /, "");
+      if (text) {
+        // Every key workflow node lands in the dialog as a permanent line —
+        // the timeline pills alone leave the user staring at a silent pane
+        // during long driver stages.
+        const label = WORKFLOW_STAGES.find(([name]) => name === evt.stage)?.[1] || evt.stage;
+        appendChatSystemNote(`〔${label}〕${text}`);
+      }
+      setChatStatus(text ? `${text}…` : undefined);
+      return;
+    }
+    if (evt.type === "progress") {
+      if (evt.stage) state.chat.stage = evt.stage;
+      renderTimeline();
+      renderChatProgress(evt);
+      return;
+    }
+    if (evt.type === "status" && evt.stage === "tool") {
+      // Writer-agent activity: Bash/Write/Edit/Task are the visible steps
+      // (packet build, audits, file writes); Read/Grep noise stays in the
+      // status spinner only.
+      if (WORKFLOW_LOG_TOOLS.has(evt.tool)) {
+        appendChatSystemNote(`↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`);
+      }
+      handleChatEvent(evt, renderer);
       return;
     }
     if (evt.type === "awaiting_input") {
       state.chat.awaitingInput = true;
       state.chat.stage = evt.stage || state.chat.stage;
       renderTimeline();
-      appendChatSystemNote("大纲已生成。回复「继续」或提出修改意见后，将撰写三种成稿并落盘。");
+      // No outline checkpoint: reaching here means manual stop or exhausted
+      // auto-continuation rounds — recovery, not a routine pause for input.
+      appendChatSystemNote(evt.detail || "工作流已暂停。回复「继续」从中断处继续。");
       return;
     }
     if (evt.type === "topic_ready") {
       state.chat.awaitingInput = false;
       state.chat.stage = "settle";
+      hideChatProgress();
       renderTimeline();
       const title = evt.title || evt.topic_id;
       const note = document.createElement("p");
@@ -1834,8 +1905,13 @@
     }
     if (evt.type === "topic_error") {
       state.chat.awaitingInput = false;
+      hideChatProgress();
       appendChatError(evt.message || "综述落盘后未能定位新话题。");
       return;
+    }
+    if (evt.type === "done") {
+      // No further stage line came to close the bar (e.g. an aborted series).
+      hideChatProgress();
     }
     handleChatEvent(evt, renderer);
   }
@@ -1913,6 +1989,7 @@
     state.chat.awaitingInput = false;
     state.chat.pane = "topic";
     nodes.chatMessages.innerHTML = "";
+    hideChatProgress();
     resetChatView();
     syncChatPane();
     if (state.topic) {
@@ -2241,6 +2318,99 @@
     else streamChat(composed, value, quotes);
   }
 
+  function exportFilename(topic, version, extension) {
+    const base = `${topic.title}-${version.label}`
+      .replace(/[\\/:*?"<>|#\s]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80);
+    return `${base || "topic-card"}.${extension}`;
+  }
+
+  function buildExportHtml(topic, version) {
+    const meta = `${topic.field} · ${version.label} · ${formatDate(topic.date)}`;
+    return [
+      "<!doctype html>",
+      '<html lang="zh-CN">',
+      "<head>",
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      `<title>${escapeHtml(version.article_title)}｜空间智能研究 Wiki</title>`,
+      "<style>",
+      "body { margin: 0; background: #f5f4f0; color: #252a27; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif; line-height: 1.75; }",
+      ".export-sheet { max-width: 760px; margin: 0 auto; padding: 48px 24px 64px; }",
+      ".export-meta { margin: 0 0 6px; color: #929893; font-size: 12px; letter-spacing: 0.04em; }",
+      ".export-source { margin-top: 48px; padding-top: 16px; border-top: 1px solid #dcdeda; color: #929893; font-size: 12px; }",
+      ".export-sheet h1 { font-size: 30px; line-height: 1.3; margin: 18px 0 20px; }",
+      ".export-sheet h2 { font-size: 22px; margin: 36px 0 12px; }",
+      ".export-sheet h3 { font-size: 18px; margin: 28px 0 10px; }",
+      ".export-sheet p { margin: 12px 0; }",
+      ".export-sheet a { color: #244b40; }",
+      ".export-sheet blockquote { margin: 16px 0; padding: 4px 18px; border-left: 3px solid #b8c9c1; color: #68706b; }",
+      ".export-sheet img { max-width: 100%; }",
+      ".export-sheet pre { overflow-x: auto; padding: 14px; background: #fafaf8; border: 1px solid #dcdeda; border-radius: 10px; font-size: 13px; }",
+      ".export-sheet code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }",
+      ".export-sheet table { width: 100%; border-collapse: collapse; font-size: 14px; }",
+      ".export-sheet th, .export-sheet td { padding: 8px 10px; border: 1px solid #dcdeda; text-align: left; vertical-align: top; }",
+      ".export-sheet thead th { background: #e9ebe7; }",
+      ".export-sheet sup a { text-decoration: none; font-weight: 700; }",
+      "</style>",
+      "</head>",
+      "<body>",
+      '<main class="export-sheet">',
+      `<p class="export-meta">${escapeHtml(meta)}</p>`,
+      version.html,
+      '<p class="export-source">导出自 空间智能研究 Wiki · 证据与版本说明见研究成果目录。</p>',
+      "</main>",
+      "</body>",
+      "</html>",
+    ].join("\n");
+  }
+
+  function exportTopicVersion(format) {
+    closeExportMenu();
+    const topic = state.topic;
+    if (!topic || nodes.article.hidden) {
+      showToast("先打开一个主题卡，再导出当前风格。");
+      return;
+    }
+    const version = topic.versions[state.version];
+    if (!version) return;
+    if (format === "md") {
+      if (!version.markdown) {
+        showToast("当前快照未包含 Markdown 源，请重建或刷新 Wiki 快照后重试。");
+        return;
+      }
+      downloadExport(exportFilename(topic, version, "md"), "text/markdown;charset=utf-8", version.markdown);
+      showToast(`已导出 Markdown：${version.label}`);
+      return;
+    }
+    downloadExport(exportFilename(topic, version, "html"), "text/html;charset=utf-8", buildExportHtml(topic, version));
+    showToast(`已导出 HTML：${version.label}`);
+  }
+
+  function downloadExport(filename, mime, content) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  // Optional UI: an older cached index.html may not carry the export menu.
+  // Guard every touchpoint so a stale HTML/JS mix degrades to "no export
+  // button" instead of aborting init and blanking the page.
+  const hasExportMenu = () => Boolean(nodes.exportButton && nodes.exportDropdown);
+
+  function closeExportMenu() {
+    if (!hasExportMenu()) return;
+    nodes.exportDropdown.hidden = true;
+    nodes.exportButton.setAttribute("aria-expanded", "false");
+  }
+
   function showToast(message) {
     nodes.toast.textContent = message;
     nodes.toast.classList.add("is-visible");
@@ -2314,6 +2484,25 @@
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     nodes.evidenceButton.addEventListener("click", openEvidence);
+    if (hasExportMenu()) {
+      nodes.exportButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const open = nodes.exportDropdown.hidden;
+        nodes.exportDropdown.hidden = !open;
+        nodes.exportButton.setAttribute("aria-expanded", String(open));
+      });
+      nodes.exportDropdown.addEventListener("click", (event) => {
+        const item = event.target.closest("[data-export-format]");
+        if (!item) return;
+        exportTopicVersion(item.dataset.exportFormat || "html");
+      });
+      document.addEventListener("click", (event) => {
+        if (!nodes.exportDropdown.hidden && !event.target.closest(".export-menu")) closeExportMenu();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !nodes.exportDropdown.hidden) closeExportMenu();
+      });
+    }
     el("evidence-close").addEventListener("click", closeEvidence);
     nodes.drawerScrim.addEventListener("click", closeEvidence);
     el("search-trigger").addEventListener("click", openSearch);

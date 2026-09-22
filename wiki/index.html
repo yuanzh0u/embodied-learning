@@ -6,10 +6,10 @@
     <meta name="theme-color" content="#f5f4f0">
     <meta name="description" content="从科研备忘录到公众解释，导览和阅读空间智能话题研究成果。">
     <title>空间智能研究 Wiki</title>
-    <link rel="stylesheet" href="assets/wiki.css">
+    <link rel="stylesheet" href="assets/wiki.css?v=20260918a">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
-    <script defer src="assets/wiki.js"></script>
+    <script defer src="assets/wiki.js?v=20260918a"></script>
   </head>
   <body>
     <a class="skip-link" href="#article-body">跳到正文</a>
@@ -99,9 +99,20 @@
                 <button type="button" role="tab" data-version="zhihu">知乎解释版</button>
                 <button type="button" role="tab" data-version="xiaohongshu">小红书版</button>
               </div>
-              <button class="evidence-button" id="evidence-button" type="button">
-                <span aria-hidden="true">▤</span> 查看证据
-              </button>
+              <div class="article-side-actions">
+                <button class="evidence-button" id="evidence-button" type="button">
+                  <span aria-hidden="true">▤</span> 查看证据
+                </button>
+                <div class="export-menu">
+                  <button class="evidence-button" id="export-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="export-dropdown">
+                    <span aria-hidden="true">⇩</span> 导出
+                  </button>
+                  <div class="export-dropdown" id="export-dropdown" role="menu" aria-label="导出格式" hidden>
+                    <button type="button" role="menuitem" data-export-format="html">导出 HTML <span class="export-default-mark">默认</span></button>
+                    <button type="button" role="menuitem" data-export-format="md">导出 Markdown</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </header>
           <header class="reader-view-header" id="reader-view-header" hidden>
@@ -194,6 +205,11 @@
         <button class="chat-send" id="paper-id-load" type="submit">载入论文</button>
       </form>
       <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-progress" id="chat-progress" hidden>
+        <span class="chat-progress-label"></span>
+        <span class="chat-progress-track"><span class="chat-progress-fill"></span></span>
+        <span class="chat-progress-count"></span>
+      </div>
       <p class="chat-status" id="chat-status" hidden></p>
       <form class="chat-composer" id="chat-form">
         <textarea id="chat-input" rows="2" placeholder="就本话题提问，或让 Claude 写综述草稿…" autocomplete="off"></textarea>

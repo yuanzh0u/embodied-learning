@@ -7,6 +7,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -78,6 +79,16 @@ class PrepareGateInputsTest(unittest.TestCase):
             self.assertEqual(len(merged), 3)
             self.assertTrue((run_dir / "evidence.jsonl").is_file())
 
+    def test_flat_run_merges_canonical_root_file(self) -> None:
+        """Runs with no evidence/ subdir keep canonical evidence.jsonl at the
+        run root; the gates' merged path must still be produced — regression
+        for the 'evidence file missing: .../evidence-all.jsonl' report."""
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "evidence.jsonl").write_text('{"e": 1}\n{"e": 2}\n', encoding="utf-8")
+            launcher.prepare_gate_inputs(run_dir)
+            self.assertEqual((run_dir / "evidence-all.jsonl").read_text(), '{"e": 1}\n{"e": 2}\n')
+
 
 class CollectGateProblemsTest(unittest.TestCase):
     def test_reports_missing_draft(self) -> None:
@@ -127,3 +138,33 @@ def argparse_namespace(**kwargs):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ResolveWriterModelTest(unittest.TestCase):
+    def test_subagent_env_var_is_ignored(self) -> None:
+        """CLAUDE_CODE_SUBAGENT_MODEL is shell-profile pollution (e.g. the
+        "-cc" SKU), never an intent signal for the writer; honoring it made
+        the pinned fast model unreachable. Subagent consistency is enforced
+        at spawn time instead (isolated_claude_env strips the var)."""
+        args = argparse_namespace(writer_model=None)
+        with mock.patch.dict(
+            "os.environ", {"CLAUDE_CODE_SUBAGENT_MODEL": "glm-5.3-flash-cc"}, clear=False
+        ):
+            self.assertEqual(launcher.resolve_writer_model(args), launcher.DRIVER_AGENT_MODEL)
+
+    def test_anthropic_model_beats_driver_default(self) -> None:
+        args = argparse_namespace(writer_model=None)
+        with mock.patch.dict("os.environ", {"ANTHROPIC_MODEL": "glm-5.3-flash"}, clear=False):
+            self.assertEqual(launcher.resolve_writer_model(args), "glm-5.3-flash")
+
+    def test_flag_beats_env(self) -> None:
+        args = argparse_namespace(writer_model="glm-5.3-flash")
+        env = {"ANTHROPIC_MODEL": "should-lose", "CLAUDE_CODE_SUBAGENT_MODEL": "also-lose"}
+        with mock.patch.dict("os.environ", env, clear=False):
+            self.assertEqual(launcher.resolve_writer_model(args), "glm-5.3-flash")
+
+    def test_falls_back_to_driver_model(self) -> None:
+        args = argparse_namespace(writer_model=None)
+        env = {"ANTHROPIC_MODEL": "", "CLAUDE_CODE_SUBAGENT_MODEL": ""}
+        with mock.patch.dict("os.environ", env, clear=False):
+            self.assertEqual(launcher.resolve_writer_model(args), launcher.DRIVER_AGENT_MODEL)

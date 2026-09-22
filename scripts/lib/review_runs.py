@@ -61,7 +61,9 @@ def catalog_run_paths(root: Path, catalog_path: Path | None = None) -> list[Path
 
     relative_links = CATALOG_RUN_LINK.findall(catalog.read_text(encoding="utf-8"))
     if not relative_links:
-        raise ValueError(f"no run manifests routed by {catalog.relative_to(root)}")
+        # An empty catalog is a valid first-run shape: it routes zero runs and
+        # the wiki publishes an empty index instead of failing.
+        return []
 
     evidence_root = (root / "evidence").resolve()
     paths: set[Path] = set()

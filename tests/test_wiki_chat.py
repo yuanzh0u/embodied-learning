@@ -470,6 +470,43 @@ class WorkflowDriverContractTest(unittest.TestCase):
         self.assertIsNone(wiki_chat.extract_driver_stage("[STAGE:plan] claude line"))
         self.assertIsNone(wiki_chat.extract_driver_stage("plain text"))
 
+    def test_extract_driver_detail_forwards_warnings(self):
+        self.assertEqual(wiki_chat.extract_driver_detail("[DRIVER] 检索计划完成"), "检索计划完成")
+        self.assertEqual(
+            wiki_chat.extract_driver_detail("[DRIVER-WARN] arXiv 返回 0 结果"),
+            "arXiv 返回 0 结果",
+        )
+        self.assertEqual(wiki_chat.extract_driver_detail("[PAPER] 2402.10329 审计通过"), "2402.10329 审计通过")
+        self.assertIsNone(wiki_chat.extract_driver_detail("plain stdout line"))
+
+    def test_extract_driver_phase_opens_blocks(self):
+        self.assertEqual(
+            wiki_chat.extract_driver_phase("[DRIVER-PHASE:plan] 查询规划与检索词生成"),
+            ("plan", "查询规划与检索词生成"),
+        )
+        self.assertEqual(
+            wiki_chat.extract_driver_phase("[DRIVER-PHASE:mining] 候选注册、筛选与全文挖掘"),
+            ("mining", "候选注册、筛选与全文挖掘"),
+        )
+        self.assertIsNone(wiki_chat.extract_driver_phase("[DRIVER-PHASE:unknown] x"))
+        self.assertIsNone(wiki_chat.extract_driver_phase("[DRIVER-STAGE:plan] ok"))
+
+    def test_extract_driver_progress_parses_counts(self):
+        self.assertEqual(
+            wiki_chat.extract_driver_progress("[DRIVER-PROGRESS:deep-read:12/48]"),
+            ("deep-read", 12, 48, ""),
+        )
+        self.assertEqual(
+            wiki_chat.extract_driver_progress("[DRIVER-PROGRESS:extract:3/48] 2402.10329 全文不满足证据条件（HELD）"),
+            ("extract", 3, 48, "2402.10329 全文不满足证据条件（HELD）"),
+        )
+        self.assertIsNone(wiki_chat.extract_driver_progress("[DRIVER] not progress"))
+
+    def test_registry_stage_maps_to_mining(self):
+        # the mining phase opens before the registry stage completes; the
+        # completion line must not flip the pill back to retrieval
+        self.assertEqual(wiki_chat.extract_driver_stage("[DRIVER-STAGE:registry] ok ran")[0], "mining")
+
 
 class SystemPromptOverrideTest(unittest.TestCase):
 
