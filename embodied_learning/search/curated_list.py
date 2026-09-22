@@ -258,7 +258,9 @@ def resolve_via_snapshot(
     """
     import sqlite3
 
-    connection = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    from embodied_learning.search.arxiv_snapshot_db import connect_readonly
+
+    connection = connect_readonly(db_path)
     try:
         resolved: list[dict[str, Any]] = []
         still: list[dict[str, Any]] = []

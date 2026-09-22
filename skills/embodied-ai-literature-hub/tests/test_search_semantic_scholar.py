@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 import email.message
-import importlib.util
+import importlib
 import json
+import sys
 import tempfile
 import unittest
 import urllib.error
 from pathlib import Path
+from contextlib import nullcontext
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "search" / "semantic_scholar.py"
-SPEC = importlib.util.spec_from_file_location("search_semantic_scholar", SCRIPT_PATH)
-s2 = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(s2)
+# Package import: search/semantic_scholar.py does `from .. import ratelimit`,
+# which needs package context (a bare spec_from_file_location load breaks).
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+s2 = importlib.import_module("embodied_learning.search.semantic_scholar")
 
 
 class DummyResponse:
@@ -105,6 +108,15 @@ class ParsePaperTest(unittest.TestCase):
 
 
 class FetchRetryTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # These tests exercise the module's own retry/backoff (with time.sleep
+        # mocked). Bypass the machine-wide rate-limit gate — its behavior is
+        # covered separately in tests/test_ratelimit.py — otherwise the gate's
+        # real sleeps pollute the sleep-call assertions.
+        patcher = mock.patch.object(s2.ratelimit, "gate", lambda *a, **k: nullcontext())
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_fetch_retries_429_with_retry_after(self) -> None:
         error = http_error(429, retry_after="7")
         search = base_search()

@@ -39,6 +39,7 @@ from typing import Any
 # The S3 downloader's top-level imports are stdlib-only (boto3 stays lazy inside it),
 # so a module-level import is safe and mock-patchable.
 from embodied_learning.fetch import s3_source as download_arxiv_source
+from embodied_learning import ratelimit
 
 DEFAULT_SOURCE_CACHE_DIR = "/tmp/embodied-ai-literature-hub/src"
 DEFAULT_TO = "markdown+tex_math_dollars"  # plain $...$ math; gfm would render $`...`$ backtick math
@@ -376,15 +377,20 @@ def fetch_arxiv2md(paper_id: str, curl_timeout: float) -> tuple[str, str]:
 
 
 def _curl_get(url: str, curl_timeout: float) -> tuple[str, str]:
-    completed = subprocess.run(
-        ["curl", "-sS", "--max-time", str(max(1.0, curl_timeout)), "-w", "\n%{http_code}", url],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    # arxiv2md rate-limits per IP (30 req/min); the gate serializes curl calls
+    # machine-wide and shares a cooldown when the API answers 429.
+    with ratelimit.gate("arxiv2md"):
+        completed = subprocess.run(
+            ["curl", "-sS", "--max-time", str(max(1.0, curl_timeout)), "-w", "\n%{http_code}", url],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
     body, _, code = completed.stdout.rpartition("\n")
     if completed.returncode != 0:
         raise RuntimeError(f"curl failed (rc={completed.returncode}): {completed.stderr.strip()[:300]}")
+    if code.strip() == "429":
+        ratelimit.report_rejection("arxiv2md")
     return body.strip(), code.strip()
 
 

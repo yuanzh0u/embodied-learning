@@ -20,6 +20,8 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import urljoin
 
+from embodied_learning import ratelimit
+
 FETCH_TIMEOUT_S = 45.0
 MAX_HTML_BYTES = 12_000_000  # sanity cap — LaTeXML pages are ≤ ~3 MB today
 
@@ -96,7 +98,7 @@ def fetch_paper(paper_id: str, cache_dir: Path, *, timeout: float = FETCH_TIMEOU
         url = url_template.format(paper_id=paper_id)
         try:
             request = urllib.request.Request(url, headers={"User-Agent": _HARVEST_TEMPLATE})
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            with ratelimit.gated_urlopen(request, group="arxiv", timeout=timeout) as response:
                 status = getattr(response, "status", 200)
                 final_url = response.geturl() or url
                 if status >= 400:

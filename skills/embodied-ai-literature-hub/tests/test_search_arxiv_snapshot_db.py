@@ -129,6 +129,19 @@ class MatchExprTest(unittest.TestCase):
         self.assertTrue(lo.startswith("2020-01-01"))
         self.assertTrue(hi.startswith("2023-12-31"))
 
+    def test_and_keeps_both_fts_conjuncts(self) -> None:
+        # Regression: `left_sql or right_sql` silently dropped the second
+        # conjunct, so `A AND B AND submittedDate:[...]` searched only A.
+        node = db_mod.parse_query(
+            'all:"object pose" AND all:"CAD model" AND submittedDate:[202001010000 TO 202312312359]'
+        )
+        sql, lo, hi = db_mod._split_date_range(node)
+        self.assertEqual(
+            sql,
+            f'{ALL_COLUMNS} : "object pose" AND {ALL_COLUMNS} : "cad model"',
+        )
+        self.assertTrue(lo.startswith("2020-01-01"))
+
 
 class SnapshotDbSearchTest(unittest.TestCase):
     @classmethod
@@ -188,6 +201,41 @@ class SnapshotDbSearchTest(unittest.TestCase):
         self.assertIn("2311.18259", by_id)
         self.assertIn("a,b", by_id["2311.18259"]["query_label"])
         self.assertEqual([q["label"] for q in result["queries"]], ["a", "b"])
+
+    def test_two_phase_matches_single_sql_plan(self) -> None:
+        """The two-phase plan (FTS docids + date table + top-row fetch) must
+        return the same ids in the same order as the single-SQL plan."""
+        import sqlite3
+
+        queries = [
+            "all:egocentric",
+            'all:"egocentric driving" AND all:dataset',
+            "all:ego ANDNOT ti:old",
+            "all:expert",
+        ]
+        for query in queries:
+            from embodied_learning.search.arxiv import with_date_filter  # type: ignore[attr-defined]
+            effective = with_date_filter(query, "2016-09-17", "2026-09-17")
+            sql_expr, lo_iso, hi_iso = db_mod._split_date_range(db_mod.parse_query(effective))
+            low = db_mod.dt.datetime.fromisoformat(lo_iso).timestamp()
+            high = db_mod.dt.datetime.fromisoformat(hi_iso).timestamp()
+            connection = sqlite3.connect(self.db)
+            reference = [
+                row[0]
+                for row in connection.execute(
+                    "SELECT p.id FROM papers p JOIN fts f ON f.rowid = p.rowid_alias"
+                    " WHERE fts MATCH ? AND p.v1_date >= ? AND p.v1_date <= ?"
+                    " ORDER BY p.v1_date DESC, p.id",
+                    (sql_expr, int(low), int(high)),
+                ).fetchall()
+            ]
+            connection.close()
+            result = run_query(self.db, query)
+            self.assertEqual(
+                [p["arxiv_id"] for p in result["papers"]],
+                reference,
+                msg=f"plan mismatch for {query!r}",
+            )
 
     def test_rejects_pre_external_content_schema(self) -> None:
         import sqlite3

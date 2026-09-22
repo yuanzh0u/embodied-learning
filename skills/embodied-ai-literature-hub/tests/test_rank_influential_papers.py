@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
-import importlib.util
+import importlib
+import sys
 import unittest
+import os
+import tempfile
+# Keep the machine-wide rate-limit gate off the real shared state: tests
+# here mock urlopen but still pass through the gate, so redirect its state
+# dir before any gated module is exercised.
+os.environ.setdefault("EMBODIED_RATELIMIT_DIR", tempfile.mkdtemp(prefix="ratelimit-test-"))
 from pathlib import Path
 from unittest import mock
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "search" / "influence.py"
-SPEC = importlib.util.spec_from_file_location("rank_influential_papers", SCRIPT_PATH)
-mod = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(mod)
+# Package import: search/influence.py does `from .. import ratelimit`, which
+# needs package context (a bare spec_from_file_location load breaks).
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+mod = importlib.import_module("embodied_learning.search.influence")
 
 
 def ranking(**overrides: object) -> mod.InfluenceRanking:

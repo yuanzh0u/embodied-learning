@@ -26,6 +26,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from embodied_learning import ratelimit
+
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "html")
 SKIP_TAGS = {"script", "style", "noscript", "svg", "math"}
 SECTION_CLASSES = (
@@ -424,7 +426,7 @@ def fetch_html(url: str, target: Path, timeout: float) -> tuple[bool, str]:
         headers={"User-Agent": "embodied-ai-literature-hub/1.0 (local research workflow)"},
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with ratelimit.gated_urlopen(request, group="arxiv", timeout=timeout) as response:
             status = getattr(response, "status", 200)
             if status >= 400:
                 return False, ""
@@ -432,7 +434,7 @@ def fetch_html(url: str, target: Path, timeout: float) -> tuple[bool, str]:
     except urllib.error.HTTPError as exc:
         if exc.code in {404, 410}:
             return False, ""
-        raise
+        raise  # transient codes already extended the machine-wide cooldown in gated_urlopen
     target.write_text(payload, encoding="utf-8")
     return True, payload
 

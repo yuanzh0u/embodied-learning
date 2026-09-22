@@ -51,6 +51,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from embodied_learning import ratelimit
+
 API_BASE = "https://api.semanticscholar.org/graph/v1"
 NEIGHBOR_FIELDS = "title,abstract,year,publicationDate,citationCount,venue,authors,externalIds"
 # Full metadata used by the batch endpoint to enrich pre-discovered arXiv IDs
@@ -743,7 +745,7 @@ def _request(
     for attempt in range(capped_retries + 1):
         attempts = attempt + 1
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            with ratelimit.gated_urlopen(request, group="semanticscholar", timeout=timeout) as response:
                 return response.read()
         except Exception as exc:  # pragma: no cover - network dependent
             last_error = exc

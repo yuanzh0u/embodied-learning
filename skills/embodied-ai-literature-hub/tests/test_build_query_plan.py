@@ -11,6 +11,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import os
+# Keep the machine-wide rate-limit gate off the real shared state: tests
+# here mock urlopen but still pass through the gate, so redirect its state
+# dir before any gated module is exercised.
+os.environ.setdefault("EMBODIED_RATELIMIT_DIR", tempfile.mkdtemp(prefix="ratelimit-test-"))
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -33,12 +38,11 @@ def run_json(*args: str) -> dict:
 
 
 def load_search_module():
-    spec = importlib.util.spec_from_file_location("search_arxiv", SEARCH)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("Unable to load search_arxiv module")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    # Package import: search/arxiv.py does `from .. import ratelimit`, which
+    # needs package context (a bare spec_from_file_location load breaks).
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    return importlib.import_module("embodied_learning.search.arxiv")
 
 
 def load_planner_module():

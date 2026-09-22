@@ -4,15 +4,21 @@ anchor/image neutralization, and the unavailable-page fallback."""
 import importlib.util
 import sys
 import unittest
+import os
+import tempfile
+# Keep the machine-wide rate-limit gate off the real shared state: tests
+# here mock urlopen but still pass through the gate, so redirect its state
+# dir before any gated module is exercised.
+os.environ.setdefault("EMBODIED_RATELIMIT_DIR", tempfile.mkdtemp(prefix="ratelimit-test-"))
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "embodied_learning" / "knowledge" / "arxiv_reader.py"
-SPEC = importlib.util.spec_from_file_location("arxiv_reader_tested", SCRIPT)
-reader = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
+# Import through the package: arxiv_reader does `from .. import ratelimit`,
+# which requires package context (a bare spec_from_file_location load breaks).
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+reader = importlib.import_module("embodied_learning.knowledge.arxiv_reader")
 sys.modules["arxiv_reader_tested"] = reader
-SPEC.loader.exec_module(reader)
 
 
 class ParseArxivIdTest(unittest.TestCase):

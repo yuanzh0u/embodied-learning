@@ -31,13 +31,16 @@ BETWEEN filters and are only supported in conjunctive position (which is how
 
 from __future__ import annotations
 
+import array
 import datetime as dt
 import json
 import re
 import sqlite3
+import threading
 import time
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from embodied_learning.search.arxiv_snapshot import (
     BinaryNode,
@@ -206,7 +209,12 @@ def _split_date_range(node: Any) -> tuple[str, str | None, str | None]:
             raise ValueError("more than one submittedDate range is not supported")
         if node.op == "ANDNOT" and (lo2 or hi2):
             raise ValueError("ANDNOT over a submittedDate range is not supported")
-        sql = f"{left_sql} ANDNOT {right_sql}" if node.op == "ANDNOT" and left_sql and right_sql else left_sql or right_sql
+        if node.op == "ANDNOT":
+            # left must stay even when right is pure date (rare; treat empty
+            # right as no constraint).
+            sql = f"{left_sql} ANDNOT {right_sql}" if left_sql and right_sql else left_sql
+        else:
+            sql = " AND ".join(part for part in (left_sql, right_sql) if part)
         return sql, lo1 or lo2, hi1 or hi2
     if isinstance(node, BinaryNode) and node.op == "OR":
         if any(isinstance(child, DateRangeNode) for child in (node.left, node.right)):
@@ -234,11 +242,65 @@ def _ensure_schema(connection: sqlite3.Connection) -> None:
         )
 
 
+def _has_date_index(connection: sqlite3.Connection) -> bool:
+    """True when the papers_v1_date index exists (needed for the two-phase
+    query plan; dbs built before it fell back to per-row lookups)."""
+    row = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='index' AND name='papers_v1_date'"
+    ).fetchone()
+    return row is not None
+
+
+def connect_readonly(db_path: str) -> sqlite3.Connection:
+    """Open the snapshot db read-only with LAN-friendly pragmas.
+
+    The snapshot db is built once and never written afterwards, so
+    ``immutable=1`` is safe and skips SQLite's file locking entirely — over
+    CIFS/NFS every lock acquisition is a wire round trip. ``cache_size`` keeps
+    the FTS index pages hot across a batch's queries (connections are reused
+    per worker thread), ``temp_store`` keeps sorts off the (possibly remote)
+    filesystem.
+    """
+    uri = "file:" + quote(str(Path(db_path).resolve())) + "?mode=ro&immutable=1"
+    connection = sqlite3.connect(uri, uri=True)
+    connection.execute("PRAGMA temp_store=MEMORY")
+    connection.execute("PRAGMA cache_size=-262144")  # 256 MiB page cache
+    return connection
+
+
+class _DateTable:
+    """rowid -> v1_date lookup, built once per process from the covering
+    ``papers_v1_date`` index (~50 MB sequential read) instead of per-row table
+    lookups (one random 4 KiB read per matched paper — brutal over a network
+    filesystem). ``rowid_alias`` is dense from insertion, so a flat array
+    indexed by rowid works; missing/NULL dates read as 0 (epoch, outside every
+    realistic date window and sorted last, matching SQLite's NULL handling).
+    """
+
+    def __init__(self, connection: sqlite3.Connection) -> None:
+        pairs = connection.execute(
+            "SELECT rowid_alias, v1_date FROM papers INDEXED BY papers_v1_date"
+        ).fetchall()
+        top = max(rowid for rowid, _ in pairs)
+        self.dates = array.array("q", bytes(8 * (top + 1)))
+        for rowid, v1_date in pairs:
+            self.dates[rowid] = v1_date or 0
+
+    def __getitem__(self, rowid: int) -> int:
+        return self.dates[rowid]
+
+
 class SnapshotDbSearch:
     """Same run() contract as :class:`SnapshotArxivSearch`, backed by SQLite.
 
-    Queries execute on a thread pool (one read-only connection per worker);
-    results merge in the main thread in original query order, so output is
+    Read-only connections with ``mode=ro&immutable=1`` (the db is built once,
+    never written) so no locking round trips happen on network filesystems;
+    one connection per worker thread, reused across the batch. FTS matching is
+    two-phase when the covering ``papers_v1_date`` index exists: docids come
+    from the index alone, date filtering/sorting runs against an in-process
+    rowid->v1_date table, and only the top rows are fetched — over CIFS/NFS
+    the naive plan's per-match random row reads dominate wall-clock time.
+    Results merge in the main thread in original query order, so output is
     identical to serial execution.
     """
 
@@ -262,9 +324,23 @@ class SnapshotDbSearch:
         self.sort_by = sort_by
         self.sort_order = sort_order
         self.output = output
+        self._date_table: _DateTable | None = None
+
+    def _date_table_for(self, connection: sqlite3.Connection) -> _DateTable | None:
+        """Lazily build the shared rowid->v1_date table (None when the
+        covering index is missing — callers then use the single-SQL plan)."""
+        if self._date_table is None:
+            try:
+                self._date_table = _DateTable(connection)
+            except sqlite3.OperationalError:
+                return None
+        return self._date_table
 
     def _run_query(
-        self, connection: sqlite3.Connection, item: dict[str, str]
+        self,
+        connection: sqlite3.Connection,
+        item: dict[str, str],
+        date_table: _DateTable | None,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         from embodied_learning.search.arxiv import with_date_filter  # noqa: E402
 
@@ -275,25 +351,55 @@ class SnapshotDbSearch:
         except ValueError as exc:
             meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": str(exc)}
             return meta, []
-        sql = "SELECT p.* FROM papers p"
         params: list[Any] = []
-        if sql_expr:
-            sql += " JOIN fts f ON f.rowid = p.rowid_alias WHERE fts MATCH ?"
-            params.append(sql_expr)
-        else:
-            sql += " WHERE 1=1"
         if lo_iso:
-            sql += " AND p.v1_date >= ? AND p.v1_date <= ?"
             low = dt.datetime.fromisoformat(lo_iso).timestamp()
             high = dt.datetime.fromisoformat(hi_iso).timestamp()
             params += [int(low), int(high)]
-        sql += " ORDER BY p.v1_date DESC, p.id LIMIT ?"
-        params.append(self.max_results)
-        try:
-            rows = connection.execute(sql, params).fetchall()
-        except sqlite3.OperationalError as exc:
-            meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": f"fts match failed: {exc}"}
-            return meta, []
+        else:
+            lo_iso = None
+        rows: list[sqlite3.Row]
+        if sql_expr and date_table is not None and lo_iso:
+            # Two-phase plan (fast over a network filesystem): the FTS scan
+            # itself is index-only, date filtering/sorting happens against the
+            # in-process date table, and only the top rows are fetched from
+            # papers — instead of one random row read per FTS match.
+            hits: list[tuple[int, int]] = []
+            for (docid,) in connection.execute(
+                "SELECT rowid FROM fts WHERE fts MATCH ?", (sql_expr,)
+            ):
+                v1_date = date_table[docid]
+                if params[0] <= v1_date <= params[1]:
+                    hits.append((v1_date, docid))
+            hits.sort(reverse=True)  # newest first; ties resolved after fetch
+            top = [docid for _, docid in hits[: self.max_results + 64]]
+            if not top:
+                meta = {"label": item["label"], "query": item["query"], "result_count": 0}
+                return meta, []
+            rowmarks = ",".join("?" * len(top))
+            rows = connection.execute(
+                f"SELECT p.* FROM papers p WHERE p.rowid_alias IN ({rowmarks})", top
+            ).fetchall()
+            rows.sort(key=lambda row: (-(row["v1_date"] or 0), row["id"]))
+            rows = rows[: self.max_results]
+        else:
+            # Single-SQL plan: date-only queries and dbs without the covering
+            # index (sorted by SQLite; NULL dates last, as with DESC above).
+            sql = "SELECT p.* FROM papers p"
+            if sql_expr:
+                sql += " JOIN fts f ON f.rowid = p.rowid_alias WHERE fts MATCH ?"
+                params = [sql_expr] + params
+            else:
+                sql += " WHERE 1=1"
+            if lo_iso:
+                sql += " AND p.v1_date >= ? AND p.v1_date <= ?"
+            sql += " ORDER BY p.v1_date DESC, p.id LIMIT ?"
+            params.append(self.max_results)
+            try:
+                rows = connection.execute(sql, params).fetchall()
+            except sqlite3.OperationalError as exc:
+                meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": f"fts match failed: {exc}"}
+                return meta, []
         papers = []
         for row in rows:
             record = {
@@ -324,28 +430,53 @@ class SnapshotDbSearch:
     def run(self, queries: list[dict[str, str]], max_workers: int = 8) -> int:
         from concurrent.futures import ThreadPoolExecutor
 
-        probe = sqlite3.connect(self.db_path)
+        probe = connect_readonly(self.db_path)
         try:
             _ensure_schema(probe)
+            has_date_index = _has_date_index(probe)
         finally:
             probe.close()
 
-        def worker(item: dict[str, str]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-            connection = sqlite3.connect(self.db_path)
-            connection.row_factory = sqlite3.Row
+        # Shared rowid->v1_date table, built once per batch from the covering
+        # index (a single sequential read) and reused by every query.
+        self._date_table = None
+        if has_date_index:
+            bootstrap = connect_readonly(self.db_path)
+            bootstrap.row_factory = sqlite3.Row
             try:
-                return self._run_query(connection, item)
+                self._date_table = self._date_table_for(bootstrap)
             finally:
-                connection.close()
+                bootstrap.close()
 
-        # sqlite3 releases the GIL during execution, so threads give real
-        # parallelism for FTS scans; map() keeps original query order.
-        if len(queries) > 1:
-            workers = max(1, min(max_workers, len(queries)))
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                outcomes = list(pool.map(worker, queries))
-        else:
-            outcomes = [worker(item) for item in queries]
+        # One connection per worker thread, lazily created and reused across
+        # the batch so the SQLite page cache (and with it the FTS index pages
+        # read over the network) survives between queries. Pool threads die at
+        # the end of the ``with`` block and their connections are GC-closed.
+        self._local = threading.local()
+
+        def worker(item: dict[str, str]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+            connection = getattr(self._local, "connection", None)
+            if connection is None:
+                connection = connect_readonly(self.db_path)
+                connection.row_factory = sqlite3.Row
+                self._local.connection = connection
+            try:
+                return self._run_query(connection, item, self._date_table)
+            except sqlite3.OperationalError as exc:
+                meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": f"fts match failed: {exc}"}
+                return meta, []
+
+        try:
+            # sqlite3 releases the GIL during execution, so threads give real
+            # parallelism for FTS scans; map() keeps original query order.
+            if len(queries) > 1:
+                workers = max(1, min(max_workers, len(queries)))
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    outcomes = list(pool.map(worker, queries))
+            else:
+                outcomes = [worker(item) for item in queries]
+        finally:
+            self._date_table = None
 
         papers_by_id: dict[str, dict[str, Any]] = {}
         query_results = []

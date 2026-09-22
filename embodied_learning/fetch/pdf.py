@@ -21,6 +21,8 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
+from embodied_learning import ratelimit
+
 
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "pdfs")
 
@@ -62,7 +64,7 @@ def download(url: str, target: Path, timeout: float = 90.0) -> None:
         url,
         headers={"User-Agent": "embodied-ai-literature-hub/1.0 (research workflow)"},
     )
-    with urllib.request.urlopen(request, timeout=max(1.0, timeout)) as response:
+    with ratelimit.gated_urlopen(request, group="arxiv", timeout=max(1.0, timeout)) as response:
         target.write_bytes(response.read())
 
 

@@ -10,6 +10,10 @@ import os
 import sys
 import tempfile
 import unittest
+# Keep the machine-wide rate-limit gate off the real shared state: tests
+# here mock urlopen but still pass through the gate, so redirect its state
+# dir before any gated module is exercised.
+os.environ.setdefault("EMBODIED_RATELIMIT_DIR", tempfile.mkdtemp(prefix="ratelimit-test-"))
 from contextlib import redirect_stdout
 from pathlib import Path
 

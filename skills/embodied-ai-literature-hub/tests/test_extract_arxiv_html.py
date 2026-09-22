@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 
-import importlib.util
+import importlib
+import sys
 import unittest
+import os
+import tempfile
+# Keep the machine-wide rate-limit gate off the real shared state: tests
+# here mock urlopen but still pass through the gate, so redirect its state
+# dir before any gated module is exercised.
+os.environ.setdefault("EMBODIED_RATELIMIT_DIR", tempfile.mkdtemp(prefix="ratelimit-test-"))
 from pathlib import Path
 
+# Package import: fetch/html.py does `from .. import ratelimit`, which needs
+# package context (a bare spec_from_file_location load breaks).
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "embodied_learning" / "fetch" / "html.py"
-SPEC = importlib.util.spec_from_file_location("extract_arxiv_html", SCRIPT)
-extract_arxiv_html = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(extract_arxiv_html)
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+extract_arxiv_html = importlib.import_module("embodied_learning.fetch.html")
 
 
 LATEXML_FIXTURE = """

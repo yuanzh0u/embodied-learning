@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from contextlib import nullcontext
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT_PATH = ROOT / "embodied_learning" / "search" / "citation_expansion.py"
-SPEC = importlib.util.spec_from_file_location("expand_via_citations", SCRIPT_PATH)
-mod = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(mod)
+# Package import: search/citation_expansion.py does `from .. import ratelimit`,
+# which needs package context (a bare spec_from_file_location load breaks).
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+mod = importlib.import_module("embodied_learning.search.citation_expansion")
 
 ENTRY_PATH = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "search.py"
 ENTRY_SPEC = importlib.util.spec_from_file_location("expand_via_citations_entry", ENTRY_PATH)
@@ -67,6 +70,15 @@ def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPEr
 
 
 class FetchRetryTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # These tests exercise the module's own retry/backoff (with time.sleep
+        # mocked). Bypass the machine-wide rate-limit gate — its behavior is
+        # covered separately in tests/test_ratelimit.py — otherwise the gate's
+        # real sleeps pollute the sleep-call assertions.
+        patcher = mock.patch.object(mod.ratelimit, "gate", lambda *a, **k: nullcontext())
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_fetch_cached_hit_skips_network_and_no_cache_bypasses(self) -> None:
         url = mod.build_neighbor_url("2403.12550", "references", 50)
         with tempfile.TemporaryDirectory() as tmp:

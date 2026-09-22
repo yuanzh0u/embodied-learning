@@ -4,18 +4,21 @@ from __future__ import annotations
 
 import argparse
 import email.message
-import importlib.util
+import importlib
+import sys
 import unittest
 import urllib.error
 from pathlib import Path
+from contextlib import nullcontext
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "search" / "arxiv.py"
-SPEC = importlib.util.spec_from_file_location("search_arxiv", SCRIPT_PATH)
-search_arxiv = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(search_arxiv)
+# Package import: search/arxiv.py does `from .. import ratelimit`, which needs
+# package context (a bare spec_from_file_location load breaks).
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+search_arxiv = importlib.import_module("embodied_learning.search.arxiv")
 
 
 class DummyResponse:
@@ -62,6 +65,15 @@ def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPEr
 
 
 class SearchArxivRetryTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # These tests exercise the module's own retry/backoff (with time.sleep
+        # mocked). Bypass the machine-wide rate-limit gate — its behavior is
+        # covered separately in tests/test_ratelimit.py — otherwise the gate's
+        # real sleeps pollute the sleep-call assertions.
+        patcher = mock.patch.object(search_arxiv.ratelimit, "gate", lambda *a, **k: nullcontext())
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_fetch_retries_429_with_retry_after_and_caps_at_three_retries(self) -> None:
         error = http_error(429, retry_after="7")
         with mock.patch.object(search_arxiv.urllib.request, "urlopen", side_effect=[error, error, error, error]) as urlopen:
