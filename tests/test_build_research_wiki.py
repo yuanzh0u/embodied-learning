@@ -77,6 +77,22 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertEqual(validated["site"]["title"], "空间智能研究 Wiki")
         self.assertEqual(set(topic["versions"]), {"keyan", "zhihu", "xiaohongshu"})
         self.assertTrue(topic["evidence"]["available"])
+        for key, version in topic["versions"].items():
+            expected = (self.source / "literature-review-test-topic-20260304" / wiki.VERSION_FILES[key][1]).read_text(encoding="utf-8")
+            self.assertEqual(version["markdown"], expected)
+
+    def test_export_contract_keeps_markdown_source_and_frontend_defaults_to_html(self) -> None:
+        script = (Path(__file__).resolve().parents[1] / "wiki" / "assets" / "wiki.js").read_text(encoding="utf-8")
+        index = (Path(__file__).resolve().parents[1] / "wiki" / "index.html").read_text(encoding="utf-8")
+        styles = (Path(__file__).resolve().parents[1] / "wiki" / "assets" / "wiki.css").read_text(encoding="utf-8")
+
+        self.assertIn('id="export-button"', index)
+        self.assertIn('data-export-format="html"', index)
+        self.assertIn('data-export-format="md"', index)
+        self.assertIn("function exportTopicVersion(", script)
+        self.assertIn('format === "md"', script)
+        self.assertIn('exportTopicVersion(item.dataset.exportFormat || "html")', script)
+        self.assertIn(".export-dropdown", styles)
 
     def test_catalog_source_publishes_only_routed_settled_runs(self) -> None:
         evidence = self.root / "evidence"
@@ -215,6 +231,47 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertEqual(topic["available_versions"], ["keyan"])
         validated = wiki.validate_snapshot(self.output)
         self.assertEqual(validated["topics"], manifest["topics"])
+
+    def test_declared_style_does_not_cap_extra_deliverables(self) -> None:
+        """style declares the required minimum, not a cap: a memo-declared run
+        that also ships the zhihu draft publishes both versions (regression for
+        zhihu disappearing after a memo regeneration round)."""
+        evidence = self.root / "evidence"
+        run = evidence / "literature-review-memo-plus-zhihu-20260910"
+        run.mkdir(parents=True)
+        (run / "run.json").write_text(
+            json.dumps(
+                {
+                    "topic": "双版本话题",
+                    "status": "settled",
+                    "style": "scientific-memo",
+                    "scope_note": "单风格备忘录交付；知乎版为先行产出一并保留",
+                    "files": {"outputs": ["scientific-memo_keyan.md", "zhihu-explainer_zhihu.md"]},
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        (run / "scientific-memo_keyan.md").write_text(
+            "# 双版本\n\n## 结论\n\n备忘录正文，长度足够作为发布内容。\n",
+            encoding="utf-8",
+        )
+        (run / "zhihu-explainer_zhihu.md").write_text(
+            "# 双版本\n\nTL;DR：知乎版正文，长度足够作为发布内容。\n",
+            encoding="utf-8",
+        )
+        (run / "evidence-appendix.md").write_text("# 证据附录\n", encoding="utf-8")
+
+        selected, _stats = wiki.discover_topics(evidence)
+        self.assertEqual(len(selected), 1)
+
+        manifest = wiki.build_snapshot(evidence, self.output)
+        topic = json.loads(
+            (self.output / "topics" / f"{manifest['topics'][0]['id']}.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(topic["available_versions"], ["keyan", "zhihu"])
+        manifest_item = manifest["topics"][0]
+        self.assertEqual(manifest_item["default_version"], "keyan")
 
     def test_markdown_renderer_escapes_html_and_keeps_external_links(self) -> None:
         rendered, toc = wiki.markdown_to_html(
