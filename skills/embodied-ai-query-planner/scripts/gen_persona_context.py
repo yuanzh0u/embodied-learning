@@ -11,6 +11,7 @@ produce byte-identical output.
 from __future__ import annotations
 
 import argparse
+import re
 import json
 from pathlib import Path
 import sys
@@ -176,6 +177,24 @@ def parse_catalog_runs() -> list[dict[str, Any]]:
     return runs
 
 
+def topic_tokens(text: str) -> set[str]:
+    """Extract overlap tokens from a free-form topic string.
+
+    Latin words of length >= 2 are kept lowercased. Continuous CJK runs
+    contribute character bigrams so Chinese queries without spaces still
+    produce useful keyword overlap against catalog run topics.
+    """
+    tokens: set[str] = set()
+    for part in re.findall(r"[A-Za-z0-9]+|[\u4e00-\u9fff]+", text.lower()):
+        if re.fullmatch(r"[a-z0-9]+", part):
+            if len(part) >= 2:
+                tokens.add(part)
+            continue
+        for index in range(len(part) - 1):
+            tokens.add(part[index : index + 2])
+    return tokens
+
+
 def match_runs(
     matched_cards: list[dict[str, Any]],
     requested_ids: list[str],
@@ -188,11 +207,13 @@ def match_runs(
     referenced = requested | card_ids
     card_aliases = [alias for card in matched_cards for alias in card.get("aliases", [])]
 
+    query_tokens = topic_tokens(topic)
     scored: list[tuple[int, str, dict[str, Any]]] = []
     for run in runs:
         overlap = len(referenced & set(run["knowledge_ids"]))
         alias_bonus = 1 if any(alias and alias in run["topic"] for alias in card_aliases) else 0
-        score = overlap * 2 + alias_bonus
+        topic_overlap = len(query_tokens & topic_tokens(run["topic"]))
+        score = overlap * 2 + alias_bonus + topic_overlap
         if score:
             scored.append((score, run["id"], run))
 
