@@ -91,6 +91,25 @@ python3 scripts/serve_research_wiki.py --open
 
 macOS 用户也可以双击根目录的 `打开具身智能研究Wiki.command`。
 
+> **完整历史克隆**：退役原始材料只保留在 git 历史中（`git show <ref>:<file>`）。贡献者若要跑
+> `scripts/check_kb_links.py` / `scripts/validate_current_reviews.py`，需要完整历史，不要用
+> `git clone --depth 1`。若已经是浅克隆，执行 `git fetch --unshallow`（或适当 `git fetch --deepen`）后再验证。
+
+### 本地验证
+
+与 CI（`research-validation.yml`）对齐的一键回归：
+
+```bash
+make test
+```
+
+仅跑知识层 `tests/`，或跑当前 catalog 路由的综述校验：
+
+```bash
+make test-knowledge
+make validate
+```
+
 ### 构建完整发布站点
 
 ```bash
