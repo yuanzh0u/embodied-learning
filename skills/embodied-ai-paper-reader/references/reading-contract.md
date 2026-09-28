@@ -6,7 +6,37 @@ The Hub owns discovery, full-text recovery, extraction method, and extraction qu
 
 Never recreate search, download, PDF parsing, field synthesis, or article writing here.
 
-## Six-pass protocol
+## Preferred mode: one-shot paper-note (token optimization)
+
+For normal `rapid` / `scoping` runs, prefer **one LLM call per paper** that emits a complete `paper-note.json` conforming to [paper-note-schema.md](paper-note-schema.md). The single call must still cover the intellectual work of triage, structure mapping, question-driven reading, evidence cards, critical appraisal, and verification rationale — just without reloading the full text five more times.
+
+Workflow:
+
+1. Build the reading packet (complete extraction remains on disk; use a summary-first packet when available).
+2. **One LLM call** → complete paper-note JSON (including `verification` on every card).
+3. Local gates only:
+   - `validate_paper_note.py`
+   - `audit_claim_support.py`
+4. On failure, **retry only failing cards** with a locator window — never a full re-read:
+
+```bash
+python3 skills/embodied-ai-paper-reader/scripts/extract_failed_card_window.py \
+  --audit work/<run>/paper-notes/<id>.audit.json \
+  --extraction work/<run>/extractions/<id>.json \
+  --paper-note work/<run>/paper-notes/<id>.json \
+  --output work/<run>/paper-notes/<id>.retry-windows.json \
+  --markdown-output work/<run>/paper-notes/<id>.retry-windows.md
+```
+
+5. Patch the failing cards in the note, re-run validate + audit, then project.
+
+Hard quality bars are unchanged: exact locators, quantitative fields, epistemic tags, and manual `verification` rationale remain mandatory. One-shot is a **calling convention**, not a relaxation of claim-support.
+
+For papers with very long extractions (roughly >80k `text_chars`), still do a cheap structure-map pass first (titles/abstract/conclusion windows only), then one-shot the note from those windows plus on-demand locator pulls — do not dump the entire text into a single truncated prompt.
+
+## Optional deep mode: six-pass protocol
+
+Keep the six-pass protocol for **systematic** reviews, high-stakes decisions, or when one-shot notes repeatedly fail claim-support. It is optional deep mode, not the default for scoping.
 
 ### Pass 0: relevance triage
 
@@ -74,4 +104,4 @@ Accepted extraction methods are `html-latexml`, `html-flat`, and `pdf-text`. Rej
 
 ## Token note
 
-Full-text recovery remains mandatory on disk. Summary-first packets optimize **LLM context**, not the evidence eligibility gate: claim-support audits still match against the complete extraction.
+Full-text recovery remains mandatory on disk. Summary-first packets, one-shot notes, and failed-card windows optimize **LLM calls and context**, not the evidence eligibility gate: claim-support audits still match against the complete extraction.

@@ -28,6 +28,28 @@ traceable but must not be reported as newly re-read until they pass this gate.
 Use HTML or text-layer PDF only. Scan-only PDFs are `unavailable`; this project
 does not use OCR/Tesseract.
 
+## Evidence floor vs LLM deep-read budget
+
+These are **two different controls**. Do not collapse them.
+
+| Control | What it means | Default |
+|---|---|---|
+| **Accepted-paper evidence floor** | Minimum accepted papers before formal outputs | `rapid` 8 / `scoping` 15 / `systematic` 30 — **floors, never caps** |
+| **LLM deep-read budget** | Soft maximum of papers that receive deep-read / one-shot note generation | `accepted_floor + 10` (e.g. scoping → 25) |
+
+- Meeting the evidence floor still requires enough *accepted* papers with passing claim-support.
+- The deep-read budget limits **LLM cost**: after the budget, additional recovered papers should stay at **map-read** or **background-only** unless the user raises the budget or the run is explicitly systematic/high-stakes.
+- Background-only / map-read papers may still appear in coverage narratives; they must not be projected as accepted evidence without a verified paper note.
+- Soft enforcement:
+
+```bash
+python3 skills/embodied-ai-literature-review/scripts/check_deep_read_budget.py \
+  --reading-summary work/<run>/reading-summary.json \
+  --review-mode scoping
+```
+
+Use `--strict` only in CI/debug if you want a non-zero exit on overrun. Default is warn-only.
+
 ## Evidence inputs
 
 Accepted inputs, strongest first:
@@ -58,9 +80,10 @@ Prefer `evidence-event` for paper-specific claims and `topic-card-source` for st
 
 Formal style outputs in workflow v2 require the mode floor (`rapid` 8,
 `scoping` 15, `systematic` 30 accepted papers) plus a passed coverage/saturation
-report. These are floors, not caps. Historical migrations without a v2
-manifest retain the five-paper compatibility gate but must not be represented
-as newly completed searches.
+report. These are floors, not caps. They are distinct from the **LLM deep-read
+budget** (`accepted_floor + 10` by default); see above. Historical migrations
+without a v2 manifest retain the five-paper compatibility gate but must not be
+represented as newly completed searches.
 
 When the threshold is met and no style is specified, produce all three final styles. Use a single style only when the user explicitly requests `scientific-memo`, `expert-explainer`, or `kol-thread`. Use `survey` only when the user asks for the intermediate review packet, style menu, source tiers, or audit surface as the final visible artifact.
 

@@ -30,14 +30,45 @@ For a full bundle, read all three style references, but plan and draft each arti
 
 ## Workflow
 
-1. **Interrogate the evidence reservoir.** Extract one central thesis, 3-5 claim clusters, the strongest counterevidence, mandatory caveats, and the evidence boundary. Separate field size, discovered candidates, extracted full text, accepted papers, and papers selected for each article.
-2. **Write a reader contract and independent editorial plan for each style.** Name the intended reader, their live question, the one-sentence takeaway, the decision consequence, one evidence-backed running example, the core terms that need explanation, the representative source subset, excluded details, and the ending. Do not reuse an outline or simply cite every accepted paper.
-3. **Draft complete explanation units.** Move from concrete phenomenon to mechanism, representative evidence, reader consequence, and boundary. Write in natural Chinese. Translate and synthesize English evidence claims; never paste or mechanically translate event claims one by one. Use paper links in body prose where the selected style permits them.
-4. **Project provenance.** Keep reader-facing citations compact and put event-level mapping in `trace-map.json` plus `evidence-appendix.md`. Follow [citation-projection.md](references/citation-projection.md).
-5. **Edit the argument.** Check the thesis, counterevidence, causal order, and overclaiming before polishing individual sentences.
-6. **Run an evidence-locked natural-writing pass.** Freeze every factual claim, paper link, number, date, named entity, quote, uncertainty marker, and boundary condition. Then remove chatbot residue, empty promotion, vague attribution, redundant signposting, synonym cycling, generic conclusions, and monotonous sentence rhythm. Do not add specificity, personal experience, or confidence to make the prose sound more human. Common technical words and punctuation are not faults by themselves; change them only when the surrounding sentence is weak. The selected platform guide outranks generic style heuristics.
-7. **Inspect the publication surface.** Reject unresolved citation anchors, missing subjects, malformed punctuation, internal reasoning labels, unannotated reading lists, and reference dumps. Check whether a non-specialist can restate the thesis without the paper names or acronyms.
-8. **Run deterministic gates.** Build the trace map, then audit the three outputs:
+### Outline-first (token optimization)
+
+Do **not** feed the full brief / appendix into three independent genre drafts. Share a compact outline + projected cards instead.
+
+1. **One outline LLM call.** From the writing brief (stance-capped when the briefing generator provides caps) and evidence reservoir, produce `writing-outline.json`:
+
+```json
+{
+  "thesis": "一句话中心论点",
+  "claim_clusters": ["…", "…"],
+  "counterevidence_notes": ["…"],
+  "mandatory_caveats": ["…"],
+  "event_ids": ["EA-…-0001", "EA-…-0002"]
+}
+```
+
+Select **8–12** `event_id`s that cover support, limit/conditional, and gap as needed. This call establishes the shared argument; it is not a draft of any genre.
+
+2. **Project short evidence cards** for those IDs only (not the full brief thrice):
+
+```bash
+python3 skills/embodied-ai-review-writer/scripts/project_outline_evidence.py \
+  --outline work/<run>/writing-outline.json \
+  --evidence-jsonl work/<run>/evidence.jsonl \
+  --output work/<run>/outline-evidence.json \
+  --markdown-output work/<run>/outline-evidence.md
+```
+
+Each genre draft loads `outline-evidence.md` (or JSON) plus the style reference — not a second full copy of `writing-brief.md` / `evidence-appendix.md`. Keep the brief available for audit, but do not re-ingest it as prompt ballast for every style.
+
+3. **Write a reader contract and independent editorial plan for each style.** Name the intended reader, their live question, the one-sentence takeaway, the decision consequence, one evidence-backed running example, the core terms that need explanation, the representative source subset (subset of the outline `event_ids`), excluded details, and the ending. Do not reuse an outline-as-prose or simply cite every accepted paper. Independence still matters: three editorial plans, one shared evidence projection.
+
+4. **Draft complete explanation units** from the projected cards. Move from concrete phenomenon to mechanism, representative evidence, reader consequence, and boundary. Write in natural Chinese. Translate and synthesize English evidence claims; never paste or mechanically translate event claims one by one. Use paper links in body prose where the selected style permits them.
+
+5. **Project provenance.** Keep reader-facing citations compact and put event-level mapping in `trace-map.json` plus `evidence-appendix.md`. Follow [citation-projection.md](references/citation-projection.md).
+6. **Edit the argument.** Check the thesis, counterevidence, causal order, and overclaiming before polishing individual sentences.
+7. **Run an evidence-locked natural-writing pass.** Freeze every factual claim, paper link, number, date, named entity, quote, uncertainty marker, and boundary condition. Then remove chatbot residue, empty promotion, vague attribution, redundant signposting, synonym cycling, generic conclusions, and monotonous sentence rhythm. Do not add specificity, personal experience, or confidence to make the prose sound more human. Common technical words and punctuation are not faults by themselves; change them only when the surrounding sentence is weak. The selected platform guide outranks generic style heuristics.
+8. **Inspect the publication surface.** Reject unresolved citation anchors, missing subjects, malformed punctuation, internal reasoning labels, unannotated reading lists, and reference dumps. Check whether a non-specialist can restate the thesis without the paper names or acronyms.
+9. **Run deterministic gates.** Build the trace map, then audit the three outputs:
 
 ```bash
 python3 skills/embodied-ai-review-writer/scripts/build_trace_map.py \
@@ -61,7 +92,7 @@ python3 skills/embodied-ai-review-writer/scripts/audit_zhihu_corpus.py \
   --project-root .
 ```
 
-9. **Use the existing evidence gates.** Run `scripts/audit_citations.py` and `scripts/check_run_bundle.py` before settlement. Editorial gates complement evidence gates; neither substitutes for the other.
+10. **Use the existing evidence gates.** Run `scripts/audit_citations.py` and `scripts/check_run_bundle.py` before settlement. Editorial gates complement evidence gates; neither substitutes for the other.
 
 ## Migrating an existing three-style bundle
 
@@ -79,6 +110,7 @@ After migration, read all three articles again. Removing an unreadable citation 
 ## Hard rules
 
 - Treat the brief, claim map, stance buckets, and evidence appendix as inputs, never as article body.
+- Prefer outline-first: one thesis + 8–12 event_ids, then genre drafts from projected short cards — do not paste the full brief into three genre prompts.
 - Give each article one explicit central thesis and an evidence-bounded conclusion.
 - Preserve `conditional`, `limit`, and `gap` evidence as visible boundaries; do not manufacture consensus.
 - Keep event IDs out of body prose. Use arXiv paper links for readers and the trace map for audit.

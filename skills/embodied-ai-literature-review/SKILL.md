@@ -57,6 +57,7 @@ New formal outputs require both the mode's accepted-paper floor (`rapid` 8, `sco
    - Use the Hub's unified `extract_arxiv_content.py`: HTML -> text-layer PDF, with `--ocr-mode never --include-full-text`.
    - Keep scan-only or otherwise unrecoverable papers in the registry as `unavailable` rather than silently dropping them.
    - Pass complete extraction payloads to `$embodied-ai-paper-reader`; ranked passages are navigation hints, not reading evidence.
+   - Prefer one-shot paper notes; keep six-pass as optional deep mode. Respect the **LLM deep-read budget** (`accepted_floor + 10` by default) while still meeting the **evidence floor** — see [review-contract.md](references/review-contract.md). Soft-check with `scripts/check_deep_read_budget.py`.
    - Require a validated paper note and passing claim-support audit before projecting evidence events.
    - Inspect evidence JSONL and briefs from `$embodied-ai-literature-hub`.
    - Inspect `knowledge/sources.md` for stable source IDs.
