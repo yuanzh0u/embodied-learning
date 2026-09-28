@@ -41,6 +41,7 @@ This repository is a research knowledge base. Optimize for context efficiency an
 - Topic cards are compressed working memory for agents.
 - The master index is the topic routing layer; [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) declares current literature-review versions — load topic-filtered rows only, never the whole file by default.
 - Candidates and intermediate artifacts live in `work/` (gitignored scratch); accepted assets live in `evidence/`.
+- Do **not** sink search-round leftovers (`search-round*`, `search-reused*`, `search-results/`) or pre/backup registries (`candidate-registry-pre.json`, `*.pre-round*`, similar `*-fresh` copies) into `evidence/`. Keep them under `work/` (or delete after settlement). Only paths declared in `run.json` → `files` (e.g. `api_search_log`) belong in the evidence bundle. Raw PDFs under `evidence/**/pdfs/` are also not part of the V2 bundle contract.
 
 ## Cross-Project Knowledge
 

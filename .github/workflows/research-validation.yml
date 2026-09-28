@@ -68,8 +68,10 @@ jobs:
           from pathlib import Path
 
           revision_range = sys.argv[1]
+          # Only Added/Modified binaries are blocked; deletions of leftover
+          # binaries (e.g. sunk raw PDFs) are intentional cleanup.
           numstat = subprocess.check_output(
-              ["git", "diff", "--numstat", revision_range], text=True
+              ["git", "diff", "--numstat", "--diff-filter=AM", revision_range], text=True
           )
           allowed_binary_files = {
               "wiki/assets/social-preview.png",
