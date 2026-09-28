@@ -32,6 +32,13 @@ import urllib.parse
 from pathlib import Path
 from typing import Any
 
+from ..atomicio import (
+    atomic_write_bytes,
+    atomic_write_json,
+    atomic_write_text,
+)
+from .. import locks
+
 DEFAULT_POOL_ROOT = "~/Documents/arxiv/pool"
 
 
@@ -96,10 +103,8 @@ def read_index(root: Path) -> dict[str, dict[str, Any]]:
 
 
 def write_index(root: Path, entries: dict[str, dict[str, Any]]) -> None:
-    path = index_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(entries[key], ensure_ascii=False, sort_keys=True) for key in sorted(entries)]
-    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+    atomic_write_text(index_path(root), "\n".join(lines) + ("\n" if lines else ""))
 
 
 class PaperPool:
@@ -138,45 +143,52 @@ class PaperPool:
         markdown = str(extraction.get("text") or "")
         if not markdown.strip():
             raise SystemExit("extraction carries no `text`; rerun with --include-full-text / full-text output")
-        target.mkdir(parents=True, exist_ok=True)
-        (target / "paper.md").write_text(markdown + "\n", encoding="utf-8")
-        (target / "extraction.json").write_text(json.dumps(extraction, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        if note:
-            (target / "note.md").write_text(note, encoding="utf-8")
-        if note_json is not None:
-            (target / "note.json").write_text(
-                json.dumps(note_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-            )
-        if html:
-            html_path = Path(html).expanduser()
-            (target / "paper.html").write_bytes(html_path.read_bytes())
 
-        quality = extraction.get("quality") or {}
-        meta = {
-            **identity,
-            "url": f"https://arxiv.org/abs/{identity['arxiv_id']}" if identity["arxiv_id"] else "",
-            "added_at": stable_now(),
-            "extraction_method": str(extraction.get("extraction_method") or ""),
-            "source_format": str(extraction.get("source_format") or ""),
-            "quality": quality.get("grade") if isinstance(quality, dict) else quality,
-            "text_chars": quality.get("text_chars") if isinstance(quality, dict) else 0,
-            "files": sorted(p.name for p in target.iterdir() if p.is_file()),
-        }
-        (target / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        # Locking: the shared index read-merge-rewrite is the conflict point
+        # (two concurrent adds would lose an entry); the per-paper dir serializes
+        # two runs deep-reading the same paper. Index is the outer lock — the
+        # reverse nesting is forbidden (see locks docs).
+        with locks.kb_lock(root, "pool-index"):
+            with locks.kb_lock(root, f"pool-paper__{identity['dir_name']}"):
+                if target.is_dir() and not force:
+                    print(f"skip {identity['dir_name']}: already in pool (use --force to refresh)")
+                    return 0
+                target.mkdir(parents=True, exist_ok=True)
+                atomic_write_text(target / "paper.md", markdown + "\n")
+                atomic_write_json(target / "extraction.json", extraction)
+                if note:
+                    atomic_write_text(target / "note.md", note)
+                if note_json is not None:
+                    atomic_write_json(target / "note.json", note_json)
+                if html:
+                    atomic_write_bytes(target / "paper.html", Path(html).expanduser().read_bytes())
 
-        entries = read_index(root)
-        entries[identity["dir_name"]] = {
-            "dir_name": meta["dir_name"],
-            "id_type": meta["id_type"],
-            "arxiv_id": meta["arxiv_id"],
-            "doi": meta["doi"],
-            "title": meta["title"],
-            "published": meta["published"],
-            "quality": meta["quality"],
-            "extraction_method": meta["extraction_method"],
-            "added_at": meta["added_at"],
-        }
-        write_index(root, entries)
+            quality = extraction.get("quality") or {}
+            meta = {
+                **identity,
+                "url": f"https://arxiv.org/abs/{identity['arxiv_id']}" if identity["arxiv_id"] else "",
+                "added_at": stable_now(),
+                "extraction_method": str(extraction.get("extraction_method") or ""),
+                "source_format": str(extraction.get("source_format") or ""),
+                "quality": quality.get("grade") if isinstance(quality, dict) else quality,
+                "text_chars": quality.get("text_chars") if isinstance(quality, dict) else 0,
+                "files": sorted(p.name for p in target.iterdir() if p.is_file()),
+            }
+            atomic_write_json(target / "meta.json", meta)
+
+            entries = read_index(root)
+            entries[identity["dir_name"]] = {
+                "dir_name": meta["dir_name"],
+                "id_type": meta["id_type"],
+                "arxiv_id": meta["arxiv_id"],
+                "doi": meta["doi"],
+                "title": meta["title"],
+                "published": meta["published"],
+                "quality": meta["quality"],
+                "extraction_method": meta["extraction_method"],
+                "added_at": meta["added_at"],
+            }
+            write_index(root, entries)
         print(f"added {identity['dir_name']} -> {target}")
         return 0
 
@@ -194,7 +206,7 @@ class PaperPool:
                 print(f"skip {md_file.name}: {target.name} already exists")
                 continue
             target.mkdir(parents=True, exist_ok=True)
-            (target / "paper.md").write_text(md_file.read_text(encoding="utf-8"), encoding="utf-8")
+            atomic_write_text(target / "paper.md", md_file.read_text(encoding="utf-8"))
             title = ""
             for line in md_file.read_text(encoding="utf-8").splitlines():
                 if line.startswith("# "):
@@ -218,20 +230,21 @@ class PaperPool:
                 "files": sorted(p.name for p in target.iterdir() if p.is_file()),
                 "imported_from": md_file.name,
             }
-            (target / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-            entries = read_index(root)
-            entries[meta["dir_name"]] = {
-                "dir_name": meta["dir_name"],
-                "id_type": meta["id_type"],
-                "arxiv_id": meta["arxiv_id"],
-                "doi": "",
-                "title": meta["title"],
-                "published": "",
-                "quality": meta["quality"],
-                "extraction_method": meta["extraction_method"],
-                "added_at": meta["added_at"],
-            }
-            write_index(root, entries)
+            atomic_write_json(target / "meta.json", meta)
+            with locks.kb_lock(root, "pool-index"):
+                entries = read_index(root)
+                entries[meta["dir_name"]] = {
+                    "dir_name": meta["dir_name"],
+                    "id_type": meta["id_type"],
+                    "arxiv_id": meta["arxiv_id"],
+                    "doi": "",
+                    "title": meta["title"],
+                    "published": "",
+                    "quality": meta["quality"],
+                    "extraction_method": meta["extraction_method"],
+                    "added_at": meta["added_at"],
+                }
+                write_index(root, entries)
             md_file.unlink()
             migrated += 1
             print(f"migrated {md_file.name} -> {target.name}/")

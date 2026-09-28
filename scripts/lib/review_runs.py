@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+
+
+_repo_root = Path(__file__).resolve().parents[2]
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
 
 
 CATALOG_RUN_LINK = re.compile(r"\]\((\.\./evidence/[^)\s]+/run\.json)\)")
@@ -21,6 +27,7 @@ STYLE_TO_FILE = {
     "scientific-memo": "scientific-memo_keyan.md",
     "expert-explainer": "zhihu-explainer_zhihu.md",
     "kol-thread": "xiaohongshu-post_xiaohongshu.md",
+    "slide-deck": "slide-deck_report.html",
     "survey": "review-packet.md",
 }
 
@@ -191,3 +198,66 @@ def event_consistency_problems(run_paths: Iterable[Path]) -> list[str]:
                         f"event_id {event_id} differs between {prior[1]} and {location}"
                     )
     return problems
+
+
+def _catalog_row_from_manifest(run_json: Path, manifest: dict) -> str:
+    """A minimal but truthful 成果索引 row; the agent may enrich it later."""
+
+    topic = str(manifest.get("topic") or run_json.parent.name)
+    knowledge_ids = manifest.get("knowledge_ids")
+    cards = "、".join(knowledge_ids) if isinstance(knowledge_ids, list) and knowledge_ids else ""
+    event_count = manifest.get("event_count")
+    scale = f"— / — / {event_count}" if isinstance(event_count, int) and event_count else "— / — / —"
+    run_rel = f"../evidence/{run_json.parent.name}/run.json"
+    return f"| LR-{topic[:24]} | {topic} | {cards} | {scale} | [run]({run_rel}) |"
+
+
+def register_run_in_catalog(
+    kb_root: Path,
+    run_json_path: Path,
+    row: str | None = None,
+    *,
+    catalog_path: Path | None = None,
+) -> bool:
+    """Append one 成果索引 row for a settled run; returns False when already
+    registered (idempotent — safe to call from both launch_review and the
+    agent-settle path).
+
+    Concurrency: the read→append→write round trip runs under the KB-shared
+    ``catalog`` lock (two machines settling at once would otherwise lose one
+    row), and the write itself is atomic. The link check keys on
+    ``../evidence/<run>/run.json`` — the same anchor the routing layer parses.
+    """
+
+    from embodied_learning.atomicio import atomic_write_text
+    from embodied_learning import locks
+
+    kb_root = kb_root.resolve()
+    catalog = (catalog_path or kb_root / "knowledge" / "literature-review-catalog.md").resolve()
+    run_json_path = run_json_path.resolve()
+    manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
+    row = row or _catalog_row_from_manifest(run_json_path, manifest)
+    link = f"../evidence/{run_json_path.parent.name}/run.json"
+
+    with locks.kb_lock(kb_root, "catalog"):
+        if catalog.is_file() and link in catalog.read_text(encoding="utf-8"):
+            return False
+        content = catalog.read_text(encoding="utf-8") if catalog.is_file() else ""
+        lines = content.splitlines()
+        # Join the last existing evidence-link table row; append at end when
+        # the catalog has no table yet.
+        insert_at = None
+        for index in range(len(lines) - 1, -1, -1):
+            if "](../evidence/" in lines[index] and lines[index].lstrip().startswith("|"):
+                insert_at = index + 1
+                break
+        if insert_at is None:
+            if content and not content.endswith("\n"):
+                content += "\n"
+            content += row + "\n"
+        else:
+            lines.insert(insert_at, row)
+            content = "\n".join(lines) + "\n"
+        catalog.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(catalog, content)
+    return True

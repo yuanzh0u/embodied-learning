@@ -12,6 +12,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "init_run.py"
+import sys  # noqa: E402
+
+sys.path.insert(0, str(ROOT / "scripts"))  # lib.* imports inside the script
 SPEC = importlib.util.spec_from_file_location("init_run", SCRIPT)
 init_run = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -26,27 +29,38 @@ class InitRunTest(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
+    def _command(self, *extra: str) -> list[str]:
+        return [
+            sys.executable,
+            str(SCRIPT),
+            "--topic",
+            "感知误差 vs 认知误差",
+            "--knowledge-id",
+            "EA-DATA",
+            "--knowledge-id",
+            "EA-MODEL",
+            "--time-range",
+            "2026-01-09..2026-07-09",
+            "--date",
+            "20260709",
+            "--work-dir",
+            str(self.tmp),
+            *extra,
+        ]
+
     def run_cli(self, *extra: str) -> subprocess.CompletedProcess:
         return subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--topic",
-                "感知误差 vs 认知误差",
-                "--knowledge-id",
-                "EA-DATA",
-                "--knowledge-id",
-                "EA-MODEL",
-                "--time-range",
-                "2026-01-09..2026-07-09",
-                "--date",
-                "20260709",
-                "--work-dir",
-                str(self.tmp),
-                *extra,
-            ],
+            self._command(*extra),
             text=True,
             capture_output=True,
+        )
+
+    def run_cli_async(self, *extra: str) -> subprocess.Popen:
+        return subprocess.Popen(
+            self._command(*extra),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_creates_in_progress_birth_certificate(self) -> None:
@@ -79,6 +93,17 @@ class InitRunTest(unittest.TestCase):
         self.assertIn("--force", second.stderr)
         third = self.run_cli("--force")
         self.assertEqual(0, third.returncode)
+
+    def test_concurrent_creation_yields_exactly_one_winner(self) -> None:
+        """Two terminals/machines starting the same topic+date run: O_EXCL
+        creation lets one win; the other must exit 1, not clobber."""
+        processes = [self.run_cli_async() for _ in range(3)]
+        outputs = [process.communicate(timeout=60) for process in processes]
+        codes = [process.returncode for process in processes]
+        self.assertEqual(codes.count(0), 1, str(outputs))
+        run_dir = next(self.tmp.glob("literature-review-*-20260709"))
+        manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["status"], "in-progress")
 
 
 if __name__ == "__main__":

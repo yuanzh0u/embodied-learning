@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import os
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
 
 from scripts import build_research_wiki as wiki
 
@@ -165,6 +168,46 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertEqual((self.output / "current.json").read_text(encoding="utf-8"), previous)
         self.assertEqual(len(wiki.validate_published_snapshot(self.output)["topics"]), 1)
 
+    def test_snapshot_id_carries_uuid_suffix(self) -> None:
+        """Two publishers building identical content must never fight over one
+        os.replace target, so the id is timestamp-digest-uuid."""
+        write_triplet(self.source / "literature-review-test-topic-20260304")
+        wiki.publish_snapshot(self.source, self.output)
+        snapshot_id = json.loads((self.output / "current.json").read_text(encoding="utf-8"))[
+            "snapshot_id"
+        ]
+        self.assertRegex(snapshot_id, r"^\d{8}T\d{6}\d+-[0-9a-f]{10}-[0-9a-f]{8}$")
+
+    def test_prune_spares_recently_published_snapshots(self) -> None:
+        """The prune age floor keeps a snapshot a slow reader may still be
+        serving; it becomes deletable on a later prune past the floor."""
+        import os as _os
+
+        directory = self.source / "literature-review-test-topic-20260304"
+        write_triplet(directory)
+        wiki.publish_snapshot(self.source, self.output)  # s1
+        first_id = json.loads((self.output / "current.json").read_text(encoding="utf-8"))[
+            "snapshot_id"
+        ]
+        (directory / "zhihu-explainer_zhihu.md").write_text(
+            "# 第二版\n\n这是第二版的完整内容，用于验证快照回滚。\n",
+            encoding="utf-8",
+        )
+        wiki.publish_snapshot(self.source, self.output)  # s2 (rollback for s1)
+        wiki.publish_snapshot(self.source, self.output)  # s3; prune would drop s1
+        self.assertEqual(len(list((self.output / "snapshots").iterdir())), 3)
+        wiki.prune_snapshots(self.output)  # s1 is seconds old: floor spares it
+        self.assertEqual(len(list((self.output / "snapshots").iterdir())), 3)
+        old_time = time.time() - 7200
+        for path in (self.output / "snapshots").iterdir():
+            if path.name != first_id:
+                _os.utime(path, (old_time, old_time))
+        wiki.prune_snapshots(self.output)  # fresh s1 still inside the floor
+        self.assertIn(first_id, {p.name for p in (self.output / "snapshots").iterdir()})
+        _os.utime(self.output / "snapshots" / first_id, (old_time, old_time))
+        wiki.prune_snapshots(self.output)  # past the floor: deletable again
+        self.assertEqual(len(list((self.output / "snapshots").iterdir())), 2)
+
     def test_previous_snapshot_can_be_atomically_reactivated(self) -> None:
         directory = self.source / "literature-review-test-topic-20260304"
         write_triplet(directory)
@@ -190,10 +233,34 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertEqual(len(wiki.validate_published_snapshot(self.output)["topics"]), 1)
 
     def test_publication_lock_rejects_concurrent_writer(self) -> None:
-        with wiki.publication_lock(self.output):
-            with self.assertRaisesRegex(RuntimeError, "正在进行"):
-                with wiki.publication_lock(self.output):
-                    pass
+        """Publishers serialize across processes/machines via the KB-shared
+        lock file (<output>/.locks/wiki-publish.lock); a second publisher
+        waits briefly, then fails with the owner info. Same-process nesting
+        is deliberately reentrant (the publisher holds it across stages)."""
+        import threading
+
+        lock_file = self.output / ".locks" / "wiki-publish.lock"
+        started = threading.Event()
+        release = threading.Event()
+
+        def holder() -> None:
+            with wiki.publication_lock(self.output):
+                started.set()
+                release.wait(10)
+
+        thread = threading.Thread(target=holder)
+        thread.start()
+        self.assertTrue(started.wait(10))
+        try:
+            self.assertTrue(lock_file.exists())
+            with mock.patch.dict(os.environ, {"EMBODIED_KB_LOCK_WAIT": "1"}):
+                with self.assertRaisesRegex(RuntimeError, "超过"):
+                    with wiki.publication_lock(self.output):
+                        pass
+        finally:
+            release.set()
+            thread.join(10)
+        self.assertFalse(lock_file.exists())
 
     def test_single_style_run_publishes_declared_version_only(self) -> None:
         """A run.json declaring style+scope_note publishes with just its own
@@ -272,6 +339,46 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertEqual(topic["available_versions"], ["keyan", "zhihu"])
         manifest_item = manifest["topics"][0]
         self.assertEqual(manifest_item["default_version"], "keyan")
+
+    def test_slide_deck_field_tracks_run_folder(self) -> None:
+        """The 汇报展示 manifest field flips on the presence of a compiled
+        slide-deck_report.html in the run folder (run-level wiki entry)."""
+        evidence = self.root / "evidence"
+
+        def make_run(name: str, with_deck: bool = False) -> Path:
+            run = evidence / name
+            run.mkdir(parents=True)
+            (run / "run.json").write_text(
+                json.dumps(
+                    {
+                        "topic": name,
+                        "status": "settled",
+                        "style": "scientific-memo",
+                        "scope_note": "单风格备忘录交付",
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            (run / "scientific-memo_keyan.md").write_text(
+                f"# {name}\n\n## 结论\n\n备忘录正文，长度足够作为发布内容。\n", encoding="utf-8"
+            )
+            (run / "evidence-appendix.md").write_text("# 证据附录\n", encoding="utf-8")
+            if with_deck:
+                (run / "slide-deck_report.html").write_text("<!doctype html><html></html>", encoding="utf-8")
+            return run
+
+        with_deck_run = make_run("literature-review-with-deck-20260101", with_deck=True)
+        make_run("literature-review-without-deck-20260102")
+
+        manifest = wiki.build_snapshot(evidence, self.output)
+        by_topic = {item["topic_key"]: item for item in manifest["topics"]}
+        self.assertTrue(by_topic["with-deck"]["slide_deck_available"])
+        self.assertFalse(by_topic["without-deck"]["slide_deck_available"])
+        topic = json.loads(
+            (self.output / "topics" / f"{by_topic['with-deck']['id']}.json").read_text(encoding="utf-8")
+        )
+        self.assertTrue(topic["slide_deck"]["available"])
 
     def test_markdown_renderer_escapes_html_and_keeps_external_links(self) -> None:
         rendered, toc = wiki.markdown_to_html(

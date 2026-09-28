@@ -34,6 +34,7 @@ from __future__ import annotations
 import array
 import datetime as dt
 import json
+import os
 import re
 import sqlite3
 import threading
@@ -91,10 +92,16 @@ def build_db(jsonl_path: str, db_path: str, progress_every: int = 500_000) -> in
     """Stream the snapshot JSONL into a fresh SQLite/FTS5 database.
 
     Idempotent-ish: refuses to run when ``db_path`` already exists so an
-    interrupted build never yields a silently partial database.
+    interrupted build never yields a silently partial database. The exclusive
+    create is O_EXCL (not check-then-create): two machines building the same
+    CIFS-resident database must not both pass the check.
     """
-    if Path(db_path).exists():
-        raise SystemExit(f"refusing to overwrite existing database: {db_path}")
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(db_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    except FileExistsError:
+        raise SystemExit(f"refusing to overwrite existing database: {db_path}") from None
+    os.close(fd)  # zero-byte file is a valid empty SQLite target for connect()
     connection = sqlite3.connect(db_path)
     connection.executescript(_SCHEMA)
     started = time.monotonic()
@@ -344,8 +351,14 @@ class SnapshotDbSearch:
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         from embodied_learning.search.arxiv import with_date_filter  # noqa: E402
 
-        effective = with_date_filter(item["query"], self.start_date, self.end_date)
-        node = parse_query(effective)
+        try:
+            effective = with_date_filter(item["query"], self.start_date, self.end_date)
+            node = parse_query(effective)
+        except ValueError as exc:
+            # One agent-authored malformed query degrades to an errored
+            # per-query entry instead of killing the retrieval batch.
+            meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": f"query parse failed: {exc}"}
+            return meta, []
         try:
             sql_expr, lo_iso, hi_iso = _split_date_range(node)
         except ValueError as exc:

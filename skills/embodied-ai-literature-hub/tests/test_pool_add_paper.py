@@ -169,5 +169,80 @@ class ListGetTest(unittest.TestCase):
             make_pool(self.tmp).get("9999.99999")
 
 
+class ConcurrentAddTest(unittest.TestCase):
+    """The shared index read-merge-rewrite is the pool's conflict point: two
+    concurrent adds (different machines on a CIFS pool, or two processes on
+    one machine) must both survive into index.jsonl."""
+
+    def test_threads_adding_different_papers_keep_both_entries(self) -> None:
+        import threading
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pool = make_pool(Path(tmp))
+            errors: list[Exception] = []
+            # Build payloads serially: extraction_json reuses one scratch file,
+            # so threads must not rewrite it while a sibling reads it.
+            payloads = [
+                load_json(extraction_json(Path(tmp), paper_id=f"2403.{i:05d}", title=f"P2403.{i:05d}"))
+                for i in range(12, 20)
+            ]
+
+            def add(payload: dict) -> None:
+                try:
+                    pool.add(payload)
+                except Exception as exc:  # surfaced by the assertions below
+                    errors.append(exc)
+
+            threads = [threading.Thread(target=add, args=(payload,)) for payload in payloads]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join(60)
+            self.assertEqual(errors, [])
+            index_lines = [
+                json.loads(line)
+                for line in (Path(tmp) / "pool" / "index.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+                if line.strip()
+            ]
+            self.assertEqual(len(index_lines), 8)
+            self.assertEqual(
+                {entry["dir_name"] for entry in index_lines},
+                {f"arxiv-2403.{i:05d}" for i in range(12, 20)},
+            )
+
+    def test_same_paper_force_adds_serialize(self) -> None:
+        import threading
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pool = make_pool(Path(tmp))
+            pool.add(load_json(extraction_json(Path(tmp), title="v1")))
+            errors: list[Exception] = []
+            payload = load_json(extraction_json(Path(tmp), title="v2"))
+
+            def readd() -> None:
+                try:
+                    pool.add(dict(payload), force=True)
+                except Exception as exc:
+                    errors.append(exc)
+
+            threads = [threading.Thread(target=readd) for _ in range(4)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join(60)
+            self.assertEqual(errors, [])
+            index_lines = [
+                json.loads(line)
+                for line in (Path(tmp) / "pool" / "index.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+                if line.strip()
+            ]
+            self.assertEqual(len(index_lines), 1)
+            self.assertEqual(index_lines[0]["dir_name"], "arxiv-2403.12550")
+
+
 if __name__ == "__main__":
     unittest.main()

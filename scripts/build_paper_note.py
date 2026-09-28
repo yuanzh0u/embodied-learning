@@ -53,8 +53,10 @@ STANCES = {"support", "limit", "conditional", "gap"}
 EVIDENCE_TYPES = {"method", "experiment", "dataset", "claim", "analysis"}
 
 
-from embodied_learning.knowledge import claim_support as auditor
-from embodied_learning.knowledge import paper_note as validator
+from embodied_learning.atomicio import atomic_write_json  # noqa: E402
+from embodied_learning.knowledge import claim_support as auditor  # noqa: E402
+from embodied_learning.knowledge import paper_note as validator  # noqa: E402
+from embodied_learning import locks  # noqa: E402
 
 
 def normalize(text: Any) -> str:
@@ -573,25 +575,27 @@ def main(argv: list[str] | None = None) -> int:
     skeleton["cards"] = (skeleton.get("cards") or [])[: max(1, args.max_cards)]
     note, problems = assemble_note(skeleton, extraction, pool_dir, max_cards=args.max_cards)
     errors, warnings = validator.validate_note(note)
-    if errors:
-        pool_dir.mkdir(parents=True, exist_ok=True)
-        (pool_dir / "note.json").write_text(json.dumps(note, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        (pool_dir / "note.build-report.json").write_text(
-            json.dumps({"status": "invalid", "errors": errors, "problems": problems}, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        print(json.dumps({"status": "invalid", "errors": errors[:5]}, ensure_ascii=False))
-        return 1
+    # Serialize the note triple-write: two runs deep-reading the same paper
+    # write the same pool dir, and a reader must never see a new note.json
+    # with a stale audit/report.
+    with locks.kb_lock(pool_dir.parent, f"pool-paper__{pool_dir.name}"):
+        if errors:
+            pool_dir.mkdir(parents=True, exist_ok=True)
+            atomic_write_json(pool_dir / "note.json", note)
+            atomic_write_json(
+                pool_dir / "note.build-report.json",
+                {"status": "invalid", "errors": errors, "problems": problems},
+            )
+            print(json.dumps({"status": "invalid", "errors": errors[:5]}, ensure_ascii=False))
+            return 1
 
-    audit = auditor.audit(note, extraction)
-    (pool_dir / "note.json").write_text(json.dumps(note, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (pool_dir / "note.json.audit.json").write_text(
-        json.dumps(audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
-    (pool_dir / "note.build-report.json").write_text(
-        json.dumps({"status": audit.get("status"), "problems": problems}, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+        audit = auditor.audit(note, extraction)
+        atomic_write_json(pool_dir / "note.json", note)
+        atomic_write_json(pool_dir / "note.json.audit.json", audit)
+        atomic_write_json(
+            pool_dir / "note.build-report.json",
+            {"status": audit.get("status"), "problems": problems},
+        )
     summary = {
         "arxiv_id": args.arxiv_id,
         "status": audit.get("status"),

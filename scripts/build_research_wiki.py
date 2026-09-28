@@ -8,7 +8,6 @@ catalog. Directory scanning remains available for compatibility and isolated tes
 from __future__ import annotations
 
 import argparse
-import fcntl
 import hashlib
 import html
 import json
@@ -17,7 +16,9 @@ import re
 import shutil
 import sys
 import tempfile
+import time
 import unicodedata
+import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -50,6 +51,7 @@ except ImportError:  # installed console-script entry: package import path
     )
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root (embodied_learning)
 from embodied_learning.knowledge import arxiv_reader  # noqa: E402
+from embodied_learning import locks  # noqa: E402
 try:
     from lib.review_runs import STYLE_TO_FILE, catalog_run_paths, load_catalog_runs  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
@@ -426,6 +428,10 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
     if evidence_path.is_file():
         evidence_html, evidence_toc = markdown_to_html(_read_text(evidence_path))
 
+    # Run-level slide deck (汇报展示): a compiled reveal.js single file sitting
+    # in the run folder. The wiki links to it; the server serves the file.
+    deck_available = (candidate.directory / "slide-deck_report.html").is_file()
+
     topic = {
         "id": identifier,
         "topic_key": candidate.topic_key,
@@ -436,6 +442,7 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         "source_directory": _relative(candidate.directory),
         "versions": versions,
         "available_versions": version_keys,
+        "slide_deck": {"available": deck_available},
         "evidence": {
             "available": bool(evidence_html),
             "label": evidence_kind,
@@ -454,6 +461,7 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         "default_version": version_keys[0],
         "available_versions": version_keys,
         "evidence_available": bool(evidence_html),
+        "slide_deck_available": deck_available,
     }
     search_item = {
         "id": identifier,
@@ -595,28 +603,21 @@ def validate_snapshot(output: Path) -> dict[str, object]:
 
 @contextmanager
 def publication_lock(output: Path) -> Iterator[None]:
-    """Prevent concurrent publishers without leaving a stale process lock."""
+    """Serialize Wiki snapshot publishers across machines and processes.
+
+    The lock file lives inside the output dir (``<output>/.locks/``) so it is
+    shared on the same CIFS mount — the previous /tmp + flock scheme was
+    machine-local and let two machines publish simultaneously. O_EXCL
+    acquisition, brief bounded wait, stale-steal (see embodied_learning.locks).
+    """
 
     output.mkdir(parents=True, exist_ok=True)
-    lock_key = hashlib.sha256(str(output.resolve()).encode("utf-8")).hexdigest()[:20]
-    lock_path = Path(tempfile.gettempdir()) / f"research-wiki-publish-{lock_key}.lock"
-    handle = lock_path.open("a+", encoding="utf-8")
-    locked = False
     try:
-        try:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-            locked = True
-        except BlockingIOError as exc:
-            raise RuntimeError("已有 Wiki 快照发布正在进行。") from exc
-        handle.seek(0)
-        handle.truncate()
-        handle.write(str(os.getpid()))
-        handle.flush()
+        wait = float(os.environ.get("EMBODIED_KB_LOCK_WAIT") or 600)
+    except ValueError:
+        wait = 600.0
+    with locks.kb_lock(output, "wiki-publish", wait=wait, stale=1800.0):
         yield
-    finally:
-        if locked:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-        handle.close()
 
 
 def _snapshot_pointer(output: Path) -> dict[str, object] | None:
@@ -678,8 +679,19 @@ def activate_snapshot(output: Path, snapshot_id: str) -> dict[str, object]:
 
 
 def prune_snapshots(output: Path, *, retain: int = 2) -> None:
-    """Keep the active snapshot and at least one rollback snapshot."""
+    """Keep the active snapshot and at least one rollback snapshot.
 
+    A minimum-age floor guards against deleting a snapshot that a Wiki reader
+    resolved moments ago (the server re-reads current.json per request but a
+    slow request may still be mid-serve): anything younger than the floor
+    survives this round and becomes deletable on a later prune.
+    """
+
+    try:
+        min_age = float(os.environ.get("EMBODIED_KB_PRUNE_MIN_AGE_S") or 600)
+    except ValueError:
+        min_age = 600
+    now = time.time()
     pointer = _snapshot_pointer(output)
     active = str(pointer["snapshot_id"]) if pointer else None
     snapshots_root = output / "snapshots"
@@ -695,8 +707,15 @@ def prune_snapshots(output: Path, *, retain: int = 2) -> None:
     if active:
         keep.add(active)
     for directory in directories:
-        if directory.name not in keep:
-            shutil.rmtree(directory)
+        if directory.name in keep:
+            continue
+        try:
+            age = now - directory.stat().st_mtime
+        except OSError:
+            continue
+        if age < min_age:
+            continue  # too fresh to prune safely; a later run removes it
+        shutil.rmtree(directory)
 
 
 def publish_snapshot(
@@ -724,7 +743,10 @@ def publish_snapshot(
                 + (stage / "search-index.json").read_bytes()
             ).hexdigest()[:10]
             timestamp = datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%f")
-            snapshot_id = f"{timestamp}-{digest}"
+            # The uuid suffix rules out cross-machine id collisions (two
+            # publishers building identical content in the same microsecond
+            # would otherwise fight over one os.replace target).
+            snapshot_id = f"{timestamp}-{digest}-{uuid.uuid4().hex[:8]}"
             final = snapshots_root / snapshot_id
             os.replace(stage, final)
             if before_activate:

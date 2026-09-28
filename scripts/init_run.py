@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -20,6 +21,11 @@ try:
     from lib.layout import default_kb_root
 except ImportError:  # installed console-script entry: package import path
     from wiki_scripts.lib.layout import default_kb_root
+
+_repo_root = Path(__file__).resolve().parents[1]
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
+from embodied_learning import locks  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,9 +65,6 @@ def main() -> int:
         date_str = dt.date.today().strftime("%Y%m%d")
     run_dir = Path(args.work_dir) / run_folder_name(args.topic, date_str)
     manifest_path = run_dir / "run.json"
-    if manifest_path.exists() and not args.force:
-        print(f"run.json already exists at {manifest_path}; pass --force to overwrite", file=sys.stderr)
-        return 1
     run_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "workflow_version": 2,
@@ -75,7 +78,26 @@ def main() -> int:
         "files": {},
         "notes": "Created by init_run.py. Flip status to 'settled' only after coverage/saturation, evidence, citation, and editorial gates pass.",
     }
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # O_EXCL creation instead of check-then-create: two machines (or terminals)
+    # starting the same topic+date run must not both "win". Lock root is the KB
+    # root (work/ sits directly beneath it) so the same run__<name> lock the
+    # driver holds also guards the --force rewrite path.
+    lock_root = Path(args.work_dir).parent
+    payload = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    if args.force:
+        with locks.kb_lock(lock_root, f"run__{run_dir.name}", stale=21600):
+            manifest_path.unlink(missing_ok=True)
+            fd = os.open(manifest_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            os.write(fd, payload)
+            os.close(fd)
+    else:
+        try:
+            fd = os.open(manifest_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        except FileExistsError:
+            print(f"run.json already exists at {manifest_path}; pass --force to overwrite", file=sys.stderr)
+            return 1
+        os.write(fd, payload)
+        os.close(fd)
     print(f"Initialized run: {run_dir}")
     print(f"- {manifest_path} (status: in-progress)")
     print("Next: planner -> candidate registry -> coverage rounds -> HTML/PDF/OCR extraction -> evidence -> writer -> settle.")

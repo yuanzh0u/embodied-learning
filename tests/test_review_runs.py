@@ -92,5 +92,62 @@ class ReviewRunsTest(unittest.TestCase):
             review_runs.catalog_run_paths(self.root, catalog)
 
 
+class RegisterRunInCatalogTest(unittest.TestCase):
+    def setUp(self) -> None:
+        import os
+
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "knowledge").mkdir()
+        (self.root / "evidence").mkdir()
+        self._env = os.environ.copy()
+        os.environ["EMBODIED_KB_LOCK_DIR"] = str(self.root / ".locks")
+        catalog = self.root / "knowledge" / "literature-review-catalog.md"
+        catalog.write_text(
+            "# 文献综述成果目录\n\n## 成果索引\n\n"
+            "| ID | 综述主题 | 主要知识卡 | 规模 | 审计入口 |\n|---|---|---|---:|---|\n",
+            encoding="utf-8",
+        )
+
+    def tearDown(self) -> None:
+        import os
+
+        os.environ.clear()
+        os.environ.update(self._env)
+        self._tmp.cleanup()
+
+    def test_registers_then_is_idempotent(self) -> None:
+        run_json = write_catalog_run(self.root, "literature-review-demo-20260922")
+        self.assertTrue(review_runs.register_run_in_catalog(self.root, run_json))
+        catalog = (self.root / "knowledge" / "literature-review-catalog.md").read_text(encoding="utf-8")
+        self.assertIn("../evidence/literature-review-demo-20260922/run.json", catalog)
+        # The row joined the existing table (not appended past it).
+        lines = catalog.splitlines()
+        self.assertTrue(lines[-1].lstrip().startswith("|"))
+        # Second call is a no-op.
+        self.assertFalse(review_runs.register_run_in_catalog(self.root, run_json))
+        self.assertEqual(
+            catalog,
+            (self.root / "knowledge" / "literature-review-catalog.md").read_text(encoding="utf-8"),
+        )
+
+    def test_generated_row_carries_topic_and_cards(self) -> None:
+        run_json = write_catalog_run(self.root, "literature-review-demo2-20260922")
+        manifest = json.loads(run_json.read_text(encoding="utf-8"))
+        manifest["knowledge_ids"] = ["EA-DEMO", "EA-DATA"]
+        manifest["event_count"] = 42
+        run_json.write_text(json.dumps(manifest), encoding="utf-8")
+        review_runs.register_run_in_catalog(self.root, run_json)
+        row = [
+            line
+            for line in (self.root / "knowledge" / "literature-review-catalog.md")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if "demo2" in line
+        ][0]
+        self.assertIn("EA-DEMO、EA-DATA", row)
+        self.assertIn("— / — / 42", row)
+
+
 if __name__ == "__main__":
     unittest.main()
