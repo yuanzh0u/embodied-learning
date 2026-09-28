@@ -189,6 +189,37 @@ class BuildResearchSiteTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "失效的仓库相对链接"):
                 renderer.render("[坏链接](missing.md)\n")
 
+    def test_static_page_uses_declared_default_version(self) -> None:
+        with TemporaryDirectory() as temporary:
+            repo = Path(temporary)
+            source = repo / "evidence" / "run"
+            source.mkdir(parents=True)
+            (source / "scientific-memo_keyan.md").write_text(
+                "# 科研备忘录\n\n这是足够长的默认正文，用于验证缩减交付专题能够进入静态站。\n",
+                encoding="utf-8",
+            )
+            (source / "evidence-appendix.md").write_text("# 证据附录\n", encoding="utf-8")
+            topic = {
+                "id": "topic-reduced",
+                "source_directory": "evidence/run",
+                "default_version": "keyan",
+                "versions": {
+                    "keyan": {
+                        "label": "科研备忘录",
+                        "source_file": "scientific-memo_keyan.md",
+                    }
+                },
+                "evidence": {"source_file": "evidence-appendix.md"},
+            }
+
+            _conclusion, article, _evidence, version, label = site._article_bodies(
+                repo, "https://github.com/example/repo", topic
+            )
+
+            self.assertEqual(version, "keyan")
+            self.assertEqual(label, "科研备忘录")
+            self.assertIn("缩减交付专题", article)
+
     def test_spa_topic_navigation_has_real_static_hrefs(self) -> None:
         script = (ROOT / "wiki" / "assets" / "wiki.js").read_text(encoding="utf-8")
         template = (ROOT / "wiki" / "index.html").read_text(encoding="utf-8")
@@ -199,6 +230,8 @@ class BuildResearchSiteTest(unittest.TestCase):
         self.assertIn('id="ai-dialog"', template)
         self.assertIn("function buildAiPrompt(task", script)
         self.assertIn("topic.evidence_event_count", script)
+        self.assertIn("function topicDefaultVersion(topic)", script)
+        self.assertIn("Object.entries(topic.versions)", script)
         self.assertIn('data-ai-provider="Gemini"', template)
 
 

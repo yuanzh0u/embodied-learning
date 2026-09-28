@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -116,6 +117,54 @@ class AuditArticleQualityTests(unittest.TestCase):
             )
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         self.assertIn("editorial quality audit OK", completed.stdout)
+
+    def test_reduced_scope_bundle_audits_only_declared_style(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            self.write_good_bundle(root)
+            (root / "zhihu-explainer_zhihu.md").unlink()
+            (root / "xiaohongshu-post_xiaohongshu.md").unlink()
+            (root / "run.json").write_text(
+                json.dumps(
+                    {
+                        "style": "scientific-memo",
+                        "scope_note": "This run intentionally publishes one research memo.",
+                        "files": {"outputs": ["scientific-memo_keyan.md"]},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            completed = subprocess.run(
+                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertEqual("editorial quality audit OK\n", completed.stdout)
+
+    def test_reduced_scope_bundle_requires_scope_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            self.write_good_bundle(root)
+            (root / "run.json").write_text(
+                json.dumps(
+                    {
+                        "style": "scientific-memo",
+                        "files": {"outputs": ["scientific-memo_keyan.md"]},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            completed = subprocess.run(
+                [sys.executable, str(SCRIPT), "--bundle-dir", str(root)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("bundle-contract", completed.stdout)
+        self.assertIn("scope_note", completed.stdout)
 
     def test_chinese_share_ignores_markdown_citation_titles(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

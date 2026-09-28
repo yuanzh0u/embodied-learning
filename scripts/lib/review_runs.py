@@ -9,12 +9,18 @@ from pathlib import Path
 from typing import Iterable
 
 
-CATALOG_RUN_LINK = re.compile(r"\]\((\.\./evidence/[^)\s]+/run\.json)\)")
+CATALOG_RUN_LINK = re.compile(r"\[run\]\((\.\./evidence/[^)\s]+/run\.json)\)")
 STANDARD_ARTICLES = (
     "scientific-memo_keyan.md",
     "zhihu-explainer_zhihu.md",
     "xiaohongshu-post_xiaohongshu.md",
 )
+STYLE_TO_ARTICLE = {
+    "scientific-memo": "scientific-memo_keyan.md",
+    "expert-explainer": "zhihu-explainer_zhihu.md",
+    "kol-thread": "xiaohongshu-post_xiaohongshu.md",
+    "survey": "review-packet.md",
+}
 
 
 @dataclass(frozen=True)
@@ -101,6 +107,49 @@ def evidence_paths(
     return resolved
 
 
+def reader_articles(
+    run_json: Path,
+    manifest: dict[str, object],
+    *,
+    require_files: bool = True,
+) -> tuple[str, ...]:
+    """Return the declared reader-facing articles for a settled run.
+
+    Three articles remain the default contract. A run may intentionally publish
+    one supported style only when both ``style`` and ``scope_note`` are present,
+    matching ``check_run_bundle.py``.
+    """
+
+    files = manifest.get("files")
+    if not isinstance(files, dict):
+        raise ValueError(f"{run_json}: files must be an object")
+    outputs = files.get("outputs")
+    if outputs is not None and (
+        not isinstance(outputs, list) or any(not isinstance(item, str) for item in outputs)
+    ):
+        raise ValueError(f"{run_json}: files.outputs must be a string list")
+
+    style = manifest.get("style")
+    if style is None:
+        articles = STANDARD_ARTICLES
+    else:
+        if not isinstance(style, str) or style not in STYLE_TO_ARTICLE:
+            supported = ", ".join(sorted(STYLE_TO_ARTICLE))
+            raise ValueError(f"{run_json}: unsupported reduced-scope style {style!r}; use {supported}")
+        if not str(manifest.get("scope_note") or "").strip():
+            raise ValueError(f"{run_json}: reduced-scope style requires scope_note")
+        if outputs is None:
+            raise ValueError(f"{run_json}: reduced-scope style requires files.outputs")
+        articles = (STYLE_TO_ARTICLE[style],)
+
+    for name in articles:
+        if isinstance(outputs, list) and name not in outputs:
+            raise ValueError(f"{run_json}: reader-facing article is not listed in files.outputs: {name}")
+        if require_files and not (run_json.parent / name).is_file():
+            raise ValueError(f"{run_json}: missing reader-facing article: {name}")
+    return articles
+
+
 def load_catalog_runs(
     root: Path,
     catalog_path: Path | None = None,
@@ -132,9 +181,7 @@ def load_catalog_runs(
             raise ValueError(f"catalog routes to non-settled run: {run_json}")
         evidence_paths(run_json, manifest, require_files=require_complete)
         if require_complete:
-            missing = [name for name in STANDARD_ARTICLES if not (run_json.parent / name).is_file()]
-            if missing:
-                raise ValueError(f"{run_json}: missing reader-facing articles: {', '.join(missing)}")
+            reader_articles(run_json, manifest)
         runs.append(ReviewRun(run_json, manifest))
     return runs
 

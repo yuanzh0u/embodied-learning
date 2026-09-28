@@ -27,9 +27,9 @@ class ValidateCurrentReviewsTests(unittest.TestCase):
             (root / "knowledge" / "literature-review-catalog.md").write_text(
                 "\n".join(
                     [
-                        "[b](../evidence/run-b/run.json)",
-                        "[a](../evidence/run-a/run.json)",
-                        "[a again](../evidence/run-a/run.json)",
+                        "[run](../evidence/run-b/run.json)",
+                        "[run](../evidence/run-a/run.json)",
+                        "[run](../evidence/run-a/run.json)",
                     ]
                 ),
                 encoding="utf-8",
@@ -75,7 +75,6 @@ class ValidateCurrentReviewsTests(unittest.TestCase):
 
             self.assertEqual(len(problems), 1)
             self.assertIn("differs between", problems[0])
-
 
 if __name__ == "__main__":
     unittest.main()

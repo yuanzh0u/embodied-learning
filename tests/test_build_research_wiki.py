@@ -114,6 +114,45 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertEqual([item.directory.name for item in selected], [routed.name])
         self.assertEqual(stats["source_mode"], "catalog")
 
+    def test_catalog_source_publishes_declared_single_version(self) -> None:
+        evidence = self.root / "evidence"
+        reduced = evidence / "literature-review-reduced-20260304"
+        write_triplet(reduced, "缩减交付话题")
+        for filename in ("zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"):
+            (reduced / filename).unlink()
+        (reduced / "evidence.jsonl").write_text(
+            json.dumps({"event_id": "EA-REDUCED-0001"}) + "\n", encoding="utf-8"
+        )
+        manifest = json.loads((reduced / "run.json").read_text(encoding="utf-8"))
+        manifest.update(
+            {
+                "status": "settled",
+                "style": "scientific-memo",
+                "scope_note": "用户明确只要求科研备忘录",
+                "files": {
+                    "evidence": "evidence.jsonl",
+                    "outputs": ["scientific-memo_keyan.md"],
+                },
+            }
+        )
+        (reduced / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        knowledge = self.root / "knowledge"
+        knowledge.mkdir()
+        catalog = knowledge / "literature-review-catalog.md"
+        catalog.write_text(
+            "[run](../evidence/literature-review-reduced-20260304/run.json)\n",
+            encoding="utf-8",
+        )
+
+        selected, _stats = wiki.discover_topics(catalog)
+        topic, manifest_item, search_item = wiki.build_topic(selected[0])
+
+        self.assertEqual(topic["default_version"], "keyan")
+        self.assertEqual(topic["available_versions"], ["keyan"])
+        self.assertEqual(list(topic["versions"]), ["keyan"])
+        self.assertEqual(manifest_item["default_version"], "keyan")
+        self.assertEqual(list(search_item["versions"]), ["keyan"])
+
     def test_atomic_publish_switches_only_after_validation(self) -> None:
         write_triplet(self.source / "literature-review-test-topic-20260304")
 

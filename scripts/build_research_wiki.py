@@ -37,7 +37,7 @@ from lib.markdown_semantics import (  # noqa: E402
     render_markdown,
     strip_frontmatter,
 )
-from lib.review_runs import load_catalog_runs  # noqa: E402
+from lib.review_runs import load_catalog_runs, reader_articles  # noqa: E402
 
 
 DEFAULT_SOURCE = REPO_ROOT / "knowledge" / "literature-review-catalog.md"
@@ -49,6 +49,11 @@ VERSION_FILES = {
     "zhihu": ("知乎解释版", "zhihu-explainer_zhihu.md"),
     "xiaohongshu": ("小红书版", "xiaohongshu-post_xiaohongshu.md"),
 }
+FILE_TO_VERSION = {
+    filename: (key, label)
+    for key, (label, filename) in VERSION_FILES.items()
+}
+FILE_TO_VERSION["review-packet.md"] = ("keyan", "研究综述")
 
 FIELD_RULES = (
     ("世界模型与评测", ("世界模型", "world-model", "评测", "evaluation", "仿真")),
@@ -84,6 +89,7 @@ class Candidate:
     topic_key: str
     date: str
     reader_rank: int
+    article_files: tuple[str, ...]
 
 
 def _read_text(path: Path) -> str:
@@ -151,7 +157,12 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
     catalog_mode = source.is_file()
     if catalog_mode:
         root = source.parent.parent
-        all_dirs = [item.directory for item in load_catalog_runs(root, source)]
+        runs = load_catalog_runs(root, source)
+        all_dirs = [item.directory for item in runs]
+        catalog_articles = {
+            item.directory: reader_articles(item.manifest_path, item.manifest)
+            for item in runs
+        }
     elif source.is_dir():
         all_dirs = [path for path in source.iterdir() if path.is_dir()]
     else:
@@ -159,9 +170,14 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
 
     complete: list[Candidate] = []
     for directory in all_dirs:
-        if not all((directory / filename).is_file() for _, filename in VERSION_FILES.values()):
+        article_files = (
+            catalog_articles[directory]
+            if catalog_mode
+            else tuple(filename for _, filename in VERSION_FILES.values())
+        )
+        if not all((directory / filename).is_file() for filename in article_files):
             if catalog_mode:
-                raise RuntimeError(f"目录指定的 run 缺少三种成稿：{directory}")
+                raise RuntimeError(f"目录指定的 run 缺少声明成稿：{directory}")
             continue
         reader_match = _READER_SUFFIX.search(directory.name)
         complete.append(
@@ -170,6 +186,7 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
                 topic_key=topic_identity(directory),
                 date=extract_date(directory.name),
                 reader_rank=int(reader_match.group(1)) if reader_match else 0,
+                article_files=article_files,
             )
         )
 
@@ -353,11 +370,11 @@ def excerpt(markdown: str, limit: int = 150) -> str:
     return plain[:limit].rstrip() + ("…" if len(plain) > limit else "")
 
 
-def get_topic_title(directory: Path, zhihu_markdown: str) -> str:
+def get_topic_title(directory: Path, default_markdown: str) -> str:
     topic = read_run_topic(directory)
     if topic:
         return topic
-    heading = first_heading(zhihu_markdown)
+    heading = first_heading(default_markdown)
     if heading:
         return heading
     name = re.sub(r"^literature-review-", "", directory.name)
@@ -435,17 +452,25 @@ def build_topic(
     *,
     field_en: str | None = None,
 ) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+    version_specs: list[tuple[str, str, str]] = []
+    for filename in candidate.article_files:
+        spec = FILE_TO_VERSION.get(filename)
+        if spec is None:
+            raise RuntimeError(f"不支持发布的成稿类型：{filename}")
+        key, label = spec
+        version_specs.append((key, label, filename))
     markdown_by_version = {
         key: _read_text(candidate.directory / filename)
-        for key, (_, filename) in VERSION_FILES.items()
+        for key, _label, filename in version_specs
     }
-    title = get_topic_title(candidate.directory, markdown_by_version["zhihu"])
+    default_version = "zhihu" if "zhihu" in markdown_by_version else version_specs[0][0]
+    title = get_topic_title(candidate.directory, markdown_by_version[default_version])
     field = classify_field(title, candidate.directory.name)
     identifier = topic_id(candidate.topic_key)
     versions: dict[str, object] = {}
     search_versions: dict[str, object] = {}
 
-    for key, (label, filename) in VERSION_FILES.items():
+    for key, label, filename in version_specs:
         markdown = markdown_by_version[key]
         rendered, toc = markdown_to_html(markdown)
         plain = markdown_to_plain(markdown)
@@ -492,7 +517,9 @@ def build_topic(
         "title": title,
         "field": field,
         "date": candidate.date,
-        "excerpt": excerpt(markdown_by_version["zhihu"]),
+        "excerpt": excerpt(markdown_by_version[default_version]),
+        "default_version": default_version,
+        "available_versions": list(versions),
         "source_directory": _relative(candidate.directory),
         "versions": versions,
         "evidence": {
@@ -511,7 +538,8 @@ def build_topic(
         "field": field,
         "date": candidate.date,
         "excerpt": topic["excerpt"],
-        "default_version": "zhihu",
+        "default_version": default_version,
+        "available_versions": list(versions),
         "evidence_available": bool(evidence_html),
         **{
             key: public_metadata[key]
@@ -562,7 +590,7 @@ def build_snapshot(
 ) -> dict[str, object]:
     selected, stats = discover_topics(source)
     if not selected:
-        raise RuntimeError("没有发现同时包含三种成稿的完整话题，保留现有快照。")
+        raise RuntimeError("没有发现包含可发布成稿的完整话题，保留现有快照。")
     publication_config = (
         load_site_config(site_config, {candidate.topic_key for candidate in selected})
         if site_config is not None
@@ -581,10 +609,12 @@ def build_snapshot(
         publication = configured_topics.get(candidate.topic_key)
         if publication_config is not None and not isinstance(publication, dict):
             raise RuntimeError(f"专题缺少发布配置：{candidate.topic_key}")
-        title_for_field = get_topic_title(
-            candidate.directory,
-            _read_text(candidate.directory / VERSION_FILES["zhihu"][1]),
+        default_file = (
+            VERSION_FILES["zhihu"][1]
+            if VERSION_FILES["zhihu"][1] in candidate.article_files
+            else candidate.article_files[0]
         )
+        title_for_field = get_topic_title(candidate.directory, _read_text(candidate.directory / default_file))
         field = classify_field(title_for_field, candidate.directory.name)
         field_en = configured_fields.get(field) if isinstance(configured_fields, dict) else None
         topic, manifest_item, search_item = build_topic(
@@ -675,6 +705,8 @@ def validate_snapshot(output: Path) -> dict[str, object]:
                 "knowledge_ids",
                 "paper_count",
                 "evidence_event_count",
+                "default_version",
+                "available_versions",
             }
             missing = sorted(required - set(item))
             if missing:
@@ -703,6 +735,19 @@ def validate_snapshot(output: Path) -> dict[str, object]:
                 or int(item["evidence_event_count"]) < 0
             ):
                 raise RuntimeError(f"{identifier} 的 evidence_event_count 非法。")
+        topic_path = output / "topics" / f"{identifier}.json"
+        if not topic_path.is_file():
+            raise RuntimeError(f"专题正文不存在：{topic_path}")
+        topic = _read_json_object(topic_path)
+        versions = topic.get("versions")
+        default_version = item.get("default_version")
+        available_versions = item.get("available_versions")
+        if not isinstance(versions, dict) or not versions:
+            raise RuntimeError(f"{identifier} 没有可发布版本。")
+        if default_version not in versions:
+            raise RuntimeError(f"{identifier} 的默认版本不存在。")
+        if available_versions != list(versions):
+            raise RuntimeError(f"{identifier} 的可用版本声明不一致。")
         manifest_ids.append(str(identifier))
         expected_topic_files.add(f"{identifier}.json")
         topic_path = output / "topics" / f"{identifier}.json"
@@ -719,6 +764,8 @@ def validate_snapshot(output: Path) -> dict[str, object]:
                 "knowledge_ids",
                 "paper_count",
                 "evidence_event_count",
+                "default_version",
+                "available_versions",
             ):
                 if topic.get(field) != item.get(field):
                     raise RuntimeError(f"{identifier} 的 {field} 与发布索引不一致。")
@@ -728,10 +775,6 @@ def validate_snapshot(output: Path) -> dict[str, object]:
             citation_urls = [citation.get("url") for citation in citations if isinstance(citation, dict)]
             if len(citation_urls) != len(citations) or len(citation_urls) != len(set(citation_urls)):
                 raise RuntimeError(f"{identifier} 的论文引用 URL 未去重。")
-        versions = topic.get("versions", {})
-        missing = [key for key in VERSION_FILES if key not in versions]
-        if missing:
-            raise RuntimeError(f"{identifier} 缺少版本：{', '.join(missing)}")
     actual_topic_files = {
         path.name for path in (output / "topics").glob("topic-*.json") if path.is_file()
     }

@@ -115,7 +115,11 @@
     return event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
   }
 
-  function openTopicFromLink(event, element, version = "zhihu") {
+  function topicDefaultVersion(topic) {
+    return topic?.default_version || state.manifest?.site?.default_version || "zhihu";
+  }
+
+  function openTopicFromLink(event, element, version = null) {
     if (!element || shouldUseNativeLink(event)) return false;
     event.preventDefault();
     setRoute(element.dataset.topicId, element.dataset.version || version);
@@ -215,7 +219,7 @@
       <a class="welcome-card" href="${escapeHtml(canonicalHref(topic))}" data-topic-id="${topic.id}">
         <small>${escapeHtml(topic.field)}</small>
         <strong>${escapeHtml(topic.title)}</strong>
-        <span>${escapeHtml(formatDate(topic.date))} · 默认知乎解释版</span>
+        <span>${escapeHtml(formatDate(topic.date))} · 默认${escapeHtml(VERSION_LABELS[topicDefaultVersion(topic)] || "研究版")}</span>
       </a>`).join("");
   }
 
@@ -226,18 +230,20 @@
     const version = parameters.get("version");
     return {
       id: decodeURIComponent(match[1]),
-      version: VERSION_LABELS[version] ? version : "zhihu",
+      version: VERSION_LABELS[version] ? version : null,
       openAi: parameters.get("ai") === "1",
     };
   }
 
-  function setRoute(topicId, version = "zhihu", replace = false) {
-    const hash = `#/topic/${encodeURIComponent(topicId)}?version=${version}`;
+  function setRoute(topicId, version = null, replace = false) {
+    const manifestItem = state.manifest?.topics.find((item) => item.id === topicId);
+    const selectedVersion = version || topicDefaultVersion(manifestItem);
+    const hash = `#/topic/${encodeURIComponent(topicId)}?version=${selectedVersion}`;
     if (replace) history.replaceState(null, "", hash);
     else location.hash = hash;
   }
 
-  async function loadTopic(identifier, requestedVersion = "zhihu", openAi = false) {
+  async function loadTopic(identifier, requestedVersion = null, openAi = false) {
     const manifestItem = state.manifest.topics.find((item) => item.id === identifier);
     if (!manifestItem) {
       showWelcome();
@@ -251,7 +257,8 @@
         state.topicCache.set(identifier, topic);
       }
       state.topic = topic;
-      state.version = topic.versions[requestedVersion] ? requestedVersion : "zhihu";
+      const fallbackVersion = topicDefaultVersion(topic);
+      state.version = topic.versions[requestedVersion] ? requestedVersion : fallbackVersion;
       state.drawerMode = null;
       state.expandedFields.add(topic.field);
       renderArticle();
@@ -281,6 +288,9 @@
     if (repeatedTitle?.tagName === "H1") repeatedTitle.remove();
     nodes.evidenceButton.disabled = !topic.evidence.available;
     nodes.evidenceButton.title = topic.evidence.available ? "打开证据附录" : "这个话题没有随附证据文档";
+    nodes.versionTabs.innerHTML = Object.entries(topic.versions).map(([key, item]) =>
+      `<button type="button" role="tab" data-version="${escapeHtml(key)}">${escapeHtml(item.label || VERSION_LABELS[key] || key)}</button>`
+    ).join("");
     [...nodes.versionTabs.querySelectorAll("[data-version]")].forEach((button) => {
       const active = button.dataset.version === state.version;
       button.setAttribute("aria-selected", String(active));
@@ -362,7 +372,7 @@ English title: ${topic.title_en || "未标注"}
 Canonical: ${absoluteCanonical(topic)}
 证据规模：${topic.paper_count || 0} 篇精读论文，${topic.evidence_event_count || 0} 条正式证据事件
 知识单元：${knowledgeIds}
-当前阅读版本：${VERSION_LABELS[state.version]}
+当前阅读版本：${topic.versions[state.version]?.label || VERSION_LABELS[state.version] || state.version}
 
 研究任务：${instruction}
 
@@ -580,7 +590,7 @@ Canonical: ${absoluteCanonical(topic)}
   function renderSearchResults(query) {
     const value = query.trim();
     if (!value) {
-      nodes.searchCount.textContent = `${state.searchIndex?.topics.length || 0} 个话题，覆盖三种表达版本`;
+      nodes.searchCount.textContent = `${state.searchIndex?.topics.length || 0} 个话题，覆盖所有可用表达版本`;
       nodes.searchResults.innerHTML = '<p class="search-empty">可以搜索概念、结论、论文名或研究问题。</p>';
       return;
     }
@@ -588,7 +598,7 @@ Canonical: ${absoluteCanonical(topic)}
     nodes.searchCount.textContent = `找到 ${results.length} 个版本匹配`;
     nodes.searchResults.innerHTML = results.length ? results.map((result) => `
       <a class="search-result" href="${escapeHtml(canonicalHref(result.topic))}" data-topic-id="${result.topic.id}" data-version="${result.versionKey}">
-        <span class="search-result-badge">${escapeHtml(VERSION_LABELS[result.versionKey])}</span>
+        <span class="search-result-badge">${escapeHtml(result.version.label || VERSION_LABELS[result.versionKey] || result.versionKey)}</span>
         <span><strong>${escapeHtml(result.topic.title)}</strong><p>${makeSnippet(result.version.text, normalizeSearch(value))}</p></span>
       </a>`).join("") : '<p class="search-empty">没有找到匹配内容。试试更短的关键词。</p>';
   }
@@ -667,7 +677,7 @@ Canonical: ${absoluteCanonical(topic)}
     const topics = state.manifest.topics;
     const current = topics.findIndex((topic) => topic.id === state.topic.id);
     const next = topics[(current + 1) % topics.length];
-    setRoute(next.id, "zhihu");
+    setRoute(next.id, topicDefaultVersion(next));
   }
 
   function bindEvents() {

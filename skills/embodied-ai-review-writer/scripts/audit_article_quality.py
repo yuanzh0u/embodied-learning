@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit editorial quality signals for a three-style embodied-AI review bundle."""
+"""Audit editorial quality signals for an embodied-AI review bundle."""
 
 from __future__ import annotations
 
@@ -99,6 +99,18 @@ MALFORMED_PUNCTUATION_RE = re.compile(r"。。|，，|；；|：：|[.,，]\s*�
 MISSING_CITATION_SUBJECT_RE = re.compile(
     r"(?:但|而|与|和)\s+的\s+(?:(?:[A-Za-z][A-Za-z0-9-]*)\s+)?(?:实验|研究|结论|方法|架构|论文)"
 )
+
+STANDARD_TARGETS = (
+    ("scientific-memo_keyan.md", "memo"),
+    ("zhihu-explainer_zhihu.md", "zhihu"),
+    ("xiaohongshu-post_xiaohongshu.md", "xiaohongshu"),
+)
+REDUCED_STYLE_TARGETS = {
+    "scientific-memo": ("scientific-memo_keyan.md", "memo"),
+    "expert-explainer": ("zhihu-explainer_zhihu.md", "zhihu"),
+    "kol-thread": ("xiaohongshu-post_xiaohongshu.md", "xiaohongshu"),
+    "survey": ("review-packet.md", "memo"),
+}
 
 
 @dataclass
@@ -433,9 +445,39 @@ def overlap_findings(memo_path: Path, memo: str, zhihu_path: Path, zhihu: str) -
     return findings
 
 
+def bundle_targets(root: Path) -> tuple[tuple[Path, str], ...]:
+    """Resolve the editorial outputs declared by a bundle manifest.
+
+    Historical bundles without a manifest style retain the standard three-file
+    contract. A reduced bundle must name a supported style and explain its
+    scope, matching the repository's publication contract.
+    """
+
+    run_json = root / "run.json"
+    if not run_json.is_file():
+        return tuple((root / name, style) for name, style in STANDARD_TARGETS)
+
+    manifest = json.loads(run_json.read_text(encoding="utf-8"))
+    style = manifest.get("style")
+    if style is None:
+        return tuple((root / name, audit_style) for name, audit_style in STANDARD_TARGETS)
+    if not isinstance(style, str) or style not in REDUCED_STYLE_TARGETS:
+        supported = ", ".join(sorted(REDUCED_STYLE_TARGETS))
+        raise ValueError(f"unsupported reduced-scope style {style!r}; use {supported}")
+    if not str(manifest.get("scope_note") or "").strip():
+        raise ValueError("reduced-scope style requires scope_note")
+
+    name, audit_style = REDUCED_STYLE_TARGETS[style]
+    files = manifest.get("files")
+    outputs = files.get("outputs") if isinstance(files, dict) else None
+    if not isinstance(outputs, list) or name not in outputs:
+        raise ValueError(f"reduced-scope article is not listed in files.outputs: {name}")
+    return ((root / name, audit_style),)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bundle-dir", help="Directory containing the three standard article filenames.")
+    parser.add_argument("--bundle-dir", help="Directory containing a standard or reduced-scope review bundle.")
     parser.add_argument("--memo", help="Scientific memo Markdown path.")
     parser.add_argument("--zhihu", help="Zhihu explainer Markdown path.")
     parser.add_argument("--xiaohongshu", help="Xiaohongshu post Markdown path.")
@@ -448,20 +490,42 @@ def main() -> int:
     args = parse_args()
     if args.bundle_dir:
         root = Path(args.bundle_dir)
-        memo_path = Path(args.memo) if args.memo else root / "scientific-memo_keyan.md"
-        zhihu_path = Path(args.zhihu) if args.zhihu else root / "zhihu-explainer_zhihu.md"
-        xhs_path = Path(args.xiaohongshu) if args.xiaohongshu else root / "xiaohongshu-post_xiaohongshu.md"
+        if args.memo or args.zhihu or args.xiaohongshu:
+            targets = (
+                (Path(args.memo) if args.memo else root / "scientific-memo_keyan.md", "memo"),
+                (Path(args.zhihu) if args.zhihu else root / "zhihu-explainer_zhihu.md", "zhihu"),
+                (
+                    Path(args.xiaohongshu)
+                    if args.xiaohongshu
+                    else root / "xiaohongshu-post_xiaohongshu.md",
+                    "xiaohongshu",
+                ),
+            )
+        else:
+            try:
+                targets = bundle_targets(root)
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                print(f"ERROR {root} [bundle-contract] {exc}")
+                return 1
     else:
         if not (args.memo and args.zhihu and args.xiaohongshu):
             raise SystemExit("provide --bundle-dir or all of --memo/--zhihu/--xiaohongshu")
-        memo_path, zhihu_path, xhs_path = Path(args.memo), Path(args.zhihu), Path(args.xiaohongshu)
+        targets = (
+            (Path(args.memo), "memo"),
+            (Path(args.zhihu), "zhihu"),
+            (Path(args.xiaohongshu), "xiaohongshu"),
+        )
 
-    memo, findings = audit_file(memo_path, "memo", args.min_chinese_share)
-    zhihu, more = audit_file(zhihu_path, "zhihu", args.min_chinese_share)
-    findings.extend(more)
-    xhs, more = audit_file(xhs_path, "xiaohongshu", args.min_chinese_share)
-    findings.extend(more)
-    if memo and zhihu:
+    contents: dict[str, tuple[Path, str]] = {}
+    findings: list[Finding] = []
+    for path, style in targets:
+        content, more = audit_file(path, style, args.min_chinese_share)
+        findings.extend(more)
+        if content:
+            contents[style] = (path, content)
+    if "memo" in contents and "zhihu" in contents:
+        memo_path, memo = contents["memo"]
+        zhihu_path, zhihu = contents["zhihu"]
         findings.extend(overlap_findings(memo_path, memo, zhihu_path, zhihu))
 
     if args.json:

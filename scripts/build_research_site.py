@@ -22,7 +22,6 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from build_research_wiki import (  # noqa: E402
-    VERSION_FILES,
     excerpt,
     resolve_snapshot_directory,
     validate_snapshot,
@@ -195,14 +194,24 @@ def _article_bodies(
     repo_root: Path,
     repository_url: str,
     topic: dict[str, object],
-) -> tuple[str, str, str]:
+) -> tuple[str, str, str, str, str]:
     directory = _source_directory(repo_root, topic)
     renderer = StaticMarkdownRenderer(repo_root, directory, repository_url)
-    zhihu_path = directory / VERSION_FILES["zhihu"][1]
-    if not zhihu_path.is_file():
-        raise RuntimeError(f"专题缺少知乎正文：{zhihu_path}")
-    raw_zhihu = _read_text(zhihu_path)
-    zhihu_html = _without_first_h1(renderer.render(raw_zhihu))
+    versions = topic.get("versions")
+    default_version = topic.get("default_version")
+    if not isinstance(versions, dict) or default_version not in versions:
+        raise RuntimeError(f"专题缺少有效默认正文：{topic.get('id')}")
+    version = versions[default_version]
+    if not isinstance(version, dict):
+        raise RuntimeError(f"专题默认正文元数据非法：{topic.get('id')}")
+    source_file = version.get("source_file")
+    if not isinstance(source_file, str):
+        raise RuntimeError(f"专题默认正文缺少 source_file：{topic.get('id')}")
+    article_path = directory / source_file
+    if not article_path.is_file():
+        raise RuntimeError(f"专题默认正文不存在：{article_path}")
+    raw_article = _read_text(article_path)
+    article_html = _without_first_h1(renderer.render(raw_article))
 
     evidence = topic.get("evidence")
     evidence_name = evidence.get("source_file") if isinstance(evidence, dict) else None
@@ -212,8 +221,9 @@ def _article_bodies(
     if not evidence_path.is_file():
         raise RuntimeError(f"专题证据附录不存在：{evidence_path}")
     evidence_html = _without_first_h1(renderer.render(_read_text(evidence_path)))
-    conclusion = excerpt(raw_zhihu, limit=260)
-    return conclusion, zhihu_html, evidence_html
+    conclusion = excerpt(raw_article, limit=260)
+    label = str(version.get("label") or default_version)
+    return conclusion, article_html, evidence_html, str(default_version), label
 
 
 def _citation_list(citations: list[dict[str, object]]) -> str:
@@ -255,7 +265,9 @@ def render_topic_page(
     preview: bool,
 ) -> str:
     repository_url = str(site["repository_url"])
-    conclusion, zhihu_html, evidence_html = _article_bodies(repo_root, repository_url, topic)
+    conclusion, article_html, evidence_html, default_version, default_label = _article_bodies(
+        repo_root, repository_url, topic
+    )
     citations = topic.get("citations")
     if not isinstance(citations, list) or any(not isinstance(item, dict) for item in citations):
         raise RuntimeError(f"专题 {topic.get('id')} 的引用列表非法。")
@@ -286,6 +298,20 @@ def render_topic_page(
         "image": social_image,
     }
     interactive_base = f"../../#/topic/{quote(str(topic['id']))}"
+    versions = topic.get("versions")
+    if not isinstance(versions, dict) or not versions:
+        raise RuntimeError(f"专题 {topic.get('id')} 没有可用阅读版本。")
+    version_links = "\n".join(
+        f'<a href="{interactive_base}?version={html.escape(str(key), quote=True)}">'
+        f'{html.escape(str(value.get("label") or key))}</a>'
+        for key, value in versions.items()
+        if isinstance(value, dict)
+    )
+    version_summary = "、".join(
+        str(value.get("label") or key)
+        for key, value in versions.items()
+        if isinstance(value, dict)
+    )
     noindex = '<meta name="robots" content="noindex,nofollow">' if preview else ""
     knowledge_ids = ", ".join(str(item) for item in topic.get("knowledge_ids", [])) or "未标注"
     return f"""<!doctype html>
@@ -336,9 +362,9 @@ def render_topic_page(
         <div><dt>审计状态</dt><dd>当前结算 run 已通过仓库校验</dd></div>
       </dl>
       <section class="article-content" aria-labelledby="article-title">
-        <p class="eyebrow">知乎解释版 · 完整正文</p>
+        <p class="eyebrow">{html.escape(default_label)} · 完整正文</p>
         <h2 id="article-title">研究综述</h2>
-        <div class="markdown-body">{zhihu_html}</div>
+        <div class="markdown-body">{article_html}</div>
       </section>
       <section class="paper-references" aria-labelledby="paper-references-title">
         <p class="eyebrow">Accepted evidence</p>
@@ -352,12 +378,10 @@ def render_topic_page(
       <section class="reading-versions" aria-labelledby="reading-versions-title">
         <p class="eyebrow">Interactive Wiki</p>
         <h2 id="reading-versions-title">进入交互阅读</h2>
-        <p>静态页以知乎解释版承接搜索意图；科研版、知乎版和小红书版在同一交互 Wiki 中切换，不建立相互竞争的索引页。</p>
+        <p>静态页采用默认版本；{html.escape(version_summary)}可在同一交互 Wiki 中阅读，不建立相互竞争的索引页。</p>
         <div class="button-row">
-          <a class="ai-entry" href="{interactive_base}?version=zhihu&amp;ai=1">用 AI 继续研究</a>
-          <a href="{interactive_base}?version=keyan">科研备忘录</a>
-          <a href="{interactive_base}?version=zhihu">知乎解释版</a>
-          <a href="{interactive_base}?version=xiaohongshu">小红书版</a>
+          <a class="ai-entry" href="{interactive_base}?version={html.escape(default_version, quote=True)}&amp;ai=1">用 AI 继续研究</a>
+          {version_links}
         </div>
       </section>
       <section class="method-note" aria-labelledby="method-note-title">
@@ -564,7 +588,7 @@ def validate_site(
     descriptions: list[str] = []
     for page in topic_pages:
         source = _read_text(page)
-        required_fragments = ["<h1>", "知乎解释版 · 完整正文", 'id="evidence"', "去重论文引用", "application/ld+json"]
+        required_fragments = ["<h1>", "· 完整正文", 'id="evidence"', "去重论文引用", "application/ld+json"]
         missing = [fragment for fragment in required_fragments if fragment not in source]
         if missing:
             raise RuntimeError(f"专题页 {page} 缺少：{', '.join(missing)}")

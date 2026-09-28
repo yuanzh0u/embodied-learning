@@ -22,11 +22,11 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from lib.review_runs import (  # noqa: E402
-    STANDARD_ARTICLES,
     catalog_run_paths,
     event_consistency_problems,
     evidence_paths,
     load_catalog_runs,
+    reader_articles,
 )
 
 
@@ -66,7 +66,7 @@ def validate(root: Path) -> None:
             )
 
         citation_command = [sys.executable, "scripts/audit_citations.py"]
-        for article in STANDARD_ARTICLES:
+        for article in reader_articles(run_json, manifest):
             citation_command.extend(["--article", str((run_dir / article).relative_to(root))])
         citation_command.extend(
             ["--appendix", str((run_dir / "evidence-appendix.md").relative_to(root))]
