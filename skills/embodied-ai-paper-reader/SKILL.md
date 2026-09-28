@@ -40,11 +40,9 @@ python3 skills/embodied-ai-paper-reader/scripts/build_reading_packet.py \
   --note-template work/<run>/paper-notes/2402.10329.json
 ```
 
-2. **Map before deep reading.** Prefer the summary-first packet's structure map + section windows. Identify the paper type, problem, method/design, results/analysis, conclusion/limitations, and relevant appendix. Never infer the paper from the top-ranked passages alone, and do **not** re-paste Complete extracted text into every LLM pass.
-3. **Read against the review question.** Follow the mode-specific depth in [reading-depth-modes.md](references/reading-depth-modes.md) and the six-pass protocol in [reading-contract.md](references/reading-contract.md). For evidence cards, open **locator windows** from the extraction JSON (or a short neighborhood around the locator) rather than the entire packet body.
-4. **Write the paper note.** Follow [paper-note-schema.md](references/paper-note-schema.md). A paper may yield zero, one, or multiple evidence cards; never manufacture a card to satisfy a quota.
-5. **Critically appraise it.** Read [critical-appraisal.md](references/critical-appraisal.md). Separate author-stated limitations from reader-inferred transfer boundaries.
-6. **Validate and audit.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
+2. **Prefer one-shot paper-note (default for rapid/scoping).** Follow [reading-contract.md](references/reading-contract.md): one LLM call on the summary-first packet produces a complete `paper-note.json` per [paper-note-schema.md](references/paper-note-schema.md), covering triage, structure map, question-driven reading, evidence cards, critical appraisal ([critical-appraisal.md](references/critical-appraisal.md)), and verification rationale. Mode depth still follows [reading-depth-modes.md](references/reading-depth-modes.md). Never infer the paper from top-ranked passages alone; for evidence cards prefer **locator windows** from the extraction JSON rather than re-pasting Complete extracted text. A paper may yield zero, one, or multiple evidence cards; never manufacture a card to satisfy a quota.
+3. **Optional six-pass deep mode.** Use the six-pass protocol in [reading-contract.md](references/reading-contract.md) only for `systematic` / high-stakes reviews or when one-shot notes repeatedly fail claim-support. Do not default to six full-text reloads on scoping runs.
+4. **Validate and audit locally.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
 
 ```bash
 python3 skills/embodied-ai-paper-reader/scripts/validate_paper_note.py \
@@ -56,7 +54,20 @@ python3 skills/embodied-ai-paper-reader/scripts/audit_claim_support.py \
   --output work/<run>/paper-notes/2402.10329.audit.json
 ```
 
-7. **Project evidence only after the gates pass.** Read [evidence-projection.md](references/evidence-projection.md).
+5. **On audit failure, retry only failing cards with a locator window** (not a full re-read):
+
+```bash
+python3 skills/embodied-ai-paper-reader/scripts/extract_failed_card_window.py \
+  --audit work/<run>/paper-notes/2402.10329.audit.json \
+  --extraction work/<run>/extractions/2402.10329.json \
+  --paper-note work/<run>/paper-notes/2402.10329.json \
+  --output work/<run>/paper-notes/2402.10329.retry-windows.json \
+  --markdown-output work/<run>/paper-notes/2402.10329.retry-windows.md
+```
+
+Patch only the failing cards, then re-run validate + audit.
+
+6. **Project evidence only after the gates pass.** Read [evidence-projection.md](references/evidence-projection.md).
 
 ```bash
 python3 skills/embodied-ai-paper-reader/scripts/project_evidence_events.py \
@@ -66,7 +77,7 @@ python3 skills/embodied-ai-paper-reader/scripts/project_evidence_events.py \
   --output work/<run>/evidence/2402.10329.jsonl
 ```
 
-8. **Update the reading ledger.** Keep recovered, mapped, deeply read, verified, and accepted counts separate.
+7. **Update the reading ledger.** Keep recovered, mapped, deeply read, verified, and accepted counts separate.
 
 ```bash
 python3 skills/embodied-ai-paper-reader/scripts/update_reading_ledger.py \

@@ -36,4 +36,8 @@ Required roles: all scoping roles plus `appendix-or-supplement`. If no appendix 
 
 ## Depth is not a paper quota
 
-Mode controls how each selected paper is read. It does not require reading every recovered paper deeply and does not impose a fixed number of evidence cards per paper.
+Mode controls how each **selected** paper is read. It does not require reading every recovered paper deeply and does not impose a fixed number of evidence cards per paper.
+
+Prefer the one-shot paper-note calling convention for rapid/scoping (see [reading-contract.md](reading-contract.md)). Use six-pass deep mode for systematic / high-stakes work.
+
+Separately, the orchestrator applies an **LLM deep-read budget** (`accepted_floor + 10` by default; see the literature-review [review-contract.md](../../embodied-ai-literature-review/references/review-contract.md)). Papers beyond that budget should remain map-read or background-only unless the budget is explicitly raised.

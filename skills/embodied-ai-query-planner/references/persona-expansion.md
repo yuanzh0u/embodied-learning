@@ -11,6 +11,10 @@ Personas widen recall for this run; they never replace the static taxonomy, neve
 - A prior run's stance distribution was skewed toward `support` and you want counter-evidence pressure at query-planning time.
 - Coverage/saturation rounds exposed a dimension gap that static tier keywords have trouble filling.
 
+## Cache interaction
+
+If `query_plan_cache.py get` hits for this `topic+mode+time_range+family`, **skip Step 2** (persona LLM). Reuse the cached plan. Still run `suggest_persona_regeneration.py` later when coverage dimensions fail — that path is not a cache bypass of the initial persona call; it is gap-filling. See [query-plan-cache.md](query-plan-cache.md).
+
 ## Workflow
 
 Three steps; only step 2 involves an LLM, and its output is a reviewable file.

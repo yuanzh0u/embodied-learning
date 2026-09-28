@@ -30,7 +30,20 @@ Use it upstream of `$embodied-ai-literature-hub` whenever a literature run needs
    - `knowledge/embodied-ai/index.md`
    - relevant topic cards only.
 2. Map the topic to `EA-*` IDs and specialized families.
-3. Generate the deterministic baseline plan:
+2b. **Check the query-plan cache** before any dynamic/persona LLM work. See [query-plan-cache.md](references/query-plan-cache.md).
+
+```bash
+python3 skills/embodied-ai-query-planner/scripts/query_plan_cache.py get \
+  --topic "UMI 数据可用性" \
+  --review-mode scoping \
+  --time-range "近六个月" \
+  --family umi \
+  --output work/<run>/query-plan.json \
+  --json
+```
+
+On **hit**: reuse the plan; **skip** dynamic-expansion and persona-generation LLM calls. Persona regeneration via `suggest_persona_regeneration.py` is still allowed later **only for coverage dimension gaps**. On **miss**: continue with step 3.
+3. Generate the deterministic baseline plan (cache miss path):
 
 ```bash
 python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
@@ -46,8 +59,9 @@ python skills/embodied-ai-query-planner/scripts/build_query_plan.py \
 5. If the topic benefits from multiple expert perspectives (e.g. pitfall-oriented topics), extract local reference context with `scripts/gen_persona_context.py`, generate a reviewed persona file, and pass it via `--persona-file`. See [persona-expansion.md](references/persona-expansion.md).
 6. If the user requested fresh calibration, search arXiv pages, project pages, author pages, Reddit, and X/Twitter for current terms. Save only terms/query hints, not claims. See [web-calibration.md](references/web-calibration.md).
 7. Re-run the script with `--dynamic-file`, `--persona-file`, and/or `--calibration-file` to merge dynamic suggestions, persona queries, and calibrated terms.
-8. After a retrieval or reading round, if the coverage report shows dimension gaps or the evidence pool skews positive, run `scripts/suggest_persona_regeneration.py` to draft a next-round persona file. Review the draft, refine focus and queries, then merge via `--persona-file` (round cap 2 by default).
-9. Pass the JSON plan to `$embodied-ai-literature-hub` or `search_arxiv.py --query-file`.
+8. After a retrieval or reading round, if the coverage report shows dimension gaps or the evidence pool skews positive, run `scripts/suggest_persona_regeneration.py` to draft a next-round persona file. Review the draft, refine focus and queries, then merge via `--persona-file` (round cap 2 by default). Cache hits do not block this gap-filling path.
+9. After the reviewed plan is finalized (especially if dynamic/persona LLM ran), store it in the cache with `query_plan_cache.py put` (see [query-plan-cache.md](references/query-plan-cache.md)).
+10. Pass the JSON plan to `$embodied-ai-literature-hub` or `search_arxiv.py --query-file`.
 
 ## Output Contract
 
@@ -70,6 +84,7 @@ Each query entry must include `label`, `tier`, `query`, and `why`.
 - Never stop because a fixed paper count was reached. Counts are floors; coverage and saturation decide completion.
 - Use `rapid` only for a bounded decision or early scan, `scoping` for normal topic maps, and `systematic` for high-consequence or explicitly exhaustive work.
 - Keep static taxonomy, persona suggestions, dynamic suggestions, and web calibration visibly separate.
+- Prefer the query-plan cache for identical `topic+mode+time_range+family`; skip dynamic/persona LLM on hit.
 - Plans without `--persona-file` must stay identical to pre-persona output; the persona layer is purely additive.
 - Do not hard-filter with `cat:` by default; include suggested categories as metadata.
 - Treat Reddit and X/Twitter as low-confidence social calibration only.
