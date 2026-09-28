@@ -26,6 +26,10 @@ from build_research_wiki import (  # noqa: E402
     resolve_snapshot_directory,
     validate_snapshot,
 )
+from build_mind_omni_reader import (  # noqa: E402
+    DEFAULT_SOURCE as MIND_OMNI_SOURCE,
+    build_reader as build_mind_omni_reader,
+)
 from lib.markdown_semantics import render_markdown  # noqa: E402
 
 
@@ -39,6 +43,8 @@ INDEX_DESCRIPTION = (
 )
 _EXTERNAL_SCHEMES = {"http", "https", "mailto"}
 _URL_PATTERN = re.compile(r"^https?://[^\s]+$")
+MIND_OMNI_TOPIC_SLUG = "autonomous-driving-vla-models-teams"
+MIND_OMNI_READER_PATH = f"/research/{MIND_OMNI_TOPIC_SLUG}/mind-omni/"
 
 
 def _read_text(path: Path) -> str:
@@ -314,6 +320,15 @@ def render_topic_page(
     )
     noindex = '<meta name="robots" content="noindex,nofollow">' if preview else ""
     knowledge_ids = ", ".join(str(item) for item in topic.get("knowledge_ids", [])) or "未标注"
+    reader_entry = ""
+    if topic.get("slug") == MIND_OMNI_TOPIC_SLUG:
+        reader_entry = """
+      <section class="quick-answer mind-omni-entry" aria-labelledby="mind-omni-reader-title">
+        <p class="eyebrow">Guided reader</p>
+        <h2 id="mind-omni-reader-title">Mind-Omni 图解阅读</h2>
+        <p>按六个体系模块展开论文、原始架构图、技术栈、团队与完整报告。这是本专题的派生阅读层，不是新的证据源。</p>
+        <p><a class="ai-entry" href="mind-omni/">打开 Mind-Omni Reader →</a></p>
+      </section>"""
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -361,6 +376,7 @@ def render_topic_page(
         <div><dt>知识单元</dt><dd>{html.escape(knowledge_ids)}</dd></div>
         <div><dt>审计状态</dt><dd>当前结算 run 已通过仓库校验</dd></div>
       </dl>
+      {reader_entry}
       <section class="article-content" aria-labelledby="article-title">
         <p class="eyebrow">{html.escape(default_label)} · 完整正文</p>
         <h2 id="article-title">研究综述</h2>
@@ -478,10 +494,14 @@ def _inject_homepage(
     return value
 
 
-def _sitemap(topics: list[dict[str, object]], base_url: str) -> str:
+def _sitemap(
+    topics: list[dict[str, object]], base_url: str, *, include_mind_omni: bool = False
+) -> str:
     urls = [f"{base_url}/", f"{base_url}/research/"] + [
         _canonical_url(base_url, str(topic["canonical_path"])) for topic in topics
     ]
+    if include_mind_omni:
+        urls.append(_canonical_url(base_url, MIND_OMNI_READER_PATH))
     rows = "\n".join(f"  <url><loc>{html.escape(url)}</loc></url>" for url in urls)
     return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{rows}\n</urlset>\n'
 
@@ -496,10 +516,17 @@ def _robots(base_url: str, preview: bool) -> str:
     )
 
 
-def _llms(topics: list[dict[str, object]], base_url: str) -> str:
+def _llms(
+    topics: list[dict[str, object]], base_url: str, *, include_mind_omni: bool = False
+) -> str:
     rows = "\n".join(
         f"- [{topic['title']} / {topic['title_en']}]({_canonical_url(base_url, str(topic['canonical_path']))})"
         for topic in topics
+    )
+    reader_row = (
+        f"\n- [Mind-Omni 图解阅读]({_canonical_url(base_url, MIND_OMNI_READER_PATH)})"
+        if include_mind_omni
+        else ""
     )
     return f"""# Embodied AI Evidence Hub / 具身智能证据知识库
 
@@ -514,6 +541,7 @@ Each public topic is derived from a settled evidence run. Accepted evidence requ
 - [Homepage]({base_url}/)
 - [Research directory]({base_url}/research/)
 {rows}
+{reader_row}
 
 ## Reuse and citation
 
@@ -547,6 +575,53 @@ class LinkCollector(HTMLParser):
             self.json_ld.append(data)
 
 
+def _validate_mind_omni_reader(output: Path, base_url: str, *, preview: bool) -> bool:
+    reader = output / MIND_OMNI_READER_PATH.lstrip("/")
+    index = reader / "index.html"
+    if not index.is_file():
+        return False
+    required = [
+        reader / "assets" / "reader.css",
+        reader / "assets" / "reader.js",
+        reader / "assets" / "research-data.js",
+        reader / "mind-omni-source.json",
+        reader / "figure-sources.json",
+        reader / "presentation-audit.json",
+        reader / "reports" / "scientific-memo_keyan.md",
+    ]
+    missing = [str(path.relative_to(output)) for path in required if not path.is_file()]
+    if missing:
+        raise RuntimeError("Mind-Omni Reader 缺少文件：" + ", ".join(missing))
+
+    source = _read_text(index)
+    canonical = _canonical_url(base_url, MIND_OMNI_READER_PATH)
+    if f'<link rel="canonical" href="{canonical}">' not in source:
+        raise RuntimeError("Mind-Omni Reader canonical 地址不正确。")
+    if preview and 'name="robots" content="noindex,nofollow"' not in source:
+        raise RuntimeError("Preview Mind-Omni Reader 缺少 noindex。")
+    if not preview and 'name="robots" content="noindex,nofollow"' in source:
+        raise RuntimeError("生产 Mind-Omni Reader 不应 noindex。")
+
+    for attribute, target in re.findall(r'\b(src|href)="([^"]+)"', source):
+        parsed = urlsplit(html.unescape(target))
+        if parsed.scheme in {"http", "https"} or (not parsed.path and parsed.fragment):
+            continue
+        if parsed.scheme or parsed.netloc:
+            raise RuntimeError(f"Mind-Omni Reader 不支持的链接：{target}")
+        destination = (reader / unquote(parsed.path)).resolve()
+        try:
+            destination.relative_to(output.resolve())
+        except ValueError as exc:
+            raise RuntimeError(f"Mind-Omni Reader 链接越界：{target}") from exc
+        if parsed.path.endswith("/"):
+            destination /= "index.html"
+        if not destination.exists():
+            raise RuntimeError(
+                f"Mind-Omni Reader 链接目标不存在：{attribute}={target}"
+            )
+    return True
+
+
 def validate_site(
     output: Path,
     base_url: str,
@@ -563,15 +638,22 @@ def validate_site(
             raise RuntimeError(f"静态站缺少文件：{required}")
     tree = ElementTree.parse(sitemap_path)
     locations = [node.text for node in tree.findall("{http://www.sitemaps.org/schemas/sitemap/0.9}url/{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+    has_mind_omni = (output / MIND_OMNI_READER_PATH.lstrip("/") / "index.html").is_file()
+    extra_canonical_count = 1 if has_mind_omni else 0
     if expected_topic_count is None:
         # check-only mode: derive the expected topic count from the sitemap
         # (home + directory listing + one canonical per topic), so the site
         # stays self-consistent as the topic set grows.
-        expected_topic_count = len(locations) - 2
+        expected_topic_count = len(locations) - 2 - extra_canonical_count
     if (
-        len(locations) != expected_topic_count + 2 or len(locations) != len(set(locations))
+        len(locations) != expected_topic_count + 2 + extra_canonical_count
+        or len(locations) != len(set(locations))
     ):
-        raise RuntimeError(f"Sitemap 必须包含 {expected_topic_count + 2} 个唯一 canonical URL，当前为 {len(locations)}。")
+        raise RuntimeError(
+            "Sitemap 必须包含 "
+            f"{expected_topic_count + 2 + extra_canonical_count} 个唯一 canonical URL，"
+            f"当前为 {len(locations)}。"
+        )
     if any("#" in str(url) or "/knowledge-map/" in str(url) or "/data/" in str(url) for url in locations):
         raise RuntimeError("Sitemap 包含 hash、知识图谱或数据快照地址。")
     robots = _read_text(robots_path)
@@ -652,6 +734,8 @@ def validate_site(
                     raise RuntimeError(f"站内链接目标不存在：{href}")
     if expected_topic_count is not None and len(canonicals) != expected_topic_count:
         raise RuntimeError(f"专题页 canonical 数量不等于 {expected_topic_count}。")
+    if has_mind_omni:
+        _validate_mind_omni_reader(output, base_url, preview=preview)
 
     graph = output / "knowledge-map" / "index.html"
     if require_knowledge_map and not graph.is_file():
@@ -738,9 +822,28 @@ def build_site(
             )
             _write_text(output / "research" / str(alias) / "index.html", redirect)
 
+    mind_omni_topic = next(
+        (topic for topic in topics if topic.get("slug") == MIND_OMNI_TOPIC_SLUG), None
+    )
+    include_mind_omni = mind_omni_topic is not None
+    if mind_omni_topic is not None:
+        build_mind_omni_reader(
+            _source_directory(repo_root, mind_omni_topic),
+            MIND_OMNI_SOURCE,
+            output / MIND_OMNI_READER_PATH.lstrip("/"),
+            canonical_url=_canonical_url(base_url, MIND_OMNI_READER_PATH),
+            preview=preview,
+        )
+
     _write_text(output / "robots.txt", _robots(base_url, preview))
-    _write_text(output / "sitemap.xml", _sitemap(topics, base_url))
-    _write_text(output / "llms.txt", _llms(topics, base_url))
+    _write_text(
+        output / "sitemap.xml",
+        _sitemap(topics, base_url, include_mind_omni=include_mind_omni),
+    )
+    _write_text(
+        output / "llms.txt",
+        _llms(topics, base_url, include_mind_omni=include_mind_omni),
+    )
     _copy_verification_files(wiki_root, output)
     validate_site(output, base_url, preview=preview, expected_topic_count=len(topics))
     return manifest

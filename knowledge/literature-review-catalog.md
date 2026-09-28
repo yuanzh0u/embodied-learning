@@ -18,11 +18,13 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 |---|---|---|---:|---|
 | LR-AVMODEL-TEAM | 智驾 VLA、驾驶基础模型与关键团队（含理想系列论文） | EA-MODEL, EA-ALIGN, EA-EVAL | 1,876 / 48 / 30 | [科研备忘录](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/scientific-memo_keyan.md) · [理想研究思路专章](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/liauto-research-program.md) · [核心论文与系统](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/core-papers-systems.md) · [技术栈](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/technology-stack.md) · [组织人员](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/organization-people.md) · [关系图](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/relationships.md) · [run](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/run.json) · [审计](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/final-review-audit.json) |
 
+派生阅读：[Mind-Omni 六模块图解 Reader](https://yuanzh0u.github.io/embodied-learning/research/autonomous-driving-vla-models-teams/mind-omni/)。Reader 从上述当前 run 生成，不作为独立证据源。
+
 历史版本：[2026-09-27 基础版科研备忘录（20篇论文）](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-20260927/scientific-memo_keyan.md)。当前增补版追加10篇正式论文，保留原论文证据与Tesla主线；研究关系与量产披露分别记录。
 
 ## 批次概况
 
-- Review mode：28 项基础 run 均为 `scoping`；其中 LR-ALLO-YEAR 候选池（18）与全文层（15）低于 scoping floor，run.json notes 已声明原因（arXiv API 当时不可用），结论为初步性质。
+- Review mode：基础 run 以 `scoping` 为主。LR-ALLO-YEAR 候选池（18）与全文层（15）低于 scoping floor，且使用旧证据 schema 并存在未覆盖的正文引文；原始成果保留为兼容归档，不选作当前发布 run。
 - 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
@@ -57,7 +59,7 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-WM-SUP | 世界模型训练是否有必要接监督信号还是走纯端到端 | EA-EVAL, EA-MODEL, EA-4D | 519 / 30 / 30 | [run](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/run.json) · [packet](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/review-packet.md) |
 | LR-EMB-SUP | 具身端到端模型除动作监督外还需要哪些监督信号 | EA-MODEL, EA-EVAL, EA-ALIGN, EA-SENSOR, EA-4D | 558 / 20 / 20 | [run](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/run.json) · [packet](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/review-packet.md) |
 | LR-BRAIN-YEAR | 近一年类脑模型的发展 | EA-MODEL | 1,280 / 45 / 20 | [run](../evidence/literature-review-近一年类脑模型的发展-20260822/run.json) · [packet](../evidence/literature-review-近一年类脑模型的发展-20260822/review-packet.md) |
-| LR-ALLO-YEAR | 近一年 allocentric representation 在具身领域的应用 | EA-DATA, EA-MODEL, EA-XEMBODIMENT, EA-SENSOR | 18 / 15 / 15 | [run](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/run.json) · [packet](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/review-packet.md) |
+| LR-ALLO-YEAR | 近一年 allocentric representation 在具身领域的应用 | EA-DATA, EA-MODEL, EA-XEMBODIMENT, EA-SENSOR | 18 / 15 / 15 | [兼容归档 run](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/run.json) · [packet](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/review-packet.md) |
 | LR-SLAMCORE | 近一年SLAM技术在具身智能领域是否有核心作用 | EA-VLOC, EA-HARDWARE, EA-4D, EA-MODEL | 141 / 48 / 39 | [run](../evidence/literature-review-近一年slam技术在具身智能领域是否有核心作用-20260903/run.json) · [packet](../evidence/literature-review-近一年slam技术在具身智能领域是否有核心作用-20260903/review-packet.md) |
 | LR-TRAJACC-YEAR | 近一年机器人末端轨迹精度的解决方案与痛点 | EA-MODEL, EA-SENSOR, EA-EVAL, EA-BIZ | 206 / 62 / 25 | [run](../evidence/literature-review-近一年机器人末端轨迹精度的解决方案与痛点-20260903/run.json) · [packet](../evidence/literature-review-近一年机器人末端轨迹精度的解决方案与痛点-20260903/review-packet.md) |
 | LR-EGOHAND-TRAJ | 无本体ego-centric数据中手部检测精度对本体末端轨迹的影响 | EA-DATA, EA-XEMBODIMENT, EA-SENSOR, EA-MODEL | 540 / 87 / 86 | [run](../evidence/literature-review-无本体ego-centric数据中手部检测精度对本体末端轨迹的影响-20260911/run.json) · [packet](../evidence/literature-review-无本体ego-centric数据中手部检测精度对本体末端轨迹的影响-20260911/review-packet.md) |
@@ -78,9 +80,9 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 
 | ID | 综述主题 | 主要知识卡 | 规模 | 未过的审计门 | 审计入口 |
 |---|---|---|---:|---|---|
-| LR-EXO-VIDEO | 第三视角视频数据对 ego 数据采集和预训练的帮助 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 16 / — / 48 events | candidate_floor, full_text_floor, mechanisms 维度 0 候选, saturation（仅 1 轮） | [run](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/run.json) · [packet](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/review-packet.md) |
-| LR-EXO-YEAR | 近一年 exocentric 人类数据的发展 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 29 / — / 126 events | candidate_floor, full_text_floor, accepted_paper_floor, saturation（仅 1 轮） | [run](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/run.json) · [packet](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/review-packet.md) |
-| LR-DIT-WM-YEAR | 近两年 Diffusion Transformer 在视频生成与世界模型中的发展 | EA-4D, EA-EVAL, EA-MODEL | 1,566 / 70 / 16 events | saturation（活跃领域，末两轮新增率未收敛） | [run](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/run.json) · [packet](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/review-packet.md) |
+| LR-EXO-VIDEO | 第三视角视频数据对 ego 数据采集和预训练的帮助 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 16 / — / 48 events | candidate_floor, full_text_floor, mechanisms 维度 0 候选, saturation（仅 1 轮） | [补沉淀 run](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/run.json) · [packet](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/review-packet.md) |
+| LR-EXO-YEAR | 近一年 exocentric 人类数据的发展 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 29 / — / 126 events | candidate_floor, full_text_floor, accepted_paper_floor, saturation（仅 1 轮） | [补沉淀 run](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/run.json) · [packet](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/review-packet.md) |
+| LR-DIT-WM-YEAR | 近两年 Diffusion Transformer 在视频生成与世界模型中的发展 | EA-4D, EA-EVAL, EA-MODEL | 1,566 / 70 / 16 events | saturation（活跃领域，末两轮新增率未收敛） | [补沉淀 run](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/run.json) · [packet](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/review-packet.md) |
 
 ## 跨 run 综合专题
 

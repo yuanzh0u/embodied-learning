@@ -140,7 +140,7 @@ class BuildResearchSiteTest(unittest.TestCase):
                 "{http://www.sitemaps.org/schemas/sitemap/0.9}loc"
             )
         ]
-        self.assertEqual(len(locations), len(self.manifest["topics"]) + 2)
+        self.assertEqual(len(locations), len(self.manifest["topics"]) + 3)
         self.assertEqual(len(locations), len(set(locations)))
         self.assertNotIn(f"{BASE_URL}/knowledge-map/", locations)
         self.assertTrue(all("#" not in value and "/data/" not in value for value in locations))
@@ -154,7 +154,7 @@ class BuildResearchSiteTest(unittest.TestCase):
         self.assertIn(f"Sitemap: {BASE_URL}/sitemap.xml", robots)
         self.assertEqual(
             llms.count(f"{BASE_URL}/research/"),
-            len(self.manifest["topics"]) + 1,
+            len(self.manifest["topics"]) + 2,
         )
         self.assertEqual(
             homepage.count('class="research-card"'),
@@ -166,6 +166,34 @@ class BuildResearchSiteTest(unittest.TestCase):
         ).group(1)
         types = {item["@type"] for item in json.loads(payload)["@graph"]}
         self.assertEqual(types, {"WebSite", "Organization"})
+
+    def test_mind_omni_reader_is_built_from_the_current_topic(self) -> None:
+        reader = (
+            self.site_root
+            / "research"
+            / "autonomous-driving-vla-models-teams"
+            / "mind-omni"
+        )
+        index = (reader / "index.html").read_text(encoding="utf-8")
+        topic = (
+            self.site_root
+            / "research"
+            / "autonomous-driving-vla-models-teams"
+            / "index.html"
+        ).read_text(encoding="utf-8")
+        data = (reader / "assets" / "research-data.js").read_text(encoding="utf-8")
+
+        self.assertIn('href="mind-omni/"', topic)
+        self.assertIn('href="../"', index)
+        self.assertIn(
+            f'<link rel="canonical" href="{BASE_URL}/research/'
+            'autonomous-driving-vla-models-teams/mind-omni/">',
+            index,
+        )
+        self.assertIn('"source_run": "literature-review-智驾模型-vla-', data)
+        self.assertEqual(len(list((reader / "assets").glob("*.png"))), 5)
+        self.assertTrue((reader / "assets" / "dial.svg").is_file())
+        self.assertTrue((reader / "reports" / "scientific-memo_keyan.md").is_file())
 
     def test_social_preview_has_required_dimensions_and_file_size(self) -> None:
         image = ROOT / "wiki" / "assets" / "social-preview.png"
@@ -187,10 +215,18 @@ class BuildResearchSiteTest(unittest.TestCase):
         robots = (preview_root / "robots.txt").read_text(encoding="utf-8")
         topic_page = next((preview_root / "research").glob("*/index.html")).read_text(encoding="utf-8")
         homepage = (preview_root / "index.html").read_text(encoding="utf-8")
+        mind_omni = (
+            preview_root
+            / "research"
+            / "autonomous-driving-vla-models-teams"
+            / "mind-omni"
+            / "index.html"
+        ).read_text(encoding="utf-8")
 
         self.assertEqual(robots, "User-agent: *\nDisallow: /\n")
         self.assertIn('name="robots" content="noindex,nofollow"', topic_page)
         self.assertIn('name="robots" content="noindex,nofollow"', homepage)
+        self.assertIn('name="robots" content="noindex,nofollow"', mind_omni)
         self.assertIn(f'<link rel="canonical" href="{BASE_URL}/', topic_page)
 
     def test_static_markdown_escapes_html_and_rejects_broken_relative_links(self) -> None:

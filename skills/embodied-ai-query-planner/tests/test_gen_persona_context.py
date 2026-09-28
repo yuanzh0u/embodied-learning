@@ -48,8 +48,9 @@ class GenPersonaContextTests(unittest.TestCase):
             self.assertTrue(run["id"].startswith("LR-"))
             self.assertTrue(run["topic"])
             self.assertTrue(run["scale"])
-        # A tactile-related run should surface for a tactile topic.
-        self.assertIn("LR-TACTILE-YEAR", {run["id"] for run in context["related_runs"]})
+        # At least one tactile-related run should surface; the exact run can
+        # change as newer catalog entries compete for the bounded result set.
+        self.assertTrue(any("触觉" in run["topic"] for run in context["related_runs"]))
 
     def test_unknown_id_fuzzy_fallback(self) -> None:
         context = run_context("--topic", "近半年触觉数据联合训练的坑")
