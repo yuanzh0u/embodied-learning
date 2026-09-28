@@ -12,6 +12,11 @@ from pathlib import Path
 from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from lib.git_history import require_full_history  # noqa: E402
 
 MD_LINK = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)")
 ARCHIVE_CMD = re.compile(r"git show ([0-9a-f]{7,40}):(.+)")
@@ -321,6 +326,7 @@ def check_index_links(root: Path) -> list[str]:
 def main() -> int:
     args = parse_args()
     root = Path(args.root).resolve()
+    require_full_history(root)
     problems = (
         check_sources_md(root)
         + check_topic_cards(root)

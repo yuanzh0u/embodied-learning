@@ -14,9 +14,14 @@ order — read it before loading knowledge files.
 The interpreter is `python3` (`python` is not on PATH). Scripts are **stdlib-only Python 3** — there
 is no build, lint, install, or dependency step. Run any script with `--help` to see its contract.
 
-Tests are stdlib `unittest` (network is mocked with `unittest.mock`; no live arXiv calls):
+Tests are stdlib `unittest` (network is mocked with `unittest.mock`; no live arXiv calls).
+The Makefile mirrors the CI discovery list in `.github/workflows/research-validation.yml`:
 
 ```bash
+make test                 # same suites as research-validation CI
+make test-knowledge       # top-level tests/ only
+make validate             # scripts/validate_current_reviews.py (needs full git history)
+
 # Run one skill's suite (skill dirs are hyphenated, so scope discovery to the tests dir)
 python3 -m unittest discover -s skills/embodied-ai-query-planner/tests -p 'test_*.py'
 
@@ -98,7 +103,9 @@ boundary is deliberate — do not blur them:
   candidates and intermediates stay in gitignored `work/`.
 - **Retired raw documents** are archived in git history only — recover via the `git show <ref>:<file>`
   commands registered in `knowledge/sources.md`. Locators use semantic anchors (section titles, Q&A
-  numbers), never line numbers.
+  numbers), never line numbers. Archive-aware checks (`check_kb_links.py`, `validate_current_reviews.py`)
+  therefore need a **full-history clone** (not `git clone --depth 1`). Shallow clones get a clear
+  early error; deepen with `git fetch --unshallow` before re-running validation.
 - **Topic cards** (`knowledge/embodied-ai/*.md`, `knowledge/error-governance/*.md`) are compressed
   working memory — one topic per card, with `id`/`tags`/`source`/`load_when` frontmatter to preserve.
 - **`knowledge/index.md`** is the routing layer: it maps user questions to stable IDs

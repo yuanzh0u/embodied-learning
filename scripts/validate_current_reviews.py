@@ -21,6 +21,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from lib.git_history import require_full_history  # noqa: E402
 from lib.review_runs import (  # noqa: E402
     catalog_run_paths,
     event_consistency_problems,
@@ -43,6 +44,7 @@ def run(command: list[str], root: Path) -> None:
 
 def validate(root: Path) -> None:
     root = root.resolve()
+    require_full_history(root)
     selected_runs = load_catalog_runs(root)
     run_paths = [item.manifest_path for item in selected_runs]
 
