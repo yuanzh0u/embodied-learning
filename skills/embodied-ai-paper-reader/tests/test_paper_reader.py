@@ -246,5 +246,66 @@ class PaperReaderTest(unittest.TestCase):
         self.assertEqual(0, completed.returncode, completed.stderr + completed.stdout)
 
 
+
+    def test_summary_first_omits_complete_text_body(self) -> None:
+        extraction_path = self.tmp / "extraction.json"
+        output = self.tmp / "packet.md"
+        extraction_path.write_text(json.dumps(extraction(), ensure_ascii=False), encoding="utf-8")
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "build_reading_packet.py"),
+                "--extraction",
+                str(extraction_path),
+                "--review-question",
+                "When does UMI data transfer?",
+                "--topic-id",
+                "EA-DATA",
+                "--summary-first",
+                "--max-section-chars",
+                "120",
+                "--output",
+                str(output),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        body = output.read_text(encoding="utf-8")
+        self.assertIn("Packet mode: summary-first", body)
+        self.assertIn("Summary-first section windows", body)
+        self.assertIn("Omitted from this summary-first packet", body)
+        # Full repeated corpus must not be embedded.
+        self.assertLess(len(body), len(FULL_TEXT))
+        self.assertNotIn(FULL_TEXT, body)
+
+    def test_default_packet_still_embeds_complete_text(self) -> None:
+        extraction_path = self.tmp / "extraction.json"
+        output = self.tmp / "packet-full.md"
+        extraction_path.write_text(json.dumps(extraction(), ensure_ascii=False), encoding="utf-8")
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "build_reading_packet.py"),
+                "--extraction",
+                str(extraction_path),
+                "--review-question",
+                "When does UMI data transfer?",
+                "--topic-id",
+                "EA-DATA",
+                "--output",
+                str(output),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        body = output.read_text(encoding="utf-8")
+        self.assertIn("## Complete extracted text", body)
+        self.assertIn("4 Experiments", body)
+        self.assertIn(FULL_TEXT[:80], body)
+
 if __name__ == "__main__":
     unittest.main()

@@ -139,3 +139,19 @@ Style requirements live in `$embodied-ai-review-writer` and are loaded only for 
 - Gaps distinguish "not found in this run" from "the literature says this is open."
 - The final review states scope boundaries such as topic IDs, resolved time range, and search/evidence limitations.
 - The writer's editorial audit passes language, template-leakage, platform-density, length, and cross-style overlap gates.
+
+
+## Writer evidence caps (token optimization)
+
+`build_review_packet.py` projects a **stance-capped** subset into `writing-brief.md` and `evidence-appendix.md` so pathological event counts cannot blow writer context:
+
+| Stance | Default cap |
+|---|---:|
+| `support` | 8 |
+| `limit` | 6 |
+| `conditional` | 6 |
+| `gap` | 4 |
+
+- Caps apply only to writer-facing surfaces. The settled `evidence.jsonl` stays complete for claim-support and citation audits.
+- Override with `--writer-stance-caps support=8,limit=6,conditional=6,gap=4` or disable via `--uncapped-writer` (debug only).
+- Layered loading: agents load the current skill + step references; do not paste the full literature-review catalog or search-round JSON into context.

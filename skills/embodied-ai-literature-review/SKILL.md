@@ -18,6 +18,13 @@ Default final deliverable: three Markdown files under a new `work/literature-rev
 
 Use `--style scientific-memo`, `--style expert-explainer`, or `--style kol-thread` only when the user asks for a single style. Use `survey` explicitly when the user wants the intermediate review packet, source tiers, and style menu instead of the final prose artifacts.
 
+## Token / context soft guards
+
+- Load this `SKILL.md` plus the **current step's** references only. Do not preload every upstream skill or the full `knowledge/literature-review-catalog.md` — grep topic/knowledge-ID rows when routing to an existing run.
+- Hub stage: never dump `candidate-registry.json` or search-round JSON into context; use coverage reports / title-only slices.
+- Reader stage: prefer `build_reading_packet.py --summary-first` for scoping; full extraction stays on disk for locator windows.
+- Writer stage: `build_review_packet.py` applies stance caps to `writing-brief.md` / `evidence-appendix.md` (default support≤8, limit≤6, conditional≤6, gap≤4). Complete events remain in `evidence.jsonl` for claim/citation audits. Override with `--writer-stance-caps` or `--uncapped-writer` only when debugging.
+
 ## Required inputs
 
 - Topic or review question.

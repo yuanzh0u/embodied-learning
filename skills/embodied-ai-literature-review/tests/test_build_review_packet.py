@@ -854,5 +854,62 @@ title: 数据采集与数据质量
         self.assertIn("review-packet.md", artifacts)
 
 
+
+    def test_writer_stance_caps_limit_brief_and_appendix(self) -> None:
+        events = []
+        for idx in range(20):
+            events.append(sample_event(f"EA-DATA-2026-{idx+1:04d}", "support"))
+        for idx in range(20, 30):
+            events.append(sample_event(f"EA-DATA-2026-{idx+1:04d}", "limit"))
+        for idx in range(30, 40):
+            events.append(sample_event(f"EA-DATA-2026-{idx+1:04d}", "conditional"))
+        for idx in range(40, 50):
+            events.append(sample_event(f"EA-DATA-2026-{idx+1:04d}", "gap"))
+        selected, stats = build_review_packet.cap_events_for_writer(events)
+        self.assertEqual(8 + 6 + 6 + 4, len(selected))
+        self.assertEqual(50, stats["total_events"])
+        self.assertEqual(24, stats["writer_events"])
+        self.assertEqual({"support": 12, "limit": 4, "conditional": 4, "gap": 6}, stats["omitted_by_stance"])
+
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            [],
+            "all",
+        )
+        brief = artifacts["writing-brief.md"]
+        appendix = artifacts["evidence-appendix.md"]
+        self.assertIn("Writer evidence caps", brief)
+        self.assertIn("support≤8", brief)
+        self.assertIn("Events in this brief/appendix: 24 / 50 loaded", brief)
+        # Cap applies to appendix headings.
+        heading_count = sum(1 for line in appendix.splitlines() if line.startswith("### EA-DATA-"))
+        self.assertEqual(24, heading_count)
+        # Full event set still drives sufficiency counts in the brief.
+        self.assertIn("Accepted events (full evidence set): 50", brief)
+
+    def test_uncapped_writer_keeps_all_events_in_brief(self) -> None:
+        events = [sample_event(f"EA-DATA-2026-{idx+1:04d}", "support") for idx in range(12)]
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性",
+            ["EA-DATA"],
+            events,
+            [],
+            [],
+            "all",
+            uncapped_writer=True,
+        )
+        brief = artifacts["writing-brief.md"]
+        self.assertIn("Writer-facing events (capped): 12", brief)
+        self.assertIn("Writer subset includes every loaded event", brief)
+
+    def test_parse_stance_caps_overrides(self) -> None:
+        caps = build_review_packet.parse_stance_caps("support=2,gap=1")
+        self.assertEqual(2, caps["support"])
+        self.assertEqual(1, caps["gap"])
+        self.assertEqual(6, caps["limit"])
+
 if __name__ == "__main__":
     unittest.main()

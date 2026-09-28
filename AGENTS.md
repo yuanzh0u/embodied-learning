@@ -8,9 +8,17 @@ This repository is a research knowledge base. Optimize for context efficiency an
 2. Load the domain index that matches the task:
    - [knowledge/embodied-ai/index.md](knowledge/embodied-ai/index.md)
    - [knowledge/error-governance/index.md](knowledge/error-governance/index.md)
-3. When the task concerns an existing literature review, load [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) and select the current run.
+3. When the task concerns an existing literature review, **do not** paste the full [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) into context. Grep/search for the topic or knowledge ID, or read only the matching table rows / run folder; then open that run's `run.json` / coverage report.
 4. Load only the topic cards listed in `load_when` or `query_routes`.
 5. Open paper notes or raw source documents only when exact wording, detailed evidence, or references are needed.
+6. Load **only the current skill's `SKILL.md`**, then step-specific `references/` as needed. Do not preload every literature-review skill or the full catalog.
+
+## Token / context soft guards
+
+- **NEVER** `Read` full `candidate-registry.json` into LLM context (often 2–5 MB). Use `coverage-report.json`, `screening-*.md`, `status_counts`, or `skills/embodied-ai-literature-hub/scripts/print_registry_titles.py` (title-only top-N).
+- Coverage decisions: read the coverage report only — **do not** paste search-round JSON (`openalex-candidates-round*.json`, raw arXiv batch files) into the conversation.
+- Paper reading: prefer `build_reading_packet.py --summary-first` (structure map + section windows). Keep full extraction on disk; open locator windows for claim cards. Do not re-paste Complete extracted text every pass.
+- Writer inputs: `writing-brief.md` / `evidence-appendix.md` are stance-capped; complete events stay in `evidence.jsonl` for audits.
 
 ## Context Rules
 
@@ -31,7 +39,7 @@ This repository is a research knowledge base. Optimize for context efficiency an
 - Settled runs sink into `evidence/` via `scripts/sink_run.py` (idempotent; stamps a `sink_checklist` into run.json; refuses gate-failed bundles unless `--allow-gate-fail`). Run `scripts/check_sink_integrity.py` after any sink or cleanup — it reconciles `work/`, `evidence/`, and the catalog, and exits non-zero on drift.
 - Retired raw documents remain traceable through their registered git archives in [knowledge/sources.md](knowledge/sources.md) (`git show 081e898:<file>`).
 - Topic cards are compressed working memory for agents.
-- The master index is the topic routing layer; [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) declares the current literature-review versions and evidence loading routes.
+- The master index is the topic routing layer; [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) declares current literature-review versions — load topic-filtered rows only, never the whole file by default.
 - Candidates and intermediate artifacts live in `work/` (gitignored scratch); accepted assets live in `evidence/`.
 
 ## Cross-Project Knowledge

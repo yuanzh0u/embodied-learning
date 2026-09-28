@@ -5,8 +5,8 @@ This Skill does not own reader-facing prose templates. It produces validated wri
 ## Briefing bundle
 
 - `review-packet.md`: audit view of accepted events, stance, confidence, authors, source gaps, and coverage.
-- `writing-brief.md`: writer-facing thesis candidates, evidence clusters, mandatory caveats, and paper/event citation pairs.
-- `evidence-appendix.md`: complete event-level provenance with locator and short quote.
+- `writing-brief.md`: writer-facing thesis candidates, evidence clusters, mandatory caveats, and paper/event citation pairs. Stance-capped by default (support≤8 / limit≤6 / conditional≤6 / gap≤4).
+- `evidence-appendix.md`: capped event-level provenance with locator and short quote for the writer subset. The complete event set remains in `evidence.jsonl` for audits.
 - Optional consolidated `evidence.jsonl`: the self-contained working evidence set for a synthesis run.
 - `candidate-registry.json`: deduplicated discovery and screening history.
 - `coverage-report.json`: size, dimension, full-text, accepted-evidence, and saturation checks.

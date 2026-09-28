@@ -4,6 +4,11 @@
 The input extraction must contain the complete HTML text (`text`) or every
 text-layer PDF page (`pages`). Ranked/selected passages alone are rejected.
 OCR-derived and scan-only papers are outside this workflow.
+
+By default the packet still embeds the complete extracted text (backward
+compatible). Prefer ``--summary-first`` for LLM scoping passes: the packet then
+carries a structure map plus truncated section windows; keep the full
+extraction JSON on disk for locator windows and claim-support audits.
 """
 
 from __future__ import annotations
@@ -17,9 +22,10 @@ from typing import Any
 
 
 MODES = {"rapid", "scoping", "systematic"}
+DEFAULT_MAX_SECTION_CHARS = 4000
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--extraction", required=True, help="Complete Hub extraction JSON.")
     parser.add_argument("--metadata", help="Optional per-paper metadata JSON.")
@@ -28,7 +34,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--review-mode", choices=sorted(MODES), default="scoping")
     parser.add_argument("--output", required=True)
     parser.add_argument("--note-template")
-    return parser.parse_args()
+    parser.add_argument(
+        "--summary-first",
+        action="store_true",
+        help=(
+            "Emit structure map + truncated section windows instead of pasting "
+            "Complete extracted text. Full text remains on disk in the extraction JSON "
+            "for locator windows and claim-support audits. Recommended for paper-reader "
+            "scoping passes."
+        ),
+    )
+    parser.add_argument(
+        "--max-section-chars",
+        type=int,
+        default=DEFAULT_MAX_SECTION_CHARS,
+        help=(
+            f"When --summary-first is set, truncate each section/page window to this many "
+            f"characters (default {DEFAULT_MAX_SECTION_CHARS}). Ignored in full-text mode."
+        ),
+    )
+    parser.add_argument(
+        "--include-full-text",
+        action="store_true",
+        help="Force embedding Complete extracted text even when --summary-first is set.",
+    )
+    return parser.parse_args(argv)
 
 
 def load_object(path: Path) -> dict[str, Any]:
@@ -122,6 +152,66 @@ def render_structure(extraction: dict[str, Any], source_format: str) -> list[str
     return ["- No machine-readable outline; map headings manually from the complete text."]
 
 
+def truncate_window(text: str, limit: int) -> str:
+    cleaned = text.strip()
+    if limit <= 0 or len(cleaned) <= limit:
+        return cleaned
+    return cleaned[: max(0, limit - 1)].rstrip() + "…"
+
+
+def section_windows(
+    extraction: dict[str, Any],
+    source_format: str,
+    full_text: str,
+    max_section_chars: int,
+) -> list[str]:
+    """Build truncated section/page windows for summary-first packets."""
+    lines: list[str] = []
+    if source_format == "html" and isinstance(extraction.get("sections"), list) and extraction["sections"]:
+        # Prefer explicit section text when present; otherwise slice by title from full text.
+        for section in extraction["sections"]:
+            if not isinstance(section, dict):
+                continue
+            label = str(section.get("path") or section.get("title") or section.get("id") or "section")
+            body = section.get("text") or section.get("content")
+            if isinstance(body, str) and body.strip():
+                window = truncate_window(body, max_section_chars)
+            else:
+                # Best-effort: find the heading in full text and take the next window.
+                title = str(section.get("title") or section.get("path") or "")
+                window = ""
+                if title:
+                    idx = full_text.find(title)
+                    if idx >= 0:
+                        window = truncate_window(full_text[idx:], max_section_chars)
+                if not window:
+                    window = truncate_window(full_text, max_section_chars)
+            lines.extend([f"### {label}", "", window, ""])
+        return lines
+
+    if source_format == "pdf" and isinstance(extraction.get("pages"), list):
+        for index, page in enumerate(extraction["pages"], start=1):
+            if not isinstance(page, dict):
+                continue
+            number = page.get("page", index)
+            window = truncate_window(str(page.get("text") or ""), max_section_chars)
+            lines.extend([f"### page {number}", "", window, ""])
+        return lines
+
+    # Fallback: leading window of the complete text plus a reminder to open extraction on disk.
+    lines.extend(
+        [
+            "### leading-window",
+            "",
+            truncate_window(full_text, max_section_chars),
+            "",
+            "_No structured sections/pages available; open the extraction JSON for locator windows._",
+            "",
+        ]
+    )
+    return lines
+
+
 def note_template(
     paper: dict[str, Any],
     extraction: dict[str, Any],
@@ -172,40 +262,108 @@ def note_template(
     }
 
 
-def main() -> int:
-    args = parse_args()
-    try:
-        extraction = load_object(Path(args.extraction))
-        metadata = load_object(Path(args.metadata)) if args.metadata else {}
-        source_format, text = complete_text(extraction)
-        paper = normalize_metadata(metadata, extraction)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"reading packet blocked: {exc}", file=sys.stderr)
-        return 2
-
+def build_packet_lines(
+    paper: dict[str, Any],
+    extraction: dict[str, Any],
+    source_format: str,
+    text: str,
+    review_question: str,
+    topic_ids: list[str],
+    review_mode: str,
+    summary_first: bool,
+    max_section_chars: int,
+    include_full_text: bool,
+    extraction_path: str | None = None,
+) -> list[str]:
+    embed_full = include_full_text or not summary_first
     lines = [
         f"# Reading Packet: {paper['title']}",
         "",
         f"- Paper: {paper['url'] or paper['arxiv_id']}",
-        f"- Review question: {args.review_question}",
-        f"- Topic IDs: {', '.join(args.topic_id)}",
-        f"- Review mode: {args.review_mode}",
+        f"- Review question: {review_question}",
+        f"- Topic IDs: {', '.join(topic_ids)}",
+        f"- Review mode: {review_mode}",
         f"- Extraction: {extraction_method(extraction)} / {extraction_quality(extraction)}",
         "- Status at packet creation: full-text-recovered (not yet map-read or deep-read)",
-        "",
-        "## Required reading roles",
-        "",
-        "Map problem, method/design, results/analysis, conclusion/limitations, and any relevant appendix before writing evidence cards.",
-        "",
-        "## Document structure",
-        "",
-        *render_structure(extraction, source_format),
-        "",
-        "## Complete extracted text",
-        "",
-        text,
-        "",
+        f"- Packet mode: {'summary-first' if summary_first and not include_full_text else 'full-text'}",
+        f"- Complete text chars (on disk): {len(text)}",
     ]
+    if extraction_path:
+        lines.append(f"- Extraction path (source of truth for locator windows): `{extraction_path}`")
+    lines.extend(
+        [
+            "",
+            "## Required reading roles",
+            "",
+            "Map problem, method/design, results/analysis, conclusion/limitations, and any relevant appendix before writing evidence cards.",
+            "",
+            "## Document structure",
+            "",
+            *render_structure(extraction, source_format),
+            "",
+        ]
+    )
+    if summary_first and not include_full_text:
+        lines.extend(
+            [
+                "## Summary-first section windows",
+                "",
+                f"Each window is truncated to ≤{max_section_chars} characters. "
+                "Do **not** paste Complete extracted text into LLM context for scoping. "
+                "For claim cards, open the extraction JSON (or a targeted locator window) instead.",
+                "",
+                *section_windows(extraction, source_format, text, max_section_chars),
+            ]
+        )
+    if embed_full:
+        lines.extend(
+            [
+                "## Complete extracted text",
+                "",
+                text,
+                "",
+            ]
+        )
+    elif summary_first:
+        lines.extend(
+            [
+                "## Complete extracted text",
+                "",
+                "_Omitted from this summary-first packet. Full text remains in the extraction JSON "
+                "on disk for locator windows and `audit_claim_support.py`._",
+                "",
+            ]
+        )
+    return lines
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    try:
+        extraction_path = Path(args.extraction)
+        extraction = load_object(extraction_path)
+        metadata = load_object(Path(args.metadata)) if args.metadata else {}
+        source_format, text = complete_text(extraction)
+        paper = normalize_metadata(metadata, extraction)
+        if args.max_section_chars < 0:
+            raise ValueError("--max-section-chars must be >= 0")
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"reading packet blocked: {exc}", file=sys.stderr)
+        return 2
+
+    lines = build_packet_lines(
+        paper,
+        extraction,
+        source_format,
+        text,
+        args.review_question,
+        args.topic_id,
+        args.review_mode,
+        summary_first=args.summary_first,
+        max_section_chars=args.max_section_chars,
+        include_full_text=args.include_full_text,
+        extraction_path=str(extraction_path),
+    )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines), encoding="utf-8")
@@ -221,7 +379,8 @@ def main() -> int:
             + "\n",
             encoding="utf-8",
         )
-    print(f"Wrote complete reading packet: {output}")
+    mode = "summary-first" if args.summary_first and not args.include_full_text else "full-text"
+    print(f"Wrote {mode} reading packet: {output}")
     if args.note_template:
         print(f"Wrote paper-note template: {args.note_template}")
     return 0
