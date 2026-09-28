@@ -1556,9 +1556,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
             elif message.strip().lower() in {"继续", "continue"}:
                 # An explicit 继续 is always a continuation instruction, even
                 # when a previous segment died mid-stage (awaiting=False).
-                prompt = wiki_chat.build_continuation_prompt(feedback="", target_style=ws_style, stage=ws_stage)
+                prompt = wiki_chat.build_continuation_prompt(feedback="", target_style=ws_style, stage=ws_stage, publisher="agent")
             else:
-                prompt = wiki_chat.build_continuation_prompt(feedback=message, target_style=ws_style, stage=ws_stage)
+                prompt = wiki_chat.build_continuation_prompt(feedback=message, target_style=ws_style, stage=ws_stage, publisher="agent")
+            # Continuation turns run on the same workflow persona as kickoff.
+            system_prompt = wiki_chat.workflow_turn_system_prompt(
+                pipeline_root, self.kb_root, publisher="agent")
         else:
             # Kickoff: validate interview answers and prepare the run dir.
             try:
@@ -1576,11 +1579,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 return
             ws_id = f"ws-{secrets.token_hex(4)}"
             ws_style = str(params.get("target_style") or "all")
-            prompt = wiki_chat.build_workflow_prompt(
+            system_prompt, prompt = wiki_chat.workflow_turn_prompts(
                 params=params,
                 run_dir=run_dir,
                 kb_root=self.kb_root,
                 pipeline_root=pipeline_root,
+                publisher="agent",
             )
             self.chat_sessions.record_session(ws_id, None, ws_model)
             self.chat_sessions.set_workflow_state(
@@ -1619,7 +1623,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
                     return
             self._write_sse_event({"type": "status", "stage": "starting", "detail": "正在启动 claude 会话"})
             resumed = (entry or {}).get("session_id")
-            turn, session_was_reset = self._spawn_workflow_turn(prompt, resumed, ws_model)
+            turn, session_was_reset = self._spawn_workflow_turn(
+                prompt, resumed, ws_model, system_prompt)
             if session_was_reset:
                 registry.record_session(ws_id, None)
                 self._write_sse_event({"type": "session_reset"})
@@ -1658,7 +1663,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 )
                 session_id = (registry.get_workspace(ws_id) or {}).get("session_id")
                 continuation = wiki_chat.build_continuation_prompt(
-                    feedback="", target_style=ws_style, stage=resume_stage
+                    feedback="", target_style=ws_style, stage=resume_stage, publisher="agent"
                 )
                 turn, _ = self._spawn_workflow_turn(continuation, session_id, ws_model)
                 full_text = self._stream_chat_turn(
@@ -1834,27 +1839,34 @@ class WikiHandler(SimpleHTTPRequestHandler):
         return True
 
     def _spawn_workflow_turn(
-        self, prompt: str, session_id: str | None, model: str | None = None
+        self, prompt: str, session_id: str | None, model: str | None = None,
+        system_prompt: str | None = None,
     ) -> tuple[wiki_chat.ChatTurn, bool]:
-        return self._spawn_turn(self._new_workflow_turn, prompt, session_id, model)
+        if system_prompt is None:  # 续轮：与 kickoff 用同一工厂
+            system_prompt = wiki_chat.workflow_turn_system_prompt(
+                resolve_pipeline_root(), self.kb_root, publisher="agent")
 
-    def _new_workflow_turn(self, prompt: str, session_id: str | None, model: str | None = None) -> wiki_chat.ChatTurn:
+        def new_turn(turn_prompt, sid, turn_model):
+            return self._new_workflow_turn(
+                turn_prompt, sid, turn_model, system_prompt=system_prompt)
+
+        return self._spawn_turn(new_turn, prompt, session_id, model)
+
+    def _new_workflow_turn(
+        self, prompt: str, session_id: str | None, model: str | None = None, *,
+        system_prompt: str,
+    ) -> wiki_chat.ChatTurn:
         # STORM-style tiering: the workflow session gets the (usually lighter)
         # workflow model for its mechanical loop, and its system prompt tells
         # subagents to use fast models too. The main thread's deep-reading
         # synthesis and final prose still happen inside this session. The
         # browser may pick the model per conversation (default glm-5.3-flash);
         # --workflow-model keeps the highest precedence for CLI-driven setups.
-        pipeline_root = resolve_pipeline_root()
-        system_prompt = wiki_chat.WORKFLOW_SYSTEM_PROMPT
-        if pipeline_root is not None:
-            skills_root, scripts_root = wiki_chat.resolve_pipeline_layout(pipeline_root)
-            system_prompt = wiki_chat.substitute_prompt_roots(
-                system_prompt,
-                skills_root=skills_root,
-                scripts_root=scripts_root,
-                pool_root=pool_root(self.kb_root),
-            )
+        # The system prompt is composed by wiki_chat.workflow_turn_prompts (the
+        # single assembly point shared with the headless launcher); passing it
+        # explicitly here blocks ChatConfig.new_turn's silent fall back to the
+        # generic topic-chat persona.
+        assert system_prompt is not None, "workflow turn 必须显式传 system_prompt"
         return self.chat.new_turn(
             prompt=prompt,
             cwd=self.kb_root,

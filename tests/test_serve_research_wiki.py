@@ -443,6 +443,11 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertEqual(turn.kwargs["system_prompt"], expected_prompt)
         self.assertNotIn("<skills-root>", turn.kwargs["system_prompt"])
         self.assertNotIn("<pool-root>", turn.kwargs["system_prompt"])
+        # The interactive publisher's mechanical tail is finalize_run.py — the
+        # hand-run register/rebuild duo must not reappear in the prompt.
+        self.assertIn("finalize_run.py", turn.kwargs["system_prompt"])
+        self.assertNotIn("register_run.py", turn.kwargs["system_prompt"])
+        self.assertNotIn("build_research_wiki.py", turn.kwargs["system_prompt"])
         self.assertGreaterEqual(turn.kwargs["timeout_s"], 3600)
         self.assertIn(run_dirs[0].name, turn.kwargs["prompt"])
         # Registry state.
@@ -570,6 +575,11 @@ class WorkflowEndpointTest(ChatServerHarness):
         continuation = FakeTurn.instances[1]
         self.assertEqual(continuation.kwargs["session_id"], "ws-fresh-1")
         self.assertIn("[STAGE:writing]", continuation.kwargs["prompt"])
+        # 续轮与 kickoff 用同一 system prompt 工厂、同一 publisher。
+        self.assertEqual(
+            continuation.kwargs["system_prompt"],
+            FakeTurn.instances[0].kwargs["system_prompt"],
+        )
         # …and the run published without any user input.
         self.assertEqual(events[-1]["type"], "topic_ready")
 

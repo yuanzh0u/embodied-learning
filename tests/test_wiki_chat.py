@@ -366,9 +366,10 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("一气呵成", prompt)
         self.assertIn("检索失败或文献不足", prompt)
 
-    def test_workflow_prompt_requires_publish_steps(self):
-        """Settle includes catalog registration + wiki rebuild, not just
-        copying into evidence/."""
+    def test_workflow_prompt_settle_runs_finalize(self):
+        """The agent publisher's mechanical settle tail is finalize_run.py —
+        the old hand-run register_run.py / build_research_wiki.py duo (and the
+        wiki-port topic-count check) must not come back."""
         with tempfile.TemporaryDirectory() as tmp:
             kb_root = Path(tmp).resolve()
             run_dir = kb_root / "work" / "literature-review-x"
@@ -379,8 +380,53 @@ class BuildWorkflowPromptTest(unittest.TestCase):
                 kb_root=kb_root,
                 pipeline_root=Path("/repo"),
             )
-        self.assertIn("literature-review-catalog.md", prompt)
-        self.assertIn("build_research_wiki.py", prompt)
+        self.assertIn("finalize_run.py", prompt)
+        self.assertNotIn("register_run.py", prompt)
+        self.assertNotIn("build_research_wiki.py", prompt)
+
+    def test_workflow_prompt_launcher_stops_after_gates(self):
+        """The headless writer (publisher="launcher") must stop right after the
+        audit gates: no stage/topic markers, no finalize instruction — the
+        launcher process does the mechanical settle/publish in code."""
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp).resolve()
+            run_dir = kb_root / "work" / "literature-review-x"
+            run_dir.mkdir(parents=True)
+            prompt = wiki_chat.build_workflow_prompt(
+                params={"topic": "x"},
+                run_dir=run_dir,
+                kb_root=kb_root,
+                pipeline_root=Path("/repo"),
+                publisher="launcher",
+            )
+        self.assertIn("立即停止本轮回复", prompt)
+        self.assertIn("由 launcher 机械完成", prompt)
+        self.assertNotIn("[STAGE:", prompt)
+        self.assertNotIn("[TOPIC:", prompt)
+        self.assertIn("运行目录根", prompt)
+        self.assertIn("build_review_packet.py", prompt)
+        self.assertIn("work/literature-review-x", prompt)
+        self.assertNotIn(str(kb_root), prompt)
+
+    def test_workflow_prompt_single_style_keeps_citation_contract_out_of_user_prompt(self):
+        """The memo citation contract lives ONLY in the system layer; the
+        single-style user prompt carries a pointer, not a second copy."""
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp).resolve()
+            run_dir = kb_root / "work" / "literature-review-demo-20260101"
+            run_dir.mkdir(parents=True)
+            prompt = wiki_chat.build_workflow_prompt(
+                params={"topic": "demo", "review_mode": "rapid",
+                        "time_range": "2023-01-01..2026-09-09",
+                        "target_style": "scientific-memo", "focus": ""},
+                run_dir=run_dir, kb_root=kb_root,
+                pipeline_root=kb_root / "skills",
+            )
+        self.assertNotIn("引文格式（Wiki 渲染依赖，必须遵守）", prompt)
+        # Voice contract stays (memo must not drift into the zhihu register).
+        self.assertIn("风格契约（scientific-memo）", prompt)
+        self.assertIn("references/scientific-memo.md", prompt)
+        self.assertIn("不是A，而是B", prompt)
 
     def test_continuation_prompt_carries_feedback(self):
         prompt = wiki_chat.build_continuation_prompt(feedback="补充一下评测部分", stage="packet")
@@ -397,7 +443,71 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("一次性读取现状", prompt)
         self.assertIn("[STAGE:writing]", prompt)
         self.assertNotIn("等待用户确认", prompt)
-        self.assertIn("literature-review-catalog.md", prompt)
+        self.assertIn("finalize_run.py", prompt)
+        self.assertNotIn("build_research_wiki.py", prompt)
+
+    def test_continuation_prompt_launcher_stops_after_gates(self):
+        """The launcher publisher's continuation stops after the gates: no
+        topic marker, no finalize instruction; stage passthrough semantics
+        (mid-pipeline vs writing branch) are unchanged."""
+        launcher = wiki_chat.build_continuation_prompt(
+            feedback="引文格式错误", target_style="scientific-memo",
+            stage="packet", publisher="launcher")
+        self.assertIn("立即停止本轮回复", launcher)
+        self.assertNotIn("[TOPIC:", launcher)
+        self.assertNotIn("[STAGE:", launcher)
+        self.assertNotIn("finalize_run.py", launcher)
+        self.assertIn("仅撰写采访中选定的风格", launcher)
+        self.assertNotIn("3 个并行 subagent", launcher)
+        mid = wiki_chat.build_continuation_prompt(publisher="launcher")
+        writing = wiki_chat.build_continuation_prompt(stage="writing", publisher="launcher")
+        self.assertIn("一次性读取现状", mid)
+        self.assertNotIn("一次性读取现状", writing)
+
+    def test_continuation_prompt_launcher_survey_style_passthrough(self):
+        """survey is not in STYLE_VOICE_CONTRACTS: the label passes through
+        untouched for the launcher publisher too."""
+        prompt = wiki_chat.build_continuation_prompt(
+            feedback="f", target_style="survey", stage="packet", publisher="launcher")
+        self.assertIn("survey", prompt)
+
+    def test_workflow_turn_prompts_is_the_single_assembly_point(self):
+        """workflow_turn_prompts returns (system, user) with the root
+        placeholders substituted — byte-identical to composing the pieces by
+        hand, so both entry points can only diverge on publisher."""
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp).resolve()
+            run_dir = kb_root / "work" / "literature-review-demo-20260101"
+            run_dir.mkdir(parents=True)
+            pipeline_root = kb_root / "pipeline"
+            (pipeline_root / "scripts").mkdir(parents=True)
+            system_prompt, user_prompt = wiki_chat.workflow_turn_prompts(
+                params={"topic": "demo"}, run_dir=run_dir, kb_root=kb_root,
+                pipeline_root=pipeline_root, publisher="agent",
+            )
+            skills_root, scripts_root = wiki_chat.resolve_pipeline_layout(pipeline_root)
+            expected_system = wiki_chat.substitute_prompt_roots(
+                wiki_chat.workflow_system_prompt("agent"),
+                skills_root=skills_root, scripts_root=scripts_root,
+                pool_root=kb_root / "pool",
+            )
+            self.assertEqual(system_prompt, expected_system)
+            self.assertIn(run_dir.name, user_prompt)
+            self.assertNotIn(str(kb_root), user_prompt)
+            launcher_system, _ = wiki_chat.workflow_turn_prompts(
+                params={"topic": "demo"}, run_dir=run_dir, kb_root=kb_root,
+                pipeline_root=pipeline_root, publisher="launcher",
+            )
+            self.assertIn("立即停止", launcher_system)
+            self.assertNotEqual(launcher_system, system_prompt)
+
+    def test_workflow_turn_system_prompt_degrades_to_literal_placeholders(self):
+        """pipeline_root=None keeps the placeholders literal — the same
+        degradation the interactive server used to do when the pipeline root
+        could not be resolved."""
+        prompt = wiki_chat.workflow_turn_system_prompt(None)
+        self.assertIn("<skills-root>", prompt)
+        self.assertEqual(prompt, wiki_chat.workflow_system_prompt("agent"))
 
     def test_continuation_prompt_honors_target_style(self):
         single = wiki_chat.build_continuation_prompt(target_style="scientific-memo", stage="packet")
@@ -409,6 +519,51 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("zhihu-explainer_zhihu.md", zhihu)
         full = wiki_chat.build_continuation_prompt(target_style="all", stage="packet")
         self.assertIn("三种成稿", full)
+
+
+class WorkflowPublisherPromptTest(unittest.TestCase):
+    """The workflow system prompt has one deliberate fork (agent vs launcher
+    publisher); the shared base is byte-identical for both entry points."""
+
+    CITE_ANCHOR = "引文格式（Wiki 渲染依赖，必须遵守）"
+
+    def test_agent_publisher_finalizes_itself(self):
+        prompt = wiki_chat.workflow_system_prompt("agent")
+        self.assertIn("finalize_run.py", prompt)
+        self.assertNotIn("register_run.py", prompt)
+        self.assertNotIn("build_research_wiki.py", prompt)
+        self.assertNotIn("topic 数量", prompt)  # wiki-port topic-count check is gone
+        self.assertIn("[STAGE:settle]", prompt)
+        self.assertIn("[TOPIC:", prompt)
+        self.assertIn(self.CITE_ANCHOR, prompt)
+
+    def test_launcher_publisher_stops_after_gates(self):
+        prompt = wiki_chat.workflow_system_prompt("launcher")
+        self.assertIn("立即停止本轮回复", prompt)
+        self.assertIn("finalize_run.py", prompt)
+        self.assertIn("launcher", prompt)
+        self.assertNotIn("[STAGE:", prompt)
+        self.assertNotIn("[TOPIC:", prompt)
+        self.assertNotIn("register_run.py", prompt)
+        # The launcher's writer still produces the memo, so the citation
+        # contract must reach it through the shared base.
+        self.assertIn(self.CITE_ANCHOR, prompt)
+
+    def test_alias_is_the_agent_variant(self):
+        self.assertEqual(
+            wiki_chat.WORKFLOW_SYSTEM_PROMPT,
+            wiki_chat.workflow_system_prompt("agent"),
+        )
+
+    def test_unknown_publisher_rejected(self):
+        with self.assertRaises(ValueError):
+            wiki_chat.workflow_system_prompt("bogus")
+
+    def test_base_is_shared_between_publishers(self):
+        agent = wiki_chat.workflow_system_prompt("agent")
+        launcher = wiki_chat.workflow_system_prompt("launcher")
+        self.assertTrue(agent.startswith(launcher.split("\n\n【机械落盘")[0]))
+        self.assertTrue(launcher.startswith(agent.split("\n\n【机械落盘")[0]))
 
 
 class WorkflowDriverContractTest(unittest.TestCase):

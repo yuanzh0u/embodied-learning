@@ -140,6 +140,123 @@ class CollectGateProblemsTest(unittest.TestCase):
             problems = launcher.collect_gate_problems(Path(tmp))
             self.assertTrue(any("成稿" in problem for problem in problems))
 
+    def test_filters_run_not_settled_timing_noise(self) -> None:
+        """check_run_bundle runs BEFORE finalize_run.py, so its
+        "run not settled: status is `in-progress`" line is timing noise that
+        would burn a continuation round; real missing-field lines still report."""
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "scientific-memo_keyan.md").write_text("# 成稿\n", encoding="utf-8")
+
+            def fake_run(command, **kwargs):
+                if str(command[1]).endswith("check_run_bundle.py"):
+                    return mock.Mock(
+                        returncode=1,
+                        stdout="run not settled: status is `in-progress`\n"
+                               "run.json: missing required field `x`\n",
+                        stderr="",
+                    )
+                return mock.Mock(returncode=0, stdout="{}", stderr="")
+
+            with mock.patch.object(launcher.subprocess, "run", side_effect=fake_run):
+                problems = launcher.collect_gate_problems(run_dir)
+        self.assertTrue(any("missing required field" in problem for problem in problems))
+        self.assertFalse(any("run not settled" in problem for problem in problems))
+
+
+class WriterPromptsTest(unittest.TestCase):
+    def test_launcher_prompts_come_from_the_shared_factory(self) -> None:
+        """The headless writer's (system, user) prompts are composed by the
+        same wiki_chat assembly point the interactive wiki uses — the only
+        divergence is publisher="launcher"."""
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            run_dir = kb_root / "work" / "literature-review-demo-20260928"
+            run_dir.mkdir(parents=True)
+            args = mock.Mock(
+                topic="点云表面重建", review_mode="systematic",
+                time_range="2016-09-28..2026-09-28", search_strategy="smart",
+                seed_arxiv_ids=None, target_style="scientific-memo",
+                focus=None, kb_root=str(kb_root),
+            )
+            wiki = launcher.load_wiki_prompts()
+            system_prompt, user_prompt = launcher.writer_prompts(run_dir, args, wiki)
+            self.assertEqual(
+                system_prompt,
+                wiki.workflow_turn_system_prompt(
+                    launcher.pipeline_root(), Path(args.kb_root).resolve(),
+                    publisher="launcher",
+                ),
+            )
+            self.assertIn("立即停止本轮回复", system_prompt)
+            self.assertNotIn("[TOPIC:", system_prompt)
+            self.assertIn(run_dir.name, user_prompt)
+            # The launcher branch must not instruct the agent to run finalize.
+            self.assertNotIn("finalize_run.py", user_prompt)
+            self.assertIn("build_review_packet.py", user_prompt)
+
+
+class RunFinalizeTest(unittest.TestCase):
+    def _args(self, kb_root: Path, target_style="scientific-memo", scope_note=None):
+        return argparse_namespace(
+            kb_root=str(kb_root), target_style=target_style, scope_note=scope_note,
+        )
+
+    def test_single_style_declares_style(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            run_dir = kb_root / "work" / "run"
+            with mock.patch.object(
+                launcher.subprocess, "run", return_value=mock.Mock(returncode=0)
+            ) as run:
+                launcher.run_finalize(self._args(kb_root), run_dir)
+            command = run.call_args.args[0]
+            self.assertTrue(any(str(part).endswith("finalize_run.py") for part in command))
+            self.assertIn("--style", command)
+            self.assertIn("scientific-memo", command)
+            self.assertNotIn("--scope-note", command)
+            self.assertEqual(str(command[command.index("--kb-root") + 1]), str(kb_root))
+
+    def test_all_style_does_not_pollute_three_style_inference(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            with mock.patch.object(
+                launcher.subprocess, "run", return_value=mock.Mock(returncode=0)
+            ) as run:
+                launcher.run_finalize(
+                    self._args(kb_root, target_style="all"), kb_root / "work" / "run")
+            self.assertNotIn("--style", run.call_args.args[0])
+
+    def test_scope_note_forwarded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            with mock.patch.object(
+                launcher.subprocess, "run", return_value=mock.Mock(returncode=0)
+            ) as run:
+                launcher.run_finalize(
+                    self._args(kb_root, scope_note="仅速读"), kb_root / "work" / "run")
+            command = run.call_args.args[0]
+            self.assertIn("--scope-note", command)
+            self.assertIn("仅速读", command)
+
+    def test_nonzero_exit_raises_with_resume_hint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            with mock.patch.object(
+                launcher.subprocess, "run", return_value=mock.Mock(returncode=2)
+            ):
+                with self.assertRaises(RuntimeError) as ctx:
+                    launcher.run_finalize(self._args(kb_root), kb_root / "work" / "run")
+            self.assertIn("--resume", str(ctx.exception))
+
+    def test_zero_exit_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            with mock.patch.object(
+                launcher.subprocess, "run", return_value=mock.Mock(returncode=0)
+            ):
+                launcher.run_finalize(self._args(kb_root), kb_root / "work" / "run")
+
 
 class VerifyPublishTest(unittest.TestCase):
     def test_reports_missing_catalog_and_snapshot(self) -> None:

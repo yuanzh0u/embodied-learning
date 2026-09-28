@@ -45,10 +45,10 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 try:
     from lib.layout import default_kb_root, find_roots  # noqa: E402
-    from lib.review_runs import STYLE_TO_FILE, register_run_in_catalog  # noqa: E402
+    from lib.review_runs import STYLE_TO_FILE  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
     from wiki_scripts.lib.layout import default_kb_root, find_roots  # noqa: E402
-    from wiki_scripts.lib.review_runs import STYLE_TO_FILE, register_run_in_catalog  # noqa: E402
+    from wiki_scripts.lib.review_runs import STYLE_TO_FILE  # noqa: E402
 # AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
 from embodied_learning.harness.claude import (  # noqa: E402
     DRIVER_AGENT_MODEL,
@@ -134,7 +134,10 @@ def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
     raise RuntimeError(f"mechanical driver failed after {args.mechanical_retries} attempts")
 
 
-def writer_prompt(run_dir: Path, args: argparse.Namespace, wiki: object) -> str:
+def writer_prompts(run_dir: Path, args: argparse.Namespace, wiki: object) -> tuple[str, str]:
+    """(system_prompt, user_prompt) for the headless writer — composed by the
+    same wiki_chat factory the interactive wiki uses; the only divergence is
+    publisher="launcher"（审计门后停止，机械尾部归 launcher）."""
     params = {
         "topic": args.topic,
         "review_mode": args.review_mode,
@@ -144,10 +147,12 @@ def writer_prompt(run_dir: Path, args: argparse.Namespace, wiki: object) -> str:
         "target_style": args.target_style,
         "focus": args.focus,
     }
-    return wiki.build_workflow_prompt(
-        params=params, run_dir=run_dir,
+    return wiki.workflow_turn_prompts(
+        params=params,
+        run_dir=run_dir,
         kb_root=resolve_kb_root(args),
         pipeline_root=pipeline_root(),
+        publisher="launcher",
     )
 
 
@@ -167,7 +172,7 @@ def resolve_writer_model(args: argparse.Namespace) -> str:
     )
 
 
-def run_writer(args: argparse.Namespace, run_dir: Path, prompt: str) -> None:
+def run_writer(args: argparse.Namespace, run_dir: Path, prompt: str, system_prompt: str) -> None:
     cli = resolve_cli()
     if not cli:
         raise RuntimeError("claude CLI not found; writer stage cannot run")
@@ -189,6 +194,7 @@ def run_writer(args: argparse.Namespace, run_dir: Path, prompt: str) -> None:
             cwd=resolve_kb_root(args),
             env=env,
             label=f"writer-{run_dir.name}",
+            system_prompt=system_prompt,
             stream=True,
             stream_to=handle,
         )
@@ -267,37 +273,31 @@ def collect_gate_problems(run_dir: Path) -> list[str]:
         capture_output=True, text=True,
     )
     if bundle.returncode:
-        problems.extend(line for line in bundle.stdout.splitlines() if line.strip())
+        # The gate loop runs BEFORE finalize_run.py, so the run is still
+        # in-progress and check_run_bundle's "run not settled" line is timing
+        # noise that would burn a --max-agent-retries round; settle semantics
+        # are re-checked by finalize under the settled status.
+        problems.extend(
+            line for line in bundle.stdout.splitlines()
+            if line.strip() and "run not settled" not in line)
     return problems
 
 
-def ensure_settled(run_dir: Path, args: argparse.Namespace) -> None:
-    from embodied_learning.atomicio import atomic_write_json
-    from embodied_learning import locks
-
-    run_json_path = run_dir / "run.json"
-    # The launcher reaches settle only after its driver exited, so contention
-    # here means a genuinely concurrent process — brief bounded wait, locked
-    # read-modify-write so a concurrent settle flip cannot lose fields.
-    with locks.kb_lock(resolve_kb_root(args), f"run__{run_dir.name}", stale=21600):
-        manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
-        if manifest.get("status") == "settled":
-            return
-        if not str(manifest.get("style") or "").strip():
-            manifest["style"] = args.target_style if args.target_style in STYLE_VALUES else "scientific-memo"
-            manifest["scope_note"] = args.scope_note or "单风格交付：launcher 程序化运行声明的收窄范围。"
-        manifest.setdefault("files", {
-            "query_plan": "query-plan.json",
-            "candidate_registry": "candidate-registry.json",
-            "coverage_report": "coverage-report.json",
-            "evidence": "evidence.jsonl",
-            "review_packet": "review-packet.md",
-            "writing_brief": "writing-brief.md",
-            "evidence_appendix": "evidence-appendix.md",
-            "outputs": [],
-        })
-        manifest["status"] = "settled"
-        atomic_write_json(run_json_path, manifest)
+def run_finalize(args: argparse.Namespace, run_dir: Path) -> None:
+    """机械 settle/publish 尾：finalize_run.py 盖章 run.json、复跑两道门、
+    拷 evidence/、翻 settled、登记 catalog、重建 wiki 快照——即 launcher
+    publisher prompt 里明说"不要触碰"的那一串。幂等，可随 --resume 重入。"""
+    command = [
+        sys.executable, str(SCRIPTS_ROOT / "finalize_run.py"),
+        "--run-dir", str(run_dir), "--kb-root", str(resolve_kb_root(args)),
+    ]
+    if args.target_style in STYLE_VALUES:  # "all" 不声明，保持三风格推断
+        command += ["--style", args.target_style]
+    if args.scope_note:
+        command += ["--scope-note", args.scope_note]
+    log("finalize: " + " ".join(command))
+    if subprocess.run(command, cwd=str(resolve_kb_root(args))).returncode:
+        raise RuntimeError("finalize_run.py 未过（按其输出修复后 --resume 重跑）")
 
 
 def verify_publish(args: argparse.Namespace, run_dir: Path, wiki: object) -> list[str]:
@@ -392,7 +392,8 @@ def launch(args: argparse.Namespace) -> int:
             mark_stage(run_dir, "mechanical")
 
         if not stage_done(run_dir, "writer"):
-            run_writer(args, run_dir, writer_prompt(run_dir, args, wiki))
+            system_prompt, user_prompt = writer_prompts(run_dir, args, wiki)
+            run_writer(args, run_dir, user_prompt, system_prompt)
             mark_stage(run_dir, "writer")
 
         # gates with one continuation round per retry budget
@@ -407,17 +408,12 @@ def launch(args: argparse.Namespace) -> int:
                 return 2
             feedback = "\n".join(problems)
             continuation = wiki.build_continuation_prompt(
-                feedback=feedback, target_style=args.target_style)
-            run_writer(args, run_dir, continuation)
+                feedback=feedback, target_style=args.target_style, publisher="launcher")
+            continuation_system = wiki.workflow_turn_system_prompt(
+                pipeline_root(), resolve_kb_root(args), publisher="launcher")
+            run_writer(args, run_dir, continuation, continuation_system)
 
-        ensure_settled(run_dir, args)
-        # Catalog registration is mechanical and idempotent now — the row is
-        # appended under the KB-shared catalog lock (two concurrent settles
-        # lose no rows); the agent no longer hand-edits the table.
-        try:
-            register_run_in_catalog(resolve_kb_root(args), run_dir / "run.json")
-        except (OSError, ValueError) as exc:
-            log(f"catalog 登记失败（verify 会再次报告）：{exc}")
+        run_finalize(args, run_dir)
         publish_problems = verify_publish(args, run_dir, wiki)
         mark_stage(run_dir, "published", "; ".join(publish_problems) or "ok")
         if publish_problems:
