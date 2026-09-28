@@ -9,7 +9,9 @@ TEST_SUITES := \
 	skills/embodied-ai-literature-hub/tests \
 	skills/embodied-ai-paper-reader/tests \
 	skills/embodied-ai-literature-review/tests \
-	skills/embodied-ai-review-writer/tests
+	skills/embodied-ai-review-writer/tests \
+	skills/embodied-ai-influence-ranking/tests \
+	skills/embodied-ai-problem-relevance-ranking/tests
 
 .PHONY: help test test-knowledge validate
 
