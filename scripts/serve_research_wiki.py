@@ -99,7 +99,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
 
     def _serve_knowledge_map(self) -> None:
         if not self.knowledge_map or not self.knowledge_map.is_file():
-            self.send_error(HTTPStatus.NOT_FOUND, "知识图谱尚未生成")
+            self.send_error(HTTPStatus.NOT_FOUND, explain="知识图谱尚未生成")
             return
         payload = self.knowledge_map.read_bytes()
         self.send_response(HTTPStatus.OK)

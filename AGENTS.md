@@ -37,6 +37,7 @@ This repository is a research knowledge base. Optimize for context efficiency an
 ## Cross-Project Knowledge
 
 - Keep research knowledge and paper evidence in this project as the source of truth.
-- For company positioning, PR expression, business planning, compliance, or other cross-project tasks, read `/Users/ryan/Documents/个人知识库/indexes/global-routing.md`.
+- Cross-project routing (company positioning, PR expression, business planning, compliance) is **owner-machine optional**. Forks and CI do not need it and must not assume a fixed absolute path.
+- When available, load the operator's global routing index from `$EMBODIED_GLOBAL_ROUTING` (absolute path to `indexes/global-routing.md`). On the owner's machine this often resolves to `/Users/ryan/Documents/个人知识库/indexes/global-routing.md`; treat that path as an example only.
 - Load only the routed shared card or project index; do not scan every connected project.
 - Update this project's owner file first, then synchronize any affected shared note.
