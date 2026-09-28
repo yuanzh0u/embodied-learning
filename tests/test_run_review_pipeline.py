@@ -126,6 +126,7 @@ class DriverPipelineTest(unittest.TestCase):
             encoding="utf-8",
         )
         self.commands: list[list[str]] = []
+        self.with_s2 = False
 
     # -- fake subprocess plumbing -----------------------------------------
 
@@ -175,12 +176,16 @@ class DriverPipelineTest(unittest.TestCase):
     def fake_popen(self, command, **kwargs):
         """Fake for the streaming stage path (extract-content-queue): records
         the argv, writes the stage's outputs, returns a process whose stdout
-        emits per-paper progress lines. The S2 channel must never reach Popen
-        in this harness."""
+        emits per-paper progress lines. The S2 keyword channel is opt-in and
+        only reaches Popen under --with-s2."""
         self.commands.append(command)
         joined = " ".join(command)
         if "search-semantic-scholar" in joined:
-            raise AssertionError("S2 must be skipped in this harness")
+            if not self.with_s2:
+                raise AssertionError("S2 keyword channel must be opt-in (--with-s2)")
+            out = self.run_dir / "search-semantic-scholar.json"
+            out.write_text(json.dumps({"paper_count": 7, "papers": []}), encoding="utf-8")
+            return mock.Mock(communicate=lambda timeout=None: (None, None), returncode=0)
         if "extract-content-queue" not in joined:
             raise AssertionError(f"unexpected streaming subprocess: {joined}")
         for name in self.STAGE_SCRIPTS["extract-content-queue"]:
@@ -231,7 +236,7 @@ class DriverPipelineTest(unittest.TestCase):
         flag and forwarded to search-arxiv as --metadata-snapshot."""
         snapshot = Path(self.tmp.name) / "arxiv-metadata-oai-snapshot.sqlite"
         snapshot.write_text("", encoding="utf-8")
-        code, _ = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        code, _ = self.run_driver(self.argv("--no-terms-agent"))
         self.assertEqual(code, 0)
         arxiv_cmd = next(c for c in self.commands if "search-arxiv" in " ".join(c))
         self.assertIn("--metadata-snapshot", arxiv_cmd)
@@ -246,7 +251,7 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(self.driver.autodetect_snapshot(base), base / "arxiv-metadata-oai-snapshot.sqlite")
 
     def test_full_run_stage_order_and_summary(self):
-        code, summary = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        code, summary = self.run_driver(self.argv("--no-terms-agent"))
         self.assertEqual(code, 0)
         names = self.stage_names()
         # search-arxiv appears twice: first pass + empty-result cooldown retry.
@@ -274,7 +279,7 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(manifest["knowledge_ids"], ["EA-SENSOR"])
 
     def test_arxiv_command_shape_single_process(self):
-        self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        self.run_driver(self.argv("--no-terms-agent"))
         arxiv = next(c for c in self.commands if "search-arxiv" in " ".join(c))
         self.assertIn("--query-file", arxiv)
         self.assertIn("--start-date", arxiv)
@@ -283,24 +288,24 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertNotIn("--query", arxiv)
 
     def test_screening_uses_terms_and_mode_limit(self):
-        self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        self.run_driver(self.argv("--no-terms-agent"))
         screen = next(c for c in self.commands if "screen-candidates" in " ".join(c))
         self.assertIn("demo", screen[screen.index("--terms") + 1].split(","))
         self.assertEqual(screen[screen.index("--limit") + 1], "24")
-        scoping = self.run_driver(self.argv("--skip-s2", "--no-terms-agent", "--review-mode", "scoping"))
+        scoping = self.run_driver(self.argv("--no-terms-agent", "--review-mode", "scoping"))
         self.assertEqual(scoping[1]["screening_limit"], 40)
 
     def test_extraction_workers_capped_and_checkpointed(self):
-        self.run_driver(self.argv("--skip-s2", "--no-terms-agent", "--workers", "9"))
+        self.run_driver(self.argv("--no-terms-agent", "--workers", "9"))
         extraction = next(c for c in self.commands if "extract-content-queue" in " ".join(c))
         self.assertEqual(extraction[extraction.index("--workers") + 1], "4")
         self.assertIn("--include-full-text", extraction)
         self.assertEqual(extraction[extraction.index("--ocr-mode") + 1], "never")
 
     def test_idempotent_rerun_skips_completed_stages(self):
-        self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        self.run_driver(self.argv("--no-terms-agent"))
         first_count = len(self.commands)
-        code, _ = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        code, _ = self.run_driver(self.argv("--no-terms-agent"))
         self.assertEqual(code, 0)
         # All script stages skipped on the rerun (the fresh run's extra arXiv
         # retry command is not repeated because outputs are present).
@@ -325,10 +330,27 @@ class DriverPipelineTest(unittest.TestCase):
             return result
 
         self.fake_run = fake_run
-        code, _ = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        code, _ = self.run_driver(self.argv("--no-terms-agent"))
         self.assertEqual(code, 0)
         arxiv_runs = [c for c in self.commands if len(c) > 2 and c[2] == "search-arxiv"]
         self.assertEqual(len(arxiv_runs), 1)
+
+    def test_s2_keyword_channel_is_opt_in(self):
+        """Default retrieval is fast: no search-semantic-scholar pass runs and
+        the summary records the channel as skipped."""
+        code, summary = self.run_driver(self.argv("--no-terms-agent"))
+        self.assertEqual(code, 0)
+        self.assertFalse(any("search-semantic-scholar" in " ".join(c) for c in self.commands))
+        self.assertIn("skipped", summary["s2_detail"])
+
+    def test_with_s2_runs_keyword_channel_and_merges(self):
+        self.with_s2 = True
+        code, summary = self.run_driver(self.argv("--no-terms-agent", "--with-s2"))
+        self.assertEqual(code, 0)
+        self.assertTrue(any("search-semantic-scholar" in " ".join(c) for c in self.commands))
+        self.assertEqual(summary["s2_detail"], "ok")
+        registry_cmd = next(c for c in self.commands if len(c) > 2 and c[2] == "build-candidate-registry")
+        self.assertIn("--semantic-scholar-result", registry_cmd)
 
     def test_missing_run_json_rejected(self):
         code = self.driver.main([
@@ -355,7 +377,7 @@ class DriverPipelineTest(unittest.TestCase):
             ],
         }
         (self.run_dir / "dynamic-queries.json").write_text(json.dumps(prior), encoding="utf-8")
-        self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        self.run_driver(self.argv("--no-terms-agent"))
         plan_cmd = next(c for c in self.commands if "build-query-plan" in " ".join(c))
         self.assertIn("--dynamic-file", plan_cmd)
         merged = json.loads((self.run_dir / "dynamic-queries.json").read_text(encoding="utf-8"))
@@ -386,14 +408,14 @@ class SearchStrategyTest(DriverPipelineTest):
 
     def test_smart_strategy_runs_agent_and_records_source(self):
         agent = mock.Mock(return_value={"queries": [{"label": "direct-x", "tier": "direct-x", "query": "all:demo"}]})
-        _, summary = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"), agent_dynamic=agent)
+        _, summary = self.run_driver(self.argv("--no-terms-agent"), agent_dynamic=agent)
         agent.assert_called_once()
         self.assertEqual(summary["dynamic_source"], "agent")
 
     def test_fast_strategy_skips_dynamic_agent(self):
         agent = mock.Mock()
         _, summary = self.run_driver(
-            self.argv("--skip-s2", "--no-terms-agent", "--search-strategy", "fast"),
+            self.argv("--no-terms-agent", "--search-strategy", "fast"),
             agent_dynamic=agent,
         )
         agent.assert_not_called()
@@ -401,7 +423,7 @@ class SearchStrategyTest(DriverPipelineTest):
 
     def test_seeds_strategy_with_ids_skips_arxiv_keyword_search(self):
         argv = self.argv(
-            "--skip-s2", "--no-terms-agent", "--search-strategy", "seeds",
+            "--no-terms-agent", "--search-strategy", "seeds",
             "--seed-arxiv-ids", "2402.14207",
         )
         code, summary = self.run_driver(argv)
@@ -437,7 +459,7 @@ class SearchStrategyTest(DriverPipelineTest):
 
     def test_smart_strategy_with_seeds_runs_citation_expansion(self):
         argv = self.argv(
-            "--skip-s2", "--no-terms-agent", "--search-strategy", "smart",
+            "--no-terms-agent", "--search-strategy", "smart",
             "--seed-arxiv-ids", "2402.14207, 1704.02084",
         )
         code, summary = self.run_driver(argv)
@@ -464,7 +486,7 @@ class SearchStrategyTest(DriverPipelineTest):
                  mock.patch.object(self.driver.time, "sleep"), \
                  mock.patch.object(Path, "glob", return_value=iter([])):
                 code = self.driver.main(self.argv(
-                    "--skip-s2", "--no-terms-agent", "--seed-arxiv-ids", "2402.14207",
+                    "--no-terms-agent", "--seed-arxiv-ids", "2402.14207",
                 ))
         self.assertEqual(code, 0)
         registry = next(c for c in self.commands if "build-candidate-registry" in " ".join(c))

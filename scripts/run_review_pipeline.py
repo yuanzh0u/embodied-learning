@@ -5,7 +5,7 @@ Moves every deterministic stage into this driver so a kickoff no longer
 replans search queries, re-reads knowledge routing, or re-learns rate limits
 each run:
 
-    plan -> retrieval (S2 best-effort + arXiv, one process) -> registry
+    plan -> retrieval (arXiv, one process; S2 keyword opt-in via --with-s2) -> registry
          -> screening -> coverage -> extraction -> reading packets
          -> deep read (parallel skeleton agents + local assembly, default on)
          -> evidence projection -> pipeline-summary.json
@@ -169,7 +169,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "selection_method in run.json — no coverage/saturation gate applies."
         ),
     )
-    parser.add_argument("--skip-s2", action="store_true", help="Skip the best-effort Semantic Scholar source.")
+    parser.add_argument(
+        "--with-s2",
+        action="store_true",
+        help="Enable the Semantic Scholar keyword channel (off by default: under the "
+        "public rate limit it routinely exceeds its budget and is killed, and the arXiv "
+        "channel already carries recall). Citation expansion is unaffected by this flag.",
+    )
     parser.add_argument(
         "--arxiv-snapshot",
         help="Offline arXiv retrieval: path to a local metadata OAI snapshot (JSONL). "
@@ -957,13 +963,12 @@ def _main_locked(
         )
         selector.start()
 
-        # ---- retrieval: S2 best-effort + arXiv single process -----------
+        # ---- retrieval: arXiv single process (S2 keyword opt-in) --------
         begun = time.monotonic()
-        log("[DRIVER-PHASE:retrieval] 开始检索（Semantic Scholar + arXiv）")
         s2_output = run_dir / "search-semantic-scholar.json"
         arxiv_output = run_dir / "search-arxiv.json"
         citation_output = run_dir / "citation-expansion.json"
-        s2_detail = "skipped (--skip-s2)"
+        s2_detail = "skipped (S2 keyword channel off by default; --with-s2 enables it)"
         s2_process = None
         seeds_strategy = args.search_strategy == "seeds"
         external_only = bool(args.external_candidates)
@@ -972,7 +977,9 @@ def _main_locked(
             log(f"[DRIVER] 外注候选模式：跳过关键词检索，registry 只收 --external-candidates "
                 f"({len(args.external_candidates)} 个文件)")
         if not skip_arxiv:
-            if not args.skip_s2:
+            if args.with_s2:
+                log("[DRIVER-PHASE:retrieval] 开始检索（Semantic Scholar + arXiv）")
+                s2_detail = "enabled (--with-s2)"
                 s2_cmd = lambda: [  # noqa: E731
                     sys.executable, str(HUB_SCRIPTS / "search.py"), "search-semantic-scholar",
                     "--query-file", str(run_dir / "query-plan.json"),
@@ -1090,7 +1097,7 @@ def _main_locked(
             ]
             if not skip_arxiv and arxiv_output.is_file():
                 command += ["--search-result", str(arxiv_output)]
-            if not args.skip_s2 and s2_output.is_file() and s2_process is not None and s2_process.returncode == 0:
+            if s2_output.is_file() and s2_process is not None and s2_process.returncode == 0:
                 command += ["--semantic-scholar-result", str(s2_output)]
             if citation_output.is_file():
                 command += ["--citation-result", str(citation_output)]
