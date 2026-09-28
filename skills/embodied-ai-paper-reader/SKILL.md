@@ -27,18 +27,21 @@ Reject OCR-derived or scan-only papers as `unavailable`. The workflow does not u
 1. **Build the reading packet.** Require complete `text` for HTML or complete `pages` for PDF. Selected passages alone are insufficient.
 
 ```bash
+# Prefer --summary-first for scoping / structure-map passes (H1 token guard).
+# Full extraction JSON stays on disk for locator windows and claim-support audits.
 python3 skills/embodied-ai-paper-reader/scripts/build_reading_packet.py \
   --extraction work/<run>/extractions/2402.10329.json \
   --metadata work/<run>/paper-metadata/2402.10329.json \
   --review-question "UMI 数据在什么条件下可迁移到机器人策略?" \
   --topic-id EA-DATA --topic-id EA-XEMBODIMENT \
   --review-mode scoping \
+  --summary-first --max-section-chars 4000 \
   --output work/<run>/reading-packets/2402.10329.md \
   --note-template work/<run>/paper-notes/2402.10329.json
 ```
 
-2. **Map before deep reading.** Identify the paper type, problem, method/design, results/analysis, conclusion/limitations, and relevant appendix. Never infer the paper from the top-ranked passages alone.
-3. **Read against the review question.** Follow the mode-specific depth in [reading-depth-modes.md](references/reading-depth-modes.md) and the six-pass protocol in [reading-contract.md](references/reading-contract.md).
+2. **Map before deep reading.** Prefer the summary-first packet's structure map + section windows. Identify the paper type, problem, method/design, results/analysis, conclusion/limitations, and relevant appendix. Never infer the paper from the top-ranked passages alone, and do **not** re-paste Complete extracted text into every LLM pass.
+3. **Read against the review question.** Follow the mode-specific depth in [reading-depth-modes.md](references/reading-depth-modes.md) and the six-pass protocol in [reading-contract.md](references/reading-contract.md). For evidence cards, open **locator windows** from the extraction JSON (or a short neighborhood around the locator) rather than the entire packet body.
 4. **Write the paper note.** Follow [paper-note-schema.md](references/paper-note-schema.md). A paper may yield zero, one, or multiple evidence cards; never manufacture a card to satisfy a quota.
 5. **Critically appraise it.** Read [critical-appraisal.md](references/critical-appraisal.md). Separate author-stated limitations from reader-inferred transfer boundaries.
 6. **Validate and audit.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
@@ -87,7 +90,7 @@ python3 skills/embodied-ai-paper-reader/scripts/update_reading_ledger.py \
 
 ## Outputs
 
-- `reading-packet.md`: complete text plus structure and reading instructions; working material only.
+- `reading-packet.md`: structure map + reading instructions; use `--summary-first` for scoping (section windows) and keep full text on disk in the extraction JSON. Working material only.
 - `paper-note.json`: paper-level source of truth for reading decisions.
 - `paper-note.audit.json`: locator/context and manual-verification gate result.
 - `evidence.jsonl`: compatibility projection for the existing review workflow.

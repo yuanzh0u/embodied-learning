@@ -42,3 +42,20 @@ A pool of 200 papers can still fail if it covers only direct positive papers.
 A pool below the target can be useful for a preliminary brief, but it is not a
 completed review. Distinguish “this run did not cover it” from “the literature
 identifies an open problem”.
+
+
+## Agent context rules (token optimization)
+
+- **NEVER** load the full `candidate-registry.json` into the model context. Registries are commonly 2–5 MB with long summaries.
+- Allowed context inputs for coverage decisions:
+  - `coverage-report.json` (primary);
+  - `screening-*.md` / screening JSON summaries;
+  - `status_counts` and title-only top-N via:
+
+```bash
+python3 skills/embodied-ai-literature-hub/scripts/print_registry_titles.py \
+  --candidate-registry work/<run>/candidate-registry.json \
+  --status full-text-queued --status extracted --limit 80
+```
+
+- Do **not** paste raw search-round JSON (`search-round-*.json`, large OpenAlex/arXiv batch files) into the conversation; merge them into the registry with scripts, then read the coverage report.

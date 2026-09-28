@@ -14,6 +14,9 @@ Decide `include`, `background-only`, or `exclude` from title/abstract and the re
 
 ### Pass 1: structure map
 
+Prefer a **summary-first reading packet** (`build_reading_packet.py --summary-first`): structure outline + truncated section windows. Selected passages alone still cannot *accept* a paper, but they are valid navigation. Keep the complete extraction JSON on disk; do not paste Complete extracted text into every pass.
+
+
 Locate:
 
 - problem and claimed contribution;
@@ -26,6 +29,9 @@ Locate:
 Record each role and locator. A keyword-ranked passage is a navigation hint, not a substitute for this pass.
 
 ### Pass 2: question-driven deep read
+
+Load only the section/page windows needed for the review question (typically a few thousand characters around each locator). Re-open the full extraction only when a locator window is insufficient.
+
 
 Read the sections needed to answer the review question. Record every read and skipped section with a reason. Distinguish the paper's stated question from the review's question.
 
@@ -65,3 +71,7 @@ Accepted extraction methods are `html-latexml`, `html-flat`, and `pdf-text`. Rej
 - Use `inference` only for a reader synthesis, name its premises, and state what would weaken it.
 - Never convert association into causation.
 - Never generalize beyond the paper's tasks, data, embodiments, horizon, or evaluation setting without marking an inference.
+
+## Token note
+
+Full-text recovery remains mandatory on disk. Summary-first packets optimize **LLM context**, not the evidence eligibility gate: claim-support audits still match against the complete extraction.

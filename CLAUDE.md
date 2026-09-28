@@ -108,6 +108,14 @@ boundary is deliberate — do not blur them:
 Add new material via `knowledge/ingestion-guide.md` (register source → extract to card → update index).
 Run `python3 scripts/check_kb_links.py` after editing knowledge files.
 
+## Token / context soft guards
+
+- Load `AGENTS.md` + the **current** skill `SKILL.md` only; pull `references/` per step. Do not preload the full `knowledge/literature-review-catalog.md` — grep relevant rows.
+- Never dump `candidate-registry.json` into the model; use coverage reports / title-only slices (`print_registry_titles.py`).
+- Prefer `build_reading_packet.py --summary-first` for scoping; full text stays on disk for locator audits.
+- `build_review_packet.py` stance-caps writer brief/appendix (default support 8 / limit 6 / conditional 6 / gap 4); pass `--uncapped-writer` only for debug.
+- Optional metering: `EMBODIED_TOKEN_METER=1` + `scripts/token_meter.py` → `work/<run>/token-meter.jsonl` (see `docs/token-meter.md`).
+
 ## Conventions and invariants
 
 - **Evidence discipline is the core invariant.** Candidate papers are never accepted evidence.
