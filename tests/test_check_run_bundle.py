@@ -170,6 +170,19 @@ class CheckRunBundleTest(unittest.TestCase):
         problems = check_run_bundle.check_run_bundle(run_dir)
         self.assertTrue(any("coverage/saturation gate not passed" in item for item in problems))
 
+        # Declared escape: gate_exceptions lists the gate names the run is
+        # settling past (justification lives in run.json notes).
+        manifest["gate_exceptions"] = ["saturation"]
+        (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], check_run_bundle.check_run_bundle(run_dir))
+
+        # Declared exceptions only cover what they name — other unresolved
+        # gates stay hard failures.
+        manifest["gate_exceptions"] = ["something-else"]
+        (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        problems = check_run_bundle.check_run_bundle(run_dir)
+        self.assertTrue(any("coverage/saturation gate not passed" in item for item in problems))
+
         (run_dir / "coverage-report.json").write_text(
             json.dumps({"stop_assessment": {"ready_to_stop": True, "unresolved": []}}),
             encoding="utf-8",

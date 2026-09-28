@@ -68,12 +68,13 @@ STYLE_FILENAME_MAP = {
     "scientific-memo": "scientific-memo_keyan.md",
     "expert-explainer": "zhihu-explainer_zhihu.md",
     "kol-thread": "xiaohongshu-post_xiaohongshu.md",
+    "slide-deck": "slide-deck_report.md",
     "survey": "review-packet.md",
 }
-STYLE_CHOICES = sorted(set(STYLE_OUTLINES_ZH) | set(DEFAULT_OUTPUT_STYLES) | {"all"})
+STYLE_CHOICES = sorted(set(STYLE_OUTLINES_ZH) | set(DEFAULT_OUTPUT_STYLES) | {"all", "slide-deck"})
 APPENDIX_FILENAME = "evidence-appendix.md"
 BRIEF_FILENAME = "writing-brief.md"
-FORMAL_STYLES = set(DEFAULT_OUTPUT_STYLES)
+FORMAL_STYLES = set(DEFAULT_OUTPUT_STYLES) | {"slide-deck"}
 SCAFFOLD_BANNER = (
     "<!-- SCAFFOLD: 机械渲染的证据脚手架,非成稿。 -->\n"
     "> **警告:本文件不是综述成稿。** 它是 claim map 与 stance 分桶的机械渲染,\n"
@@ -948,7 +949,7 @@ def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_rang
 
 FIGURE_CAPS_NOTE = (
     "每风格配额（上限，不是下限）：科研备忘录 ≤4 图 + 1 表；知乎解释版 ≤2 图；"
-    "小红书版 ≤1 图；evidence-appendix 全量保留。"
+    "小红书版 ≤1 图；slide-deck 每页 ≤2 图、全册 ≤10 图；evidence-appendix 全量保留。"
     "图只能来自下面列出的 evidence 事件图表（URL 与题注照抄，禁止自造或外搜图片）；"
     "插入位置：紧跟其支撑的段落之后；无合适图就少配或不配，禁止为凑数放 teaser/logo。"
 )
@@ -1172,6 +1173,43 @@ def render_kol_thread(
     return "\n".join(lines)
 
 
+def render_slide_deck_scaffold(topic: str) -> str:
+    """slide-deck 的机械骨架：slide-source DSL 模板，只给结构不给内容。
+    成稿由代理依 writing-brief.md 改写（参见 references/slide-deck.md）。"""
+    return SCAFFOLD_BANNER + "\n".join([
+        "# title: " + topic,
+        "# subtitle: （一句话副标题）",
+        "# date: （日期）",
+        "# refs: refs.json   # 引文键 -> {title,url}；正文用 {{key}} 引用",
+        "# end: 谢谢 · Q&A",
+        "",
+        "---",
+        "class: cover",
+        "",
+        "---",
+        "kicker: 背景",
+        "title: （每页一个论点）",
+        "verdict: （页底结论条，每张内容页必填）",
+        "",
+        "- 要点（≤7 条/页；支持 **强调**、`code` 与 {{citekey}}）",
+        "",
+        "@stat 0.71 | 指标名",
+        "@bars 基线 0.30 ; *我们 0.85",
+        "@tier 环节一 > 环节二 > *核心环节",
+        "@care 风险/边界一句话",
+        "",
+        "---",
+        "kicker: 结论",
+        "title: （收束页：三条 take-away）",
+        "verdict: （全册最后一句话）",
+        "",
+        "- take-away 一",
+        "- take-away 二",
+        "- take-away 三",
+        "",
+    ]) + "\n"
+
+
 def render_final_output(
     topic: str,
     knowledge_ids: list[str],
@@ -1189,6 +1227,8 @@ def render_final_output(
         return render_expert_explainer(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources, time_range)
     if style == "kol-thread":
         return render_kol_thread(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources, time_range)
+    if style == "slide-deck":
+        return render_slide_deck_scaffold(topic)
     return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, style, fallback_sources, time_range)
 
 

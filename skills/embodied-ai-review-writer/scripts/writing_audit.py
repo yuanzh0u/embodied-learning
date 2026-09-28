@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """CLI: writer-side audit tools — trace maps and editorial quality gates.
 
-One entry, three subcommands (the old single-purpose scripts, kebab-cased):
-build-trace-map | audit-article-quality | audit-zhihu-corpus. Each
-subcommand reuses its original parser verbatim (sys.argv slice), so flags,
+One entry, four subcommands (the old single-purpose scripts, kebab-cased):
+build-trace-map | audit-article-quality | audit-zhihu-corpus | audit-slide-deck.
+Each subcommand reuses its original parser verbatim (sys.argv slice), so flags,
 help text, and exit codes are unchanged.
 """
 import sys
@@ -14,6 +14,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 import _article_quality  # noqa: E402  (sibling modules, same directory)
+import _slide_deck  # noqa: E402
 import _trace_map  # noqa: E402
 import _zhihu_corpus  # noqa: E402
 
@@ -21,6 +22,7 @@ _SUBCOMMANDS = {
     "build-trace-map": _trace_map,
     "audit-article-quality": _article_quality,
     "audit-zhihu-corpus": _zhihu_corpus,
+    "audit-slide-deck": _slide_deck,
 }
 
 

@@ -1,6 +1,6 @@
 ---
 name: embodied-ai-review-writer
-description: Orchestrate coverage-driven embodied-AI literature reviews end to end and write or rewrite publication-ready, natural Chinese content from a formal-ready brief and a potentially large evidence reservoir. Owns review-mode selection, candidate registries, saturation auditing, validated briefs, settled runs; use for researching, auditing, or producing evidence-grounded scientific research memos, 知乎专家解释稿, 小红书洞察帖, full three-style bundles, or when articles are traceable but shallow, packet-like, repetitive, formulaic, under-cited, or not audience-specific.
+description: Orchestrate coverage-driven embodied-AI literature reviews end to end and write or rewrite publication-ready, natural Chinese content from a formal-ready brief and a potentially large evidence reservoir. Owns review-mode selection, candidate registries, saturation auditing, validated briefs, settled runs; use for researching, auditing, or producing evidence-grounded scientific research memos, 知乎专家解释稿, 小红书洞察帖, reveal.js 汇报展示 (slide decks), full three-style bundles, or when articles are traceable but shallow, packet-like, repetitive, formulaic, under-cited, or not audience-specific.
 ---
 
 # Embodied AI Review Writer
@@ -15,8 +15,9 @@ Default final deliverable: three Markdown files under a new `work/literature-rev
 - `scientific-memo_keyan.md`: 科研文献综述/研究备忘录风格。
 - `zhihu-explainer_zhihu.md`: 知乎科普帖/专家解释帖风格。
 - `xiaohongshu-post_xiaohongshu.md`: 小红书网文/KOL 洞察帖风格。
+- `slide-deck_report.html`: 汇报展示风格（reveal.js 单文件放映件；源文件 `slide-deck_report.md`，由 `scripts/build_slide_deck.py` 编译，代理只写 slide-source，见 [slide-deck.md](references/slide-deck.md)）。
 
-A fourth style exists outside the review bundle: `quick-read_sudu.md`（速读卡，see [quick-read.md](references/quick-read.md)）is a **single-paper pool artifact**, not a literature-review deliverable. Its inputs are one paper's deep-read `note.json` + `paper.md` from the public pool — never a writing brief — and it is generated per paper by `scripts/quick_read_paper.py`; it never appears inside a `literature-review-<topic>-<date>/` folder.
+Another style exists outside the review bundle: `quick-read_sudu.md`（速读卡，see [quick-read.md](references/quick-read.md)）is a **single-paper pool artifact**, not a literature-review deliverable. Its inputs are one paper's deep-read `note.json` + `paper.md` from the public pool — never a writing brief — and it is generated per paper by `scripts/quick_read_paper.py`; it never appears inside a `literature-review-<topic>-<date>/` folder.
 
 **Division of labor:** `build_review_packet.py` is a briefing generator, not an author. It emits `review-packet.md` + `writing-brief.md` + `evidence-appendix.md`; the writing stage writes and editorially audits the three reader-facing files. Never present mechanical renders (`*.scaffold.md`) as finished articles.
 
@@ -27,7 +28,7 @@ A fourth style exists outside the review bundle: `quick-read_sudu.md`（速读�
 - Topic or review question.
 - Time range when discovering papers or invoking upstream literature mining. If no time range is provided, default to the most recent six months.
 - Review mode: `rapid`, `scoping` (default), or `systematic`. Treat every size target as a floor, never as a cap.
-- Target style: optional. If absent, write all three default Markdown outputs. Use `scientific-memo`, `expert-explainer`, or `kol-thread` for one formal style output, and `survey` for the explicit review packet/style menu.
+- Target style: optional. If absent, write all three default Markdown outputs. Use `scientific-memo`, `expert-explainer`, `kol-thread`, or `slide-deck` for one formal style output, and `survey` for the explicit review packet/style menu.
 - At least one of:
   - evidence JSONL from `$embodied-ai-literature-hub`
   - fallback source-tier JSON from lightweight Browser/web collection
@@ -41,7 +42,7 @@ If the brief says `Writing readiness: preliminary` or its coverage gate is block
 
 ## Run lifecycle and gates
 
-0. **Decide the deliverable shape (before any writing).** Default is the full three-style bundle. A single style is allowed ONLY when the user explicitly asks for it — record that decision in `run.json` as `"style": "<formal-style>"` plus `"scope_note": "<the user's ask, in their words>"`. The ONLY recognized deliverable filenames are `scientific-memo_keyan.md` / `zhihu-explainer_zhihu.md` / `xiaohongshu-post_xiaohongshu.md` — an invented filename (research-memo.md, main-*.md, …) is not a deliverable, whatever its quality. Non-review artifacts (research outlines, experiment designs, synthesis notes) must NOT use a `literature-review-<topic>-<date>` folder name — that name IS the bundle contract trigger; use e.g. `work/research-outline-<topic>-<date>/` instead.
+0. **Decide the deliverable shape (before any writing).** Default is the full three-style bundle. A single style is allowed ONLY when the user explicitly asks for it — record that decision in `run.json` as `"style": "<formal-style>"` plus `"scope_note": "<the user's ask, in their words>"`. The ONLY recognized deliverable filenames are `scientific-memo_keyan.md` / `zhihu-explainer_zhihu.md` / `xiaohongshu-post_xiaohongshu.md` / `slide-deck_report.html` (with its `slide-deck_report.md` slide-source) — an invented filename (research-memo.md, main-*.md, …) is not a deliverable, whatever its quality. Non-review artifacts (research outlines, experiment designs, synthesis notes) must NOT use a `literature-review-<topic>-<date>` folder name — that name IS the bundle contract trigger; use e.g. `work/research-outline-<topic>-<date>/` instead.
 1. Initialize the run, then load the repository routing layer:
    - `python3 scripts/init_run.py --topic "..." --knowledge-id EA-… --time-range "..." --review-mode scoping` creates a workflow-v2 run with `status: in-progress`.
    - **If you stop for any reason before settling** (search failed, evidence insufficient, out of time), leave the run `in-progress` in `work/` and TELL THE USER explicitly that the run is unfinished, listing the missing steps. A silently abandoned run that looks like a deliverable is a contract violation; an honestly declared partial run is fine.
@@ -204,7 +205,7 @@ python3 skills/embodied-ai-review-writer/scripts/writing_audit.py audit-zhihu-co
 
 - Read [review-contract.md](references/review-contract.md) before drafting or auditing a full review.
 - Read [templates.md](references/templates.md) for the briefing-to-writer handoff.
-- Load only the selected style guidance for drafting: [scientific-memo.md](references/scientific-memo.md), [zhihu-explainer.md](references/zhihu-explainer.md), [xiaohongshu-post.md](references/xiaohongshu-post.md), [quick-read.md](references/quick-read.md) (single-paper cards only), plus always [editorial-quality-rubric.md](references/editorial-quality-rubric.md) and [citation-projection.md](references/citation-projection.md).
+- Load only the selected style guidance for drafting: [scientific-memo.md](references/scientific-memo.md), [zhihu-explainer.md](references/zhihu-explainer.md), [xiaohongshu-post.md](references/xiaohongshu-post.md), [quick-read.md](references/quick-read.md) (single-paper cards only), [slide-deck.md](references/slide-deck.md) (汇报展示 only), plus always [editorial-quality-rubric.md](references/editorial-quality-rubric.md) and [citation-projection.md](references/citation-projection.md).
 
 ## Completion standard
 

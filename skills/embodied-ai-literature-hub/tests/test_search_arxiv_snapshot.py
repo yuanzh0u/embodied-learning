@@ -67,6 +67,23 @@ def run_search(records: list[dict], query: str, **overrides) -> dict:
         return json.load(handle)
 
 
+def run_query_batch(queries: list[dict[str, str]]) -> dict:
+    records = [make_record(title="Egocentric Activity Understanding")]
+    path = write_snapshot(records)
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+        output = handle.name
+    search = snap.SnapshotArxivSearch(
+        snapshot_path=path,
+        start_date="2016-09-17",
+        end_date="2026-09-17",
+        output=output,
+    )
+    code = search.run(queries)
+    assert code == 0
+    with open(output) as handle:
+        return json.load(handle)
+
+
 class QueryParserTest(unittest.TestCase):
     def test_term_and_phrase(self) -> None:
         node = snap.parse_query('all:"ego-exo" AND abs:egocentric')
@@ -85,11 +102,43 @@ class QueryParserTest(unittest.TestCase):
         node = snap.parse_query("all:ego ANDNOT all:cat")
         self.assertEqual(node.op, "ANDNOT")
 
+    def test_andnot(self) -> None:
+        node = snap.parse_query("all:ego ANDNOT all:cat")
+        self.assertEqual(node.op, "ANDNOT")
+
+    def test_field_scoped_group(self) -> None:
+        # Dynamic-query agents emit `all:(a OR b)` — valid arXiv API syntax;
+        # the field scopes over every leaf of the group.
+        node = snap.parse_query('all:(point AND "surface reconstruction")')
+        self.assertIsInstance(node, snap.BinaryNode)
+        self.assertEqual(node.op, "AND")
+        self.assertEqual(node.left.field, "all")
+        self.assertEqual(node.right.field, "all")
+
+    def test_field_scoped_group_non_all_field(self) -> None:
+        node = snap.parse_query("ti:(mesh OR atlas) AND abs:lidar")
+        self.assertEqual(node.op, "AND")
+        self.assertEqual(node.left.left.field, "ti")
+        self.assertEqual(node.left.right.field, "ti")
+        self.assertEqual(node.right.field, "abs")
+
     def test_unknown_field_is_term(self) -> None:
         # "foo:" is not a known field, tokenizes as a bare term.
         node = snap.parse_query("foo:bar")
         self.assertIsInstance(node, snap.TermNode)
         self.assertEqual(node.term, "foo:bar")
+
+    def test_malformed_group_query_degrades_to_error_meta(self) -> None:
+        # A single malformed query must not kill the batch: it becomes an
+        # errored per-query entry while the other queries still return hits.
+        result = run_query_batch([
+            {"label": "bad", "query": "ti:(unbalanced"},
+            {"label": "good", "query": "all:egocentric"},
+        ])
+        metas = {q["label"]: q for q in result["queries"]}
+        self.assertIn("error", metas["bad"])
+        self.assertEqual(metas["bad"]["result_count"], 0)
+        self.assertEqual(metas["good"]["result_count"], 1)
 
 
 class RecordTest(unittest.TestCase):

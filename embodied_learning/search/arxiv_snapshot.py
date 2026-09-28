@@ -231,6 +231,15 @@ class QueryParser:
                     raise ValueError("submittedDate requires a [A TO B] range")
                 low, high = value[1].split("..")
                 return DateRangeNode(low, high)
+            if value[0] == "LPAREN":
+                # arXiv API field-scoped group: `all:(a OR b)` scopes the field
+                # over every leaf of the sub-expression. Parse the group, then
+                # rewrite its unscoped (default-"all") leaves to the field.
+                group = self._parse_or()
+                closing = self._next()
+                if closing[0] != "RPAREN":
+                    raise ValueError("unbalanced parentheses in query")
+                return _scope_group(group, field)
             if value[0] == "PHRASE":
                 return PhraseNode(field, _normalize(value[1]))
             if value[0] == "TERM":
@@ -245,6 +254,19 @@ class QueryParser:
 
 def parse_query(query: str) -> QueryNode:
     return QueryParser(query).parse()
+
+
+def _scope_group(node: Any, field: str) -> QueryNode:
+    """Rewrite a parsed group so every default-scoped leaf becomes
+    field-scoped (arXiv `field:(...)` semantics). Already-scoped leaves,
+    binary structure, and date ranges pass through unchanged."""
+    if isinstance(node, TermNode) and node.field == "all":
+        return TermNode(field, node.term)
+    if isinstance(node, PhraseNode) and node.field == "all":
+        return PhraseNode(field, node.phrase)
+    if isinstance(node, BinaryNode):
+        return BinaryNode(node.op, _scope_group(node.left, field), _scope_group(node.right, field))
+    return node
 
 
 def _normalize(text: str) -> str:
@@ -363,9 +385,22 @@ class SnapshotArxivSearch:
         from embodied_learning.search.arxiv import with_date_filter  # noqa: E402  # local: avoids import at module load
 
         compiled: list[dict[str, Any]] = []
-        for item in queries:
+        failed_by_index: dict[int, dict[str, Any]] = {}
+        for index, item in enumerate(queries):
             effective = with_date_filter(item["query"], self.start_date, self.end_date)
-            node = parse_query(effective)
+            # One agent-authored malformed query must degrade to an errored
+            # per-query entry, not kill the whole retrieval batch (a driver
+            # retry hits the same query and fails 3/3).
+            try:
+                node = parse_query(effective)
+            except ValueError as exc:
+                failed_by_index[index] = {
+                    "label": item["label"],
+                    "query": item["query"],
+                    "result_count": 0,
+                    "error": f"query parse failed: {exc}",
+                }
+                continue
             compiled.append({
                 "label": item["label"],
                 "query": item["query"],
@@ -424,7 +459,11 @@ class SnapshotArxivSearch:
 
         papers_by_id: dict[str, dict[str, Any]] = {}
         query_results = []
-        for entry in compiled:
+        for index, item in enumerate(queries):
+            if index in failed_by_index:
+                query_results.append(failed_by_index[index])
+                continue
+            entry = next(e for e in compiled if e["label"] == item["label"])
             heap = entry["heap"]
             top = sorted(heap, key=lambda item: item[0], reverse=self.sort_order == "descending")
             top = top[: self.max_results]

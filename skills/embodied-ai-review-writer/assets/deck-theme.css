@@ -1,0 +1,354 @@
+/* deck-theme.css — 汇报展示风格默认主题（slide-deck）
+ * 深色科研汇报主题，配色与组件词汇表来自 ego-exo-report.html 的已验证版式。
+ * 组件：.kicker .verdict .statrow/.stat .bars .card .tier .fix .steps .care .fig
+ *       table .refs .cover .end
+ * 幻灯片画布 1280x720，由 reveal.js 负责整体缩放。 */
+
+:root {
+  --bg: #0A1322;
+  --panel: #101E33;
+  --panel-2: #16283F;
+  --ink: #E8EEF7;
+  --dim: #8FA3BD;
+  --line: #22344E;
+  --mark: #FFC94D;   /* 强调/结论 */
+  --ours: #7AD0FF;   /* 本方案 */
+  --risk: #FF7A6B;   /* 风险 */
+  --good: #6FE0A8;   /* 正向 */
+}
+
+/* ---------- reveal 骨架覆写 ---------- */
+.reveal {
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC",
+    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-size: 28px;
+  color: var(--ink);
+}
+.reveal .slides { text-align: left; }
+.reveal .slides section {
+  width: 1280px;
+  height: 720px;
+  box-sizing: border-box;
+  padding: 44px 64px 56px;
+  background: var(--bg);
+}
+.reveal-viewport {
+  background: var(--bg);
+}
+.reveal .progress {
+  color: var(--mark);
+  height: 4px;
+}
+.reveal .controls { color: var(--dim); }
+.reveal .slide-number {
+  background: none;
+  color: var(--dim);
+  font-size: 16px;
+  font-family: inherit;
+  bottom: 14px;
+  right: 22px;
+}
+
+/* ---------- 页头 / 结论条 ---------- */
+.kicker {
+  font-size: 19px;
+  letter-spacing: 0.35em;
+  color: var(--ours);
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+.reveal h2 {
+  font-size: 44px;
+  line-height: 1.2;
+  margin: 0 0 26px;
+  color: var(--ink);
+  font-weight: 700;
+}
+.reveal h2 .hl { color: var(--mark); }
+
+.verdict {
+  position: absolute;
+  left: 64px;
+  right: 64px;
+  bottom: 26px;
+  padding: 12px 20px;
+  border-left: 5px solid var(--mark);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 23px;
+  line-height: 1.45;
+  border-radius: 4px;
+}
+.verdict b, .verdict strong { color: var(--mark); }
+
+/* ---------- 列表与正文 ---------- */
+.reveal ul, .reveal ol {
+  margin: 0 0 18px;
+  padding-left: 1.1em;
+  line-height: 1.55;
+}
+.reveal li { margin-bottom: 10px; }
+.reveal li::marker { color: var(--ours); }
+.reveal p { margin: 0 0 14px; line-height: 1.55; }
+.reveal strong { color: var(--mark); font-weight: 700; }
+.reveal code {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 0.82em;
+  color: var(--ours);
+  background: var(--panel);
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+.reveal a { color: var(--ours); text-decoration: none; }
+.cite {
+  font-size: 0.62em;
+  color: var(--dim);
+  vertical-align: super;
+  padding-left: 1px;
+}
+
+/* ---------- stat 数字卡 ---------- */
+.statrow {
+  display: flex;
+  gap: 18px;
+  margin: 14px 0 20px;
+}
+.stat {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+.stat .v {
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--mark);
+  line-height: 1.15;
+}
+.stat .k {
+  font-size: 19px;
+  color: var(--dim);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ---------- 横条图 ---------- */
+.bars { margin: 12px 0 20px; }
+.bars .row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.bars .lbl {
+  width: 220px;
+  flex: none;
+  font-size: 21px;
+  color: var(--ink);
+  text-align: right;
+  padding-right: 14px;
+}
+.bars .track {
+  flex: 1;
+  height: 22px;
+  background: var(--panel-2);
+  border-radius: 11px;
+  overflow: hidden;
+}
+.bars .fill {
+  height: 100%;
+  background: var(--ours);
+  border-radius: 11px;
+}
+.bars .row.ours .fill { background: var(--mark); }
+.bars .row.risk .fill { background: var(--risk); }
+.bars .bval {
+  width: 118px;
+  flex: none;
+  padding-left: 12px;
+  font-size: 21px;
+  color: var(--mark);
+  white-space: nowrap;
+}
+
+/* ---------- 卡片 / 层级 / 修复清单 / 步骤 ---------- */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 12px 0;
+  font-size: 24px;
+  line-height: 1.5;
+}
+.card .t {
+  color: var(--ours);
+  font-weight: 700;
+  margin-right: 10px;
+}
+.cardrow { display: flex; gap: 16px; margin: 12px 0; }
+.cardrow .card { flex: 1; margin: 0; }
+
+.tier {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 20px;
+  flex-wrap: wrap;
+}
+.tier .t {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 22px;
+}
+.tier .t.hot { border-color: var(--mark); color: var(--mark); }
+.tier .arrow { color: var(--dim); font-size: 22px; }
+
+.fix { margin: 12px 0 18px; padding: 0; list-style: none; }
+.fix li {
+  padding: 8px 0 8px 34px;
+  position: relative;
+  font-size: 24px;
+  line-height: 1.45;
+}
+.fix li::before {
+  content: "✓";
+  position: absolute;
+  left: 4px;
+  color: var(--good);
+  font-weight: 700;
+}
+
+.steps { margin: 14px 0 20px; padding: 0; list-style: none; counter-reset: step; }
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 8px 0 8px 52px;
+  font-size: 24px;
+  line-height: 1.45;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 4px;
+  top: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--panel-2);
+  border: 1px solid var(--ours);
+  color: var(--ours);
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* ---------- 风险/注意面板 ---------- */
+.care {
+  background: rgba(255, 122, 107, 0.10);
+  border: 1px solid rgba(255, 122, 107, 0.45);
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin: 12px 0 18px;
+  font-size: 23px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.care::before {
+  content: "⚠ ";
+  color: var(--risk);
+  font-weight: 700;
+}
+
+/* ---------- 图片装裱（论文白底图） ---------- */
+.fig {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px auto 18px;
+  text-align: center;
+  max-width: 92%;
+}
+.fig img {
+  background: #fff;
+  padding: 5px;
+  border-radius: 3px;
+  max-width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+}
+.fig .cap {
+  font-size: 18px;
+  color: var(--dim);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* ---------- 表格 ---------- */
+.reveal table {
+  border-collapse: collapse;
+  margin: 12px 0 20px;
+  font-size: 21px;
+  width: 100%;
+}
+.reveal th {
+  background: var(--panel-2);
+  color: var(--ours);
+  font-weight: 700;
+  text-align: left;
+}
+.reveal th, .reveal td {
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  line-height: 1.4;
+}
+.reveal tr:nth-child(even) td { background: rgba(16, 30, 51, 0.5); }
+
+/* ---------- 引用附录 ---------- */
+.refs {
+  column-count: 3;
+  column-gap: 34px;
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--dim);
+}
+.refs div {
+  break-inside: avoid;
+  margin-bottom: 9px;
+  padding-left: 30px;
+  text-indent: -30px;
+}
+.refs .n { color: var(--mark); font-weight: 700; }
+.refs a { color: var(--dim); word-break: break-all; }
+
+/* ---------- 封面 / 结尾 ---------- */
+.slide.cover, .slide.end {
+  text-align: center;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.slide.cover .kicker { letter-spacing: 0.5em; }
+.slide.cover h1 {
+  font-size: 62px;
+  margin: 0 0 22px;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.slide.cover .sub {
+  font-size: 26px;
+  color: var(--dim);
+  line-height: 1.6;
+}
+.slide.end h1 {
+  font-size: 52px;
+  color: var(--mark);
+  margin: 0 0 24px;
+}
+.slide.end .sub { font-size: 26px; color: var(--dim); }

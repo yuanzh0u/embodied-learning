@@ -55,6 +55,9 @@
     // id currently generating. Memory only — never persisted.
     quickRead: new Map(),
     quickReadGenerating: null,
+    // Slide-deck (汇报) tab state: deck payload cache keyed by paper id.
+    slideDeck: new Map(),
+    slideDeckGenerating: null,
     chat: {
       open: false,
       serverEnabled: false,
@@ -168,6 +171,9 @@
     readerBack: el("reader-back-button"),
     readerQuickReadTab: el("reader-quickread-tab"),
     readerQuickReadBody: el("reader-quickread-body"),
+    readerSlideDeckTab: el("reader-slidedeck-tab"),
+    readerSlideDeckBody: el("reader-slidedeck-body"),
+    deckButton: el("deck-button"),
     readerOpenExternal: el("reader-open-external"),
     readerProgress: el("reader-progress"),
     readerProgressBar: el("reader-progress-bar"),
@@ -385,6 +391,11 @@
     if (repeatedTitle?.tagName === "H1") repeatedTitle.remove();
     nodes.evidenceButton.disabled = !topic.evidence.available;
     nodes.evidenceButton.title = topic.evidence.available ? "打开证据附录" : "这个话题没有随附证据文档";
+    // Run-level slide deck (汇报展示): the entry always shows — click probes
+    // live availability and offers generation when the deck is missing.
+    nodes.deckButton.hidden = !topic.source_directory;
+    nodes.deckButton.title = topic.slide_deck?.available
+      ? "打开汇报放映件" : "还没有放映件：点击生成（约 5-10 分钟）";
     const available = topic.available_versions || Object.keys(topic.versions);
     [...nodes.versionTabs.querySelectorAll("[data-version]")].forEach((button) => {
       const present = available.includes(button.dataset.version);
@@ -1269,10 +1280,10 @@
     nodes.readingMeta.hidden = on;
     nodes.articleFooter.hidden = on;
     nodes.tocPanel.hidden = on;
-    // Leaving the reader must also undo switchReaderTab(true): otherwise the
-    // 速读 card stays visible (and #article-body stays hidden) on top of
-    // every subsequently rendered topic card.
-    if (!on) resetQuickReadTab();
+    // Leaving the reader must also undo switchReaderSideTab: otherwise a
+    // 速读 card or 汇报 deck stays visible (and #article-body stays hidden)
+    // on top of every subsequently rendered topic card.
+    if (!on) { resetQuickReadTab(); resetSlideDeckTab(); }
   }
 
   function showReaderSkeleton(paperId) {
@@ -1367,6 +1378,7 @@
     const controller = new AbortController();
     state.readerAbort = controller;
     resetQuickReadTab();
+    resetSlideDeckTab();
     showReaderSkeleton(paperId);
 
     // Warm cache: paint instantly, no fetch at all.
@@ -1445,18 +1457,27 @@
   // deep-read gated); the tab loads lazily on first click.
 
   function resetQuickReadTab() {
-    nodes.readerQuickReadTab.setAttribute("aria-pressed", "false");
-    nodes.readerQuickReadTab.classList.remove("is-active");
-    nodes.readerQuickReadBody.hidden = true;
     nodes.readerQuickReadBody.innerHTML = "";
-    nodes.articleBody.hidden = false;
+    switchReaderSideTab(null);
   }
 
-  function switchReaderTab(showQuickRead) {
+  function resetSlideDeckTab() {
+    nodes.readerSlideDeckBody.innerHTML = "";
+    switchReaderSideTab(null);
+  }
+
+  function switchReaderSideTab(which) {
+    // which: "quickread" | "slidedeck" | null (back to the paper document).
+    // The two side tabs are mutually exclusive with the paper view.
+    const showQuickRead = which === "quickread";
+    const showSlideDeck = which === "slidedeck";
     nodes.readerQuickReadTab.setAttribute("aria-pressed", String(showQuickRead));
     nodes.readerQuickReadTab.classList.toggle("is-active", showQuickRead);
     nodes.readerQuickReadBody.hidden = !showQuickRead;
-    nodes.articleBody.hidden = showQuickRead;
+    nodes.readerSlideDeckTab.setAttribute("aria-pressed", String(showSlideDeck));
+    nodes.readerSlideDeckTab.classList.toggle("is-active", showSlideDeck);
+    nodes.readerSlideDeckBody.hidden = !showSlideDeck;
+    nodes.articleBody.hidden = showQuickRead || showSlideDeck;
   }
 
   function renderQuickReadCard(paperId, markdown) {
@@ -1537,6 +1558,114 @@
       state.quickReadGenerating = null;
       nodes.readerProgressBar.style.width = "100%";
       nodes.readerProgressLabel.textContent = "速读完成";
+      setTimeout(() => { nodes.readerProgress.hidden = true; }, 600);
+    }
+  }
+
+  // ---- slide deck (汇报) tab -----------------------------------------------
+  // The deck is a self-contained reveal.js page — it cannot render inside the
+  // markdown reader, so the tab embeds it in an iframe (reveal scales to fit)
+  // and offers a new-window 放映 link. Generated server-side by
+  // paper_slide_deck.py (pooled, deep-read gated), same contract as 速读.
+
+  function slideDeckPanelUrl(paperId) {
+    return `api/paper/slidedeck/file?id=${encodeURIComponent(paperId)}`;
+  }
+
+  function renderSlideDeckPanel(paperId, payload) {
+    const updated = payload?.updated_at ? new Date(payload.updated_at).toLocaleString() : "";
+    const agentReady = payload?.agent_available !== false;
+    nodes.readerSlideDeckBody.innerHTML = `
+      <div class="quickread-placeholder">
+        <p><strong>汇报放映件已就绪。</strong>${updated ? `<span class="slidedeck-updated">生成于 ${escapeHtml(updated)}</span>` : ""}</p>
+        <iframe class="slidedeck-frame" src="${escapeHtml(payload.deck_url || slideDeckPanelUrl(paperId))}"
+                title="slide deck" loading="lazy"></iframe>
+        <div class="slidedeck-actions">
+          <button type="button" id="slidedeck-open-button">新窗口放映 ↗</button>
+          <button type="button" id="slidedeck-regenerate-button" ${agentReady ? "" : "disabled"}>重新生成</button>
+        </div>
+      </div>`;
+    nodes.readerSlideDeckBody.querySelector("#slidedeck-open-button")
+      ?.addEventListener("click", () => window.open(slideDeckPanelUrl(paperId), "_blank", "noopener"));
+    nodes.readerSlideDeckBody.querySelector("#slidedeck-regenerate-button")
+      ?.addEventListener("click", () => generateSlideDeck(paperId));
+  }
+
+  function slideDeckPlaceholder(payload) {
+    const agentReady = payload?.agent_available !== false;
+    const deepStatus = payload?.deep_read_status || "未深读";
+    return `
+      <div class="quickread-placeholder">
+        <p><strong>还没有这篇论文的汇报放映件。</strong></p>
+        <p>汇报基于已审计的深读笔记生成（当前深读状态：${escapeHtml(deepStatus)}），按主题组织为 reveal.js 幻灯片，首次生成约需 3-8 分钟。</p>
+        <button type="button" id="slidedeck-generate-button" ${agentReady ? "" : "disabled"}>生成汇报</button>
+        ${agentReady ? "" : '<p class="reader-load-error">claude CLI 不可用，无法生成汇报。</p>'}
+      </div>`;
+  }
+
+  async function loadSlideDeckState(paperId) {
+    const cached = state.slideDeck.get(paperId);
+    if (cached) {
+      renderSlideDeckPanel(paperId, cached);
+      return;
+    }
+    nodes.readerSlideDeckBody.innerHTML = '<p class="reader-load-error">正在检查汇报缓存…</p>';
+    try {
+      const response = await fetch(`api/paper/slidedeck/state?id=${encodeURIComponent(paperId)}`);
+      if (!response.ok) throw new Error(`状态读取失败（${response.status}）`);
+      const payload = await response.json();
+      if (payload.slide_deck && payload.deck_url) {
+        state.slideDeck.set(paperId, payload);
+        renderSlideDeckPanel(paperId, payload);
+        return;
+      }
+      nodes.readerSlideDeckBody.innerHTML = slideDeckPlaceholder(payload);
+      nodes.readerSlideDeckBody.querySelector("#slidedeck-generate-button")
+        ?.addEventListener("click", () => generateSlideDeck(paperId));
+    } catch (error) {
+      nodes.readerSlideDeckBody.innerHTML =
+        `<p class="reader-load-error">汇报状态读取失败：${escapeHtml(error.message)}</p>`;
+    }
+  }
+
+  async function generateSlideDeck(paperId) {
+    if (state.slideDeckGenerating) return;
+    state.slideDeckGenerating = paperId;
+    nodes.readerProgress.hidden = false;
+    nodes.readerProgressBar.style.width = "30%";
+    nodes.readerProgressLabel.textContent = "正在生成汇报（深读校验 → 写作简报 → 幻灯片编译）…";
+    const button = nodes.readerSlideDeckBody.querySelector("button");
+    if (button) { button.disabled = true; button.textContent = "生成中…"; }
+    try {
+      const response = await fetch("api/paper/slidedeck", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ arxiv_id: paperId }),
+      });
+      if (response.status === 409) {
+        showToast("该论文已有汇报生成正在进行，请稍候。");
+        return;
+      }
+      if (!response.ok) throw new Error(`生成请求失败（${response.status}）`);
+      await consumeSSE(response, (event) => {
+        if (event.type === "stage") {
+          nodes.readerProgressLabel.textContent = event.detail || "正在生成汇报…";
+        } else if (event.type === "slidedeck_done") {
+          const payload = { deck_url: event.deck_url, updated_at: new Date().toISOString() };
+          state.slideDeck.set(paperId, payload);
+          renderSlideDeckPanel(paperId, payload);
+        } else if (event.type === "topic_error") {
+          nodes.readerSlideDeckBody.innerHTML =
+            `<p class="reader-load-error">${escapeHtml(event.message || "汇报生成失败")}</p>`;
+        }
+      });
+    } catch (error) {
+      nodes.readerSlideDeckBody.innerHTML =
+        `<p class="reader-load-error">汇报生成失败：${escapeHtml(error.message)}</p>`;
+    } finally {
+      state.slideDeckGenerating = null;
+      nodes.readerProgressBar.style.width = "100%";
+      nodes.readerProgressLabel.textContent = "汇报完成";
       setTimeout(() => { nodes.readerProgress.hidden = true; }, 600);
     }
   }
@@ -1826,8 +1955,46 @@
     }).join("");
   }
 
+  function replayWorkflowJournal(events) {
+    // Rebuild the dialog from the run-dir journal (DialogJournal): the live
+    // SSE conversation dies with the page, so a reload replays the mirrored
+    // events through the same handlers that rendered them the first time.
+    nodes.chatMessages.innerHTML = "";
+    hideChatProgress();
+    let assistantEl = null;
+    let renderer = null;
+    const closeAssistant = () => {
+      if (assistantEl) renderFinalAssistant(assistantEl, renderer.text());
+      assistantEl = null;
+      renderer = null;
+    };
+    for (const record of events) {
+      if (record.kind === "user") {
+        closeAssistant();
+        appendChatUserMessage(record.text || "");
+        continue;
+      }
+      const evt = record.event;
+      if (!evt) continue;
+      if (evt.type === "delta") {
+        if (!renderer) {
+          assistantEl = appendChatMessage("assistant", "");
+          renderer = makeStreamingRenderer(assistantEl);
+        }
+        renderer.append(evt.text || "");
+        continue;
+      }
+      if (evt.type === "progress") continue; // transient bar — rebuilt from stage
+      handleWorkflowEvent(evt, renderer);
+    }
+    closeAssistant();
+    hideChatProgress();
+    setChatStatus(null);
+    chatScrollToBottom(true);
+  }
+
   async function loadWorkflowState() {
-    if (!state.chat.wsId) return;
+    if (!state.chat.wsId || state.chat.streaming) return;
     const wsId = state.chat.wsId;
     try {
       const response = await fetch(`api/workflow/state?ws_id=${encodeURIComponent(wsId)}`, { cache: "no-store" });
@@ -1837,7 +2004,11 @@
       state.chat.wsMessages = Array.isArray(payload.messages) ? payload.messages : [];
       state.chat.stage = payload.stage || null;
       state.chat.awaitingInput = Boolean(payload.awaiting_input);
-      renderChatMessages();
+      if (Array.isArray(payload.journal) && payload.journal.length) {
+        replayWorkflowJournal(payload.journal);
+      } else {
+        renderChatMessages();
+      }
       renderTimeline();
       state.chat.wsSessionId = payload.session_id || null;
       setChatSessionMeta(payload.session_id ? `会话 ${String(payload.session_id).slice(0, 8)} · 可继续追问` : "");
@@ -2019,10 +2190,10 @@
       </div>
       <p class="interview-question">② 检索范围</p>
       <div class="interview-options" role="radiogroup" aria-label="检索范围">
-        <label><input type="radio" name="iw-range" value="6mo">近 6 个月</label>
+        <label><input type="radio" name="iw-range" value="1y">近 1 年</label>
         <label><input type="radio" name="iw-range" value="3y" checked>近 3 年</label>
+        <label><input type="radio" name="iw-range" value="5y">近 5 年</label>
         <label><input type="radio" name="iw-range" value="10y">近 10 年</label>
-        <label><input type="radio" name="iw-range" value="20y">近 20 年</label>
         <label><input type="radio" name="iw-range" value="custom">自定义</label>
       </div>
       <div id="iw-custom-range" hidden>
@@ -2167,6 +2338,16 @@
       setChatTitle("综述工作流");
       nodes.chatInput.disabled = false;
       nodes.chatInput.placeholder = "对大纲提修改意见，或回复「继续」…";
+      // The SSE dialog died with the previous page: rebuild it from the
+      // run-dir journal, falling back to the registry message history.
+      if (Array.isArray(payload.journal) && payload.journal.length) {
+        replayWorkflowJournal(payload.journal);
+      } else if (state.chat.wsMessages.length) {
+        renderChatMessages();
+      }
+      setChatSessionMeta(
+        payload.session_id ? `会话 ${String(payload.session_id).slice(0, 8)} · 可继续追问` : ""
+      );
       renderTimeline();
     } catch {
       // Server unaware of this workspace (restarted with a wiped store) —
@@ -2441,9 +2622,17 @@
       const paperId = parsePaperRoute();
       if (!paperId) return;
       const showQuickRead = nodes.readerQuickReadBody.hidden;
-      switchReaderTab(showQuickRead);
+      switchReaderSideTab(showQuickRead ? "quickread" : null);
       // Lazy: fetch the card (or placeholder) only when the tab is opened.
       if (showQuickRead) loadQuickReadState(paperId);
+    });
+    nodes.readerSlideDeckTab.addEventListener("click", () => {
+      const paperId = parsePaperRoute();
+      if (!paperId) return;
+      const showDeck = nodes.readerSlideDeckBody.hidden;
+      switchReaderSideTab(showDeck ? "slidedeck" : null);
+      // Lazy: fetch the deck panel (or placeholder) only when opened.
+      if (showDeck) loadSlideDeckState(paperId);
     });
     window.addEventListener("scroll", updateProgress, { passive: true });
     mobileNavigationQuery.addEventListener("change", syncSidebarForViewport);
@@ -2484,6 +2673,66 @@
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     nodes.evidenceButton.addEventListener("click", openEvidence);
+    nodes.deckButton.addEventListener("click", () => deckButtonAction(state.topic));
+
+    async function deckButtonAction(topic) {
+      const source = topic?.source_directory;
+      if (!source) return;
+      const deckUrl = `api/deck?source=${encodeURIComponent(source)}`;
+      try {
+        const probe = await (await fetch(`api/deck/state?source=${encodeURIComponent(source)}`)).json();
+        if (probe.available) {
+          window.open(deckUrl, "_blank", "noopener");
+          return;
+        }
+        if (probe.agent_available === false) {
+          showToast("claude CLI 不可用，无法生成汇报。");
+          return;
+        }
+      } catch (error) {
+        showToast(`汇报状态读取失败：${error.message}`);
+        return;
+      }
+      if (!window.confirm("这个话题还没有汇报放映件。现在生成？（约需 5-10 分钟）")) return;
+      await generateRunDeck(source, deckUrl);
+    }
+
+    async function generateRunDeck(source, deckUrl) {
+      nodes.readerProgress.hidden = false;
+      nodes.readerProgressBar.style.width = "30%";
+      nodes.readerProgressLabel.textContent = "正在生成汇报（写作简报 → 幻灯片编译）…";
+      let done = false;
+      try {
+        const response = await fetch("api/deck/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source }),
+        });
+        if (response.status === 409) {
+          showToast("该话题已有汇报生成正在进行，请稍候。");
+          return;
+        }
+        if (!response.ok) throw new Error(`生成请求失败（${response.status}）`);
+        await consumeSSE(response, (event) => {
+          if (event.type === "stage") {
+            nodes.readerProgressLabel.textContent = event.detail || "正在生成汇报…";
+          } else if (event.type === "deck_done") {
+            done = true;
+            if (!window.open(deckUrl, "_blank", "noopener")) {
+              showToast("汇报已生成，浏览器拦截了新窗口——再点一次「汇报放映」即可打开。");
+            }
+          } else if (event.type === "topic_error") {
+            showToast(event.message || "汇报生成失败");
+          }
+        });
+      } catch (error) {
+        showToast(`汇报生成失败：${error.message}`);
+      } finally {
+        nodes.readerProgressBar.style.width = "100%";
+        nodes.readerProgressLabel.textContent = done ? "汇报完成" : "汇报未生成";
+        setTimeout(() => { nodes.readerProgress.hidden = true; }, 600);
+      }
+    }
     if (hasExportMenu()) {
       nodes.exportButton.addEventListener("click", (event) => {
         event.stopPropagation();

@@ -139,12 +139,20 @@ def check_run_bundle(run_dir: Path) -> list[str]:
             except json.JSONDecodeError as exc:
                 problems.append(f"coverage report is invalid JSON: {exc}")
             else:
-                if not bool((coverage.get("stop_assessment") or {}).get("ready_to_stop")):
-                    unresolved = (coverage.get("stop_assessment") or {}).get("unresolved", [])
-                    problems.append(
-                        "coverage/saturation gate not passed"
-                        + (f": {', '.join(str(item) for item in unresolved)}" if unresolved else "")
-                    )
+                stop = coverage.get("stop_assessment") or {}
+                if not bool(stop.get("ready_to_stop")):
+                    unresolved = [str(item) for item in (stop.get("unresolved") or [])]
+                    # Explicit escape hatch: a run may declare the gate names it
+                    # is settling past (e.g. saturation on a broad field), with
+                    # the justification carried in run.json notes. Undeclared
+                    # failures stay hard failures.
+                    declared = manifest.get("gate_exceptions") or []
+                    still_open = [item for item in unresolved if item not in declared]
+                    if still_open:
+                        problems.append(
+                            "coverage/saturation gate not passed"
+                            + (f": {', '.join(still_open)}" if still_open else "")
+                        )
     elif workflow_version != 1:
         problems.append(f"run.json: unsupported workflow_version {workflow_version!r}")
 
