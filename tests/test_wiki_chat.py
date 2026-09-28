@@ -30,8 +30,6 @@ class BuildClaudeCommandTest(unittest.TestCase):
                 "--verbose",
                 "--permission-mode",
                 "bypassPermissions",
-                "--append-system-prompt",
-                wiki_chat.CHAT_SYSTEM_PROMPT,
             ],
         )
         # The user prompt must never travel through argv.
@@ -185,6 +183,31 @@ class RegistryTest(unittest.TestCase):
             "topics": {},
             "workspaces": {}
         })
+
+    def test_subprocess_mutation_survives_local_mutation(self):
+        """Two processes mutating the same registry file must not lose each
+        other's entry — the KB-shared lock serializes load→mutate→save."""
+        import subprocess
+        import sys
+
+        helper = (
+            "import sys, time\n"
+            "sys.path.insert(0, {repo_root!r})\n"
+            "sys.path.insert(0, {scripts!r})\n"
+            "import wiki_chat\n"
+            "registry = wiki_chat.ChatSessionRegistry({path!r})\n"
+            "registry.append_message('topic-child', 'user', 'from subprocess')\n"
+        ).format(
+            repo_root=str(Path(__file__).resolve().parents[1]),
+            scripts=str(Path(__file__).resolve().parents[1] / "scripts"),
+            path=str(self.registry.path),
+        )
+        subprocess.run([sys.executable, "-c", helper], check=True, timeout=60)
+        # Local mutation after the subprocess finished must keep its entry.
+        self.registry.append_message("topic-local", "user", "local")
+        data = self.registry.load()
+        self.assertIn("topic-child", data["topics"])
+        self.assertIn("topic-local", data["topics"])
 
     def test_corrupt_file_recovers(self):
         self.registry.path.write_text("{not json", encoding="utf-8")
@@ -511,7 +534,10 @@ class WorkflowDriverContractTest(unittest.TestCase):
 class SystemPromptOverrideTest(unittest.TestCase):
 
     def test_default_is_chat_prompt(self):
-        argv = wiki_chat.build_claude_command(cli="claude")
+        # The harness knows nothing about the wiki persona: the caller passes
+        # the system prompt explicitly (ChatConfig.new_turn does this).
+        argv = wiki_chat.build_claude_command(
+            cli="claude", system_prompt=wiki_chat.CHAT_SYSTEM_PROMPT)
         self.assertEqual(argv[argv.index("--append-system-prompt") + 1],
                          wiki_chat.CHAT_SYSTEM_PROMPT)
 
@@ -661,6 +687,104 @@ class ResolveCliTest(unittest.TestCase):
         except wiki_chat.ChatUnavailableError:
             self.skipTest("no claude binary on this machine")
         self.assertTrue(Path(cli).exists())
+
+
+class DialogJournalTest(unittest.TestCase):
+    """The run-dir dialog transcript: mirrored SSE events survive a page
+    refresh; a fresh kickoff truncates whatever the run dir already had."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.run_dir = Path(self.tmp.name) / "work" / "literature-review-demo"
+        self.journal = wiki_chat.DialogJournal(self.run_dir)
+        self.path = self.run_dir / "dialog" / "journal.jsonl"
+
+    def records(self) -> list[dict]:
+        return wiki_chat.read_dialog_journal(self.path)
+
+    def test_start_truncates_existing_journal(self):
+        self.journal.start()
+        self.journal.user("第一轮")
+        # A re-kickoff reuses the in-progress run dir but begins a new
+        # conversation: the old dialog must not bleed into the new one.
+        wiki_chat.DialogJournal(self.run_dir).start()
+        self.assertEqual(self.records(), [])
+
+    def test_user_and_events_append_in_order(self):
+        self.journal.start()
+        self.journal.user("综述主题")
+        self.journal.event({"type": "stage", "stage": "plan", "detail": "生成查询计划"})
+        self.journal.event({"type": "delta", "text": "你好"})
+        self.journal.flush_deltas()
+        records = self.records()
+        self.assertEqual(records[0], {"kind": "user", "text": "综述主题"})
+        self.assertEqual(records[1]["event"]["type"], "stage")
+        self.assertEqual(records[2]["event"], {"type": "delta", "text": "你好"})
+
+    def test_small_deltas_coalesce_into_one_record(self):
+        self.journal.start()
+        for index in range(50):
+            self.journal.event({"type": "delta", "text": f"片段{index}"})
+        self.journal.flush_deltas()
+        records = self.records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["event"]["text"], "".join(f"片段{i}" for i in range(50)))
+
+    def test_large_deltas_flush_at_threshold(self):
+        self.journal.start()
+        self.journal.event({"type": "delta", "text": "x" * (wiki_chat.DialogJournal.DELTA_FLUSH_CHARS - 1)})
+        self.assertEqual(self.records(), [])  # below threshold, still buffered
+        self.journal.event({"type": "delta", "text": "y"})
+        records = self.records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["event"]["text"], "x" * (wiki_chat.DialogJournal.DELTA_FLUSH_CHARS - 1) + "y")
+
+    def test_non_delta_event_flushes_pending_deltas_first(self):
+        self.journal.start()
+        self.journal.event({"type": "delta", "text": "半段输出"})
+        self.journal.event({"type": "awaiting_input", "stage": "packet", "detail": "已暂停"})
+        records = self.records()
+        self.assertEqual(records[0]["event"]["text"], "半段输出")
+        self.assertEqual(records[1]["event"]["type"], "awaiting_input")
+
+    def test_torn_last_line_is_skipped(self):
+        self.journal.start()
+        self.journal.user("问题")
+        with self.path.open("a", encoding="utf-8") as fh:
+            fh.write('{"kind": "event", "event": {"type": "del')  # crash mid-write
+        records = self.records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["kind"], "user")
+
+    def test_read_missing_file_is_empty(self):
+        self.assertEqual(wiki_chat.read_dialog_journal(self.run_dir / "none" / "journal.jsonl"), [])
+
+
+class JournalableEventTest(unittest.TestCase):
+
+    def test_dialog_bearing_events_are_kept(self):
+        for event in (
+            {"type": "delta", "text": "x"},
+            {"type": "stage", "stage": "plan", "detail": "d"},
+            {"type": "status", "stage": "tool", "tool": "Bash", "detail": "d"},
+            {"type": "awaiting_input", "stage": "packet"},
+            {"type": "topic_ready", "topic_id": "topic-1"},
+            {"type": "topic_error", "message": "m"},
+            {"type": "session_reset"},
+            {"type": "error", "message": "m"},
+        ):
+            self.assertTrue(wiki_chat.journalable_event(event), event)
+
+    def test_transient_events_are_dropped(self):
+        for event in (
+            {"type": "status", "stage": "driver", "detail": "d"},
+            {"type": "status"},  # thinking spinner
+            {"type": "progress", "name": "deep-read", "done": 1, "total": 8},
+            {"type": "session", "session_id": "s-1"},
+            {"type": "done", "session_id": "s-1"},
+        ):
+            self.assertFalse(wiki_chat.journalable_event(event), event)
 
 
 if __name__ == "__main__":

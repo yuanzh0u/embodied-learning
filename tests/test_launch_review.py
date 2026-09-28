@@ -67,6 +67,50 @@ class StageMarkersTest(unittest.TestCase):
             self.assertIn("ok", (run_dir / ".launch" / "mechanical.done").read_text())
 
 
+class BackfillReentryParamsTest(unittest.TestCase):
+    def test_manifest_backfills_identity_and_kb_root(self) -> None:
+        # Re-entry with a bare --run-dir: topic/mode/range come from run.json
+        # and the KB root is inferred from <kb-root>/work/<run> — a bare
+        # resume used to crash with a None arg in the driver command.
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            run_dir = kb_root / "work" / "literature-review-demo-20260924"
+            run_dir.mkdir(parents=True)
+            (run_dir / "run.json").write_text(
+                json.dumps({
+                    "topic": "点云表面重建",
+                    "review_mode": "systematic",
+                    "time_range": "2016-09-22..2026-09-22",
+                }),
+                encoding="utf-8",
+            )
+            args = mock.Mock(
+                topic=None, review_mode=None, time_range=None, kb_root=None,
+            )
+            launcher.backfill_reentry_params(args, run_dir)
+            self.assertEqual(args.topic, "点云表面重建")
+            self.assertEqual(args.review_mode, "systematic")
+            self.assertEqual(args.time_range, "2016-09-22..2026-09-22")
+            self.assertEqual(args.kb_root, str(kb_root))
+
+    def test_explicit_kb_root_not_overridden(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "work" / "run"
+            run_dir.mkdir(parents=True)
+            args = mock.Mock(topic=None, review_mode=None, time_range=None, kb_root="/explicit")
+            launcher.backfill_reentry_params(args, run_dir)
+            self.assertEqual(args.kb_root, "/explicit")
+
+    def test_missing_manifest_leaves_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "work" / "run"
+            run_dir.mkdir(parents=True)
+            args = mock.Mock(topic="t", review_mode="rapid", time_range="r", kb_root=None)
+            launcher.backfill_reentry_params(args, run_dir)
+            self.assertEqual(args.topic, "t")
+            self.assertEqual(args.kb_root, str(Path(tmp)))
+
+
 class PrepareGateInputsTest(unittest.TestCase):
     def test_merges_and_canonicalizes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

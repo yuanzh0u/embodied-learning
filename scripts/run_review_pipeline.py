@@ -43,24 +43,24 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 try:
     from lib.agent_invoke import (  # noqa: E402
-        DRIVER_AGENT_MODEL,
         build_skeleton_prompt,
         pool_root_for,
         read_skeleton_output,
-        resolve_cli,
-        run_one_shot_agent,
     )
     from lib.layout import default_kb_root, find_roots  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
     from wiki_scripts.lib.agent_invoke import (  # noqa: E402
-        DRIVER_AGENT_MODEL,
         build_skeleton_prompt,
         pool_root_for,
         read_skeleton_output,
-        resolve_cli,
-        run_one_shot_agent,
     )
     from wiki_scripts.lib.layout import default_kb_root, find_roots  # noqa: E402
+# AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
+from embodied_learning.harness.claude import (  # noqa: E402
+    DRIVER_AGENT_MODEL,
+    complete,
+    resolve_cli,
+)
 
 _REPO_ROOT, SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
 if _REPO_ROOT is not None and str(_REPO_ROOT) not in sys.path:
@@ -247,7 +247,7 @@ def agent_terms(topic: str, focus: str, timeout_s: float, cli: str | None) -> li
     if not cli:
         return None
     try:
-        result = run_one_shot_agent(
+        result = complete(
             TERMS_PROMPT.format(topic=topic, focus=focus or "无"), timeout_s=timeout_s, cli=cli
         )
     except (subprocess.TimeoutExpired, OSError):
@@ -329,7 +329,7 @@ def agent_dynamic_queries(
     seed_line = SEED_LINE.format(seeds=", ".join(seed_ids)) if seed_ids else ""
     prompt = DYNAMIC_QUERIES_PROMPT.format(topic=topic, focus=focus or "无", seed_line=seed_line)
     try:
-        result = run_one_shot_agent(prompt, timeout_s=timeout_s, cli=cli)
+        result = complete(prompt, timeout_s=timeout_s, cli=cli)
     except (subprocess.TimeoutExpired, OSError):
         return None
     if result.returncode:
@@ -435,7 +435,47 @@ def finalize_coverage(run_dir: Path, registry_command: list[str], coverage_outpu
     return detail
 
 
-def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
+def claim_event_prefix(kb_root: Path, run_json_path: Path, manifest: dict) -> str:
+    """Reserve this run's event-ID prefix under ``<kb-root>/.claims/``.
+
+    Two concurrent runs with the same TOPIC8+year would both project
+    ``EA-<TOPIC8>-<year>-NNNN`` ids (the old run-local counter can't see the
+    other run's in-flight events). The claim file is an O_EXCL reservation —
+    permanent, never GC'd. On a collision (another run's claim, or legacy
+    evidence already using the prefix without a claim) the suffix increments.
+    Idempotent: a manifest that already carries ``event_prefix`` keeps it.
+    """
+
+    import next_event_id
+    from embodied_learning import locks
+
+    existing = manifest.get("event_prefix")
+    if isinstance(existing, str) and existing:
+        return existing
+    year = dt.date.today().strftime("%Y")
+    base = re.sub(r"[^0-9A-Za-z]+", "", manifest.get("topic") or "REVIEW")[:8].upper() or "REVIEW"
+    evidence_dir = kb_root / "evidence"
+    used = next_event_id.scan(evidence_dir) if evidence_dir.is_dir() else {}
+    claimed: dict[str, dict] = {
+        str(record.get("prefix")): record for record in next_event_id.list_claims(kb_root)
+    }
+    for attempt in range(5):
+        candidate = f"EA-{base}-{year}" if attempt == 0 else f"EA-{base}-{year}-{attempt + 1}"
+        if candidate in used or candidate in claimed:
+            continue
+        payload = {"prefix": candidate, "run": run_json_path.parent.name, "topic": manifest.get("topic") or ""}
+        if locks.claim(kb_root, f"event-prefix/{candidate}", payload):
+            log(f"[DRIVER] 事件 ID 前缀已预留：{candidate}（{kb_root / '.claims'}）")
+            return candidate
+    # All attempts lost the race: fall back to scan-derived next suffix.
+    log("[DRIVER-WARN] 前缀预留竞争失败，使用扫描推导的后缀前缀（旧代码并发时仍可能撞号）")
+    suffix = 2
+    while f"EA-{base}-{year}-{suffix}" in used or f"EA-{base}-{year}-{suffix}" in claimed:
+        suffix += 1
+    return f"EA-{base}-{year}-{suffix}"
+
+
+def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
     """Project evidence events from every audited paper note. Pure script
     chain: next_event_id → project_evidence_events per paper → merged JSONL."""
     notes_dir = run_dir / "paper-notes"
@@ -449,9 +489,10 @@ def project_evidence(run_dir: Path, run_json_path: Path, summary_extra: dict) ->
             summary_extra["evidence_events"] = total
             return
     manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
-    year = dt.date.today().strftime("%Y")
-    base = re.sub(r"[^0-9A-Za-z]+", "", manifest.get("topic") or "REVIEW")[:8].upper() or "REVIEW"
-    id_prefix = f"EA-{base}-{year}"
+    id_prefix = str(manifest.get("event_prefix") or "")
+    if not id_prefix:
+        id_prefix = claim_event_prefix(kb_root, run_json_path, manifest)
+        write_sync(kb_root, run_json_path, lambda m: m.update({"event_prefix": id_prefix}))
     start_seq = 1
     projected = 0
     for note_path in sorted(notes_dir.glob("*.json")):
@@ -583,7 +624,7 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
 def run_skeleton_agent(cli: str, paper_id: str, pool_root: Path, timeout_s: float) -> dict | None:
     """One one-shot claude call returning the paper's claim skeleton."""
     try:
-        result = run_one_shot_agent(
+        result = complete(
             build_skeleton_prompt(paper_id, pool_root), timeout_s=timeout_s, cli=cli,
             cwd=DRIVER_CWD,
         )
@@ -743,10 +784,17 @@ def autodetect_snapshot(kb_root: Path) -> Path | None:
     return None
 
 
-def write_sync(run_json_path: Path, mutate) -> None:
-    manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
-    mutate(manifest)
-    run_json_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+def write_sync(kb_root: Path, run_json_path: Path, mutate) -> None:
+    """Locked read-modify-write of run.json (atomic replace): concurrent
+    writers of the same run (driver + launcher settle flip) cannot lose one
+    another's fields. Reentrant with the driver's whole-run lock."""
+    from embodied_learning.atomicio import atomic_write_json
+    from embodied_learning import locks
+
+    with locks.kb_lock(kb_root, f"run__{run_json_path.parent.name}", stale=21600):
+        manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
+        mutate(manifest)
+        atomic_write_json(run_json_path, manifest)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -770,6 +818,34 @@ def main(argv: list[str] | None = None) -> int:
             return 2
     run_json_path = run_dir / "run.json"
 
+    # Whole-run fail-fast mutual exclusion (the duplicate-launcher hazard:
+    # two concurrent drivers on one run truncated registries and downgraded
+    # coverage). Waiting would only duplicate a running pipeline, so this
+    # lock never waits — it reports the holder and exits. The later run.json
+    # write_sync acquisitions are reentrant with this one.
+    from embodied_learning import locks as _locks
+
+    try:
+        _run_lock = _locks.kb_lock(kb_root, f"run__{run_dir.name}", fail_fast=True, stale=21600)
+        _run_lock.__enter__()
+    except _locks.LockBusy as exc:
+        print(str(exc), file=sys.stderr)
+        return 4
+    try:
+        return _main_locked(args, kb_root, run_dir, run_json_path, start_date, end_date)
+    finally:
+        _run_lock.__exit__(None, None, None)
+
+
+def _main_locked(
+    args: argparse.Namespace,
+    kb_root: Path,
+    run_dir: Path,
+    run_json_path: Path,
+    start_date: str,
+    end_date: str,
+) -> int:
+    global DRIVER_CWD
     log("[DRIVER-PHASE:plan] 查询规划与检索词生成")
     if not args.arxiv_snapshot:
         detected = autodetect_snapshot(kb_root)
@@ -865,7 +941,7 @@ def main(argv: list[str] | None = None) -> int:
         knowledge_ids = [str(item) for item in plan.get("knowledge_ids") or []]
         query_count = len(plan.get("queries") or [])
         if knowledge_ids:
-            write_sync(run_json_path, lambda m: m.update({"knowledge_ids": knowledge_ids}))
+            write_sync(kb_root, run_json_path, lambda m: m.update({"knowledge_ids": knowledge_ids}))
         plan_notes = [str(note) for note in plan.get("notes") or []]
         log(f"[DRIVER] 检索计划完成：{query_count} 条查询（策略 {args.search_strategy}）"
             + (f"，知识卡 {','.join(knowledge_ids)}" if knowledge_ids else "，无知识卡匹配"))
@@ -943,10 +1019,11 @@ def main(argv: list[str] | None = None) -> int:
             arxiv_detail = run_stage("retrieval-arxiv", [arxiv_output], args.force, arxiv_cmd)
             if arxiv_detail.startswith("ran") and arxiv_output.is_file():
                 try:
-                    hits = sum(
-                        len(item.get("results") or item.get("papers") or [])
-                        for item in json.loads(arxiv_output.read_text(encoding="utf-8")).get("queries", [])
-                    )
+                    # paper_count lives at the top level of both the live and
+                    # snapshot outputs (per-query entries only carry
+                    # result_count); counting per-query result lists here read
+                    # 0 for every successful retrieval and forced a bogus retry.
+                    hits = int(json.loads(arxiv_output.read_text(encoding="utf-8")).get("paper_count") or 0)
                 except (json.JSONDecodeError, OSError):
                     hits = 0
                 if hits == 0:
@@ -1139,7 +1216,7 @@ def main(argv: list[str] | None = None) -> int:
             deep_read(run_dir, run_json_path, screening_ids, args, summary_extra)
             mark("deep-read", begun)
             begun = time.monotonic()
-            project_evidence(run_dir, run_json_path, summary_extra)
+            project_evidence(kb_root, run_dir, run_json_path, summary_extra)
             mark("project", begun)
             # ---- coverage finalize: statuses + evidence-aware reassessment
             begun = time.monotonic()

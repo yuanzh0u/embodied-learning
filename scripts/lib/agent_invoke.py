@@ -1,138 +1,53 @@
-"""One-shot claude agent invocation + CLI discovery, shared by the pipeline
-driver and the single-paper chat preparation script.
+"""Prompt templates + KB layout for spawned agents, and the compatibility
+facade over the AI-invocation harness.
 
-The user prompt is NEVER part of argv — it is written to stdin
-(shell/quoting safety, mirroring wiki_chat.build_claude_command).
+Everything that talks to claude (CLI discovery, spawn-environment isolation,
+authentication preflight, one-shot completion, streaming turns, invocation
+archiving) lives in :mod:`embodied_learning.harness.claude` — call it from new
+code instead of importing the names re-exported here. This module keeps only:
+
+- ``pool_root_for`` and the deep-read skeleton prompt/parse helpers
+  (mechanical, deterministic);
+- re-exports of the harness surface so existing callers
+  (``from lib.agent_invoke import resolve_cli, run_one_shot_agent``) keep
+  working during the migration.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import re
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_repo_root = Path(__file__).resolve().parents[2]
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
 
-FALLBACK_CLI = "/usr/local/bin/claude"
-# The one-shot agents run outside any session: pin a fast model, otherwise the
-# CLI default (opus) makes even a tiny structured-output call exceed 2 minutes.
-DRIVER_AGENT_MODEL = "glm-5.3-flash"
+from embodied_learning.harness.claude import (  # noqa: E401,F401
+    CREDENTIALS_FILE,
+    DRIVER_AGENT_MODEL,
+    FALLBACK_CLI,
+    ISOLATED_CONFIG_DIR,
+    NESTED_CLAUDE_ENV_KEYS,
+    SPAWN_ENV_MODEL_KEYS,
+    STRIPPED_SPAWN_ENV_KEYS,
+    ChatTurn,
+    claude_auth_ready,
+    complete,
+    conversation_store,
+    build_claude_command,
+    isolated_claude_env,
+    parse_stream_line,
+    prepare_claude_config_dir,
+    record_agent_invocation,
+    resolve_cli,
+    strip_nested_claude_env,
+)
 
-# Environment markers of a running claude session — a spawned headless agent
-# must never think it is nested inside one.
-NESTED_CLAUDE_ENV_KEYS = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_SSE_PORT")
-# Shell profiles often export CLAUDE_CODE_SUBAGENT_MODEL (e.g. a "-cc" SKU for
-# interactive work). On claude CLI < 2.1.251 that env var has top precedence and
-# forces every Task subagent inside a spawned session onto that model, beating
-# even an explicit per-call model. Stripping it lets subagents fall through to
-# "inherit the main conversation's model" — i.e. the pinned --model the caller
-# passed, so subagents stay consistent with the main loop.
-SPAWN_ENV_MODEL_KEYS = ("CLAUDE_CODE_SUBAGENT_MODEL",)
-# Isolated config dir for spawned agents: a per-user scratch, never inside a
-# run dir (run dirs get registered in the catalog and may be synced — no
-# credentials there). Redirecting CLAUDE_CONFIG_DIR hides the launcher's
-# memory/projects/settings/user-CLAUDE.md from the spawned agent, which is the
-# whole point: headless pipeline agents must work from the KB + packaged files
-# only, not from whatever machine they happen to run on.
-ISOLATED_CONFIG_DIR = Path.home() / ".cache" / "embodied-learning" / "claude-config"
-CREDENTIALS_FILE = Path.home() / ".claude" / ".credentials.json"
-
-
-def strip_nested_claude_env(env: dict[str, str] | None = None) -> dict[str, str]:
-    """Copy of the environment without nested-claude session markers and
-    shell-profile subagent-model overrides (see SPAWN_ENV_MODEL_KEYS)."""
-    source = dict(os.environ) if env is None else dict(env)
-    for key in NESTED_CLAUDE_ENV_KEYS + SPAWN_ENV_MODEL_KEYS:
-        source.pop(key, None)
-    return source
-
-
-def prepare_claude_config_dir(config_dir: Path | None = None) -> Path:
-    """Create the isolated config dir, seeding credentials when the standard
-    Linux credentials file exists. Idempotent; keeps the copy 0600."""
-    target_dir = config_dir or ISOLATED_CONFIG_DIR
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target = target_dir / ".credentials.json"
-    if not target.exists() and CREDENTIALS_FILE.is_file():
-        shutil.copy2(CREDENTIALS_FILE, target)
-        target.chmod(0o600)
-    return target_dir
-
-
-def isolated_claude_env(env: dict[str, str] | None = None) -> dict[str, str]:
-    """Environment for spawned headless claude agents: nested-session markers
-    stripped and CLAUDE_CONFIG_DIR pointed at the isolated scratch dir, so the
-    agent starts from the KB + packaged files instead of the launcher's
-    memory, project history, and settings."""
-    prepared = strip_nested_claude_env(env)
-    prepared["CLAUDE_CONFIG_DIR"] = str(prepare_claude_config_dir())
-    return prepared
-
-
-def claude_auth_ready(env: dict[str, str] | None = None) -> str | None:
-    """Return an error message when spawned agents cannot authenticate.
-
-    The isolated config dir has no keychain access; auth must come from the
-    copied credentials file or an API key in the environment. Callers fail
-    fast with this message instead of letting the writer stage time out on a
-    confusing auth prompt."""
-    source = os.environ if env is None else env
-    if source.get("ANTHROPIC_API_KEY", "").strip():
-        return None
-    config_dir = source.get("CLAUDE_CONFIG_DIR", str(ISOLATED_CONFIG_DIR))
-    if (Path(config_dir) / ".credentials.json").is_file():
-        return None
-    return (
-        "无法认证 spawn 的 claude 代理：隔离配置目录缺少 .credentials.json，"
-        "且环境未设置 ANTHROPIC_API_KEY。请先在 ~/.claude 登录一次或导出 API key。"
-    )
-
-
-def resolve_cli(cli: str | None = None) -> str | None:
-    """Return a usable claude binary path, or None when absent (callers decide
-    whether that degrades or fails). Mirrors wiki_chat.resolve_cli's lookup."""
-
-    candidates = [cli] if cli else []
-    candidates += ["claude", FALLBACK_CLI]
-    for candidate in candidates:
-        found = shutil.which(str(Path(candidate).expanduser()))
-        if found:
-            return found
-    return None
-
-
-def run_one_shot_agent(
-    prompt: str,
-    *,
-    timeout_s: float,
-    cli: str | None = None,
-    model: str = DRIVER_AGENT_MODEL,
-    permission_mode: str | None = "bypassPermissions",
-    cwd: str | Path | None = None,
-    env: dict[str, str] | None = None,
-) -> subprocess.CompletedProcess:
-    """Run one `claude -p` call with the prompt on stdin and return the
-    CompletedProcess. Callers parse ``stdout`` themselves. ``env`` defaults to
-    the isolated spawn environment (see isolated_claude_env); ``cwd`` should
-    be the KB root so the agent sees no repo CLAUDE.md and a clean project
-    scope."""
-    command = [cli, "-p", "--model", model]
-    if permission_mode:
-        command += ["--permission-mode", permission_mode]
-    return subprocess.run(
-        command,
-        input=prompt,
-        text=True,
-        capture_output=True,
-        timeout=timeout_s,
-        check=False,
-        cwd=str(cwd) if cwd is not None else None,
-        env=isolated_claude_env() if env is None else env,
-    )
+# Backward-compatible name: the harness primitive is complete(); historical
+# callers (and tests) know run_one_shot_agent.
+run_one_shot_agent = complete
 
 
 def pool_root_for(kb_root: str | Path) -> Path:

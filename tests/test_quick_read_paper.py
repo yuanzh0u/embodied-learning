@@ -128,7 +128,7 @@ class QuickReadPipelineTest(unittest.TestCase):
              mock.patch.object(self.module, "ensure_deep_read", return_value=deep_status) as deep, \
              mock.patch.object(self.module, "audit_article") as audit, \
              mock.patch.object(self.module, "resolve_cli", return_value="/fake/claude"), \
-             mock.patch.object(self.module, "run_one_shot_agent", side_effect=fake_agent):
+             mock.patch.object(self.module, "complete", side_effect=fake_agent):
             code = self.module.main(argv)
         captured.update(extract=extract, deep=deep, audit=audit, agent_calls=len(seen))
         return code, captured
@@ -177,7 +177,7 @@ class QuickReadPipelineTest(unittest.TestCase):
         code, captured = self.run_main(["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)])
         self.assertEqual(code, 0)
         self.assertEqual("缓存卡", article_path.read_text(encoding="utf-8"))
-        # run_one_shot_agent never called: its mock side_effect would have raised KeyError.
+        # complete never called: its mock side_effect would have raised KeyError.
         # Now touch note.json so the cache goes stale.
         (self.pool_dir / "note.json").write_text(json.dumps(sample_note()), encoding="utf-8")
         code, _ = self.run_main(["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)],

@@ -12,6 +12,7 @@ conversations survive server restarts and are resumed with ``--resume``.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import queue
 import re
@@ -27,8 +28,20 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from lib.agent_invoke import prepare_claude_config_dir  # noqa: E402
+from lib.agent_invoke import conversation_store  # noqa: E402,F401  (compat re-export)
 from lib.jsonio import atomic_write_json  # noqa: E402
+sys.path.insert(0, str(SCRIPT_DIR.parent))  # repo root, for the embodied_learning package
+from embodied_learning import locks  # noqa: E402
+# All claude invocation machinery lives in the harness (pybind-style binding);
+# this module keeps prompts, session registry, and HTTP glue only.
+from embodied_learning.harness.claude import (  # noqa: E402,F401
+    ChatTurn,
+    build_claude_command,
+    is_resume_failure,
+    parse_stream_line,
+    prepare_claude_config_dir,
+)
+from embodied_learning.harness.claude import resolve_cli as _harness_resolve_cli  # noqa: E402
 
 DEFAULT_PERMISSION_MODE = "bypassPermissions"
 DEFAULT_CHAT_TIMEOUT_S = 900
@@ -39,6 +52,24 @@ MAX_PROMPT_CONTEXT_FILES = 40
 # When ``claude`` is not on PATH (e.g. launched from a desktop launcher), the
 # standard install location is the fallback.
 FALLBACK_CLI = "/usr/local/bin/claude"
+
+
+def local_registry_path(kb_root: Path | str) -> Path:
+    """Machine-local home for the chat-session registry (a cache, never shared).
+
+    Conversation history belongs to the server process serving THIS machine's
+    browsers; cross-machine sharing would buy nothing (each machine's claude
+    sessions are independent) while putting the highest-frequency
+    read-merge-rewrite in the whole system — one per chat message — onto a
+    possibly flaky NAS. The kb_root hash scopes the cache per knowledge base,
+    so several servers on one machine (different ports, same KB) still share
+    one history file and keep cross-process exclusion via a machine-local
+    kb_lock. The shared KB keeps only deliverable outputs (evidence/pool/
+    knowledge/runs/wiki snapshots); the store root itself archives every
+    claude conversation (see harness.claude.conversation_store)."""
+
+    digest = hashlib.sha256(str(Path(kb_root).resolve()).encode("utf-8")).hexdigest()[:16]
+    return conversation_store() / "chat-sessions" / digest / "chat-sessions.json"
 
 CHAT_SYSTEM_PROMPT = (
     "你是「空间智能研究 Wiki」的研究助手，工作目录即本地知识库根目录。"
@@ -81,7 +112,7 @@ WORKFLOW_SYSTEM_PROMPT = (
     "审计门后才允许落盘 evidence/；落盘后把 run.json status 改为 settled，"
     "成稿必须落图：writing-brief 的「可用图表」段给出带图的证据事件与现成 markdown 块，"
     "按各风格配额把图插到所支撑的段落之后（图源只能是 evidence 携带的图，URL/题注照抄，禁止自造图片）。"
-    "在 <kb-root>/knowledge/literature-review-catalog.md 登记一行（ID、主题、规模三元组、run/packet/成稿链接），"
+    "用 python3 <scripts-root>/register_run.py --run-dir <run-dir> --kb-root <kb-root> 登记 catalog（幂等、带锁，不要手改表格），"
     "再跑 python3 <scripts-root>/build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data 重建 wiki 快照，"
     "并核对该 KB wiki 端口 /data/current.json 的 topic 数量 +1。\n"
     "\n【唯一允许提前停止的条件】\n"
@@ -189,18 +220,6 @@ DRIVER_PHASE_TO_WORKFLOW = {
 # dialog stays readable.
 DRIVER_PROGRESS_RE = re.compile(r"^\[DRIVER-PROGRESS:([a-z_-]+):(\d+)/(\d+)\]\s*(.*)$")
 
-# Nested-claude guard variables: the wiki server may itself run inside a Claude
-# Code session, and these would make the spawned claude refuse or misbehave.
-# CLAUDE_CODE_SUBAGENT_MODEL is stripped for the same reason as
-# lib.agent_invoke.SPAWN_ENV_MODEL_KEYS: shell profiles export it globally, and
-# on CLI < 2.1.251 it outranks per-call model choices — dropping it lets chat/
-# workflow subagents inherit the session's --model instead.
-_STRIPRED_ENV_KEYS = (
-    "CLAUDECODE",
-    "CLAUDE_CODE_ENTRYPOINT",
-    "CLAUDE_CODE_SSE_PORT",
-    "CLAUDE_CODE_SUBAGENT_MODEL",
-)
 
 
 class ChatConfig:
@@ -258,347 +277,15 @@ class ChatUnavailableError(RuntimeError):
 
 def resolve_cli(cli: str | None = None) -> str:
     """Return a usable claude binary path: explicit arg, then PATH, then the
-    standard install location. Raises ChatUnavailableError when none exists.
+    standard install location. Raises ChatUnavailableError when none exists
+    (the harness lookup is shared; only the failure contract differs here)."""
 
-    ``shutil.which`` already resolves absolute/relative paths (executable file
-    or None), so one lookup covers both bare names and explicit paths."""
-
-    candidates = [cli] if cli else []
-    candidates += ["claude", FALLBACK_CLI]
-    for candidate in candidates:
-        found = shutil.which(str(Path(candidate).expanduser()))
-        if found:
-            return found
-    raise ChatUnavailableError(
-        f"未找到 claude 命令（已尝试 PATH 与 {FALLBACK_CLI}）。请安装 Claude Code 或用 --chat-cli 指定路径。"
-    )
-
-
-def build_claude_command(
-    *,
-    cli: str,
-    session_id: str | None = None,
-    model: str | None = None,
-    permission_mode: str = DEFAULT_PERMISSION_MODE,
-    allowed_tools: str | None = None,
-    system_prompt: str | None = None,
-    effort: str | None = None,
-) -> list[str]:
-    """Assemble the one-shot claude invocation. The user prompt is NEVER part
-    of argv — it is written to stdin by ChatTurn (shell/quoting safety)."""
-
-    argv = [
-        cli,
-        "-p",
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--permission-mode",
-        permission_mode,
-        "--append-system-prompt",
-        system_prompt if system_prompt is not None else CHAT_SYSTEM_PROMPT,
-    ]
-    if session_id:
-        argv += ["--resume", session_id]
-    if model:
-        argv += ["--model", model]
-    if effort:
-        argv += ["--effort", effort]
-    if allowed_tools:
-        argv += ["--allowedTools", allowed_tools]
-    return argv
-
-
-def parse_stream_line(line: str) -> list[dict]:
-    """Translate one stream-json line into 0..n frontend chat events."""
-
-    stripped = line.strip()
-    if not stripped:
-        return []
-    try:
-        raw = json.loads(stripped)
-    except json.JSONDecodeError:
-        return []
-    if not isinstance(raw, dict):
-        return []
-
-    kind = raw.get("type")
-    if kind == "system" and raw.get("subtype") == "init":
-        return [
-            {
-                "type": "session",
-                "session_id": raw.get("session_id"),
-                "model": raw.get("model"),
-            }
-        ]
-
-    if kind == "assistant":
-        events: list[dict] = []
-        for block in (raw.get("message") or {}).get("content") or []:
-            if not isinstance(block, dict):
-                continue
-            block_type = block.get("type")
-            if block_type == "text" and block.get("text"):
-                events.append({"type": "delta", "text": block["text"]})
-            elif block_type == "thinking":
-                events.append({"type": "status", "stage": "thinking"})
-            elif block_type == "tool_use" and block.get("name"):
-                events.append(
-                    {
-                        "type": "status",
-                        "stage": "tool",
-                        "tool": block["name"],
-                        "detail": _tool_detail(block),
-                    }
-                )
-        return events
-
-    if kind == "result":
-        return [
-            {
-                "type": "done",
-                "session_id": raw.get("session_id"),
-                "is_error": raw.get("is_error") is True,
-                "result_text": raw.get("result"),
-                "cost_usd": raw.get("total_cost_usd"),
-                "num_turns": raw.get("num_turns"),
-            }
-        ]
-
-    return []
-
-
-def _tool_detail(block: dict) -> str:
-    """Short human-readable summary of a tool call input (file path etc.)."""
-
-    payload = block.get("input")
-    if not isinstance(payload, dict):
-        return ""
-    for key in ("file_path", "notebook_path", "path", "pattern", "command", "url", "query"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value[:120]
-    return ""
-
-
-def is_resume_failure(stderr_text: str) -> bool:
-    """Best-effort detection of a stale ``--resume`` session id."""
-
-    lowered = stderr_text.lower()
-    return (
-        "no conversation found" in lowered
-        or "session not found" in lowered
-        or "no such session" in lowered
-    )
-
-
-class ChatTurn:
-    """One claude chat turn: a spawned ``claude -p`` process bridged to a
-    thread-safe event queue so the HTTP handler can stream events while a
-    second request (stop) can terminate the process concurrently."""
-
-    def __init__(
-        self,
-        *,
-        cli: str,
-        prompt: str,
-        cwd: Path,
-        session_id: str | None = None,
-        model: str | None = None,
-        permission_mode: str = DEFAULT_PERMISSION_MODE,
-        allowed_tools: str | None = None,
-        timeout_s: float = DEFAULT_CHAT_TIMEOUT_S,
-        system_prompt: str | None = None,
-        effort: str | None = None,
-    ):
-        self.cli = cli
-        self.prompt = prompt
-        self.cwd = Path(cwd)
-        self.session_id = session_id
-        self.model = model
-        self.permission_mode = permission_mode
-        self.allowed_tools = allowed_tools
-        self.timeout_s = timeout_s
-        self.system_prompt = system_prompt if system_prompt is not None else CHAT_SYSTEM_PROMPT
-        self.effort = effort
-        self.stop_requested = False
-        self._queue: queue.Queue = queue.Queue()
-        self._process: subprocess.Popen | None = None
-        self._stderr_tail: list[str] = []
-        self._timer: threading.Timer | None = None
-        self._timed_out = False
-        self._peeked: dict | None = None
-        self._early_exit_seen = False
-
-    # -- lifecycle ---------------------------------------------------------
-
-    def start(self) -> None:
-        command = build_claude_command(
-            cli=self.cli,
-            session_id=self.session_id,
-            model=self.model,
-            permission_mode=self.permission_mode,
-            allowed_tools=self.allowed_tools,
-            system_prompt=self.system_prompt,
-            effort=self.effort,
+    found = _harness_resolve_cli(cli)
+    if found is None:
+        raise ChatUnavailableError(
+            f"未找到 claude 命令（已尝试 PATH 与 {FALLBACK_CLI}）。请安装 Claude Code 或用 --chat-cli 指定路径。"
         )
-        env = dict(os.environ)
-        for key in _STRIPRED_ENV_KEYS:
-            env.pop(key, None)
-        # Isolate the spawned chat from the launcher session's memory and
-        # settings (same guarantee as lib.agent_invoke.isolated_claude_env;
-        # kept inline because wiki_chat is import-only and must not drag the
-        # lib package into every importer).
-        config_dir = prepare_claude_config_dir()
-        env["CLAUDE_CONFIG_DIR"] = str(config_dir)
-        try:
-            self._process = subprocess.Popen(
-                command,
-                cwd=str(self.cwd),
-                env=env,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-            )
-        except OSError as exc:
-            resume_failed = is_resume_failure(str(exc))
-            self._queue.put(
-                ("error", {"type": "error", "message": f"无法启动 claude：{exc}", "resume_failed": resume_failed})
-            )
-            self._queue.put(("exit", None))
-            return
-        # Prompt travels through stdin; close immediately so claude sees EOF.
-        try:
-            assert self._process.stdin is not None
-            self._process.stdin.write(self.prompt)
-            self._process.stdin.close()
-        except OSError:
-            pass  # the stderr/stdout readers will surface the failure
-        threading.Thread(target=self._read_stdout, daemon=True).start()
-        threading.Thread(target=self._read_stderr, daemon=True).start()
-        if self.timeout_s and self.timeout_s > 0:
-            self._timer = threading.Timer(self.timeout_s, self._on_timeout)
-            self._timer.daemon = True
-            self._timer.start()
-
-    def _read_stdout(self) -> None:
-        assert self._process is not None and self._process.stdout is not None
-        try:
-            for line in self._process.stdout:
-                for event in parse_stream_line(line):
-                    self._queue.put(("event", event))
-        except (OSError, ValueError):
-            pass
-        finally:
-            code = self._process.poll() if self._process else None
-            self._queue.put(("exit", code))
-        if self._timer:
-            self._timer.cancel()
-
-    def _read_stderr(self) -> None:
-        assert self._process is not None and self._process.stderr is not None
-        try:
-            for line in self._process.stderr:
-                text = line.strip()
-                if text:
-                    self._stderr_tail.append(text)
-                    del self._stderr_tail[:-20]
-        except (OSError, ValueError):
-            pass
-
-    def _on_timeout(self) -> None:
-        self._timed_out = True
-        self.stop()
-
-    # -- consumption -------------------------------------------------------
-
-    def peek_event(self, timeout_s: float | None = None) -> dict | None:
-        """Wait up to ``timeout_s`` (default FIRST_EVENT_TIMEOUT_S) for the
-        first queue item and return it if it is an event. Used by the caller
-        to detect a resume failure before streaming starts; the item stays
-        queued for events() (or is remembered if it was the exit marker).
-        Returns None on timeout or early exit — a timeout means claude
-        produced nothing at all (hung process / stalled API), and the caller
-        should surface that instead of holding the HTTP request open forever."""
-
-        if self._early_exit_seen:
-            return None
-        try:
-            kind, payload = self._queue.get(timeout=FIRST_EVENT_TIMEOUT_S if timeout_s is None else timeout_s)
-        except queue.Empty:
-            return None
-        if kind == "exit":
-            self._early_exit_seen = True
-            return None
-        if kind == "event":
-            self._peeked = payload
-            return payload
-        self._peeked = payload
-        return payload  # error event
-
-    def events(self):
-        """Yield chat events until the process exits; errors are yielded as
-        ``{"type": "error", ...}`` dicts, never raised."""
-
-        if self._peeked is not None:
-            yield self._peeked
-            self._peeked = None
-        if self._early_exit_seen:
-            return
-        while True:
-            kind, payload = self._queue.get()
-            if kind == "event":
-                yield payload
-            elif kind == "error":
-                yield payload
-            elif kind == "exit":
-                exit_code = payload
-                stderr_text = "\n".join(self._stderr_tail)
-                if self._timed_out:
-                    yield {"type": "error", "message": f"对话超时（{int(self.timeout_s)} 秒），已中断。"}
-                elif self.stop_requested:
-                    yield {"type": "done", "session_id": None, "stopped": True}
-                elif exit_code not in (0, None):
-                    resume_failed = is_resume_failure(stderr_text)
-                    detail = stderr_text[-500:] if stderr_text else f"退出码 {exit_code}"
-                    yield {
-                        "type": "error",
-                        "message": f"claude 执行失败：{detail}",
-                        "resume_failed": resume_failed,
-                    }
-                return
-
-    @property
-    def is_alive(self) -> bool:
-        """True while the claude process exists and hasn't exited."""
-
-        return self._process is not None and self._process.poll() is None
-
-    def stop(self) -> None:
-        """SIGTERM, then SIGKILL after a grace window. Safe to call from any
-        thread and on an already-exited process."""
-
-        self.stop_requested = True
-        process = self._process
-        if process is None or process.poll() is not None:
-            return
-        try:
-            process.send_signal(signal.SIGTERM)
-        except OSError:
-            return
-
-        def _kill_after_grace() -> None:
-            if process.poll() is None:
-                try:
-                    process.kill()
-                except OSError:
-                    pass
-
-        timer = threading.Timer(STOP_GRACE_S, _kill_after_grace)
-        timer.daemon = True
-        timer.start()
+    return found
 
 
 def build_turn_prompt(
@@ -836,7 +523,7 @@ def build_workflow_prompt(
         "执行要求：先读 pipeline-summary.json 与 writing 输入现状，"
         "然后从 build_review_packet.py（[STAGE:packet]）开始一气呵成执行到 settle："
         "亲自阅读证据事件与综述包后直接撰写成稿、过审计门、落盘 evidence/、翻 settled、"
-        "登记 knowledge/literature-review-catalog.md 并用 build_research_wiki.py 重建 wiki 快照"
+        "用 register_run.py 登记 knowledge/literature-review-catalog.md（幂等、带锁）并用 build_research_wiki.py 重建 wiki 快照"
         "（[STAGE:settle]）。成稿落图：writing-brief「可用图表」段按各风格配额插图"
         "（URL/题注照抄 evidence 携带的图，插在所支撑段落后），appendix 全量保留图表。"
         "唯一允许提前停止的条件：检索失败或文献不足"
@@ -878,7 +565,7 @@ def build_continuation_prompt(
         parallel_clause = "单一成稿由主线程直接撰写润色，再走审计门"
     settle_clause = (
         "通过审计门、落盘 evidence/、把 run.json status 改为 settled，"
-        "在 knowledge/literature-review-catalog.md 登记一行，"
+        "用 register_run.py 登记 knowledge/literature-review-catalog.md（幂等、带锁，不要手改表格），"
         "重建 wiki 快照（build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data），"
         "最后输出 [TOPIC:<运行目录相对路径>]。"
     )
@@ -917,8 +604,18 @@ class ChatSessionRegistry:
     message history); workspaces additionally carry workflow state. Loading
     never raises: a missing or corrupt file simply means no conversations yet."""
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, lock_root: Path | None = None):
         self.path = Path(path)
+        # Cross-process lock root: <kb-root> when the wiki data dir is the
+        # canonical <kb-root>/wiki/data (chat-sessions.json lives two levels
+        # below the KB root). Multiple wiki servers — same machine on
+        # different ports, or different machines on a shared mount — mutate
+        # this one file, so load→mutate→save must hold the KB-shared lock.
+        self.lock_root = (
+            Path(lock_root)
+            if lock_root
+            else (self.path.parents[2] if len(self.path.parents) > 3 else self.path.parent)
+        )
 
     def load(self) -> dict:
         try:
@@ -950,15 +647,16 @@ class ChatSessionRegistry:
         atomic_write_json(self.path, data)
 
     def _mutate(self, key: str, mutate, *, namespace: str = "topics") -> None:
-        data = self.load()
-        space = data.setdefault(namespace, {})
-        entry = space.get(key)
-        if not isinstance(entry, dict):
-            entry = {"messages": []}
-            space[key] = entry
-        mutate(entry)
-        entry["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-        self._save(data)
+        with locks.kb_lock(self.lock_root, "wiki-chat-sessions", wait=30):
+            data = self.load()
+            space = data.setdefault(namespace, {})
+            entry = space.get(key)
+            if not isinstance(entry, dict):
+                entry = {"messages": []}
+                space[key] = entry
+            mutate(entry)
+            entry["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+            self._save(data)
 
     def record_session(self, key: str, session_id: str | None, model: str | None = None) -> None:
         """Bind the latest claude session id to a topic or workspace key."""
@@ -1009,3 +707,100 @@ class ChatSessionRegistry:
         if isinstance(space, dict) and key in space:
             del space[key]
             self._save(data)
+
+
+class DialogJournal:
+    """Append-only dialog transcript for one workflow workspace, persisted
+    under the run dir (``<run_dir>/dialog/journal.jsonl``).
+
+    The SSE dialog lives in the browser connection: a page refresh drops it.
+    Every dialog-bearing event is mirrored here as one JSON line as it is
+    streamed, so ``api/workflow/state`` can hand the transcript back and the
+    frontend can rebuild the dialog after a reload.
+
+    Record shapes (one JSON object per line):
+      {"kind": "user", "text": ...}      — a user turn
+      {"kind": "event", "event": {...}}  — a mirrored SSE event
+
+    Deltas are coalesced into a small buffer (flushed at
+    ``DELTA_FLUSH_CHARS`` or on any non-delta record) so a long reply does
+    not become thousands of one-line writes."""
+
+    DELTA_FLUSH_CHARS = 512
+
+    def __init__(self, run_dir: Path):
+        self.path = Path(run_dir) / "dialog" / "journal.jsonl"
+        self._delta_buf: list[str] = []
+
+    def start(self) -> None:
+        """Truncate for a fresh dialog. Kickoff reuses an in-progress run dir
+        on resume, but a kickoff always means a new conversation, so the old
+        journal must not bleed into it."""
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._write_lines([])
+
+    def user(self, text: str) -> None:
+        self.flush_deltas()
+        self._append({"kind": "user", "text": text})
+
+    def event(self, event: dict) -> None:
+        if event.get("type") == "delta":
+            self._delta_buf.append(str(event.get("text") or ""))
+            if sum(len(chunk) for chunk in self._delta_buf) >= self.DELTA_FLUSH_CHARS:
+                self.flush_deltas()
+            return
+        self.flush_deltas()
+        self._append({"kind": "event", "event": event})
+
+    def flush_deltas(self) -> None:
+        if not self._delta_buf:
+            return
+        text = "".join(self._delta_buf)
+        self._delta_buf = []
+        self._append({"kind": "event", "event": {"type": "delta", "text": text}})
+
+    def _append(self, record: dict) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    def _write_lines(self, lines: list[str]) -> None:
+        with self.path.open("w", encoding="utf-8") as fh:
+            fh.writelines(lines)
+
+
+def journalable_event(event: dict) -> bool:
+    """True when an SSE event carries dialog content worth persisting.
+    Spinner/transient state (status, progress, session ids, frame closing)
+    is skipped; tool-activity status lines ARE dialog notes in the UI and
+    are kept."""
+
+    kind = event.get("type")
+    if kind == "delta":
+        return True
+    if kind == "status":
+        return event.get("stage") == "tool"
+    return kind in ("stage", "awaiting_input", "topic_ready", "topic_error", "session_reset", "error")
+
+
+def read_dialog_journal(path: Path) -> list[dict]:
+    """Load a journal for replay; a missing or partially written file yields
+    whatever complete lines exist (last line may be torn after a crash)."""
+
+    try:
+        raw = Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return []
+    records: list[dict] = []
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(record, dict):
+            records.append(record)
+    return records

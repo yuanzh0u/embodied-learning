@@ -30,9 +30,12 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from build_research_wiki import resolve_snapshot_directory  # noqa: E402
 from init_run import run_folder_name, slugify_topic  # noqa: E402
-from lib.agent_invoke import resolve_cli as agent_cli_available  # noqa: E402
+# AI-model capability goes through the harness binding (pybind-style).
+from embodied_learning.harness.claude import resolve_cli as agent_cli_available  # noqa: E402
 sys.path.insert(0, str(SCRIPT_DIR.parent))  # repo root, for the embodied_learning package
 from embodied_learning.knowledge import arxiv_reader  # noqa: E402
+from embodied_learning.atomicio import atomic_copy, atomic_write_text  # noqa: E402
+from embodied_learning import locks  # noqa: E402
 import wiki_chat  # noqa: E402
 
 
@@ -124,12 +127,15 @@ def ensure_default_kb(kb_root: Path) -> Path:
     (knowledge/ + a starter catalog routing zero runs) at the default location
     and say so. Explicit --kb-root never gets auto-created."""
 
-    catalog = kb_root / CATALOG_RELPATH
-    catalog.parent.mkdir(parents=True, exist_ok=True)
-    if not catalog.is_file():
-        catalog.write_text(STARTER_CATALOG, encoding="utf-8")
-        (kb_root / "evidence").mkdir(exist_ok=True)
-        print(f"已初始化本地知识库：{kb_root}（knowledge/ + evidence/）")
+    # Two servers cold-starting against one shared (possibly CIFS) KB must not
+    # interleave the catalog write — hence the kb-bootstrap lock + atomic write.
+    with locks.kb_lock(kb_root, "kb-bootstrap", wait=60):
+        catalog = kb_root / CATALOG_RELPATH
+        catalog.parent.mkdir(parents=True, exist_ok=True)
+        if not catalog.is_file():
+            atomic_write_text(catalog, STARTER_CATALOG)
+            (kb_root / "evidence").mkdir(exist_ok=True)
+            print(f"已初始化本地知识库：{kb_root}（knowledge/ + evidence/）")
     return kb_root
 
 
@@ -213,14 +219,16 @@ def resolve_wiki_root(kb_root: Path) -> Path:
     """Pick the wiki/ folder to serve. An editable install (repo checkout)
     serves the repo's own wiki/ so frontend edits show up immediately; a
     non-editable install serves <kb-root>/wiki, bootstrapping a first-run copy
-    from the repo checkout's wiki/ when the folder does not exist yet."""
+    from the wheel-bundled frontend when the folder does not exist yet. An
+    existing copy is refreshed in place on every start (byte-compare) so a
+    reinstall reaches KBs bootstrapped by an older build."""
 
     if IS_REPO_CHECKOUT and (REPO_WIKI_ROOT / "index.html").is_file():
         return REPO_WIKI_ROOT
     kb_wiki = kb_root / "wiki"
-    if (kb_wiki / "index.html").is_file():
-        return kb_wiki
-    bootstrap_wiki_frontend(kb_wiki)
+    # Refresh-or-bootstrap on every start; an existing copy is only required
+    # to be servable, so a missing frontend source degrades to the old shell.
+    bootstrap_wiki_frontend(kb_wiki, required=not (kb_wiki / "index.html").is_file())
     return kb_wiki
 
 
@@ -229,36 +237,44 @@ def resolve_wiki_root(kb_root: Path) -> Path:
 FRONTEND_SYNC_FILES = ("index.html", "assets/wiki.css", "assets/wiki.js", "assets/github-mark.svg")
 
 
-def bootstrap_wiki_frontend(target: Path) -> None:
+def bootstrap_wiki_frontend(target: Path, required: bool = True) -> None:
     """First run against a KB without wiki/: copy the frontend shell from the
     wheel-bundled assets (a non-editable install) or the repo checkout, so the
     server can serve and later refresh data/ in place next to the KB. An
     existing copy gets stale files refreshed in place (byte-compare) — without
-    this a KB bootstrapped by an older build silently serves old JS/CSS."""
+    this a KB bootstrapped by an older build silently serves old JS/CSS.
+    ``required=False`` (refresh of an existing copy) tolerates a missing
+    source: keep serving the old shell instead of failing startup."""
 
     candidates = [FRONTEND_ASSETS, REPO_WIKI_ROOT]
     source = next((c for c in candidates if (c / "index.html").is_file()), None)
     if source is None:
+        if not required and (target / "index.html").is_file():
+            return
         raise RuntimeError(
             f"未找到 Wiki 前端资源（{FRONTEND_ASSETS} 或 {REPO_WIKI_ROOT}）。"
             "请重新安装本软件包，或手动复制仓库的 wiki/ 目录到该路径。"
         )
-    if target.is_dir() and (target / "index.html").is_file():
-        synced: list[str] = []
-        for rel in FRONTEND_SYNC_FILES:
-            src, dst = source / rel, target / rel
-            if src.is_file() and (not dst.is_file() or dst.read_bytes() != src.read_bytes()):
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src, dst)
-                synced.append(rel)
-        if synced:
-            print(f"已更新 Wiki 前端（{'、'.join(synced)}）：{target}")
-        return
-    shutil.copytree(
-        source,
-        target,
-        ignore=shutil.ignore_patterns("data", "__pycache__", "__init__.py"),
-    )
+    # Two servers (same machine, different ports — or different machines) start
+    # against the same shared KB: serialize the sync so a browser never reads a
+    # half-copied wiki.js. Same lock as ensure_default_kb, keyed on the KB root.
+    with locks.kb_lock(target.parent, "kb-bootstrap", wait=60):
+        if target.is_dir() and (target / "index.html").is_file():
+            synced: list[str] = []
+            for rel in FRONTEND_SYNC_FILES:
+                src, dst = source / rel, target / rel
+                if src.is_file() and (not dst.is_file() or dst.read_bytes() != src.read_bytes()):
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    atomic_copy(src, dst)
+                    synced.append(rel)
+            if synced:
+                print(f"已更新 Wiki 前端（{'、'.join(synced)}）：{target}")
+            return
+        shutil.copytree(
+            source,
+            target,
+            ignore=shutil.ignore_patterns("data", "__pycache__", "__init__.py"),
+        )
     print(f"已初始化 Wiki 前端目录：{target}")
 
 
@@ -293,6 +309,9 @@ def stop_current_chat() -> bool:
 
 class WikiHandler(SimpleHTTPRequestHandler):
     server_version = "ResearchWiki/1.1"
+    # Workflow dialog journal for the request in flight; None outside
+    # _handle_workflow (topic/paper chat never journals).
+    _dialog_journal: wiki_chat.DialogJournal | None = None
 
     def __init__(
         self,
@@ -313,7 +332,19 @@ class WikiHandler(SimpleHTTPRequestHandler):
         self.workflow_effort = workflow_effort
         self.refresh_command = build_refresh_command(kb_root, data_dir)
         self.chat = chat or wiki_chat.ChatConfig()
-        self.chat_sessions = wiki_chat.ChatSessionRegistry(data_dir / "chat-sessions.json")
+        # Chat history is machine-local cache (highest-frequency writes in the
+        # system; belongs to this server, not the shared KB). One-time
+        # migration keeps histories written by older versions at the shared
+        # location. Same KB on this machine (different ports) still shares
+        # one file, so the registry keeps its machine-local kb_lock.
+        registry_path = wiki_chat.local_registry_path(kb_root)
+        legacy_path = data_dir / "chat-sessions.json"
+        if legacy_path.is_file() and not registry_path.is_file():
+            registry_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(legacy_path, registry_path)
+        self.chat_sessions = wiki_chat.ChatSessionRegistry(
+            registry_path, lock_root=registry_path.parent
+        )
         super().__init__(*args, directory=str(wiki_root), **kwargs)
 
     def end_headers(self) -> None:
@@ -342,6 +373,18 @@ class WikiHandler(SimpleHTTPRequestHandler):
             return
         if path == "/api/paper/quickread/state":
             self._handle_quick_read_state()
+            return
+        if path == "/api/paper/slidedeck/state":
+            self._handle_slide_deck_state()
+            return
+        if path == "/api/paper/slidedeck/file":
+            self._handle_slide_deck_file()
+            return
+        if path == "/api/deck":
+            self._handle_run_deck()
+            return
+        if path == "/api/deck/state":
+            self._handle_run_deck_state()
             return
         if path == "/api/workflow/state":
             self._handle_workflow_state()
@@ -397,6 +440,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
             return
         if path == "/api/paper/quickread":
             self._handle_quick_read_generate()
+            return
+        if path == "/api/paper/slidedeck":
+            self._handle_slide_deck_generate()
+            return
+        if path == "/api/deck/generate":
+            self._handle_run_deck_generate()
             return
         if path == "/api/paper/chat/reset":
             self._handle_paper_chat_reset()
@@ -786,6 +835,265 @@ class WikiHandler(SimpleHTTPRequestHandler):
             return False
         return returncode == 0
 
+    # ---- slide deck (汇报) — per-paper tab + run-level file ----------------
+
+    def _slide_deck_path(self, paper_id: str) -> Path:
+        return pool_root(self.kb_root) / f"arxiv-{paper_id}" / "slide-deck_report.html"
+
+    def _serve_deck_html(self, deck_path: Path) -> None:
+        """Serve a compiled deck (self-contained reveal.js HTML) as a page."""
+        if not deck_path.is_file():
+            self._send_json(HTTPStatus.NOT_FOUND, {"error": "汇报放映件不存在，请先生成。"})
+            return
+        body = deck_path.read_bytes()
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_slide_deck_file(self) -> None:
+        query = parse_qs(urlparse(self.path).query)
+        paper_id = arxiv_reader.parse_arxiv_id((query.get("id") or [""])[0])
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        self._serve_deck_html(self._slide_deck_path(paper_id))
+
+    def _resolve_run_deck_dir(self, source: str) -> Path | None:
+        """The run folder behind a topic's source_directory (repo-relative or
+        absolute); only folders inside <kb-root>/evidence/ or <kb-root>/work/
+        resolve — nothing else is servable or writable."""
+
+        if not source.strip():
+            return None
+        base = Path(source)
+        if not base.is_absolute():
+            base = self.kb_root / base
+        run_dir = base.resolve()
+        kb_root = self.kb_root.resolve()
+        allowed_roots = [(kb_root / "evidence").resolve(), (kb_root / "work").resolve()]
+        if not any(run_dir.is_relative_to(root) for root in allowed_roots):
+            return None
+        return run_dir
+
+    def _handle_run_deck(self) -> None:
+        """Serve a run folder's slide-deck_report.html (run-level entry)."""
+
+        query = parse_qs(urlparse(self.path).query)
+        run_dir = self._resolve_run_deck_dir((query.get("source") or [""])[0])
+        if run_dir is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 run 来源。"})
+            return
+        self._serve_deck_html(run_dir / "slide-deck_report.html")
+
+    def _handle_run_deck_state(self) -> None:
+        """Availability probe for the topic page's 汇报放映 button: served
+        live from the filesystem, so a deck generated after the last snapshot
+        rebuild is immediately visible."""
+
+        query = parse_qs(urlparse(self.path).query)
+        run_dir = self._resolve_run_deck_dir((query.get("source") or [""])[0])
+        if run_dir is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 run 来源。"})
+            return
+        deck_path = run_dir / "slide-deck_report.html"
+        available = deck_path.is_file() and deck_path.stat().st_size > 0
+        updated_at = None
+        if available:
+            updated_at = dt.datetime.fromtimestamp(
+                deck_path.stat().st_mtime, tz=dt.timezone.utc
+            ).isoformat()
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "available": available,
+                "source": str(run_dir),
+                "agent_available": agent_cli_available() is not None,
+                "updated_at": updated_at,
+            },
+        )
+
+    def _handle_run_deck_generate(self) -> None:
+        """Generate the run-level slide deck via scripts/run_slide_deck.py.
+        Streams [SLIDE-DECK]/[PAPER-CHAT] progress as SSE; on success the deck
+        file sits in the run folder and /api/deck serves it right away."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        run_dir = self._resolve_run_deck_dir(str(body.get("source") or ""))
+        if run_dir is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 run 来源。"})
+            return
+        key = f"rundeck-{run_dir}"
+        if not acquire_chat_lock(key):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该 run 已有汇报生成正在进行，请稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            self._write_sse_event({"type": "stage", "stage": "rundeck",
+                                   "detail": f"开始生成汇报 {run_dir.name}…"})
+            ok = self._run_run_deck_generation(run_dir)
+            if not ok:
+                self._write_sse_event(
+                    {
+                        "type": "topic_error",
+                        "message": f"汇报生成失败：run {run_dir.name} 缺少写作简报/证据附录，或写作与编译出错，请稍后重试。",
+                    }
+                )
+                return
+            self._write_sse_event({"type": "deck_done", "source": str(run_dir)})
+        finally:
+            release_chat_lock(key)
+
+    def _run_run_deck_generation(self, run_dir: Path) -> bool:
+        """Run run_slide_deck.py, forwarding [SLIDE-DECK] and [PAPER-CHAT]
+        progress lines. Slide-source (600s) + compile/audit + slack → 900s."""
+
+        command = [
+            sys.executable,
+            str(SCRIPT_DIR / "run_slide_deck.py"),
+            "--run-dir", str(run_dir),
+        ]
+        try:
+            process = subprocess.Popen(
+                command, cwd=str(self.kb_root), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                detail = line.strip()
+                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] "):
+                    if detail.startswith(prefix):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "rundeck", "detail": detail.removeprefix(prefix)}
+                        )
+                        break
+            try:
+                returncode = process.wait(timeout=900)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+                returncode = -1
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return returncode == 0
+
+
+    def _handle_slide_deck_state(self) -> None:
+        """Capability + deck probe for the reader's 汇报 tab. Mirrors the
+        速读 state handler; the deck itself is served as a standalone page."""
+
+        query = parse_qs(urlparse(self.path).query)
+        raw_id = (query.get("id") or [""])[0]
+        if not raw_id:
+            self._send_json(HTTPStatus.OK, {"enabled": True})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(raw_id)
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        pool_dir = pool_root(self.kb_root) / f"arxiv-{paper_id}"
+        deck_path = self._slide_deck_path(paper_id)
+        deck_ready = deck_path.is_file() and deck_path.stat().st_size > 0
+        updated_at = None
+        if deck_ready:
+            updated_at = dt.datetime.fromtimestamp(
+                deck_path.stat().st_mtime, tz=dt.timezone.utc
+            ).isoformat()
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "enabled": True,
+                "arxiv_id": paper_id,
+                "pooled": (pool_dir / "extraction.json").is_file(),
+                "deep_read_status": self._pool_deep_read_status(pool_dir),
+                "slide_deck": deck_ready,
+                "deck_url": f"api/paper/slidedeck/file?id={paper_id}" if deck_ready else None,
+                "agent_available": agent_cli_available() is not None,
+                "updated_at": updated_at,
+            },
+        )
+
+    def _handle_slide_deck_generate(self) -> None:
+        """Generate (or regenerate) the single-paper slide deck. Streams
+        [SLIDE-DECK]/[PAPER-CHAT] progress from scripts/paper_slide_deck.py as
+        SSE; only exit 0 counts — exit 3 means deep-read unavailable."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(str(body.get("arxiv_id") or ""))
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        key = f"slidedeck-{paper_id}"
+        if not acquire_chat_lock(key):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该论文已有汇报生成正在进行，请稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            self._write_sse_event({"type": "stage", "stage": "slidedeck", "detail": f"开始生成汇报 {paper_id}…"})
+            ok = self._run_slide_deck_generation(paper_id)
+            if not ok:
+                self._write_sse_event(
+                    {
+                        "type": "topic_error",
+                        "message": f"汇报生成失败：论文 {paper_id} 未通过深读审计或写作/编译出错，请稍后重试。",
+                    }
+                )
+                return
+            self._write_sse_event(
+                {
+                    "type": "slidedeck_done",
+                    "arxiv_id": paper_id,
+                    "deck_url": f"api/paper/slidedeck/file?id={paper_id}",
+                }
+            )
+        finally:
+            release_chat_lock(key)
+
+    def _run_slide_deck_generation(self, paper_id: str) -> bool:
+        """Run paper_slide_deck.py, forwarding [SLIDE-DECK] and [PAPER-CHAT]
+        progress lines. Deep read (420s) + slide-source (600s) + compile/audit
+        + slack → 1500s. Only returncode 0 is success."""
+
+        command = [
+            sys.executable,
+            str(SCRIPT_DIR / "paper_slide_deck.py"),
+            "--arxiv-id", paper_id,
+            "--kb-root", str(self.kb_root),
+        ]
+        try:
+            process = subprocess.Popen(
+                command, cwd=str(self.kb_root), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                detail = line.strip()
+                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] "):
+                    if detail.startswith(prefix):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "slidedeck", "detail": detail.removeprefix(prefix)}
+                        )
+                        break
+            try:
+                returncode = process.wait(timeout=1500)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+                returncode = -1
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return returncode == 0
+
 
     def _handle_paper_chat(self) -> None:
         """One conversational turn about a single arXiv paper. On first contact
@@ -1027,8 +1335,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
         card's custom wire format), or an explicit ``A..B`` string; return the
         canonical ``YYYY-MM-DD..YYYY-MM-DD`` string for the run manifest.
 
-        Presets: 6mo / 3y (default) / 10y / 20y. Legacy names ("recent" =
-        6mo, "since2023" ≈ 3y) still map for old clients."""
+        Presets: 1y / 3y (default) / 5y / 10y. Legacy names ("recent" =
+        6mo, "since2023" ≈ 3y, "20y") still map for old clients."""
 
         today = dt.date.today()
         today_s = today.strftime("%Y-%m-%d")
@@ -1045,8 +1353,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
         if preset in ("", "recent", "6mo"):
             start = (today - dt.timedelta(days=183)).strftime("%Y-%m-%d")
             return f"{start}..{today_s}"
+        if preset == "1y":
+            return years_back(1)
         if preset in ("3y", "since2023"):
             return years_back(3)
+        if preset == "5y":
+            return years_back(5)
         if preset == "10y":
             return years_back(10)
         if preset == "20y":
@@ -1181,6 +1493,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
             return
         entry = self.chat_sessions.get_workspace(raw_ws) or {}
         workflow = entry.get("workflow") or {}
+        # The dialog transcript mirrored to the run dir (see DialogJournal):
+        # lets a refreshed page rebuild the claude dialog from disk.
+        journal: list[dict] = []
+        run_rel = workflow.get("run_dir") or ""
+        if run_rel:
+            journal = wiki_chat.read_dialog_journal(self.kb_root / run_rel / "dialog" / "journal.jsonl")
         self._send_json(
             HTTPStatus.OK,
             {
@@ -1194,6 +1512,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 "topic_id": entry.get("topic_id"),
                 "session_id": entry.get("session_id"),
                 "messages": entry.get("messages", []),
+                "journal": journal,
             },
         )
 
@@ -1278,6 +1597,18 @@ class WikiHandler(SimpleHTTPRequestHandler):
             self._send_json(HTTPStatus.CONFLICT, {"error": "该工作流已有阶段正在执行，请先停止或稍候。"})
             return
         try:
+            # Mirror the dialog into the run dir (journal.jsonl) while it
+            # streams: the SSE conversation lives only in the browser
+            # connection, so a page refresh would otherwise lose it. A kickoff
+            # starts a fresh conversation — truncate any journal left in the
+            # (possibly reused) in-progress run dir.
+            journal = wiki_chat.DialogJournal(run_dir)
+            if entry is None:
+                journal.start()
+                journal.user(params["topic"])
+            else:
+                journal.user(message)
+            self._dialog_journal = journal
             self._send_sse_headers(workflow_id=ws_id)
             registry = self.chat_sessions
             if entry is None:
@@ -1390,6 +1721,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
                                    "回复「继续」从中断处继续，或检查运行目录排查问题。"}
                     )
         finally:
+            if self._dialog_journal is not None:
+                self._dialog_journal.flush_deltas()
+            self._dialog_journal = None
             _set_current_chat(None)
             release_chat_lock(ws_id)
 
@@ -1558,6 +1892,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
         self.close_connection = True
 
     def _write_sse_event(self, event: dict) -> None:
+        journal = self._dialog_journal
+        if journal is not None and wiki_chat.journalable_event(event):
+            journal.event(event)
         payload = json.dumps(event, ensure_ascii=False)
         self.wfile.write(f"data: {payload}\n\n".encode("utf-8"))
         self.wfile.flush()

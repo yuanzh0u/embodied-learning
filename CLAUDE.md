@@ -167,6 +167,23 @@ a pool dir inside the repo is a mis-resolved default, migrate it out and delete 
 
 ## Conventions and invariants
 
+- **All model-capability calls go through `embodied_learning/harness/claude.py`** (pybind-style
+  binding layer). Feature modules keep prompts and output parsing; the harness owns CLI discovery,
+  spawn-environment isolation, auth preflight, one-shot `complete()`, streaming `ChatTurn`, and the
+  machine-local conversation archive (`~/.claude/projects/embodied-learning-work/`). Never spawn
+  `claude` via `subprocess` anywhere else; `scripts/lib/agent_invoke.py` is a compatibility shim
+  (prompts + KB layout + re-exports).
+- **Shared-KB concurrency is O_EXCL-based, never flock.** The KB may live on a CIFS mount shared by
+  several machines; all cross-process coordination lives under `<kb-root>/.locks/` (owner-record
+  lock files created with `O_CREAT|O_EXCL`, stale-steal via a fixed `.steal` marker) and
+  `<kb-root>/.claims/` (event-ID prefix reservations). Never use `fcntl.flock` for a KB resource
+  (unreliable across CIFS clients; `ratelimit.py`'s flock gate is machine-local request pacing
+  only). Lock ONLY the read-merge-rewrite of shared files (`pool/index.jsonl`, catalog,
+  run.json, chat-sessions.json, wiki publish, cold-start bootstrap); per-run outputs
+  (`work/<run>/`, `evidence/<run>/`) stay lock-free. Every rewrite of a shared file goes through
+  `embodied_learning/atomicio.py` (tmp + `os.replace`). Knobs:
+  `EMBODIED_KB_LOCK_{DIR,WAIT,STALE,POLL}` / `EMBODIED_KB_LOCKS_DISABLED=1` (emergency no-op).
+  Details in `scripts/README.md` (「共享知识库的并发与锁」).
 - **Evidence discipline is the core invariant.** Candidate papers are never accepted evidence.
   Browser/web/social results are low-confidence *calibration* only and must not be promoted to
   evidence; promote a claim only after arXiv HTML 正文 verification.

@@ -84,15 +84,20 @@ class ResolvePipelineLayoutTest(unittest.TestCase):
 
 class IsolatedClaudeEnvTest(unittest.TestCase):
     def setUp(self) -> None:
-        self._orig = (agent_invoke.ISOLATED_CONFIG_DIR, agent_invoke.CREDENTIALS_FILE)
+        # The env helpers live in the harness module now; patch there (never
+        # the shim's re-exports) so tests cannot touch real credentials.
+        import embodied_learning.harness.claude as harness_claude
+
+        self._harness = harness_claude
+        self._orig = (harness_claude.ISOLATED_CONFIG_DIR, harness_claude.CREDENTIALS_FILE)
 
     def tearDown(self) -> None:
-        agent_invoke.ISOLATED_CONFIG_DIR, agent_invoke.CREDENTIALS_FILE = self._orig
+        self._harness.ISOLATED_CONFIG_DIR, self._harness.CREDENTIALS_FILE = self._orig
 
     def test_strips_nested_markers_and_sets_config_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             config_dir = Path(tmp) / "claude-config"
-            agent_invoke.ISOLATED_CONFIG_DIR = config_dir
+            self._harness.ISOLATED_CONFIG_DIR = config_dir
             env = agent_invoke.isolated_claude_env({
                 "CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "cli",
                 "CLAUDE_CODE_SSE_PORT": "1234", "PATH": "/usr/bin",
@@ -109,15 +114,15 @@ class IsolatedClaudeEnvTest(unittest.TestCase):
             config_dir = tmp / "claude-config"
             credentials = tmp / "home-credentials.json"
             credentials.write_text("{}", encoding="utf-8")
-            agent_invoke.ISOLATED_CONFIG_DIR = config_dir
-            agent_invoke.CREDENTIALS_FILE = credentials
-            agent_invoke.prepare_claude_config_dir(config_dir)
+            self._harness.ISOLATED_CONFIG_DIR = config_dir
+            self._harness.CREDENTIALS_FILE = credentials
+            self._harness.prepare_claude_config_dir(config_dir)
             copied = config_dir / ".credentials.json"
             self.assertTrue(copied.is_file())
             self.assertEqual(copied.stat().st_mode & 0o777, 0o600)
             # idempotent: second call keeps the existing copy
             credentials.write_text("{\"x\":1}", encoding="utf-8")
-            agent_invoke.prepare_claude_config_dir(config_dir)
+            self._harness.prepare_claude_config_dir(config_dir)
             self.assertEqual(copied.read_text(encoding="utf-8"), "{}")
 
     def test_auth_ready_messages(self) -> None:
@@ -142,14 +147,16 @@ class RunOneShotAgentIsolationTest(unittest.TestCase):
             captured.update(kwargs)
             return subprocess.CompletedProcess(command, 0, "", "")
 
-        orig_run = agent_invoke.subprocess.run
-        agent_invoke.subprocess.run = fake_run
+        import embodied_learning.harness.claude as harness_claude
+
+        orig_run = harness_claude.subprocess.run
+        harness_claude.subprocess.run = fake_run
         try:
             with tempfile.TemporaryDirectory() as tmp:
-                agent_invoke.ISOLATED_CONFIG_DIR = Path(tmp) / "cfg"
+                harness_claude.ISOLATED_CONFIG_DIR = Path(tmp) / "cfg"
                 agent_invoke.run_one_shot_agent("prompt", timeout_s=1.0, cli="claude", cwd=Path(tmp))
         finally:
-            agent_invoke.subprocess.run = orig_run
+            harness_claude.subprocess.run = orig_run
         self.assertEqual(captured["command"], ["claude", "-p", "--model", agent_invoke.DRIVER_AGENT_MODEL,
                                                "--permission-mode", "bypassPermissions"])
         self.assertIn("cwd", captured)

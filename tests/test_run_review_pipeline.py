@@ -306,6 +306,30 @@ class DriverPipelineTest(unittest.TestCase):
         # retry command is not repeated because outputs are present).
         self.assertEqual(len(self.commands), first_count)
 
+    def test_arxiv_hit_count_reads_top_level_paper_count(self):
+        """Both arXiv backends put paper_count at the top level and per-query
+        entries only carry result_count — a successful retrieval must not be
+        misread as 0 hits and force the cooldown retry."""
+        base = self.fake_run
+
+        def fake_run(command, timeout=None):
+            result = base(command, timeout=timeout)
+            if len(command) > 2 and command[2] == "search-arxiv":
+                (self.run_dir / "search-arxiv.json").write_text(
+                    json.dumps({
+                        "paper_count": 399,
+                        "queries": [{"label": "a", "query": "all:demo", "result_count": 25}],
+                    }),
+                    encoding="utf-8",
+                )
+            return result
+
+        self.fake_run = fake_run
+        code, _ = self.run_driver(self.argv("--skip-s2", "--no-terms-agent"))
+        self.assertEqual(code, 0)
+        arxiv_runs = [c for c in self.commands if len(c) > 2 and c[2] == "search-arxiv"]
+        self.assertEqual(len(arxiv_runs), 1)
+
     def test_missing_run_json_rejected(self):
         code = self.driver.main([
             "--run-dir", str(self.run_dir.parent / "nope"),

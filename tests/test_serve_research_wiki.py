@@ -17,6 +17,16 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "serve_research_wiki.py"
+# Route the machine-local conversation store (chat sessions + invocation
+# archive) into this module's own tmp dir so tests never touch the real
+# ~/.claude store.
+_CONVO_STORE = tempfile.TemporaryDirectory()
+import atexit  # noqa: E402
+
+atexit.register(_CONVO_STORE.cleanup)
+import os  # noqa: E402
+
+os.environ["EMBODIED_CONVERSATION_STORE"] = _CONVO_STORE.name
 SPEC = importlib.util.spec_from_file_location("serve_research_wiki_tested", SCRIPT)
 server_module = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -166,6 +176,25 @@ class ChatServerHarness(unittest.TestCase):
         return status, raw, headers
 
 
+class ResolveWikiRootTest(unittest.TestCase):
+    """A non-editable install must refresh an existing <kb-root>/wiki shell on
+    start — regression for the dead branch that returned the stale bootstrapped
+    copy forever (test env served an old frontend after a wheel upgrade)."""
+
+    def test_existing_kb_wiki_gets_frontend_refreshed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            kb = Path(tmp)
+            kb_wiki = kb / "wiki"
+            kb_wiki.mkdir()
+            (kb_wiki / "index.html").write_text("<html>old shell</html>", encoding="utf-8")
+            with mock.patch.object(server_module, "IS_REPO_CHECKOUT", False):
+                root = server_module.resolve_wiki_root(kb)
+            self.assertEqual(root, kb_wiki)
+            refreshed = (kb_wiki / "index.html").read_text(encoding="utf-8")
+            self.assertIn("assets/wiki.js", refreshed)
+            self.assertNotIn("<html>old shell</html>", refreshed)
+
+
 class ResolveTopicTest(ChatServerHarness):
     """resolve_topic runs through the HTTP layer: valid ids stream, invalid
     ones get 400. The security boundary (path traversal, foreign run dirs) is
@@ -199,7 +228,7 @@ class ChatEndpointTest(ChatServerHarness):
         self.assertEqual(turn.kwargs["cli"], "/fake/claude")
         self.assertIn(self.run_dir.name, turn.kwargs["prompt"])
         registry = server_module.wiki_chat.ChatSessionRegistry(
-            self.kb_root / "wiki" / "data" / "chat-sessions.json"
+            server_module.wiki_chat.local_registry_path(self.kb_root)
         )
         entry = registry.get(self.topic_id)
         self.assertEqual(entry["session_id"], "fresh-1")
@@ -219,7 +248,7 @@ class ChatEndpointTest(ChatServerHarness):
 
     def test_stale_session_resets_and_retries_fresh(self):
         registry = server_module.wiki_chat.ChatSessionRegistry(
-            self.kb_root / "wiki" / "data" / "chat-sessions.json"
+            server_module.wiki_chat.local_registry_path(self.kb_root)
         )
         registry.record_session(self.topic_id, "stale-id")
         created: list[FakeTurn] = []
@@ -418,7 +447,7 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertIn(run_dirs[0].name, turn.kwargs["prompt"])
         # Registry state.
         registry = server_module.wiki_chat.ChatSessionRegistry(
-            self.kb_root / "wiki" / "data" / "chat-sessions.json"
+            server_module.wiki_chat.local_registry_path(self.kb_root)
         )
         entry = registry.get_workspace(ws_id)
         self.assertEqual(entry["session_id"], "ws-fresh-1")
@@ -445,18 +474,21 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertEqual(status, HTTPStatus.BAD_REQUEST)
 
     def test_time_range_presets_resolve_to_absolute_windows(self):
-        """6mo/3y/10y/20y presets (3y default) with legacy names still mapped;
-        2026-09-11 request to replace since2023/recent with year-based options."""
+        """1y/3y/5y/10y presets (3y default, 2026-09-22 request to replace
+        6mo/10y/20y) with legacy names still mapped for old clients."""
         resolve = server_module.WikiHandler._resolve_time_range
         import datetime as dt_module
 
         today = dt_module.date.today()
         cases = {
+            "1y": today.replace(year=today.year - 1).strftime("%Y-%m-%d"),
+            "3y": today.replace(year=today.year - 3).strftime("%Y-%m-%d"),
+            "5y": today.replace(year=today.year - 5).strftime("%Y-%m-%d"),
+            "10y": today.replace(year=today.year - 10).strftime("%Y-%m-%d"),
+            # Legacy names still accepted so an old client keeps working.
             "6mo": (today - dt_module.timedelta(days=183)).strftime("%Y-%m-%d"),
             "recent": (today - dt_module.timedelta(days=183)).strftime("%Y-%m-%d"),
-            "3y": today.replace(year=today.year - 3).strftime("%Y-%m-%d"),
             "since2023": today.replace(year=today.year - 3).strftime("%Y-%m-%d"),
-            "10y": today.replace(year=today.year - 10).strftime("%Y-%m-%d"),
             "20y": today.replace(year=today.year - 20).strftime("%Y-%m-%d"),
         }
         end = today.strftime("%Y-%m-%d")
@@ -588,7 +620,7 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertEqual(turn.kwargs["session_id"], "ws-fresh-1")
         self.assertIn("继续执行", turn.kwargs["prompt"])
         registry = server_module.wiki_chat.ChatSessionRegistry(
-            self.kb_root / "wiki" / "data" / "chat-sessions.json"
+            server_module.wiki_chat.local_registry_path(self.kb_root)
         )
         entry = registry.get_workspace(ws_id)
         self.assertEqual(entry["topic_id"], ready["topic_id"])
@@ -731,6 +763,56 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertEqual(status, HTTPStatus.OK, "topic chat must not 409 while a workflow runs")
         self.assertEqual(self.sse_events()[0]["type"], "session")
         self.assertEqual(workflow_events[-1], "awaiting_input")
+
+    def test_dialog_journal_mirrors_and_state_exposes_it(self):
+        """2026-09-22: the dialog mirrors into <run_dir>/dialog/journal.jsonl
+        while it streams, and api/workflow/state hands it back so a refreshed
+        page can rebuild the claude dialog from disk."""
+
+        def script(turn_self, kwargs):
+            turn_self._events = self._checkpoint_turn_events()
+
+        self._seed_turn_factory(script)
+        status, raw, headers = self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": "高斯溅射SLAM综述", "params": self.params()})
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        ws_id = headers.get("X-Workflow-Id")
+        run_dir = next((self.kb_root / "work").glob("literature-review-*"))
+        records = server_module.wiki_chat.read_dialog_journal(run_dir / "dialog" / "journal.jsonl")
+        # First record is the kickoff user turn; driver stage lines, assistant
+        # deltas and the park note are mirrored; spinner/session frames are not.
+        self.assertEqual(records[0], {"kind": "user", "text": "高斯溅射SLAM综述"})
+        event_types = [r["event"]["type"] for r in records if r.get("kind") == "event"]
+        self.assertIn(("stage", "retrieval"), {(r["event"]["type"], r["event"].get("stage")) for r in records if r.get("kind") == "event"})
+        self.assertIn("delta", event_types)
+        self.assertIn("awaiting_input", event_types)
+        self.assertNotIn("session", event_types)
+        self.assertNotIn("status", event_types)
+        # The state endpoint returns the journal for frontend replay.
+        status, payload, _ = self.request("GET", f"/api/workflow/state?ws_id={ws_id}")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(payload["journal"], records)
+
+    def test_second_kickoff_truncates_reused_run_dir_journal(self):
+        """A kickoff on an in-progress run reuses its dir but starts a new
+        conversation: the previous dialog's journal must not survive."""
+
+        def script(turn_self, kwargs):
+            turn_self._events = self._checkpoint_turn_events()
+
+        self._seed_turn_factory(script)
+        self.request("POST", "/api/workflow", {"message": "主题", "params": self.params()})
+        journal_path = next((self.kb_root / "work").glob("literature-review-*")) / "dialog" / "journal.jsonl"
+        self.assertTrue(journal_path.is_file())
+        with journal_path.open("a", encoding="utf-8") as fh:
+            fh.write('{"kind": "user", "text": "OLD-DIALOG-MARKER"}\n')
+        self.request("POST", "/api/workflow", {"message": "主题", "params": self.params()})
+        records = server_module.wiki_chat.read_dialog_journal(journal_path)
+        self.assertNotIn("OLD-DIALOG-MARKER", [r.get("text") for r in records])
+        # One fresh dialog only: the kickoff user turn (journalled from the
+        # topic param), with the appended marker line gone.
+        self.assertEqual([r for r in records if r.get("kind") == "user"], [{"kind": "user", "text": "高斯溅射SLAM综述"}])
 
 
 class WikiRootResolutionTest(unittest.TestCase):
@@ -1102,7 +1184,7 @@ class PaperChatEndpointTest(ChatServerHarness):
         # Session is cached under the paper-<id> key.
         entry = server_module.WikiHandler._paper_chat_key("2402.10329")
         recorded = server_module.wiki_chat.ChatSessionRegistry(
-            self.kb_root / "wiki" / "data" / "chat-sessions.json"
+            server_module.wiki_chat.local_registry_path(self.kb_root)
         ).get(entry)
         self.assertIsNotNone(recorded)
         self.assertTrue(any(m["role"] == "user" for m in recorded["messages"]))
@@ -1126,7 +1208,7 @@ class PaperChatEndpointTest(ChatServerHarness):
         self.assertEqual(status, HTTPStatus.OK)
         key = server_module.WikiHandler._paper_chat_key("2402.10329")
         registry = server_module.wiki_chat.ChatSessionRegistry(
-            self.kb_root / "wiki" / "data" / "chat-sessions.json"
+            server_module.wiki_chat.local_registry_path(self.kb_root)
         )
         self.assertIsNone(registry.get(key))
         # State probe reports no history after reset.
@@ -1219,6 +1301,172 @@ class QuickReadEndpointTest(ChatServerHarness):
     def test_generate_bad_id_rejected(self):
         status, payload, _ = self.request("POST", "/api/paper/quickread", {"arxiv_id": "garbage"})
         self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+
+class SlideDeckEndpointTest(ChatServerHarness):
+    """The 汇报 (slide-deck) routes: per-paper state probe + file serving, the
+    SSE generate endpoint backed by a stubbed paper_slide_deck.py run, and the
+    run-level /api/deck file route with its traversal guard."""
+
+    DECK_HTML = "<!doctype html><html><body><div class='reveal'></div></body></html>"
+
+    def seed_pool(self, paper_id: str = "2402.10329", *, with_deck: bool = False):
+        pool_dir = self.kb_root / "pool" / f"arxiv-{paper_id}"
+        pool_dir.mkdir(parents=True, exist_ok=True)
+        (pool_dir / "extraction.json").write_text("{}", encoding="utf-8")
+        (pool_dir / "note.json").write_text("{}", encoding="utf-8")
+        (pool_dir / "note.json.audit.json").write_text(json.dumps({"status": "pass"}), encoding="utf-8")
+        if with_deck:
+            (pool_dir / "slide-deck_report.html").write_text(self.DECK_HTML, encoding="utf-8")
+        return pool_dir
+
+    def test_state_reports_unpooled_paper(self):
+        status, payload, _ = self.request("GET", "/api/paper/slidedeck/state?id=2402.10329")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertFalse(payload["pooled"])
+        self.assertFalse(payload["slide_deck"])
+        self.assertIsNone(payload["deck_url"])
+        self.assertIn("agent_available", payload)
+
+    def test_state_reports_ready_deck(self):
+        self.seed_pool(with_deck=True)
+        status, payload, _ = self.request("GET", "/api/paper/slidedeck/state?id=2402.10329")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertTrue(payload["slide_deck"])
+        self.assertEqual(payload["deep_read_status"], "pass")
+        self.assertIn("slidedeck/file", payload["deck_url"])
+        self.assertIsNotNone(payload["updated_at"])
+
+    def test_state_bad_id_rejected(self):
+        status, _, _ = self.request("GET", "/api/paper/slidedeck/state?id=not-an-id")
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_file_endpoint_serves_deck_html(self):
+        self.seed_pool(with_deck=True)
+        status, raw, headers = self.request("GET", "/api/paper/slidedeck/file?id=2402.10329")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn("text/html", headers.get("Content-Type", ""))
+        self.assertIn("reveal", raw)
+
+    def test_file_endpoint_missing_deck_404(self):
+        self.seed_pool()
+        status, payload, _ = self.request("GET", "/api/paper/slidedeck/file?id=2402.10329")
+        self.assertEqual(status, HTTPStatus.NOT_FOUND)
+
+    def test_generate_streams_sse_and_delivers_deck_url(self):
+        pool_dir = self.seed_pool()
+
+        def fake_popen(command, **kwargs):
+            (pool_dir / "slide-deck_report.md").write_text("# title: T\n", encoding="utf-8")
+            (pool_dir / "slide-deck_report.html").write_text(self.DECK_HTML, encoding="utf-8")
+            return FakeProcess(returncode=0, lines=["[PAPER-CHAT] pool 命中", "[SLIDE-DECK] 幻灯片已编译"])
+
+        with mock.patch.object(server_module.subprocess, "Popen", side_effect=fake_popen):
+            status, raw, _ = self._collect_sse(
+                self.request("POST", "/api/paper/slidedeck", {"arxiv_id": "2402.10329"})
+            )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        kinds = [event["type"] for event in events]
+        self.assertIn("stage", kinds)
+        self.assertEqual(kinds[-1], "slidedeck_done")
+        done = events[-1]
+        self.assertEqual(done["arxiv_id"], "2402.10329")
+        self.assertIn("slidedeck/file", done["deck_url"])
+        details = [event["detail"] for event in events if event["type"] == "stage"]
+        self.assertTrue(any("幻灯片已编译" in detail for detail in details))
+
+    def test_generate_failure_reports_topic_error(self):
+        self.seed_pool()
+        with mock.patch.object(server_module.subprocess, "Popen",
+                               return_value=FakeProcess(returncode=3, lines=[])):
+            status, _, _ = self._collect_sse(
+                self.request("POST", "/api/paper/slidedeck", {"arxiv_id": "2402.10329"})
+            )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        self.assertEqual(events[-1]["type"], "topic_error")
+        self.assertIn("失败", events[-1]["message"])
+
+    def test_generate_conflict_while_running(self):
+        self.seed_pool()
+        with mock.patch.object(server_module, "acquire_chat_lock", return_value=False):
+            status, payload, _ = self.request("POST", "/api/paper/slidedeck", {"arxiv_id": "2402.10329"})
+        self.assertEqual(status, HTTPStatus.CONFLICT)
+
+    def test_run_deck_serves_settled_run_deck(self):
+        (self.run_dir / "slide-deck_report.html").write_text(self.DECK_HTML, encoding="utf-8")
+        source = str(self.run_dir)
+        status, raw, headers = self.request("GET", f"/api/deck?source={source}")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn("reveal", raw)
+
+    def test_run_deck_rejects_paths_outside_kb(self):
+        outside = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, outside, ignore_errors=True)
+        Path(outside, "slide-deck_report.html").write_text(self.DECK_HTML, encoding="utf-8")
+        status, _, _ = self.request("GET", f"/api/deck?source={outside}")
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_run_deck_missing_deck_404(self):
+        status, _, _ = self.request("GET", f"/api/deck?source={self.run_dir}")
+        self.assertEqual(status, HTTPStatus.NOT_FOUND)
+
+
+    def test_run_deck_state_reflects_filesystem(self):
+        # No deck yet -> available False but agent capability reported.
+        status, payload, _ = self.request("GET", f"/api/deck/state?source={self.run_dir}")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertFalse(payload["available"])
+        self.assertIn("agent_available", payload)
+        # Generate one behind the server's back -> immediately visible (live
+        # probe, no snapshot rebuild needed).
+        (self.run_dir / "slide-deck_report.html").write_text(self.DECK_HTML, encoding="utf-8")
+        status, payload, _ = self.request("GET", f"/api/deck/state?source={self.run_dir}")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertTrue(payload["available"])
+        self.assertIsNotNone(payload["updated_at"])
+
+    def test_run_deck_state_bad_source_rejected(self):
+        status, _, _ = self.request("GET", "/api/deck/state?source=/etc")
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_run_deck_generate_streams_sse(self):
+        def fake_popen(command, **kwargs):
+            self.assertIn("run_slide_deck.py", " ".join(command))
+            self.assertIn(str(self.run_dir), " ".join(command))
+            (self.run_dir / "slide-deck_report.html").write_text(self.DECK_HTML, encoding="utf-8")
+            return FakeProcess(returncode=0, lines=["[SLIDE-DECK] 幻灯片已编译"])
+
+        with mock.patch.object(server_module.subprocess, "Popen", side_effect=fake_popen):
+            status, _, _ = self._collect_sse(
+                self.request("POST", "/api/deck/generate", {"source": str(self.run_dir)})
+            )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        self.assertEqual(events[-1]["type"], "deck_done")
+        self.assertEqual(events[-1]["source"], str(self.run_dir))
+        self.assertTrue(any("幻灯片已编译" in e.get("detail", "") for e in events if e["type"] == "stage"))
+
+    def test_run_deck_generate_failure_reports_topic_error(self):
+        with mock.patch.object(server_module.subprocess, "Popen",
+                               return_value=FakeProcess(returncode=2, lines=[])):
+            status, _, _ = self._collect_sse(
+                self.request("POST", "/api/deck/generate", {"source": str(self.run_dir)})
+            )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        self.assertEqual(events[-1]["type"], "topic_error")
+        self.assertIn("失败", events[-1]["message"])
+
+    def test_run_deck_generate_bad_source_rejected(self):
+        status, _, _ = self.request("POST", "/api/deck/generate", {"source": "/etc"})
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_run_deck_generate_conflict_while_running(self):
+        with mock.patch.object(server_module, "acquire_chat_lock", return_value=False):
+            status, payload, _ = self.request("POST", "/api/deck/generate", {"source": str(self.run_dir)})
+        self.assertEqual(status, HTTPStatus.CONFLICT)
 
 
 class FakeProcess:

@@ -44,25 +44,19 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 try:
-    from lib.agent_invoke import (  # noqa: E402
-        DRIVER_AGENT_MODEL,
-        claude_auth_ready,
-        isolated_claude_env,
-        resolve_cli,
-        run_one_shot_agent,
-    )
     from lib.layout import default_kb_root, find_roots  # noqa: E402
-    from lib.review_runs import STYLE_TO_FILE  # noqa: E402
+    from lib.review_runs import STYLE_TO_FILE, register_run_in_catalog  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
-    from wiki_scripts.lib.agent_invoke import (  # noqa: E402
-        DRIVER_AGENT_MODEL,
-        claude_auth_ready,
-        isolated_claude_env,
-        resolve_cli,
-        run_one_shot_agent,
-    )
     from wiki_scripts.lib.layout import default_kb_root, find_roots  # noqa: E402
-    from wiki_scripts.lib.review_runs import STYLE_TO_FILE  # noqa: E402
+    from wiki_scripts.lib.review_runs import STYLE_TO_FILE, register_run_in_catalog  # noqa: E402
+# AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
+from embodied_learning.harness.claude import (  # noqa: E402
+    DRIVER_AGENT_MODEL,
+    claude_auth_ready,
+    complete,
+    isolated_claude_env,
+    resolve_cli,
+)
 
 _REPO_ROOT, SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
 STYLE_VALUES = tuple(STYLE_TO_FILE)
@@ -186,12 +180,16 @@ def run_writer(args: argparse.Namespace, run_dir: Path, prompt: str) -> None:
     with open(writer_log, "a", encoding="utf-8") as handle:
         handle.write(f"\n===== writer round {time.strftime('%Y-%m-%dT%H:%M:%S')} (model: {model}) =====\n")
         handle.flush()
-        result = subprocess.run(
-            [cli, "-p", "--model", model, "--permission-mode", "bypassPermissions",
-             "--output-format", "stream-json", "--verbose"],
-            input=prompt, text=True, stdout=handle, stderr=handle,
-            timeout=args.writer_timeout, cwd=str(resolve_kb_root(args)),
+        result = complete(
+            prompt,
+            timeout_s=args.writer_timeout,
+            cli=cli,
+            model=model,
+            cwd=resolve_kb_root(args),
             env=env,
+            label=f"writer-{run_dir.name}",
+            stream=True,
+            stream_to=handle,
         )
     if result.returncode:
         raise RuntimeError(f"writer agent exit {result.returncode} (see {writer_log})")
@@ -273,25 +271,32 @@ def collect_gate_problems(run_dir: Path) -> list[str]:
 
 
 def ensure_settled(run_dir: Path, args: argparse.Namespace) -> None:
+    from embodied_learning.atomicio import atomic_write_json
+    from embodied_learning import locks
+
     run_json_path = run_dir / "run.json"
-    manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
-    if manifest.get("status") == "settled":
-        return
-    if not str(manifest.get("style") or "").strip():
-        manifest["style"] = args.target_style if args.target_style in STYLE_VALUES else "scientific-memo"
-        manifest["scope_note"] = args.scope_note or "单风格交付：launcher 程序化运行声明的收窄范围。"
-    manifest.setdefault("files", {
-        "query_plan": "query-plan.json",
-        "candidate_registry": "candidate-registry.json",
-        "coverage_report": "coverage-report.json",
-        "evidence": "evidence.jsonl",
-        "review_packet": "review-packet.md",
-        "writing_brief": "writing-brief.md",
-        "evidence_appendix": "evidence-appendix.md",
-        "outputs": [],
-    })
-    manifest["status"] = "settled"
-    run_json_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # The launcher reaches settle only after its driver exited, so contention
+    # here means a genuinely concurrent process — brief bounded wait, locked
+    # read-modify-write so a concurrent settle flip cannot lose fields.
+    with locks.kb_lock(resolve_kb_root(args), f"run__{run_dir.name}", stale=21600):
+        manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
+        if manifest.get("status") == "settled":
+            return
+        if not str(manifest.get("style") or "").strip():
+            manifest["style"] = args.target_style if args.target_style in STYLE_VALUES else "scientific-memo"
+            manifest["scope_note"] = args.scope_note or "单风格交付：launcher 程序化运行声明的收窄范围。"
+        manifest.setdefault("files", {
+            "query_plan": "query-plan.json",
+            "candidate_registry": "candidate-registry.json",
+            "coverage_report": "coverage-report.json",
+            "evidence": "evidence.jsonl",
+            "review_packet": "review-packet.md",
+            "writing_brief": "writing-brief.md",
+            "evidence_appendix": "evidence-appendix.md",
+            "outputs": [],
+        })
+        manifest["status"] = "settled"
+        atomic_write_json(run_json_path, manifest)
 
 
 def verify_publish(args: argparse.Namespace, run_dir: Path, wiki: object) -> list[str]:
@@ -326,6 +331,22 @@ def verify_publish(args: argparse.Namespace, run_dir: Path, wiki: object) -> lis
     return problems
 
 
+def backfill_reentry_params(args: argparse.Namespace, run_dir: Path) -> None:
+    """Re-entry (--run-dir): the run manifest defines the run identity — load
+    topic/mode/range (and infer the KB root) instead of requiring CLI
+    re-statement, which a bare `--run-dir` resume never provides."""
+    run_json = run_dir / "run.json"
+    if run_json.is_file():
+        manifest = json.loads(run_json.read_text(encoding="utf-8"))
+        args.topic = manifest.get("topic") or args.topic
+        args.review_mode = manifest.get("review_mode") or args.review_mode
+        args.time_range = manifest.get("time_range") or args.time_range
+    if not args.kb_root:
+        # init_run places runs at <kb-root>/work/<run>; infer the root from
+        # the run dir so publish steps land in the right KB.
+        args.kb_root = str(run_dir.parent.parent)
+
+
 def launch(args: argparse.Namespace) -> int:
     wiki = load_wiki_prompts()
     run_dir = Path(args.run_dir) if args.run_dir else None
@@ -352,6 +373,7 @@ def launch(args: argparse.Namespace) -> int:
             return 1
         run_dir = Path(init.stdout.strip().splitlines()[0].replace("Initialized run: ", ""))
     run_dir = run_dir.resolve()
+    backfill_reentry_params(args, run_dir)
     if stage_done(run_dir, "published"):
         log("run already published; nothing to do")
         return 0
@@ -385,6 +407,13 @@ def launch(args: argparse.Namespace) -> int:
             run_writer(args, run_dir, continuation)
 
         ensure_settled(run_dir, args)
+        # Catalog registration is mechanical and idempotent now — the row is
+        # appended under the KB-shared catalog lock (two concurrent settles
+        # lose no rows); the agent no longer hand-edits the table.
+        try:
+            register_run_in_catalog(resolve_kb_root(args), run_dir / "run.json")
+        except (OSError, ValueError) as exc:
+            log(f"catalog 登记失败（verify 会再次报告）：{exc}")
         publish_problems = verify_publish(args, run_dir, wiki)
         mark_stage(run_dir, "published", "; ".join(publish_problems) or "ok")
         if publish_problems:
@@ -462,6 +491,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--status", action="store_true")
     parser.add_argument("--stop", action="store_true")
+    parser.add_argument("--resume", action="store_true",
+                        help="续跑已有 run。续跑本就靠阶段标记幂等（直接重跑 --run-dir 即可）；"
+                             "此旗子只为让失败提示里的命令字面可用，无额外行为。")
     args = parser.parse_args(argv)
     return launch(args)
 

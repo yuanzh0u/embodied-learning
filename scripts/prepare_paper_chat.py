@@ -31,8 +31,6 @@ try:
         build_skeleton_prompt,
         pool_root_for,
         read_skeleton_output,
-        resolve_cli,
-        run_one_shot_agent,
     )
     from lib.layout import find_roots  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
@@ -40,16 +38,17 @@ except ImportError:  # installed console-script entry: package import path
         build_skeleton_prompt,
         pool_root_for,
         read_skeleton_output,
-        resolve_cli,
-        run_one_shot_agent,
     )
     from wiki_scripts.lib.layout import find_roots  # noqa: E402
+# AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
+from embodied_learning.harness.claude import resolve_cli  # noqa: E402
 
 _REPO_ROOT, _SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
 if _REPO_ROOT is not None and str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))  # repo root (embodied_learning)
 HUB_SCRIPTS = _SKILLS_ROOT / "embodied-ai-literature-hub" / "scripts"
 from embodied_learning.knowledge.arxiv_reader import parse_arxiv_id  # noqa: E402
+from embodied_learning import locks  # noqa: E402
 try:
     from run_review_pipeline import deep_read_paper  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
@@ -60,6 +59,12 @@ SKELETON_TIMEOUT_S = 420.0
 
 def log(message: str) -> None:
     print(f"[PAPER-CHAT] {message}", flush=True)
+
+
+def _paper_lock(pool_root: Path, paper_dir_name: str, *, wait: float):
+    """Per-paper pool lock (see embodied_learning.locks)."""
+
+    return locks.kb_lock(pool_root, f"pool-paper__{paper_dir_name}", wait=wait)
 
 
 def normalize_arxiv_id(raw: str) -> str:
@@ -83,23 +88,34 @@ def ensure_extraction(paper_id: str, pool_root: Path, force: bool) -> bool:
     if (pool_dir / "extraction.json").is_file() and not force:
         log(f"pool 命中：{pool_dir}")
         return True
-    log("未入池，开始全文抽取（HTML → markdown）…")
-    output = pool_dir / "extraction.json"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    result = run(
-        [
-            sys.executable, str(HUB_SCRIPTS / "extract_arxiv_content.py"),
-            "--paper-id", paper_id,
-            "--preferred-source", "auto",
-            "--include-full-text",
-            "--ocr-mode", "never",
-            "-o", str(output),
-        ],
-        timeout=300.0,
-    )
-    if result.returncode or not output.is_file():
-        log(f"抽取失败：exit {result.returncode} {(result.stderr or '')[-200:]}")
-        return False
+    # Serialize per-paper work: two terminals racing on the same paper would
+    # otherwise both fetch and both write pool/arxiv-<id>/extraction.json in
+    # place. The waiter re-checks after acquiring (the holder usually already
+    # finished the fetch). Network fetch inside the lock is deliberate —
+    # duplicating it is the waste we are avoiding. The pool-add child runs
+    # OUTSIDE the lock: it takes pool locks in its own process, and re-taking
+    # this process's per-paper lock from a child would deadlock.
+    with _paper_lock(pool_root, pool_dir.name, wait=600.0):
+        if (pool_dir / "extraction.json").is_file() and not force:
+            log(f"pool 命中（等待后）：{pool_dir}")
+            return True
+        log("未入池，开始全文抽取（HTML → markdown）…")
+        output = pool_dir / "extraction.json"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        result = run(
+            [
+                sys.executable, str(HUB_SCRIPTS / "extract_arxiv_content.py"),
+                "--paper-id", paper_id,
+                "--preferred-source", "auto",
+                "--include-full-text",
+                "--ocr-mode", "never",
+                "-o", str(output),
+            ],
+            timeout=300.0,
+        )
+        if result.returncode or not output.is_file():
+            log(f"抽取失败：exit {result.returncode} {(result.stderr or '')[-200:]}")
+            return False
     add = run(
         [
             sys.executable, str(HUB_SCRIPTS / "knowledge.py"),

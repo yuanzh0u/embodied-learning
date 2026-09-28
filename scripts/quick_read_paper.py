@@ -36,15 +36,19 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 try:
-    from lib.agent_invoke import pool_root_for, resolve_cli, run_one_shot_agent  # noqa: E402
+    from lib.agent_invoke import pool_root_for  # noqa: E402
     from lib.layout import find_roots  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
-    from wiki_scripts.lib.agent_invoke import pool_root_for, resolve_cli, run_one_shot_agent  # noqa: E402
+    from wiki_scripts.lib.agent_invoke import pool_root_for  # noqa: E402
     from wiki_scripts.lib.layout import find_roots  # noqa: E402
+# AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
+from embodied_learning.harness.claude import complete, resolve_cli  # noqa: E402
 try:
     from prepare_paper_chat import ensure_deep_read, ensure_extraction, normalize_arxiv_id  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
     from wiki_scripts.prepare_paper_chat import ensure_deep_read, ensure_extraction, normalize_arxiv_id  # noqa: E402
+from embodied_learning.atomicio import atomic_write_text  # noqa: E402
+from embodied_learning import locks  # noqa: E402
 
 _REPO_ROOT, SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
 
@@ -297,7 +301,11 @@ def main(argv: list[str] | None = None) -> int:
     except (json.JSONDecodeError, OSError) as exc:
         log(f"读取深读笔记失败：{exc}")
         return 1
-    brief_path.write_text(build_quick_read_brief(paper_id, note, meta), encoding="utf-8")
+    # Serialize per-paper pool writes: two terminals quick-reading the same
+    # paper write the same dir. Two short critical sections — the minutes-long
+    # agent call itself must never hold the lock.
+    with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
+        atomic_write_text(brief_path, build_quick_read_brief(paper_id, note, meta))
     log(f"写作简报已更新：{brief_path}")
 
     if args.skip_agent:
@@ -330,7 +338,7 @@ def main(argv: list[str] | None = None) -> int:
         if attempt == 2:
             log("第 1 次输出无效，重试…")
         try:
-            completed = run_one_shot_agent(
+            completed = complete(
                 build_agent_prompt(paper_id, pool_dir),
                 timeout_s=ARTICLE_TIMEOUT_S,
                 cli=cli,
@@ -343,12 +351,14 @@ def main(argv: list[str] | None = None) -> int:
             break
         raw = completed.stdout or ""
         # Dump verbatim before rejecting — without this the failure is undiagnosable.
-        raw_dump_path.write_text(raw, encoding="utf-8")
+        with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
+            atomic_write_text(raw_dump_path, raw)
         log(f"agent 输出无效（{describe_rejection(raw, paper_id)}），已转储：{raw_dump_path}")
     if article is None:
         log("重试后仍无有效速读卡，已丢弃")
         return 1
-    article_path.write_text(article, encoding="utf-8")
+    with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
+        atomic_write_text(article_path, article)
     log(f"速读卡已写入：{article_path}")
 
     if not args.no_audit:
