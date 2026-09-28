@@ -2,13 +2,23 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-09-12
+updated: 2026-09-27
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
 本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 28 个 paper-reader-backed 基础 run、14 个跨 run 主题综合与 2 项引文图派生综述；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 3 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
+
+## 智驾模型与团队专项
+
+本专项按用户明确要求交付单篇科研备忘录、三张对照表与关系图；理想增补提供同文体专章，不计入下方基础三文体 run 统计。论文与工业披露分别登记；Tesla、Waymo、理想系统案例不抵扣论文门槛。规模依次为发现候选 / 完整全文恢复 / 正式接纳论文；发现池不代表已全量人工筛选。
+
+| ID | 综述主题 | 主要知识卡 | 规模 | 阅读与审计入口 |
+|---|---|---|---:|---|
+| LR-AVMODEL-TEAM | 智驾 VLA、驾驶基础模型与关键团队（含理想系列论文） | EA-MODEL, EA-ALIGN, EA-EVAL | 1,876 / 48 / 30 | [科研备忘录](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/scientific-memo_keyan.md) · [理想研究思路专章](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/liauto-research-program.md) · [核心论文与系统](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/core-papers-systems.md) · [技术栈](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/technology-stack.md) · [组织人员](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/organization-people.md) · [关系图](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/relationships.md) · [run](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/run.json) · [审计](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/final-review-audit.json) |
+
+历史版本：[2026-09-27 基础版科研备忘录（20篇论文）](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-20260927/scientific-memo_keyan.md)。当前增补版追加10篇正式论文，保留原论文证据与Tesla主线；研究关系与量产披露分别记录。
 
 ## 批次概况
 

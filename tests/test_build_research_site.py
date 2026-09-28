@@ -47,7 +47,7 @@ class BuildResearchSiteTest(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls._tmp.cleanup()
 
-    def test_publication_config_covers_exactly_38_current_topics(self) -> None:
+    def test_publication_config_covers_all_current_topics(self) -> None:
         selected, _stats = wiki.discover_topics(wiki.DEFAULT_SOURCE)
         config = wiki.load_site_config(
             wiki.DEFAULT_SITE_CONFIG,
@@ -56,7 +56,7 @@ class BuildResearchSiteTest(unittest.TestCase):
         topics = config["topics"]
         slugs = [value["slug"] for value in topics.values()]
 
-        self.assertEqual(len(topics), 38)
+        self.assertEqual(len(topics), len(selected))
         self.assertEqual(len(slugs), len(set(slugs)))
         self.assertTrue(all(re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) for slug in slugs))
 
@@ -66,7 +66,7 @@ class BuildResearchSiteTest(unittest.TestCase):
             self.manifest["site"]["title"],
             "Embodied AI Evidence Hub｜具身智能证据知识库",
         )
-        self.assertEqual(len(self.manifest["topics"]), 38)
+        self.assertGreater(len(self.manifest["topics"]), 0)
         for item in self.manifest["topics"]:
             self.assertEqual(item["canonical_path"], f"/research/{item['slug']}/")
             self.assertTrue(item["title_en"])
@@ -79,21 +79,32 @@ class BuildResearchSiteTest(unittest.TestCase):
             citation_urls = [citation["url"] for citation in topic["citations"]]
             self.assertEqual(len(citation_urls), len(set(citation_urls)))
 
-    def test_build_contains_exactly_38_crawlable_topic_pages(self) -> None:
-        pages = sorted((self.site_root / "research").glob("*/index.html"))
-        self.assertEqual(len(pages), 38)
-        for page in pages:
+    def test_build_contains_one_crawlable_page_per_topic(self) -> None:
+        pages = [
+            self.site_root / "research" / item["slug"] / "index.html"
+            for item in self.manifest["topics"]
+        ]
+        self.assertTrue(all(page.is_file() for page in pages))
+        for item, page in zip(self.manifest["topics"], pages):
             source = page.read_text(encoding="utf-8")
+            topic = json.loads(
+                (self.snapshot_dir / "topics" / f"{item['id']}.json").read_text(encoding="utf-8")
+            )
+            default_version = topic["default_version"]
+            default_label = topic["versions"][default_version]["label"]
             self.assertIn("<h1>", source)
-            self.assertIn("知乎解释版 · 完整正文", source)
+            self.assertIn(f"{default_label} · 完整正文", source)
             self.assertIn('id="evidence"', source)
             self.assertIn("去重论文引用", source)
             self.assertRegex(source, r'<a href="https?://[^\"]+"')
             self.assertIn('type="application/ld+json"', source)
-            self.assertIn("?version=zhihu&amp;ai=1", source)
+            self.assertIn(f"?version={default_version}&amp;ai=1", source)
 
     def test_page_metadata_and_json_ld_are_unique_and_parseable(self) -> None:
-        pages = sorted((self.site_root / "research").glob("*/index.html"))
+        pages = [
+            self.site_root / "research" / item["slug"] / "index.html"
+            for item in self.manifest["topics"]
+        ]
         titles: set[str] = set()
         descriptions: set[str] = set()
         canonicals: set[str] = set()
@@ -115,11 +126,12 @@ class BuildResearchSiteTest(unittest.TestCase):
             titles.add(title)
             descriptions.add(description)
             canonicals.add(canonical)
-        self.assertEqual(len(titles), 38)
-        self.assertEqual(len(descriptions), 38)
-        self.assertEqual(len(canonicals), 38)
+        expected = len(self.manifest["topics"])
+        self.assertEqual(len(titles), expected)
+        self.assertEqual(len(descriptions), expected)
+        self.assertEqual(len(canonicals), expected)
 
-    def test_sitemap_has_only_home_directory_and_38_topics(self) -> None:
+    def test_sitemap_has_only_home_directory_and_topics(self) -> None:
         tree = ElementTree.parse(self.site_root / "sitemap.xml")
         locations = [
             node.text
@@ -128,7 +140,7 @@ class BuildResearchSiteTest(unittest.TestCase):
                 "{http://www.sitemaps.org/schemas/sitemap/0.9}loc"
             )
         ]
-        self.assertEqual(len(locations), 40)
+        self.assertEqual(len(locations), len(self.manifest["topics"]) + 2)
         self.assertEqual(len(locations), len(set(locations)))
         self.assertNotIn(f"{BASE_URL}/knowledge-map/", locations)
         self.assertTrue(all("#" not in value and "/data/" not in value for value in locations))
@@ -140,8 +152,14 @@ class BuildResearchSiteTest(unittest.TestCase):
 
         self.assertIn("User-agent: OAI-SearchBot\nAllow: /", robots)
         self.assertIn(f"Sitemap: {BASE_URL}/sitemap.xml", robots)
-        self.assertEqual(llms.count(f"{BASE_URL}/research/"), 39)
-        self.assertEqual(homepage.count('class="research-card"'), 38)
+        self.assertEqual(
+            llms.count(f"{BASE_URL}/research/"),
+            len(self.manifest["topics"]) + 1,
+        )
+        self.assertEqual(
+            homepage.count('class="research-card"'),
+            len(self.manifest["topics"]),
+        )
         self.assertIn(f'<link rel="canonical" href="{BASE_URL}/">', homepage)
         payload = re.search(
             r'<script type="application/ld\+json">(.*?)</script>', homepage, re.DOTALL

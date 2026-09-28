@@ -43,7 +43,7 @@ Embodied AI Evidence Hub is an evidence-first research hub for embodied AI and r
 - [Ego–Exo 相机标定与视角对齐](https://yuanzh0u.github.io/embodied-learning/research/ego-exo-camera-calibration-alignment/) — 几何注册与表征迁移的不同边界
 - [Loco-Manipulation 研究进展](https://yuanzh0u.github.io/embodied-learning/research/loco-manipulation-progress/) — 移动与操作耦合下的系统进展
 
-[浏览全部 38 个专题](https://yuanzh0u.github.io/embodied-learning/research/)
+[浏览全部专题](https://yuanzh0u.github.io/embodied-learning/research/)
 
 ## 为什么采用证据优先
 
@@ -73,7 +73,7 @@ flowchart LR
 
 ### 搜索友好的静态专题页
 
-[静态专题目录](https://yuanzh0u.github.io/embodied-learning/research/) 为 38 个当前专题提供永久地址。页面包含双语标题、30 秒结论、证据统计、知乎正文、去重论文引用、完整证据附录和结构化元数据。
+[静态专题目录](https://yuanzh0u.github.io/embodied-learning/research/) 为当前专题提供永久地址。页面包含双语标题、30 秒结论、证据统计、默认成稿、去重论文引用、完整证据附录和结构化元数据。
 
 ### 交互 Wiki
 

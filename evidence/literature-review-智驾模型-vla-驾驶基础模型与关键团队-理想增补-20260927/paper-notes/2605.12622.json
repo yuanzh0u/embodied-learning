@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.12622",
+    "title": "Action Emergence from Streaming Intent",
+    "published": "2026-05-12",
+    "url": "https://arxiv.org/abs/2605.12622",
+    "versioned_id": "2605.12622v2",
+    "authors": [
+      "Pengfei Jing",
+      "Victor Shea-Jay Huang",
+      "Hengtong Lu",
+      "Jifeng Dai",
+      {
+        "name": "Yan Xie",
+        "author_key": "yan-xie-liauto",
+        "role": "paper-author",
+        "institutions": []
+      },
+      "Benjin Zhu"
+    ]
+  },
+  "review": {
+    "question": "语言意图能否成为连续动作分布的可控接口？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "语言意图能否成为连续动作分布的可控接口？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "2.1 Intent Bridge; 2.2 Streaming and Distillation; 2.3 Data",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "3.1 Setup; 3.3 Action Emergence; 3.4 Candidate Quality",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "5 Discussion and Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "语言意图能否成为连续动作分布的可控接口？",
+  "contributions": [
+    "同一 Qwen3-VL 骨干自回归生成 Perceive/Predict/Judge/Plan，再解析为二十类意图嵌入，条件化 flow matching；CFG 可经意图嵌入蒸馏减少动作阶段计算。保留历史意图与视觉记忆。"
+  ],
+  "method": {
+    "summary": "同一 Qwen3-VL 骨干自回归生成 Perceive/Predict/Judge/Plan，再解析为二十类意图嵌入，条件化 flow matching；CFG 可经意图嵌入蒸馏减少动作阶段计算。保留历史意图与视觉记忆。",
+    "assumptions": [
+      "动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Waymo Open Dataset E2E",
+      "MindLabel reasoning annotations"
+    ],
+    "tasks": [
+      "语言意图能否成为连续动作分布的可控接口？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "开放环 RFS、意图条件消融、多意图可视化与候选轨迹评分比较；不是实时闭环。",
+    "baselines": [
+      "同骨干消融支持意图接口价值，但定性意图扫描和有限场景不能替代全面多样性质量评估。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "开放环 RFS、意图条件消融、多意图可视化与候选轨迹评分比较；不是实时闭环。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "Streaming Intent 将语言推理解析为有限意图类别，再以意图条件控制连续动作生成。",
+      "scope": "动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。",
+      "locator": "2.1"
+    },
+    {
+      "finding": "推理标注教师使用过去和未来视频；这一标签生成条件不代表推理期车辆可以访问未来。",
+      "scope": "动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。",
+      "locator": "2.3"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "少数意图样本不足；动作涌现的更全面定量检验仍需补充。",
+        "locator": "5 Limitations"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。",
+        "basis": "开放环 RFS、意图条件消融、多意图可视化与候选轨迹评分比较；不是实时闭环。"
+      }
+    ]
+  },
+  "transfer_boundary": "动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "开放环 RFS、意图条件消融、多意图可视化与候选轨迹评分比较；不是实时闭环。"
+    ],
+    "design_risks": [
+      "动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。"
+    ],
+    "baseline_fairness": "同骨干消融支持意图接口价值，但定性意图扫描和有限场景不能替代全面多样性质量评估。",
+    "metric_validity": "验证类型与指标限定为：开放环 RFS、意图条件消融、多意图可视化与候选轨迹评分比较；不是实时闭环。",
+    "reproducibility": "原始项目与全文可追溯；倒车停车等稀少类别支持不足。",
+    "external_validity": "动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.12622-C01",
+      "claim": "Streaming Intent 将语言推理解析为有限意图类别，再以意图条件控制连续动作生成。",
+      "stance": "support",
+      "relation": "语言意图能否成为连续动作分布的可控接口？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "离散语义桥接与连续动作头承担不同职责，不等同全动作词元化。",
+      "locator": "2.1",
+      "source_context": "one of 20 intent classes",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "离散语义桥接与连续动作头承担不同职责，不等同全动作词元化。 适用边界：动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。"
+      }
+    },
+    {
+      "card_id": "2605.12622-C02",
+      "claim": "推理标注教师使用过去和未来视频；这一标签生成条件不代表推理期车辆可以访问未来。",
+      "stance": "conditional",
+      "relation": "语言意图能否成为连续动作分布的可控接口？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "明确区分离线标注特权信息和在线模型观测，保留事后解释偏差风险。",
+      "locator": "2.3",
+      "source_context": "past video, future video",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "明确区分离线标注特权信息和在线模型观测，保留事后解释偏差风险。 适用边界：动作涌现主要指改变意图后出现不同候选动作；不能当作任意长尾能力或形式理论保证。教师标注见未来视频，在线策略不能照搬该输入。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "Streaming Intent",
+    "core": false,
+    "stack": {}
+  }
+}

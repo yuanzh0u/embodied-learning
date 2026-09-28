@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2512.13636",
+    "title": "MindDrive: A Vision-Language-Action Model for Autonomous Driving via Online Reinforcement Learning",
+    "published": "2025-12-15",
+    "url": "https://arxiv.org/abs/2512.13636",
+    "versioned_id": "2512.13636v4",
+    "authors": [
+      "Haoyu Fu",
+      "Diankun Zhang",
+      "Zongchuang Zhao",
+      "Jianfeng Cui",
+      "Hongwei Xie",
+      "Bing Wang",
+      "Guang Chen",
+      "Hangjun Ye",
+      "Dingkang Liang",
+      "Xiang Bai"
+    ]
+  },
+  "review": {
+    "question": "能否把真实仿真交互反馈用于语言决策？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "能否把真实仿真交互反馈用于语言决策？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "3 Method; 3.1 Problem Formulation; 3.2 Language-Action Mapping; 3.3 Online RL for Action-Reasoning; Appendix 0.D Training Details",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "4.1 Experimental Settings; 4.2 Main Results; 4.3 Ablation Studies; 4.4 Qualitative Results",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "5 Conclusion; 0.E.5 Analysis on Performance Degradation With Online RL Training Epochs",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "能否把真实仿真交互反馈用于语言决策？",
+  "contributions": [
+    "共享 EVA-02-L 与 Qwen 底座、两套 LoRA 分别作 Decision/Action Expert；纵横向 meta-action 映射到 VAE+GRU 路径和速度路点；CARLA rollout 的稀疏成败奖励通过 PPO+KL 优化决策专家。"
+  ],
+  "method": {
+    "summary": "共享 EVA-02-L 与 Qwen 底座、两套 LoRA 分别作 Decision/Action Expert；纵横向 meta-action 映射到 VAE+GRU 路径和速度路点；CARLA rollout 的稀疏成败奖励通过 PPO+KL 优化决策专家。",
+    "assumptions": [
+      "只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "Bench2Drive",
+      "Chat-B2D",
+      "CARLA"
+    ],
+    "tasks": [
+      "能否把真实仿真交互反馈用于语言决策？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "IL 与在线 RL 对比；奖励事件、正则和训练轮数消融，220 条官方短路线闭环。",
+    "baselines": [
+      "同模型 IL/RL 对照比跨骨干排行榜更有解释力；增加训练轮数会退化。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "IL 与在线 RL 对比；奖励事件、正则和训练轮数消融，220 条官方短路线闭环。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "MindDrive 先学语言 meta-action 到轨迹的映射，再用 CARLA 交互回报及 PPO 优化决策专家。",
+      "scope": "只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。",
+      "locator": "3.2 Language-Action Mapping; 3.3 Online RL for Action-Reasoning"
+    },
+    {
+      "finding": "MindDrive 在线 RL 的训练轮数与闭环性能并非单调关系，过多更新会降低表现。",
+      "scope": "只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。",
+      "locator": "4.3 Ablation Studies"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "只在 CARLA；并行仿真同步困难限制相同初态的多候选比较。",
+        "locator": "5 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。",
+        "basis": "IL 与在线 RL 对比；奖励事件、正则和训练轮数消融，220 条官方短路线闭环。"
+      }
+    ]
+  },
+  "transfer_boundary": "只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "IL 与在线 RL 对比；奖励事件、正则和训练轮数消融，220 条官方短路线闭环。"
+    ],
+    "design_risks": [
+      "只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。"
+    ],
+    "baseline_fairness": "同模型 IL/RL 对照比跨骨干排行榜更有解释力；增加训练轮数会退化。",
+    "metric_validity": "验证类型与指标限定为：IL 与在线 RL 对比；奖励事件、正则和训练轮数消融，220 条官方短路线闭环。",
+    "reproducibility": "算法、训练路由和项目代码入口公开；没有运行复现。",
+    "external_validity": "只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2512.13636-C01",
+      "claim": "MindDrive 先学语言 meta-action 到轨迹的映射，再用 CARLA 交互回报及 PPO 优化决策专家。",
+      "stance": "support",
+      "relation": "能否把真实仿真交互反馈用于语言决策？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法及算法明确回报来自实际 simulator rollout，优化的是决策分支和价值网络。",
+      "locator": "3.2 Language-Action Mapping; 3.3 Online RL for Action-Reasoning",
+      "source_context": "optimize the policy using the Proximal Policy Optimization",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "方法及算法明确回报来自实际 simulator rollout，优化的是决策分支和价值网络。 适用边界：只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。"
+      }
+    },
+    {
+      "card_id": "2512.13636-C02",
+      "claim": "MindDrive 在线 RL 的训练轮数与闭环性能并非单调关系，过多更新会降低表现。",
+      "stance": "limit",
+      "relation": "能否把真实仿真交互反馈用于语言决策？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "消融直接观察退化；作者用灾难性遗忘解释，但该机制解释本身仍是推断。",
+      "locator": "4.3 Ablation Studies",
+      "source_context": "further increasing the epochs substantially degrades performance",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "消融直接观察退化；作者用灾难性遗忘解释，但该机制解释本身仍是推断。 适用边界：只在 CARLA 验证，挑选可成功探索的训练路线；不是实车在线 RL，也不能把离线奖励重打分视为同协议。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "MindDrive (Fu et al.)",
+    "core": false,
+    "stack": {}
+  }
+}
