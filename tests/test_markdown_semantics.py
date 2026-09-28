@@ -70,5 +70,25 @@ class MarkdownSemanticsTest(unittest.TestCase):
         self.assertIn("<p>middle text</p>", html_break)
 
 
+    def test_image_alt_with_bracketed_citation_renders_as_img(self) -> None:
+        """arXiv captions keep citation remnants ("DPT head [ 28 ]"); the flat
+        [^]]* alt group used to fail the whole image and leak raw markdown
+        into the wiki page (20260928 时序深度估计 run, VDA figure)."""
+        result = render_markdown(
+            "![Overview of the spatio-temporal head, extending the DPT head [ 28 ] .]"
+            "(https://arxiv.org/html/2501.12375v3/overview_head_fix.png)\n"
+        )
+        self.assertNotIn("![", result.html)
+        self.assertIn('<img src="https://arxiv.org/html/2501.12375v3/overview_head_fix.png"', result.html)
+        self.assertIn("DPT head [ 28 ] .", result.html)
+
+    def test_plain_links_and_bold_unaffected_by_bracket_alt(self) -> None:
+        result = render_markdown(
+            "![alt [1] text](https://x.io/a.png) plus [link](https://x.io/b) and **bold**\n"
+        )
+        self.assertIn('<img src="https://x.io/a.png"', result.html)
+        self.assertIn('href="https://x.io/b"', result.html)
+        self.assertIn("<strong>bold</strong>", result.html)
+
 if __name__ == "__main__":
     unittest.main()

@@ -23,8 +23,15 @@ UL_ITEM = re.compile(r"^[-*+]\s+(.+)$")
 OL_ITEM = re.compile(r"^\d+[.)]\s+(.+)$")
 BLOCKQUOTE = re.compile(r"^>\s?(.*)$")
 TABLE_SEP = re.compile(r"^\s*\|?\s*:?-{2,}.*\|")
+# Image alt text may contain one level of balanced brackets — arXiv captions
+# keep citation remnants like "DPT head [ 28 ]" and a flat [^]]* group would
+# fail the whole image and leak raw markdown into the page. (Links keep the
+# flat group: their labels never carry citation brackets in real content, and
+# the greedy balanced group regresses ordinary link+bond styling.)
 INLINE_LINK = re.compile(r"(?<!!)\[([^\]]+)]\(([^)\s]+)(?:\s+[\"'][^\"']*[\"'])?\)")
-INLINE_IMAGE = re.compile(r"!\[([^\]]*)]\(([^)\s]+)(?:\s+[\"'][^\"']*[\"'])?\)")
+INLINE_IMAGE = re.compile(
+    r"!\[((?:[^\[\]]|\[[^\[\]]*\])*)]\(([^)\s]+)(?:\s+[\"'][^\"']*[\"'])?\)"
+)
 INLINE_CODE = re.compile(r"`([^`]+)`")
 INLINE_BOLD = re.compile(r"\*\*(.+?)\*\*|__(.+?)__")
 INLINE_STRIKE = re.compile(r"~~(.+?)~~")

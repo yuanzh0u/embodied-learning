@@ -38,10 +38,14 @@ def _caption_text(caption: str) -> str:
     """Flatten an extracted caption into a clean alt/display string.
 
     Drops a leading figure/table number tag (``Figure 3 :`` / ``Table 1 :``)
-    so the alt text reads naturally, and replaces the extraction's ellipsis
-    (``...``) with nothing so the text reads as a continuous caption.
+    so the alt text reads naturally, replaces the extraction's ellipsis
+    (``...``) with nothing so the text reads as a continuous caption, and
+    strips bracketed citation remnants (``[ 28 ]`` / ``[12, 30]``) that the
+    laTeXML caption extraction keeps — a stray ``]`` in the alt would
+    otherwise break the wiki's markdown image renderer.
     """
     text = re.sub(r"^\s*(?:Figure|Table)\s+\S+\s*:?\s*", "", caption, flags=re.IGNORECASE).strip()
+    text = re.sub(r"\[\s*\d+(?:\s*,\s*\d+)*\s*]", "", text)
     text = text.replace(" ... ", " ")
     text = text.replace("...", "")
     return " ".join(text.split())

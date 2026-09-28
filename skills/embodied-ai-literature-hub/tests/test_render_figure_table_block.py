@@ -95,5 +95,17 @@ class RenderFigureTableBlockTest(unittest.TestCase):
         self.assertIn("| Dataset | Year |", table_block)
 
 
+    def test_caption_citation_remnants_are_stripped(self) -> None:
+        """laTeXML captions keep bracketed citations ("[ 28 ]"); a stray ]
+        in the alt breaks the wiki's markdown image renderer."""
+        self.assertEqual(
+            render_figure_table_block._caption_text("Overview of the head [ 28 ] ."),
+            "Overview of the head .",
+        )
+        self.assertEqual(
+            render_figure_table_block._caption_text("Ablation of modules [12, 30] on DTU"),
+            "Ablation of modules on DTU",
+        )
+
 if __name__ == "__main__":
     unittest.main()
