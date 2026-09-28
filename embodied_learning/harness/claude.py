@@ -495,7 +495,16 @@ class ChatTurn:
         except (OSError, ValueError):
             pass
         finally:
-            code = self._process.poll() if self._process else None
+            # stdout EOF means the child is exiting; wait (bounded) for the
+            # real exit code instead of poll(), which races process teardown
+            # and would archive returncode=None.
+            code = None
+            if self._process is not None:
+                try:
+                    self._process.wait(timeout=5.0)
+                except subprocess.TimeoutExpired:
+                    pass
+                code = self._process.poll()
             # Archive BEFORE the exit marker: consumers (events()) must be
             # able to rely on the transcript being on disk once they see the
             # turn end.
