@@ -135,7 +135,9 @@ class RegisterRunInCatalogTest(unittest.TestCase):
         run_json = write_catalog_run(self.root, "literature-review-demo2-20260922")
         manifest = json.loads(run_json.read_text(encoding="utf-8"))
         manifest["knowledge_ids"] = ["EA-DEMO", "EA-DATA"]
-        manifest["event_count"] = 42
+        manifest["candidate_count"] = 421
+        manifest["full_text_count"] = 40
+        manifest["evidence_papers"] = 12
         run_json.write_text(json.dumps(manifest), encoding="utf-8")
         review_runs.register_run_in_catalog(self.root, run_json)
         row = [
@@ -146,7 +148,20 @@ class RegisterRunInCatalogTest(unittest.TestCase):
             if "demo2" in line
         ][0]
         self.assertIn("EA-DEMO、EA-DATA", row)
-        self.assertIn("— / — / 42", row)
+        # 规模 = 候选池 / 可读全文 / 精读并接纳论文数 (catalog header semantics)
+        self.assertIn("421 / 40 / 12", row)
+
+    def test_generated_row_scale_falls_back_to_dashes(self) -> None:
+        run_json = write_catalog_run(self.root, "literature-review-demo3-20260922")
+        review_runs.register_run_in_catalog(self.root, run_json)
+        row = [
+            line
+            for line in (self.root / "knowledge" / "literature-review-catalog.md")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if "demo3" in line
+        ][0]
+        self.assertIn("| — / — / — |", row)
 
 
 if __name__ == "__main__":

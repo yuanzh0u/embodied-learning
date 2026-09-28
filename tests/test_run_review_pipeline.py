@@ -127,6 +127,7 @@ class DriverPipelineTest(unittest.TestCase):
         )
         self.commands: list[list[str]] = []
         self.with_s2 = False
+        self.held_in_summary = False
 
     # -- fake subprocess plumbing -----------------------------------------
 
@@ -188,10 +189,13 @@ class DriverPipelineTest(unittest.TestCase):
             return mock.Mock(communicate=lambda timeout=None: (None, None), returncode=0)
         if "extract-content-queue" not in joined:
             raise AssertionError(f"unexpected streaming subprocess: {joined}")
+        payload = json.loads(self._stage_payload("extract-content-queue"))
+        if self.held_in_summary:
+            payload["held_count"] = 2
         for name in self.STAGE_SCRIPTS["extract-content-queue"]:
             out = self.run_dir / name
             out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(self._stage_payload("extract-content-queue"), encoding="utf-8")
+            out.write_text(json.dumps(payload), encoding="utf-8")
         return mock.Mock(stdout=iter(["OK 2402.10329 (1/2)", "HELD 2302.01109 (2/2)"]), wait=lambda timeout=None: 0)
 
     def run_driver(self, argv: list[str], *, agent_dynamic=None) -> tuple[int, dict]:
@@ -295,6 +299,41 @@ class DriverPipelineTest(unittest.TestCase):
         scoping = self.run_driver(self.argv("--no-terms-agent", "--review-mode", "scoping"))
         self.assertEqual(scoping[1]["screening_limit"], 40)
 
+    def test_deep_read_limit_defaults_to_mode(self):
+        """Deep-read throughput is mode-aware by default (the fixed default 10
+        starved scoping reviews down to 7 citable papers in real runs)."""
+        self.assertIsNone(self.driver.parse_args(self.argv()).deep_read_limit)
+        self.assertEqual(self.driver.DEEP_READ_LIMITS, {"rapid": 10, "scoping": 16, "systematic": 40})
+
+    def test_deep_read_order_puts_seeds_first(self):
+        """Influence-scored screening buries fresh seed papers below the cut;
+        the deep-read queue must force them to the front (the 20260924 run
+        never deep-read its user-supplied seed)."""
+        order = self.driver.deep_read_order(["a", "b", "c", "d"], ["c"], 3)
+        self.assertEqual(order, ["c", "a", "b"])
+        # A seed below the screening cut is still queued.
+        self.assertEqual(self.driver.deep_read_order(["a", "b"], ["z"], 2), ["z", "a"])
+        # Seed already present is not duplicated.
+        self.assertEqual(self.driver.deep_read_order(["a", "b"], ["a"], 2), ["a", "b"])
+
+    def test_projection_stamps_event_scale_into_run_json(self):
+        """check_run_bundle requires run.json event_count to match the evidence
+        set; only the driver knows it at projection time, so it must stamp the
+        manifest instead of leaving the writer to reverse-engineer the gate."""
+        evidence_dir = self.run_dir / "evidence"
+        evidence_dir.mkdir()
+        for stem in ("p1", "p2"):
+            (evidence_dir / f"{stem}.jsonl").write_text(
+                json.dumps({"id": f"EA-DEMO-2026-{stem}"}) + "\n", encoding="utf-8"
+            )
+        (evidence_dir / "p3.jsonl").write_text("", encoding="utf-8")
+        self.driver._stamp_evidence_scale(
+            Path(self.tmp.name), self.run_dir / "run.json", evidence_dir, 2
+        )
+        manifest = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["event_count"], 2)
+        self.assertEqual(manifest["evidence_papers"], 2)  # empty p3.jsonl ignored
+
     def test_extraction_workers_capped_and_checkpointed(self):
         self.run_driver(self.argv("--no-terms-agent", "--workers", "9"))
         extraction = next(c for c in self.commands if "extract-content-queue" in " ".join(c))
@@ -351,6 +390,24 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(summary["s2_detail"], "ok")
         registry_cmd = next(c for c in self.commands if len(c) > 2 and c[2] == "build-candidate-registry")
         self.assertIn("--semantic-scholar-result", registry_cmd)
+
+    def test_extraction_reruns_while_held_papers_outstanding(self):
+        """HELD extractions are retryable: while extraction-summary.json
+        reports held_count > 0, a rerun re-runs the queue (the queue caches
+        evidence-eligible papers, so only HELD ones re-fetch). A fully
+        recovered summary goes back to plain stage skipping."""
+        self.held_in_summary = True
+        self.run_driver(self.argv("--no-terms-agent"))
+        self.run_driver(self.argv("--no-terms-agent"))
+        held_reruns = len([c for c in self.commands if "extract-content-queue" in " ".join(c)])
+        self.assertEqual(held_reruns, 2)
+
+        self.held_in_summary = False
+        self.commands.clear()
+        self.run_driver(self.argv("--no-terms-agent"))
+        self.run_driver(self.argv("--no-terms-agent"))
+        recovered_reruns = len([c for c in self.commands if "extract-content-queue" in " ".join(c)])
+        self.assertEqual(recovered_reruns, 1)
 
     def test_missing_run_json_rejected(self):
         code = self.driver.main([

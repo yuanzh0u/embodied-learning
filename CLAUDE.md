@@ -47,22 +47,25 @@ Knowledge-base integrity and ID allocation (top-level `scripts/`):
 python3 scripts/check_kb_links.py            # broken links, unregistered source IDs, line-number locators
 python3 scripts/next_event_id.py --prefix EA-TWM-2026   # next collision-free evidence event ID
 python3 scripts/init_run.py --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
-python3 scripts/run_review_pipeline.py --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents) -> projection -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
+python3 scripts/run_review_pipeline.py --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents; seeds forced to the front, limit mode-aware: rapid 10 / scoping 16 / systematic 40) -> projection (stamps run.json event_count/evidence_papers) -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
 python3 scripts/check_run_bundle.py <run-dir>           # bundle completeness gate (pre-settle)
 python3 scripts/audit_citations.py --article ... --appendix ... --evidence-jsonl ...   # citation gate
+python3 scripts/finalize_run.py --run-dir <run-dir> --kb-root <kb-root>   # mechanical settle: stamp run.json fields -> cited-paper floor gate (rapid 6 / scoping 10 / systematic 15 distinct papers) -> both gates -> publish evidence/ -> settled -> catalog row -> wiki snapshot
+python3 scripts/run_status.py --run-dir <run-dir>   # one-shot run digest (funnel, per-paper evidence + References metadata, artifact checklist, next commands) — agents read this instead of looping over evidence/*.jsonl
 ```
 
 **Literature review runs are driver-first.** Default to `run_review_pipeline.py` for every
 mechanical stage instead of hand-running search/extraction/deep-read steps (it encodes rate-limit
 degradation, dynamic-query merging, and skeleton-agent deep reading). Claude sessions own only the
-judgment stages (packet → writing → audit gates → settle) and run them **in one turn** — no
-outline stop-and-wait checkpoint; the only sanctioned early stop is retrieval failure or
-insufficient evidence (leave the run `in-progress` and say what is missing). Settling a run is
-not the last step: after `check_run_bundle.py` passes and status flips to `settled`, register the
-run in `knowledge/literature-review-catalog.md` (or the local KB's catalog, e.g.
-`~/Documents/arxiv/knowledge/literature-review-catalog.md` for LiDAR/SLAM/calibration topics) and
-rebuild the wiki snapshot (`scripts/build_research_wiki.py --kb-root <kb-root> --output
-<kb-root>/wiki/data`) — an unregistered run is invisible in the wiki.
+judgment stages (packet via `build_review_packet.py --run-dir` → writing → audit gates →
+`finalize_run.py`) and run them **in one turn** — no outline stop-and-wait checkpoint; the only
+sanctioned early stop is retrieval failure or insufficient evidence (leave the run `in-progress`
+and say what is missing) — a gate failure is a fix-and-rerun condition, never a stop. Settling a
+run is not the last step: `finalize_run.py` performs publish + catalog registration + wiki
+snapshot rebuild (`scripts/build_research_wiki.py --kb-root <kb-root> --output
+<kb-root>/wiki/data`); runs may also be registered by hand in `knowledge/literature-review-catalog.md`
+(or the local KB's catalog, e.g. `~/Documents/arxiv/knowledge/literature-review-catalog.md` for
+LiDAR/SLAM/calibration topics) — an unregistered run is invisible in the wiki.
 
 Note: repo-wide `unittest discover -s skills` finds **0 tests** — the hyphenated skill directories
 are not importable packages and have no `__init__.py`. Always scope to a `*/tests` directory or a file.

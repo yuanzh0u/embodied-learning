@@ -71,6 +71,11 @@ PACKET_SCRIPT = SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "build_re
 
 REVIEW_MODES = {"rapid", "scoping", "systematic"}
 SCREEN_LIMITS = {"rapid": 24, "scoping": 40, "systematic": 80}
+# Deep-read throughput is the real review breadth (screening only triages).
+# Sized so the finalize cited-paper floors are reachable even with the
+# observed ~70% skeleton-audit pass rate: rapid 10→≥6, scoping 16→≥10,
+# systematic 40→≥15. An explicit --deep-read-limit overrides the mode default.
+DEEP_READ_LIMITS = {"rapid": 10, "scoping": 16, "systematic": 40}
 SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
 S2_BUDGET_S = 240.0  # best-effort source: give up rather than retry into a 429 storm
 # S2 requests run at a 3s pace: the API 429s aggressively, and a degraded S2
@@ -189,7 +194,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--workers", type=int, default=4, help="Full-text extraction workers (capped 4 downstream).")
     parser.add_argument("--force", action="store_true", help="Re-run every stage even when outputs exist.")
     parser.add_argument("--skip-deep-read", action="store_true", help="Stop after reading packets (no skeleton agents).")
-    parser.add_argument("--deep-read-limit", type=int, default=10, help="Max papers to deep-read this run.")
+    parser.add_argument(
+        "--deep-read-limit", type=int, default=None,
+        help="Max papers to deep-read this run. Default: mode-aware "
+             "(rapid 10 / scoping 16 / systematic 40) so the finalize "
+             "cited-paper floor is reachable.",
+    )
     parser.add_argument("--agent-timeout", type=float, default=420.0, help="Per-paper skeleton agent timeout (s).")
     parser.add_argument("--agents-parallel", type=int, default=5, help="Concurrent skeleton agents.")
     return parser.parse_args(argv)
@@ -481,6 +491,20 @@ def claim_event_prefix(kb_root: Path, run_json_path: Path, manifest: dict) -> st
     return f"EA-{base}-{year}-{suffix}"
 
 
+def _stamp_evidence_scale(kb_root: Path, run_json_path: Path, evidence_dir: Path, events: int) -> None:
+    """Write the evidence scale into run.json. check_run_bundle requires
+    event_count to match the bundle's evidence; only the driver knows it at
+    projection time, so stamp it here instead of leaving the writer agent to
+    reverse-engineer the gate and hand-patch the manifest."""
+    papers = sum(
+        1 for path in evidence_dir.glob("*.jsonl")
+        if any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())
+    )
+    write_sync(kb_root, run_json_path, lambda m: m.update(
+        {"event_count": events, "evidence_papers": papers}
+    ))
+
+
 def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
     """Project evidence events from every audited paper note. Pure script
     chain: next_event_id → project_evidence_events per paper → merged JSONL."""
@@ -493,6 +517,7 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
         if total:
             log(stage_line("project", f"已有 {total} 条证据事件，跳过重复投影"))
             summary_extra["evidence_events"] = total
+            _stamp_evidence_scale(kb_root, run_json_path, evidence_dir, total)
             return
     manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
     id_prefix = str(manifest.get("event_prefix") or "")
@@ -527,6 +552,7 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
         projected += count
         log(f"[PAPER] {note_path.stem} 投影 {count} 条证据事件")
     summary_extra["evidence_events"] = projected
+    _stamp_evidence_scale(kb_root, run_json_path, evidence_dir, projected)
     log(stage_line("project", f"{projected} 条证据事件（前缀 {id_prefix}）"))
 
 
@@ -542,6 +568,19 @@ def _audited_note(note_path: Path, audit_path: Path | None = None) -> bool:
         return False
 
 
+def deep_read_order(screened: list[str], seeds: list[str], limit: int) -> list[str]:
+    """Deep-read queue: seeds first, then screening order, truncated to limit.
+
+    Screening is influence-scored, so a just-published seed paper (few
+    citations by construction) ranks below the cut — observed in the 20260924
+    单目深度估计 run where the seed never got deep-read. Seeds are the user's
+    own framing of the topic: force them to the front.
+    """
+
+    seeds = [seed for seed in seeds if seed]
+    return (seeds + [paper_id for paper_id in screened if paper_id not in seeds])[:limit]
+
+
 def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, summary_extra: dict) -> None:
     """Per-paper skeleton agents (parallel one-shot claude) + local assembly.
 
@@ -552,12 +591,17 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
         log("[DRIVER] claude CLI 不存在，跳过深读阶段（note 不会生成）")
         return
     pool_root = pool_root_for(args.kb_root)
-    manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
-    order = [
+    limit = args.deep_read_limit or DEEP_READ_LIMITS[args.review_mode]
+    # run.json carries no seed_ids (init_run doesn't know them); the retrieval
+    # stage already stashed them in summary_extra.
+    seeds = [str(s).strip() for s in (summary_extra.get("seed_ids") or []) if str(s).strip()]
+    screened = [
         line.strip()
         for line in screening_ids.read_text(encoding="utf-8").splitlines()
         if line.strip()
-    ][: args.deep_read_limit]
+    ]
+    order = deep_read_order(screened, seeds, limit)
+    summary_extra["deep_read_limit"] = limit
 
     notes_dir = run_dir / "paper-notes"
     notes_dir.mkdir(parents=True, exist_ok=True)
@@ -1178,8 +1222,18 @@ def _main_locked(
             "--include-full-text",
             "--summary-output", str(extraction_summary),
         ]
+        # HELD papers are retryable, not settled: a rerun re-runs the queue so
+        # transient fetch failures (rate limiting) get supplemented. The queue
+        # itself caches evidence-eligible papers, so only HELD ones re-fetch.
+        extraction_force = args.force
+        if not extraction_force and extraction_summary.is_file():
+            try:
+                extraction_force = bool(
+                    json.loads(extraction_summary.read_text(encoding="utf-8")).get("held_count"))
+            except (OSError, ValueError):
+                extraction_force = False
         run_stage(
-            "extraction", [extraction_summary], args.force, extraction_cmd, timeout=1800.0,
+            "extraction", [extraction_summary], extraction_force, extraction_cmd, timeout=1800.0,
             stream=True, on_line=extraction_queue_line,
         )
         mark("extraction", begun)

@@ -1462,6 +1462,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="With --style all, additionally emit *.scaffold.md mechanical renders of the three formal styles.",
     )
     parser.add_argument("--work-dir", default=str(_CWD / "work"), help="Directory for default review project folders.")
+    parser.add_argument(
+        "--run-dir",
+        help="Write artifacts directly into an existing in-progress run directory "
+             "instead of creating a fresh work/<topic>-<date>/ folder. Takes precedence "
+             "over --work-dir; --output still wins when given.",
+    )
     parser.add_argument("--output", help="Write Markdown artifact to this path. Use '-' for stdout. Defaults to work/<project>/ when omitted.")
     return parser
 
@@ -1518,7 +1524,12 @@ def main(argv: list[str] | None = None) -> int:
             for filename, content in artifacts.items():
                 (output / filename).write_text(content, encoding="utf-8")
     else:
-        project_dir = default_project_dir(Path(args.work_dir), args.topic)
+        if args.run_dir:
+            # Existing run: land the briefing next to run.json so the writer
+            # never has to mv artifacts out of a fresh dated folder.
+            project_dir = Path(args.run_dir).expanduser()
+        else:
+            project_dir = default_project_dir(Path(args.work_dir), args.topic)
         project_dir.mkdir(parents=True, exist_ok=True)
         outputs: list[Path] = []
         for filename, content in artifacts.items():

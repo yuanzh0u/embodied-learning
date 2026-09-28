@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import json
+import subprocess
 import tempfile
 import unittest
+from unittest import mock
 import os
 # Keep the machine-wide rate-limit gate off the real shared state: tests
 # here mock urlopen but still pass through the gate, so redirect its state
@@ -31,6 +34,69 @@ class ExtractContentQueueTest(unittest.TestCase):
             path.write_text("2606.03784v2\nhttps://arxiv.org/abs/2607.00673\n2606.03784 # duplicate\n", encoding="utf-8")
             self.assertEqual(["2606.03784", "2607.00673"], extract_content_queue.load_ids(path))
 
+
+    def _opts(self, output_dir: Path) -> "extract_content_queue.QueueOptions":
+        return extract_content_queue.QueueOptions(
+            paper_id_file="ids.txt", terms="t", output_dir=str(output_dir),
+        )
+
+    def test_held_extraction_is_retried_not_cached(self) -> None:
+        """A HELD paper must be supplementable: a rerun re-extracts it instead
+        of returning the cached failure forever (transient fetch failures,
+        e.g. rate limiting, would otherwise permanently drop the paper)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            output_dir = tmp / "extractions"
+            output_dir.mkdir()
+            held = output_dir / "2110.10805.json"
+            held.write_text(json.dumps({
+                "paper_id": "2110.10805", "available": False,
+                "evidence_eligible": False, "error": "extractor exit 2: ",
+            }), encoding="utf-8")
+            calls: list[list[str]] = []
+
+            def fake_run(command, capture_output, text, timeout, check):
+                calls.append(command)
+                target = Path(command[command.index("--output") + 1])
+                target.write_text(json.dumps({
+                    "paper_id": "2110.10805", "available": True,
+                    "evidence_eligible": True,
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with mock.patch.object(extract_content_queue.subprocess, "run", side_effect=fake_run):
+                result = extract_content_queue.extract_one("2110.10805", self._opts(output_dir), output_dir)
+            self.assertEqual(len(calls), 1, "HELD paper must be re-extracted")
+            self.assertTrue(result["evidence_eligible"])
+
+            # An evidence-eligible extraction stays cached — no re-fetch.
+            calls.clear()
+            with mock.patch.object(extract_content_queue.subprocess, "run", side_effect=fake_run):
+                result = extract_content_queue.extract_one("2110.10805", self._opts(output_dir), output_dir)
+            self.assertEqual(calls, [])
+            self.assertEqual(result["state"], "cached")
+
+    def test_still_held_paper_recheckpoints_failure(self) -> None:
+        """A genuinely unrecoverable paper re-extracts and re-checkpoints the
+        HELD marker instead of crashing the queue."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            output_dir = tmp / "extractions"
+            output_dir.mkdir()
+            held = output_dir / "2110.10805.json"
+            held.write_text(json.dumps({
+                "paper_id": "2110.10805", "available": False,
+                "evidence_eligible": False, "error": "old",
+            }), encoding="utf-8")
+
+            def fake_fail(command, capture_output, text, timeout, check):
+                return subprocess.CompletedProcess(command, 2, "", "")
+
+            with mock.patch.object(extract_content_queue.subprocess, "run", side_effect=fake_fail):
+                result = extract_content_queue.extract_one("2110.10805", self._opts(output_dir), output_dir)
+            self.assertFalse(result["evidence_eligible"])
+            data = json.loads((output_dir / "2110.10805.json").read_text(encoding="utf-8"))
+            self.assertIn("extractor exit 2", data["error"])
 
 if __name__ == "__main__":
     unittest.main()

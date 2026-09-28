@@ -81,7 +81,15 @@ CHAT_SYSTEM_PROMPT = (
     "不要覆盖已有成稿。用中文回答，先给中心判断，再给证据与反例。"
 )
 
-WORKFLOW_SYSTEM_PROMPT = (
+# The workflow system prompt has exactly ONE deliberate fork: the interactive
+# wiki ("agent" publisher) finishes the mechanical settle itself (finalize_run.py)
+# and emits [STAGE:]/[TOPIC:] markers the wiki UI parses; the headless launcher
+# ("launcher" publisher) stops right after the audit gates — the launcher process
+# does finalize/publish in code. Everything else (role, boundaries, judgment
+# duties, stop conditions, citation contract, resume discipline) is byte-identical
+# for both entry points. Prompt text lives ONLY here; both scripts/serve_research_wiki.py
+# and scripts/launch_review.py compose through the factories below.
+_WORKFLOW_BASE_SYSTEM_PROMPT = (
     "你是「空间智能研究 Wiki」的综述工作流执行器，工作目录即本地知识库根目录。"
     "<skills-root> 下是本仓库的技能树（每个子目录含 SKILL.md 与 scripts/），"
     "<scripts-root> 下是顶层脚本（check_run_bundle.py、audit_citations.py 等）。"
@@ -101,29 +109,20 @@ WORKFLOW_SYSTEM_PROMPT = (
     "\n\n【你的判断职责】\n"
     "1. 论文深读与证据投影：已由系统驱动脚本完成（速记骨架 + 审计 + 投影）。"
     "不要派发深读 subagent、不要跑 note_tools.py project-evidence-events；"
-    "若 pipeline-summary.json 的 deep_read 字段显示失败篇目，如实向用户说明。\n"
-    "2. 综述包：跑 <skills-root>/embodied-ai-review-writer/scripts/build_review_packet.py"
-    "（--topic … --knowledge-id … --evidence-jsonl work/<run>/evidence/*.jsonl "
-    "--review-mode … --coverage-report …）。\n"
-    "3. 成稿、审计与发布（同一轮一气呵成）：按目标风格亲自撰写成稿（review-packet 是简报不是成稿），"
-    "生成 trace-map.json，逐一通过 <scripts-root>/check_run_bundle.py、<scripts-root>/audit_citations.py、"
-    "<skills-root>/embodied-ai-review-writer/scripts/writing_audit.py audit-article-quality "
-    "（加 --evidence-jsonl 以启用带图可用但成稿未落图的告警）"
-    "审计门后才允许落盘 evidence/；落盘后把 run.json status 改为 settled，"
+    "若 pipeline-summary.json 的 deep_read 字段显示失败篇目，如实说明。\n"
+    "2. 综述包与成稿：跑 <skills-root>/embodied-ai-review-writer/scripts/build_review_packet.py "
+    "生成综述包（review-packet 是简报不是成稿），然后亲自撰写成稿、生成 trace-map.json；"
     "成稿必须落图：writing-brief 的「可用图表」段给出带图的证据事件与现成 markdown 块，"
-    "按各风格配额把图插到所支撑的段落之后（图源只能是 evidence 携带的图，URL/题注照抄，禁止自造图片）。"
-    "用 python3 <scripts-root>/register_run.py --run-dir <run-dir> --kb-root <kb-root> 登记 catalog（幂等、带锁，不要手改表格），"
-    "再跑 python3 <scripts-root>/build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data 重建 wiki 快照，"
-    "并核对该 KB wiki 端口 /data/current.json 的 topic 数量 +1。\n"
-    "\n【唯一允许提前停止的条件】\n"
+    "按各风格配额把图插到所支撑的段落之后（图源只能是 evidence 携带的图，URL/题注照抄，禁止自造图片）。\n"
+    "3. 审计门：逐一通过 <scripts-root>/check_run_bundle.py、<scripts-root>/audit_citations.py、"
+    "<skills-root>/embodied-ai-review-writer/scripts/writing_audit.py audit-article-quality "
+    "（加 --evidence-jsonl 以启用带图可用但成稿未落图的告警）；"
+    "审计门全过之前不要把证据落盘到 evidence/。"
+    "\n\n【唯一允许提前停止的条件】\n"
     "检索失败或文献不足：pipeline-summary.json 显示检索通道整体失败、coverage/saturation 未过、"
     "或验收证据不足以支撑目标风格的成稿。此时停下并如实说明缺什么，把 run 留在 in-progress。"
-    "除此之外不要因大纲确认、风格选择等原因中途停轮等待用户——综述从综述包到 settle 一轮写完。\n"
-    "\n\n在开始每个阶段前，先单独输出一行阶段标记（普通文本，不要放进代码块）："
-    "[STAGE:mining] / [STAGE:packet] / [STAGE:writing] / [STAGE:audit] / [STAGE:settle]，后跟一句话进度说明。"
-    "落盘到 evidence/ 后，在最终回复的单独一行输出 "
-    "[TOPIC:<evidence/ 下新运行目录的相对路径>]，不要带其他后缀。"
-    "\n\n【科研备忘录（scientific-memo_keyan.md）引文格式——必须遵守】\n"
+    "除此之外不要因大纲确认、风格选择等原因中途停轮等待用户——综述从综述包到 settle 一轮写完。"
+    "\n\n【科研备忘录（scientific-memo_keyan.md）引文格式（Wiki 渲染依赖，必须遵守）】\n"
     "正文引用用上标编号，每条引用单独一个标记、带方括号：单条 ^[1]^；多条时逐条并列写成 "
     "^[1]^ ^[2]^ ^[3]^，严禁把多个编号塞进同一个标记（^[1,2,3]^ 是格式错误）。"
     "文末「参考文献」编号列表：编号对应正文上标，每条列出论文名称（英文原题）、"
@@ -136,6 +135,50 @@ WORKFLOW_SYSTEM_PROMPT = (
     "（已通过审计的笔记直接复用，不要重读重写），只补缺失部分。"
     "除落盘阶段外只写入 <work-dir> 运行目录；用中文与用户交流。"
 )
+
+_WORKFLOW_AGENT_TAIL = (
+    "\n\n【机械落盘由你收尾】\n"
+    "审计门全过后，用 python3 <scripts-root>/finalize_run.py --run-dir <run-dir> --kb-root <kb-root> "
+    "一步完成机械落盘：补齐 run.json 字段（含单风格时的 style/scope_note）、复跑两道门、拷贝 evidence/<run>/、"
+    "翻 settled、登记 catalog、重建 wiki 快照——这些全是 finalize_run.py 的机械职责，"
+    "不要手改 run.json，也不要再手动跑登记表格或重建快照的脚本、逐项核对 wiki 端口的发布结果。"
+    "finalize_run.py 门禁不过时会机械打印缺失项：按提示修复后重跑 finalize 即可，门禁未过不是提前停止的理由。"
+    "\n\n在开始每个阶段前，先单独输出一行阶段标记（普通文本，不要放进代码块）："
+    "[STAGE:mining] / [STAGE:packet] / [STAGE:writing] / [STAGE:audit] / [STAGE:settle]，后跟一句话进度说明。"
+    "落盘到 evidence/ 后，在最终回复的单独一行输出 "
+    "[TOPIC:<evidence/ 下新运行目录的相对路径>]，不要带其他后缀。"
+)
+
+_WORKFLOW_LAUNCHER_TAIL = (
+    "\n\n【机械落盘与发布不归你】\n"
+    "通过全部审计门后【立即停止本轮回复】，不要再做任何落盘或发布动作："
+    "finalize_run.py、run.json 盖章、evidence/ 落盘拷贝、catalog 登记、"
+    "wiki 快照重建与 publish 校验由 launcher 在你停止后机械完成，"
+    "不要执行这些脚本、不要手改 run.json。"
+    "成稿文件按目标风格直接写在运行目录根"
+    "（scientific-memo_keyan.md / zhihu-explainer_zhihu.md / xiaohongshu-post_xiaohongshu.md / survey-*.md），"
+    "trace-map.json 与 evidence-appendix.md 同样落在运行目录根，"
+    "launcher 会从那里取件做门禁与发布。不需要输出任何阶段或话题标记。"
+)
+
+
+def workflow_system_prompt(publisher: str = "agent") -> str:
+    """Workflow system prompt: shared base + the one deliberate fork.
+
+    ``publisher="agent"``（交互 wiki 面）让代理自己跑 finalize_run.py 收尾，
+    并要求输出 wiki UI 解析的 [STAGE:]/[TOPIC:] 标记；``publisher="launcher"``
+    （headless writer）在审计门后立即停止——机械落盘/发布由 launcher 在代码里做。
+    """
+    if publisher == "agent":
+        return _WORKFLOW_BASE_SYSTEM_PROMPT + _WORKFLOW_AGENT_TAIL
+    if publisher == "launcher":
+        return _WORKFLOW_BASE_SYSTEM_PROMPT + _WORKFLOW_LAUNCHER_TAIL
+    raise ValueError(f"unknown workflow publisher: {publisher}")
+
+
+# Compatibility alias: the interactive call sites and existing tests read this
+# name; it is always the interactive ("agent") variant.
+WORKFLOW_SYSTEM_PROMPT = workflow_system_prompt("agent")
 
 
 def resolve_pipeline_layout(pipeline_root: Path) -> tuple[Path, Path]:
@@ -172,6 +215,43 @@ def substitute_prompt_roots(
     if pool_root is not None:
         text = text.replace("<pool-root>", pool_root.as_posix())
     return text
+
+
+def workflow_turn_system_prompt(
+    pipeline_root: Path | None, kb_root: Path | None = None, *, publisher: str = "agent"
+) -> str:
+    """Substituted workflow system prompt for one turn. ``pipeline_root=None``
+    keeps the placeholders literal (与今天 _new_workflow_turn 的降级一致):
+    根目录解析规则只是不命中，不换人格。"""
+    if pipeline_root is None:
+        return workflow_system_prompt(publisher)
+    skills_root, scripts_root = resolve_pipeline_layout(pipeline_root)
+    return substitute_prompt_roots(
+        workflow_system_prompt(publisher),
+        skills_root=skills_root,
+        scripts_root=scripts_root,
+        pool_root=(kb_root / "pool") if kb_root is not None else None,
+    )
+
+
+def workflow_turn_prompts(
+    *,
+    params: dict,
+    run_dir: Path,
+    kb_root: Path,
+    pipeline_root: Path,
+    publisher: str = "agent",
+) -> tuple[str, str]:
+    """唯一的两入口 prompt 组装点：返回 (system_prompt, user_prompt)，根目录
+    占位符已替换。交互 wiki 与 headless launcher 都必须走这里，prompt 修复
+    只落一处；唯一分叉是 publisher。"""
+    return (
+        workflow_turn_system_prompt(pipeline_root, kb_root, publisher=publisher),
+        build_workflow_prompt(
+            params=params, run_dir=run_dir, kb_root=kb_root,
+            pipeline_root=pipeline_root, publisher=publisher,
+        ),
+    )
 
 TOPIC_ID_RE = re.compile(r"^topic-[0-9a-f]{6,16}$")
 WS_ID_RE = re.compile(r"^ws-[0-9a-f]{6,16}$")
@@ -452,12 +532,7 @@ STYLE_VOICE_CONTRACTS = {
         "正文不得使用知乎解释稿的演化弧叙事口吻。混入即返工。"
         "\n图表（必须遵守）：writing-brief「可用图表」段有图就落图，≤4 图 + 1 表，"
         "插在所支撑段落后，格式 `![题注](url)` + `> 用法：…`；图源只能是 evidence 携带的图，禁止自造 URL。"
-        "\n引文格式（Wiki 渲染依赖，必须遵守）：正文引用用上标编号，每条引用单独一个标记、带方括号——"
-        "单条 ^[1]^；多条时逐条并列写成 ^[1]^ ^[2]^ ^[3]^，严禁把多个编号塞进同一个标记（^[1,2,3]^ 是格式错误）。"
-        "文末「## References」编号列表：编号对应正文上标，每条列出论文名称（英文原题）、"
-        "作者（第一作者 et al.）、年份，并附 arXiv 链接（[arXiv:2602.11323](https://arxiv.org/abs/2602.11323) 形式）。"
-        "除 References 外，正文叙述中不要出现 arxiv.org 链接或 [arXiv:xxxx.xxxxx] 式前缀。"
-        "门禁会机械检查：正文出现内联 arXiv 链接、上标少于 5 个、或出现 ^[1,2]^ 分组标记都会被拒。"
+        "\n引文格式按系统提示的科研备忘录引文契约执行（门禁会机械检查）。"
     ),
     "expert-explainer": (
         "风格契约（expert-explainer）：动笔前先读"
@@ -481,13 +556,17 @@ def build_workflow_prompt(
     run_dir: Path,
     kb_root: Path,
     pipeline_root: Path,
+    publisher: str = "agent",
 ) -> str:
     """Compose the workflow kickoff prompt from the interview parameters.
 
     ``pipeline_root`` is the skills/ root (repo checkout or the wheel-bundled
     tree — claude reads the SKILL.mds and pipeline scripts from there);
     ``run_dir`` is the pre-created in-progress run under ``<kb-root>/work/``.
-    Paths travel KB-relative like build_turn_prompt."""
+    Paths travel KB-relative like build_turn_prompt. ``publisher`` forks only
+    the settle tail: "agent" (interactive wiki) runs finalize_run.py itself,
+    "launcher" (headless writer) stops after the audit gates and lets the
+    launcher process finalize/publish in code."""
 
     def rel(path: Path) -> str:
         try:
@@ -495,10 +574,38 @@ def build_workflow_prompt(
         except ValueError:
             return str(path)
 
+    agent = publisher == "agent"
+
+    def stage(tag: str) -> str:
+        return f"（[STAGE:{tag}]）" if agent else ""
+
     topic = str(params.get("topic", "")).strip()
     skills_root, scripts_root = resolve_pipeline_layout(pipeline_root)
     skills_rel = rel(skills_root)
     scripts_rel = rel(scripts_root)
+    if agent:
+        execution_chain = (
+            "然后一气呵成执行到 settle："
+            "用 build_review_packet.py --run-dir <运行目录>" + stage("packet")
+            + "生成综述包（直接写进运行目录，不要新建日期文件夹）；"
+            "亲自阅读证据事件与综述包后撰写成稿" + stage("writing")
+            + "、生成 trace-map.json 并逐项跑审计脚本" + stage("audit") + "；"
+            "审计门全过后用 finalize_run.py --run-dir <运行目录> --kb-root <kb-root>" + stage("settle")
+            + "一步完成机械落盘（补齐 run.json 字段、复跑两道门、拷贝 evidence/、翻 settled、"
+            "登记 catalog、重建 wiki 快照）。"
+            "finalize_run.py 门禁不过时会机械打印缺失项：按提示修复后重跑 finalize 即可，"
+            "门禁未过不是提前停止的理由。"
+        )
+    else:
+        execution_chain = (
+            "然后一气呵成执行到审计门："
+            "用 build_review_packet.py --run-dir <运行目录> 生成综述包"
+            "（直接写进运行目录，不要新建日期文件夹）；"
+            "亲自阅读证据事件与综述包后撰写成稿、生成 trace-map.json 并逐项跑审计脚本。"
+            "全部审计门通过后【立即停止本轮回复】——机械落盘、catalog 登记、"
+            "wiki 快照重建与 publish 校验由 launcher 机械完成，不要触碰（见系统提示的停止契约）。"
+            "成稿与 trace-map.json、evidence-appendix.md 一律落在运行目录根。"
+        )
     lines = [
         "<workflow_request>",
         f"综述主题：{topic}",
@@ -516,34 +623,45 @@ def build_workflow_prompt(
         f"运行目录（已由系统创建，status: in-progress）：{rel(run_dir)}/",
         f"skills 根目录（SKILL.md 所在，读技能与脚本用）：<skills-root>={skills_rel}",
         f"顶层脚本目录（check_run_bundle/audit_citations）：<scripts-root>={scripts_rel}",
-        "执行状态：查询规划、检索、筛选、全文抽取、深读（每篇速记骨架+审计）与证据投影"
-        "已由系统驱动脚本 run_review_pipeline.py 全部完成"
+        "执行状态：上述机械阶段已由系统驱动脚本 run_review_pipeline.py 全部完成"
         "（产物见运行目录的 pipeline-summary.json、paper-notes/、evidence/），"
         "不要重跑任何检索/抽取/筛选/深读/投影命令。",
-        "执行要求：先读 pipeline-summary.json 与 writing 输入现状，"
-        "然后从 build_review_packet.py（[STAGE:packet]）开始一气呵成执行到 settle："
-        "亲自阅读证据事件与综述包后直接撰写成稿、过审计门、落盘 evidence/、翻 settled、"
-        "用 register_run.py 登记 knowledge/literature-review-catalog.md（幂等、带锁）并用 build_research_wiki.py 重建 wiki 快照"
-        "（[STAGE:settle]）。成稿落图：writing-brief「可用图表」段按各风格配额插图"
+        "执行要求：运行现状一律用 run_status.py --run-dir <运行目录> 一次性读取"
+        "（含漏斗数字、逐篇证据与 claim 摘要、References 作者/年份元数据、产物清单、"
+        "引用篇数下限门禁与建议命令），"
+        "禁止用内联 python 循环逐文件读 evidence/*.jsonl、逐个 cat 探查产物、"
+        "对脚本跑 --help 探查或翻历史 run 的成稿当格式样板；"
+        "成稿输入读渲染好的 review-packet.md / writing-brief.md / evidence-appendix.md，"
+        "引文/图表格式契约以风格 references 文件与写作包为准。"
+        + execution_chain,
+        *(
+            ["仅撰写目标风格成稿，不要写其他风格。"]
+            if str(params.get("target_style") or "") not in ("", "all")
+            else ["撰写三种成稿（scientific-memo / zhihu / xiaohongshu），可用 3 个并行 subagent 起草。"]
+        ),
+        "成稿落图：writing-brief「可用图表」段按各风格配额插图"
         "（URL/题注照抄 evidence 携带的图，插在所支撑段落后），appendix 全量保留图表。"
         "唯一允许提前停止的条件：检索失败或文献不足"
         "（覆盖/饱和未过、验收证据不足以成稿），"
         "此时停下如实说明并把 run 留在 in-progress；"
-        "若 pipeline-summary 显示深读有失败篇目，如实向用户说明影响。",
+        "若 pipeline-summary 显示深读有失败篇目，如实说明影响。",
         "</workflow_request>",
     ]
     return "\n".join(lines)
 
 
 def build_continuation_prompt(
-    *, feedback: str = "", target_style: str = "", stage: str = ""
+    *, feedback: str = "", target_style: str = "", stage: str = "", publisher: str = "agent"
 ) -> str:
     """Resume the workflow after an interruption (crash, session end, user
     feedback mid-run). The prompt is stage-aware: a run that never produced
     the packet finishes the interrupted stage first; a run that already has
     the packet goes straight to writing. There is no outline checkpoint —
-    both branches continue through settle in the same turn."""
+    both branches continue through settle in the same turn. ``publisher``
+    forks only the settle tail (agent finalizes itself; launcher stops after
+    the gates)."""
 
+    agent = publisher == "agent"
     feedback = (feedback or "").strip()
     opinion = feedback if feedback else "无，按现有证据继续"
     style = (target_style or "all").strip()
@@ -563,31 +681,43 @@ def build_continuation_prompt(
             + (STYLE_VOICE_CONTRACTS[style] if style in STYLE_VOICE_CONTRACTS else "")
         )
         parallel_clause = "单一成稿由主线程直接撰写润色，再走审计门"
-    settle_clause = (
-        "通过审计门、落盘 evidence/、把 run.json status 改为 settled，"
-        "用 register_run.py 登记 knowledge/literature-review-catalog.md（幂等、带锁，不要手改表格），"
-        "重建 wiki 快照（build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data），"
-        "最后输出 [TOPIC:<运行目录相对路径>]。"
-    )
+    if agent:
+        settle_clause = (
+            "审计门过后用 finalize_run.py --run-dir <运行目录> --kb-root <kb-root> 完成机械落盘"
+            "（补齐 run.json 的 status/files/style/scope_note 字段、复跑两道门、拷贝 evidence/、"
+            "翻 settled、登记 catalog、重建 wiki 快照）；"
+            "门禁不过时 finalize 会打印缺失项，修复后重跑即可，不要因此停止；"
+            "最后输出 [TOPIC:<运行目录相对路径>]。"
+        )
+        mid_seq = "（[STAGE:packet] → [STAGE:writing] → [STAGE:audit] → [STAGE:settle]）"
+        writing_seq = "（[STAGE:writing] → [STAGE:audit] → [STAGE:settle]）"
+        fields_clause = (
+            "run.json 的 status/files 字段由 finalize_run.py 机械补齐；"
+            "style 与 scope_note 字段（单风格缩减范围声明）也由 finalize_run.py 机械补齐，不要手改；"
+        )
+    else:
+        settle_clause = (
+            "全部审计门通过后【立即停止本轮回复】；机械落盘（run.json 盖章、evidence/ 落盘拷贝）、"
+            "catalog 登记、wiki 快照重建与 publish 校验由 launcher 机械完成，"
+            "不要执行这些收尾动作、不要手改 run.json；不需要输出任何阶段或话题标记。"
+        )
+        mid_seq = "（综述包 → 成稿 → 审计门 → 停止）"
+        writing_seq = "（成稿 → 审计门 → 停止）"
+        fields_clause = "run.json 的 status/files/style/scope_note 字段一律不要手改（由 launcher 机械补齐）；"
     if stage in ("init", "plan", "retrieval", "mining", ""):
         lines = [
-            "用户发来消息。先从磁盘已有进度继续当前阶段（检查 pipeline-summary.json 与运行目录产物，"
-            "已完成的环节不要重做），然后一气呵成走完剩余阶段"
-            "（[STAGE:packet] → [STAGE:writing] → [STAGE:audit] → [STAGE:settle]）："
+            "用户发来消息。先用 run_status.py --run-dir <运行目录> 一次性读取现状"
+            "（已完成的环节不要重做；禁止内联 python 逐文件循环读 evidence/），"
+            f"然后一气呵成走完剩余阶段{mid_seq}："
             + settle_clause,
             f"用户消息：{opinion}",
         ]
         return "\n".join(lines)
     lines = [
-        "用户发来消息，请继续执行剩余阶段（[STAGE:writing] → [STAGE:audit] → "
-        f"[STAGE:settle]）：{writing_clause}、{settle_clause}"
-        f"{parallel_clause}，尽量压缩总时长。",
-        "落盘前把 run.json 的 status 改为 settled，并按实际产出声明 files.outputs；"
-        + (
-            "若只产出单一成稿，同时写入 style 与 scope_note 字段（说明用户只要这一风格）。"
-            if style != "all"
-            else "三种成稿齐全时无需 style/scope_note 字段。"
-        ),
+        f"用户发来消息，请继续执行剩余阶段{writing_seq}：{writing_clause}、{settle_clause}"
+        f"{parallel_clause}，尽量压缩总时长。"
+        "可用 run_status.py --run-dir <运行目录> 一次性核对现状，禁止内联 python 逐文件循环。",
+        fields_clause,
         f"用户消息：{opinion}",
     ]
     return "\n".join(lines)

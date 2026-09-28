@@ -118,7 +118,12 @@ def extract_one(paper_id: str, options: QueueOptions, output_dir: Path) -> dict[
     target = output_dir / f"{paper_id}.json"
     if target.is_file() and not options.force:
         data = json.loads(target.read_text(encoding="utf-8"))
-        return {"paper_id": paper_id, "state": "cached", "evidence_eligible": bool(data.get("evidence_eligible")), "path": str(target)}
+        if data.get("evidence_eligible"):
+            return {"paper_id": paper_id, "state": "cached", "evidence_eligible": True, "path": str(target)}
+        # A previously HELD paper is retryable, not cached: the fetch may have
+        # failed transiently (rate limit) and a driver rerun should supplement
+        # it instead of skipping it forever. Falls through to a fresh extract;
+        # a paper that is genuinely unrecoverable just re-checkpoints as HELD.
     temporary = target.with_suffix(".json.tmp")
     command = [
         *_EXTRACT_CMD,

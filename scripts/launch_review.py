@@ -3,7 +3,7 @@
 
 Chains the mechanical driver (run_review_pipeline.py) with the judgment
 stages as a detached one-shot claude agent (the wiki workflow prompt), then
-verifies the gates, settle state, catalog registration, and wiki snapshot.
+settles/publishes via finalize_run.py, then verifies catalog + wiki snapshot.
 Designed to survive the launching session ending: stages are marked on disk,
 idempotent, and re-enterable via --resume.
 

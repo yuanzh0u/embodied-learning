@@ -394,7 +394,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         current stage and continues through settle in the same turn — no
         outline checkpoint to stop at."""
         prompt = wiki_chat.build_continuation_prompt(stage="mining")
-        self.assertIn("从磁盘已有进度继续当前阶段", prompt)
+        self.assertIn("一次性读取现状", prompt)
         self.assertIn("[STAGE:writing]", prompt)
         self.assertNotIn("等待用户确认", prompt)
         self.assertIn("literature-review-catalog.md", prompt)

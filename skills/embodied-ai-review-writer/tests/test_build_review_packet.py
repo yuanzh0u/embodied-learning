@@ -917,3 +917,48 @@ title: 数据采集与数据质量
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_cli_run_dir_writes_briefing_into_existing_run_folder(self) -> None:
+        """The wiki workflow passes --run-dir: artifacts land next to run.json
+        instead of a fresh work/<topic>-<date>/ folder the agent must mv out."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            run_dir = tmp / "kb" / "work" / "literature-review-demo-20260101"
+            run_dir.mkdir(parents=True)
+            (run_dir / "run.json").write_text("{}", encoding="utf-8")
+            evidence = tmp / "evidence.jsonl"
+            evidence.write_text(
+                "\n".join(
+                    json.dumps(event_for_paper(f"EA-DATA-2026-000{index}", f"2601.0000{index}"), ensure_ascii=False)
+                    for index in range(1, 6)
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--topic",
+                    "demo topic",
+                    "--knowledge-id",
+                    "EA-DATA",
+                    "--evidence-jsonl",
+                    str(evidence),
+                    "--run-dir",
+                    str(run_dir),
+                ],
+                check=True,
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+
+            written = {path.name for path in run_dir.glob("*.md")}
+            self.assertEqual({"review-packet.md", "writing-brief.md", "evidence-appendix.md"}, written)
+            # No fresh dated project folder appears next to the run dir.
+            self.assertEqual(
+                ["literature-review-demo-20260101"],
+                [path.name for path in (tmp / "kb" / "work").iterdir()],
+            )

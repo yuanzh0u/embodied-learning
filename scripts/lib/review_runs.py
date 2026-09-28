@@ -201,13 +201,25 @@ def event_consistency_problems(run_paths: Iterable[Path]) -> list[str]:
 
 
 def _catalog_row_from_manifest(run_json: Path, manifest: dict) -> str:
-    """A minimal but truthful 成果索引 row; the agent may enrich it later."""
+    """A minimal but truthful 成果索引 row; the agent may enrich it later.
+
+    规模 = 候选池 / 可读全文 / 精读并接纳论文数 (column semantics per the
+    catalog header). finalize_run.py stamps candidate_count / full_text_count
+    / evidence_papers into run.json from pipeline-summary.json + the evidence
+    set, so the row carries the real triple instead of "— / — / N".
+    """
 
     topic = str(manifest.get("topic") or run_json.parent.name)
     knowledge_ids = manifest.get("knowledge_ids")
     cards = "、".join(knowledge_ids) if isinstance(knowledge_ids, list) and knowledge_ids else ""
-    event_count = manifest.get("event_count")
-    scale = f"— / — / {event_count}" if isinstance(event_count, int) and event_count else "— / — / —"
+
+    def fmt(value: object) -> str:
+        return str(value) if isinstance(value, int) and value > 0 else "—"
+
+    scale = " / ".join(
+        fmt(manifest.get(key))
+        for key in ("candidate_count", "full_text_count", "evidence_papers")
+    )
     run_rel = f"../evidence/{run_json.parent.name}/run.json"
     return f"| LR-{topic[:24]} | {topic} | {cards} | {scale} | [run]({run_rel}) |"
 
