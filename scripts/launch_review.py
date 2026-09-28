@@ -109,11 +109,12 @@ def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
         "--run-dir", str(run_dir),
         "--topic", args.topic,
         "--review-mode", args.review_mode,
-        "--time-range", args.time_range,
         "--focus", args.focus or "",
         "--search-strategy", args.search_strategy,
         "--deep-read-limit", str(args.deep_read_limit),
     ]
+    if args.time_range:
+        command += ["--time-range", args.time_range]
     if args.seed_arxiv_ids:
         command += ["--seed-arxiv-ids", args.seed_arxiv_ids]
     for path in args.external_candidates:
@@ -362,9 +363,12 @@ def launch(args: argparse.Namespace) -> int:
         init_command = [
             sys.executable, str(SCRIPTS_ROOT / "init_run.py"),
             "--topic", args.topic, "--review-mode", args.review_mode,
-            "--time-range", args.time_range,
             "--work-dir", str(kb_root / "work"),
         ]
+        # time-range is scope metadata only and defaults to None (the
+        # curated-list channel legitimately has no date scope).
+        if args.time_range:
+            init_command += ["--time-range", args.time_range]
         for kid in (args.knowledge_id or ["EA-DATA"]):
             init_command += ["--knowledge-id", kid]
         init = subprocess.run(init_command, capture_output=True, text=True, cwd=str(kb_root))

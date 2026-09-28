@@ -39,21 +39,37 @@ def score_candidate(candidate: dict[str, Any], terms: list[str], prefixes: list[
     arxiv_id = str(candidate.get("arxiv_id") or "")
     title = str(candidate.get("title") or "").lower()
     summary = str(candidate.get("summary") or "").lower()
+    # Curated-list candidates may carry their discovery context (the list
+    # block they were mined from) even when title/summary stayed empty —
+    # match it at a low weight so a curated channel never silently screens
+    # to an empty queue.
+    context = str(candidate.get("discovery_context") or "").lower()
     labels = discovery_labels(candidate)
     matched_title = [term for term in terms if term in title]
     matched_summary = [term for term in terms if term in summary and term not in matched_title]
+    matched_context = [
+        term for term in terms
+        if term in context and term not in matched_title and term not in matched_summary
+    ]
     matched_labels = sorted(label for label in labels if any(label.startswith(prefix) for prefix in prefixes))
     seeded = arxiv_id in seed_ids
     # Prior evidence is a small continuity signal, not an automatic win. The
     # former +100 bonus could crowd new, limiting, or contradictory papers out
     # of the recovery queue before their full text was inspected.
-    score = (4 if seeded else 0) + 10 * len(matched_title) + 2 * len(matched_summary) + 6 * len(matched_labels)
+    score = (
+        (4 if seeded else 0)
+        + 10 * len(matched_title)
+        + 2 * len(matched_summary)
+        + len(matched_context)
+        + 6 * len(matched_labels)
+    )
     return {
         "candidate": candidate,
         "score": score,
         "seeded": seeded,
         "matched_title_terms": matched_title,
         "matched_summary_terms": matched_summary,
+        "matched_context_terms": matched_context,
         "matched_query_labels": matched_labels,
     }
 
@@ -109,7 +125,10 @@ def render_markdown(selected: list[dict[str, Any]], registry_count: int) -> str:
     ]
     for rank, item in enumerate(selected, start=1):
         candidate = item["candidate"]
-        matches = item["matched_title_terms"] + item["matched_summary_terms"] + item["matched_query_labels"]
+        matches = (
+            item["matched_title_terms"] + item["matched_summary_terms"]
+            + item["matched_context_terms"] + item["matched_query_labels"]
+        )
         title = str(candidate.get("title") or "").replace("|", "\\|")
         lines.append(
             f"| {rank} | [{candidate.get('arxiv_id')}]({candidate.get('abs_url')}) | {item['score']} | "

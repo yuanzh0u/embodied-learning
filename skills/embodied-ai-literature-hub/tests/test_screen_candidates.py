@@ -41,6 +41,22 @@ class ScreenCandidatesTest(unittest.TestCase):
         )
         self.assertEqual(1, sum(bool(item["seeded"]) for item in selected))
 
+    def test_discovery_context_matches_when_title_and_summary_are_empty(self) -> None:
+        # Curated-list entries can arrive with junk titles and no abstract;
+        # their mined list block (discovery_context) must still score so the
+        # channel never screens to an empty queue.
+        registry = {
+            "candidates": [
+                {"arxiv_id": "1", "title": "`arXiv 2017`", "summary": "",
+                 "discovery_context": "- **`arXiv 2017`** Proximal Policy Optimization Algorithms",
+                 "discoveries": []},
+                {"arxiv_id": "2", "title": "Unrelated", "summary": "", "discoveries": []},
+            ]
+        }
+        selected = screen_candidates.select_candidates(registry, ["policy optimization"], [], set(), 2)
+        self.assertEqual(["1"], [item["candidate"]["arxiv_id"] for item in selected])
+        self.assertIn("policy optimization", selected[0]["matched_context_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()

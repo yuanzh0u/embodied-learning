@@ -145,12 +145,49 @@ def _iter_blocks(text: str):
         index += 1
 
 
+def _looks_like_tag(text: str) -> bool:
+    """Venue/year badge rather than a paper title: ``arXiv 2017``, ``ICLR 2023``,
+    ``NeurIPS 2024``. Some lists bold the venue tag and leave the title plain —
+    the first bold run is then not the title."""
+    stripped = text.strip()
+    if "`" in stripped:
+        return True
+    return bool(re.search(r"\b20\d{2}\b", stripped)) and len(stripped) <= 40
+
+
+# Link-text noise from [paper](url)-style badges, stripped from the tail of a
+# context-derived title (the context keeps them as bare words).
+_LINK_TEXT_TOKENS = {"paper", "code", "project", "website", "page", "docs", "doc",
+                     "blog", "pdf", "homepage", "site", "arxiv", "demo", "video"}
+
+
+def _title_from_context_remainder(line: str) -> str:
+    """Title = the plain text left after removing bold runs (venue-tag style)."""
+    remainder = BOLD_RE.sub(" ", line, count=1)
+    remainder = _clean_context(remainder).lstrip("-").strip()
+    tokens = remainder.split()
+    while tokens and tokens[-1].lower().strip(".") in _LINK_TEXT_TOKENS:
+        tokens.pop()
+    return " ".join(tokens).strip(" .;:|-")
+
+
 def _block_title(block: list[str], kind: str) -> str:
-    """First bold run wins (list style); fall back to the table's first cell."""
-    for line in block:
-        match = BOLD_RE.search(line)
-        if match:
-            return " ".join(match.group(1).split())
+    """First non-tag bold run wins (list style); venue-tag lists fall back to
+    the plain text after the tag; table rows use the first cell."""
+    bold_runs = [
+        " ".join(match.group(1).split())
+        for line in block
+        for match in BOLD_RE.finditer(line)
+    ]
+    for run in bold_runs:
+        if run and not _looks_like_tag(run):
+            return run
+    if bold_runs:
+        line = next((line for line in block if BOLD_RE.search(line)), None)
+        if line is not None:
+            title = _title_from_context_remainder(line)
+            if title:
+                return title
     if kind == "table-row":
         cell = block[0].strip().strip("|").split("|")[0]
         return " ".join(cell.replace("**", "").split())
@@ -385,6 +422,54 @@ def resolve_unresolved(
     return resolved, still
 
 
+# ---- snapshot metadata hydration (arXiv-ID candidates) -----------------------
+
+
+def hydrate_from_snapshot(candidates: list[dict[str, Any]], db_path: str) -> int:
+    """Fill metadata for known arXiv IDs from the local snapshot DB (offline).
+
+    Curated-list blocks reliably carry arXiv links but often junk or truncated
+    titles (venue badges) and never abstracts. The snapshot is authoritative
+    for metadata; the list's own title is kept as ``listed_title`` for
+    provenance. Screen-candidates matches terms against title/summary only,
+    so hydration is what makes a harvested list screenable at all. Returns
+    the number of records updated.
+    """
+    from embodied_learning.search.arxiv_snapshot_db import connect_readonly
+
+    updated = 0
+    connection = connect_readonly(db_path)
+    try:
+        for record in candidates:
+            row = connection.execute(
+                "SELECT title, abstract, categories, update_date, v1_date"
+                " FROM papers WHERE id = ?",
+                (record["arxiv_id"],),
+            ).fetchone()
+            if not row:
+                continue
+            title, abstract, categories, update_date, v1_date = row
+            if title:
+                if str(record.get("title") or "") != title:
+                    record.setdefault("listed_title", str(record.get("title") or ""))
+                    record["title"] = title
+            if abstract and not record.get("summary"):
+                record["summary"] = abstract
+            if categories and not record.get("categories"):
+                record["categories"] = str(categories).split()
+            if not record.get("published"):
+                if v1_date:
+                    record["published"] = time.strftime(
+                        "%Y-%m-%d", time.gmtime(int(v1_date))
+                    )
+                elif update_date:
+                    record["published"] = str(update_date)
+            updated += 1
+    finally:
+        connection.close()
+    return updated
+
+
 # ---- orchestration ------------------------------------------------------------
 
 
@@ -423,6 +508,12 @@ def harvest(
             resolved, unresolved = resolve_unresolved(unresolved, sleep_seconds=sleep_seconds, timeout=timeout)
             for record in resolved:
                 candidates.setdefault(record["arxiv_id"], record)
+    hydrated = 0
+    if resolve_db:
+        # Last, so every candidate — linked, snapshot-resolved, or S2-resolved —
+        # gets authoritative metadata. Junk titles never reach the title
+        # resolvers, and hydrated abstracts are what screening matches on.
+        hydrated = hydrate_from_snapshot(list(candidates.values()), resolve_db)
     return {
         "batch": f"curated-list:{repo}",
         "source_label": f"curated-list:{repo}",
@@ -430,6 +521,7 @@ def harvest(
         "channel_hint": "curated-list",
         "ref": ref,
         "files_scanned": scanned,
+        "snapshot_hydrated": hydrated,
         "candidates": sorted(candidates.values(), key=lambda item: item["arxiv_id"]),
         "unresolved": unresolved,
     }

@@ -144,6 +144,73 @@ class HarvestTest(unittest.TestCase):
         self.assertEqual(record["discovery_context"], "- **WorldRover-10M** (2026) — 6,003 synthetic exploration sequences.")
 
 
+class VenueTagTitleTest(unittest.TestCase):
+    """Lists like RUC-NLPIR/Awesome-Long-Horizon-Agents bold a venue/year tag
+    and leave the real title plain: ``- **`arXiv 2017`** Real Title. [paper]``.
+    The first bold run is not the title there."""
+
+    SAMPLE = """## Pillar
+
+- **`arXiv 2017`** Proximal Policy Optimization Algorithms. [paper](https://arxiv.org/abs/1707.06347) [code](https://github.com/x)
+
+- **`ICLR 2023`** ReAct: Synergizing Reasoning and Acting in Language Models. [paper](https://arxiv.org/abs/2210.03629)
+
+- **Bold Real Title** (2024) — traditional bold-title entry.
+  [![arXiv](https://img.shields.io/badge/arXiv-2401.00001-b31b1b.svg)](https://arxiv.org/abs/2401.00001)
+"""
+
+    def test_venue_tag_bold_falls_through_to_plain_title(self) -> None:
+        candidates, unresolved = curated_list.extract_candidates(self.SAMPLE, "README.md")
+        by_id = {c["arxiv_id"]: c for c in candidates}
+        self.assertEqual(by_id["1707.06347"]["title"], "Proximal Policy Optimization Algorithms")
+        self.assertEqual(
+            by_id["2210.03629"]["title"],
+            "ReAct: Synergizing Reasoning and Acting in Language Models",
+        )
+        self.assertEqual(by_id["2401.00001"]["title"], "Bold Real Title")
+
+
+class HydrateFromSnapshotTest(unittest.TestCase):
+    def test_hydration_fills_metadata_and_keeps_listed_title(self) -> None:
+        db_mod = load("snapshot_db_for_hydrate_test", "embodied_learning/search/arxiv_snapshot_db.py")
+        record = {
+            "id": "1707.06347", "title": "Proximal Policy Optimization Algorithms",
+            "abstract": "We propose a new gradient ascent algorithm.", "authors": "John Schulman",
+            "categories": "cs.LG", "versions": [], "update_date": "2017-08-28",
+            "comments": "", "journal-ref": "",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            jsonl = Path(tmp) / "snap.json"
+            jsonl.write_text(json.dumps(record), encoding="utf-8")
+            db = str(Path(tmp) / "snap.sqlite")
+            db_mod.build_db(str(jsonl), db, progress_every=10**9)
+            candidates = [{"arxiv_id": "1707.06347", "title": "`arXiv 2017`", "context": "- PPO"}]
+            updated = curated_list.hydrate_from_snapshot(candidates, db)
+        self.assertEqual(updated, 1)
+        hydrated = candidates[0]
+        self.assertEqual(hydrated["title"], "Proximal Policy Optimization Algorithms")
+        self.assertEqual(hydrated["listed_title"], "`arXiv 2017`")
+        self.assertEqual(hydrated["summary"], "We propose a new gradient ascent algorithm.")
+        self.assertEqual(hydrated["categories"], ["cs.LG"])
+        self.assertEqual(hydrated["published"], "2017-08-28")
+
+    def test_hydration_skips_ids_missing_from_snapshot(self) -> None:
+        db_mod = load("snapshot_db_for_hydrate_test2", "embodied_learning/search/arxiv_snapshot_db.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            jsonl = Path(tmp) / "snap.json"
+            jsonl.write_text(json.dumps({
+                "id": "1707.06347", "title": "PPO", "abstract": "", "authors": "",
+                "categories": "cs.LG", "versions": [], "update_date": "2017-08-28",
+                "comments": "", "journal-ref": "",
+            }), encoding="utf-8")
+            db = str(Path(tmp) / "snap.sqlite")
+            db_mod.build_db(str(jsonl), db, progress_every=10**9)
+            candidates = [{"arxiv_id": "9999.99999", "title": "Not In Snapshot"}]
+            updated = curated_list.hydrate_from_snapshot(candidates, db)
+        self.assertEqual(updated, 0)
+        self.assertEqual(candidates[0]["title"], "Not In Snapshot")
+
+
 class ResolveViaSnapshotTest(unittest.TestCase):
     def test_title_match_attaches_snapshot_id(self) -> None:
         db_mod = load("snapshot_db_for_curated_test", "embodied_learning/search/arxiv_snapshot_db.py")
