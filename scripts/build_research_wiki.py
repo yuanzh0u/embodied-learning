@@ -84,6 +84,9 @@ FIELD_RULES = (
 # review titles were established. These aliases make those historical runs part
 # of the same version line, so the newer dated run wins automatically.
 TOPIC_ALIASES = {
+    # 时序深度估计是单目深度估计主题线的第二轮综述（20260924 → 20260928），
+    # 两轮合并为一个话题：新轮为基底版本，旧轮发布为 第1轮综述。
+    "时序深度估计": "单目深度估计",
     "road-marking-extraction": "地面箭头提取",
     "4d-data-requirements": "4d时空推理对数据的需求",
     "data-quality-contradictions": "具身智能数据质量的主要矛盾",
