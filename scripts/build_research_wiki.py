@@ -554,6 +554,36 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
             }
             version_keys.append(key)
 
+    # Chat draft documents: the topic chat's survey-*.md convention used to be
+    # write-only; each draft now publishes as its own version key so a
+    # manually written or agent-drafted 补注/讨论稿 is versioned and switchable.
+    for path in sorted(candidate.directory.glob("survey-*.md")):
+        key = path.stem
+        if key in versions:
+            continue
+        markdown = _read_text(path)
+        rendered, toc = markdown_to_html(markdown)
+        # Survey drafts may carry the memo citation contract; harmless when
+        # the reference map is empty.
+        rendered = link_citation_superscripts(rendered, _reference_map(markdown))
+        plain = markdown_to_plain(markdown)
+        versions[key] = {
+            "label": key.removeprefix("survey-") or key,
+            "article_title": first_heading(markdown) or title,
+            "html": rendered,
+            "markdown": markdown,
+            "toc": toc,
+            "characters": len(plain),
+            "source_file": path.name,
+            "survey": True,
+        }
+        search_versions[key] = {
+            "label": versions[key]["label"],
+            "article_title": versions[key]["article_title"],
+            "text": plain,
+        }
+        version_keys.append(key)
+
     evidence_path = candidate.directory / "evidence-appendix.md"
     evidence_kind = "证据附录"
     if not evidence_path.is_file():

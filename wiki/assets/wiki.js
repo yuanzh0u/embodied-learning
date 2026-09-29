@@ -430,7 +430,11 @@
     const revisions = available
       .filter((key) => topic.versions[key]?.based_on === base)
       .sort((a, b) => (topic.versions[a].revision || 0) - (topic.versions[b].revision || 0));
-    if (!revisions.length) {
+    // Standalone documents (survey-*.md 补注/讨论稿) belong to the topic, not
+    // to one style — always listed after the style's revisions.
+    const styleKeys = ["keyan", "zhihu", "xiaohongshu"];
+    const docs = available.filter((key) => !styleKeys.includes(key) && !topic.versions[key]?.based_on);
+    if (!revisions.length && !docs.length) {
       chips.hidden = true;
       chips.innerHTML = "";
     } else {
@@ -444,7 +448,12 @@
         const name = suffix || "原始版";
         const hint = entry.request ? ` · ${entry.request.slice(0, 18)}` : "";
         return `<button type="button" class="revision-chip${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.request || name)}">${escapeHtml(name + hint)}</button>`;
-      }).join("");
+      }).join("")
+        + docs.map((key) => {
+            const entry = topic.versions[key];
+            const active = key === state.version;
+            return `<button type="button" class="revision-chip revision-chip-doc${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.article_title || entry.label)}">📄 ${escapeHtml(entry.label)}</button>`;
+          }).join("");
     }
     if (nodes.latestBadge) {
       nodes.latestBadge.textContent = current?.revision ? `修订版 v${current.revision}` : "最新版本";

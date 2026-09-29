@@ -455,6 +455,40 @@ class BuildResearchWikiTest(unittest.TestCase):
         # Old-run evidence appendix stays in the old run dir, untouched.
         self.assertTrue((old_run / "evidence-appendix.md").is_file())
 
+    def test_survey_drafts_publish_as_standalone_versions(self) -> None:
+        """The topic chat's survey-*.md draft convention used to be write-only;
+        each draft now publishes as its own version key (label from the
+        filename) so a hand-written or agent-drafted 补注 is versioned."""
+        evidence = self.root / "evidence"
+        run = evidence / "literature-review-中美具身智能路线差异-20260923"
+        run.mkdir(parents=True)
+        (run / "run.json").write_text(
+            json.dumps({"topic": "中美具身智能路线差异以及原因", "status": "settled",
+                        "style": "scientific-memo", "scope_note": "单风格",
+                        "files": {"outputs": ["scientific-memo_keyan.md"]}},
+                       ensure_ascii=False),
+            encoding="utf-8",
+        )
+        (run / "scientific-memo_keyan.md").write_text(
+            "# 中美路线\n\n## 结论\n\n备忘录正文，长度足够作为发布内容。\n", encoding="utf-8"
+        )
+        (run / "evidence-appendix.md").write_text("# 证据附录\n", encoding="utf-8")
+        (run / "survey-机构层补注-中美具身智能路线差异.md").write_text(
+            "# 机构层补注\n\n补注正文，长度足够作为发布内容。\n", encoding="utf-8"
+        )
+
+        manifest = wiki.build_snapshot(evidence, self.output)
+        topic = json.loads(
+            (self.output / "topics" / f"{manifest['topics'][0]['id']}.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(topic["available_versions"], ["keyan", "survey-机构层补注-中美具身智能路线差异"])
+        doc = topic["versions"]["survey-机构层补注-中美具身智能路线差异"]
+        self.assertEqual(doc["label"], "机构层补注-中美具身智能路线差异")
+        self.assertTrue(doc["survey"])
+        self.assertEqual(doc["source_file"], "survey-机构层补注-中美具身智能路线差异.md")
+        # Not a style revision: no based_on, so chips render it as a document.
+        self.assertNotIn("based_on", doc)
+
     def test_slide_deck_field_tracks_run_folder(self) -> None:
         """The 汇报展示 manifest field flips on the presence of a compiled
         slide-deck_report.html in the run folder (run-level wiki entry)."""
