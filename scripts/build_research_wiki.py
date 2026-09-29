@@ -95,6 +95,9 @@ _DATE_COMPACT = re.compile(r"(?<!\d)(20\d{6})(?!\d)")
 _DATE_DASHED = re.compile(r"(?<!\d)(20\d{2})-(\d{2})-(\d{2})(?!\d)")
 _READER_SUFFIX = re.compile(r"-reader-v(\d+)$", re.IGNORECASE)
 _ARXIV_URL = re.compile(r"^https?://(?:[a-z0-9-]+\.)?arxiv\.org/", re.IGNORECASE)
+# Chat-driven revisions live at <run>/revisions/<style>-v<N>.md (style is a
+# VERSION_FILES key); the revision flow never touches the base deliverables.
+REVISION_FILE_RE = re.compile(r"^(keyan|zhihu|xiaohongshu)-v(\d+)$")
 
 
 @dataclass(frozen=True)
@@ -107,6 +110,24 @@ class Candidate:
 
 def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
+
+
+def _revision_index(run_dir: Path) -> dict[str, dict]:
+    """version_key -> provenance entry from <run>/revisions/index.json
+    (written by the wiki revision flow; the agent itself never writes it)."""
+    data = None
+    index_path = run_dir / "revisions" / "index.json"
+    try:
+        data = json.loads(_read_text(index_path))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, list):
+        return {}
+    return {
+        str(entry.get("version_key")): entry
+        for entry in data
+        if isinstance(entry, dict) and entry.get("version_key")
+    }
 
 
 def _relative(path: Path) -> str:
@@ -392,6 +413,36 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
     versions: dict[str, object] = {}
     search_versions: dict[str, object] = {}
 
+def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+    # Three styles by default; a run.json declaring a reduced scope publishes
+    # only its own deliverable (mirrors check_run_bundle's style gate). The
+    # declaration is the required minimum, not a cap: a run may ship extra
+    # deliverables (e.g. a memo regenerated alongside an earlier zhihu
+    # draft), and every deliverable actually on disk is published.
+    manifest = read_run_manifest(candidate.directory) or {}
+    declared_style = str(manifest.get("style") or "")
+
+    def version_file(key: str) -> Path:
+        return candidate.directory / VERSION_FILES[key][1]
+
+    if declared_style in _STYLE_VERSION_KEYS:
+        primary = _STYLE_VERSION_KEYS[declared_style]
+        version_keys = [primary] + [
+            key for key in VERSION_FILES if key != primary and version_file(key).is_file()
+        ]
+    else:
+        version_keys = [key for key in VERSION_FILES if version_file(key).is_file()] or list(VERSION_FILES)
+    markdown_by_version = {
+        key: _read_text(candidate.directory / VERSION_FILES[key][1])
+        for key in version_keys
+    }
+    fallback_markdown = markdown_by_version[version_keys[0]]
+    title = get_topic_title(candidate.directory, fallback_markdown)
+    field = classify_field(title, candidate.directory.name)
+    identifier = topic_id(candidate.topic_key)
+    versions: dict[str, object] = {}
+    search_versions: dict[str, object] = {}
+
     for key in version_keys:
         label, filename = VERSION_FILES[key]
         markdown = markdown_by_version[key]
@@ -417,6 +468,58 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
             "article_title": first_heading(markdown) or title,
             "text": plain,
         }
+
+    # Chat-driven revisions (versions feature): the wiki revision flow writes
+    # additive `revisions/<style>-v<N>.md` files into the published run and
+    # never touches the base deliverables, so every version stays viewable.
+    # Revisions are published as version keys of their own ("keyan-v2"),
+    # ordered directly after their base style.
+    revision_entries: list[tuple[str, int, Path]] = []
+    revisions_dir = candidate.directory / "revisions"
+    if revisions_dir.is_dir():
+        for path in revisions_dir.glob("*.md"):
+            match = REVISION_FILE_RE.match(path.stem)
+            if match:
+                revision_entries.append((match.group(1), int(match.group(2)), path))
+    if revision_entries:
+        style_order = {key: index for index, key in enumerate(version_keys)}
+        revision_entries.sort(key=lambda item: (style_order.get(item[0], len(style_order)), item[1]))
+        revision_meta = _revision_index(candidate.directory)
+        for style, number, path in revision_entries:
+            key = path.stem
+            markdown = _read_text(path)
+            rendered, toc = markdown_to_html(markdown)
+            if style == "keyan":
+                rendered = link_citation_superscripts(rendered, _reference_map(markdown))
+            plain = markdown_to_plain(markdown)
+            base_label = VERSION_FILES[style][0] if style in VERSION_FILES else style
+            meta = revision_meta.get(key) or {}
+            versions[key] = {
+                "label": f"{base_label} · 修订v{number}",
+                "article_title": first_heading(markdown) or title,
+                "html": rendered,
+                "markdown": markdown,
+                "toc": toc,
+                "characters": len(plain),
+                "source_file": f"revisions/{path.name}",
+                "revision": number,
+                "based_on": style,
+                "request": str(meta.get("request") or ""),
+                "created_at": str(meta.get("created_at") or ""),
+            }
+            search_versions[key] = {
+                "label": versions[key]["label"],
+                "article_title": versions[key]["article_title"],
+                "text": plain,
+            }
+        ordered: list[str] = []
+        for key in version_keys:
+            ordered.append(key)
+            ordered.extend(path.stem for style, _, path in revision_entries if style == key)
+        ordered.extend(
+            path.stem for style, _, path in revision_entries if style not in style_order
+        )
+        version_keys = ordered
 
     evidence_path = candidate.directory / "evidence-appendix.md"
     evidence_kind = "证据附录"

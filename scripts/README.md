@@ -74,8 +74,8 @@
 |---|---|---|
 | `check_kb_links.py` | 知识库链接完整性（sources、主题卡、索引、evidence 清单、POOL 路径） | `check_kb_links.py`（改完 knowledge/ 必跑） |
 | `build_research_wiki.py` | 从 KB 构建 Wiki 静态快照（原子发布到 `wiki/data/`） | `build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data` |
-| `serve_research_wiki.py` | 本地起 Wiki 服务（含安全的 refresh 端点） | `serve_research_wiki.py`（默认读 `~/Documents/arxiv`） |
-| `wiki_chat.py` | Wiki 聊天/工作流的 claude 会话后端（stream-json 桥接、嵌套 claude 环境防护、workflow/continuation prompt 的定义处） | 由 `serve_research_wiki.py` 内部使用，不直接手跑 |
+| `serve_research_wiki.py` | 本地起 Wiki 服务（含安全的 refresh 端点与成稿修订端点） | `serve_research_wiki.py`（默认读 `~/Documents/arxiv`） |
+| `wiki_chat.py` | Wiki 聊天/工作流的 claude 会话后端（stream-json 桥接、嵌套 claude 环境防护、workflow/continuation/revision prompt 的定义处） | 由 `serve_research_wiki.py` 内部使用，不直接手跑 |
 | `visualize_kb_index.py` | 把 `knowledge/index.md` 渲染成可浏览文档站 | `visualize_kb_index.py` |
 
 ### C. 论文池与单篇入口
@@ -179,6 +179,13 @@ python3 scripts/quick_read_paper.py --arxiv-id 2311.18259   # 入池+深读+速�
 ## 约定与不变量
 
 - **全部 stdlib-only Python 3**（解释器 `python3`，`python` 不在 PATH）；每个脚本的合同用 `--help` 查看。
+- **成稿修订（版本管理）**：已发布 run 的成稿修订走 wiki 主题对话框的「修订成稿」开关 →
+  `POST /api/topic/revise` → agent 只新建 `evidence/<run>/revisions/<style>-v<N>.md`（style ∈ keyan/zhihu/xiaohongshu，
+  基底交付物即 v1，首个修订为 v2；run.json / 三件套 / trace-map.json / evidence-appendix 一律不动）→
+  agent 逐字跑三道门（build-trace-map → `revisions/trace-map-<key>.json`、audit-article-quality 单风格、audit_citations）→
+  服务端追加 `revisions/index.json`（version_key/style/request/created_at，agent 不写）→ 刷新快照 →
+  前端发 `revision_ready` 事件自动切到新版本键（如 `keyan-v2`）。快照构建会把 revisions 目录发现为
+  `available_versions` 里的新版本（label「科研备忘录 · 修订v2」等）。修订只基于现有证据集，不加文献。
 - **布局解析只走 `lib/layout.py`**：仓库检出与 wheel 安装（`wiki_scripts` 包目录自带打包的 `skills/` 树）两种布局都成立；禁止新增 `Path(__file__).parent.parent` 式的 REPO_ROOT 猜测——装到 site-packages 后全部失准。wheel 是自包含的：`pyproject.toml` 把 `skills/` 打成 `wiki_scripts.skills` 包数据（SKILL.md/references/agents/scripts，tests 不进包）。
 - **spawn 的 claude 代理必须隔离**：cwd=kb_root、env 走 harness 的 `isolated_claude_env()`（剥 `CLAUDECODE` / `CLAUDE_CODE_ENTRYPOINT` / `CLAUDE_CODE_SSE_PORT` + 重定向 `CLAUDE_CONFIG_DIR` 到 `~/.cache/embodied-learning/claude-config`，凭据自动播种）——代理只能看到 KB 与打包内容，看不到 launcher 会话的记忆/代码库；认证缺失用 `claude_auth_ready()` 提前报错。
 

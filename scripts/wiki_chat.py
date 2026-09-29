@@ -733,6 +733,115 @@ def build_continuation_prompt(
     return "\n".join(lines)
 
 
+# ---- 成稿修订（版本管理）---------------------------------------------------
+# The wiki's revision flow turns one user requirement into an additive
+# revisions/<style>-v<N>.md next to the base deliverable — never an overwrite.
+
+REVISION_STYLE_BY_KEY = {
+    "keyan": "scientific-memo",
+    "zhihu": "expert-explainer",
+    "xiaohongshu": "kol-thread",
+}
+REVISION_QUALITY_FLAG = {
+    "scientific-memo": "--memo",
+    "expert-explainer": "--zhihu",
+    "kol-thread": "--xiaohongshu",
+}
+REVISION_STYLE_LABEL = {
+    "keyan": "科研备忘录",
+    "zhihu": "知乎解释版",
+    "xiaohongshu": "小红书版",
+}
+REVISION_MARKER_RE = re.compile(r"^\[REVISION:([^\]]+)\]\s*$")
+
+
+def build_revision_prompts(
+    *,
+    run_dir: Path,
+    kb_root: Path,
+    style_key: str,
+    revision_number: int,
+    topic_title: str,
+    base_filename: str,
+    pipeline_root: Path | None,
+    message: str,
+) -> tuple[str, str]:
+    """(system_prompt, user_prompt) for one revision turn.
+
+    ``style_key`` is the base version key (keyan/zhihu/xiaohongshu); the new
+    file — and the snapshot version key — is ``<style_key>-v<N>``. The agent
+    writes exactly one new file and runs the three article gates verbatim —
+    same philosophy as the workflow prompts: concrete paths, no source
+    reading, no parameter probing.
+    """
+
+    def rel(path: Path) -> str:
+        try:
+            return Path(os.path.relpath(path, kb_root)).as_posix()
+        except ValueError:
+            return str(path)
+
+    style = REVISION_STYLE_BY_KEY.get(style_key)
+    if style is None:
+        raise ValueError(f"未知修订风格键：{style_key}")
+    if pipeline_root is not None:
+        skills_root, scripts_root = resolve_pipeline_layout(pipeline_root)
+    else:
+        # Same degradation as workflow_turn_system_prompt: keep placeholders
+        # literal instead of guessing a layout.
+        skills_root = kb_root / "<skills-root>"
+        scripts_root = kb_root / "<scripts-root>"
+    version_key = f"{style_key}-v{revision_number}"
+    target_rel = f"revisions/{version_key}.md"
+    evidence_rel = rel(run_dir / "evidence.jsonl")
+    if not (run_dir / "evidence.jsonl").is_file():
+        evidence_rel = rel(run_dir / "evidence") + "/*.jsonl"
+    appendix_rel = rel(run_dir / "evidence-appendix.md")
+    gate_commands = "\n".join([
+        f"python3 {rel(skills_root / 'embodied-ai-review-writer' / 'scripts' / 'writing_audit.py')} "
+        f"build-trace-map --evidence-jsonl {evidence_rel} --article {target_rel} "
+        f"--output {rel(run_dir / 'revisions' / f'trace-map-{version_key}.json')}",
+        f"python3 {rel(skills_root / 'embodied-ai-review-writer' / 'scripts' / 'writing_audit.py')} "
+        f"audit-article-quality {REVISION_QUALITY_FLAG[style]} {target_rel}",
+        f"python3 {rel(scripts_root / 'audit_citations.py')} --article {target_rel} "
+        f"--appendix {appendix_rel} --evidence-jsonl {evidence_rel} --run-json {rel(run_dir / 'run.json')}",
+    ])
+    style_contract = STYLE_VOICE_CONTRACTS.get(style, "").replace("<skills-root>", rel(skills_root))
+    system_prompt = (
+        "你是「空间智能研究 Wiki」的成稿修订执行器，工作目录即本地知识库根目录。"
+        "用户的修订要求针对某个已发布综述话题的一篇成稿。你生成一个**新修订版本**，绝不覆盖任何既有文件。\n\n"
+        "【铁律】\n"
+        "1. 只允许新建一个文件：目标路径见任务消息（revisions/<version>.md）；"
+        "基底成稿、evidence-appendix.md、trace-map.json、run.json、evidence/ 目录一律只读。"
+        "证据集不变：不得引入证据附录之外的论文、事件或图片 URL，不得增删参考文献编号。\n"
+        "2. 动笔前先读：基底成稿（记住它的结构与优点）、evidence-appendix.md；"
+        "需要核对引文时再读 evidence/ 下的 JSONL。\n"
+        "3. 用户的修订要求优先：与要求冲突的段落按要求改写；其余内容保持原文水准——"
+        "是定向修订，不是整体重写，更不能退化为缩写摘要。\n"
+        + (f"\n{style_contract}\n" if style_contract else "\n")
+        + "\n【门禁（逐字执行，命令里的路径不要改）】\n"
+        f"{gate_commands}\n"
+        "任一门禁未过：按其输出修复成稿后重跑该命令；门禁未过不是停止理由，"
+        "也不要为过门禁删掉有支撑的引文或图表。\n\n"
+        "【完成标记】\n"
+        "三道门禁全部通过后，在最终回复的单独一行输出 "
+        f"[REVISION:{target_rel}]，不要带其他后缀；"
+        "无法完成修订时如实说明原因，绝不输出该标记。用中文与用户交流。"
+    )
+    user_prompt = "\n".join([
+        "<revision_request>",
+        f"话题：{topic_title}（运行目录：{rel(run_dir)}/）",
+        f"修订风格：{REVISION_STYLE_LABEL.get(style_key, style_key)}"
+        f"（基底文件：{base_filename}，作为 v{revision_number} 的底本）",
+        f"目标文件（唯一允许新建的文件）：{target_rel}",
+        "用户修订要求：",
+        message.strip() or "（无具体要求，请改善整体质量）",
+        "先读基底成稿与证据附录，再按要求生成修订版，然后逐字跑完上面系统提示里的门禁命令。",
+        "</revision_request>",
+    ])
+    return system_prompt, user_prompt
+
+
 class ChatSessionRegistry:
     """Persistent conversation store at ``<data_dir>/chat-sessions.json``::
 

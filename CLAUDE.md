@@ -67,6 +67,13 @@ snapshot rebuild (`scripts/build_research_wiki.py --kb-root <kb-root> --output
 (or the local KB's catalog, e.g. `~/Documents/arxiv/knowledge/literature-review-catalog.md` for
 LiDAR/SLAM/calibration topics) — an unregistered run is invisible in the wiki.
 
+**Post-settle revisions are additive versions.** The wiki topic chat's 修订成稿 toggle (`POST
+/api/topic/revise`) regenerates one deliverable as `evidence/<run>/revisions/<style>-v<N>.md`
+(base deliverable = v1, first revision = v2; provenance in `revisions/index.json`, written by the
+server only). The snapshot builder publishes each revision as its own version key (`keyan-v2`)
+ordered after its base style; the base deliverables, `run.json`, `trace-map.json`, and
+`evidence-appendix.md` are never edited. Revisions use the run's existing evidence set only.
+
 Note: repo-wide `unittest discover -s skills` finds **0 tests** — the hyphenated skill directories
 are not importable packages and have no `__init__.py`. Always scope to a `*/tests` directory or a file.
 

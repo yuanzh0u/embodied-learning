@@ -118,6 +118,8 @@
     articleTitle: el("article-title"),
     articleExcerpt: el("article-excerpt"),
     versionTabs: el("version-tabs"),
+    revisionChips: el("revision-chips"),
+    latestBadge: el("article-kicker")?.querySelector(".latest-badge") || null,
     versionArticleTitle: el("version-article-title"),
     readingLength: el("reading-length"),
     articleBody: el("article-body"),
@@ -404,6 +406,7 @@
       button.setAttribute("aria-selected", String(active));
       button.tabIndex = active ? 0 : -1;
     });
+    renderRevisionChips(topic, available);
     nodes.tocPanel.hidden = false;
     renderToc(version.toc || []);
     renderFieldTree();
@@ -411,6 +414,38 @@
     bindReaderLinks(nodes.articleBody);
     updateProgress();
     document.title = `${version.article_title}｜空间智能研究 Wiki`;
+  }
+
+  function baseStyleOf(versionKey) {
+    return String(versionKey || "").replace(/-v\d+$/, "");
+  }
+
+  function renderRevisionChips(topic, available) {
+    // Per-style revision history: chips list the active style's base + its
+    // revisions (keyan-v2 …), driven purely by the snapshot's versions map.
+    const chips = nodes.revisionChips;
+    if (!chips) return;
+    const current = topic.versions[state.version];
+    const base = current?.based_on || state.version;
+    const revisions = available
+      .filter((key) => topic.versions[key]?.based_on === base)
+      .sort((a, b) => (topic.versions[a].revision || 0) - (topic.versions[b].revision || 0));
+    if (!revisions.length) {
+      chips.hidden = true;
+      chips.innerHTML = "";
+    } else {
+      chips.hidden = false;
+      chips.innerHTML = revisions.map((key) => {
+        const entry = topic.versions[key];
+        const active = key === state.version;
+        const name = entry.revision ? `修订v${entry.revision}` : "原始版";
+        const hint = entry.request ? ` · ${entry.request.slice(0, 18)}` : "";
+        return `<button type="button" class="revision-chip${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.request || name)}">${escapeHtml(name + hint)}</button>`;
+      }).join("");
+    }
+    if (nodes.latestBadge) {
+      nodes.latestBadge.textContent = current?.revision ? `修订版 v${current.revision}` : "最新版本";
+    }
   }
 
   function renderToc(toc) {
@@ -2386,6 +2421,23 @@
       setChatStatus(null);
       return;
     }
+    if (evt.type === "revision_ready") {
+      setChatStatus(null);
+      state.topicCache.delete(evt.topic_id || state.topic?.id);
+      state.searchIndex = null;
+      loadTopic(evt.topic_id || state.topic?.id, evt.version_key)
+        .then(() => {
+          if (state.topic) renderArticle();
+          showToast(`修订版已生成：${evt.version_key}`);
+        })
+        .catch(() => showToast("修订版已生成，刷新后可见。"));
+      return;
+    }
+    if (evt.type === "revision_error") {
+      setChatStatus(null);
+      showToast(evt.message || "修订未完成。");
+      return;
+    }
     if (evt.type === "error") {
       setChatStatus(null);
       appendChatError(evt.message || "对话失败。");
@@ -2462,6 +2514,27 @@
     });
   }
 
+  async function streamRevision(composedMessage, displayText, quotes) {
+    if (!state.topic) {
+      showToast("先选择一个话题，再发起修订。");
+      return;
+    }
+    const requested = state.topic.versions[state.version]?.based_on || state.version;
+    appendChatUserMessage(`〔修订〕${displayText}`, quotes);
+    await streamTurn({
+      endpoint: "api/topic/revise",
+      payload: {
+        topic_id: state.topic.id,
+        version: requested,
+        message: composedMessage,
+        model: selectedChatModel() || undefined,
+      },
+      onEvent: handleChatEvent,
+      history: state.chat.messages,
+      errorLabel: "修订失败",
+    });
+  }
+
   function abortChat() {
     if (state.chat.controller) state.chat.controller.abort();
     const stopPath = workflowMode() ? "api/workflow/stop" : "api/chat/stop";
@@ -2496,6 +2569,7 @@
     const composed = composeMessageWithContext(value);
     if (workflowMode()) streamWorkflow(composed, value, quotes);
     else if (paperMode()) streamPaperChat(composed, value);
+    else if (nodes.reviseToggle?.checked) streamRevision(composed, value, quotes);
     else streamChat(composed, value, quotes);
   }
 
@@ -2661,6 +2735,10 @@
     });
     nodes.recentResearch.addEventListener("click", showRecentResearch);
     nodes.versionTabs.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-version]");
+      if (button) switchVersion(button.dataset.version);
+    });
+    nodes.revisionChips?.addEventListener("click", (event) => {
       const button = event.target.closest("[data-version]");
       if (button) switchVersion(button.dataset.version);
     });

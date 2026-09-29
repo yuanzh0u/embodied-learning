@@ -429,6 +429,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
         if path == "/api/chat":
             self._handle_chat()
             return
+        if path == "/api/topic/revise":
+            self._handle_topic_revise()
+            return
         if path == "/api/chat/stop":
             self._handle_chat_stop()
             return
@@ -660,6 +663,124 @@ class WikiHandler(SimpleHTTPRequestHandler):
             self._stream_chat_turn(
                 key=topic_id, turn=turn, registry=registry, record_user_message=message
             )
+        finally:
+            _set_current_chat(None)
+            release_chat_lock(topic_id)
+
+    # ---- topic revision: regenerate one deliverable as a new version ------
+
+    @staticmethod
+    def _next_revision_number(run_dir: Path, style_key: str) -> int:
+        """Next revision number; the settled base deliverable counts as v1,
+        so the first chat revision is v2."""
+        pattern = re.compile(rf"^{re.escape(style_key)}-v(\d+)$")
+        revisions_dir = run_dir / "revisions"
+        numbers = [
+            int(match.group(1))
+            for path in revisions_dir.glob(f"{style_key}-v*.md")
+            if (match := pattern.match(path.stem))
+        ]
+        return max(numbers, default=1) + 1
+
+    @staticmethod
+    def _append_revision_index(run_dir: Path, entry: dict) -> None:
+        index_path = run_dir / "revisions" / "index.json"
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            data = json.loads(index_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            data = []
+        if not isinstance(data, list):
+            data = []
+        data.append(entry)
+        atomic_write_text(index_path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+
+    def _handle_topic_revise(self) -> None:
+        body = self._chat_precheck()
+        if body is None:
+            return
+        message = (body.get("message") or "").strip()
+        if not message:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "消息为空。"})
+            return
+        model = self._resolve_request_model(body.get("model"))
+        try:
+            run_dir, topic = self.resolve_topic(body.get("topic_id") or "")
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        topic_id = topic.get("id") or body["topic_id"]
+        # The browser sends the currently viewed version key ("keyan" or
+        # "keyan-v2"); a revision regenerates the BASE style's deliverable.
+        requested = str(body.get("version") or "").strip()
+        style_key = re.sub(r"-v\d+$", "", requested)
+        available = topic.get("available_versions") or []
+        if style_key not in wiki_chat.REVISION_STYLE_BY_KEY or style_key not in available:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": f"无效的修订风格：{requested or '未指定'}"})
+            return
+        revision_number = self._next_revision_number(run_dir, style_key)
+        base_filename = (topic.get("versions") or {}).get(style_key, {}).get("source_file") or ""
+        try:
+            system_prompt, prompt = wiki_chat.build_revision_prompts(
+                run_dir=run_dir, kb_root=self.kb_root, style_key=style_key,
+                revision_number=revision_number, topic_title=str(topic.get("title") or ""),
+                base_filename=base_filename, pipeline_root=resolve_pipeline_root(),
+                message=message,
+            )
+        except ValueError as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        version_key = f"{style_key}-v{revision_number}"
+
+        if not acquire_chat_lock(topic_id):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该话题已有对话正在进行，请先停止或稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            registry = self.chat_sessions
+            self._write_sse_event({
+                "type": "status", "stage": "revision",
+                "detail": f"正在生成修订版 {version_key}",
+            })
+            resumed = (registry.get(topic_id) or {}).get("session_id")
+            turn, session_was_reset = self._spawn_workflow_turn(
+                prompt, resumed, model, system_prompt=system_prompt)
+            if session_was_reset:
+                registry.reset(topic_id)
+                self._write_sse_event({"type": "session_reset"})
+            full_text = self._stream_chat_turn(
+                key=topic_id, turn=turn, registry=registry, record_user_message=message
+            )
+            marker = next(
+                (match.group(1)
+                 for line in full_text.splitlines()
+                 if (match := wiki_chat.REVISION_MARKER_RE.match(line.strip()))),
+                None,
+            )
+            target = (run_dir / marker) if marker else None
+            if marker and target is not None and target.resolve() == (run_dir / f"revisions/{version_key}.md").resolve() and target.is_file():
+                self._append_revision_index(run_dir, {
+                    "version_key": version_key,
+                    "style": style_key,
+                    "request": message,
+                    "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+                })
+                try:
+                    refresh_snapshot(self.kb_root, self.data_dir)
+                except (EmptyCorpusError, RuntimeError) as exc:
+                    self._write_sse_event({
+                        "type": "revision_error",
+                        "message": f"修订已写入，但快照刷新失败：{exc}",
+                    })
+                    return
+                self._write_sse_event({
+                    "type": "revision_ready", "topic_id": topic_id, "version_key": version_key,
+                })
+            else:
+                self._write_sse_event({
+                    "type": "revision_error",
+                    "message": "修订未完成：agent 未通过门禁或未输出完成标记，详见上方对话内容。",
+                })
         finally:
             _set_current_chat(None)
             release_chat_lock(topic_id)

@@ -60,12 +60,9 @@ If the brief says `Writing readiness: preliminary` or its coverage gate is block
    - Inspect evidence JSONL and briefs from `$embodied-ai-literature-hub`; inspect `knowledge/sources.md` for stable source IDs.
    - Use candidate lists only for search coverage, not accepted claims; use fallback source-tier JSON only as review-packet context, not Hub evidence JSONL.
    - **Articles cite verified evidence only.** If the synthesis needs a candidate paper, recover its complete text, read it with `$embodied-ai-paper-reader`, audit it, and project its events before writing.
-7. Settle the run:
-   - **Preferred: one mechanical command.** `python3 scripts/finalize_run.py --run-dir <run-dir> --kb-root <kb-root>` stamps run.json (`event_count`/`evidence_papers`/`candidate_count`/`full_text_count`, `files.evidence` by consolidating `evidence/*.jsonl`, `style`+`scope_note` when a single deliverable exists), enforces the per-mode cited-paper floor (rapid 6 / scoping 10 / systematic 15 — a shortfall means the deep-read queue was too short: resume `run_review_pipeline.py` with a higher `--deep-read-limit`, never hand-wave it), runs both gates below, flips `settled`, publishes into `<kb-root>/evidence/<run>/`, registers the catalog row (scale triple 候选/全文/精读 included), and rebuilds the wiki snapshot. Gate failures print what is missing — fix and rerun; a gate miss is never a stop-and-explain condition.
-   - Validate the evidence JSONL: `python3 skills/embodied-ai-literature-hub/scripts/parse.py write-lit-outputs --evidence-jsonl <file> --validate-only`.
-   - Flip `run.json` `status` from `in-progress` to `settled`.
-   - Copy accepted assets into `evidence/literature-review-<topic>-<date>/`: every used evidence JSONL, final articles, appendix, source draft, query plan, candidate registry, and coverage report. Full texts/extraction payloads stay in cache/`work/`. (finalize_run.py does the standard subset; add the rest by hand when present.)
-   - **Publish (settle is not the last step):** register the run in the owning knowledge base's `knowledge/literature-review-catalog.md` (one row: ID, topic, scale triple 候选/全文/精读, links to run/packet/articles), then rebuild that KB's wiki snapshot with `python3 scripts/build_research_wiki.py --kb-root <kb-root> --output <kb-root>/wiki/data` and verify the served `/data/current.json` topic count increased. The two knowledge bases: this repo (embodied-AI topics) and the local KB at `~/Documents/arxiv` (LiDAR/SLAM/calibration/point-cloud topics — runs live there, not in the repo). A settled-but-unregistered run is invisible to readers. finalize_run.py performs both; skip them only when it was already run.
+7. Settle the run — one mechanical command, no manual steps:
+   - `python3 scripts/finalize_run.py --run-dir <run-dir> --kb-root <kb-root>` does ALL of the settle/publish mechanics: stamps run.json (`event_count`/`evidence_papers`/`candidate_count`/`full_text_count`, `files.evidence` by consolidating `evidence/*.jsonl`, `style`+`scope_note` when a single deliverable exists), enforces the per-mode cited-paper floor (rapid 6 / scoping 10 / systematic 15), copies accepted assets into `evidence/<run>/`, flips `settled`, registers the catalog row (scale triple 候选/全文/精读 included), and rebuilds the wiki snapshot. Gate failures print what is missing — fix and rerun; a gate miss is never a stop-and-explain condition. Never flip `run.json` status, hand-copy evidence assets, edit the catalog table, run `build_research_wiki.py`, or verify the served `/data/current.json` topic count yourself — those are finalize_run.py's mechanical duties, and redoing them by hand is a contract violation.
+   - A cited-paper-floor shortfall means the deep-read queue was too short. When you are driving the mechanical stages yourself, the remedy is to resume `run_review_pipeline.py` with a higher `--deep-read-limit` — never hand-wave the shortfall. When the mechanical stages were already driven for you (pipeline-summary.json present in the run dir), do NOT re-run the driver: report the gap honestly to the user and leave the run `in-progress`.
    - Cross-run evidence is supported but must be recorded: `run.json` lists `source_runs` (the prior runs whose evidence was combined) and `event_count` equals the deduplicated count actually available to the articles. Never cite an event that is not in the settled evidence set.
    - Audit before settling — all gates must pass:
      - `python3 scripts/check_run_bundle.py <run-dir>` (bundle completeness: three styles or a declared `style`+`scope_note`, self-contained evidence, standard run.json schema).
@@ -74,6 +71,8 @@ If the brief says `Writing readiness: preliminary` or its coverage gate is block
    - `check_run_bundle.py` enforces the v2 coverage artifacts and refuses settlement while `ready_to_stop=false`.
 
 For a legacy multi-run paper-reader upgrade, keep every old settled run immutable. Build and audit the replacement under `work/`, then publish it under a new suffixed directory such as `literature-review-<topic>-<date>-reader-v1`. The replacement run must include `paper-notes/`, `claim-support-audits/`, `reading-ledger.jsonl`, `reading-summary.json`, their indexes, regenerated evidence/brief/appendix/trace map, and all three audited articles. Only switch it to `settled` after all reading, citation, editorial, and bundle gates pass.
+
+Post-settle article revisions go through the wiki revision flow (topic chat's 修订成稿 toggle → `/api/topic/revise`): the agent adds `revisions/<style>-v<N>.md` inside the published run and never edits the base deliverables, `run.json`, `trace-map.json`, or `evidence-appendix.md`. Revisions re-run the article gates (build-trace-map into `revisions/`, `audit-article-quality` single style, `audit_citations`) against the run's own evidence set.
 
 ## Briefing generation
 
@@ -211,7 +210,8 @@ python3 skills/embodied-ai-review-writer/scripts/writing_audit.py audit-zhihu-co
 ## Completion standard
 
 Finish only when the evidence gates pass, the editorial audit passes, the run is registered in the
-owning KB's `literature-review-catalog.md` with its wiki snapshot rebuilt, and a manual read confirms
+owning KB's `literature-review-catalog.md` with its wiki snapshot rebuilt (finalize_run.py does both
+— never by hand), and a manual read confirms
 that the three outputs sound like three publications for three audiences rather than three views of
 one database. The natural-writing pass must improve clarity without changing the evidence surface.
 

@@ -340,6 +340,79 @@ class BuildResearchWikiTest(unittest.TestCase):
         manifest_item = manifest["topics"][0]
         self.assertEqual(manifest_item["default_version"], "keyan")
 
+    def test_revisions_publish_as_ordered_version_keys(self) -> None:
+        """Chat-driven revisions/<style>-vN.md become version keys of their own
+        (keyan-v2), ordered after the base style, with revision/based_on/
+        request provenance — and the base deliverable stays default."""
+        evidence = self.root / "evidence"
+        run = evidence / "literature-review-revision-topic-20260911"
+        run.mkdir(parents=True)
+        (run / "run.json").write_text(
+            json.dumps(
+                {"topic": "修订话题", "status": "settled", "style": "scientific-memo",
+                 "scope_note": "单风格", "files": {"outputs": ["scientific-memo_keyan.md"]}},
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        (run / "scientific-memo_keyan.md").write_text(
+            "# 修订话题\n\n## 结论\n\n原始备忘录正文，长度足够作为发布内容。\n",
+            encoding="utf-8",
+        )
+        (run / "evidence-appendix.md").write_text("# 证据附录\n", encoding="utf-8")
+        revisions = run / "revisions"
+        revisions.mkdir()
+        (revisions / "keyan-v2.md").write_text(
+            "# 修订话题\n\n## 结论\n\n按要求生成的修订正文。^[1]^\n\n## References\n\n"
+            "1. Demo Paper ([arXiv:2601.00001](https://arxiv.org/abs/2601.00001))\n",
+            encoding="utf-8",
+        )
+        (revisions / "keyan-v3.md").write_text(
+            "# 修订话题\n\n## 结论\n\n第三版正文，长度足够作为发布内容。\n", encoding="utf-8"
+        )
+        (revisions / "index.json").write_text(
+            json.dumps([
+                {"version_key": "keyan-v2", "style": "keyan", "request": "开头加落地建议",
+                 "created_at": "2026-09-29T10:00:00Z"},
+            ], ensure_ascii=False),
+            encoding="utf-8",
+        )
+        # A stray non-matching file must be ignored.
+        (revisions / "notes.md").write_text("scratch", encoding="utf-8")
+
+        manifest = wiki.build_snapshot(evidence, self.output)
+        topic = json.loads(
+            (self.output / "topics" / f"{manifest['topics'][0]['id']}.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            topic["available_versions"], ["keyan", "keyan-v2", "keyan-v3"]
+        )
+        self.assertEqual(manifest["topics"][0]["default_version"], "keyan")
+        v2 = topic["versions"]["keyan-v2"]
+        self.assertEqual(v2["label"], "科研备忘录 · 修订v2")
+        self.assertEqual(v2["based_on"], "keyan")
+        self.assertEqual(v2["revision"], 2)
+        self.assertEqual(v2["request"], "开头加落地建议")
+        self.assertEqual(v2["source_file"], "revisions/keyan-v2.md")
+        # keyan revisions keep the citation superscript reader links.
+        self.assertIn("/api/reader/2601.00001", v2["html"])
+        v3 = topic["versions"]["keyan-v3"]
+        self.assertEqual(v3["revision"], 3)
+        self.assertEqual(v3["request"], "")
+        validated = wiki.validate_snapshot(self.output)
+        self.assertEqual(validated["topics"], manifest["topics"])
+
+    def test_run_without_revisions_is_unchanged(self) -> None:
+        write_triplet(self.source / "literature-review-complete-topic-20260102")
+        selected, _stats = wiki.discover_topics(self.source)
+        manifest = wiki.build_snapshot(self.source, self.output)
+        topic = json.loads(
+            (self.output / "topics" / f"{manifest['topics'][0]['id']}.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            topic["available_versions"], ["keyan", "zhihu", "xiaohongshu"]
+        )
+
     def test_slide_deck_field_tracks_run_folder(self) -> None:
         """The 汇报展示 manifest field flips on the presence of a compiled
         slide-deck_report.html in the run folder (run-level wiki entry)."""

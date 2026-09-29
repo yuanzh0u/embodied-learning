@@ -942,5 +942,53 @@ class JournalableEventTest(unittest.TestCase):
             self.assertFalse(wiki_chat.journalable_event(event), event)
 
 
+class RevisionPromptTest(unittest.TestCase):
+    """build_revision_prompts — the wiki revision flow's agent contract."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.kb_root = Path(self.tmp.name)
+        self.run_dir = self.kb_root / "evidence" / "literature-review-x-20260929"
+        self.run_dir.mkdir(parents=True)
+
+    def test_prompts_carry_target_gates_and_marker(self):
+        system, user = wiki_chat.build_revision_prompts(
+            run_dir=self.run_dir, kb_root=self.kb_root,
+            style_key="keyan", revision_number=2, topic_title="时序深度估计",
+            base_filename="scientific-memo_keyan.md", pipeline_root=None,
+            message="开头加落地建议",
+        )
+        self.assertIn("[REVISION:revisions/keyan-v2.md]", system)
+        self.assertIn("build-trace-map", system)
+        self.assertIn("audit-article-quality --memo", system)
+        self.assertIn("audit_citations.py --article revisions/keyan-v2.md", system)
+        self.assertIn("evidence-appendix.md", system)
+        self.assertIn("trace-map-keyan-v2.json", system)  # base trace-map untouched
+        self.assertIn("风格契约（scientific-memo）", system)  # voice contract injected
+        # Immutability contract: base deliverables are read-only.
+        self.assertIn("绝不覆盖任何既有文件", system)
+        self.assertIn("revisions/keyan-v2.md", user)
+        self.assertIn("开头加落地建议", user)
+        self.assertIn("scientific-memo_keyan.md", user)
+
+    def test_zhihu_revision_uses_zhihu_gates(self):
+        system, _ = wiki_chat.build_revision_prompts(
+            run_dir=self.run_dir, kb_root=self.kb_root,
+            style_key="zhihu", revision_number=1, topic_title="t",
+            base_filename="zhihu-explainer_zhihu.md", pipeline_root=None,
+            message="",
+        )
+        self.assertIn("audit-article-quality --zhihu", system)
+        self.assertIn("（无具体要求，请改善整体质量）", _)
+
+    def test_unknown_style_key_rejected(self):
+        with self.assertRaises(ValueError):
+            wiki_chat.build_revision_prompts(
+                run_dir=self.run_dir, kb_root=self.kb_root,
+                style_key="quickread", revision_number=1, topic_title="t",
+                base_filename="x.md", pipeline_root=None, message="m",
+            )
+
 if __name__ == "__main__":
     unittest.main()

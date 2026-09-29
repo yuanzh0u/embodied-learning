@@ -1495,5 +1495,133 @@ class FakeProcess:
         pass
 
 
+class RevisionEndpointTest(ChatServerHarness):
+    """POST /api/topic/revise — chat-driven article revision as new versions."""
+
+    def _enrich_topic(self):
+        topic_path = (
+            self.kb_root / "wiki" / "data" / "snapshots" / "20260101T000000-abcdef1234"
+            / "topics" / f"{self.topic_id}.json"
+        )
+        topic = json.loads(topic_path.read_text(encoding="utf-8"))
+        topic["title"] = "演示话题"
+        topic["available_versions"] = ["keyan", "zhihu", "xiaohongshu"]
+        topic["versions"] = {
+            "keyan": {"source_file": "scientific-memo_keyan.md"},
+            "zhihu": {"source_file": "zhihu-explainer_zhihu.md"},
+            "xiaohongshu": {"source_file": "xiaohongshu-post_xiaohongshu.md"},
+        }
+        topic_path.write_text(json.dumps(topic, ensure_ascii=False), encoding="utf-8")
+
+    def setUp(self):
+        super().setUp()
+        self._enrich_topic()
+        self._original_refresh = server_module.refresh_snapshot
+        self.refresh_calls: list[tuple] = []
+        server_module.refresh_snapshot = (
+            lambda kb_root, data_dir: self.refresh_calls.append((kb_root, data_dir))
+        )
+        self.addCleanup(self._restore_refresh)
+
+    def _restore_refresh(self):
+        server_module.refresh_snapshot = self._original_refresh
+
+    def _install_writing_turn(self, marker: str | None):
+        original = server_module.wiki_chat.ChatTurn
+
+        class WritingTurn(FakeTurn):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self._events = [
+                    {"type": "session", "session_id": "rev-1", "model": "fake"},
+                    {"type": "delta", "text": "修订中……"},
+                    {"type": "delta", "text": (f"\n[REVISION:{marker}]" if marker else "")},
+                    {"type": "done", "session_id": "rev-1", "is_error": False},
+                ]
+
+            def events(self):
+                if marker:
+                    target = Path(self.kwargs["cwd"]) / "evidence" / self.run_name / marker
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text("# 修订版\n", encoding="utf-8")
+                yield from self._events
+
+        WritingTurn.run_name = self.run_dir.name
+        server_module.wiki_chat.ChatTurn = WritingTurn
+        self.addCleanup(self._restore_writing_turn, original)
+
+    def _restore_writing_turn(self, original):
+        server_module.wiki_chat.ChatTurn = original
+
+    def test_revision_happy_path_writes_index_and_refreshes(self):
+        self._install_writing_turn("revisions/keyan-v2.md")
+        status, _raw, headers = self._collect_sse(
+            self.request("POST", "/api/topic/revise", {
+                "topic_id": self.topic_id, "version": "keyan",
+                "message": "开头加落地建议",
+            })
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn("text/event-stream", headers.get("Content-Type", ""))
+        events = self.sse_events()
+        types = [e["type"] for e in events]
+        self.assertIn("revision_ready", types)
+        ready = next(e for e in events if e["type"] == "revision_ready")
+        self.assertEqual(ready["version_key"], "keyan-v2")
+        # Provenance index appended; snapshot refresh triggered.
+        index = json.loads(
+            (self.run_dir / "revisions" / "index.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(index[0]["version_key"], "keyan-v2")
+        self.assertEqual(index[0]["request"], "开头加落地建议")
+        self.assertEqual(len(self.refresh_calls), 1)
+        # The agent turn carried the revision contract and a long timeout.
+        turn = FakeTurn.instances[-1]
+        self.assertIn("[REVISION:revisions/keyan-v2.md]", turn.kwargs["system_prompt"])
+        self.assertGreaterEqual(turn.kwargs["timeout_s"], 3600)
+
+    def test_next_revision_number_increments_from_disk(self):
+        self._install_writing_turn("revisions/keyan-v3.md")
+        (self.run_dir / "revisions").mkdir()
+        (self.run_dir / "revisions" / "keyan-v2.md").write_text("old\n", encoding="utf-8")
+        status, _raw, _headers = self._collect_sse(
+            self.request("POST", "/api/topic/revise", {
+                "topic_id": self.topic_id, "version": "keyan-v2",
+                "message": "更精简",
+            })
+        )
+        ready = next(
+            e for e in self.sse_events() if e["type"] == "revision_ready"
+        )
+        self.assertEqual(ready["version_key"], "keyan-v3")
+
+    def test_missing_marker_reports_revision_error(self):
+        self._install_writing_turn(None)
+        status, _raw, _headers = self._collect_sse(
+            self.request("POST", "/api/topic/revise", {
+                "topic_id": self.topic_id, "version": "keyan", "message": "改一下",
+            })
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn("revision_error", [e["type"] for e in self.sse_events()])
+        self.assertEqual(self.refresh_calls, [])
+        self.assertFalse((self.run_dir / "revisions" / "index.json").exists())
+
+    def test_invalid_style_rejected(self):
+        status, payload, _ = self.request("POST", "/api/topic/revise", {
+            "topic_id": self.topic_id, "version": "quickread", "message": "改",
+        })
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_busy_topic_rejected(self):
+        self.assertTrue(server_module.acquire_chat_lock(self.topic_id))
+        try:
+            status, payload, _ = self.request("POST", "/api/topic/revise", {
+                "topic_id": self.topic_id, "version": "keyan", "message": "改",
+            })
+            self.assertEqual(status, HTTPStatus.CONFLICT)
+        finally:
+            server_module.release_chat_lock(self.topic_id)
+
 if __name__ == "__main__":
     unittest.main()
