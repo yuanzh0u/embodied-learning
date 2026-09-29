@@ -65,7 +65,7 @@
 | `check_run_bundle.py` | **settle 前门禁**：bundle 完整性（三风格或声明的 style+scope_note、files 清单、事件数、coverage ready_to_stop） | `check_run_bundle.py <run-dir>` |
 | `audit_citations.py` | **settle 前门禁**：成稿引用审计（死锚点、超出加载证据集的引用、run.json 漂移） | `audit_citations.py --article <成稿> --appendix evidence-appendix.md --evidence-jsonl <jsonl>` |
 | `finalize_run.py` | **机械 settle 一条龙**：盖章 run.json（event_count/evidence_papers/candidate_count/full_text_count、files.evidence、单风格 style+scope_note）→ 引用篇数下限门禁（rapid 6 / scoping 10 / systematic 15，不足则提示续跑 driver 补深读）→ 两道门 → 拷贝 evidence/ → 翻 settled → 登记 catalog → 重建 wiki 快照。幂等；门禁失败打印缺失项（修复重跑，不是停止理由） | `finalize_run.py --run-dir work/<run> --kb-root <kb-root>` |
-| `run_status.py` | **run 现状一次性摘要**（替代 agent 逐文件循环）：漏斗数字、逐篇证据与 claim 摘要、从 candidate-registry join 的 References 作者/年份元数据、产物清单、引用篇数下限核对、建议命令；`--json` 出机器可读 | `run_status.py --run-dir work/<run>` |
+| `run_status.py` | **run 现状一次性摘要**（替代 agent 逐文件循环）：漏斗数字、逐篇证据与 claim 摘要、从 candidate-registry join 的 References 作者/年份元数据、逐篇深读漏斗（held / deep-read-failed 及筛选命中词）、产物清单、引用篇数下限核对、建议命令——含**逐字可执行的综述包完整命令**；`--json` 出机器可读 | `run_status.py --run-dir work/<run>` |
 | `validate_current_reviews.py` | 批量校验 catalog 路由的全部已发布 run | `validate_current_reviews.py`（知识库改动后跑） |
 
 ### B. 知识库与 Wiki 运维

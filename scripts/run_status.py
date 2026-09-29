@@ -92,6 +92,107 @@ def year_of(published: str) -> str:
     return published[:4] if len(published) >= 4 else ""
 
 
+def audit_statuses(run_dir: Path) -> dict[str, str]:
+    """paper_id -> claim-support audit status (pass / needs-review / reject)."""
+    out: dict[str, str] = {}
+    notes_dir = run_dir / "paper-notes"
+    if not notes_dir.is_dir():
+        return out
+    for path in notes_dir.glob("*.audit.json"):
+        data = load_json(path)
+        out[path.name[: -len(".audit.json")]] = str(data.get("status") or "?")
+    return out
+
+
+def evidence_paper_ids(run_dir: Path) -> set[str]:
+    """Papers with at least one projected evidence event."""
+    return {
+        path.stem
+        for path in (run_dir / "evidence").glob("*.jsonl")
+        if any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())
+    }
+
+
+def paper_funnel(run_dir: Path) -> list[dict]:
+    """Per screened paper: where it stopped in extraction → pool → deep-read
+    → audit → evidence. The writer used to reconstruct this with a dozen
+    inline-python loops over screening/registry/audit files."""
+    ids_path = run_dir / "screening-ids.txt"
+    if not ids_path.is_file():
+        return []
+    ids = [line.strip() for line in ids_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    extraction = load_json(run_dir / "extraction-summary.json")
+    eligible = {
+        str(result.get("paper_id")): bool(result.get("evidence_eligible"))
+        for result in extraction.get("results") or []
+    }
+    audits = audit_statuses(run_dir)
+    evidence_ids = evidence_paper_ids(run_dir)
+    metadata = registry_metadata(run_dir)
+    screening = load_json(run_dir / "screening.json")
+    screened = {
+        str(item.get("arxiv_id")): item
+        for item in (screening.get("candidates") or [])
+        if isinstance(item, dict)
+    }
+    pool_root = run_dir.parent.parent / "pool"
+    rows: list[dict] = []
+    for paper_id in ids:
+        audit = audits.get(paper_id)
+        if paper_id in evidence_ids:
+            stage = "evidence"
+        elif audit == "reject":
+            stage = "audit-reject"
+        elif (run_dir / "paper-notes" / f"{paper_id}.json").is_file():
+            # Note assembled but its audit never passed: invalid skeleton or a
+            # failed audit step — retryable by rerunning the driver.
+            stage = "deep-read-failed"
+        elif pool_root.is_dir() and (pool_root / f"arxiv-{paper_id}" / "extraction.json").is_file():
+            stage = "pooled-unread"
+        elif eligible.get(paper_id) is False:
+            stage = "held"
+        elif paper_id in eligible:
+            stage = "extracted-unpooled"
+        else:
+            stage = "unknown"
+        item = screened.get(paper_id) or {}
+        record = metadata.get(paper_id) or {}
+        rows.append({
+            "arxiv_id": paper_id,
+            "stage": stage,
+            "audit": audit,
+            "title": str(record.get("title") or ""),
+            "matched_title_terms": (item.get("matched_title_terms") or [])[:3],
+        })
+    return rows
+
+
+def packet_command(run_dir: Path, report: dict, scripts_root: Path) -> str:
+    """The exact, fully-specified packet invocation — the writer used to read
+    the packet script's argparse source to discover these flags."""
+    script = scripts_root / "skills" / "embodied-ai-review-writer" / "scripts" / "build_review_packet.py"
+    parts = ["python3", str(script), "--run-dir", str(run_dir)]
+    if report.get("topic"):
+        parts += ["--topic", str(report["topic"])]
+    for knowledge_id in report.get("knowledge_ids") or []:
+        parts += ["--knowledge-id", str(knowledge_id)]
+    if report.get("review_mode"):
+        parts += ["--review-mode", str(report["review_mode"])]
+    consolidated = run_dir / "evidence.jsonl"
+    if consolidated.is_file():
+        parts += ["--evidence-jsonl", str(consolidated)]
+    else:
+        for path in sorted((run_dir / "evidence").glob("*.jsonl")):
+            if any(line.strip() for line in path.read_text(encoding="utf-8").splitlines()):
+                parts += ["--evidence-jsonl", str(path)]
+    for flag, filename in (("--coverage-report", "coverage-report.json"),
+                           ("--reading-summary", "reading-summary.json")):
+        if (run_dir / filename).is_file():
+            parts += [flag, str(run_dir / filename)]
+    parts.append("--consolidate-evidence")
+    return " ".join(parts)
+
+
 def build_report(run_dir: Path) -> dict:
     manifest = load_json(run_dir / "run.json")
     summary = load_json(run_dir / "pipeline-summary.json")
@@ -112,6 +213,8 @@ def build_report(run_dir: Path) -> dict:
     return {
         "run": run_dir.name,
         "status": manifest.get("status") or "unknown",
+        "topic": manifest.get("topic"),
+        "knowledge_ids": manifest.get("knowledge_ids"),
         "review_mode": mode,
         "style": manifest.get("style"),
         "scope_note": manifest.get("scope_note"),
@@ -125,6 +228,7 @@ def build_report(run_dir: Path) -> dict:
             "floor_met": (paper_count >= floor) if floor else None,
         },
         "papers": papers,
+        "paper_funnel": paper_funnel(run_dir),
         "artifacts": {**present, **deliverables},
         "paper_notes": len(list((run_dir / "paper-notes").glob("*.json"))) if (run_dir / "paper-notes").is_dir() else 0,
     }
@@ -170,11 +274,25 @@ def render(report: dict, run_dir: Path, scripts_root: Path) -> str:
     missing = [name for name, exists in report["artifacts"].items() if not exists]
     have = [name for name, exists in report["artifacts"].items() if exists]
     lines.append(f"[artifacts] 有：{', '.join(have) or '无'}；缺：{', '.join(missing) or '无'}")
-    if not report["artifacts"].get("review-packet.md"):
+    funnel_rows = report.get("paper_funnel") or []
+    if funnel_rows:
+        stuck = [row for row in funnel_rows if row["stage"] not in ("evidence",)]
         lines.append(
-            f"[next] 生成综述包（直接写进运行目录）：python3 {scripts_root / 'skills' / 'embodied-ai-review-writer' / 'scripts' / 'build_review_packet.py'} "
-            f"--run-dir {run_dir} --topic <topic> --evidence-jsonl {run_dir / 'evidence.jsonl' if (run_dir / 'evidence.jsonl').is_file() else '<evidence jsonl>'}"
+            f"[deep-read] 队列 {len(funnel_rows)} 篇：evidence "
+            f"{len(funnel_rows) - len(stuck)}，其余 {len(stuck)} 篇停在下述阶段"
+            "（deep-read-failed / audit-reject 可续跑驱动重试；held 为全文未恢复）："
         )
+        for row in stuck:
+            title = row["title"][:36]
+            terms = ",".join(row["matched_title_terms"])
+            lines.append(
+                f"  {row['arxiv_id']}  {row['stage']}"
+                + (f"  命中:{terms}" if terms else "")
+                + (f"  {title}" if title else "")
+            )
+    if not report["artifacts"].get("review-packet.md"):
+        lines.append("[next] 生成综述包（直接写进运行目录，逐字执行即可）：")
+        lines.append(f"  {packet_command(run_dir, report, scripts_root)}")
     lines.append(
         f"[next] 成稿+trace-map 就绪后一次落盘：python3 {scripts_root / 'finalize_run.py'} "
         f"--run-dir {run_dir} --kb-root <kb-root>"

@@ -44,6 +44,45 @@ class RunStatusTest(unittest.TestCase):
         (evidence / "2412.01090.jsonl").write_text("\n".join(events) + "\n", encoding="utf-8")
         (evidence / "empty.jsonl").write_text("", encoding="utf-8")
         (self.run_dir / "writing-brief.md").write_text("# brief\n", encoding="utf-8")
+        # Deep-read funnel inputs: screening queue + extraction outcomes + audits.
+        (self.run_dir / "screening-ids.txt").write_text(
+            "2412.01090\n2110.10805\n2203.02677\n", encoding="utf-8"
+        )
+        (self.run_dir / "extraction-summary.json").write_text(json.dumps({"results": [
+            {"paper_id": "2412.01090", "evidence_eligible": True},
+            {"paper_id": "2110.10805", "evidence_eligible": False},
+            {"paper_id": "2203.02677", "evidence_eligible": False},
+        ]}), encoding="utf-8")
+        (self.run_dir / "screening.json").write_text(json.dumps({"candidates": [
+            {"arxiv_id": "2110.10805", "matched_title_terms": ["depth", "temporal"]},
+        ]}), encoding="utf-8")
+        paper_notes = self.run_dir / "paper-notes"
+        paper_notes.mkdir()
+        (paper_notes / "2203.02677.json").write_text("{}", encoding="utf-8")  # note without audit
+
+    def test_deep_read_funnel_resolves_per_paper_stage(self):
+        """The per-paper stage table replaces the writer's inline-python loops
+        over extraction/audit/screening files."""
+        rows = {row["arxiv_id"]: row for row in run_status.build_report(self.run_dir)["paper_funnel"]}
+        self.assertEqual(rows["2412.01090"]["stage"], "evidence")
+        self.assertEqual(rows["2110.10805"]["stage"], "held")
+        self.assertEqual(rows["2110.10805"]["matched_title_terms"], ["depth", "temporal"])
+        # Note present but audit missing → retryable deep-read failure.
+        self.assertEqual(rows["2203.02677"]["stage"], "deep-read-failed")
+
+    def test_packet_command_is_fully_specified(self):
+        """The [next] packet command must be executable verbatim — the writer
+        used to read the packet script's argparse source to discover flags."""
+        text = run_status.render(
+            run_status.build_report(self.run_dir), self.run_dir, Path("/scripts")
+        )
+        command_line = next(line for line in text.splitlines() if "build_review_packet.py" in line)
+        self.assertIn("--run-dir", command_line)
+        self.assertIn("--topic demo", command_line)
+        self.assertIn("--review-mode scoping", command_line)
+        self.assertIn("--consolidate-evidence", command_line)
+        # Per-paper JSONL fallback (empty files skipped) when no consolidated file exists.
+        self.assertIn("--evidence-jsonl", command_line)
 
     def test_digest_aggregates_papers_metadata_and_floor(self):
         report = run_status.build_report(self.run_dir)

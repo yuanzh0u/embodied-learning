@@ -96,11 +96,18 @@ _WORKFLOW_BASE_SYSTEM_PROMPT = (
     "按照 <skills-root>/embodied-ai-review-writer/SKILL.md 的综述契约执行，"
     "SKILL.md 中出现的相对路径按其所在目录解析：路径以 skills/ 开头时替换为 <skills-root>，"
     "以 scripts/ 开头时替换为 <scripts-root>。"
+    "只遵循 SKILL.md 的成稿、风格与引文契约；其「Run lifecycle and gates」里的检索、深读、"
+    "投影段落以及所有手动 settle/publish 步骤（翻 run.json status、手工拷贝 evidence 资产、"
+    "手工登记 catalog 表格、重建 wiki 快照并核对发布结果）已全部由系统机械化——"
+    "一律跳过，更不要照着手动执行。"
     "\n\n【职责边界——固定流程已由系统完成】\n"
     "查询规划、候选检索（Semantic Scholar + arXiv）、候选注册、筛选、覆盖度评估、"
     "全文 HTML 抽取、论文深读（速记骨架+审计）与证据投影已由驱动脚本 run_review_pipeline.py 一次性完成，"
-    "产物都在运行目录：先读 pipeline-summary.json（各阶段耗时、候选/全文/深读/证据计数、覆盖维度、筛选词及来源），"
-    "再按需读 screening.json、coverage-report.json、paper-notes/、evidence/。"
+    "运行现状用 python3 <scripts-root>/run_status.py --run-dir <run-dir> 一次性读取："
+    "漏斗数字、逐篇证据与 claim、References 作者/年份元数据、逐篇深读漏斗（held / deep-read-failed 及筛选命中词）、"
+    "产物清单与建议命令都在它的输出里。"
+    "禁止用内联 python 循环或 grep 统计 screening.json、candidate-registry.json、paper-notes/、evidence/——"
+    "那是一次调用就能拿到的机械聚合；也不要读脚本源码或用 --help 探查参数。"
     "不要手动执行任何检索/抽取/筛选/深读/投影命令（search.py search-arxiv、search.py search-semantic-scholar、"
     "search.py build-candidate-registry、search.py screen-candidates、search.py assess-review-coverage、"
     "fetch.py extract-content-queue、build_reading_packet.py、build_paper_note.py、"
@@ -586,21 +593,20 @@ def build_workflow_prompt(
     if agent:
         execution_chain = (
             "然后一气呵成执行到 settle："
-            "用 build_review_packet.py --run-dir <运行目录>" + stage("packet")
-            + "生成综述包（直接写进运行目录，不要新建日期文件夹）；"
+            "综述包用 run_status.py 输出中 [next] 给出的 build_review_packet.py 完整命令"
+            + stage("packet")
+            + "逐字执行（直接写进运行目录，不要新建日期文件夹，不要读脚本源码探查参数）；"
             "亲自阅读证据事件与综述包后撰写成稿" + stage("writing")
             + "、生成 trace-map.json 并逐项跑审计脚本" + stage("audit") + "；"
-            "审计门全过后用 finalize_run.py --run-dir <运行目录> --kb-root <kb-root>" + stage("settle")
-            + "一步完成机械落盘（补齐 run.json 字段、复跑两道门、拷贝 evidence/、翻 settled、"
-            "登记 catalog、重建 wiki 快照）。"
-            "finalize_run.py 门禁不过时会机械打印缺失项：按提示修复后重跑 finalize 即可，"
-            "门禁未过不是提前停止的理由。"
+            "审计门全过后按系统提示的落盘契约执行 finalize_run.py --run-dir <运行目录> --kb-root <kb-root>"
+            + stage("settle")
+            + "一步完成机械落盘，不要手改 run.json、不要手动登记表格或重建快照。"
         )
     else:
         execution_chain = (
             "然后一气呵成执行到审计门："
-            "用 build_review_packet.py --run-dir <运行目录> 生成综述包"
-            "（直接写进运行目录，不要新建日期文件夹）；"
+            "综述包用 run_status.py 输出中 [next] 给出的 build_review_packet.py 完整命令逐字执行"
+            "（直接写进运行目录，不要新建日期文件夹，不要读脚本源码探查参数）；"
             "亲自阅读证据事件与综述包后撰写成稿、生成 trace-map.json 并逐项跑审计脚本。"
             "全部审计门通过后【立即停止本轮回复】——机械落盘、catalog 登记、"
             "wiki 快照重建与 publish 校验由 launcher 机械完成，不要触碰（见系统提示的停止契约）。"
@@ -627,9 +633,12 @@ def build_workflow_prompt(
         "（产物见运行目录的 pipeline-summary.json、paper-notes/、evidence/），"
         "不要重跑任何检索/抽取/筛选/深读/投影命令。",
         "执行要求：运行现状一律用 run_status.py --run-dir <运行目录> 一次性读取"
-        "（含漏斗数字、逐篇证据与 claim 摘要、References 作者/年份元数据、产物清单、"
+        "（含漏斗数字、逐篇证据与 claim 摘要、References 作者/年份元数据、"
+        "逐篇深读漏斗——held / deep-read-failed 及筛选命中词、产物清单、"
         "引用篇数下限门禁与建议命令），"
-        "禁止用内联 python 循环逐文件读 evidence/*.jsonl、逐个 cat 探查产物、"
+        "深读结果、References 元数据、筛选命中词均已在 run_status 输出："
+        "禁止用内联 python 循环或 grep 统计 evidence/*.jsonl、screening.json、"
+        "candidate-registry.json、paper-notes/，禁止逐个 cat 探查产物、"
         "对脚本跑 --help 探查或翻历史 run 的成稿当格式样板；"
         "成稿输入读渲染好的 review-packet.md / writing-brief.md / evidence-appendix.md，"
         "引文/图表格式契约以风格 references 文件与写作包为准。"
@@ -683,10 +692,9 @@ def build_continuation_prompt(
         parallel_clause = "单一成稿由主线程直接撰写润色，再走审计门"
     if agent:
         settle_clause = (
-            "审计门过后用 finalize_run.py --run-dir <运行目录> --kb-root <kb-root> 完成机械落盘"
-            "（补齐 run.json 的 status/files/style/scope_note 字段、复跑两道门、拷贝 evidence/、"
-            "翻 settled、登记 catalog、重建 wiki 快照）；"
-            "门禁不过时 finalize 会打印缺失项，修复后重跑即可，不要因此停止；"
+            "审计门过后按系统提示的落盘契约执行 finalize_run.py --run-dir <运行目录> --kb-root <kb-root>"
+            "完成机械落盘（不要手改 run.json，也不要手动登记表格或重建快照）；"
+            "门禁不过时修复后重跑即可，不要因此停止；"
             "最后输出 [TOPIC:<运行目录相对路径>]。"
         )
         mid_seq = "（[STAGE:packet] → [STAGE:writing] → [STAGE:audit] → [STAGE:settle]）"
@@ -707,7 +715,9 @@ def build_continuation_prompt(
     if stage in ("init", "plan", "retrieval", "mining", ""):
         lines = [
             "用户发来消息。先用 run_status.py --run-dir <运行目录> 一次性读取现状"
-            "（已完成的环节不要重做；禁止内联 python 逐文件循环读 evidence/），"
+            "（已完成的环节不要重做；深读结果、References 元数据、筛选命中词都已在输出里，"
+            "禁止内联 python 逐文件循环或 grep 统计）；"
+            "综述包未生成时用其 [next] 给出的 build_review_packet.py 完整命令逐字执行；"
             f"然后一气呵成走完剩余阶段{mid_seq}："
             + settle_clause,
             f"用户消息：{opinion}",
