@@ -20,7 +20,7 @@ import time
 import unicodedata
 import uuid
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Iterator
@@ -84,6 +84,7 @@ FIELD_RULES = (
 # review titles were established. These aliases make those historical runs part
 # of the same version line, so the newer dated run wins automatically.
 TOPIC_ALIASES = {
+    "road-marking-extraction": "地面箭头提取",
     "4d-data-requirements": "4d时空推理对数据的需求",
     "data-quality-contradictions": "具身智能数据质量的主要矛盾",
     "embodied-sensor-perception-error": "具身传感器感知误差",
@@ -106,6 +107,13 @@ class Candidate:
     topic_key: str
     date: str
     reader_rank: int
+    # Same-day runs tie on the extracted date; the run dir's mtime (settle
+    # time) breaks the tie so the actually-newer review wins.
+    mtime: float = 0.0
+    # Same-topic runs this candidate supersedes (newest-wins grouping); the
+    # older runs stay reachable as 第N轮综述 version keys instead of being
+    # dropped from the wiki.
+    superseded_runs: tuple["Candidate", ...] = ()
 
 
 def _read_text(path: Path) -> str:
@@ -233,6 +241,7 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
                 topic_key=topic_identity(directory),
                 date=extract_date(directory.name),
                 reader_rank=int(reader_match.group(1)) if reader_match else 0,
+                mtime=directory.stat().st_mtime,
             )
         )
 
@@ -240,10 +249,14 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
     for candidate in complete:
         grouped.setdefault(candidate.topic_key, []).append(candidate)
 
-    selected = [
-        max(items, key=lambda item: (item.date, item.reader_rank, item.directory.name))
-        for items in grouped.values()
-    ]
+    selected = []
+    for items in grouped.values():
+        winner = max(items, key=lambda item: (item.date, item.mtime, item.reader_rank, item.directory.name))
+        older = sorted(
+            (item for item in items if item is not winner),
+            key=lambda item: (item.date, item.directory.name),
+        )
+        selected.append(replace(winner, superseded_runs=tuple(older)))
     selected.sort(key=lambda item: (item.date, item.directory.name), reverse=True)
     stats = {
         "scanned_directories": len(all_dirs),
@@ -408,36 +421,12 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
     }
     fallback_markdown = markdown_by_version[version_keys[0]]
     title = get_topic_title(candidate.directory, fallback_markdown)
-    field = classify_field(title, candidate.directory.name)
-    identifier = topic_id(candidate.topic_key)
-    versions: dict[str, object] = {}
-    search_versions: dict[str, object] = {}
-
-def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
-    # Three styles by default; a run.json declaring a reduced scope publishes
-    # only its own deliverable (mirrors check_run_bundle's style gate). The
-    # declaration is the required minimum, not a cap: a run may ship extra
-    # deliverables (e.g. a memo regenerated alongside an earlier zhihu
-    # draft), and every deliverable actually on disk is published.
-    manifest = read_run_manifest(candidate.directory) or {}
-    declared_style = str(manifest.get("style") or "")
-
-    def version_file(key: str) -> Path:
-        return candidate.directory / VERSION_FILES[key][1]
-
-    if declared_style in _STYLE_VERSION_KEYS:
-        primary = _STYLE_VERSION_KEYS[declared_style]
-        version_keys = [primary] + [
-            key for key in VERSION_FILES if key != primary and version_file(key).is_file()
-        ]
-    else:
-        version_keys = [key for key in VERSION_FILES if version_file(key).is_file()] or list(VERSION_FILES)
-    markdown_by_version = {
-        key: _read_text(candidate.directory / VERSION_FILES[key][1])
-        for key in version_keys
-    }
-    fallback_markdown = markdown_by_version[version_keys[0]]
-    title = get_topic_title(candidate.directory, fallback_markdown)
+    # When the winner's own topic name needed an alias to reach the canonical
+    # line (e.g. an English re-run of a Chinese-titled review), the canonical
+    # key is the reader-facing title — the wiki groups by it.
+    raw_key = normalize_topic_key(read_run_topic(candidate.directory) or candidate.directory.name)
+    if candidate.topic_key and raw_key != candidate.topic_key:
+        title = candidate.topic_key
     field = classify_field(title, candidate.directory.name)
     identifier = topic_id(candidate.topic_key)
     versions: dict[str, object] = {}
@@ -520,6 +509,50 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
             path.stem for style, _, path in revision_entries if style not in style_order
         )
         version_keys = ordered
+
+    # Superseded same-topic runs (a re-run of the whole review — e.g. the same
+    # topic submitted under an English name) become 第N轮综述 versions instead
+    # of being dropped by the newest-wins collapse. Numbering is chronological:
+    # the oldest superseded run is 第1轮, the winner carries no round suffix.
+    for round_index, old in enumerate(candidate.superseded_runs, start=1):
+        old_manifest = read_run_manifest(old.directory) or {}
+        old_declared = str(old_manifest.get("style") or "")
+        if old_declared in _STYLE_VERSION_KEYS:
+            old_styles = [_STYLE_VERSION_KEYS[old_declared]]
+        else:
+            old_styles = [
+                key for key in VERSION_FILES if (old.directory / VERSION_FILES[key][1]).is_file()
+            ]
+        for style in old_styles:
+            key = f"{style}-r{round_index}"
+            if key in versions:
+                continue
+            markdown = _read_text(old.directory / VERSION_FILES[style][1])
+            rendered, toc = markdown_to_html(markdown)
+            if style == "keyan":
+                rendered = link_citation_superscripts(rendered, _reference_map(markdown))
+            plain = markdown_to_plain(markdown)
+            base_label = VERSION_FILES[style][0]
+            versions[key] = {
+                "label": f"{base_label} · 第{round_index}轮综述",
+                "article_title": first_heading(markdown) or title,
+                "html": rendered,
+                "markdown": markdown,
+                "toc": toc,
+                "characters": len(plain),
+                "source_file": VERSION_FILES[style][1],
+                "revision": round_index,
+                "based_on": style,
+                "cross_run": True,
+                "request": f"第{round_index}轮综述 · run {old.directory.name}",
+                "run_directory": _relative(old.directory),
+            }
+            search_versions[key] = {
+                "label": versions[key]["label"],
+                "article_title": versions[key]["article_title"],
+                "text": plain,
+            }
+            version_keys.append(key)
 
     evidence_path = candidate.directory / "evidence-appendix.md"
     evidence_kind = "证据附录"

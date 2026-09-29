@@ -413,6 +413,48 @@ class BuildResearchWikiTest(unittest.TestCase):
             topic["available_versions"], ["keyan", "zhihu", "xiaohongshu"]
         )
 
+    def test_superseded_runs_publish_as_round_versions(self) -> None:
+        """Re-running a whole review (same topic, e.g. re-submitted under an
+        English name) must not split into two unlinked topic cards: the older
+        run's deliverables publish as 第N轮综述 versions of the winner, oldest
+        round first. Exercises the TOPIC_ALIASES merge too."""
+        evidence = self.root / "evidence"
+        old_run = evidence / "literature-review-地面箭头提取-20260928"
+        new_run = evidence / "literature-review-road-marking-extraction-20260929"
+        for run, topic in ((old_run, "地面箭头提取"), (new_run, "road marking extraction")):
+            run.mkdir(parents=True)
+            (run / "run.json").write_text(
+                json.dumps({"topic": topic, "status": "settled", "style": "scientific-memo",
+                            "scope_note": "单风格", "files": {"outputs": ["scientific-memo_keyan.md"]}},
+                           ensure_ascii=False),
+                encoding="utf-8",
+            )
+            (run / "scientific-memo_keyan.md").write_text(
+                f"# 地面箭头提取\n\n## 结论\n\n{topic} 轮次的备忘录正文，长度足够作为发布内容。\n",
+                encoding="utf-8",
+            )
+            (run / "evidence-appendix.md").write_text("# 证据附录\n", encoding="utf-8")
+
+        selected, _stats = wiki.discover_topics(evidence)
+        self.assertEqual(len(selected), 1, "alias must merge both runs into one topic")
+        self.assertEqual(selected[0].directory, new_run)
+        self.assertEqual(len(selected[0].superseded_runs), 1)
+
+        manifest = wiki.build_snapshot(evidence, self.output)
+        topic = json.loads(
+            (self.output / "topics" / f"{manifest['topics'][0]['id']}.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(topic["available_versions"], ["keyan", "keyan-r1"])
+        r1 = topic["versions"]["keyan-r1"]
+        self.assertEqual(r1["label"], "科研备忘录 · 第1轮综述")
+        self.assertEqual(r1["based_on"], "keyan")
+        self.assertTrue(r1["cross_run"])
+        self.assertIn("地面箭头提取-20260928", r1["run_directory"])
+        # The winner's own memo is still the default view.
+        self.assertEqual(manifest["topics"][0]["default_version"], "keyan")
+        # Old-run evidence appendix stays in the old run dir, untouched.
+        self.assertTrue((old_run / "evidence-appendix.md").is_file())
+
     def test_slide_deck_field_tracks_run_folder(self) -> None:
         """The 汇报展示 manifest field flips on the presence of a compiled
         slide-deck_report.html in the run folder (run-level wiki entry)."""
