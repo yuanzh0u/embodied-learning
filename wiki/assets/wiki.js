@@ -442,17 +442,17 @@
       chips.innerHTML = revisions.map((key) => {
         const entry = topic.versions[key];
         const active = key === state.version;
-        // Chip text: the label's suffix after " · " (修订v2 / 第1轮综述);
-        // falls back to 原始版 for a bare base entry.
-        const suffix = String(entry.label || "").split(" · ").slice(1).join(" · ");
-        const name = suffix || "原始版";
-        const hint = entry.request ? ` · ${entry.request.slice(0, 18)}` : "";
-        return `<button type="button" class="revision-chip${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.request || name)}">${escapeHtml(name + hint)}</button>`;
+        // Chip text stays tiny (导航栏空间紧张): 修订v2 / 第1轮; the request
+        // and full label live in the tooltip only.
+        const name = entry.cross_run
+          ? `第${entry.revision}轮`
+          : `修订v${entry.revision}`;
+        return `<button type="button" class="revision-chip${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.request || entry.label || name)}">${escapeHtml(name)}</button>`;
       }).join("")
         + docs.map((key) => {
             const entry = topic.versions[key];
             const active = key === state.version;
-            return `<button type="button" class="revision-chip revision-chip-doc${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.article_title || entry.label)}">📄 ${escapeHtml(entry.label)}</button>`;
+            return `<button type="button" class="revision-chip revision-chip-doc${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.article_title || entry.label)}">📄${escapeHtml(entry.label)}</button>`;
           }).join("");
     }
     if (nodes.latestBadge) {
