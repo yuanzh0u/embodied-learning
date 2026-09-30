@@ -11,7 +11,7 @@ Papers beyond the budget should stay at map-read / background-only unless the
 user explicitly raises the budget or chooses systematic high-stakes deep mode.
 
 Exit codes:
-  0 — within budget (or --warn-only always)
+  0 — within budget, or a warning when --strict is absent
   1 — over budget when --strict
   2 — input error
 """
@@ -129,7 +129,7 @@ def main() -> int:
         )
         if report["warning"]:
             print(report["warning"], file=sys.stderr)
-        print(report["distinction"])
+        print(report["severity"])
 
     if over and args.strict:
         return 1

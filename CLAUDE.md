@@ -9,6 +9,10 @@ literature-review pipeline. Content is bilingual; prose, topic cards, and delive
 in Chinese while code and CLI flags are English. `AGENTS.md` is the authority for context-loading
 order — read it before loading knowledge files.
 
+## Match the workflow to the question
+
+Follow the request-routing table in `AGENTS.md` before selecting a skill. Continuing a discussion uses existing topic cards and selected notes; explaining one paper uses that paper's evidence or the paper-reader. Only a requested literature review/survey starts the full search, coverage, and publication pipeline. The commands below describe that formal pipeline, not the default response to every technical question.
+
 ## Commands
 
 The interpreter is `python3` (`python` is not on PATH). Scripts are **stdlib-only Python 3** — there

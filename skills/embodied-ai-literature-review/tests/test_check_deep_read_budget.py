@@ -82,6 +82,22 @@ class DeepReadBudgetTests(unittest.TestCase):
         self.assertFalse(report["within_budget"])
         self.assertIn("exceeds", report["warning"])
 
+    def test_text_output_preserves_budget_exit_contract(self) -> None:
+        for deep, strict, expected_code in ((20, False, 0), (20, True, 0),
+                                            (40, False, 0), (40, True, 1)):
+            with self.subTest(deep=deep, strict=strict):
+                args = ["--reading-summary", str(self._summary(deep)),
+                        "--review-mode", "scoping"]
+                if strict:
+                    args.append("--strict")
+                completed = run(*args, check=False)
+                self.assertEqual(completed.returncode, expected_code)
+                self.assertIn("Evidence floor is a minimum", completed.stdout)
+                self.assertIn("[WARN]" if deep > 25 else "[OK]", completed.stdout)
+                self.assertNotIn("Traceback", completed.stderr)
+                if deep > 25:
+                    self.assertIn("exceeds", completed.stderr)
+
     def test_strict_over_budget_exits_one(self) -> None:
         summary = self._summary(40)
         completed = run(
@@ -93,6 +109,8 @@ class DeepReadBudgetTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(completed.returncode, 1)
+        self.assertIn("exceeds", completed.stderr)
+        self.assertNotIn("Traceback", completed.stderr)
 
 
 if __name__ == "__main__":

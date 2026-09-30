@@ -30,7 +30,18 @@ This repository is a research knowledge base. Optimize for context efficiency an
 
 ## Research Workflow
 
-- When researching a topic, first use the project skill `embodied-ai-literature-review`; it orchestrates `embodied-ai-query-planner` and `embodied-ai-literature-hub` for search planning, evidence extraction, and final review drafting.
+Choose the smallest workflow that answers the user's actual question:
+
+| Request | Start here | Do not start automatically |
+| --- | --- | --- |
+| Explain a concept, continue a discussion, or compare existing findings | Relevant topic card and selected existing paper notes; inspect source windows when a claim needs checking | New candidate search, review run, or three-style publication bundle |
+| Understand a named paper in depth | Reuse a valid note for that paper/version when it covers the question; otherwise use `embodied-ai-paper-reader` for that paper | An 8/15/30-paper review merely to explain one paper |
+| Answer a bounded new technical question | Check existing evidence first; fill the specific evidence gap and state remaining uncertainty | Broad search to meet a literature-review paper quota |
+| Produce an explicitly requested literature review or survey | Use `embodied-ai-literature-review`, which orchestrates planning, discovery, paper reading, and writing | Treating a partial search as a completed review |
+
+The review's coverage and accepted-paper floors apply to formal reviews, not ordinary discussion or a standalone paper explanation. Standalone reading still follows the paper-reader's evidence and audit requirements before promoting claims. Keep informal explanations distinct from accepted evidence; do not create a `literature-review-*` folder unless that bundle is actually intended. Reuse existing evidence without claiming it was newly read; a new question or paper version can require targeted rechecking.
+
+For formal reviews, check the deep-read budget before planning another reading batch, and again after updating the reading ledger. A warning is a reason to narrow the next batch or report the remaining evidence gap, not to bypass the evidence gate or silently increase the budget.
 - A paper may enter accepted evidence only after complete non-OCR full text, a validated paper note, and a passing claim-support audit. Scanned-only papers are out of scope.
 
 ## Source Of Truth
