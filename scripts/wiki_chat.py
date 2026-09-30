@@ -117,18 +117,30 @@ _WORKFLOW_BASE_SYSTEM_PROMPT = (
     "1. 论文深读与证据投影：已由系统驱动脚本完成（速记骨架 + 审计 + 投影）。"
     "不要派发深读 subagent、不要跑 note_tools.py project-evidence-events；"
     "若 pipeline-summary.json 的 deep_read 字段显示失败篇目，如实说明。\n"
-    "2. 综述包与成稿：跑 <skills-root>/embodied-ai-review-writer/scripts/build_review_packet.py "
-    "生成综述包（review-packet 是简报不是成稿），然后亲自撰写成稿、生成 trace-map.json；"
+    "2. 综述包与成稿：review-packet.md / writing-brief.md / evidence-appendix.md 已由驱动的 "
+    "review-packet 阶段按最终证据集渲染好——直接读它们撰写成稿；仅当缺失时才用 "
+    "run_status.py [next] 给出的 build_review_packet.py 完整命令补生成（逐字执行，"
+    "不要读脚本源码探查参数）。review-packet 是简报不是成稿；然后亲自撰写成稿（trace-map.json 由 finalize_run.py/launcher 机械生成，不要手写）；"
     "成稿必须落图：writing-brief 的「可用图表」段给出带图的证据事件与现成 markdown 块，"
     "按各风格配额把图插到所支撑的段落之后（图源只能是 evidence 携带的图，URL/题注照抄，禁止自造图片）。\n"
     "3. 审计门：逐一通过 <scripts-root>/check_run_bundle.py、<scripts-root>/audit_citations.py、"
     "<skills-root>/embodied-ai-review-writer/scripts/writing_audit.py audit-article-quality "
     "（加 --evidence-jsonl 以启用带图可用但成稿未落图的告警）；"
     "审计门全过之前不要把证据落盘到 evidence/。"
+    "门禁失败消息自带修法（指标 vs 阈值 + 补救命令/写法）——按消息执行即可，"
+    "不要读门禁脚本源码。coverage/saturation 未过还有官方逃生门：run.json 加 "
+    '"gate_exceptions": ["saturation"] 并在 notes 写明正当理由'
+    "（如一次性检索构建的 registry，批次反映渠道构成而非迭代轮次）。\n"
+    "摘要级事件（附录「摘要级相关工作」节，tier: abstract）只用于相关工作定位句"
+    "——“谁在什么方向做了什么”，不得作为机制结论或中心论点的证据；"
+    "References 中对应条目末尾标注（摘要级）。"
     "\n\n【唯一允许提前停止的条件】\n"
-    "检索失败或文献不足：pipeline-summary.json 显示检索通道整体失败、coverage/saturation 未过、"
-    "或验收证据不足以支撑目标风格的成稿。此时停下并如实说明缺什么，把 run 留在 in-progress。"
-    "除此之外不要因大纲确认、风格选择等原因中途停轮等待用户——综述从综述包到 settle 一轮写完。"
+    "检索通道整体失败（pipeline-summary.json 显示各检索通道全部失败、无可续跑来源），"
+    "或续跑驱动补检索/深读后验收证据仍不足以支撑成稿。此时停下并如实说明缺什么，把 run 留在 in-progress。"
+    "门禁失败（引文/编辑/bundle，含 coverage/saturation）一律是修复重跑条件，绝不停轮："
+    "按门禁消息里给的修法执行（续跑驱动、重建 packet/appendix、改写成稿）；"
+    "coverage/saturation 未过可续跑驱动，也可按上述 gate_exceptions 声明豁免。"
+    "不要因大纲确认、风格选择等原因中途停轮等待用户——综述从综述包到 settle 一轮写完。"
     "\n\n【科研备忘录（scientific-memo_keyan.md）引文格式（Wiki 渲染依赖，必须遵守）】\n"
     "正文引用用上标编号，每条引用单独一个标记、带方括号：单条 ^[1]^；多条时逐条并列写成 "
     "^[1]^ ^[2]^ ^[3]^，严禁把多个编号塞进同一个标记（^[1,2,3]^ 是格式错误）。"
@@ -164,7 +176,7 @@ _WORKFLOW_LAUNCHER_TAIL = (
     "不要执行这些脚本、不要手改 run.json。"
     "成稿文件按目标风格直接写在运行目录根"
     "（scientific-memo_keyan.md / zhihu-explainer_zhihu.md / xiaohongshu-post_xiaohongshu.md / survey-*.md），"
-    "trace-map.json 与 evidence-appendix.md 同样落在运行目录根，"
+    "evidence-appendix.md 落在运行目录根（trace-map.json 由 launcher 机械生成，不要手写），"
     "launcher 会从那里取件做门禁与发布。不需要输出任何阶段或话题标记。"
 )
 
@@ -554,6 +566,23 @@ STYLE_VOICE_CONTRACTS = {
         "writing-brief「可用图表」段有图就落 1 张最强洞察图，"
         "格式 `![题注](url)` + `> 用法：…`；图源只能是 evidence 携带的图，禁止自造 URL。"
     ),
+    # Survey 的交付物是机械渲染的综述包本身（finalize 的 survey 风格文件就是
+    # review-packet.md），没有 prose 成稿；slide-deck 只写 DSL，编译交给脚本。
+    # 此前这两个键缺失时上述注入为空，one-shot writer 会自行发挥。
+    "survey": (
+        "风格契约（survey）：交付物是机械渲染的综述包（review-packet.md + writing-brief.md + "
+        "evidence-appendix.md），不是 prose 成稿——确认综述包已在运行目录根后直接进入审计门与落盘，"
+        "不要重写或改写包内容，也不要另写记忆体成稿文件。"
+    ),
+    "slide-deck": (
+        "风格契约（slide-deck）：只写 slide-source DSL 源文件，"
+        "用 <skills-root>/embodied-ai-review-writer/scripts/build_slide_deck.py "
+        "编译成 slide-deck_report.html 单文件；禁止手写 HTML。"
+        "图与引文纪律同综述：图源只能是 evidence 携带的图，引文只引已接纳证据。"
+    ),
+    # 刻意没有 "all" 键：三风格 run 不注入任何单风格口吻契约（风格契约的
+    # 作用是防单稿漂移到知乎腔），全风格共用 writing-brief「各风格写作契约」节
+    # ——tests/test_wiki_chat.py 的 no_single_style_contract 契约钉死这一点。
 }
 
 
@@ -593,11 +622,11 @@ def build_workflow_prompt(
     if agent:
         execution_chain = (
             "然后一气呵成执行到 settle："
-            "综述包用 run_status.py 输出中 [next] 给出的 build_review_packet.py 完整命令"
+            "综述包（review-packet/writing-brief/evidence-appendix）已由驱动生成直接读，缺失时才用 run_status.py [next] 的 build_review_packet.py 完整命令补生成"
             + stage("packet")
-            + "逐字执行（直接写进运行目录，不要新建日期文件夹，不要读脚本源码探查参数）；"
+            + "（逐字执行，不要读脚本源码探查参数）；"
             "亲自阅读证据事件与综述包后撰写成稿" + stage("writing")
-            + "、生成 trace-map.json 并逐项跑审计脚本" + stage("audit") + "；"
+            + "、逐项跑审计脚本" + stage("audit") + "；"
             "审计门全过后按系统提示的落盘契约执行 finalize_run.py --run-dir <运行目录> --kb-root <kb-root>"
             + stage("settle")
             + "一步完成机械落盘，不要手改 run.json、不要手动登记表格或重建快照。"
@@ -605,9 +634,9 @@ def build_workflow_prompt(
     else:
         execution_chain = (
             "然后一气呵成执行到审计门："
-            "综述包用 run_status.py 输出中 [next] 给出的 build_review_packet.py 完整命令逐字执行"
-            "（直接写进运行目录，不要新建日期文件夹，不要读脚本源码探查参数）；"
-            "亲自阅读证据事件与综述包后撰写成稿、生成 trace-map.json 并逐项跑审计脚本。"
+            "综述包（review-packet/writing-brief/evidence-appendix）已由驱动生成直接读，缺失时才用 run_status.py [next] 的 build_review_packet.py 完整命令补生成"
+            "（逐字执行，不要读脚本源码探查参数）；"
+            "亲自阅读证据事件与综述包后撰写成稿、逐项跑审计脚本。"
             "全部审计门通过后【立即停止本轮回复】——机械落盘、catalog 登记、"
             "wiki 快照重建与 publish 校验由 launcher 机械完成，不要触碰（见系统提示的停止契约）。"
             "成稿与 trace-map.json、evidence-appendix.md 一律落在运行目录根。"
@@ -618,6 +647,7 @@ def build_workflow_prompt(
         f"综述模式：{params.get('review_mode', 'scoping')}",
         f"时间范围：{params.get('time_range', '')}",
         f"检索策略：{params.get('search_strategy', 'smart')}",
+        f"选文策略：{params.get('selection_strategy', 'smart')}",
         f"种子论文：{params.get('seed_arxiv_ids') or '无'}",
         f"目标风格：{params.get('target_style', 'all')}",
         *(
@@ -650,9 +680,9 @@ def build_workflow_prompt(
         ),
         "成稿落图：writing-brief「可用图表」段按各风格配额插图"
         "（URL/题注照抄 evidence 携带的图，插在所支撑段落后），appendix 全量保留图表。"
-        "唯一允许提前停止的条件：检索失败或文献不足"
-        "（覆盖/饱和未过、验收证据不足以成稿），"
+        "唯一允许提前停止的条件：检索通道整体失败，或续跑驱动后验收证据仍不足以成稿，"
         "此时停下如实说明并把 run 留在 in-progress；"
+        "门禁失败（含覆盖/饱和）一律修复重跑，按门禁消息修法执行或声明 gate_exceptions 豁免；"
         "若 pipeline-summary 显示深读有失败篇目，如实说明影响。",
         "</workflow_request>",
     ]

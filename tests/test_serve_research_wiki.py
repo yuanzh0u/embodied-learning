@@ -448,7 +448,7 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertIn("finalize_run.py", turn.kwargs["system_prompt"])
         self.assertNotIn("register_run.py", turn.kwargs["system_prompt"])
         self.assertNotIn("build_research_wiki.py", turn.kwargs["system_prompt"])
-        self.assertGreaterEqual(turn.kwargs["timeout_s"], 3600)
+        self.assertGreaterEqual(turn.kwargs["timeout_s"], 5400)
         self.assertIn(run_dirs[0].name, turn.kwargs["prompt"])
         # Registry state.
         registry = server_module.wiki_chat.ChatSessionRegistry(
@@ -521,6 +521,28 @@ class WorkflowEndpointTest(ChatServerHarness):
     def test_invalid_search_strategy_rejected(self):
         bad = self.params()
         bad["search_strategy"] = "bogus"
+        status, _, _ = self.request("POST", "/api/workflow", {"params": bad})
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_selection_strategy_flows_to_driver_and_prompt(self):
+        """The interview card's 选文策略 reaches the driver's --selection-strategy
+        and the kickoff prompt's 选文策略 line."""
+        params = self.params()
+        params["selection_strategy"] = "bm25"
+        self.request("POST", "/api/workflow", {"params": params})
+        self.assertTrue(self.driver_calls)
+        driver_params = self.driver_calls[0][0]
+        self.assertEqual(driver_params["selection_strategy"], "bm25")
+        kickoff_prompt = FakeTurn.instances[0].kwargs["prompt"]
+        self.assertIn("选文策略：bm25", kickoff_prompt)
+
+    def test_selection_strategy_defaults_to_smart_and_rejects_unknown(self):
+        params = self.params()
+        params.pop("selection_strategy", None)
+        self.request("POST", "/api/workflow", {"params": params})
+        self.assertEqual(self.driver_calls[0][0]["selection_strategy"], "smart")
+        bad = self.params()
+        bad["selection_strategy"] = "bogus"
         status, _, _ = self.request("POST", "/api/workflow", {"params": bad})
         self.assertEqual(status, HTTPStatus.BAD_REQUEST)
 
@@ -1578,7 +1600,7 @@ class RevisionEndpointTest(ChatServerHarness):
         # The agent turn carried the revision contract and a long timeout.
         turn = FakeTurn.instances[-1]
         self.assertIn("[REVISION:revisions/keyan-v2.md]", turn.kwargs["system_prompt"])
-        self.assertGreaterEqual(turn.kwargs["timeout_s"], 3600)
+        self.assertGreaterEqual(turn.kwargs["timeout_s"], 5400)
 
     def test_next_revision_number_increments_from_disk(self):
         self._install_writing_turn("revisions/keyan-v3.md")

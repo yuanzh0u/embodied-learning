@@ -348,6 +348,32 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("work/literature-review-demo-20260908", prompt)
         self.assertNotIn(str(kb_root), prompt)
 
+    def test_selection_strategy_line_defaults_to_smart(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp).resolve()
+            run_dir = kb_root / "work" / "literature-review-demo-20260908"
+            run_dir.mkdir(parents=True)
+            prompt = wiki_chat.build_workflow_prompt(
+                params={"topic": "x", "selection_strategy": "bm25"},
+                run_dir=run_dir, kb_root=kb_root, pipeline_root=Path("/repo"),
+            )
+            default = wiki_chat.build_workflow_prompt(
+                params={"topic": "x"},
+                run_dir=run_dir, kb_root=kb_root, pipeline_root=Path("/repo"),
+            )
+        self.assertIn("选文策略：bm25", prompt)
+        self.assertIn("选文策略：smart", default)
+
+    def test_system_prompt_bounds_abstract_tier_usage(self):
+        """Abstract-tier events are positioning-only material: the shared
+        workflow persona must say so, including the References annotation."""
+        system_prompt = wiki_chat.workflow_system_prompt("agent")
+        self.assertIn("摘要级事件（附录「摘要级相关工作」节，tier: abstract）", system_prompt)
+        self.assertIn("不得作为机制结论或中心论点的证据", system_prompt)
+        self.assertIn("References 中对应条目末尾标注（摘要级）", system_prompt)
+        launcher_prompt = wiki_chat.workflow_system_prompt("launcher")
+        self.assertIn("References 中对应条目末尾标注（摘要级）", launcher_prompt)
+
     def test_no_outline_checkpoint_in_workflow_prompt(self):
         """The workflow runs packet → settle in one turn; the outline
         stop-and-wait checkpoint is gone. Only insufficient-evidence stops."""
@@ -364,7 +390,13 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertNotIn("立即停止本轮回复", prompt)
         self.assertNotIn("等待用户确认", prompt)
         self.assertIn("一气呵成", prompt)
-        self.assertIn("检索失败或文献不足", prompt)
+        # 停轮条件只剩两条（检索整体失败 / 续跑后证据仍不足）；门禁失败是
+        # 修复重跑条件，并且 gate_exceptions 逃生门必须可见（2026-09-29 统一教义）。
+        self.assertIn("检索通道整体失败", prompt)
+        self.assertIn("验收证据仍不足以", prompt)
+        self.assertIn("门禁失败", prompt)
+        self.assertIn("修复重跑", prompt)
+        self.assertIn("gate_exceptions", prompt)
 
     def test_workflow_prompt_settle_runs_finalize(self):
         """The agent publisher's mechanical settle tail is finalize_run.py —

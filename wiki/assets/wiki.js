@@ -2231,9 +2231,9 @@
       <p class="interview-topic">综述主题：${escapeHtml(topic)}</p>
       <p class="interview-question">① 综述模式</p>
       <div class="interview-options" role="radiogroup" aria-label="综述模式">
-        <label><input type="radio" name="iw-mode" value="rapid" checked>rapid 快速 · 8 篇底线</label>
-        <label><input type="radio" name="iw-mode" value="scoping">scoping 标准 · 15 篇</label>
-        <label><input type="radio" name="iw-mode" value="systematic">systematic 系统 · 30 篇</label>
+        <label><input type="radio" name="iw-mode" value="rapid" checked>rapid 快速 · 6 篇底线</label>
+        <label><input type="radio" name="iw-mode" value="scoping">scoping 标准 · 10 篇</label>
+        <label><input type="radio" name="iw-mode" value="systematic">systematic 系统 · 15 篇</label>
       </div>
       <p class="interview-question">② 检索范围</p>
       <div class="interview-options" role="radiogroup" aria-label="检索范围">
@@ -2255,15 +2255,22 @@
       </div>
       <p class="interview-question">④ 检索策略</p>
       <div class="interview-options" role="radiogroup" aria-label="检索策略">
-        <label><input type="radio" name="iw-strategy" value="smart" checked>智能（推荐）· 分类法底座 + agent 动态扩展，指定种子时引文网络扩张</label>
-        <label><input type="radio" name="iw-strategy" value="fast">快速 · 纯固定流程（最快，检索约 1 分钟）</label>
-        <label><input type="radio" name="iw-strategy" value="seeds">种子扩张 · 以种子论文为锚的引文网络扩张（需填种子）</label>
+        <label><input type="radio" name="iw-strategy" value="smart" checked title="分类法底座 + agent 动态扩展；指定种子时引文网络扩张">智能（推荐）</label>
+        <label><input type="radio" name="iw-strategy" value="fast" title="纯固定流程，最快（检索约 1 分钟）">快速</label>
+        <label><input type="radio" name="iw-strategy" value="seeds" title="以种子论文为锚的引文网络扩张（需填种子）">种子扩张</label>
       </div>
-      <p class="interview-question">⑤ 种子论文（可选，引文网络扩张用）</p>
+      <p class="interview-question">⑤ 选文策略</p>
+      <div class="interview-options" role="radiogroup" aria-label="选文策略">
+        <label><input type="radio" name="iw-selection" value="smart" checked title="一个 agent 通读全部候选摘要，按话题挑出真正相关的论文；宁缺毋滥，不足如实汇报">智能相关性（推荐）</label>
+        <label><input type="radio" name="iw-selection" value="bm25" title="BM25 相关性排序（标题+摘要 vs 话题），纯机械最快">BM25 相关性</label>
+        <label><input type="radio" name="iw-selection" value="influence" title="按引用数排序（候选池缺引用数据时自动降级为 BM25）">影响力</label>
+        <label><input type="radio" name="iw-selection" value="keywords" title="旧的词面打分（标题/摘要词匹配），仅作降级备用">关键词</label>
+      </div>
+      <p class="interview-question">⑥ 种子论文（可选，引文网络扩张用）</p>
       <input type="text" id="iw-seeds" placeholder="arXiv ID，逗号或空格分隔，如 2402.14207, 1704.02084" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13.5px;">
-      <p class="interview-question">⑥ 关注重点（可跳过）</p>
+      <p class="interview-question">⑦ 关注重点（可跳过）</p>
       <textarea id="iw-focus" placeholder="例如：重点关注室外场景下的效率与鲁棒性…"></textarea>
-      <p class="interview-question">⑦ 执行模型</p>
+      <p class="interview-question">⑧ 执行模型</p>
       <div class="interview-options" role="radiogroup" aria-label="执行模型">
         <label><input type="radio" name="iw-model" value="glm-5.3-flash" checked>glm-5.3-flash</label>
         <label><input type="radio" name="iw-model" value="deepseek-v4-flash-vision-exp">deepseek-v4-flash-vision-exp</label>
@@ -2310,6 +2317,7 @@
       time_range: rangePreset === "custom" ? { range: rangeCustom } : rangePreset,
       target_style: card.querySelector('input[name="iw-style"]:checked')?.value || "scientific-memo",
       search_strategy: card.querySelector('input[name="iw-strategy"]:checked')?.value || "smart",
+      selection_strategy: card.querySelector('input[name="iw-selection"]:checked')?.value || "smart",
       seed_arxiv_ids: card.querySelector("#iw-seeds")?.value.trim() || "",
       focus: card.querySelector("#iw-focus")?.value.trim() || "",
     };

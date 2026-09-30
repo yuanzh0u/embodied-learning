@@ -35,6 +35,7 @@ class BuildResearchWikiTest(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
+
     def test_discovery_requires_all_three_versions(self) -> None:
         write_triplet(self.source / "literature-review-complete-topic-20260102")
         incomplete = self.source / "literature-review-incomplete-topic-20260103"

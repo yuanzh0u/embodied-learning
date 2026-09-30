@@ -158,7 +158,10 @@ WORKFLOW_AUTO_CONTINUE_ROUNDS = 2
 WORKFLOW_REVIEW_MODES = {"rapid", "scoping", "systematic"}
 WORKFLOW_STYLES = {"all", "scientific-memo", "expert-explainer"}
 WORKFLOW_SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
-WORKFLOW_MIN_TIMEOUT_S = 3600.0  # pipeline segments outlive the chat default
+# Deep-read queue selection (the interview card's 选文策略; keywords keeps the
+# legacy term-matching screen-candidates inside the driver).
+WORKFLOW_SELECTION_STRATEGIES = {"smart", "keywords", "influence", "bm25"}
+WORKFLOW_MIN_TIMEOUT_S = 5400.0  # pipeline segments outlive the chat default; aligned with launch_review --writer-timeout
 WORKFLOW_DRIVER_TIMEOUT_S = 900.0  # mechanical stages; idempotent so retry is cheap
 PIPELINE_DRIVER = SCRIPT_DIR / "run_review_pipeline.py"
 # Chat model: the browser's composer picks per conversation; this is the
@@ -1440,6 +1443,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
         search_strategy = str(params.get("search_strategy") or "smart")
         if search_strategy not in WORKFLOW_SEARCH_STRATEGIES:
             raise ChatBadRequest("检索策略无效（smart / fast / seeds）。")
+        selection_strategy = str(params.get("selection_strategy") or "smart")
+        if selection_strategy not in WORKFLOW_SELECTION_STRATEGIES:
+            raise ChatBadRequest("选文策略无效（smart / keywords / influence / bm25）。")
         seed_raw = str(params.get("seed_arxiv_ids") or "").strip()
         return {
             "topic": topic,
@@ -1448,6 +1454,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
             "time_range": time_range,
             "focus": str(params.get("focus") or "").strip()[:500],
             "search_strategy": search_strategy,
+            "selection_strategy": selection_strategy,
             "seed_arxiv_ids": seed_raw[:300],
         }
 
@@ -1876,6 +1883,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
             "--time-range", str(params.get("time_range") or ""),
             "--kb-root", str(self.kb_root),
             "--search-strategy", str(params.get("search_strategy") or "smart"),
+            "--selection-strategy", str(params.get("selection_strategy") or "smart"),
         ]
         focus = str(params.get("focus") or "")
         if focus:
