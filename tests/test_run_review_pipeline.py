@@ -136,8 +136,10 @@ class DriverPipelineTest(unittest.TestCase):
         "search-arxiv": ("search-arxiv.json",),
         "build-candidate-registry": ("candidate-registry.json",),
         "screen-candidates": ("screening.json", "screening-ids.txt", "screening.md"),
+        "select-candidates": ("screening.json", "screening-ids.txt", "screening.md"),
         "assess-review-coverage": ("coverage-report.json",),
         "extract-content-queue": ("extraction-summary.json",),
+        "build_review_packet": ("review-packet.md", "writing-brief.md", "evidence-appendix.md"),
     }
 
     def _stage_payload(self, script: str) -> str:
@@ -153,8 +155,16 @@ class DriverPipelineTest(unittest.TestCase):
             "search-arxiv": {},
             "build-candidate-registry": registry,
             "screen-candidates": {},
+            "select-candidates": {
+                "selection_rule": {
+                    "strategy": "smart",
+                    "detail": "smart selected 2/42 considered; shortfall: only 2 relevant (limit 24), not padded",
+                },
+                "candidates": [],
+            },
             "assess-review-coverage": coverage,
             "extract-content-queue": {"paper_count": 2},
+            "build_review_packet": {"packet": "mechanical"},
         }
         return json.dumps(payloads[script])
 
@@ -170,7 +180,10 @@ class DriverPipelineTest(unittest.TestCase):
                 for name in outputs:
                     out = self.run_dir / name
                     out.parent.mkdir(parents=True, exist_ok=True)
-                    out.write_text(self._stage_payload(script), encoding="utf-8")
+                    if name == "screening-ids.txt":
+                        out.write_text("2402.10329\n2402.10330\n", encoding="utf-8")
+                    else:
+                        out.write_text(self._stage_payload(script), encoding="utf-8")
                 return mock.Mock(returncode=0, stdout="", stderr="")
         return mock.Mock(returncode=0, stdout="", stderr="")
 
@@ -230,7 +243,7 @@ class DriverPipelineTest(unittest.TestCase):
         names = []
         for command in self.commands:
             joined = " ".join(command)
-            for marker in ("build-query-plan", "search-arxiv", "build-candidate-registry", "screen-candidates", "assess-review-coverage", "extract-content-queue"):
+            for marker in ("build-query-plan", "search-arxiv", "build-candidate-registry", "screen-candidates", "select-candidates", "assess-review-coverage", "extract-content-queue"):
                 if marker in joined:
                     names.append(marker)
         return names
@@ -264,7 +277,7 @@ class DriverPipelineTest(unittest.TestCase):
             [
                 "build-query-plan",
                 "build-candidate-registry",
-                "screen-candidates",
+                "select-candidates",
                 "assess-review-coverage",
                 "extract-content-queue",
             ],
@@ -273,14 +286,19 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(summary["knowledge_ids"], ["EA-SENSOR"])
         self.assertEqual(summary["candidate_count"], 42)
         self.assertEqual(summary["screening_limit"], 24)  # rapid
+        self.assertEqual(summary["selection_strategy"], "smart")
+        self.assertIn("smart selected", summary["selection_detail"])
+        self.assertEqual(summary["abstract_events"], 0)
         self.assertTrue(summary["coverage_dimensions_passed"])
         self.assertTrue(summary["candidate_floor_passed"])
         self.assertFalse(summary["saturation_passed"])
         self.assertEqual(summary["terms"], ["demo"])
         self.assertEqual(summary["terms_source"], "mechanical")
-        # knowledge_ids flowed back into run.json (init memoization).
+        # knowledge_ids flowed back into run.json (init memoization), and so
+        # did the selection strategy the run was born with.
         manifest = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["knowledge_ids"], ["EA-SENSOR"])
+        self.assertEqual(manifest["selection_strategy"], "smart")
 
     def test_arxiv_command_shape_single_process(self):
         self.run_driver(self.argv("--no-terms-agent"))
@@ -291,11 +309,34 @@ class DriverPipelineTest(unittest.TestCase):
         # One process for the whole plan: no --query repetition here.
         self.assertNotIn("--query", arxiv)
 
-    def test_screening_uses_terms_and_mode_limit(self):
+    def test_selection_strategy_defaults_to_smart(self):
+        args = self.driver.parse_args(self.argv())
+        self.assertEqual(args.selection_strategy, "smart")
+        self.assertEqual(
+            sorted(self.driver.SELECTION_STRATEGIES),
+            ["bm25", "influence", "keywords", "smart"],
+        )
+
+    def test_smart_selection_dispatches_select_candidates(self):
+        """Default (smart): screening goes through search.py select-candidates
+        with the registry + topic + focus; the terms thread still runs but the
+        screening command does not consume it."""
         self.run_driver(self.argv("--no-terms-agent"))
+        screen = next(c for c in self.commands if "select-candidates" in " ".join(c))
+        self.assertIn("--registry", screen)
+        self.assertEqual(screen[screen.index("--strategy") + 1], "smart")
+        self.assertEqual(screen[screen.index("--topic") + 1], "demo topic ERASOR")
+        self.assertEqual(screen[screen.index("--limit") + 1], "24")
+        self.assertIn("--terms", screen)  # English terms augment the bm25/smart query
+        self.assertFalse(any("screen-candidates" in " ".join(c) for c in self.commands))
+
+    def test_screening_uses_terms_and_mode_limit(self):
+        """The keywords strategy keeps the legacy term-matching screen."""
+        self.run_driver(self.argv("--no-terms-agent", "--selection-strategy", "keywords"))
         screen = next(c for c in self.commands if "screen-candidates" in " ".join(c))
         self.assertIn("demo", screen[screen.index("--terms") + 1].split(","))
         self.assertEqual(screen[screen.index("--limit") + 1], "24")
+        self.assertFalse(any("select-candidates" in " ".join(c) for c in self.commands))
         scoping = self.run_driver(self.argv("--no-terms-agent", "--review-mode", "scoping"))
         self.assertEqual(scoping[1]["screening_limit"], 40)
 
@@ -548,6 +589,104 @@ class SearchStrategyTest(DriverPipelineTest):
         self.assertEqual(code, 0)
         registry = next(c for c in self.commands if "build-candidate-registry" in " ".join(c))
         self.assertIn("--citation-result", registry)
+
+
+class AbstractEvidenceStageTest(unittest.TestCase):
+    """The abstract-evidence stage: registry metadata becomes positioning-only
+    events (tier: abstract) under the run's event-ID prefix."""
+
+    def setUp(self):
+        self.driver = load_driver()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.kb_root = Path(self.tmp.name)
+        self.run_dir = self.kb_root / "work" / "literature-review-demo-20260101"
+        self.run_dir.mkdir(parents=True)
+        (self.run_dir / "run.json").write_text(
+            json.dumps({"status": "in-progress", "topic": "demo"}), encoding="utf-8"
+        )
+        (self.run_dir / "candidate-registry.json").write_text(json.dumps({
+            "candidate_count": 3,
+            "candidates": [
+                {"arxiv_id": "2402.10329", "title": "UMI", "summary": "Universal manipulation interface. It collects data with a gripper.",
+                 "authors": ["Alice"], "published": "2024-02-01"},
+                {"arxiv_id": "2302.01109", "title": "No abstract candidate"},
+                {"arxiv_id": "2311.18259", "title": "Ego-Exo4D", "summary": "Ego-exo dataset.", "authors": []},
+            ],
+        }), encoding="utf-8")
+        self.args = self.driver.parse_args([
+            "--run-dir", str(self.run_dir), "--topic", "demo topic",
+        ])
+        self.summary: dict = {}
+
+    def run_stage(self):
+        self.driver.abstract_evidence_stage(
+            self.kb_root, self.run_dir, self.run_dir / "run.json",
+            ["EA-SENSOR"], self.args, self.summary,
+        )
+
+    def events(self) -> list[dict]:
+        return [
+            json.loads(line)
+            for line in (self.run_dir / "evidence" / "abstract-tier.jsonl")
+            .read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    def test_projects_registry_metadata_with_claimed_prefix(self):
+        self.run_stage()
+        events = self.events()
+        self.assertEqual(len(events), 2)  # the no-abstract candidate is skipped
+        prefix = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))["event_prefix"]
+        self.assertEqual([event["event_id"] for event in events], [f"{prefix}-0001", f"{prefix}-0002"])
+        self.assertEqual({event["tier"] for event in events}, {"abstract"})
+        self.assertEqual({event["stance"] for event in events}, {""})
+        self.assertEqual(events[0]["topic_id"], "EA-SENSOR")
+        self.assertEqual(self.summary["abstract_events"], 2)
+
+    def test_idempotent_on_existing_output(self):
+        self.run_stage()
+        first = (self.run_dir / "evidence" / "abstract-tier.jsonl").read_text(encoding="utf-8")
+        self.summary.clear()
+        self.run_stage()
+        self.assertEqual(
+            (self.run_dir / "evidence" / "abstract-tier.jsonl").read_text(encoding="utf-8"), first
+        )
+        self.assertEqual(self.summary["abstract_events"], 2)
+
+    def test_stamp_counts_abstract_papers_separately(self):
+        """event_count is the whole set; evidence_papers (the cited-paper floor
+        input) stays full-text-only and abstract_papers records the rest."""
+        evidence_dir = self.run_dir / "evidence"
+        evidence_dir.mkdir()
+        (evidence_dir / "p1.jsonl").write_text(
+            json.dumps({"event_id": "EA-DEMO-2026-0042"}) + "\n", encoding="utf-8"
+        )
+        (evidence_dir / "p2.jsonl").write_text("", encoding="utf-8")
+        (evidence_dir / "abstract-tier.jsonl").write_text(
+            "\n".join(
+                json.dumps({"event_id": f"EA-DEMO-2026-{seq:04d}", "tier": "abstract",
+                            "paper": {"arxiv_id": arxiv_id}})
+                for seq, arxiv_id in ((1, "2402.10329"), (2, "2402.10329"), (3, "2311.18259"))
+            ) + "\n",
+            encoding="utf-8",
+        )
+        self.driver._stamp_evidence_scale(
+            self.kb_root, self.run_dir / "run.json", evidence_dir, 4
+        )
+        manifest = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["event_count"], 4)  # deep read + abstract
+        self.assertEqual(manifest["evidence_papers"], 1)  # empty p2 ignored
+        self.assertEqual(manifest["abstract_papers"], 2)  # 2402.10329 deduplicated
+
+    def test_stamp_without_abstract_tier(self):
+        evidence_dir = self.run_dir / "evidence"
+        evidence_dir.mkdir()
+        self.driver._stamp_evidence_scale(
+            self.kb_root, self.run_dir / "run.json", evidence_dir, 0
+        )
+        manifest = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["abstract_papers"], 0)
 
 
 if __name__ == "__main__":

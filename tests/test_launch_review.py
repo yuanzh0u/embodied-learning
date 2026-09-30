@@ -112,26 +112,40 @@ class BackfillReentryParamsTest(unittest.TestCase):
 
 
 class PrepareGateInputsTest(unittest.TestCase):
-    def test_merges_and_canonicalizes(self) -> None:
+    def test_rebuilds_shared_evidence_jsonl(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp)
             (run_dir / "evidence").mkdir()
-            (run_dir / "evidence" / "a.jsonl").write_text('{"e": 1}\n{"e": 2}\n', encoding="utf-8")
-            (run_dir / "evidence" / "b.jsonl").write_text('{"e": 3}\n', encoding="utf-8")
+            (run_dir / "evidence" / "a.jsonl").write_text('{"event_id": "E1"}\n{"event_id": "E2"}\n', encoding="utf-8")
+            (run_dir / "evidence" / "b.jsonl").write_text('{"event_id": "E3"}\n', encoding="utf-8")
             launcher.prepare_gate_inputs(run_dir)
-            merged = (run_dir / "evidence-all.jsonl").read_text().splitlines()
+            merged = (run_dir / "evidence.jsonl").read_text().splitlines()
             self.assertEqual(len(merged), 3)
-            self.assertTrue((run_dir / "evidence.jsonl").is_file())
+            self.assertFalse((run_dir / "evidence-all.jsonl").exists())
 
-    def test_flat_run_merges_canonical_root_file(self) -> None:
+    def test_flat_run_keeps_canonical_root_file(self) -> None:
         """Runs with no evidence/ subdir keep canonical evidence.jsonl at the
-        run root; the gates' merged path must still be produced — regression
-        for the 'evidence file missing: .../evidence-all.jsonl' report."""
+        run root; the rebuild must fold its lines in, not clobber them —
+        regression for the flat-run evidence loss."""
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp)
             (run_dir / "evidence.jsonl").write_text('{"e": 1}\n{"e": 2}\n', encoding="utf-8")
             launcher.prepare_gate_inputs(run_dir)
-            self.assertEqual((run_dir / "evidence-all.jsonl").read_text(), '{"e": 1}\n{"e": 2}\n')
+            self.assertEqual((run_dir / "evidence.jsonl").read_text(), '{"e": 1}\n{"e": 2}\n')
+
+    def test_rebuild_refreshes_stale_merge(self) -> None:
+        """A stale merged file from before a resumed deep-read round must be
+        refreshed (20260929 split-brain: launcher gate and finalize gate saw
+        different evidence sets)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "evidence").mkdir()
+            (run_dir / "evidence.jsonl").write_text('{"event_id": "OLD"}\n', encoding="utf-8")
+            (run_dir / "evidence" / "new.jsonl").write_text('{"event_id": "NEW"}\n', encoding="utf-8")
+            launcher.prepare_gate_inputs(run_dir)
+            text = (run_dir / "evidence.jsonl").read_text()
+            self.assertIn("OLD", text)
+            self.assertIn("NEW", text)
 
 
 class CollectGateProblemsTest(unittest.TestCase):
@@ -176,6 +190,7 @@ class WriterPromptsTest(unittest.TestCase):
             args = mock.Mock(
                 topic="点云表面重建", review_mode="systematic",
                 time_range="2016-09-28..2026-09-28", search_strategy="smart",
+                selection_strategy="bm25",
                 seed_arxiv_ids=None, target_style="scientific-memo",
                 focus=None, kb_root=str(kb_root),
             )
@@ -194,6 +209,35 @@ class WriterPromptsTest(unittest.TestCase):
             # The launcher branch must not instruct the agent to run finalize.
             self.assertNotIn("finalize_run.py", user_prompt)
             self.assertIn("build_review_packet.py", user_prompt)
+            # The selection strategy reaches the writer prompt (and run_mechanical
+            # forwards the same flag to the driver).
+            self.assertIn("选文策略：bm25", user_prompt)
+
+    def test_selection_strategy_flag_defaults_and_forwards(self) -> None:
+        # Default is smart; an unknown value is rejected by argparse.
+        with mock.patch.object(launcher, "launch", return_value=0) as launch:
+            launcher.main(["--topic", "demo"])
+        self.assertEqual(launch.call_args.args[0].selection_strategy, "smart")
+        with self.assertRaises(SystemExit):
+            launcher.main(["--topic", "demo", "--selection-strategy", "bogus"])
+
+    def test_run_mechanical_forwards_selection_strategy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            args = mock.Mock(
+                topic="点云表面重建", review_mode="systematic", focus=None,
+                time_range="2016-09-28..2026-09-28", search_strategy="smart",
+                selection_strategy="influence", deep_read_limit=48,
+                agents_parallel=10, arxiv_snapshot=None, kb_root=str(kb_root),
+                seed_arxiv_ids=None, external_candidates=[], mechanical_retries=1,
+            )
+            with mock.patch.object(launcher.subprocess, "run", return_value=mock.Mock(returncode=0)) as run:
+                launcher.run_mechanical(args, Path(tmp) / "run")
+            command = run.call_args.args[0]
+            self.assertEqual(
+                command[command.index("--selection-strategy") + 1], "influence"
+            )
+            self.assertEqual(command[command.index("--search-strategy") + 1], "smart")
 
 
 class RunFinalizeTest(unittest.TestCase):

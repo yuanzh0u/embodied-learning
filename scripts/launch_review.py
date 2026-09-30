@@ -45,10 +45,10 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 try:
     from lib.layout import default_kb_root, find_roots  # noqa: E402
-    from lib.review_runs import STYLE_TO_FILE  # noqa: E402
+    from lib.review_runs import STYLE_TO_FILE, build_trace_map, consolidate_evidence  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
     from wiki_scripts.lib.layout import default_kb_root, find_roots  # noqa: E402
-    from wiki_scripts.lib.review_runs import STYLE_TO_FILE  # noqa: E402
+    from wiki_scripts.lib.review_runs import STYLE_TO_FILE, build_trace_map, consolidate_evidence  # noqa: E402
 # AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
 from embodied_learning.harness.claude import (  # noqa: E402
     DRIVER_AGENT_MODEL,
@@ -111,6 +111,7 @@ def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
         "--review-mode", args.review_mode,
         "--focus", args.focus or "",
         "--search-strategy", args.search_strategy,
+        "--selection-strategy", args.selection_strategy,
         "--deep-read-limit", str(args.deep_read_limit),
     ]
     if args.time_range:
@@ -143,6 +144,7 @@ def writer_prompts(run_dir: Path, args: argparse.Namespace, wiki: object) -> tup
         "review_mode": args.review_mode,
         "time_range": args.time_range,
         "search_strategy": args.search_strategy,
+        "selection_strategy": args.selection_strategy,
         "seed_arxiv_ids": args.seed_arxiv_ids,
         "target_style": args.target_style,
         "focus": args.focus,
@@ -203,22 +205,11 @@ def run_writer(args: argparse.Namespace, run_dir: Path, prompt: str, system_prom
 
 
 def prepare_gate_inputs(run_dir: Path) -> None:
-    """The gates read merged evidence files; produce them when the writer
-    agent did not."""
-    evidence_dir = run_dir / "evidence"
-    merged = run_dir / "evidence-all.jsonl"
-    canonical = run_dir / "evidence.jsonl"
-    if evidence_dir.is_dir() and not merged.is_file():
-        lines: list[str] = []
-        for evidence_file in sorted(evidence_dir.glob("*.jsonl")):
-            lines.extend(line for line in evidence_file.read_text(encoding="utf-8").splitlines() if line.strip())
-        merged.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    elif not evidence_dir.is_dir() and not merged.is_file() and canonical.is_file():
-        # Flat runs keep canonical evidence at the run root with no evidence/
-        # subdir to merge; the gates still read the merged path.
-        merged.write_text(canonical.read_text(encoding="utf-8"), encoding="utf-8")
-    if merged.is_file() and not canonical.is_file():
-        canonical.write_text(merged.read_text(encoding="utf-8"), encoding="utf-8")
+    """Gates read ONE merged evidence set: always rebuild evidence.jsonl via
+    the shared consolidation (same function finalize_run uses). A cached
+    merge lags resumed deep-read rounds and made the launcher gate and the
+    finalize gate audit different evidence sets (20260929 split-brain)."""
+    consolidate_evidence(run_dir)
 
 
 MEMO_FORMAT_RULE_IDS = {
@@ -232,42 +223,68 @@ MEMO_FORMAT_RULE_IDS = {
 }
 
 
-def memo_format_problems(run_dir: Path) -> list[str]:
-    memo = run_dir / "scientific-memo_keyan.md"
-    if not memo.is_file():
+def editorial_problems(run_dir: Path) -> list[str]:
+    """Full editorial-quality gate over every deliverable that exists (all
+    styles), with --evidence-jsonl so the figures-available check is live.
+    Findings that are errors gate; the memo format trio upgrades its warnings
+    to gate problems (wiki rendering contract); other warnings stay advisory
+    in the audit output only."""
+    style_flags = {
+        "memo": "scientific-memo_keyan.md",
+        "zhihu": "zhihu-explainer_zhihu.md",
+        "xiaohongshu": "xiaohongshu-post_xiaohongshu.md",
+    }
+    command = [
+        sys.executable,
+        str(SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"),
+        "audit-article-quality", "--json",
+        "--evidence-jsonl", str(run_dir / "evidence.jsonl"),
+    ]
+    present = False
+    for flag, name in style_flags.items():
+        if (run_dir / name).is_file():
+            command += [f"--{flag}", str(run_dir / name)]
+            present = True
+    if not present:
         return []
-    result = subprocess.run(
-        [sys.executable,
-         str(pipeline_root() / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"),
-         "audit-article-quality", "--memo", str(memo), "--json"],
-        capture_output=True, text=True, cwd=str(pipeline_root()),
-    )
+    result = subprocess.run(command, capture_output=True, text=True, cwd=str(pipeline_root()))
     try:
         payload = json.loads(result.stdout or "{}")
     except json.JSONDecodeError:
         return [f"editorial quality audit did not emit JSON (exit {result.returncode}): {(result.stderr or '')[-200:]}"]
-    return [
-        f"{finding['rule']}: {finding['message']}"
-        for finding in payload.get("findings", [])
-        if finding.get("rule") in MEMO_FORMAT_RULE_IDS
-    ]
+    problems = []
+    for finding in payload.get("findings", []):
+        rule = str(finding.get("rule") or "")
+        if finding.get("severity") == "error" or rule in MEMO_FORMAT_RULE_IDS:
+            problems.append(f"editorial {rule}: {finding.get('message')}")
+    return problems
 
 
 def collect_gate_problems(run_dir: Path) -> list[str]:
     problems: list[str] = []
+    # The gates print a bare "N problem(s):" header before the itemized
+    # lines; a kept header becomes a phantom problem that burns
+    # continuation rounds on nothing.
+    gate_header = re.compile(r"^\d+ problem\(s\):$")
     prepare_gate_inputs(run_dir)
     if not (run_dir / "scientific-memo_keyan.md").is_file() and not (run_dir / "zhihu-explainer_zhihu.md").is_file():
         return ["run 目录没有成稿（scientific-memo_keyan.md / zhihu-explainer_zhihu.md 均缺失）"]
-    problems.extend(memo_format_problems(run_dir))
+    problems.extend(editorial_problems(run_dir))
+    trace_ok, trace_problems = build_trace_map(run_dir, SKILLS_ROOT)
+    if not trace_ok:
+        problems.extend(f"trace-map: {line}" for line in trace_problems)
+        problems.append("trace-map 未生成：删改成稿中无证据支撑的 arXiv 引用（UNCOVERED 行），或补证据后重跑；勿手写 trace-map.json")
     audit = subprocess.run(
         [sys.executable, str(SCRIPTS_ROOT / "audit_citations.py"),
          "--article", str(run_dir / "scientific-memo_keyan.md"),
          "--appendix", str(run_dir / "evidence-appendix.md"),
-         "--evidence-jsonl", str(run_dir / "evidence-all.jsonl")],
+         "--evidence-jsonl", str(run_dir / "evidence.jsonl")],
         capture_output=True, text=True,
     )
     if audit.returncode:
-        problems.extend(line for line in audit.stdout.splitlines() if line.strip())
+        problems.extend(
+            line for line in audit.stdout.splitlines()
+            if line.strip() and not gate_header.match(line.strip()))
     bundle = subprocess.run(
         [sys.executable, str(SCRIPTS_ROOT / "check_run_bundle.py"), str(run_dir)],
         capture_output=True, text=True,
@@ -279,7 +296,8 @@ def collect_gate_problems(run_dir: Path) -> list[str]:
         # are re-checked by finalize under the settled status.
         problems.extend(
             line for line in bundle.stdout.splitlines()
-            if line.strip() and "run not settled" not in line)
+            if line.strip() and "run not settled" not in line
+            and not gate_header.match(line.strip()))
     return problems
 
 
@@ -467,6 +485,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--time-range", help="YYYY-MM-DD..YYYY-MM-DD")
     parser.add_argument("--focus")
     parser.add_argument("--search-strategy", choices=["smart", "fast", "seeds"], default="smart")
+    parser.add_argument(
+        "--selection-strategy",
+        choices=["keywords", "influence", "bm25", "smart"],
+        default="smart",
+        help="Deep-read queue selection (forwarded to the driver; keywords keeps the "
+        "legacy term-matching screen-candidates).",
+    )
     parser.add_argument("--seed-arxiv-ids")
     parser.add_argument("--external-candidates", action="append", default=[],
                         help="harvest-curated-list JSON as the candidate source; forwarded to the driver (repeatable)")

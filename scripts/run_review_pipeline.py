@@ -35,6 +35,7 @@ import sys
 import tempfile
 import threading
 import time
+from typing import Any
 import concurrent.futures
 from pathlib import Path
 
@@ -48,6 +49,7 @@ try:
         read_skeleton_output,
     )
     from lib.layout import default_kb_root, find_roots  # noqa: E402
+    from lib.review_runs import consolidate_evidence  # noqa: E402
 except ImportError:  # installed console-script entry: package import path
     from wiki_scripts.lib.agent_invoke import (  # noqa: E402
         build_skeleton_prompt,
@@ -55,11 +57,19 @@ except ImportError:  # installed console-script entry: package import path
         read_skeleton_output,
     )
     from wiki_scripts.lib.layout import default_kb_root, find_roots  # noqa: E402
+    from wiki_scripts.lib.review_runs import consolidate_evidence  # noqa: E402
 # AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
 from embodied_learning.harness.claude import (  # noqa: E402
     DRIVER_AGENT_MODEL,
     complete,
     resolve_cli,
+)
+from embodied_learning.search.abstract_evidence import (  # noqa: E402
+    ABSTRACT_FILENAME,
+    build_abstract_events,
+    max_event_seq,
+    read_events,
+    write_abstract_tier,
 )
 
 _REPO_ROOT, SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
@@ -68,6 +78,7 @@ if _REPO_ROOT is not None and str(_REPO_ROOT) not in sys.path:
 HUB_SCRIPTS = SKILLS_ROOT / "embodied-ai-literature-hub" / "scripts"
 PLANNER_SCRIPT = HUB_SCRIPTS / "search.py"
 PACKET_SCRIPT = SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "build_reading_packet.py"
+REVIEW_PACKET_SCRIPT = SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "build_review_packet.py"
 
 REVIEW_MODES = {"rapid", "scoping", "systematic"}
 SCREEN_LIMITS = {"rapid": 24, "scoping": 40, "systematic": 80}
@@ -77,6 +88,10 @@ SCREEN_LIMITS = {"rapid": 24, "scoping": 40, "systematic": 80}
 # systematic 40→≥15. An explicit --deep-read-limit overrides the mode default.
 DEEP_READ_LIMITS = {"rapid": 10, "scoping": 16, "systematic": 40}
 SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
+# Deep-read queue selection: keywords is the legacy term-matching screen
+# (screen-candidates); the rest rank the registry by relevance (bm25),
+# citations (influence), or one one-shot agent (smart, the default).
+SELECTION_STRATEGIES = {"keywords", "influence", "bm25", "smart"}
 S2_BUDGET_S = 240.0  # best-effort source: give up rather than retry into a 429 storm
 # S2 requests run at a 3s pace: the API 429s aggressively, and a degraded S2
 # channel costs more (retry rounds, thinner registries) than the seconds saved.
@@ -157,6 +172,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="smart",
         help="smart: taxonomy plan + agent dynamic queries (+ citation expansion when seeds given); "
         "fast: taxonomy plan only; seeds: citation-graph expansion only (requires seeds).",
+    )
+    parser.add_argument(
+        "--selection-strategy",
+        choices=sorted(SELECTION_STRATEGIES),
+        default="smart",
+        help="How the deep-read queue is chosen from the registry: smart (one-shot "
+        "agent relevance pass, default), bm25, influence (degrades to bm25 without "
+        "citation data), or keywords (legacy term-matching screen-candidates).",
     )
     parser.add_argument(
         "--seed-arxiv-ids",
@@ -425,7 +448,10 @@ def finalize_coverage(run_dir: Path, registry_command: list[str], coverage_outpu
     full-text and accepted-paper floors are always stale-mid-run. After
     projection: rebuild the registry with extraction statuses merged in, then
     re-run assess-review-coverage with the projected evidence JSONL."""
-    evidence_files = sorted((run_dir / "evidence").glob("*.jsonl"))
+    evidence_files = sorted(
+        path for path in (run_dir / "evidence").glob("*.jsonl")
+        if path.name != ABSTRACT_FILENAME  # abstract positioning is not accepted evidence
+    )
     if not evidence_files:
         return "skipped (no evidence projected)"
     detail = "ok"
@@ -491,51 +517,122 @@ def claim_event_prefix(kb_root: Path, run_json_path: Path, manifest: dict) -> st
     return f"EA-{base}-{year}-{suffix}"
 
 
+def ensure_event_prefix(kb_root: Path, run_json_path: Path, manifest: dict) -> str:
+    """Manifest event_prefix, or a freshly claimed one written back to run.json.
+
+    Shared by the abstract-evidence stage and the deep-read projection: both
+    allocate from the same citable ``{prefix}-NNNN`` namespace, so whichever
+    runs first reserves the prefix exactly once."""
+    existing = manifest.get("event_prefix")
+    if isinstance(existing, str) and existing:
+        return existing
+    prefix = claim_event_prefix(kb_root, run_json_path, manifest)
+    write_sync(kb_root, run_json_path, lambda m: m.update({"event_prefix": prefix}))
+    return prefix
+
+
 def _stamp_evidence_scale(kb_root: Path, run_json_path: Path, evidence_dir: Path, events: int) -> None:
     """Write the evidence scale into run.json. check_run_bundle requires
     event_count to match the bundle's evidence; only the driver knows it at
     projection time, so stamp it here instead of leaving the writer agent to
-    reverse-engineer the gate and hand-patch the manifest."""
-    papers = sum(
+    reverse-engineer the gate and hand-patch the manifest.
+
+    ``events`` is the whole set (abstract tier included). ``evidence_papers``
+    counts only full-text-tier papers — the finalize cited-paper floor keeps
+    measuring deep-read coverage, which abstract positioning never contributes
+    to — and ``abstract_papers`` records the abstract tier separately."""
+    full_text_papers = sum(
         1 for path in evidence_dir.glob("*.jsonl")
-        if any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())
+        if path.name != ABSTRACT_FILENAME
+        and any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())
     )
+    abstract_papers = {
+        str((event.get("paper") or {}).get("arxiv_id") or "")
+        for event in read_events(evidence_dir / ABSTRACT_FILENAME)
+    } - {""}
     write_sync(kb_root, run_json_path, lambda m: m.update(
-        {"event_count": events, "evidence_papers": papers}
+        {
+            "event_count": events,
+            "evidence_papers": full_text_papers,
+            "abstract_papers": len(abstract_papers),
+        }
     ))
 
 
+def abstract_evidence_stage(
+    kb_root: Path,
+    run_dir: Path,
+    run_json_path: Path,
+    knowledge_ids: list[str],
+    args: argparse.Namespace,
+    summary_extra: dict,
+) -> None:
+    """Project registry metadata into abstract-tier evidence events (stage:
+    abstract-evidence). Abstracts are positioning-only material — related-work
+    landscape, never mechanism-level claims — and they share the run's event-ID
+    prefix with the deep-read projection (the deep-read start sequence is
+    computed after this file exists). Idempotent on the output file."""
+    evidence_dir = run_dir / "evidence"
+    target = evidence_dir / ABSTRACT_FILENAME
+    if not args.force and outputs_exist(target):
+        existing = read_events(target)
+        summary_extra["abstract_events"] = len(existing)
+        log(stage_line("abstract-evidence", f"skipped (outputs present, {len(existing)} events)"))
+        return
+    manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
+    prefix = ensure_event_prefix(kb_root, run_json_path, manifest)
+    registry = json.loads((run_dir / "candidate-registry.json").read_text(encoding="utf-8"))
+    # Deep-read evidence does not exist yet at this point, so nothing to exclude:
+    # the packet drops abstract events for papers that later deep-read.
+    events = build_abstract_events(
+        registry,
+        topic=args.topic,
+        topic_id=knowledge_ids[0] if knowledge_ids else "EA-DATA",
+        prefix=prefix,
+        start_seq=1,
+    )
+    write_abstract_tier(events, evidence_dir)
+    summary_extra["abstract_events"] = len(events)
+    log(stage_line("abstract-evidence", f"{len(events)} 条摘要级事件（tier: abstract，仅定位用）"))
+
+
 def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
-    """Project evidence events from every audited paper note. Pure script
-    chain: next_event_id → project_evidence_events per paper → merged JSONL."""
+    """Project evidence events from every audited paper note.
+    Chain: next_event_id → project_evidence_events per paper → merged JSONL.
+
+    Idempotency is per paper: an existing non-empty ``evidence/<paper>.jsonl``
+    is kept as-is, so a resume that only owes a few papers does not re-project
+    the rest (a run whose evidence directory holds only the abstract tier must
+    still project its deep-read events)."""
     notes_dir = run_dir / "paper-notes"
     evidence_dir = run_dir / "evidence"
     evidence_dir.mkdir(parents=True, exist_ok=True)
-    existing = sorted(evidence_dir.glob("*.jsonl"))
-    if existing:
-        total = sum(1 for path in existing for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
-        if total:
-            log(stage_line("project", f"已有 {total} 条证据事件，跳过重复投影"))
-            summary_extra["evidence_events"] = total
-            _stamp_evidence_scale(kb_root, run_json_path, evidence_dir, total)
-            return
     manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
-    id_prefix = str(manifest.get("event_prefix") or "")
-    if not id_prefix:
-        id_prefix = claim_event_prefix(kb_root, run_json_path, manifest)
-        write_sync(kb_root, run_json_path, lambda m: m.update({"event_prefix": id_prefix}))
-    start_seq = 1
+    id_prefix = ensure_event_prefix(kb_root, run_json_path, manifest)
+    # Deep-read events continue the abstract tier's numbering (same citable
+    # namespace): the highest allocated ID across every evidence JSONL sets
+    # the next sequence.
+    existing_events = [
+        event
+        for path in sorted(evidence_dir.glob("*.jsonl"))
+        for event in read_events(path)
+    ]
+    start_seq = max_event_seq(existing_events) + 1
     projected = 0
     for note_path in sorted(notes_dir.glob("*.json")):
         if note_path.name.endswith(".audit.json"):
             continue
+        output = evidence_dir / f"{note_path.stem}.jsonl"
+        if output.is_file() and any(
+            line.strip() for line in output.read_text(encoding="utf-8").splitlines()
+        ):
+            continue  # per-paper idempotency: already projected
         audit_path = note_path.with_name(note_path.stem + ".audit.json")
         if not audit_path.is_file():
             continue
         audit = json.loads(audit_path.read_text(encoding="utf-8"))
         if audit.get("status") not in {"pass", "needs-review"}:
             continue
-        output = evidence_dir / f"{note_path.stem}.jsonl"
         result = run_command([
             sys.executable, str(PROJECT_SCRIPT), "project-evidence-events",
             "--paper-note", str(note_path),
@@ -551,9 +648,69 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
         start_seq += count
         projected += count
         log(f"[PAPER] {note_path.stem} 投影 {count} 条证据事件")
-    summary_extra["evidence_events"] = projected
-    _stamp_evidence_scale(kb_root, run_json_path, evidence_dir, projected)
-    log(stage_line("project", f"{projected} 条证据事件（前缀 {id_prefix}）"))
+    # evidence_events stays deep-read-only (the abstract tier is positioning,
+    # not accepted evidence); the whole-set total goes into run.json.
+    deep_read_events = sum(
+        len(read_events(path))
+        for path in sorted(evidence_dir.glob("*.jsonl"))
+        if path.name != ABSTRACT_FILENAME
+    )
+    abstract_events = len(read_events(evidence_dir / ABSTRACT_FILENAME))
+    summary_extra["evidence_events"] = deep_read_events
+    _stamp_evidence_scale(kb_root, run_json_path, evidence_dir, deep_read_events + abstract_events)
+    log(stage_line("project", f"{projected} 条深读证据事件（前缀 {id_prefix}，合计 {deep_read_events + abstract_events} 含摘要级）"))
+
+
+def review_packet_stage(run_dir: Path, args, summary_extra: dict) -> None:
+    """Stage: review-packet — consolidate evidence.jsonl and render
+    review-packet / writing-brief / evidence-appendix from the FINAL evidence
+    set. build_review_packet is mechanical, so doing it here keeps the
+    appendix in lockstep with projected events: a resumed deep-read round
+    used to leave the appendix without the new anchors and the writer
+    chasing dead ones (20260929 图像粗配准). The writer reads the rendered
+    packet; run_status's [next] command remains the manual fallback."""
+    evidence_jsonl = consolidate_evidence(run_dir)
+    outputs = [
+        run_dir / "review-packet.md",
+        run_dir / "writing-brief.md",
+        run_dir / "evidence-appendix.md",
+    ]
+    lines = [line for line in evidence_jsonl.read_text(encoding="utf-8").splitlines() if line.strip()]
+    fingerprint = {"events": len(lines)}
+    if lines:
+        try:
+            fingerprint["last_event_id"] = str(json.loads(lines[-1]).get("event_id") or "")
+        except json.JSONDecodeError:
+            fingerprint["last_event_id"] = ""
+    stamp_path = run_dir / ".review-packet.stamp.json"
+    if (
+        not args.force
+        and outputs_exist(*outputs)
+        and stamp_path.is_file()
+        and json.loads(stamp_path.read_text(encoding="utf-8")) == fingerprint
+    ):
+        log(stage_line("review-packet", f"skipped (outputs present, evidence unchanged: {fingerprint['events']} events)"))
+        return
+    command = [
+        sys.executable,
+        str(REVIEW_PACKET_SCRIPT),
+        "--run-dir", str(run_dir),
+        "--topic", args.topic,
+        "--review-mode", args.review_mode,
+        "--evidence-jsonl", str(evidence_jsonl),
+    ]
+    coverage_output = run_dir / "coverage-report.json"
+    if coverage_output.is_file():
+        command += ["--coverage-report", str(coverage_output)]
+    reading_summary = run_dir / "reading-summary.json"
+    if reading_summary.is_file():
+        command += ["--reading-summary", str(reading_summary)]
+    result = run_command(command)
+    if result.returncode:
+        raise DriverError(f"review packet exit {result.returncode}")
+    stamp_path.write_text(json.dumps(fingerprint, ensure_ascii=False) + "\n", encoding="utf-8")
+    summary_extra["review_packet_events"] = fingerprint["events"]
+    log(stage_line("review-packet", f"{fingerprint['events']} events rendered into packet/brief/appendix"))
 
 
 def _audited_note(note_path: Path, audit_path: Path | None = None) -> bool:
@@ -579,6 +736,32 @@ def deep_read_order(screened: list[str], seeds: list[str], limit: int) -> list[s
 
     seeds = [seed for seed in seeds if seed]
     return (seeds + [paper_id for paper_id in screened if paper_id not in seeds])[:limit]
+
+
+def _failure_note_path(notes_dir: Path, paper_id: str) -> Path | None:
+    """paper_id becomes a filename: reject anything that is not a plain id
+    (a malformed screening line must never become a path)."""
+    if not paper_id or len(paper_id) > 64 or any(ch in paper_id for ch in "/\\\0"):
+        return None
+    return notes_dir / f"{paper_id}.failed.json"
+
+
+def _record_deep_read_failure(notes_dir: Path, paper_id: str, outcome: str, reason: str) -> None:
+    """Persist why a paper stopped: run_status surfaces these reasons (the
+    dialog line alone was invisible to later sessions)."""
+    path = _failure_note_path(notes_dir, paper_id)
+    if path is None:
+        return
+    path.write_text(
+        json.dumps({"outcome": outcome, "reason": reason}, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _clear_deep_read_failure(notes_dir: Path, paper_id: str) -> None:
+    path = _failure_note_path(notes_dir, paper_id)
+    if path is not None:
+        path.unlink(missing_ok=True)
 
 
 def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, summary_extra: dict) -> None:
@@ -633,6 +816,7 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                     futures[paper_id] = None
                     done += 1
                     failed += 1  # consistent with the pre-2026-09 summary semantics
+                    _record_deep_read_failure(notes_dir, paper_id, "no-extraction", "未入池（extraction.json 缺失）")
                     log(f"[DRIVER-PROGRESS:deep-read:{done}/{len(order)}]")
                     log(f"[PAPER] {paper_id} 未入池，跳过")
                     continue
@@ -646,8 +830,10 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                     continue  # counted when skipped at submission
                 try:
                     outcome = future.result()
+                    failure_reason = ""
                 except Exception as exc:  # noqa: BLE001 - per-paper isolation
                     outcome = "failed"
+                    failure_reason = f"agent 异常：{exc}"
                     log(f"[PAPER] {paper_id} agent 异常：{exc}")
                 pooled_note = pool_root / f"arxiv-{paper_id}" / "note.json"
                 pooled_audit = pool_root / f"arxiv-{paper_id}" / "note.json.audit.json"
@@ -658,14 +844,22 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                 done += 1
                 log(f"[DRIVER-PROGRESS:deep-read:{done}/{len(order)}]")
                 # Only exceptions to the norm go to the dialog; steady progress
-                # lives on the progress bar.
+                # lives on the progress bar. Failure reasons are persisted so
+                # run_status can report WHY a paper stopped (log-only reasons
+                # were invisible to the writer).
                 if outcome == "pass":
                     passed += 1
+                    _clear_deep_read_failure(notes_dir, paper_id)
                 elif outcome == "needs-review":
                     needs_review += 1
+                    _clear_deep_read_failure(notes_dir, paper_id)
                     log(f"[PAPER] {paper_id} 审计 needs-review（可用）")
                 else:
                     failed += 1
+                    _record_deep_read_failure(
+                        notes_dir, paper_id, str(outcome),
+                        failure_reason or f"深读失败（{outcome}）",
+                    )
                     log(f"[PAPER] {paper_id} 深读失败（{outcome}）")
     summary_extra["deep_read"] = {"total": len(order), "pass": passed, "needs_review": needs_review, "failed": failed}
     log(stage_line("deep-read", f"{passed} pass / {needs_review} needs-review / {failed} failed（共 {len(order)} 篇）"))
@@ -1180,16 +1374,42 @@ def _main_locked(
         screen_limit = SCREEN_LIMITS[args.review_mode]
         screening_output = run_dir / "screening.json"
         screening_ids = run_dir / "screening-ids.txt"
-        screening_cmd = lambda: [  # noqa: E731
-            sys.executable, str(HUB_SCRIPTS / "search.py"), "screen-candidates",
-            "--candidate-registry", str(registry_output),
-            "--terms", ",".join(terms),
-            "--limit", str(screen_limit),
-            "--output-screening", str(screening_output),
-            "--output-ids", str(screening_ids),
-            "--output-markdown", str(run_dir / "screening.md"),
-        ]
+        if args.selection_strategy == "keywords":
+            # Legacy term-matching screen: only this strategy consumes the terms
+            # thread's output for triage (other strategies still generate terms
+            # for the abstract evidence and the reading packets).
+            screening_cmd = lambda: [  # noqa: E731
+                sys.executable, str(HUB_SCRIPTS / "search.py"), "screen-candidates",
+                "--candidate-registry", str(registry_output),
+                "--terms", ",".join(terms),
+                "--limit", str(screen_limit),
+                "--output-screening", str(screening_output),
+                "--output-ids", str(screening_ids),
+                "--output-markdown", str(run_dir / "screening.md"),
+            ]
+        else:
+            screening_cmd = lambda: [  # noqa: E731
+                sys.executable, str(HUB_SCRIPTS / "search.py"), "select-candidates",
+                "--registry", str(registry_output),
+                "--strategy", args.selection_strategy,
+                "--topic", args.topic,
+                "--focus", args.focus or "",
+                "--terms", ",".join(terms),
+                "--limit", str(screen_limit),
+                "--output-screening", str(screening_output),
+                "--output-ids", str(screening_ids),
+                "--output-markdown", str(run_dir / "screening.md"),
+            ]
         run_stage("screening", [screening_output, screening_ids], args.force, screening_cmd)
+        summary_extra["selection_strategy"] = args.selection_strategy
+        try:
+            selection_detail = str(
+                (json.loads(screening_output.read_text(encoding="utf-8")).get("selection_rule") or {}).get("detail") or ""
+            )
+        except (OSError, json.JSONDecodeError):
+            selection_detail = ""
+        summary_extra["selection_detail"] = selection_detail
+        write_sync(kb_root, run_json_path, lambda m: m.update({"selection_strategy": args.selection_strategy}))
         screened_ids = [
             line.strip()
             for line in screening_ids.read_text(encoding="utf-8").splitlines()
@@ -1207,6 +1427,11 @@ def _main_locked(
         run_stage("coverage", [coverage_output], args.force, coverage_cmd)
         mark("screening", begun)
         coverage = json.loads(coverage_output.read_text(encoding="utf-8"))
+
+        # ---- abstract-tier evidence (positioning-only, before extraction) --
+        begun = time.monotonic()
+        abstract_evidence_stage(kb_root, run_dir, run_json_path, knowledge_ids, args, summary_extra)
+        mark("abstract-evidence", begun)
 
         # ---- full-text extraction --------------------------------------
         begun = time.monotonic()
@@ -1284,6 +1509,11 @@ def _main_locked(
             summary_extra["coverage_final"] = finalize_coverage(run_dir, registry_cmd(), coverage_output)
             mark("coverage-final", begun)
             log(stage_line("coverage-final", summary_extra["coverage_final"]))
+
+        # ---- review packet (mechanical refresh over the final evidence set)
+        begun = time.monotonic()
+        review_packet_stage(run_dir, args, summary_extra)
+        mark("review-packet", begun)
 
         # ---- summary ----------------------------------------------------
         registry = json.loads(registry_output.read_text(encoding="utf-8"))
