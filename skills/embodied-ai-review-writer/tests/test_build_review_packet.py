@@ -443,6 +443,51 @@ title: 数据采集与数据质量
         self.assertIn("Expert explainer preview:", packet)
         self.assertIn("KOL thread preview:", packet)
 
+    def test_run_dir_without_evidence_flag_autoloads_run_manifest_evidence(self) -> None:
+        """--run-dir alone must auto-load run.json files.evidence: the bare
+        --run-dir invocation used to render an EMPTY packet and exit 0
+        (20260929 图像粗配准 stale-appendix chase)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            run_dir = tmp / "work" / "literature-review-demo-20260101"
+            run_dir.mkdir(parents=True)
+            (run_dir / "evidence.jsonl").write_text(
+                "".join(
+                    json.dumps(event_for_paper(f"EA-DATA-2026-{index:04d}", f"2601.{index:05d}")) + "\n"
+                    for index in range(1, 4)
+                ),
+                encoding="utf-8",
+            )
+            (run_dir / "run.json").write_text(
+                json.dumps({"files": {"evidence": "evidence.jsonl"}}), encoding="utf-8"
+            )
+
+            completed = subprocess.run(
+                [sys.executable, str(SCRIPT), "--topic", "UMI", "--run-dir", str(run_dir),
+                 "--output", "-"],
+                cwd=ROOT, text=True, capture_output=True,
+            )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertIn("EA-DATA-2026-0003", completed.stdout)
+
+    def test_zero_events_without_fallback_refuses_to_render(self) -> None:
+        """An empty packet renders placeholders and exits 0; the writer then
+        writes from nothing. Refuse next to the cause instead."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            evidence = tmp / "empty.jsonl"
+            evidence.write_text("", encoding="utf-8")
+
+            completed = subprocess.run(
+                [sys.executable, str(SCRIPT), "--topic", "UMI", "--evidence-jsonl", str(evidence),
+                 "--style", "survey", "--output", "-"],
+                cwd=ROOT, text=True, capture_output=True,
+            )
+
+        self.assertEqual(2, completed.returncode)
+        self.assertIn("拒绝渲染空综述包", completed.stderr)
+
     def test_new_cli_flow_requires_coverage_report_not_only_paper_count(self) -> None:
         events = [
             event_for_paper(f"EA-DATA-2026-{index:04d}", f"2601.{index:05d}")
@@ -472,7 +517,7 @@ title: 数据采集与数据质量
         self.assertIn("Writing readiness: preliminary", blocked)
         self.assertIn("coverage-report-missing", blocked)
         self.assertIn("Writing readiness: formal-ready", ready)
-        self.assertIn("15 / 15 floor (not a cap)", ready)
+        self.assertIn("15 / 10 floor (not a cap)", ready)
 
     def test_cli_can_render_scientific_memo_from_sufficient_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -643,7 +688,7 @@ title: 数据采集与数据质量
         self.assertIn("### social-calibration", completed.stdout)
         self.assertIn("Discussion thread", completed.stdout)
         self.assertIn("Fallback sources are review-packet context, not Hub evidence JSONL.", completed.stdout)
-        self.assertIn("Paper-level sources: 1 / 15 floor (not a cap)", completed.stdout)
+        self.assertIn("Paper-level sources: 1 / 10 floor (not a cap)", completed.stdout)
         self.assertNotIn("Paper-level sources: 0 / 5", completed.stdout)
 
     def test_style_request_with_only_fallback_sources_still_degrades_to_packet_with_tiers(self) -> None:
@@ -962,3 +1007,96 @@ if __name__ == "__main__":
                 ["literature-review-demo-20260101"],
                 [path.name for path in (tmp / "kb" / "work").iterdir()],
             )
+
+
+def abstract_event(event_id: str, arxiv_id: str, claim: str) -> dict[str, object]:
+    return {
+        "event_id": event_id,
+        "tier": "abstract",
+        "topic_id": "EA-DATA",
+        "topic": "UMI data usability",
+        "paper": {
+            "arxiv_id": arxiv_id,
+            "title": f"Abstract-only paper {arxiv_id}",
+            "published": "2026-05-01",
+        },
+        "authors": [],
+        "claim": claim,
+        "stance": "",
+        "evidence": {"summary": claim, "locator": "abstract"},
+    }
+
+
+class AbstractTierRenderingTests(unittest.TestCase):
+    """tier: abstract events are candidate-landscape positioning: one shared
+    appendix section, excluded from every full-text stat."""
+
+    def test_split_tiers_separates_and_deduplicates_papers(self) -> None:
+        fulltext = event_for_paper("EA-DATA-2026-0001", "2601.00001")
+        events = [
+            fulltext,
+            abstract_event("EA-DATA-2026-0002", "2601.00001", "redundant positioning"),
+            abstract_event("EA-DATA-2026-0003", "2601.00002", "landscape only"),
+        ]
+        fulltext_events, abstract_events = build_review_packet.split_tiers(events)
+        self.assertEqual([str(event["event_id"]) for event in fulltext_events], ["EA-DATA-2026-0001"])
+        # The abstract event for a paper that already deep-read is redundant.
+        self.assertEqual(
+            [str(event["event_id"]) for event in abstract_events], ["EA-DATA-2026-0003"]
+        )
+
+    def test_appendix_has_one_shared_abstract_section(self) -> None:
+        abstract = [
+            abstract_event("EA-DATA-2026-0003", "2601.00002", "landscape claim one"),
+            abstract_event("EA-DATA-2026-0004", "2601.00003", "landscape claim two"),
+        ]
+        appendix = build_review_packet.render_evidence_appendix(
+            "demo", [], None, abstract_events=abstract
+        )
+        self.assertEqual(1, appendix.count("### 摘要级相关工作"))
+        self.assertNotIn("### EA-DATA-2026-0003", appendix)
+        self.assertIn("| 事件 ID | 年份 | 标题 | 摘要节选 |", appendix)
+        self.assertIn("仅定位用", appendix)
+        # The section heading is the anchor these events link through.
+        anchor = build_review_packet.event_anchor("摘要级相关工作")
+        self.assertEqual(anchor, "摘要级相关工作")
+        self.assertIn(f"(evidence-appendix.md#{anchor})", appendix)
+
+    def test_packet_carries_abstract_landscape_and_keeps_stats_fulltext_only(self) -> None:
+        fulltext = [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
+        abstract = [abstract_event("EA-DATA-2026-0003", "2601.00002", "landscape claim")]
+        packet = build_review_packet.render_packet(
+            "demo", ["EA-DATA"], fulltext, [], [], "survey", abstract_events=abstract
+        )
+        self.assertIn("## 摘要级相关工作（候选景观）", packet)
+        self.assertIn("EA-DATA-2026-0003", packet)
+        self.assertIn("- Evidence events: 1", packet)
+        self.assertIn("- Abstract-tier events: 1", packet)
+        self.assertEqual(build_review_packet.count_paper_level_sources(fulltext), 1)
+
+    def test_no_abstract_events_no_section(self) -> None:
+        packet = build_review_packet.render_packet(
+            "demo", ["EA-DATA"], [event_for_paper("EA-DATA-2026-0001", "2601.00001")], [], [], "survey"
+        )
+        self.assertNotIn("摘要级相关工作", packet)
+        appendix = build_review_packet.render_evidence_appendix(
+            "demo", [event_for_paper("EA-DATA-2026-0001", "2601.00001")]
+        )
+        self.assertNotIn("摘要级相关工作", appendix)
+
+    def test_bundle_routes_tiers_and_brief_explains_usage(self) -> None:
+        events = [
+            event_for_paper("EA-DATA-2026-0001", "2601.00001"),
+            abstract_event("EA-DATA-2026-0003", "2601.00002", "landscape claim"),
+        ]
+        artifacts = build_review_packet.render_output_artifacts(
+            "UMI 数据可用性", ["EA-DATA"], events, [], [], "all"
+        )
+        self.assertIn("## 摘要级相关工作（候选景观）", artifacts["review-packet.md"])
+        self.assertIn("### 摘要级相关工作", artifacts["evidence-appendix.md"])
+        brief = artifacts["writing-brief.md"]
+        self.assertIn("摘要级相关工作（候选景观，仅定位用）", brief)
+        self.assertIn("References 中对应条目末尾标注（摘要级）", brief)
+        # Full-text stats stay on the full-text tier.
+        self.assertIn("- Evidence events: 1", artifacts["review-packet.md"])
+        self.assertNotIn("EA-DATA-2026-0003 |", artifacts["writing-brief.md"])

@@ -29,9 +29,31 @@ from embodied_learning.parse.figure_table import (  # noqa: E402
     render_figure,
     render_table_block,
 )
+from embodied_learning.search.abstract_evidence import ABSTRACT_TIER, load_tier  # noqa: E402
 STANCE_ORDER = ["support", "conditional", "limit", "gap"]
 FORMAL_SOURCE_THRESHOLD = 5
-REVIEW_MODE_SOURCE_FLOORS = {"rapid": 8, "scoping": 15, "systematic": 30}
+# Same numbers as the enforced settle gate (finalize_run.CITED_PAPER_FLOORS,
+# defined in scripts/lib/review_runs.py): a mismatched "brief floor" made the
+# brief report blocked while settle would pass (20260929 口径统一).
+try:  # repo checkout: scripts/ is a path root with lib/ beneath it
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from lib.review_runs import CITED_PAPER_FLOORS as REVIEW_MODE_SOURCE_FLOORS  # noqa: E402
+except ImportError:  # installed wheel: wiki_scripts.lib.review_runs
+    from wiki_scripts.lib.review_runs import CITED_PAPER_FLOORS as REVIEW_MODE_SOURCE_FLOORS  # noqa: E402
+
+# The writing contract is owned by the editorial audit; render it into the
+# brief from the audit's own constants so the writer's first draft can pass
+# the gate instead of learning its regexes by failing.
+_SKILL_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SKILL_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKILL_SCRIPTS_DIR))
+from _article_quality import (  # noqa: E402
+    LENGTH_CEILINGS,
+    LENGTH_FLOORS,
+    LINK_BUDGETS,
+    REQUIRED_SECTIONS,
+    STRUCTURE_GATES,
+)
 DEFAULT_LOOKBACK_MONTHS = 6
 STANCE_ZH = {
     "support": "支持",
@@ -497,6 +519,60 @@ def count_paper_level_sources(events: list[dict[str, Any]], fallback_sources: li
     return len(keys)
 
 
+# Anchor of the appendix's single abstract-tier section: every abstract-tier
+# event links here instead of getting its own `### <event_id>` heading. Both
+# anchor rules (this module's event_anchor and audit_citations.anchor_for)
+# keep the CJK range, so the Chinese heading yields the stable anchor
+# `#摘要级相关工作`.
+ABSTRACT_SECTION_HEADING = "### 摘要级相关工作"
+ABSTRACT_TIER_NOTE = "tier: abstract，仅定位用，不得作为机制结论。"
+
+
+def split_tiers(events: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """(full-text-tier, abstract-tier) events.
+
+    The abstract tier is candidate-landscape positioning: an abstract event for
+    a paper that already carries full-text evidence is redundant, so it is
+    dropped here and every downstream stat keeps the full-text view only."""
+    fulltext_events = load_tier(events, None)
+    abstract_papers = {paper_key(event) for event in fulltext_events}
+    abstract_events = [
+        event
+        for event in load_tier(events, ABSTRACT_TIER)
+        if paper_key(event) not in abstract_papers
+    ]
+    return fulltext_events, abstract_events
+
+
+def abstract_event_link(event_id: str) -> str:
+    """Markdown link for an abstract-tier event: there is no per-event heading,
+    so the shared 摘要级相关工作 section is the only appendix anchor."""
+    return f"[{md_escape(event_id)}]({APPENDIX_FILENAME}#{event_anchor(ABSTRACT_SECTION_HEADING.lstrip('#').strip())})"
+
+
+def render_abstract_related_work(abstract_events: list[dict[str, Any]], linked: bool = False) -> str:
+    """One shared table for the whole abstract tier (never one section per
+    event): the section heading itself is the only anchor these events get."""
+    if not abstract_events:
+        return ""
+    lines = [
+        "| 事件 ID | 年份 | 标题 | 摘要节选 |",
+        "|---|---|---|---|",
+    ]
+    for event in sorted(abstract_events, key=event_sort_key):
+        paper = paper_info(event)
+        event_id = str(event.get("event_id") or "missing-event-id")
+        lines.append(
+            "| {} | {} | {} | {} |".format(
+                abstract_event_link(event_id) if linked else md_escape(event_id),
+                md_escape(str(paper.get("published") or "")[:10] or "unknown"),
+                truncate(paper.get("title") or "untitled", 120),
+                truncate(event.get("claim"), 200),
+            )
+        )
+    return "\n".join(lines) + "\n"
+
+
 def render_evidence_sufficiency(
     events: list[dict[str, Any]],
     fallback_sources: list[dict[str, Any]] | None = None,
@@ -809,6 +885,45 @@ def tension_pairs(events: list[dict[str, Any]], limit: int = 8) -> list[str]:
     return pairs
 
 
+def render_style_contract() -> list[str]:
+    """Per-style writing contract, rendered from the editorial audit's own
+    constants: the brief teaches the gate's standard up front so the first
+    draft satisfies it instead of learning the regexes by failing."""
+    lines = [
+        "## 各风格写作契约（编辑审计门即此标准，首稿须达标）",
+        "",
+    ]
+    for style_key, label in (
+        ("memo", "科研备忘录 `scientific-memo_keyan.md`"),
+        ("zhihu", "知乎科普 `zhihu-explainer_zhihu.md`"),
+        ("xiaohongshu", "小红书 `xiaohongshu-post_xiaohongshu.md`"),
+    ):
+        lines.append(f"### {label}")
+        lines.append("")
+        sections = REQUIRED_SECTIONS.get(style_key) or {}
+        for rule, (_, hint) in sections.items():
+            lines.append(f"- 必需节 `{rule}`：{hint}")
+        for gate in STRUCTURE_GATES.get(style_key, ()):
+            lines.append(f"- 结构门：{gate}")
+        ceiling = LENGTH_CEILINGS.get(style_key)
+        lines.append(
+            f"- 篇幅：正文至少 {LENGTH_FLOORS[style_key]} 个中文字符"
+            + (f"，至多 {ceiling}" if ceiling else "")
+            + "。"
+        )
+        lo, hi = LINK_BUDGETS[style_key]
+        lines.append(f"- arXiv 链接：至少 {lo} 个" + (f"，至多 {hi}" if hi else "，无上限") + "。")
+        if style_key == "memo":
+            lines.append(
+                "- 引文格式：正文一律上标 ^[1]^（多条逐条并列 ^[1]^ ^[2]^，严禁 ^[1,2]^）；"
+                "arXiv 链接只出现在文末 References。"
+            )
+        if style_key == "zhihu":
+            lines.append("- 延伸阅读：至少 3 条链接 bullet，每条附一句读者价值注记。")
+        lines.append("")
+    return lines
+
+
 def render_writing_brief(
     topic: str,
     knowledge_ids: list[str],
@@ -818,6 +933,7 @@ def render_writing_brief(
     fallback_sources: list[dict[str, Any]] | None = None,
     review_mode: str | None = None,
     coverage_report: dict[str, Any] | None = None,
+    abstract_events: list[dict[str, Any]] | None = None,
 ) -> str:
     """The writer-facing brief: raw material organized for prose, not for audit."""
     state = sufficiency_state(events, fallback_sources, review_mode, coverage_report)
@@ -879,6 +995,19 @@ def render_writing_brief(
     else:
         lines.append("- 无 limit/conditional/gap 事件;声明证据一致性本身即是 caveat。")
     lines.extend(["", *render_available_visuals(events)])
+    if abstract_events:
+        lines.extend(
+            [
+                "",
+                "## 摘要级相关工作（候选景观，仅定位用）",
+                "",
+                f"- 本 run 另有 {len(abstract_events)} 条摘要级事件（tier: abstract），"
+                f"全量表格在 evidence-appendix 的「摘要级相关工作」节（锚点 `#{ABSTRACT_SECTION_HEADING.lstrip('#').strip()}`）。",
+                "- 用法：只写相关工作定位句——“谁在什么方向做了什么”；不得作为机制结论、"
+                "对比论据或中心论点的证据，也不得与全文证据混写。",
+                "- 正文引用照常给 arXiv 论文链接，References 中对应条目末尾标注（摘要级）。",
+            ]
+        )
     lines.extend(
         [
             "",
@@ -898,18 +1027,30 @@ def render_writing_brief(
             "- Registered sources: "
             + (", ".join(f"`{item}`" for item in source_ids[:12]) if source_ids else "not loaded"),
             "",
+            *render_style_contract(),
         ]
     )
     return "\n".join(lines)
 
 
-def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_range: str | None = None) -> str:
-    """Per-event appendix; each `### <event_id>` heading is the anchor target for in-text event links."""
+def render_evidence_appendix(
+    topic: str,
+    events: list[dict[str, Any]],
+    time_range: str | None = None,
+    abstract_events: list[dict[str, Any]] | None = None,
+) -> str:
+    """Per-event appendix; each `### <event_id>` heading is the anchor target for in-text event links.
+
+    Abstract-tier events share ONE section (`### 摘要级相关工作`) instead of one
+    heading each: they are positioning material, and that single heading is the
+    only anchor they can be linked through."""
+    abstract_events = abstract_events or []
     lines = [
         f"# Evidence Appendix: {topic}",
         "",
         f"- Time range: {time_range or 'not provided'}",
         f"- Events: {len(events)}",
+        *( [f"- Abstract-tier events: {len(abstract_events)}"] if abstract_events else [] ),
         "- 每个事件一节,标题即锚点;trace-map 中的 event 链接跳转到这里。",
         "",
     ]
@@ -943,6 +1084,17 @@ def render_evidence_appendix(topic: str, events: list[dict[str, Any]], time_rang
         for table in evidence.get("tables") or []:
             if isinstance(table, dict):
                 lines.extend([render_table_block(table, label), ""])
+    if abstract_events:
+        lines.extend(
+            [
+                ABSTRACT_SECTION_HEADING,
+                "",
+                ABSTRACT_TIER_NOTE + "此节是全部摘要级事件的唯一锚点。",
+                "",
+                render_abstract_related_work(abstract_events, linked=True).rstrip(),
+                "",
+            ]
+        )
     lines.extend(["## References", "", render_references(events).rstrip(), ""])
     return "\n".join(lines)
 
@@ -1219,6 +1371,7 @@ def render_final_output(
     style: str,
     fallback_sources: list[dict[str, Any]] | None = None,
     time_range: str | None = None,
+    abstract_events: list[dict[str, Any]] | None = None,
 ) -> str:
     fallback_sources = fallback_sources or []
     if style == "scientific-memo":
@@ -1229,7 +1382,7 @@ def render_final_output(
         return render_kol_thread(topic, knowledge_ids, events, topic_cards, source_ids, fallback_sources, time_range)
     if style == "slide-deck":
         return render_slide_deck_scaffold(topic)
-    return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, style, fallback_sources, time_range)
+    return render_packet(topic, knowledge_ids, events, topic_cards, source_ids, style, fallback_sources, time_range, abstract_events=abstract_events)
 
 
 def render_output_artifacts(
@@ -1252,23 +1405,30 @@ def render_output_artifacts(
     articles are written by the agent from the brief. Mechanical style renders
     are only available as clearly-bannered `*.scaffold.md` files, either via
     emit_scaffold or by requesting a formal style explicitly.
-    """
+
+    Evidence arrives as one set and is split here: the claim map, stance
+    buckets, author stances, synthesis slots, sufficiency, and source tiers all
+    read the full-text tier only; the abstract tier is candidate-landscape
+    positioning and renders into its own sections."""
+
+    fulltext_events, abstract_events = split_tiers(events)
 
     def brief() -> str:
         return render_writing_brief(
             topic,
             knowledge_ids,
-            events,
+            fulltext_events,
             source_ids,
             time_range,
             fallback_sources,
             review_mode,
             coverage_report,
+            abstract_events=abstract_events,
         )
 
     def scaffold(output_style: str) -> str:
         rendered = render_final_output(
-            topic, knowledge_ids, events, topic_cards, source_ids, output_style, fallback_sources, time_range
+            topic, knowledge_ids, fulltext_events, topic_cards, source_ids, output_style, fallback_sources, time_range
         )
         return SCAFFOLD_BANNER + rendered
 
@@ -1277,7 +1437,7 @@ def render_output_artifacts(
         artifacts["review-packet.md"] = render_packet(
             topic,
             knowledge_ids,
-            events,
+            fulltext_events,
             topic_cards,
             source_ids,
             "survey",
@@ -1285,10 +1445,13 @@ def render_output_artifacts(
             time_range,
             review_mode,
             coverage_report,
+            abstract_events=abstract_events,
         )
         artifacts[BRIEF_FILENAME] = brief()
-        if events:
-            artifacts[APPENDIX_FILENAME] = render_evidence_appendix(topic, events, time_range)
+        if fulltext_events or abstract_events:
+            artifacts[APPENDIX_FILENAME] = render_evidence_appendix(
+                topic, fulltext_events, time_range, abstract_events=abstract_events
+            )
         if emit_scaffold:
             for output_style in DEFAULT_OUTPUT_STYLES:
                 artifacts[scaffold_filename(output_style)] = scaffold(output_style)
@@ -1296,12 +1459,15 @@ def render_output_artifacts(
         # Explicit formal style: never emit a file that looks like a finished article.
         artifacts[scaffold_filename(style)] = scaffold(style)
         artifacts[BRIEF_FILENAME] = brief()
-        if events:
-            artifacts[APPENDIX_FILENAME] = render_evidence_appendix(topic, events, time_range)
+        if fulltext_events or abstract_events:
+            artifacts[APPENDIX_FILENAME] = render_evidence_appendix(
+                topic, fulltext_events, time_range, abstract_events=abstract_events
+            )
     else:
         # survey / related-work / positioning keep their packet-flavored artifact.
         artifacts[artifact_filename(style)] = render_final_output(
-            topic, knowledge_ids, events, topic_cards, source_ids, style, fallback_sources, time_range
+            topic, knowledge_ids, fulltext_events, topic_cards, source_ids, style, fallback_sources, time_range,
+            abstract_events=abstract_events,
         )
     return artifacts
 
@@ -1322,8 +1488,10 @@ def render_packet(
     time_range: str | None = None,
     review_mode: str | None = None,
     coverage_report: dict[str, Any] | None = None,
+    abstract_events: list[dict[str, Any]] | None = None,
 ) -> str:
     fallback_sources = fallback_sources or []
+    abstract_events = abstract_events or []
     event_topics = sorted({str(event.get("topic_id")) for event in events if event.get("topic_id")})
     knowledge = knowledge_ids or event_topics or [str(card["id"]) for card in topic_cards]
     lines = [
@@ -1336,6 +1504,7 @@ def render_packet(
         f"- Review style: `{style}`",
         f"- Knowledge IDs: {', '.join(f'`{item}`' for item in knowledge) if knowledge else 'unlisted'}",
         f"- Evidence events: {len(events)}",
+        *( [f"- Abstract-tier events: {len(abstract_events)}"] if abstract_events else [] ),
         f"- Topic cards: {len(topic_cards)}",
         f"- Registered source IDs available: {', '.join(f'`{item}`' for item in source_ids[:12]) if source_ids else 'not loaded'}",
         "",
@@ -1386,6 +1555,18 @@ def render_packet(
         "",
         render_source_gaps(events, source_ids).rstrip(),
         "",
+        *(
+            [
+                "## 摘要级相关工作（候选景观）",
+                "",
+                ABSTRACT_TIER_NOTE + "该表只用于相关工作定位，不进入 Claim Map、stance 统计或论文数下限。",
+                "",
+                render_abstract_related_work(abstract_events).rstrip(),
+                "",
+            ]
+            if abstract_events
+            else []
+        ),
         "## Style Menu",
         "",
         render_style_menu(topic, events, fallback_sources, review_mode, coverage_report).rstrip(),
@@ -1481,15 +1662,51 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     time_range = args.time_range or default_time_range()
-    events = load_events([Path(path) for path in args.evidence_jsonl])
+    evidence_paths = [Path(path) for path in args.evidence_jsonl]
+    if args.run_dir and not evidence_paths:
+        # --run-dir without explicit evidence: auto-load the run's own
+        # evidence set. Without this the script silently rendered an empty
+        # packet (exit 0) and the writer only noticed at the citation gate
+        # (20260929 图像粗配准).
+        run_json = Path(args.run_dir).expanduser() / "run.json"
+        try:
+            manifest = json.loads(run_json.read_text(encoding="utf-8"))
+            rel = (manifest.get("files") or {}).get("evidence")
+            if not rel:
+                raise KeyError("files.evidence")
+            evidence_paths = [run_json.parent / str(rel)]
+        except (OSError, json.JSONDecodeError, KeyError) as exc:
+            print(
+                f"--run-dir 模式无法自动载入证据（{exc}）：先跑驱动/补 run.json，"
+                "或显式传 --evidence-jsonl（run_status.py [next] 给出完整命令）。",
+                file=sys.stderr,
+            )
+            return 2
+    events = load_events(evidence_paths)
     selected_ids = load_selection_ids(args.select_event, [Path(path) for path in args.select_events_file])
     if selected_ids:
         events = select_events(events, selected_ids)
     fallback_sources = load_fallback_sources([Path(path) for path in args.fallback_source_json])
+    if not events and not args.fallback_source_json:
+        # An empty packet renders placeholders and exits 0 — the writer then
+        # writes from nothing and fails the citation gate three stages later.
+        # Refuse here, next to the cause. (An explicitly provided
+        # --fallback-source-json keeps the preliminary packet renderable,
+        # even when the file itself is empty.)
+        print(
+            "证据事件为 0 且无 fallback 来源：拒绝渲染空综述包。"
+            "先完成检索/深读/投影，或用 run_status.py [next] 的完整命令重试；"
+            "确要空包请传 --fallback-source-json。",
+            file=sys.stderr,
+        )
+        return 2
     coverage_report = load_coverage_report(Path(args.coverage_report)) if args.coverage_report else None
     reading_summary = load_reading_summary(Path(args.reading_summary)) if args.reading_summary else None
+    fulltext_events, _ = split_tiers(events)
     if reading_summary is not None:
-        coverage_report = apply_reading_gate(events, args.review_mode, coverage_report, reading_summary)
+        # The deep-read gate reads full-text evidence only; abstract-tier
+        # positioning has no paper_reading to verify.
+        coverage_report = apply_reading_gate(fulltext_events, args.review_mode, coverage_report, reading_summary)
     cards = load_topic_cards([Path(path) for path in args.topic_card])
     source_ids = load_source_ids(Path(args.source_file)) if args.source_file else []
     artifacts = render_output_artifacts(

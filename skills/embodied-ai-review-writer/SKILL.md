@@ -62,13 +62,13 @@ If the brief says `Writing readiness: preliminary` or its coverage gate is block
    - **Articles cite verified evidence only.** If the synthesis needs a candidate paper, recover its complete text, read it with `$embodied-ai-paper-reader`, audit it, and project its events before writing.
 7. Settle the run — one mechanical command, no manual steps:
    - `python3 scripts/finalize_run.py --run-dir <run-dir> --kb-root <kb-root>` does ALL of the settle/publish mechanics: stamps run.json (`event_count`/`evidence_papers`/`candidate_count`/`full_text_count`, `files.evidence` by consolidating `evidence/*.jsonl`, `style`+`scope_note` when a single deliverable exists), enforces the per-mode cited-paper floor (rapid 6 / scoping 10 / systematic 15), copies accepted assets into `evidence/<run>/`, flips `settled`, registers the catalog row (scale triple 候选/全文/精读 included), and rebuilds the wiki snapshot. Gate failures print what is missing — fix and rerun; a gate miss is never a stop-and-explain condition. Never flip `run.json` status, hand-copy evidence assets, edit the catalog table, run `build_research_wiki.py`, or verify the served `/data/current.json` topic count yourself — those are finalize_run.py's mechanical duties, and redoing them by hand is a contract violation.
-   - A cited-paper-floor shortfall means the deep-read queue was too short. When you are driving the mechanical stages yourself, the remedy is to resume `run_review_pipeline.py` with a higher `--deep-read-limit` — never hand-wave the shortfall. When the mechanical stages were already driven for you (pipeline-summary.json present in the run dir), do NOT re-run the driver: report the gap honestly to the user and leave the run `in-progress`.
+   - A cited-paper-floor shortfall means the deep-read queue was too short. The remedy is the resume command the floor gate prints (or `run_review_pipeline.py --run-dir <run-dir> --review-mode <mode> --deep-read-limit <higher>`): the driver is idempotent and only fills the missing papers, then rerun `finalize_run.py`. Never hand-wave the shortfall, and never re-run retrieval/extraction from scratch (`--force`) — resume, don't restart.
    - Cross-run evidence is supported but must be recorded: `run.json` lists `source_runs` (the prior runs whose evidence was combined) and `event_count` equals the deduplicated count actually available to the articles. Never cite an event that is not in the settled evidence set.
    - Audit before settling — all gates must pass:
      - `python3 scripts/check_run_bundle.py <run-dir>` (bundle completeness: three styles or a declared `style`+`scope_note`, self-contained evidence, standard run.json schema).
      - `python3 scripts/audit_citations.py --article <each article> --appendix <appendix> --evidence-jsonl <each evidence file> --run-json <run.json>` (no dead anchors, no citations outside the loaded evidence).
      - `python3 skills/embodied-ai-review-writer/scripts/writing_audit.py audit-article-quality --bundle-dir <run-dir>` (reader-facing editorial quality and cross-style differentiation).
-   - `check_run_bundle.py` enforces the v2 coverage artifacts and refuses settlement while `ready_to_stop=false`.
+   - `check_run_bundle.py` enforces the v2 coverage artifacts and refuses settlement while `ready_to_stop=false`. The gate's own failure message lists the two sanctioned paths (resume the driver, or declare `gate_exceptions` in `run.json` with the justification in `notes` — e.g. saturation on a one-shot registry whose "rounds" are channels, not iterations).
 
 For a legacy multi-run paper-reader upgrade, keep every old settled run immutable. Build and audit the replacement under `work/`, then publish it under a new suffixed directory such as `literature-review-<topic>-<date>-reader-v1`. The replacement run must include `paper-notes/`, `claim-support-audits/`, `reading-ledger.jsonl`, `reading-summary.json`, their indexes, regenerated evidence/brief/appendix/trace map, and all three audited articles. Only switch it to `settled` after all reading, citation, editorial, and bundle gates pass.
 
@@ -125,7 +125,11 @@ python skills/embodied-ai-review-writer/scripts/build_review_packet.py \
 
 Use `--output -` only when the user explicitly wants inline Markdown or stdout for another tool.
 
-Then hand the validated brief to the writing workflow below (mandatory for prose deliverables): pass `writing-brief.md`, `evidence-appendix.md`, every accepted evidence JSONL, and the requested style(s); save the exact deliverable filenames in the same run folder; generate `trace-map.json`, then run `writing_audit.py audit-article-quality`. A traceable scaffold is not an article.
+### Abstract-tier evidence (`tier: abstract`)
+
+A run may also load abstract-tier events (appendix section 「摘要级相关工作」, `tier: abstract`): registry-metadata positioning for the candidate landscape. Use them only for related-work positioning sentences — who did what in which direction — never as mechanism conclusions, comparison evidence, or central-thesis support. Cite them in body prose with the ordinary arXiv paper link and append （摘要级） to the References entry. Abstract-tier events have no per-event appendix heading: their only anchor is the shared 「摘要级相关工作」 section. The cited-paper floor (`evidence_papers`) counts full-text-tier papers only.
+
+Then hand the validated brief to the writing workflow below (mandatory for prose deliverables): pass `writing-brief.md`, `evidence-appendix.md`, every accepted evidence JSONL, and the requested style(s); save the exact deliverable filenames in the same run folder; run `writing_audit.py audit-article-quality` — `trace-map.json` is built mechanically at settle (finalize_run.py; the headless launcher builds it before the gate loop), never hand-written. A traceable scaffold is not an article.
 
 ## Load only the selected style guidance
 
@@ -148,7 +152,7 @@ With a validated brief in hand (from the briefing step above or supplied by the 
 5. **Edit the argument.** Check the thesis, counterevidence, causal order, and overclaiming before polishing individual sentences.
 6. **Run an evidence-locked natural-writing pass.** Freeze every factual claim, paper link, number, date, named entity, quote, uncertainty marker, and boundary condition. Then remove chatbot residue, empty promotion, vague attribution, redundant signposting, synonym cycling, generic conclusions, and monotonous sentence rhythm. Do not add specificity, personal experience, or confidence to make the prose sound more human. Common technical words and punctuation are not faults by themselves; change them only when the surrounding sentence is weak. The selected platform guide outranks generic style heuristics.
 7. **Inspect the publication surface.** Reject unresolved citation anchors, missing subjects, malformed punctuation, internal reasoning labels, unannotated reading lists, and reference dumps. Check whether a non-specialist can restate the thesis without the paper names or acronyms.
-8. **Run deterministic gates.** Build the trace map, then audit the three outputs:
+8. **Run deterministic gates.** `trace-map.json` is built mechanically at settle — do not hand-write it. Audit the three outputs (pre-build the trace map below only to catch UNCOVERED citations early):
 
 ```bash
 python3 skills/embodied-ai-review-writer/scripts/writing_audit.py build-trace-map \
