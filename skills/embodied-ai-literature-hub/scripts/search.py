@@ -419,6 +419,53 @@ def _screen_candidates_main(argv: list[str] | None = None) -> int:
         output_markdown=args.output_markdown,
     )
 
+# ---- select-candidates (selection strategies; keywords stays screen-candidates) -----
+
+import argparse
+
+from embodied_learning.search.selection import run_select  # noqa: E402
+
+SELECTION_STRATEGIES = ("bm25", "influence", "keywords", "smart")
+
+
+def _select_candidates_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Rank a candidate registry into the deep-read queue with one "
+        "selection strategy (bm25 / influence / smart). The keywords strategy is "
+        "NOT implemented here — screen-candidates owns it."
+    )
+    parser.add_argument("--registry", required=True, help="candidate-registry.json.")
+    parser.add_argument("--strategy", required=True, choices=SELECTION_STRATEGIES)
+    parser.add_argument("--topic", required=True, help="Review topic (the bm25/smart query).")
+    parser.add_argument("--focus", default="", help="Interview focus text appended to the query.")
+    parser.add_argument("--terms", default="", help="Comma-separated English terms augmenting the bm25 query (a pure-Chinese topic tokenizes to nothing).")
+    parser.add_argument("--limit", required=True, type=int, help="Deep-read queue size.")
+    parser.add_argument("--output-screening", required=True)
+    parser.add_argument("--output-ids", required=True)
+    parser.add_argument("--output-markdown")
+    parser.add_argument("--complete-cli", help="claude binary for the smart strategy (default: harness resolve_cli).")
+    parser.add_argument("--complete-model", help="Model for the smart strategy (default: harness DRIVER_AGENT_MODEL).")
+    parser.add_argument("--complete-timeout", type=float, default=600.0, help="Smart-agent timeout in seconds.")
+    return parser.parse_args(argv)
+
+
+def _select_candidates_main(argv: list[str] | None = None) -> int:
+    args = _select_candidates_parse_args(argv)
+    return run_select(
+        args.registry,
+        args.strategy,
+        args.topic,
+        args.focus,
+        args.limit,
+        args.output_screening,
+        args.output_ids,
+        args.output_markdown,
+        terms=args.terms,
+        cli=args.complete_cli,
+        model=args.complete_model,
+        timeout_s=args.complete_timeout,
+    )
+
 # ---- assess-review-coverage (was scripts/assess_review_coverage.py) ------------------
 
 
@@ -728,6 +775,7 @@ _SUBCOMMANDS = {
     "expand-via-citations": _expand_via_citations_main,
     "build-candidate-registry": _build_candidate_registry_main,
     "screen-candidates": _screen_candidates_main,
+    "select-candidates": _select_candidates_main,
     "assess-review-coverage": _assess_review_coverage_main,
     "rank-influential-papers": _rank_influential_papers_main,
     "rank-problem-relevance": _rank_problem_relevance_main,

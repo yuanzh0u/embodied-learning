@@ -56,6 +56,25 @@ class SearchCliDispatchTest(unittest.TestCase):
         self.assertEqual(kwargs.get("output_screening"), "/tmp/scr.json")
         self.assertEqual(kwargs.get("output_ids"), "/tmp/ids.txt")
 
+    def test_select_candidates_dispatches_to_selection_run(self):
+        # search.py binds run_select into its own namespace at import time, so
+        # patch the bound name (not the source module attribute).
+        with mock.patch.object(self.module, "run_select", return_value=0) as run_select:
+            code = self.module._select_candidates_main(
+                ["--registry", "/tmp/r.json", "--strategy", "bm25", "--topic", "umi",
+                 "--focus", "data", "--limit", "10",
+                 "--output-screening", "/tmp/scr.json", "--output-ids", "/tmp/ids.txt"]
+            )
+        self.assertEqual(code, 0)
+        args, kwargs = run_select.call_args
+        self.assertEqual(args[0], "/tmp/r.json")
+        self.assertEqual(args[1], "bm25")
+        self.assertEqual(args[2], "umi")
+        self.assertEqual(args[3], "data")
+        self.assertEqual(args[4], 10)
+        self.assertEqual(kwargs.get("cli"), None)
+        self.assertEqual(kwargs.get("model"), None)
+
     def test_assess_review_coverage_dispatches_to_coverage_run(self):
         with mock.patch.object(self.module.coverage, "run", return_value=0) as run:
             code = self.module._assess_review_coverage_main(
