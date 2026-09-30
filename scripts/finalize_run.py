@@ -7,8 +7,9 @@ settled → register catalog → rebuild wiki). Steps, each idempotent:
 
 1. Fill run.json mechanically: event_count / evidence_papers (from the
    evidence set), candidate_count / full_text_count (from
-   pipeline-summary.json), files.evidence (consolidating evidence/*.jsonl
-   into evidence.jsonl when the packet didn't), files.outputs, and
+   pipeline-summary.json), files.evidence (always rebuilding
+   evidence.jsonl from evidence/*.jsonl + the flat-run canonical via
+   lib.review_runs.consolidate_evidence), files.outputs, and
    style + scope_note when only one deliverable exists.
 2. Coverage floor: a systematic review citing too few papers is a filter
    failure, not a writing failure — refuse (exit 2) with the exact driver
@@ -35,21 +36,33 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from lib.layout import default_kb_root
-    from lib.review_runs import STYLE_TO_FILE, register_run_in_catalog
+    from lib.layout import default_kb_root, find_roots
+    from lib.review_runs import (
+        CITED_PAPER_FLOORS,
+        STANDARD_ARTICLES,
+        STYLE_TO_FILE,
+        build_trace_map,
+        consolidate_evidence,
+        register_run_in_catalog,
+    )
 except ImportError:  # installed console-script entry: package import path
-    from wiki_scripts.lib.layout import default_kb_root
-    from wiki_scripts.lib.review_runs import STYLE_TO_FILE, register_run_in_catalog
-
-# Minimum distinct papers the final deliverable set must rest on, per review
-# mode. 7-paper scoping reviews (20260924 单目深度估计) are what this gate
-# exists to prevent. Floors are sized against DEEP_READ_LIMITS in the driver
-# (rapid 10 / scoping 16 / systematic 40) and the ~70% skeleton-audit pass
-# rate, so a floor miss means the deep-read queue itself was too short.
-CITED_PAPER_FLOORS = {"rapid": 6, "scoping": 10, "systematic": 15}
+    from wiki_scripts.lib.layout import default_kb_root, find_roots
+    from wiki_scripts.lib.review_runs import (
+        CITED_PAPER_FLOORS,
+        STANDARD_ARTICLES,
+        STYLE_TO_FILE,
+        build_trace_map,
+        consolidate_evidence,
+        register_run_in_catalog,
+    )
 
 APPENDIX = "evidence-appendix.md"
 PUBLISH_FILES = [APPENDIX, "trace-map.json", "evidence.jsonl", "pipeline-summary.json"]
+# Positioning-only tier inside evidence/: its per-paper JSONL is one virtual
+# file (abstract-tier.jsonl), never a deep-read paper, so both the per-file and
+# the consolidated counting paths must skip it.
+ABSTRACT_TIER = "abstract"
+ABSTRACT_TIER_STEM = "abstract-tier"
 
 
 def log(message: str) -> None:
@@ -74,36 +87,16 @@ def write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def consolidate_evidence(run_dir: Path) -> Path:
-    """One deduplicated evidence.jsonl from the per-paper JSONL set."""
-    merged = run_dir / "evidence.jsonl"
-    if not merged.is_file():
-        seen: set[str] = set()
-        lines: list[str] = []
-        for path in sorted((run_dir / "evidence").glob("*.jsonl")):
-            for line in path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    event_id = str(json.loads(line).get("id") or "")
-                except json.JSONDecodeError:
-                    event_id = ""
-                key = event_id or line
-                if key in seen:
-                    continue
-                seen.add(key)
-                lines.append(line)
-        merged.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
-    return merged
-
-
 def evidence_papers(run_dir: Path, evidence_jsonl: Path) -> int:
-    """Distinct papers backing the evidence: prefer the per-paper file set."""
+    """Distinct papers backing the full-text evidence.
+
+    Abstract-tier events are positioning-only: they never count toward the
+    cited-paper floor, so both counting paths skip ``tier: abstract``."""
     per_paper = {
         path.stem
         for path in (run_dir / "evidence").glob("*.jsonl")
-        if any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())
+        if path.stem != ABSTRACT_TIER_STEM
+        and any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())
     }
     if per_paper:
         return len(per_paper)
@@ -116,9 +109,35 @@ def evidence_papers(run_dir: Path, evidence_jsonl: Path) -> int:
             event = json.loads(line)
         except json.JSONDecodeError:
             continue
-        paper_id = (event.get("source") or {}).get("paper_id") or event.get("paper_id")
+        if str(event.get("tier") or "") == ABSTRACT_TIER:
+            continue
+        paper = event.get("paper") if isinstance(event.get("paper"), dict) else {}
+        paper_id = (
+            paper.get("arxiv_id")
+            or (event.get("source") or {}).get("paper_id")
+            or event.get("paper_id")
+        )
         if paper_id:
             papers.add(str(paper_id))
+    return len(papers)
+
+
+def abstract_papers(evidence_jsonl: Path) -> int:
+    """Distinct papers contributing abstract-tier (positioning) events."""
+    papers: set[str] = set()
+    for line in evidence_jsonl.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if str(event.get("tier") or "") != ABSTRACT_TIER:
+            continue
+        paper = event.get("paper") if isinstance(event.get("paper"), dict) else {}
+        arxiv_id = str(paper.get("arxiv_id") or "").strip()
+        if arxiv_id:
+            papers.add(arxiv_id)
     return len(papers)
 
 
@@ -154,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     papers = evidence_papers(run_dir, evidence_jsonl)
     manifest["event_count"] = len(event_ids)
     manifest["evidence_papers"] = papers
+    manifest["abstract_papers"] = abstract_papers(evidence_jsonl)
     summary_path = run_dir / "pipeline-summary.json"
     if summary_path.is_file():
         summary = load_json(summary_path)
@@ -161,8 +181,25 @@ def main(argv: list[str] | None = None) -> int:
             value = summary.get(key)
             if isinstance(value, int):
                 manifest["candidate_count" if key == "candidate_count" else "full_text_count"] = value
-    deliverables = [name for name in STYLE_TO_FILE.values() if (run_dir / name).is_file()]
     style = args.style or manifest.get("style")
+    if style and style in STYLE_TO_FILE:
+        # Declared style → its own file is the only deliverable. A disk scan
+        # over STYLE_TO_FILE would sweep in mechanically generated artifacts
+        # that happen to share a filename (survey maps to review-packet.md,
+        # which the packet script also emits as a briefing) and then fail the
+        # citation gate on the packet's bare inventory IDs.
+        declared_file = STYLE_TO_FILE[style]
+        if not (run_dir / declared_file).is_file():
+            log(f"声明了 style={style} 但交付物 {declared_file} 不存在：先补写成稿再 finalize。")
+            return 2
+        deliverables = [declared_file]
+    else:
+        # Undeclared scope → the three prose deliverables only. The mechanical
+        # briefing (review-packet.md) shares its filename with survey's style
+        # file and exists in every run, so sweeping STYLE_TO_FILE.values()
+        # would audit the briefing's bare inventory IDs as if it were prose.
+        # survey/slide-deck become deliverables only via explicit --style.
+        deliverables = [name for name in STANDARD_ARTICLES if (run_dir / name).is_file()]
     if not style and len(deliverables) == 1:
         style = next(name for name, filename in STYLE_TO_FILE.items() if filename == deliverables[0])
     if style:
@@ -179,7 +216,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest["files"]["outputs"] = outputs
     write_json(run_json_path, manifest)
     log(f"run.json 已盖章：event_count={len(event_ids)} evidence_papers={papers} "
-        f"style={style or '（三风格）'}")
+        f"abstract_papers={manifest['abstract_papers']} style={style or '（三风格）'}")
 
     # ---- 2. coverage floor -------------------------------------------------
     review_mode = str(manifest.get("review_mode") or "")
@@ -193,6 +230,17 @@ def main(argv: list[str] | None = None) -> int:
             f"--review-mode {review_mode} --deep-read-limit {max(papers * 2, floor * 2)}")
         return 2
 
+    # ---- 2b. trace map (mechanical; the writer never hand-builds it) ------
+    _, skills_root, _ = find_roots()
+    trace_ok, trace_problems = build_trace_map(run_dir, skills_root)
+    if not trace_ok:
+        for line in trace_problems:
+            log(f"trace-map: {line}")
+        log("trace-map 未生成：成稿引用了证据集之外的论文（UNCOVERED）或输入缺失。"
+            "修法：删改成稿中无证据支撑的 arXiv 引用，或补证据后重跑 finalize_run.py。"
+            "门禁未过不是提前停止的理由。")
+        return 2
+
     # ---- 3+4. the two gates -------------------------------------------------
     # check_run_bundle demands status=settled, so flip first and revert on
     # failure: a gate-failed run must never stay marked settled.
@@ -202,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         scripts_root = Path(__file__).resolve().parent
         run_step("check_run_bundle", [sys.executable, str(scripts_root / "check_run_bundle.py"), str(run_dir)])
         audit_cmd = [sys.executable, str(scripts_root / "audit_citations.py")]
-        for name in (deliverables or [n for n in STYLE_TO_FILE.values() if (run_dir / n).is_file()]):
+        for name in (deliverables or [n for n in STANDARD_ARTICLES if (run_dir / n).is_file()]):
             audit_cmd += ["--article", str(run_dir / name)]
         audit_cmd += [
             "--appendix", str(run_dir / APPENDIX),

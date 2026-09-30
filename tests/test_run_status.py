@@ -112,6 +112,40 @@ class RunStatusTest(unittest.TestCase):
         self.assertIn("[next]", text)
         self.assertIn("finalize_run.py", text)
 
+    def test_gates_block_surfaces_stop_assessment_and_exceptions(self):
+        (self.run_dir / "coverage-report.json").write_text(json.dumps({
+            "saturation_rounds": [
+                {"batch": "r1", "channel": "arxiv-api", "new_unique_rate": 1.0},
+                {"batch": "r2", "channel": "citation-seeds", "new_unique_rate": 0.91},
+            ],
+            "stop_assessment": {
+                "ready_to_stop": False,
+                "checks": {"candidate_floor": True, "saturation": False},
+                "unresolved": ["saturation"],
+            },
+        }), encoding="utf-8")
+        (self.run_dir / "run.json").write_text(json.dumps({
+            "run": "literature-review-demo-20260101", "topic": "demo",
+            "review_mode": "scoping", "status": "in-progress", "files": {},
+            "gate_exceptions": ["saturation"],
+        }), encoding="utf-8")
+        report = run_status.build_report(self.run_dir)
+        text = run_status.render(report, self.run_dir, Path("/scripts"))
+        self.assertIn("[gates]", text)
+        self.assertIn("saturation=未过", text)
+        self.assertIn("已声明豁免：saturation", text)
+        self.assertIn("gate_exceptions", text)  # 修法提示里的逃生门键名
+        self.assertIn("新篇目率 0.91", text)
+
+    def test_deep_read_row_carries_failure_reason(self):
+        (self.run_dir / "paper-notes" / "2203.02677.failed.json").write_text(
+            json.dumps({"outcome": "failed", "reason": "agent 异常：timeout"}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        report = run_status.build_report(self.run_dir)
+        text = run_status.render(report, self.run_dir, Path("/scripts"))
+        self.assertIn("因:agent 异常：timeout", text)
+
     def test_missing_run_json_rejected(self):
         with tempfile.TemporaryDirectory() as other:
             self.assertEqual(run_status.main(["--run-dir", other]), 1)

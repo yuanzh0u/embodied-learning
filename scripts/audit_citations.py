@@ -107,27 +107,45 @@ def audit_article(
         if appendix is not None:
             expected = {appendix.name}
             if target_file and target_file not in expected:
-                problems.append(f"{rel}: event link points at `{target_file}` instead of {appendix.name}: [{label}]")
+                problems.append(
+                    f"{rel}: event link points at `{target_file}` instead of {appendix.name}: [{label}]"
+                    "（修法：链接目标写同目录的 evidence-appendix.md）"
+                )
                 continue
             resolved = article.parent / (target_file or appendix.name)
             if not resolved.is_file():
-                problems.append(f"{rel}: linked appendix file missing: {target_file or appendix.name}")
+                problems.append(
+                    f"{rel}: linked appendix file missing: {target_file or appendix.name}"
+                    "（修法：用 run_status.py [next] 的 build_review_packet 命令重建 appendix）"
+                )
                 continue
         if anchors and anchor not in anchors:
-            problems.append(f"{rel}: dead anchor #{anchor} for [{label}]")
+            problems.append(
+                    f"{rel}: dead anchor #{anchor} for [{label}]"
+                    "（修法：重跑 build_review_packet.py 重建 appendix 锚点，或改引现有锚点）"
+                )
 
     if evidence_ids:
         for event_id in sorted(cited_ids - evidence_ids):
-            problems.append(f"{rel}: cites event outside loaded evidence set: {event_id}")
+            problems.append(
+                f"{rel}: cites event outside loaded evidence set: {event_id}"
+                "（修法：删该引用，或换成本 run evidence 里的事件 ID）"
+            )
 
     if paper_ids:
         linked_papers = {match.group(1) for match in ARXIV_LINK_RE.finditer(text)}
         for arxiv_id in sorted(linked_papers - paper_ids):
-            problems.append(f"{rel}: links paper with no event in loaded evidence set: {arxiv_id}")
+            problems.append(
+                f"{rel}: links paper with no event in loaded evidence set: {arxiv_id}"
+                "（修法：删除该 arXiv 链接，或改引已入证据的论文）"
+            )
 
     for event_id in sorted(cited_ids - linked_ids):
         # Bare (unlinked) event IDs violate the citation/link contract in formal outputs.
-        problems.append(f"{rel}: bare event ID (not linked to appendix): {event_id}")
+        problems.append(
+            f"{rel}: bare event ID (not linked to appendix): {event_id}"
+            "（修法：写成 [ID](evidence-appendix.md#anchor) 链接）"
+        )
     return problems
 
 

@@ -31,6 +31,84 @@ STYLE_TO_FILE = {
     "survey": "review-packet.md",
 }
 
+# Minimum distinct papers the final deliverable set must rest on, per review
+# mode — the single source for every floor display (finalize gate, run_status,
+# the writing brief). 7-paper scoping reviews (20260924 单目深度估计) are what
+# this gate exists to prevent. Floors are sized against DEEP_READ_LIMITS in
+# the driver (rapid 10 / scoping 16 / systematic 40) and the ~70%
+# skeleton-audit pass rate, so a floor miss means the deep-read queue was too
+# short.
+CITED_PAPER_FLOORS = {"rapid": 6, "scoping": 10, "systematic": 15}
+
+
+def consolidate_evidence(run_dir: Path) -> Path:
+    """One deduplicated ``evidence.jsonl`` at the run root, always rebuilt.
+
+    The single merge both gate surfaces read (launcher gate loop and
+    finalize_run). Always rebuilt, never reused: the driver re-projects
+    events whenever a deep-read round resumes, so a cached merge would
+    silently lag the evidence/ tree and fail the event_count gate
+    (20260929 图像粗配准). Flat runs keep canonical evidence at the run
+    root with no evidence/ subdir — its lines are folded in as the seed so
+    the rebuild never clobbers them."""
+    merged = run_dir / "evidence.jsonl"
+    seen: set[str] = set()
+    lines: list[str] = []
+
+    def absorb(path: Path) -> None:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event_id = str(json.loads(line).get("event_id") or "")
+            except json.JSONDecodeError:
+                event_id = ""
+            key = event_id or line
+            if key in seen:
+                continue
+            seen.add(key)
+            lines.append(line)
+
+    canonical = run_dir / "evidence.jsonl"
+    if canonical.is_file():
+        absorb(canonical)
+    for path in sorted((run_dir / "evidence").glob("*.jsonl")):
+        absorb(path)
+    merged.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+    return merged
+
+
+def build_trace_map(run_dir: Path, skills_root: Path) -> tuple[bool, list[str]]:
+    """Mechanically build ``trace-map.json`` from the deliverables + evidence.
+
+    Pure script work the writer used to do by hand (the file is published in
+    finalize_run.PUBLISH_FILES yet nothing built it). Always rebuilt — cheap
+    and deterministic. Returns ``(ok, problem_lines)``; ``UNCOVERED`` lines
+    name papers the deliverables cite without evidence backing, a
+    fix-and-rerun condition for the writer, never a stop."""
+    import subprocess
+    import sys
+
+    builder = skills_root / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
+    evidence = run_dir / "evidence.jsonl"
+    if not evidence.is_file():
+        return False, [f"trace-map 输入缺失：{evidence}（先跑驱动/consolidate 生成 evidence.jsonl）"]
+    if not builder.is_file():
+        return False, [f"trace-map 构建器缺失：{builder}"]
+    articles = [name for name in STANDARD_ARTICLES if (run_dir / name).is_file()]
+    if not articles:
+        return True, []  # writer 未写成稿：无物可映射
+    command = [sys.executable, str(builder), "build-trace-map", "--evidence-jsonl", str(evidence)]
+    for name in articles:
+        command += ["--article", str(run_dir / name)]
+    command += ["--output", str(run_dir / "trace-map.json")]
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode:
+        lines = [line.strip() for line in (result.stdout or "").splitlines() if line.strip()]
+        return False, lines or [f"build-trace-map exit {result.returncode}：{(result.stderr or '')[-200:]}"]
+    return True, []
+
 
 @dataclass(frozen=True)
 class ReviewRun:

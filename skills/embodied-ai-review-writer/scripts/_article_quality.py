@@ -19,6 +19,56 @@ CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
 LATIN_RE = re.compile(r"[A-Za-z]")
 ACRONYM_RE = re.compile(r"(?<![A-Za-z])[A-Z][A-Z0-9-]{1,}(?![A-Za-z])")
 
+# Single source of the per-style required-section contract: style ->
+# {rule: (heading regex, human-readable hint)}. audit_file enforces it (the
+# failure message carries the hint so a failing draft names its own fix), and
+# build_review_packet renders it into the writing brief so the writer's FIRST
+# draft can satisfy the gate instead of learning it by failing.
+REQUIRED_SECTIONS: dict[str, dict[str, tuple[str, str]]] = {
+    "memo": {
+        "boundary": (r"^## .*?(研究边界|研究范围)", '以 "## 研究边界…" 或 "## 研究范围…" 开头的节'),
+        "thesis": (r"^## .*?(中心判断|核心结论|中心论点)", '标题含 中心判断/核心结论/中心论点 的 "##" 节'),
+        "limits": (r"^## .*?(条件|分歧|边界|限制|局限|空白)", '标题含 条件/分歧/边界/限制/局限/空白 的 "##" 节'),
+        "ending": (r"^## .*?(结论|启发|下一步)", '标题含 结论/启发/下一步 的 "##" 节'),
+    },
+    "zhihu": {
+        "tldr": (r"^## TL;DR", '以 "## TL;DR" 开头的节'),
+        "misconception": (
+            r"^#{2,3}\s+.*(?:误区|直觉.*(?:失灵|误判)|为什么.*(?:容易|会).*误判|问题从哪来)",
+            '标题含 误区/直觉失灵/为什么容易误判/问题从哪来 的 "##"/"###" 节',
+        ),
+        "mechanism": (
+            r"^#{2,3}\s+.*(?:机制|问题.*(?:出在哪|在哪里)|为什么.*(?:失败|失效)|因果链|真正发生)",
+            '标题含 机制/问题出在哪/为什么失效/因果链/真正发生 的 "##"/"###" 节',
+        ),
+        "boundary": (r"^## .*?(边界|什么时候.*不成立|限制)", '标题含 边界/什么时候不成立/限制 的 "##" 节'),
+    },
+    "quickread": {
+        "positioning": (r"^## .*?一句话定位", '以 "## …一句话定位" 开头的节'),
+        "method": (r"^## .*?方法步骤", '以 "## …方法步骤" 开头的节'),
+        "limits": (r"^## .*?局限与边界", '以 "## …局限与边界" 开头的节'),
+    },
+    "xiaohongshu": {},  # 结构门替代必需节：💡×3-5 + ⚠️ caveat（见 STRUCTURE_GATES）
+}
+
+# Styles with no required heading sections but hard structural gates, as
+# human-readable hints for the brief. audit_file enforces these inline per style.
+STRUCTURE_GATES: dict[str, tuple[str, ...]] = {
+    "xiaohongshu": ("3-5 个行首 💡 洞察行", "至少一个行首 ⚠️ 注意事项行"),
+}
+
+# Chinese-character floors/ceilings and arXiv-link budgets per style: shared
+# by audit_file and build_review_packet's writing-brief contract section.
+LENGTH_FLOORS = {"memo": 1800, "zhihu": 1000, "quickread": 300, "xiaohongshu": 300}
+# Hard upper warning ceilings; memo has none.
+LENGTH_CEILINGS = {"zhihu": 4500, "quickread": 1400, "xiaohongshu": 1400}
+LINK_BUDGETS = {
+    "memo": (5, None),
+    "zhihu": (3, 12),
+    "xiaohongshu": (3, 5),
+    "quickread": (1, 1),
+}
+
 CANNED_PHRASES = [
     "不能只看一个漂亮结论",
     "真正值钱的信息藏在证据条件里",
@@ -304,8 +354,8 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
 
     zh_count = chinese_count(body)
     if style == "memo":
-        if zh_count < 1800:
-            add(findings, "error", path, "memo-length", f"memo has only {zh_count} Chinese characters before references; expected at least 1800")
+        if zh_count < LENGTH_FLOORS["memo"]:
+            add(findings, "error", path, "memo-length", f"memo has only {zh_count} Chinese characters before references; expected at least {LENGTH_FLOORS['memo']}")
         # Citation format contract: the wiki renders ^[n]^ superscripts into
         # clickable reading links via the References list — inline arXiv links
         # in the body break that rendering (2026-09-18 regression on both
@@ -342,15 +392,9 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
                 f"memo body groups multiple numbers into one marker ({', '.join(grouped[:3])});"
                 " write consecutive markers ^[1]^ ^[2]^ instead of ^[1,2]^",
             )
-        required = {
-            "boundary": r"^## .*?(研究边界|研究范围)",
-            "thesis": r"^## .*?(中心判断|核心结论|中心论点)",
-            "limits": r"^## .*?(条件|分歧|边界|限制|局限|空白)",
-            "ending": r"^## .*?(结论|启发|下一步)",
-        }
     elif style == "zhihu":
-        if zh_count < 1000:
-            add(findings, "error", path, "zhihu-length", f"Zhihu body has only {zh_count} Chinese characters; expected at least 1000")
+        if zh_count < LENGTH_FLOORS["zhihu"]:
+            add(findings, "error", path, "zhihu-length", f"Zhihu body has only {zh_count} Chinese characters; expected at least {LENGTH_FLOORS['zhihu']}")
         elif zh_count < 1800:
             add(
                 findings,
@@ -359,13 +403,13 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
                 "zhihu-length",
                 f"Zhihu body has {zh_count} Chinese characters; review for over-compression against the 1800-character explanation target",
             )
-        elif zh_count > 4500:
+        elif zh_count > LENGTH_CEILINGS["zhihu"]:
             add(
                 findings,
                 "warning",
                 path,
                 "zhihu-length",
-                f"Zhihu body has {zh_count} Chinese characters; review whether the explanation can stay below 4500",
+                f"Zhihu body has {zh_count} Chinese characters; review whether the explanation can stay below {LENGTH_CEILINGS['zhihu']}",
             )
         acronyms = domain_acronyms(body)
         if len(acronyms) > 5:
@@ -403,29 +447,18 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
                 "unannotated-reading-list",
                 f"Zhihu further reading has {reading_items} linked bullet(s), {annotated_items} with reader-value annotations; expected at least 3 and every item annotated",
             )
-        required = {
-            "tldr": r"^## TL;DR",
-            "misconception": r"^#{2,3}\s+.*(?:误区|直觉.*(?:失灵|误判)|为什么.*(?:容易|会).*误判|问题从哪来)",
-            "mechanism": r"^#{2,3}\s+.*(?:机制|问题.*(?:出在哪|在哪里)|为什么.*(?:失败|失效)|因果链|真正发生)",
-            "boundary": r"^## .*?(边界|什么时候.*不成立|限制)",
-        }
     elif style == "quickread":
-        if zh_count < 300:
-            add(findings, "error", path, "quickread-length", f"Quick-read card has only {zh_count} Chinese characters; expected at least 300")
-        elif zh_count > 1400:
-            add(findings, "warning", path, "quickread-length", f"Quick-read card has {zh_count} Chinese characters; consider tightening below 1400")
-        required = {
-            "positioning": r"^## .*?一句话定位",
-            "method": r"^## .*?方法步骤",
-            "limits": r"^## .*?局限与边界",
-        }
+        if zh_count < LENGTH_FLOORS["quickread"]:
+            add(findings, "error", path, "quickread-length", f"Quick-read card has only {zh_count} Chinese characters; expected at least {LENGTH_FLOORS['quickread']}")
+        elif zh_count > LENGTH_CEILINGS["quickread"]:
+            add(findings, "warning", path, "quickread-length", f"Quick-read card has {zh_count} Chinese characters; consider tightening below {LENGTH_CEILINGS['quickread']}")
         if re.search(r"^\|.*\|", text, flags=re.MULTILINE):
             add(findings, "warning", path, "quickread-table", "card contains a table row; the wiki inline reader cannot render tables")
     else:
-        if zh_count < 300:
-            add(findings, "error", path, "xiaohongshu-length", f"Xiaohongshu body has only {zh_count} Chinese characters; expected at least 300")
-        if zh_count > 1400:
-            add(findings, "warning", path, "xiaohongshu-length", f"Xiaohongshu body has {zh_count} Chinese characters; consider tightening below 1400")
+        if zh_count < LENGTH_FLOORS["xiaohongshu"]:
+            add(findings, "error", path, "xiaohongshu-length", f"Xiaohongshu body has only {zh_count} Chinese characters; expected at least {LENGTH_FLOORS['xiaohongshu']}")
+        if zh_count > LENGTH_CEILINGS["xiaohongshu"]:
+            add(findings, "warning", path, "xiaohongshu-length", f"Xiaohongshu body has {zh_count} Chinese characters; consider tightening below {LENGTH_CEILINGS['xiaohongshu']}")
         insight_count = len(re.findall(r"^\s*💡", body, flags=re.MULTILINE))
         if not 3 <= insight_count <= 5:
             add(findings, "error", path, "insight-count", f"expected 3-5 visible 💡 insights, found {insight_count}")
@@ -434,15 +467,13 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
         ref_share = source_line_share(text)
         if ref_share > 0.20:
             add(findings, "error", path, "source-share", f"source/reference material occupies {ref_share:.0%} of non-empty lines; maximum is 20%")
-        required = {}
 
-    for rule, pattern in required.items():
+    for rule, (pattern, hint) in REQUIRED_SECTIONS.get(style, {}).items():
         if not re.search(pattern, text, flags=re.MULTILINE):
-            add(findings, "error", path, f"section-{rule}", f"missing required {style} section: {rule}")
+            add(findings, "error", path, f"section-{rule}", f"missing required {style} section: {rule}（{hint}）")
 
     unique_links = set(ARXIV_LINK_RE.findall(text))
-    minimum_links = {"memo": 5, "zhihu": 3, "xiaohongshu": 3, "quickread": 1}[style]
-    maximum_links = {"memo": None, "zhihu": 12, "xiaohongshu": 5, "quickread": 1}[style]
+    minimum_links, maximum_links = LINK_BUDGETS[style]
     if len(unique_links) < minimum_links:
         add(
             findings,

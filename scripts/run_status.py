@@ -113,6 +113,22 @@ def evidence_paper_ids(run_dir: Path) -> set[str]:
     }
 
 
+def failure_reason(run_dir: Path, paper_id: str) -> str:
+    """Why a paper stopped: audit payload problems first (richer), then the
+    driver's persisted failed.json (skeleton/agent failures)."""
+    audit_path = run_dir / "paper-notes" / f"{paper_id}.audit.json"
+    if audit_path.is_file():
+        data = load_json(audit_path)
+        problems = data.get("errors") or data.get("problems") or []
+        if problems:
+            return str(problems[0])[:80]
+    failed_path = run_dir / "paper-notes" / f"{paper_id}.failed.json"
+    if failed_path.is_file():
+        data = load_json(failed_path)
+        return str(data.get("reason") or data.get("outcome") or "")[:80]
+    return ""
+
+
 def paper_funnel(run_dir: Path) -> list[dict]:
     """Per screened paper: where it stopped in extraction → pool → deep-read
     → audit → evidence. The writer used to reconstruct this with a dozen
@@ -161,6 +177,7 @@ def paper_funnel(run_dir: Path) -> list[dict]:
             "arxiv_id": paper_id,
             "stage": stage,
             "audit": audit,
+            "reason": failure_reason(run_dir, paper_id),
             "title": str(record.get("title") or ""),
             "matched_title_terms": (item.get("matched_title_terms") or [])[:3],
         })
@@ -191,6 +208,26 @@ def packet_command(run_dir: Path, report: dict, scripts_root: Path) -> str:
             parts += [flag, str(run_dir / filename)]
     parts.append("--consolidate-evidence")
     return " ".join(parts)
+
+
+def gates_block(run_dir: Path, manifest: dict) -> dict:
+    """Coverage/saturation gate state + declared exceptions: the writer used
+    to rediscover all of this by reading gate source."""
+    coverage = load_json(run_dir / "coverage-report.json")
+    stop = coverage.get("stop_assessment") or {}
+    return {
+        "checks": stop.get("checks") or {},
+        "unresolved": stop.get("unresolved") or [],
+        "saturation_rounds": [
+            {
+                "batch": str(item.get("batch") or ""),
+                "channel": str(item.get("channel") or ""),
+                "new_unique_rate": item.get("new_unique_rate"),
+            }
+            for item in coverage.get("saturation_rounds") or []
+        ],
+        "gate_exceptions": list(manifest.get("gate_exceptions") or []),
+    }
 
 
 def build_report(run_dir: Path) -> dict:
@@ -229,6 +266,7 @@ def build_report(run_dir: Path) -> dict:
         },
         "papers": papers,
         "paper_funnel": paper_funnel(run_dir),
+        "gates": gates_block(run_dir, manifest),
         "artifacts": {**present, **deliverables},
         "paper_notes": len(list((run_dir / "paper-notes").glob("*.json"))) if (run_dir / "paper-notes").is_dir() else 0,
     }
@@ -258,6 +296,22 @@ def render(report: dict, run_dir: Path, scripts_root: Path) -> str:
             if funnel["floor_met"] is False else ""
         )
         lines.append(f"[floor] 模式 {report['review_mode']} 引用篇数下限 {funnel['cited_floor']}：{verdict}")
+    gates = report.get("gates") or {}
+    checks = gates.get("checks") or {}
+    if checks:
+        verdicts = " ".join(f"{name}={'过' if ok else '未过'}" for name, ok in checks.items())
+        lines.append(f"[gates] 覆盖/饱和：{verdicts}")
+        if gates.get("unresolved"):
+            lines.append(
+                "  未过：" + ", ".join(str(item) for item in gates["unresolved"])
+                + " —— 修法二选一：续跑 run_review_pipeline.py 补检索/深读；或 run.json 声明 "
+                '"gate_exceptions": [...] 并在 notes 写明正当理由（勿手改 event_count）'
+            )
+        for rnd in gates.get("saturation_rounds") or []:
+            rate = rnd.get("new_unique_rate")
+            lines.append(f"  饱和轮 {rnd.get('batch')}（{rnd.get('channel')}）新篇目率 {rate}")
+        if gates.get("gate_exceptions"):
+            lines.append("  已声明豁免：" + ", ".join(str(item) for item in gates["gate_exceptions"]))
     lines.append(f"[papers] 逐篇证据（References 元数据已从 candidate-registry join）：")
     for entry in report["papers"]:
         authors = entry["authors"]
@@ -288,6 +342,7 @@ def render(report: dict, run_dir: Path, scripts_root: Path) -> str:
             lines.append(
                 f"  {row['arxiv_id']}  {row['stage']}"
                 + (f"  命中:{terms}" if terms else "")
+                + (f"  因:{row['reason']}" if row.get("reason") else "")
                 + (f"  {title}" if title else "")
             )
     if not report["artifacts"].get("review-packet.md"):

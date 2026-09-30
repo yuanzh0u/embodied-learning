@@ -152,6 +152,12 @@ def check_run_bundle(run_dir: Path) -> list[str]:
                         problems.append(
                             "coverage/saturation gate not passed"
                             + (f": {', '.join(still_open)}" if still_open else "")
+                            + " — 修法二选一：①续跑 run_review_pipeline.py --run-dir "
+                            f"{run_dir} 补检索/深读后重算；②确属不可比的一次性检索时声明豁免——"
+                            'run.json 加 "gate_exceptions": ["saturation"] 并在 notes 写明正当理由'
+                            "（如一次性构建的 registry，批次反映渠道构成而非迭代轮次）。"
+                            "已声明的豁免："
+                            + (", ".join(str(item) for item in declared) if declared else "无")
                         )
     elif workflow_version != 1:
         problems.append(f"run.json: unsupported workflow_version {workflow_version!r}")
@@ -165,7 +171,11 @@ def check_run_bundle(run_dir: Path) -> list[str]:
             listed.extend(item for item in value if isinstance(item, str))
     for name in listed:
         if not (run_dir / name).is_file():
-            problems.append(f"run.json lists missing file: {name}")
+            problems.append(
+                f"run.json lists missing file: {name}"
+                " — 修复产物缺失（evidence.jsonl/appendix 等可由 finalize_run.py 重跑自动重建），"
+                "或从 files 里移除过期条目；勿手改 run.json 的 event_count。"
+            )
 
     # Self-contained evidence, and event_count must match it.
     local_ids, evidence_problems = load_local_event_ids(run_dir, files)
@@ -174,6 +184,8 @@ def check_run_bundle(run_dir: Path) -> list[str]:
     if isinstance(recorded, int) and local_ids and recorded != len(local_ids):
         problems.append(
             f"run.json event_count={recorded} but local evidence has {len(local_ids)} deduplicated events"
+            " — 重跑 finalize_run.py 会按 evidence/ 自动重建 evidence.jsonl 并重新盖章 event_count；"
+            "勿手改 run.json。"
         )
 
     # Bundle completeness: three styles by default, or a declared reduced scope.
