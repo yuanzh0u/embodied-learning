@@ -236,6 +236,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "cited-paper floor is reachable.",
     )
     parser.add_argument("--agent-timeout", type=float, default=420.0, help="Per-paper skeleton agent timeout (s).")
+    parser.add_argument(
+        "--selection-timeout", type=float, default=900.0,
+        help="Per-chunk smart-selection agent timeout (s); a timeout is a failed chunk, not a crash.",
+    )
     parser.add_argument("--agents-parallel", type=int, default=5, help="Concurrent skeleton agents.")
     return parser.parse_args(argv)
 
@@ -1475,6 +1479,7 @@ def _main_locked(
                 "--candidate-registry", str(registry_output),
                 "--terms", ",".join(terms),
                 "--limit", str(screen_limit),
+                "--complete-timeout", str(args.selection_timeout),
                 "--output-screening", str(screening_output),
                 "--output-ids", str(screening_ids),
                 "--output-markdown", str(run_dir / "screening.md"),

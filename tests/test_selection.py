@@ -8,6 +8,7 @@ relevance ordering, the honest influence degradation, the smart agent contract
 from __future__ import annotations
 
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -180,6 +181,38 @@ class SmartSelectTest(unittest.TestCase):
         )
         self.assertEqual(selected, [])
         self.assertIn("1/1 chunk(s) failed", detail)
+
+    def test_timeout_is_a_failed_chunk_not_a_crash(self):
+        """A slow agent call must not abort the run. Regression: TimeoutExpired
+        escaped smart_select (the only complete() caller without a guard) and
+        killed the whole fixed workflow with exit 1 on 2026-10-08."""
+        complete_fn = mock.Mock(
+            side_effect=subprocess.TimeoutExpired(cmd=["claude"], timeout=900.0)
+        )
+        selected, detail = smart_select(
+            self.REGISTRY, topic="umi", focus="", limit=2,
+            complete_fn=complete_fn, cli="/fake/claude", model="m", timeout_s=900.0,
+        )
+        self.assertEqual(selected, [])
+        self.assertIn("1/1 chunk(s) timed out after 900s", detail)
+        self.assertIn("coverage incomplete", detail)
+
+    def test_timed_out_chunk_does_not_take_down_the_others(self):
+        """One hung chunk costs only that chunk's coverage; the rest still land."""
+        ok = mock.Mock(
+            returncode=0, stdout='{"relevant": [{"arxiv_id": "2402.10329", "reason": "jizhi"}]}'
+        )
+        # An exception INSTANCE in a side_effect iterable is raised, not returned.
+        hang = subprocess.TimeoutExpired(cmd=["claude"], timeout=1.0)
+        with mock.patch.object(selection_mod, "SMART_CANDIDATES_PER_CALL", 1):
+            selected, detail = smart_select(
+                self.REGISTRY, topic="umi", focus="", limit=2,
+                complete_fn=mock.Mock(side_effect=[hang, ok]),
+                cli="/fake/claude", model="m", timeout_s=1.0,
+            )
+        self.assertEqual([c["arxiv_id"] for c in selected], ["2402.10329"])
+        self.assertIn("1/2 chunk(s) timed out after 1s", detail)
+        self.assertIn("coverage incomplete", detail)
 
     def test_empty_registry_short_circuits(self):
         selected, detail = smart_select(

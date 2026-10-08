@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -192,7 +193,7 @@ def smart_select(
     model: str,
     env: dict[str, str] | None = None,
     cwd=None,
-    timeout_s: float = 600.0,
+    timeout_s: float = 900.0,
 ) -> tuple[list[dict[str, Any]], str]:
     """The smart contract: EVERY candidate's abstract reaches the agent.
 
@@ -214,6 +215,7 @@ def smart_select(
     focus_line = f"关注重点：{focus}" if focus else ""
     selected: list[tuple[str, str]] = []
     failed_chunks = 0
+    timed_out_chunks = 0
     salvaged_chunks = 0
     chunks = [
         candidates[i : i + SMART_CANDIDATES_PER_CALL]
@@ -224,10 +226,21 @@ def smart_select(
             topic=topic, focus_line=focus_line, limit=limit,
             candidates=_candidate_lines(chunk),
         )
-        result = complete_fn(
-            prompt, timeout_s=timeout_s, cli=cli, model=model,
-            cwd=cwd, env=env, label="selection-smart",
-        )
+        try:
+            result = complete_fn(
+                prompt, timeout_s=timeout_s, cli=cli, model=model,
+                cwd=cwd, env=env, label="selection-smart",
+            )
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            # A slow or hung agent call is a FAILED CHUNK, never a run-killing
+            # crash — the same contract as a non-zero exit. Every other
+            # complete() caller already degrades this way; letting
+            # TimeoutExpired escape here aborted the whole fixed workflow
+            # (2026-10-08, exit 1 on a single 600s timeout) instead of
+            # reporting one visible coverage hole and continuing.
+            timed_out_chunks += 1
+            failed_chunks += 1
+            continue
         if result.returncode != 0:
             failed_chunks += 1
             continue
@@ -252,6 +265,11 @@ def smart_select(
     if salvaged_chunks:
         detail_parts.append(
             f"{salvaged_chunks}/{len(chunks)} chunk(s) malformed — IDs salvaged, reasons lost"
+        )
+    if timed_out_chunks:
+        detail_parts.append(
+            f"{timed_out_chunks}/{len(chunks)} chunk(s) timed out after {timeout_s:.0f}s — "
+            "coverage incomplete (raise --complete-timeout, or re-run this stage)"
         )
     if failed_chunks:
         detail_parts.append(f"{failed_chunks}/{len(chunks)} chunk(s) failed — coverage incomplete")
@@ -331,7 +349,7 @@ def run_select(
     *,
     cli: str | None = None,
     model: str | None = None,
-    timeout_s: float = 600.0,
+    timeout_s: float = 900.0,
     complete_fn=None,
 ) -> int:
     """CLI driver behind ``search.py select-candidates``: rank the registry with

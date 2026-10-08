@@ -447,7 +447,7 @@ def _select_candidates_parse_args(argv: list[str] | None = None) -> argparse.Nam
     parser.add_argument("--output-markdown")
     parser.add_argument("--complete-cli", help="claude binary for the smart strategy (default: harness resolve_cli).")
     parser.add_argument("--complete-model", help="Model for the smart strategy (default: harness DRIVER_AGENT_MODEL).")
-    parser.add_argument("--complete-timeout", type=float, default=600.0, help="Smart-agent timeout in seconds.")
+    parser.add_argument("--complete-timeout", type=float, default=900.0, help="Smart-agent timeout in seconds (per chunk).")
     return parser.parse_args(argv)
 
 
