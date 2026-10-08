@@ -927,7 +927,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
         [PAPER-CHAT] progress lines (the reused pool/deep-read stages print
         the latter). Deep read (420s) + article (300s) + slack → 900s.
         Unlike paper preparation, only returncode 0 is success: exit 3 means
-        no audited deep-read note, so no card may be written."""
+        no audited deep-read note, so no card may be written.
+
+        stderr is merged into the stream (a PIPE nobody reads can deadlock the
+        child once the OS buffer fills) and lock/traceback lines are surfaced
+        as stage events — previously they were swallowed and every failure
+        looked like the same generic message."""
 
         command = [
             sys.executable,
@@ -938,17 +943,24 @@ class WikiHandler(SimpleHTTPRequestHandler):
         try:
             process = subprocess.Popen(
                 command, cwd=str(self.kb_root), text=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             )
             assert process.stdout is not None
             for line in process.stdout:
                 detail = line.strip()
-                for prefix in ("[QUICK-READ] ", "[PAPER-CHAT] "):
+                if not detail or detail.startswith("{"):
+                    continue  # final machine-readable JSON
+                for prefix in ("[QUICK-READ] ", "[PAPER-CHAT] ", "[kb-lock] "):
                     if detail.startswith(prefix):
                         self._write_sse_event(
                             {"type": "stage", "stage": "quickread", "detail": detail.removeprefix(prefix)}
                         )
                         break
+                else:
+                    if "Traceback" in detail or detail.startswith(("OSError", "LockTimeout", "LockBusy")):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "quickread", "detail": detail}
+                        )
             try:
                 returncode = process.wait(timeout=900)
             except subprocess.TimeoutExpired:

@@ -61,6 +61,10 @@ STYLE_REFERENCE = SKILLS_ROOT / "embodied-ai-review-writer" / "references" / "qu
 CITATION_REFERENCE = SKILLS_ROOT / "embodied-ai-review-writer" / "references" / "citation-projection.md"
 ARTICLE_OPEN = "<<<QUICK-READ-ARTICLE>>>"
 ARTICLE_CLOSE = "<<<END-QUICK-READ-ARTICLE>>>"
+# glm-5.3-flash occasionally translates the opening sentinel into Chinese
+# while leaving the closing one intact; accept it so a well-formed card is not
+# discarded (and not re-billed) over a marker the model localized.
+ARTICLE_OPEN_ALIASES = (ARTICLE_OPEN, "<<<快速阅读卡>>>")
 
 UNPROVIDED = "（笔记未提供，需从 paper.md 核对）"
 
@@ -218,15 +222,25 @@ def build_agent_prompt(paper_id: str, pool_dir: Path) -> str:
 {ARTICLE_CLOSE}"""
 
 
+def _find_open_sentinel(raw: str) -> tuple[str, int]:
+    """Return (matched sentinel, index) for the first alias present, or ("", -1)."""
+    best: tuple[str, int] = ("", -1)
+    for alias in ARTICLE_OPEN_ALIASES:
+        idx = raw.find(alias)
+        if idx >= 0 and (best[1] < 0 or idx < best[1]):
+            best = (alias, idx)
+    return best
+
+
 def extract_article(raw: str, paper_id: str) -> str | None:
     """Slice the card between sentinels and sanity-check the shape."""
     if not raw:
         return None
-    start = raw.find(ARTICLE_OPEN)
+    open_sentinel, start = _find_open_sentinel(raw)
     end = raw.find(ARTICLE_CLOSE)
     if start < 0 or end <= start:
         return None
-    article = raw[start + len(ARTICLE_OPEN) : end].strip()
+    article = raw[start + len(open_sentinel) : end].strip()
     if len(article) < 300:
         return None
     if f"arxiv.org/abs/{paper_id}" not in article:
@@ -238,11 +252,11 @@ def extract_article(raw: str, paper_id: str) -> str | None:
 
 def describe_rejection(raw: str, paper_id: str) -> str:
     """Say which extract_article check failed, for the dump log line."""
-    start = raw.find(ARTICLE_OPEN)
+    open_sentinel, start = _find_open_sentinel(raw)
     end = raw.find(ARTICLE_CLOSE)
     if start < 0 or end <= start:
         return "哨兵缺失或顺序错误"
-    body = raw[start + len(ARTICLE_OPEN) : end].strip()
+    body = raw[start + len(open_sentinel) : end].strip()
     if len(body) < 300:
         return "正文不足 300 字符"
     if f"arxiv.org/abs/{paper_id}" not in body:
@@ -304,8 +318,12 @@ def main(argv: list[str] | None = None) -> int:
     # Serialize per-paper pool writes: two terminals quick-reading the same
     # paper write the same dir. Two short critical sections — the minutes-long
     # agent call itself must never hold the lock.
-    with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
-        atomic_write_text(brief_path, build_quick_read_brief(paper_id, note, meta))
+    try:
+        with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
+            atomic_write_text(brief_path, build_quick_read_brief(paper_id, note, meta))
+    except locks.LockTimeout as exc:
+        log(f"写作简报写入被锁挡住：{exc}")
+        return 1
     log(f"写作简报已更新：{brief_path}")
 
     if args.skip_agent:
@@ -342,6 +360,7 @@ def main(argv: list[str] | None = None) -> int:
                 build_agent_prompt(paper_id, pool_dir),
                 timeout_s=ARTICLE_TIMEOUT_S,
                 cli=cli,
+                label=f"quick-read-{paper_id}",
             )
         except subprocess.TimeoutExpired:
             log(f"速读写作 agent 超时（{ARTICLE_TIMEOUT_S:.0f}s）")
@@ -351,14 +370,21 @@ def main(argv: list[str] | None = None) -> int:
             break
         raw = completed.stdout or ""
         # Dump verbatim before rejecting — without this the failure is undiagnosable.
-        with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
-            atomic_write_text(raw_dump_path, raw)
+        try:
+            with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
+                atomic_write_text(raw_dump_path, raw)
+        except locks.LockTimeout as exc:
+            log(f"转储 agent 原文被锁挡住：{exc}")
         log(f"agent 输出无效（{describe_rejection(raw, paper_id)}），已转储：{raw_dump_path}")
     if article is None:
         log("重试后仍无有效速读卡，已丢弃")
         return 1
-    with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
-        atomic_write_text(article_path, article)
+    try:
+        with locks.kb_lock(pool_root, f"pool-paper__{pool_dir.name}"):
+            atomic_write_text(article_path, article)
+    except locks.LockTimeout as exc:
+        log(f"速读卡写入被锁挡住（{exc}）；agent 输出有效但未能落盘")
+        return 1
     log(f"速读卡已写入：{article_path}")
 
     if not args.no_audit:

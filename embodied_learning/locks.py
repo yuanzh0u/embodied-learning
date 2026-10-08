@@ -42,7 +42,10 @@ Design notes:
 - Reentrancy is handled per process with a registry keyed by lock path: the
   same thread re-entering the same lock increments a depth counter instead of
   deadlocking on itself; a second thread of the same process still serializes
-  on the registry's RLock before touching the file.
+  on the registry's RLock before touching the file. Because of that, reaching
+  the file acquire with our own pid in the owner record means the previous
+  release leaked (CIFS unlink blip) — the leftover is stolen immediately
+  instead of making the same process wait out its own lock.
 - ``claim``/``release_claim`` use the same O_EXCL create with the steal dance
   for TTL takeover. Claims under ``.claims/`` are reservations (event-ID
   prefixes), not locks: nothing garbage-collects them.
@@ -167,7 +170,12 @@ def _record_age(record: dict[str, object] | None, lock_file: Path) -> float:
     try:
         return max(0.0, time.time() - lock_file.stat().st_mtime)
     except OSError:
-        return 0.0
+        # Cannot stat: ghost dentry, or the name is already gone on the server
+        # while EEXIST is still cache-answered. Returning 0.0 here made the
+        # unreadable-grace reclaim unreachable ("just created" forever), which
+        # is exactly how a quick-read card write timed out against a ghost.
+        # Treat age as unknown-but-old so the grace path can fire.
+        return float("inf")
 
 
 def _unreadable_grace(wait: float, stale: float, poll: float) -> float:
@@ -222,6 +230,61 @@ def _holder_dead_locally(record: dict[str, object] | None) -> bool:
     except OSError:
         return False
     return False
+
+
+def _is_own_leftover(record: dict[str, object] | None) -> bool:
+    """True when the lock file is a leftover of THIS process's own earlier
+    acquisition.
+
+    Reaching ``_acquire`` with depth==1 means the registry says we do not hold
+    this lock (nested/reentrant takes skip the file acquire; sibling threads
+    serialize on the entry RLock first). So a record stamped with our own live
+    pid is a leaked file — release's unlink failed, typically a CIFS dentry
+    hiccup — and must be reclaimable immediately. Without this, the next write
+    in the same process (quick-read brief, then card) sits out the full wait
+    against itself and times out. Same-pid is never a live foreign holder, and
+    a recycled pid from a dead previous run is also a leftover, so stealing is
+    safe either way.
+    """
+
+    if not record:
+        return False
+    host, pid = record.get("host"), record.get("pid")
+    return (
+        isinstance(host, str)
+        and host == socket.gethostname()
+        and isinstance(pid, int)
+        and pid == os.getpid()
+    )
+
+
+def _install_replacement(lock_file: Path, record: dict[str, object]) -> bool:
+    """Take over ``lock_file`` by renaming our owner record onto it.
+
+    ``os.replace`` is a server-side rename: it reaches the share even when
+    ``O_CREAT|O_EXCL`` keeps answering EEXIST from a client-cached dentry and
+    ``unlink`` leaves that dentry stuck (the flaky-CIFS ghost that made a
+    quick-read card write time out). On success we own the path without a
+    second create race. The steal marker must already be held — otherwise two
+    waiters could both rename and both believe they won.
+    """
+
+    tmp = lock_file.with_name(f".{lock_file.name}.takeover-{uuid.uuid4().hex}")
+    try:
+        tmp.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(tmp, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False))
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, lock_file)
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return False
+    return True
 
 
 def _try_steal(lock_file: Path) -> bool:
@@ -404,10 +467,20 @@ def _acquire(
             # server). st_nlink==0 is the definitive dying-inode marker, but
             # flaky NAS clients lie in more shapes — stat may say ENOENT or
             # report nlink=1 for an entry that cannot be opened — so after a
-            # short streak of unreadable records, unlink unconditionally: it
-            # drops whichever cached state is blocking the create, and a live
-            # holder (record written within ms) never accumulates the streak.
+            # short streak of unreadable records, take over: unlink alone can
+            # leave the cached dentry stuck (the quick-read ghost incident),
+            # so once the streak proves the record is not a live holder's
+            # just-written JSON, win the steal marker and rename our record
+            # onto the path — rename reaches the server and drops the cache.
             if _is_ghost_dentry(target) or unreadable_streak >= UNREADABLE_STREAK_LIMIT:
+                if unreadable_streak >= UNREADABLE_STREAK_LIMIT and _try_steal(target):
+                    if _install_replacement(target, record):
+                        entry.claim_id = str(record["claim_id"])
+                        print(
+                            f"[kb-lock] 锁 {name} 的记录不可读（空/损坏/客户端缓存幽灵 dentry），已 rename 抢占",
+                            file=sys.stderr,
+                        )
+                        return
                 target.unlink(missing_ok=True)  # server may say ENOENT; that's the point
                 unreadable_streak = 0
                 print(f"[kb-lock] 清除 {name} 的客户端缓存幽灵 dentry，重试", file=sys.stderr)
@@ -417,24 +490,39 @@ def _acquire(
         # Third steal path: the owner record is unreadable (0-byte leftover
         # from a crash between create and record-write, or corrupt content).
         # The grace is bounded by the caller's own wait so the reclaim always
-        # fires before a timeout; its unlink attempt also clears ghost
-        # dentries, which is what actually un-blocks the next O_EXCL create.
+        # fires before a timeout; rename-over is what actually un-blocks a
+        # ghost dentry that unlink cannot drop.
         if holder is None and _record_age(holder, target) > _unreadable_grace(wait, stale, poll):
             if _try_steal(target):
-                print(f"[kb-lock] 锁 {name} 的持有者记录不可读（空/损坏/客户端缓存幽灵），判定遗留，已抢占", file=sys.stderr)
+                if _install_replacement(target, record):
+                    entry.claim_id = str(record["claim_id"])
+                    print(f"[kb-lock] 锁 {name} 的持有者记录不可读（空/损坏/客户端缓存幽灵），判定遗留，已抢占", file=sys.stderr)
+                    return
+                print(f"[kb-lock] 锁 {name} 的持有者记录不可读，抢占后创建仍失败，重试", file=sys.stderr)
                 continue
-        # Same-host holder provably dead → steal immediately, regardless of
+        # Our own leaked lock (release's unlink failed on a flaky NAS) or a
+        # same-host holder provably dead → steal immediately, regardless of
         # wait/stale (a crashed driver's run-lock must not block its own
-        # rerun for the full TTL). Cross-machine holders still age out.
-        if _holder_dead_locally(holder):
+        # rerun for the full TTL, and a quick-read's brief write must not
+        # block its own card write). Cross-machine holders still age out.
+        if _is_own_leftover(holder) or _holder_dead_locally(holder):
             if _try_steal(target):
-                print(
-                    f"[kb-lock] 锁 {name} 的持有进程（{_format_owner(holder)}）已退出，判定遗留，已抢占",
-                    file=sys.stderr,
-                )
+                who = "本进程遗留（释放时 unlink 失败）" if _is_own_leftover(holder) else _format_owner(holder)
+                if _install_replacement(target, record):
+                    entry.claim_id = str(record["claim_id"])
+                    print(
+                        f"[kb-lock] 锁 {name} 的持有者（{who}）判定遗留，已抢占",
+                        file=sys.stderr,
+                    )
+                    return
+                print(f"[kb-lock] 锁 {name} 抢占（{who}）后创建仍失败，重试", file=sys.stderr)
                 continue
         elif _record_age(holder, target) > stale and _try_steal(target):
-            print(f"[kb-lock] 锁 {name} 疑似遗留（超过 {stale:.0f}s），已抢占", file=sys.stderr)
+            if _install_replacement(target, record):
+                entry.claim_id = str(record["claim_id"])
+                print(f"[kb-lock] 锁 {name} 疑似遗留（超过 {stale:.0f}s），已抢占", file=sys.stderr)
+                return
+            print(f"[kb-lock] 锁 {name} 超时抢占后创建仍失败，重试", file=sys.stderr)
             continue
         if fail_fast:
             raise LockBusy(
@@ -463,15 +551,32 @@ def _release(target: Path, entry: _Entry) -> None:
     try:
         holder = read_owner(target)
     except OSError:
-        return
+        holder = None
     # Only unlink while we are still the recorded owner: a stale-steal may have
     # handed the lock to someone else while we were still working.
     if holder and entry.claim_id and holder.get("claim_id") != entry.claim_id:
         return
-    try:
-        target.unlink()
-    except OSError:
-        pass
+    # CIFS unlink can fail on a cached-dentry blip; a leaked lock file then
+    # blocks the caller's next acquisition (same live pid, not yet stale) for
+    # the full wait window. Retry a few times, then leave the file — the
+    # same-pid leftover path in _acquire reclaims it on the next take.
+    last_exc: OSError | None = None
+    for attempt in range(3):
+        try:
+            target.unlink()
+            last_exc = None
+            break
+        except FileNotFoundError:
+            last_exc = None
+            break
+        except OSError as exc:
+            last_exc = exc
+            time.sleep(0.05 * (attempt + 1))
+    if last_exc is not None:
+        print(
+            f"[kb-lock] 释放锁 {target.name} 失败（{last_exc}），残留文件将由同进程下次抢占回收",
+            file=sys.stderr,
+        )
     entry.claim_id = None
 
 

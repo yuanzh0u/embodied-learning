@@ -249,6 +249,13 @@ class SentinelExtractionTest(unittest.TestCase):
         # extract_article strips sentinel-bounded content and appends one newline.
         self.assertEqual(self.module.extract_article(raw, PAPER_ID), article + "\n")
 
+    def test_accepts_chinese_open_sentinel_alias(self):
+        """glm-5.3-flash sometimes localizes the opening sentinel while leaving
+        the closing one intact; the card must still be extracted."""
+        article = "# 速读\n\n" + "正文。" * 100 + f"\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})"
+        raw = f"<<<快速阅读卡>>>\n{article}\n{self.module.ARTICLE_CLOSE}\n"
+        self.assertEqual(self.module.extract_article(raw, PAPER_ID), article + "\n")
+
     def test_rejects_missing_sentinels_or_short_or_table_or_wrong_link(self):
         good_body = "# 速读\n\n" + "正文。" * 100 + f"\n[arXiv:{PAPER_ID}](https://arxiv.org/abs/{PAPER_ID})\n"
         with self.subTest("no sentinels"):

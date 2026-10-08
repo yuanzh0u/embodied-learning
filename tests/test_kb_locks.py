@@ -364,6 +364,144 @@ class StaleStealTest(unittest.TestCase):
                     with locks.kb_lock(tmp, "x", wait=0.3, stale=1800, poll=0.05):
                         pass
 
+    def test_own_leftover_lock_is_stolen_instantly(self) -> None:
+        """A lock file stamped with THIS process's pid is a leaked release
+        (CIFS unlink blip), not a live hold — the registry already says we do
+        not own it. The next acquisition must reclaim it immediately instead
+        of timing out against itself (quick-read brief write → card write)."""
+        import socket
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict("os.environ", _env(tmp)):
+                lock_file = Path(tmp) / ".locks" / "pool-paper__arxiv-demo.lock"
+                _touch_owner(
+                    lock_file,
+                    {
+                        "name": "pool-paper__arxiv-demo",
+                        "host": socket.gethostname(),
+                        "pid": os.getpid(),
+                        "ts": time.time(),  # brand new: TTL path must not apply
+                        "claim_id": "own-leak",
+                    },
+                )
+                with locks.kb_lock(tmp, "pool-paper__arxiv-demo", wait=1.0, stale=1800, poll=0.05):
+                    record = json.loads(lock_file.read_text(encoding="utf-8"))
+                    self.assertNotEqual(record["claim_id"], "own-leak")
+
+    def test_own_leftover_stolen_even_fail_fast(self) -> None:
+        import socket
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict("os.environ", _env(tmp)):
+                lock_file = Path(tmp) / ".locks" / "x.lock"
+                _touch_owner(
+                    lock_file,
+                    {
+                        "name": "x",
+                        "host": socket.gethostname(),
+                        "pid": os.getpid(),
+                        "ts": time.time(),
+                        "claim_id": "own-leak",
+                    },
+                )
+                with locks.kb_lock(tmp, "x", fail_fast=True, stale=21600):
+                    record = json.loads(lock_file.read_text(encoding="utf-8"))
+                    self.assertNotEqual(record["claim_id"], "own-leak")
+
+    def test_release_unlink_failure_is_reclaimed_on_next_take(self) -> None:
+        """End-to-end form of the quick-read incident: release's unlink fails
+        (CIFS), the lock file stays with our pid, and the next kb_lock in the
+        same process must still succeed within a short wait."""
+        import socket
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict("os.environ", _env(tmp)):
+                lock_file = Path(tmp) / ".locks" / "pool-paper__arxiv-demo.lock"
+                real_unlink = Path.unlink
+
+                def flaky_unlink(self, missing_ok: bool = False):
+                    if self.name.endswith(".lock") and self.name.startswith("pool-paper__"):
+                        raise OSError(5, "Input/output error (CIFS unlink blip)")
+                    return real_unlink(self, missing_ok=missing_ok)
+
+                with mock.patch.object(Path, "unlink", flaky_unlink):
+                    with locks.kb_lock(tmp, "pool-paper__arxiv-demo", wait=0.5, poll=0.05):
+                        pass
+                # release could not unlink; the file is still our record
+                self.assertTrue(lock_file.exists())
+                record = json.loads(lock_file.read_text(encoding="utf-8"))
+                self.assertEqual(record["pid"], os.getpid())
+                self.assertEqual(record["host"], socket.gethostname())
+                # next take reclaims it immediately
+                with locks.kb_lock(tmp, "pool-paper__arxiv-demo", wait=0.5, stale=1800, poll=0.05):
+                    fresh = json.loads(lock_file.read_text(encoding="utf-8"))
+                    self.assertNotEqual(fresh["claim_id"], record["claim_id"])
+
+    def test_ghost_dentry_reclaimed_via_rename_takeover(self) -> None:
+        """The quick-read failure mode on this CIFS mount: O_CREAT|O_EXCL keeps
+        answering EEXIST from a client-cached dentry, the owner record is
+        unreadable, and unlink "succeeds" without unblocking the create. The
+        waiter must take over with a server-side rename instead of spinning
+        until the wait expires."""
+        real_open = os.open
+        locked_name = "pool-paper__arxiv-ghost.lock"
+        state = {"exists": True}
+
+        def ghost_open(path, flags, mode=0o777, *, dir_fd=None):
+            name = Path(str(path)).name
+            if name == locked_name and (flags & os.O_EXCL) and state["exists"]:
+                raise FileExistsError(17, "File exists", str(path))
+            return real_open(path, flags, mode, dir_fd=dir_fd)
+
+        def ghost_unlink(self, missing_ok: bool = False):
+            if self.name == locked_name:
+                # client claims success but the cached dentry stays put
+                return None
+            return os.unlink(str(self))
+
+        def ghost_stat(self, *args, **kwargs):
+            if self.name == locked_name:
+                raise OSError(2, "No such file or directory", str(self))
+            return os.stat(str(self), *args, **kwargs)
+
+        def ghost_read_text(self, *args, **kwargs):
+            if self.name == locked_name:
+                raise OSError(2, "No such file or directory", str(self))
+            return os.stat(str(self)) and open(self).read()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict("os.environ", _env(tmp)):
+                lock_file = Path(tmp) / ".locks" / locked_name
+                lock_file.parent.mkdir(parents=True, exist_ok=True)
+                with mock.patch("os.open", ghost_open):
+                    with mock.patch.object(Path, "unlink", ghost_unlink):
+                        with mock.patch.object(Path, "stat", ghost_stat):
+                            with mock.patch.object(Path, "read_text", ghost_read_text):
+                                with locks.kb_lock(tmp, "pool-paper__arxiv-ghost", wait=2.0, stale=1800, poll=0.05):
+                                    # rename-over must have installed a readable record
+                                    self.assertTrue(state["exists"] or lock_file.exists())
+                # drop the ghost simulation and confirm the installed record
+                state["exists"] = False
+                record = json.loads(lock_file.read_text(encoding="utf-8"))
+                self.assertEqual(record["pid"], os.getpid())
+
+    def test_install_replacement_replaces_unreadable_file(self) -> None:
+        """rename-over writes our record even when the target is unreadable."""
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_file = Path(tmp) / ".locks" / "x.lock"
+            lock_file.parent.mkdir(parents=True, exist_ok=True)
+            lock_file.write_bytes(b"")  # 0-byte leftover
+            record = {"name": "x", "pid": os.getpid(), "claim_id": "takeover", "ts": time.time()}
+            self.assertTrue(locks._install_replacement(lock_file, record))
+            self.assertEqual(json.loads(lock_file.read_text())["claim_id"], "takeover")
+
+    def test_record_age_is_infinite_when_file_cannot_be_statted(self) -> None:
+        """A ghost (stat ENOENT while O_EXCL still EEXISTs) must not read as
+        age 0 — that made the unreadable-grace reclaim unreachable."""
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / ".locks" / "gone.lock"
+            self.assertEqual(locks._record_age(None, missing), float("inf"))
+
     def test_release_with_foreign_claim_id_does_not_unlink(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             lock_file = Path(tmp) / ".locks" / "pool-index.lock"
