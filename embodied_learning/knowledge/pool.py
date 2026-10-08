@@ -140,7 +140,21 @@ class PaperPool:
         if not extraction.get("available"):
             raise SystemExit("extraction is not available; refusing to add an unavailable paper")
 
-        markdown = str(extraction.get("text") or "")
+        # The two extraction tiers shape their payload differently: html-latexml
+        # carries a flat `text`, pdf-text carries only `pages[].text`. Both are
+        # full-text extractions — refusing the page shape used to strand a good
+        # PDF extraction outside the pool (2026-10-08: 2507.15186, 8 pages,
+        # evidence_eligible, rejected with "carries no text" and then reported
+        # downstream as "全文未恢复").
+        from ..knowledge.claim_support import extraction_text
+
+        try:
+            markdown, _by_page = extraction_text(extraction)
+        except ValueError as exc:
+            raise SystemExit(
+                f"extraction carries no usable full text ({exc}); "
+                "rerun with --include-full-text / full-text output"
+            ) from exc
         if not markdown.strip():
             raise SystemExit("extraction carries no `text`; rerun with --include-full-text / full-text output")
 
@@ -171,7 +185,7 @@ class PaperPool:
                 "extraction_method": str(extraction.get("extraction_method") or ""),
                 "source_format": str(extraction.get("source_format") or ""),
                 "quality": quality.get("grade") if isinstance(quality, dict) else quality,
-                "text_chars": quality.get("text_chars") if isinstance(quality, dict) else 0,
+                "text_chars": (quality.get("text_chars") if isinstance(quality, dict) else 0) or len(markdown),
                 "files": sorted(p.name for p in target.iterdir() if p.is_file()),
             }
             atomic_write_json(target / "meta.json", meta)

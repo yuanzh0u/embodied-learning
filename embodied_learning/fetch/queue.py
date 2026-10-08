@@ -46,7 +46,7 @@ class QueueOptions:
         pdf_cache_dir: str | None = None,
         workers: int = 2,
         timeout: float = 30.0,
-        paper_timeout: float = 120.0,
+        paper_timeout: float = 300.0,
         top_sections: int = 3,
         ocr_mode: str = "never",
         ocr_language: str = "eng",

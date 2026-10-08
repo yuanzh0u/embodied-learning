@@ -240,6 +240,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--selection-timeout", type=float, default=900.0,
         help="Per-chunk smart-selection agent timeout (s); a timeout is a failed chunk, not a crash.",
     )
+    parser.add_argument(
+        "--extraction-timeout", type=float, default=300.0,
+        help="Hard per-paper full-text extraction timeout (s).",
+    )
     parser.add_argument("--agents-parallel", type=int, default=5, help="Concurrent skeleton agents.")
     return parser.parse_args(argv)
 
@@ -855,13 +859,30 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
             futures = {}
             for paper_id in chunk:
                 if not (pool_root / f"arxiv-{paper_id}" / "extraction.json").is_file():
+                    # Say WHY: a 121-byte timeout stub and a full extraction
+                    # that failed to pool look identical behind the old
+                    # "extraction.json 缺失" wording (2026-10-08).
+                    run_extraction = run_dir / "extractions" / f"{paper_id}.json"
+                    if not run_extraction.is_file():
+                        reason = "全文未恢复（无 extraction 产物）"
+                    else:
+                        try:
+                            payload = json.loads(run_extraction.read_text(encoding="utf-8"))
+                        except (OSError, json.JSONDecodeError):
+                            payload = {}
+                        if str(payload.get("error") or "").strip():
+                            reason = f"全文未恢复（{payload['error']}）"
+                        elif payload.get("available"):
+                            reason = "全文已恢复但未入池（pool-add 失败，见上文日志）"
+                        else:
+                            reason = "全文未恢复（抽取产物不可用）"
                     futures[paper_id] = None
                     done += 1
                     failed += 1  # consistent with the pre-2026-09 summary semantics
-                    _record_deep_read_failure(notes_dir, paper_id, "no-extraction", "未入池（extraction.json 缺失）")
-                    outcomes.append((paper_id, "failed", "未入池（extraction.json 缺失）"))
+                    _record_deep_read_failure(notes_dir, paper_id, "no-extraction", reason)
+                    outcomes.append((paper_id, "failed", reason))
                     log(f"[DRIVER-PROGRESS:deep-read:{done}/{len(order)}]")
-                    log(f"[PAPER] {paper_id} 未入池，跳过")
+                    log(f"[PAPER] {paper_id} {reason}，跳过")
                     continue
                 futures[paper_id] = executor.submit(
                     deep_read_paper, paper_id, pool_root, cli,
@@ -1001,6 +1022,15 @@ def pool_seed(summary_extra: dict, screening_ids: Path, run_dir: Path, args) -> 
         result = run_command(command)
         if result.returncode == 0:
             cold += 1
+            continue
+        # A failed pool-add must be visible: it used to vanish and resurface
+        # later as "未入池（extraction.json 缺失）" with no way to tell a good
+        # extraction from a failed one (2026-10-08, 2507.15186).
+        reason = (result.stderr or result.stdout or "").strip().splitlines()
+        log(
+            f"[PAPER] {paper_id} 入池失败（extraction 已恢复但未进 pool）："
+            f"{reason[-1] if reason else f'exit {result.returncode}'}"
+        )
     summary_extra["pool_warm"] = warm
     summary_extra["pool_seeded"] = cold
 
@@ -1569,6 +1599,7 @@ def _main_locked(
         log(f"[DRIVER] 开始全文抽取（HTML→Markdown，最长 30 分钟，候选 {len(screened_ids)} 篇）…")
         extraction_cmd = lambda: [  # noqa: E731
             sys.executable, str(HUB_SCRIPTS / "fetch.py"), "extract-content-queue",
+            "--paper-timeout", str(args.extraction_timeout),
             "--paper-id-file", str(screening_ids),
             "--terms", ",".join(terms),
             "--output-dir", str(run_dir / "extractions"),

@@ -235,7 +235,7 @@ def _extract_content_queue_parse_args(argv: list[str] | None = None) -> argparse
     )
     parser.add_argument("--workers", type=int, default=2, help="Bounded I/O workers; capped at 4.")
     parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--paper-timeout", type=float, default=120.0, help="Hard wall-clock limit per paper subprocess.")
+    parser.add_argument("--paper-timeout", type=float, default=300.0, help="Hard wall-clock limit per paper subprocess.")
     parser.add_argument("--top-sections", type=int, default=3)
     parser.add_argument("--ocr-mode", choices=["auto", "never", "always"], default="never")
     parser.add_argument("--ocr-language", default="eng")

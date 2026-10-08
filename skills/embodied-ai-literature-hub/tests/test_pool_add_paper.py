@@ -98,6 +98,36 @@ class AddTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             make_pool(self.tmp).add(**add_kwargs(self.tmp, text=""))
 
+    def test_page_shaped_pdf_extraction_is_accepted(self) -> None:
+        """pdf-text extractions carry `pages[].text` and no flat `text`; they are
+        still full-text extractions. Regression: pool refused them
+        ("extraction carries no `text`") and the paper was then reported
+        downstream as 全文未恢复 (2026-10-08, 2507.15186)."""
+        payload = {
+            "paper_id": "2507.15186",
+            "available": True,
+            "source_format": "pdf",
+            "extraction_method": "pdf-text",
+            "title": "Model Simplification through refinement",
+            "quality": {"grade": "high"},
+            "pages": [
+                {"page": 1, "text": "Intro page text."},
+                {"page": 2, "text": "Method page text."},
+            ],
+        }
+        path = self.tmp / "extraction-pages.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        kwargs = add_kwargs(self.tmp)
+        kwargs["extraction"] = payload
+
+        self.assertEqual(make_pool(self.tmp).add(**kwargs), 0)
+        entry = self.tmp / "pool" / "arxiv-2507.15186"
+        body = (entry / "paper.md").read_text()
+        self.assertIn("Intro page text.", body)
+        self.assertIn("Method page text.", body)
+        meta = json.loads((entry / "meta.json").read_text())
+        self.assertEqual(meta["text_chars"], len(body.rstrip("\n")))
+
     def test_doi_fallback_naming(self) -> None:
         metadata = self.tmp / "meta.json"
         metadata.write_text(json.dumps({"doi": "10.1000/xyz", "title": "No-arXiv paper"}), encoding="utf-8")
