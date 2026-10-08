@@ -15,7 +15,13 @@ if str(_repo_root) not in sys.path:
     sys.path.insert(0, str(_repo_root))
 
 
-CATALOG_RUN_LINK = re.compile(r"\[run\]\((\.\./evidence/[^)\s]+/run\.json)\)")
+# Route markers for a CURRENT run manifest. Catalogs label the link either
+# `[run](...)` or `[run.json](...)` depending on the authoring path; both mean
+# "this is the run to publish". Prose labels — 历史版本 / 兼容归档 run /
+# 补沉淀 run — mark rows that must NOT be routed into the wiki.
+CATALOG_RUN_LINK = re.compile(
+    r"\[(?:run|run\.json)\]\((\.\./evidence/[^)\s]+/run\.json)\)"
+)
 STANDARD_ARTICLES = (
     "scientific-memo_keyan.md",
     "zhihu-explainer_zhihu.md",

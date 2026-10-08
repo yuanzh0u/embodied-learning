@@ -121,6 +121,29 @@ class ReviewRunsTest(unittest.TestCase):
 
         self.assertEqual([item.directory.name for item in loaded], ["current"])
 
+    def test_run_json_label_variant_is_routed(self) -> None:
+        """Catalogs authored with `[run.json](...)` as the link text mean the same
+        as `[run](...)` — the run manifest of a current run. Regression: a
+        label-only filter silently dropped 5 of 12 rows in the /mount/TEST KB
+        (2026-10-08), hiding the 中美具身智能路线差异 topic from the wiki."""
+        write_catalog_run(self.root, "labeled-run-json")
+        write_catalog_run(self.root, "labeled-run-word")
+        write_catalog_run(self.root, "archived")
+        catalog = self.root / "knowledge" / "literature-review-catalog.md"
+        catalog.write_text(
+            "[run.json](../evidence/labeled-run-json/run.json)\n"
+            "[run](../evidence/labeled-run-word/run.json)\n"
+            "[兼容归档 run](../evidence/archived/run.json)\n",
+            encoding="utf-8",
+        )
+
+        loaded = review_runs.load_catalog_runs(self.root, catalog)
+
+        self.assertEqual(
+            sorted(item.directory.name for item in loaded),
+            ["labeled-run-json", "labeled-run-word"],
+        )
+
     def test_evidence_path_cannot_escape_its_run(self) -> None:
         run_json = write_catalog_run(self.root, "unsafe")
         manifest = json.loads(run_json.read_text(encoding="utf-8"))
