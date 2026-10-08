@@ -102,6 +102,63 @@ class FinalizeRunTest(unittest.TestCase):
         trace.assert_called_once()
         register.assert_called_once()
 
+    def test_declare_gate_exception_writes_manifest_and_notes(self):
+        code, run, register, trace = self.finalize(
+            "--declare-gate-exception", "cited_paper_floor",
+            "--reason", "选文策略如实缩水：该 niche 仅 3 篇核心论文",
+        )
+        self.assertEqual(code, 0)
+        manifest = self.manifest()
+        self.assertIn("cited_paper_floor", manifest["gate_exceptions"])
+        self.assertTrue(any("选文策略如实缩水" in str(note) for note in manifest["notes"]))
+
+    def test_declare_gate_exception_requires_reason(self):
+        with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
+             mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
+             mock.patch.object(finalize, "register_run_in_catalog", return_value=True):
+            code = finalize.main([
+                "--run-dir", str(self.run_dir), "--kb-root", str(self.kb_root),
+                "--declare-gate-exception", "saturation",
+            ])
+        self.assertEqual(code, 2)
+
+    def test_floor_gate_waived_by_cited_paper_floor_exception(self):
+        for stem in ("p3", "p4", "p5"):
+            (self.run_dir / "evidence" / f"{stem}.jsonl").write_text("", encoding="utf-8")
+        code, run, register, trace = self.finalize(
+            "--declare-gate-exception", "cited_paper_floor", "--reason", "诚实薄审",
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(self.manifest()["status"], "settled")
+
+    def test_floor_gate_shortfall_reports_paper_list_and_stops(self):
+        """2026-09-30 定案：精读数量不够 = 用户决策点——汇报选定的精读论文列表
+        后立即停轮等决策，不薄审落盘、不换选文策略、不继续硬修。"""
+        for stem in ("p3", "p4", "p5"):
+            (self.run_dir / "evidence" / f"{stem}.jsonl").write_text("", encoding="utf-8")
+        (self.run_dir / "screening.json").write_text(json.dumps({
+            "selection_rule": {"strategy": "smart", "detail": "smart selected 3/481 considered; shortfall: only 3 relevant (limit 40), not padded"},
+        }), encoding="utf-8")
+        import contextlib, io
+        buf = io.StringIO()
+        with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
+             mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
+             contextlib.redirect_stdout(buf):
+            code = finalize.main([
+                "--run-dir", str(self.run_dir), "--kb-root", str(self.kb_root),
+            ])
+        out = buf.getvalue()
+        self.assertEqual(code, 2)
+        self.assertEqual(self.manifest()["status"], "in-progress")
+        self.assertIn("精读数量不够", out)
+        self.assertIn("已选定并深读的论文列表", out)
+        for stem in ("p0", "p1", "p2"):
+            self.assertIn(stem, out)  # 报告含选定论文清单
+        self.assertIn("立即停轮", out)
+        self.assertIn("等待用户决策", out)
+        self.assertIn("严禁薄审落盘", out)
+        self.assertIn("严禁更换选文策略", out)
+
     def test_trace_map_failure_blocks_with_fix_message(self):
         """UNCOVERED citations in a deliverable are a fix-and-rerun condition:
         finalize refuses and names the remedy, run stays in-progress."""
@@ -215,6 +272,34 @@ class FinalizeRunTest(unittest.TestCase):
         self.assertEqual(code, 2)  # floor counts full-text papers only
         self.assertEqual(self.manifest()["status"], "in-progress")
         run.assert_not_called()
+
+    def test_kb_root_inferred_from_run_dir_when_omitted(self):
+        """--kb-root is optional: <kb-root>/work/<run> layout publishes into the
+        KB that owns the run (2026-09-30 absolute-pose published into
+        ~/Documents/arxiv because the writer omitted --kb-root)."""
+        with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
+             mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
+             mock.patch.object(finalize, "register_run_in_catalog", return_value=True):
+            code = finalize.main(["--run-dir", str(self.run_dir)])
+        self.assertEqual(code, 0)
+        published = self.kb_root / "evidence" / "literature-review-demo-20260101"
+        self.assertTrue((published / "run.json").is_file())
+
+    def test_kb_root_mismatch_refuses_cross_kb_publish(self):
+        """An explicit --kb-root that disagrees with the run's owning KB is a
+        hard error — never copy a run into a foreign knowledge base."""
+        other_kb = Path(self.tmp.name) / "other-kb"
+        other_kb.mkdir()
+        with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
+             mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
+             mock.patch.object(finalize, "register_run_in_catalog", return_value=True):
+            code = finalize.main([
+                "--run-dir", str(self.run_dir), "--kb-root", str(other_kb),
+            ])
+        self.assertEqual(code, 2)
+        self.assertFalse((other_kb / "evidence").exists())
+        self.assertFalse((self.kb_root / "evidence").exists())
+        self.assertEqual(self.manifest()["status"], "in-progress")
 
 
 if __name__ == "__main__":

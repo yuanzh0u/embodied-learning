@@ -23,9 +23,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from lib.layout import default_kb_root
+    from lib.layout import default_kb_root, infer_kb_root
 except ImportError:  # installed console-script entry: package import path
-    from wiki_scripts.lib.layout import default_kb_root
+    from wiki_scripts.lib.layout import default_kb_root, infer_kb_root
 
 STYLE_FILES = {
     "scientific-memo": "scientific-memo_keyan.md",
@@ -178,6 +178,7 @@ def paper_funnel(run_dir: Path) -> list[dict]:
             "stage": stage,
             "audit": audit,
             "reason": failure_reason(run_dir, paper_id),
+            "selection_reason": " ".join(str(item.get("selection_reason") or "").split()),
             "title": str(record.get("title") or ""),
             "matched_title_terms": (item.get("matched_title_terms") or [])[:3],
         })
@@ -342,15 +343,44 @@ def render(report: dict, run_dir: Path, scripts_root: Path) -> str:
             lines.append(
                 f"  {row['arxiv_id']}  {row['stage']}"
                 + (f"  命中:{terms}" if terms else "")
+                + (f"  选中:{row['selection_reason']}" if row.get("selection_reason") else "")
                 + (f"  因:{row['reason']}" if row.get("reason") else "")
                 + (f"  {title}" if title else "")
             )
     if not report["artifacts"].get("review-packet.md"):
         lines.append("[next] 生成综述包（直接写进运行目录，逐字执行即可）：")
         lines.append(f"  {packet_command(run_dir, report, scripts_root)}")
+    # Gate commands verbatim: the writer used to guess check/audit flags wrong
+    # (positional vs --run-dir) and burn calls re-discovering the CLI.
+    style_flags = {
+        "scientific-memo_keyan.md": "memo",
+        "zhihu-explainer_zhihu.md": "zhihu",
+        "xiaohongshu-post_xiaohongshu.md": "xiaohongshu",
+    }
+    gate_articles = [name for name in style_flags if (run_dir / name).is_file()]
+    if gate_articles:
+        lines.append("[next] 审计门（逐字执行，参数勿猜）：")
+        lines.append(f"  python3 {scripts_root / 'check_run_bundle.py'} {run_dir}")
+        art = " ".join(f"--article {run_dir / name}" for name in gate_articles)
+        lines.append(
+            f"  python3 {scripts_root / 'audit_citations.py'} {art} "
+            f"--appendix {run_dir / 'evidence-appendix.md'} "
+            f"--evidence-jsonl {run_dir / 'evidence.jsonl'} --run-json {run_dir / 'run.json'}"
+        )
+        style_args = " ".join(f"--{style_flags[name]} {run_dir / name}" for name in gate_articles)
+        lines.append(
+            f"  python3 {scripts_root / 'skills' / 'embodied-ai-review-writer' / 'scripts' / 'writing_audit.py'} "
+            f"audit-article-quality {style_args} --evidence-jsonl {run_dir / 'evidence.jsonl'}"
+        )
+    kb_root = infer_kb_root(run_dir) or default_kb_root()
     lines.append(
-        f"[next] 成稿+trace-map 就绪后一次落盘：python3 {scripts_root / 'finalize_run.py'} "
-        f"--run-dir {run_dir} --kb-root <kb-root>"
+        f"[next] 成稿+审计门全过后一次落盘：python3 {scripts_root / 'finalize_run.py'} "
+        f"--run-dir {run_dir} --kb-root {kb_root}"
+    )
+    lines.append(
+        f"[next] 地板/饱和要豁免时用机械入口（勿手改 run.json）：python3 {scripts_root / 'finalize_run.py'} "
+        f"--run-dir {run_dir} --kb-root {kb_root} "
+        f"--declare-gate-exception <cited_paper_floor|saturation> --reason \"...\""
     )
     return "\n".join(lines)
 

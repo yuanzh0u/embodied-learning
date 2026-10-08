@@ -43,3 +43,22 @@ def default_kb_root() -> Path:
     """Canonical local KB root for new environments (override per-call with
     --kb-root; serve_research_wiki keeps its own DEFAULT_KB_ROOT constant)."""
     return DEFAULT_KB_ROOT
+
+
+def infer_kb_root(run_dir: Path) -> Path | None:
+    """Owning KB root of a run directory, from its birth layout.
+
+    init_run.py places runs at ``<kb-root>/work/<run>/``, so the root is the
+    grandparent of a run that lives under ``work/``. Returns None for any
+    other layout (callers fall back to an explicit --kb-root or the default).
+
+    This is the guard against silent cross-KB publish: finalize_run.py must
+    never copy a run into a KB that does not own its work/ directory (the
+    2026-09-30 absolute-pose run published into ~/Documents/arxiv while the
+    run lived under the /mount/TEST wiki KB — the writer omitted --kb-root and
+    the default swallowed it)."""
+    resolved = Path(run_dir).expanduser().resolve()
+    if resolved.parent.name == "work":
+        return resolved.parent.parent
+    return None
+

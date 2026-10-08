@@ -97,6 +97,64 @@ class SmartSelectTest(unittest.TestCase):
         self.assertEqual([c["arxiv_id"] for c in selected], ["2402.10329"])
         self.assertIn("smart selected 2/2 considered (1 full-coverage chunk(s))", detail)
 
+    def test_reasons_are_parsed_and_carried_into_artifacts(self):
+        """smart 输出逐篇选中理由（供调试）：解析 {arxiv_id, reason}，进
+        screening.json 行与 screening.md 表格。"""
+        result = mock.Mock(returncode=0, stdout=json.dumps({
+            "relevant": [
+                {"arxiv_id": "2402.10329", "reason": "提供数据采集接口，支撑可用性机制讨论"},
+                {"arxiv_id": "1704.02084", "reason": "点云分类先验，作对比基线"},
+                {"arxiv_id": "2402.10329", "reason": "重复条目应去重"},
+            ],
+            "shortfall_note": "",
+        }))
+        selected, _ = smart_select(
+            self.REGISTRY, topic="umi", focus="", limit=2,
+            complete_fn=mock.Mock(return_value=result), cli="/fake/claude", model="m",
+        )
+        self.assertEqual(
+            [(c["arxiv_id"], c["selection_reason"]) for c in selected],
+            [("2402.10329", "提供数据采集接口，支撑可用性机制讨论"),
+             ("1704.02084", "点云分类先验，作对比基线")],
+        )
+        rows, ids = to_screening_artifacts(selected, "smart detail")
+        self.assertEqual(rows[0]["selection_reason"], "提供数据采集接口，支撑可用性机制讨论")
+        markdown = render_selection_markdown("smart", "smart detail", selected, 3)
+        self.assertIn("提供数据采集接口，支撑可用性机制讨论", markdown)
+
+    def test_malformed_chunk_output_is_salvaged_not_silently_dropped(self):
+        """20260930 绝对位姿 run：chunk-1 模型输出的 JSON 数组里混进 .replace()
+        代码残留 → 解析归零、300 篇（含 PnP 核心论文）被静默跳过。修复：坏输出
+        打捞已知 ID，并在 detail 里如实标注。"""
+        registry = registry_with(
+            candidate("2410.14164", "Optimal DLT PnP", "PnP solver."),
+            candidate("2407.15540", "Reloc", "Camera relocalization."),
+        )
+        garbled = '前言 {"relevant": ["2410.14164", "2407.15540".replace("x","x"), "2407.15540"]} 后记'
+        result = mock.Mock(returncode=0, stdout=garbled)
+        selected, detail = smart_select(
+            registry, topic="absolute pose", focus="", limit=40,
+            complete_fn=mock.Mock(return_value=result), cli="c", model="m",
+        )
+        self.assertEqual(sorted(c["arxiv_id"] for c in selected), ["2407.15540", "2410.14164"])
+        self.assertIn("malformed", detail)
+        self.assertIn("salvaged", detail)
+
+    def test_unparseable_chunk_counts_as_coverage_hole(self):
+        result = mock.Mock(returncode=0, stdout="好的，我认为这些论文都不错。")
+        _, detail = smart_select(
+            self.REGISTRY, topic="umi", focus="", limit=2,
+            complete_fn=mock.Mock(return_value=result), cli="c", model="m",
+        )
+        # 非空但不可解析 = 覆盖缺口（failed chunk），不是"0 篇相关"的诚实结论
+        self.assertIn("1/1 chunk(s) failed", detail)
+
+    def test_legacy_string_form_still_parses(self):
+        self.assertEqual(
+            selection_mod._parse_selections('{"relevant": ["2402.10329"]}', {"2402.10329"}),
+            [("2402.10329", "")],
+        )
+
     def test_shortfall_is_reported_when_relevant_below_limit(self):
         result = mock.Mock(returncode=0, stdout='{"relevant": ["2402.10329"]}')
         _, detail = smart_select(
@@ -139,6 +197,7 @@ class ToScreeningArtifactsTest(unittest.TestCase):
         self.assertEqual(rows, [{
             "arxiv_id": "2402.10329", "title": "UMI",
             "status": "full-text-queued", "selection_detail": "smart detail",
+            "selection_reason": "",
         }])
         self.assertEqual(ids, ["2402.10329"])
         self.assertEqual(to_screening_artifacts([{"title": "no id"}], "d"), ([], []))

@@ -300,6 +300,28 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(manifest["knowledge_ids"], ["EA-SENSOR"])
         self.assertEqual(manifest["selection_strategy"], "smart")
 
+    def test_driver_emits_per_stage_result_briefs(self):
+        """Each mechanical stage closes with a [DRIVER-BRIEF:<stage>] JSON
+        block — the human-checkable work product (query list, selected papers,
+        deep-read outcomes…) the wiki dialog renders as 成果简报."""
+        import contextlib
+        import io
+
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            self.run_driver(self.argv("--no-terms-agent"))
+        brief_lines = [
+            line for line in buffer.getvalue().splitlines()
+            if line.startswith("[DRIVER-BRIEF:")
+        ]
+        stages = [line.split("]", 1)[0].split(":", 1)[1] for line in brief_lines]
+        for expected in ("plan", "retrieval", "selection", "summary"):
+            self.assertIn(expected, stages)
+        plan_line = next(line for line in brief_lines if line.startswith("[DRIVER-BRIEF:plan]"))
+        payload = json.loads(plan_line.split("] ", 1)[1])
+        self.assertIn("查询计划", payload["title"])
+        self.assertTrue(payload["lines"])
+
     def test_arxiv_command_shape_single_process(self):
         self.run_driver(self.argv("--no-terms-agent"))
         arxiv = next(c for c in self.commands if "search-arxiv" in " ".join(c))
@@ -381,6 +403,19 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(extraction[extraction.index("--workers") + 1], "4")
         self.assertIn("--include-full-text", extraction)
         self.assertEqual(extraction[extraction.index("--ocr-mode") + 1], "never")
+
+    def test_latin_terms_become_one_conjunctive_query_not_bare_words(self):
+        """机械拉丁词合成一条 AND 查询：单词裸查询（absolute/pose/estimation）
+        会灌垃圾进候选池（20260930 绝对位姿 run 池里大半是高能物理/量子/NLP）。"""
+        self.run_driver(self.argv("--no-terms-agent"))
+        dyn = json.loads((self.run_dir / "dynamic-queries.json").read_text(encoding="utf-8"))
+        queries = [str(item.get("query") or "") for item in dyn.get("queries") or []]
+        # 没有任何裸单词查询（无空格且非 all: 语法的条目）
+        bare = [q for q in queries if q and " " not in q and not q.startswith("all:")]
+        self.assertEqual(bare, [], f"bare word queries leaked: {bare}")
+        combined = [q for q in queries if q.count(" AND ") >= 1]
+        self.assertTrue(combined, "expected a conjunctive latin-combined query")
+        self.assertIn("latin-combined", [str(item.get("label") or "") for item in dyn.get("queries") or []])
 
     def test_idempotent_rerun_skips_completed_stages(self):
         self.run_driver(self.argv("--no-terms-agent"))

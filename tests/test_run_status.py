@@ -146,6 +146,33 @@ class RunStatusTest(unittest.TestCase):
         text = run_status.render(report, self.run_dir, Path("/scripts"))
         self.assertIn("因:agent 异常：timeout", text)
 
+    def test_next_block_carries_verbatim_gate_commands(self):
+        (self.run_dir / "scientific-memo_keyan.md").write_text("# memo\n", encoding="utf-8")
+        report = run_status.build_report(self.run_dir)
+        text = run_status.render(report, self.run_dir, Path("/scripts"))
+        self.assertIn("check_run_bundle.py", text)
+        self.assertIn("--article", text)
+        self.assertIn("audit_citations.py", text)
+        self.assertIn("audit-article-quality", text)
+        self.assertIn("--declare-gate-exception", text)
+
+    def test_next_block_prints_resolved_kb_root_not_placeholder(self):
+        """The [next] finalize command carries the real --kb-root (inferred from
+        the <kb-root>/work/<run> layout), never the literal <kb-root> placeholder
+        the writer used to guess wrong (2026-09-30 absolute-pose)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp) / "kb"
+            run_dir = kb_root / "work" / "literature-review-demo-20260101"
+            run_dir.mkdir(parents=True)
+            for name in ("run.json", "pipeline-summary.json"):
+                source = self.run_dir / name
+                (run_dir / name).write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+            text = run_status.render(
+                run_status.build_report(run_dir), run_dir, Path("/scripts")
+            )
+        self.assertIn(f"--kb-root {kb_root}", text)
+        self.assertNotIn("--kb-root <kb-root>", text)
+
     def test_missing_run_json_rejected(self):
         with tempfile.TemporaryDirectory() as other:
             self.assertEqual(run_status.main(["--run-dir", other]), 1)

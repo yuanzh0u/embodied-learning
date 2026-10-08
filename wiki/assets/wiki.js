@@ -1083,11 +1083,42 @@
     return item;
   }
 
-  function appendChatSystemNote(text) {
+  function formatEventTime(ts) {
+    // "2026-09-30T15:10:23" → "15:10:23"; empty when the event predates
+    // timestamps (older journal lines).
+    if (!ts) return "";
+    const match = String(ts).match(/T?(\d{2}:\d{2}:\d{2})/);
+    return match ? match[1] : "";
+  }
+
+  function appendChatSystemNote(text, ts) {
     const note = document.createElement("p");
     note.className = "chat-system-note";
-    note.textContent = text;
+    const clock = formatEventTime(ts);
+    note.textContent = clock ? `[${clock}] ${text}` : text;
     nodes.chatMessages.appendChild(note);
+    chatScrollToBottom(true);
+  }
+
+  function appendChatBrief(title, lines, ts) {
+    // Per-stage 成果简报: the human-checkable work product of that stage
+    // (query list, selected papers, deep-read outcomes…). Collapsed by default
+    // so long lists don't drown the dialog, but one click from verification.
+    const clock = formatEventTime(ts);
+    const details = document.createElement("details");
+    details.className = "chat-brief";
+    const summary = document.createElement("summary");
+    summary.textContent = `${clock ? `[${clock}] ` : ""}📋 ${title || "成果简报"}`;
+    details.appendChild(summary);
+    const body = document.createElement("ul");
+    body.className = "chat-brief-lines";
+    for (const line of lines || []) {
+      const item = document.createElement("li");
+      item.textContent = line;
+      body.appendChild(item);
+    }
+    details.appendChild(body);
+    nodes.chatMessages.appendChild(details);
     chatScrollToBottom(true);
   }
 
@@ -2078,9 +2109,20 @@
         // the timeline pills alone leave the user staring at a silent pane
         // during long driver stages.
         const label = WORKFLOW_STAGES.find(([name]) => name === evt.stage)?.[1] || evt.stage;
-        appendChatSystemNote(`〔${label}〕${text}`);
+        appendChatSystemNote(`〔${label}〕${text}`, evt.ts);
       }
       setChatStatus(text ? `${text}…` : undefined);
+      return;
+    }
+    if (evt.type === "brief") {
+      // Per-stage results brief (query plan, selected papers, deep-read
+      // outcomes…): the work product a reviewer verifies and a debugger
+      // replays, kept as a collapsible block in the dialog.
+      if (evt.stage) {
+        state.chat.stage = evt.stage;
+        renderTimeline();
+      }
+      appendChatBrief(evt.title, evt.lines, evt.ts);
       return;
     }
     if (evt.type === "progress") {
@@ -2094,7 +2136,7 @@
       // (packet build, audits, file writes); Read/Grep noise stays in the
       // status spinner only.
       if (WORKFLOW_LOG_TOOLS.has(evt.tool)) {
-        appendChatSystemNote(`↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`);
+        appendChatSystemNote(`↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`, evt.ts);
       }
       handleChatEvent(evt, renderer);
       return;
@@ -2105,7 +2147,7 @@
       renderTimeline();
       // No outline checkpoint: reaching here means manual stop or exhausted
       // auto-continuation rounds — recovery, not a routine pause for input.
-      appendChatSystemNote(evt.detail || "工作流已暂停。回复「继续」从中断处继续。");
+      appendChatSystemNote(evt.detail || "工作流已暂停。回复「继续」从中断处继续。", evt.ts);
       return;
     }
     if (evt.type === "topic_ready") {

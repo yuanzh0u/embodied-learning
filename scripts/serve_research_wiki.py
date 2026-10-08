@@ -1771,13 +1771,17 @@ class WikiHandler(SimpleHTTPRequestHandler):
             )
 
             marker_run = wiki_chat.extract_topic_marker(full_text)
+            stop_reason = wiki_chat.extract_stop_marker(full_text)
 
             # One-shot contract: no outline stop-and-wait. A segment that ends
             # without settling is auto-continued in the same session until it
-            # publishes or the round budget runs out.
+            # publishes or the round budget runs out — EXCEPT a deliberate
+            # [STOP:<reason>] decision point (e.g. 精读数量不够): that parks for
+            # the user and must never be auto-continued (2026-09-30 定案).
             auto_rounds = 0
             while (
                 marker_run is None
+                and stop_reason is None
                 and full_text.strip()
                 and not turn.stop_requested
                 and auto_rounds < WORKFLOW_AUTO_CONTINUE_ROUNDS
@@ -1798,6 +1802,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                     key=ws_id, turn=turn, registry=registry, on_delta=on_delta,
                 )
                 marker_run = wiki_chat.extract_topic_marker(full_text)
+                stop_reason = wiki_chat.extract_stop_marker(full_text)
 
             if marker_run:
                 # Settle finished: publish and hand the topic back.
@@ -1831,7 +1836,18 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 registry.set_workflow_state(
                     ws_id, stage=current_stage or WORKFLOW_CHECKPOINT_STAGE, awaiting_input=True
                 )
-                if turn.stop_requested:
+                if stop_reason:
+                    # Designed user decision point: the writer reported and
+                    # stopped on purpose (e.g. 精读数量不够). Park for the user's
+                    # call — 补充信息 or 扩大综述范围 — never auto-continue.
+                    self._write_sse_event(
+                        {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                         "detail": "已停在用户决策点（"
+                         + stop_reason
+                         + "）：见上方精读论文列表。请决策——补充信息（种子论文/关注重点）"
+                           "或扩大综述范围（review-mode/时间范围），然后回复「继续」或直接说明。"}
+                    )
+                elif turn.stop_requested:
                     self._write_sse_event(
                         {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE,
                          "detail": "已手动停止。回复「继续」从中断处继续。"}
@@ -1940,6 +1956,14 @@ class WikiHandler(SimpleHTTPRequestHandler):
                          "done": done, "total": total, "detail": detail}
                     )
                     continue
+                brief = wiki_chat.extract_driver_brief(line)
+                if brief:
+                    brief_stage, title, lines = brief
+                    self._write_sse_event(
+                        {"type": "brief", "stage": current_stage, "brief_stage": brief_stage,
+                         "title": title, "lines": lines}
+                    )
+                    continue
                 detail = wiki_chat.extract_driver_detail(line)
                 if detail:
                     # Free-form progress lines land in the dialog so the user
@@ -2033,6 +2057,10 @@ class WikiHandler(SimpleHTTPRequestHandler):
         self.close_connection = True
 
     def _write_sse_event(self, event: dict) -> None:
+        # Timestamp every dialog-bearing event at the emission point: the
+        # journal replay and the live pane both render the same clock, so a
+        # workflow log says WHEN each stage ran (2026-09-30 debugging ask).
+        event.setdefault("ts", dt.datetime.now().isoformat(timespec="seconds"))
         journal = self._dialog_journal
         if journal is not None and wiki_chat.journalable_event(event):
             journal.event(event)

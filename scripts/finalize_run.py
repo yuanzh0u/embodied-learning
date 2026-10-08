@@ -36,7 +36,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from lib.layout import default_kb_root, find_roots
+    from lib.layout import default_kb_root, find_roots, infer_kb_root
     from lib.review_runs import (
         CITED_PAPER_FLOORS,
         STANDARD_ARTICLES,
@@ -46,7 +46,7 @@ try:
         register_run_in_catalog,
     )
 except ImportError:  # installed console-script entry: package import path
-    from wiki_scripts.lib.layout import default_kb_root, find_roots
+    from wiki_scripts.lib.layout import default_kb_root, find_roots, infer_kb_root
     from wiki_scripts.lib.review_runs import (
         CITED_PAPER_FLOORS,
         STANDARD_ARTICLES,
@@ -144,9 +144,24 @@ def abstract_papers(evidence_jsonl: Path) -> int:
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", required=True, help="In-progress run directory (holds run.json).")
-    parser.add_argument("--kb-root", default=str(default_kb_root()), help="KB root to publish into.")
+    parser.add_argument(
+        "--kb-root",
+        default=None,
+        help="KB root to publish into. Default: inferred from --run-dir "
+        "(<kb-root>/work/<run> layout); only needed for non-standard layouts.",
+    )
     parser.add_argument("--style", choices=sorted(STYLE_TO_FILE), help="Declare a reduced single-style scope.")
     parser.add_argument("--scope-note", help="Why the user asked for a single style (with --style).")
+    parser.add_argument(
+        "--declare-gate-exception",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Mechanical gate_exceptions declaration: waive the named gate (e.g. "
+        "saturation / cited_paper_floor) with a --reason justification recorded in "
+        "run.json notes. Never hand-edit run.json for this.",
+    )
+    parser.add_argument("--reason", default="", help="Justification for --declare-gate-exception.")
     parser.add_argument("--skip-wiki", action="store_true", help="Skip the wiki snapshot rebuild.")
     return parser.parse_args(argv)
 
@@ -154,12 +169,46 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     run_dir = Path(args.run_dir).expanduser().resolve()
-    kb_root = Path(args.kb_root).expanduser().resolve()
+    inferred = infer_kb_root(run_dir)
+    if args.kb_root is None:
+        kb_root = inferred or default_kb_root()
+        if inferred is None:
+            log(f"run-dir 不在 <kb-root>/work/ 布局下，无法推断知识库根；使用默认 {kb_root}。")
+            log("若这不是目标知识库，请显式传 --kb-root。")
+    else:
+        kb_root = Path(args.kb_root).expanduser().resolve()
+    # Guard: never publish a run into a KB that does not own its work/ dir.
+    # (2026-09-30 absolute-pose: the writer omitted --kb-root, the default
+    # swallowed it, and the whole publish landed in ~/Documents/arxiv while
+    # the run lived under the /mount/TEST wiki KB.)
+    if inferred is not None and kb_root != inferred:
+        log(f"拒绝落盘：run-dir 归属知识库 {inferred}，与目标 --kb-root {kb_root} 不一致。")
+        log(f"修法：去掉 --kb-root（会自动推断为 {inferred}），或改传 --kb-root {inferred}。")
+        log("落错知识库 = evidence/、catalog、wiki 快照全部进错库。")
+        return 2
+    log(f"知识库根：{kb_root}" + ("（由 run-dir 推断）" if args.kb_root is None and inferred else ""))
     run_json_path = run_dir / "run.json"
     if not run_json_path.is_file():
         log(f"run.json 不存在：{run_json_path}")
         return 1
     manifest = load_json(run_json_path)
+
+    # ---- 0. mechanical gate_exceptions declaration -------------------------
+    if args.declare_gate_exception:
+        if not str(args.reason or "").strip():
+            log("--declare-gate-exception 必须带 --reason 写明正当理由（会记入 run.json notes）。")
+            return 2
+        names = [str(item) for item in args.declare_gate_exception]
+        manifest["gate_exceptions"] = list(
+            dict.fromkeys([*(str(x) for x in (manifest.get("gate_exceptions") or [])), *names])
+        )
+        notes = manifest.get("notes")
+        entry = (
+            f"{__import__('datetime').date.today().isoformat()}: gate_exception {', '.join(names)} — {args.reason}"
+        )
+        manifest["notes"] = [notes, entry] if isinstance(notes, str) else (notes or []) + [entry]
+        write_json(run_json_path, manifest)
+        log(f"已声明 gate 豁免：{', '.join(names)}（理由已记入 notes）")
 
     # ---- 1. fill the manifest mechanically -------------------------------
     evidence_jsonl = consolidate_evidence(run_dir)
@@ -223,12 +272,34 @@ def main(argv: list[str] | None = None) -> int:
     if not review_mode and summary_path.is_file():
         review_mode = str(load_json(summary_path).get("review_mode") or "")
     floor = CITED_PAPER_FLOORS.get(review_mode)
-    if floor and papers < floor:
-        log(f"证据仅覆盖 {papers} 篇论文，低于 {review_mode} 模式下限 {floor} 篇。"
-            "这是筛选/深读环节的覆盖不足，不是写作问题：续跑驱动补足深读后重跑 finalize：\n"
-            f"  python3 run_review_pipeline.py --run-dir {run_dir} --kb-root {args.kb_root} "
-            f"--review-mode {review_mode} --deep-read-limit {max(papers * 2, floor * 2)}")
+    declared_gates = [str(item) for item in (manifest.get("gate_exceptions") or [])]
+    if floor and papers < floor and "cited_paper_floor" not in declared_gates:
+        # 精读数量不够 = 设计内的用户决策点（2026-09-30 定案），不是可修复故障：
+        # 汇报选定的精读论文列表 → 停轮等决策（补充信息或扩大综述范围）。
+        log(f"精读数量不够：证据仅覆盖 {papers} 篇论文，低于 {review_mode} 模式下限 {floor} 篇。")
+        log("已选定并深读的论文列表（决策用）：")
+        titles: dict[str, str] = {}
+        registry_path = run_dir / "candidate-registry.json"
+        if registry_path.is_file():
+            for record in (load_json(registry_path).get("candidates") or []):
+                if isinstance(record, dict) and record.get("arxiv_id"):
+                    titles[str(record["arxiv_id"])] = str(record.get("title") or "")
+        stems = sorted(
+            path.stem
+            for path in (run_dir / "evidence").glob("*.jsonl")
+            if path.stem != ABSTRACT_TIER_STEM
+            and any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())
+        )
+        for stem in stems:
+            log(f"  - {stem}  {titles.get(stem, '')}".rstrip())
+        if not stems:
+            log("  （无——尚无论文进入全文证据）")
+        log("按定案行为：汇报上述列表后【立即停轮】，把 run 留在 in-progress，等待用户决策——"
+            "补充信息（种子论文/关注重点）或扩大综述范围（review-mode/时间范围）。"
+            "严禁薄审落盘（除非用户明示接受）、严禁更换选文策略、严禁删除或改写机械产物、严禁继续硬修。")
         return 2
+    if floor and papers < floor:
+        log(f"已声明豁免 cited_paper_floor（用户明示接受薄审）：{papers} 篇 < 下限 {floor} 篇，按 run.json notes 的理由继续落盘。")
 
     # ---- 2b. trace map (mechanical; the writer never hand-builds it) ------
     _, skills_root, _ = find_roots()

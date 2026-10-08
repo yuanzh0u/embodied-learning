@@ -127,7 +127,9 @@ SMART_PROMPT_TEMPLATE = (
     "任务：判断哪些候选与话题真正相关（能进入综述的相关工作或机制讨论，而不是只沾边）。\n"
     "要求：\n"
     "1. 最多输出 {limit} 篇；与话题核心无关的宁缺毋滥。\n"
-    "2. 只输出一个 JSON 对象，格式：{{\"relevant\": [\"<arxiv_id>\", ...], \"shortfall_note\": \"<如数量不足，一句话说明为什么其余不相关>\"}}。\n"
+    "2. 只输出一个 JSON 对象，格式：{{\"relevant\": [{{\"arxiv_id\": \"<id>\", \"reason\": \"<一句话选中理由>\"}}, ...], "
+    "\"shortfall_note\": \"<如数量不足，一句话说明为什么其余不相关>\"}}。\n"
+    "2b. 每条选中都要给 reason：它与话题哪条主线相关、可贡献什么证据（机制/对比/边界），不要复述标题。\n"
     "3. arXiv ID 必须逐字取自清单方括号内，不要改写。\n"
     "不要输出 JSON 以外的任何内容。\n\n"
     "候选清单：\n{candidates}"
@@ -135,6 +137,13 @@ SMART_PROMPT_TEMPLATE = (
 
 
 def _parse_ids(payload: str, known: set[str]) -> list[str]:
+    return [arxiv_id for arxiv_id, _ in _parse_selections(payload, known)]
+
+
+def _parse_selections(payload: str, known: set[str]) -> list[tuple[str, str]]:
+    """(arxiv_id, reason) pairs from the agent JSON. Accepts both the current
+    object form ``{"arxiv_id": ..., "reason": ...}`` and the legacy bare-string
+    form; unknown IDs are dropped, duplicates keep the first reason."""
     match = re.search(r"\{.*\}", payload, re.DOTALL)
     if not match:
         return []
@@ -145,9 +154,28 @@ def _parse_ids(payload: str, known: set[str]) -> list[str]:
     relevant = data.get("relevant") if isinstance(data, dict) else None
     if not isinstance(relevant, list):
         return []
-    out = []
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
     for item in relevant:
-        arxiv_id = str(item).strip()
+        if isinstance(item, dict):
+            arxiv_id = str(item.get("arxiv_id") or item.get("id") or "").strip()
+            reason = " ".join(str(item.get("reason") or "").split())
+        else:
+            arxiv_id = str(item).strip()
+            reason = ""
+        if arxiv_id in known and arxiv_id not in seen:
+            seen.add(arxiv_id)
+            out.append((arxiv_id, reason))
+    return out
+
+
+def _salvage_ids(payload: str, known: set[str]) -> list[str]:
+    """Last-resort ID recovery from malformed agent output (the model sometimes
+    emits code residue inside the JSON array — 20260930 absolute-pose chunk-1
+    lost 300 judged papers to this). Bracketed arXiv IDs are extracted and
+    filtered against the known set, so hallucinated IDs cannot enter."""
+    out: list[str] = []
+    for arxiv_id in re.findall(r"\d{4}\.\d{4,5}", payload):
         if arxiv_id in known and arxiv_id not in out:
             out.append(arxiv_id)
     return out
@@ -184,8 +212,9 @@ def smart_select(
         return [], "empty registry"
     by_id = {str(c.get("arxiv_id")): c for c in candidates}
     focus_line = f"关注重点：{focus}" if focus else ""
-    selected: list[str] = []
+    selected: list[tuple[str, str]] = []
     failed_chunks = 0
+    salvaged_chunks = 0
     chunks = [
         candidates[i : i + SMART_CANDIDATES_PER_CALL]
         for i in range(0, len(candidates), SMART_CANDIDATES_PER_CALL)
@@ -202,17 +231,39 @@ def smart_select(
         if result.returncode != 0:
             failed_chunks += 1
             continue
-        selected.extend(_parse_ids(result.stdout, known))
+        parsed = _parse_selections(result.stdout, known)
+        if parsed:
+            selected.extend(parsed)
+        elif result.stdout.strip():
+            # Non-empty output that parses to nothing is NOT an empty verdict:
+            # count it as a coverage hole (or salvage IDs) — never let a
+            # malformed response silently stand in for "300 papers judged
+            # irrelevant" (20260930 absolute-pose chunk-1).
+            salvaged = _salvage_ids(result.stdout, known)
+            if salvaged:
+                selected.extend((arxiv_id, "") for arxiv_id in salvaged)
+                salvaged_chunks += 1
+            else:
+                failed_chunks += 1
     detail_parts = [
         f"smart selected {len(selected)}/{len(candidates)} considered "
         f"({len(chunks)} full-coverage chunk(s))"
     ]
+    if salvaged_chunks:
+        detail_parts.append(
+            f"{salvaged_chunks}/{len(chunks)} chunk(s) malformed — IDs salvaged, reasons lost"
+        )
     if failed_chunks:
         detail_parts.append(f"{failed_chunks}/{len(chunks)} chunk(s) failed — coverage incomplete")
-    # Dedup, cap, and resolve to candidate records; if fewer than the limit
-    # came back relevant, that is the honest answer (never padded).
-    ordered_ids = list(dict.fromkeys(selected))[: max(0, limit)]
-    out = [by_id[i] for i in ordered_ids]
+    # Dedup, cap, and resolve to candidate records carrying their selection
+    # reason (debug surface in screening.json); if fewer than the limit came
+    # back relevant, that is the honest answer (never padded).
+    ordered = list(dict.fromkeys(selected))[: max(0, limit)]
+    out = []
+    for arxiv_id, reason in ordered:
+        record = dict(by_id[arxiv_id])
+        record["selection_reason"] = reason
+        out.append(record)
     if len(out) < limit:
         detail_parts.append(f"shortfall: only {len(out)} relevant (limit {limit}), not padded")
     return out, "; ".join(detail_parts)
@@ -232,6 +283,7 @@ def to_screening_artifacts(selected: list[dict[str, Any]], detail: str) -> tuple
             "title": candidate.get("title") or "",
             "status": "full-text-queued",
             "selection_detail": detail,
+            "selection_reason": " ".join(str(candidate.get("selection_reason") or "").split()),
         })
         ids.append(arxiv_id)
     return rows, ids
@@ -259,8 +311,9 @@ def render_selection_markdown(
     ]
     for rank, candidate in enumerate(selected, start=1):
         title = " ".join(str(candidate.get("title") or "").split()).replace("|", "\\|")
+        note = md_escape_detail(candidate.get("selection_reason") or detail)
         lines.append(
-            f"| {rank} | {candidate.get('arxiv_id')} |  | {title} | {md_escape_detail(detail)} |"
+            f"| {rank} | {candidate.get('arxiv_id')} |  | {title} | {note} |"
         )
     return "\n".join(lines) + "\n"
 

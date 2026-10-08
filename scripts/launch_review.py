@@ -315,7 +315,11 @@ def run_finalize(args: argparse.Namespace, run_dir: Path) -> None:
         command += ["--scope-note", args.scope_note]
     log("finalize: " + " ".join(command))
     if subprocess.run(command, cwd=str(resolve_kb_root(args))).returncode:
-        raise RuntimeError("finalize_run.py 未过（按其输出修复后 --resume 重跑）")
+        raise RuntimeError(
+            "finalize_run.py 未过：按其输出执行。若是「精读数量不够」，那是用户决策点——"
+            "汇报选定的精读论文列表后等待用户决策（补充信息或扩大综述范围），"
+            "勿 --resume 硬修；其他门禁问题修复后 --resume 重跑。"
+        )
 
 
 def verify_publish(args: argparse.Namespace, run_dir: Path, wiki: object) -> list[str]:

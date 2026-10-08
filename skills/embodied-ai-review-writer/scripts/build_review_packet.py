@@ -920,6 +920,13 @@ def render_style_contract() -> list[str]:
             )
         if style_key == "zhihu":
             lines.append("- 延伸阅读：至少 3 条链接 bullet，每条附一句读者价值注记。")
+            lines.append(
+                "- 句长：单句不超过 70 个中文字符（长句拆从句、降推断负载；审计门会点名待修句）。"
+            )
+            lines.append("- 缩写：正文领域缩写不超过 5 个，首次出现给一句人话解释。")
+            lines.append(
+                "- 正文引用：正文内嵌引用控制在 3–12 篇；支撑性覆盖挪进「延伸阅读」注记。"
+            )
         lines.append("")
     return lines
 

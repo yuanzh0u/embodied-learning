@@ -197,6 +197,17 @@ def longest_chinese_sentence(text: str) -> int:
     return max((len(CHINESE_RE.findall(sentence)) for sentence in sentences), default=0)
 
 
+def longest_chinese_sentence_text(text: str) -> str:
+    """The longest Chinese sentence itself (trimmed), so the long-sentence
+    warning names the exact text the writer must Edit — no inline-python
+    sentence hunt (2026-09-30 absolute-pose burned ~8 calls finding it)."""
+    sentences = re.split(r"[。！？!?；;\n]+", linguistic_text(text))
+    if not sentences:
+        return ""
+    longest = max(sentences, key=lambda s: len(CHINESE_RE.findall(s)))
+    return " ".join(longest.split())
+
+
 def domain_acronyms(text: str) -> list[str]:
     return sorted(set(ACRONYM_RE.findall(linguistic_text(text))) - {"TL", "DR"})
 
@@ -422,12 +433,14 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
             )
         longest_sentence = longest_chinese_sentence(body)
         if longest_sentence > 70:
+            offender = longest_chinese_sentence_text(body)
             add(
                 findings,
                 "warning",
                 path,
                 "long-sentence",
-                f"Zhihu body contains a sentence with {longest_sentence} Chinese characters; review clauses and inference load above 70",
+                f"Zhihu body contains a sentence with {longest_sentence} Chinese characters; review clauses and inference load above 70"
+                + (f" — 待修句：{offender}" if offender else ""),
             )
         body_sources = set(ARXIV_LINK_RE.findall(body))
         if len(body_sources) >= 10:

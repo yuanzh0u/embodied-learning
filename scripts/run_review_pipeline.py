@@ -138,6 +138,18 @@ def log(message: str) -> None:
     print(message, flush=True)
 
 
+def brief(stage: str, title: str, lines: list[str]) -> None:
+    """Emit one per-stage results brief — the human-checkable work product of
+    that stage (query list, selected papers, deep-read outcomes…).
+
+    The wiki dialog renders it as a collapsible 成果简报 block so a reviewer
+    can verify what the stage actually produced and a debugger can replay the
+    decision surface without opening the run dir. One JSON payload on the
+    stdout line (multi-line briefs survive framing)."""
+    payload = json.dumps({"title": title, "lines": lines}, ensure_ascii=False)
+    log(f"[DRIVER-BRIEF:{stage}] {payload}")
+
+
 def run_command(command: list[str], *, timeout: float | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         command,
@@ -659,6 +671,17 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
     summary_extra["evidence_events"] = deep_read_events
     _stamp_evidence_scale(kb_root, run_json_path, evidence_dir, deep_read_events + abstract_events)
     log(stage_line("project", f"{projected} 条深读证据事件（前缀 {id_prefix}，合计 {deep_read_events + abstract_events} 含摘要级）"))
+    projection_lines = [
+        f"{path.stem}  {len(read_events(path))} 条"
+        for path in sorted(evidence_dir.glob("*.jsonl"))
+        if path.name != ABSTRACT_FILENAME
+    ]
+    projection_lines.append(f"（摘要级 {abstract_events} 条，仅定位用）")
+    brief(
+        "project",
+        f"证据投影 · 全文 {deep_read_events} 条 / 摘要 {abstract_events} 条",
+        projection_lines,
+    )
 
 
 def review_packet_stage(run_dir: Path, args, summary_extra: dict) -> None:
@@ -711,6 +734,15 @@ def review_packet_stage(run_dir: Path, args, summary_extra: dict) -> None:
     stamp_path.write_text(json.dumps(fingerprint, ensure_ascii=False) + "\n", encoding="utf-8")
     summary_extra["review_packet_events"] = fingerprint["events"]
     log(stage_line("review-packet", f"{fingerprint['events']} events rendered into packet/brief/appendix"))
+    brief(
+        "review-packet",
+        f"综述包渲染 · {fingerprint['events']} 条证据事件",
+        [
+            "review-packet.md — 简报（证据面 + 可用图表）",
+            "writing-brief.md — 写作合同（必需节/篇幅/链接预算/句长）",
+            "evidence-appendix.md — 全量证据附录（锚点）",
+        ],
+    )
 
 
 def _audited_note(note_path: Path, audit_path: Path | None = None) -> bool:
@@ -807,6 +839,12 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
     passed = needs_review = failed = 0
     done = reused  # reused notes count toward the progress bar
     papers = list(todo)
+    # (paper_id, outcome, note) for the deep-read brief — the list a reviewer
+    # verifies ("which papers made it in?") and the first debugging surface
+    # when the evidence base looks thin.
+    outcomes: list[tuple[str, str, str]] = [
+        (paper_id, "pass", "复用已有深读笔记") for paper_id in order if paper_id not in set(papers)
+    ]
     for batch_start in range(0, len(papers), args.agents_parallel):
         chunk = papers[batch_start : batch_start + args.agents_parallel]
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(chunk)) as executor:
@@ -817,6 +855,7 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                     done += 1
                     failed += 1  # consistent with the pre-2026-09 summary semantics
                     _record_deep_read_failure(notes_dir, paper_id, "no-extraction", "未入池（extraction.json 缺失）")
+                    outcomes.append((paper_id, "failed", "未入池（extraction.json 缺失）"))
                     log(f"[DRIVER-PROGRESS:deep-read:{done}/{len(order)}]")
                     log(f"[PAPER] {paper_id} 未入池，跳过")
                     continue
@@ -850,19 +889,33 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                 if outcome == "pass":
                     passed += 1
                     _clear_deep_read_failure(notes_dir, paper_id)
+                    outcomes.append((paper_id, "pass", ""))
                 elif outcome == "needs-review":
                     needs_review += 1
                     _clear_deep_read_failure(notes_dir, paper_id)
+                    outcomes.append((paper_id, "needs-review", "审计 needs-review（可用）"))
                     log(f"[PAPER] {paper_id} 审计 needs-review（可用）")
                 else:
                     failed += 1
+                    reason = failure_reason or f"深读失败（{outcome}）"
                     _record_deep_read_failure(
                         notes_dir, paper_id, str(outcome),
                         failure_reason or f"深读失败（{outcome}）",
                     )
+                    outcomes.append((paper_id, "failed", reason))
                     log(f"[PAPER] {paper_id} 深读失败（{outcome}）")
     summary_extra["deep_read"] = {"total": len(order), "pass": passed, "needs_review": needs_review, "failed": failed}
     log(stage_line("deep-read", f"{passed} pass / {needs_review} needs-review / {failed} failed（共 {len(order)} 篇）"))
+    outcome_rank = {"pass": 0, "needs-review": 1, "failed": 2}
+    outcomes.sort(key=lambda item: (outcome_rank.get(item[1], 3), item[0]))
+    brief(
+        "deep-read",
+        f"精读结果 · {passed} pass / {needs_review} needs-review / {failed} failed（共 {len(order)} 篇）",
+        [
+            f"{paper_id}  [{outcome}]" + (f"  {note}" if note else "")
+            for paper_id, outcome, note in outcomes
+        ],
+    )
 
 
 def run_skeleton_agent(cli: str, paper_id: str, pool_root: Path, timeout_s: float) -> dict | None:
@@ -1116,11 +1169,14 @@ def _main_locked(
         seed_ids = parse_seed_ids(args.seed_arxiv_ids)
 
         # Bilingual bootstrapping: a pure-Chinese topic produces Chinese-only
-        # arXiv queries that match nothing. Always inject the Latin keyword
-        # tokens (mechanical split, same as the screening fallback) as dynamic
-        # planner queries. The file also acts as the merge point for dynamic
-        # queries from a prior claude session or the dynamic-query agent:
-        # replanning (retry after a failure) must not silently drop them.
+        # arXiv queries that match nothing, so the Latin keyword tokens from
+        # the mechanical split go into the plan as ONE conjunctive query
+        # (all:"a" AND all:"b") — precise like the topic itself. Bare
+        # per-word queries ("absolute", "pose", "estimation") flood the
+        # registry with off-topic junk (高能物理/量子/NLP on 20260930) and
+        # dilute smart selection; never emit those. The file also acts as the
+        # merge point for dynamic queries from a prior claude session or the
+        # dynamic-query agent: replanning must not silently drop them.
         dynamic_path = run_dir / "dynamic-queries.json"
         latin_terms = mechanical_terms(args.topic, args.focus)
         merged_queries: list[dict[str, str]] = []
@@ -1135,9 +1191,11 @@ def _main_locked(
             for item in existing_dynamic.get("queries") or []
             if isinstance(item, dict) and item.get("query")
         )
-        for index, term in enumerate(latin_terms, start=1):
-            if term.isascii() and term not in {str(item.get("query")) for item in merged_queries}:
-                merged_queries.append({"label": f"latin-{index}", "query": term, "tier": "dynamic-core"})
+        ascii_terms = [term for term in latin_terms if term.isascii()]
+        if ascii_terms:
+            combined = " AND ".join(f'all:"{term}"' for term in ascii_terms)
+            if combined not in {str(item.get("query")) for item in merged_queries}:
+                merged_queries.append({"label": "latin-combined", "query": combined, "tier": "dynamic-core"})
 
         # Smart strategy: one-shot agent generates the topic's own arXiv
         # queries (the stage whose absence sank the pure-Chinese topics on
@@ -1191,6 +1249,18 @@ def _main_locked(
             + (f"，知识卡 {','.join(knowledge_ids)}" if knowledge_ids else "，无知识卡匹配"))
         for note in plan_notes[:3]:
             log(f"[DRIVER] 规划提示: {note}")
+        query_lines = [
+            f"[{str(item.get('tier') or '-')}] {str(item.get('label') or '-')}：{str(item.get('query') or '')}"
+            for item in (plan.get("queries") or [])
+            if isinstance(item, dict)
+        ]
+        brief(
+            "plan",
+            f"查询计划 · {query_count} 条（检索策略 {args.search_strategy}"
+            + (f"，知识卡 {','.join(knowledge_ids)}" if knowledge_ids else "")
+            + "）",
+            query_lines,
+        )
 
         # ---- terms selection (overlaps retrieval) -----------------------
         selector = TermsSelector(
@@ -1348,7 +1418,15 @@ def _main_locked(
             registry_size = len(json.loads(registry_output.read_text(encoding="utf-8")).get("candidates") or [])
             log(f"[DRIVER] 候选注册表合并完成：{registry_size} 篇去重候选")
         except (json.JSONDecodeError, OSError):
-            pass
+            registry_size = 0
+        retrieval_lines = [
+            f"arXiv 关键词：{arxiv_detail if not skip_arxiv else '未跑（seeds/外部候选模式）'}",
+            f"Semantic Scholar：{s2_detail or '未启用'}",
+            f"引文扩展：{citation_detail}",
+        ]
+        if args.external_candidates:
+            retrieval_lines.append(f"外部候选：{len(args.external_candidates)} 个清单")
+        brief("retrieval", f"检索命中 · 注册 {registry_size} 篇去重候选", retrieval_lines)
 
         # ---- screening + coverage (joins the terms thread) --------------
         begun = time.monotonic()
@@ -1417,6 +1495,39 @@ def _main_locked(
         ]
         summary_extra["screened_count"] = len(screened_ids)
         log(f"[DRIVER] 精读候选 {len(screened_ids)} 篇（screening.md 已写入运行目录）")
+        # Selection brief: the deep-read queue with per-paper reasons — the
+        # decision surface a reviewer checks ("why these papers?") and the
+        # first thing a debugger replays when the queue looks wrong.
+        selection_lines: list[str] = []
+        try:
+            screening_rows = (
+                json.loads(screening_output.read_text(encoding="utf-8")).get("candidates") or []
+            )
+            titles_by_id = {}
+            try:
+                for record in json.loads(registry_output.read_text(encoding="utf-8")).get("candidates") or []:
+                    if isinstance(record, dict) and record.get("arxiv_id"):
+                        titles_by_id[str(record["arxiv_id"])] = str(record.get("title") or "")
+            except (json.JSONDecodeError, OSError):
+                pass
+            for row in screening_rows:
+                if not isinstance(row, dict):
+                    continue
+                arxiv_id = str(row.get("arxiv_id") or "")
+                title = " ".join((str(row.get("title") or titles_by_id.get(arxiv_id, ""))).split())
+                reason = " ".join(str(row.get("selection_reason") or "").split())
+                selection_lines.append(
+                    f"{arxiv_id}  {title}" + (f"  — {reason}" if reason else "")
+                )
+        except (json.JSONDecodeError, OSError):
+            pass
+        if not selection_lines:
+            selection_lines = list(screened_ids)
+        brief(
+            "selection",
+            f"精读候选 · {len(screened_ids)} 篇（选文策略 {args.selection_strategy}）",
+            selection_lines,
+        )
         coverage_output = run_dir / "coverage-report.json"
         coverage_cmd = lambda: [  # noqa: E731
             sys.executable, str(HUB_SCRIPTS / "search.py"), "assess-review-coverage",
@@ -1462,6 +1573,22 @@ def _main_locked(
             stream=True, on_line=extraction_queue_line,
         )
         mark("extraction", begun)
+        try:
+            extraction_payload = json.loads(extraction_summary.read_text(encoding="utf-8"))
+            eligible = int(extraction_payload.get("evidence_eligible_count") or 0)
+            held = int(extraction_payload.get("held_count") or 0)
+            held_ids = [
+                str(item.get("paper_id") or "")
+                for item in extraction_payload.get("results") or []
+                if isinstance(item, dict) and not item.get("evidence_eligible")
+            ]
+            brief(
+                "extraction",
+                f"全文恢复 · {eligible} 篇可用 / {held} 篇 HELD（共 {eligible + held} 篇）",
+                ([f"HELD  {paper_id}" for paper_id in held_ids if paper_id] or ["无 HELD 篇目"]),
+            )
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            pass
         pool_seed(summary_extra, screening_ids, run_dir, args)
 
         # ---- reading packets --------------------------------------------
@@ -1556,6 +1683,22 @@ def _main_locked(
         log(
             f"[DRIVER] 检索计划 query-plan.md · 候选 {summary['candidate_count']} 篇 · "
             f"精读候选 {len(screened_ids)} 篇 · 详情见运行目录 pipeline-summary.json"
+        )
+        deep_stats = summary_extra.get("deep_read") or {}
+        brief(
+            "summary",
+            f"机械阶段完成 · 候选 {summary['candidate_count']} → 精读 {len(screened_ids)} → 证据 {summary_extra.get('evidence_events', 0)}",
+            [
+                f"查询 {query_count} 条（{args.search_strategy}）",
+                f"全文恢复 {summary['full_text_recovered_count']} 篇 · 阅读包 {packet_count} 篇",
+                f"深读 {deep_stats.get('total', 0)} 篇：pass {deep_stats.get('pass', 0)} / "
+                f"needs-review {deep_stats.get('needs_review', 0)} / failed {deep_stats.get('failed', 0)}",
+                f"证据事件 {summary_extra.get('evidence_events', 0)} 条（全文级）",
+                f"覆盖维度 {'过' if summary['coverage_dimensions_passed'] else '未过'} · "
+                f"候选地板 {'过' if summary['candidate_floor_passed'] else '未过'} · "
+                f"饱和 {'过' if summary['saturation_passed'] else '未过'}",
+                "产物：query-plan.md / candidate-registry.json / screening.md / pipeline-summary.json",
+            ],
         )
         return 0
     except DriverError as exc:

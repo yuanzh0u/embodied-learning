@@ -11,6 +11,7 @@ conversations survive server restarts and are resumed with ``--resume``.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import hashlib
 import os
@@ -128,18 +129,28 @@ _WORKFLOW_BASE_SYSTEM_PROMPT = (
     "（加 --evidence-jsonl 以启用带图可用但成稿未落图的告警）；"
     "审计门全过之前不要把证据落盘到 evidence/。"
     "门禁失败消息自带修法（指标 vs 阈值 + 补救命令/写法）——按消息执行即可，"
-    "不要读门禁脚本源码。coverage/saturation 未过还有官方逃生门：run.json 加 "
-    '"gate_exceptions": ["saturation"] 并在 notes 写明正当理由'
-    "（如一次性检索构建的 registry，批次反映渠道构成而非迭代轮次）。\n"
+    "不要读门禁脚本源码。写作契约（必需节/篇幅/链接预算/句长）已写进 writing-brief，"
+    "首稿按契约写即可；不要用内联 python 预检中文字符数、💡 数、链接数——writing_audit 全覆盖；"
+    "风格修复（长句拆分、措辞调整）用 Edit 直接改文本，不要写内联 python 字符串手术脚本。"
+    "豁免逃生门的机械入口：finalize_run.py --declare-gate-exception "
+    "<name> --reason \"...\"（可豁免 saturation / cited_paper_floor 等，理由自动记入 notes），"
+    "严禁手改 run.json。\n"
     "摘要级事件（附录「摘要级相关工作」节，tier: abstract）只用于相关工作定位句"
     "——“谁在什么方向做了什么”，不得作为机制结论或中心论点的证据；"
     "References 中对应条目末尾标注（摘要级）。"
-    "\n\n【唯一允许提前停止的条件】\n"
-    "检索通道整体失败（pipeline-summary.json 显示各检索通道全部失败、无可续跑来源），"
-    "或续跑驱动补检索/深读后验收证据仍不足以支撑成稿。此时停下并如实说明缺什么，把 run 留在 in-progress。"
-    "门禁失败（引文/编辑/bundle，含 coverage/saturation）一律是修复重跑条件，绝不停轮："
-    "按门禁消息里给的修法执行（续跑驱动、重建 packet/appendix、改写成稿）；"
-    "coverage/saturation 未过可续跑驱动，也可按上述 gate_exceptions 声明豁免。"
+    "\n\n【停轮与决策点】\n"
+    "精读数量不够（引用篇数地板未过，含筛选如实 shortfall）是设计内的用户决策点："
+    "汇报【选定的精读论文列表】（run_status [papers] 节的全文档论文）后立即停止，"
+    "把 run 留在 in-progress，并在回复末尾单独一行输出 [STOP:awaiting-user]，"
+    "等待用户决策：补充信息（种子论文/关注重点）或扩大综述范围（review-mode/时间范围）。"
+    "这是正确终态，不是失败。严禁薄审落盘（除非用户明示接受）、严禁更换选文策略、"
+    "严禁删除或改写机械产物（screening*.json、extraction-summary.json、pipeline-summary.json、"
+    "evidence/、paper-notes/）、严禁手改 run.json（gate_exceptions/notes/status/event_count）、"
+    "严禁继续硬修或反复重试。"
+    "其余一切：检索通道整体失败时同样停下如实说明（[STOP:awaiting-user]）；"
+    "其他门禁失败（引文/编辑/bundle，含 coverage/saturation）一律是修复重跑条件，绝不停轮——"
+    "按门禁消息里给的修法执行；coverage/saturation 未过可续跑驱动，也可用 "
+    "finalize_run.py --declare-gate-exception <name> --reason \"...\" 声明豁免（勿手改 run.json）。"
     "不要因大纲确认、风格选择等原因中途停轮等待用户——综述从综述包到 settle 一轮写完。"
     "\n\n【科研备忘录（scientific-memo_keyan.md）引文格式（Wiki 渲染依赖，必须遵守）】\n"
     "正文引用用上标编号，每条引用单独一个标记、带方括号：单条 ^[1]^；多条时逐条并列写成 "
@@ -157,10 +168,12 @@ _WORKFLOW_BASE_SYSTEM_PROMPT = (
 
 _WORKFLOW_AGENT_TAIL = (
     "\n\n【机械落盘由你收尾】\n"
-    "审计门全过后，用 python3 <scripts-root>/finalize_run.py --run-dir <run-dir> --kb-root <kb-root> "
+    "审计门全过后，用 python3 <scripts-root>/finalize_run.py --run-dir <run-dir> "
     "一步完成机械落盘：补齐 run.json 字段（含单风格时的 style/scope_note）、复跑两道门、拷贝 evidence/<run>/、"
     "翻 settled、登记 catalog、重建 wiki 快照——这些全是 finalize_run.py 的机械职责，"
     "不要手改 run.json，也不要再手动跑登记表格或重建快照的脚本、逐项核对 wiki 端口的发布结果。"
+    "--kb-root 可省：脚本自动从运行目录推断知识库根（<kb-root>/work/<run> 布局），"
+    "显式传错目标会被拒绝落盘（防落错库）；run_status.py [next] 给出带 --kb-root 的逐字命令。"
     "finalize_run.py 门禁不过时会机械打印缺失项：按提示修复后重跑 finalize 即可，门禁未过不是提前停止的理由。"
     "\n\n在开始每个阶段前，先单独输出一行阶段标记（普通文本，不要放进代码块）："
     "[STAGE:mining] / [STAGE:packet] / [STAGE:writing] / [STAGE:audit] / [STAGE:settle]，后跟一句话进度说明。"
@@ -221,18 +234,27 @@ def resolve_pipeline_layout(pipeline_root: Path) -> tuple[Path, Path]:
 
 
 def substitute_prompt_roots(
-    text: str, *, skills_root: Path, scripts_root: Path, pool_root: Path | None = None
+    text: str,
+    *,
+    skills_root: Path,
+    scripts_root: Path,
+    pool_root: Path | None = None,
+    kb_root: Path | None = None,
 ) -> str:
-    """Fill the <skills-root>/<scripts-root>/<pool-root> placeholders in a
-    workflow prompt. Paths travel KB-relative like all other prompt context
-    (no absolute leak); an absent pool keeps the placeholder literal (the
-    pool-lookup instruction just never matches)."""
+    """Fill the <skills-root>/<scripts-root>/<pool-root>/<kb-root> placeholders
+    in a workflow prompt. Paths travel KB-relative like all other prompt
+    context (no absolute leak); an absent pool keeps the placeholder literal
+    (the pool-lookup instruction just never matches). <kb-root> is filled when
+    known so the writer never has to guess the publish target (2026-09-30
+    absolute-pose published into the wrong KB)."""
 
     text = text.replace("<skills-root>", skills_root.as_posix()).replace(
         "<scripts-root>", scripts_root.as_posix()
     )
     if pool_root is not None:
         text = text.replace("<pool-root>", pool_root.as_posix())
+    if kb_root is not None:
+        text = text.replace("<kb-root>", kb_root.as_posix())
     return text
 
 
@@ -250,6 +272,7 @@ def workflow_turn_system_prompt(
         skills_root=skills_root,
         scripts_root=scripts_root,
         pool_root=(kb_root / "pool") if kb_root is not None else None,
+        kb_root=kb_root,
     )
 
 
@@ -276,6 +299,9 @@ TOPIC_ID_RE = re.compile(r"^topic-[0-9a-f]{6,16}$")
 WS_ID_RE = re.compile(r"^ws-[0-9a-f]{6,16}$")
 STAGE_RE = re.compile(r"^\[STAGE:([a-z_]+)\]\s*(.*)$")
 TOPIC_MARKER_RE = re.compile(r"^\[TOPIC:([^\]]+)\]\s*$")
+# Terminal marker for the designed user decision points (e.g. 精读数量不够):
+# the writer reports and stops; the server must NOT auto-continue past it.
+STOP_MARKER_RE = re.compile(r"^\[STOP:([a-z-]+)\]\s*$")
 WORKFLOW_STAGE_NAMES = (
     "init",
     "plan",
@@ -318,6 +344,12 @@ DRIVER_PHASE_TO_WORKFLOW = {
 # the dialog; per-paper detail lines are deliberately NOT forwarded so the
 # dialog stays readable.
 DRIVER_PROGRESS_RE = re.compile(r"^\[DRIVER-PROGRESS:([a-z_-]+):(\d+)/(\d+)\]\s*(.*)$")
+
+# [DRIVER-BRIEF:<stage>] <json> — per-stage results brief (title + lines).
+# The human-checkable work product of that stage (query list, selected papers,
+# deep-read outcomes…): what a reviewer verifies and what a debugger replays.
+# One JSON object on the line so multi-line briefs survive stdout framing.
+DRIVER_BRIEF_RE = re.compile(r"^\[DRIVER-BRIEF:([a-z_-]+)\]\s+(\{.*\})\s*$")
 
 
 
@@ -511,6 +543,30 @@ def extract_driver_progress(line: str) -> tuple[str, int, int, str] | None:
     return match.group(1), int(match.group(2)), int(match.group(3)), match.group(4).strip()
 
 
+def extract_driver_brief(line: str) -> tuple[str, str, list[str]] | None:
+    """Parse one ``[DRIVER-BRIEF:<stage>] {json}`` line into
+    (stage, title, lines), or None. Malformed JSON is dropped (the stage
+    detail lines already carry the counts)."""
+
+    match = DRIVER_BRIEF_RE.match(line.strip())
+    if not match:
+        return None
+    try:
+        payload = json.loads(match.group(2))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    title = " ".join(str(payload.get("title") or "").split())
+    raw_lines = payload.get("lines")
+    lines = (
+        [" ".join(str(item).split()) for item in raw_lines if str(item).strip()]
+        if isinstance(raw_lines, list)
+        else []
+    )
+    return match.group(1), title, lines
+
+
 def extract_driver_detail(line: str) -> str | None:
     """Free-form progress lines from the pipeline driver (per-paper reads,
     assembly results, retrieval-plan notes). Anything printed as ``[PAPER] …``,
@@ -530,6 +586,20 @@ def extract_topic_marker(text: str) -> str | None:
 
     for line in text.splitlines():
         match = TOPIC_MARKER_RE.match(line.strip())
+        if match:
+            return match.group(1).strip()
+    return None
+
+
+def extract_stop_marker(text: str) -> str | None:
+    """Return the reason slug from a ``[STOP:<reason>]`` line, if any.
+
+    ``[STOP:awaiting-user]`` marks a designed user decision point (e.g.
+    精读数量不够): the writer has reported and stopped on purpose — the
+    workflow must park and wait for the user, never auto-continue."""
+
+    for line in text.splitlines():
+        match = STOP_MARKER_RE.match(line.strip())
         if match:
             return match.group(1).strip()
     return None
@@ -627,7 +697,8 @@ def build_workflow_prompt(
             + "（逐字执行，不要读脚本源码探查参数）；"
             "亲自阅读证据事件与综述包后撰写成稿" + stage("writing")
             + "、逐项跑审计脚本" + stage("audit") + "；"
-            "审计门全过后按系统提示的落盘契约执行 finalize_run.py --run-dir <运行目录> --kb-root <kb-root>"
+            "审计门全过后按系统提示的落盘契约执行 finalize_run.py --run-dir <运行目录>"
+            "（--kb-root 可省，自动从运行目录推断知识库根）"
             + stage("settle")
             + "一步完成机械落盘，不要手改 run.json、不要手动登记表格或重建快照。"
         )
@@ -680,9 +751,11 @@ def build_workflow_prompt(
         ),
         "成稿落图：writing-brief「可用图表」段按各风格配额插图"
         "（URL/题注照抄 evidence 携带的图，插在所支撑段落后），appendix 全量保留图表。"
-        "唯一允许提前停止的条件：检索通道整体失败，或续跑驱动后验收证据仍不足以成稿，"
-        "此时停下如实说明并把 run 留在 in-progress；"
-        "门禁失败（含覆盖/饱和）一律修复重跑，按门禁消息修法执行或声明 gate_exceptions 豁免；"
+        "精读数量不够时汇报选定的精读论文列表并【立即停轮】（末尾单独一行 [STOP:awaiting-user]，"
+        "run 留在 in-progress），等待用户决策：补充信息或扩大综述范围——这是正确终态；"
+        "严禁薄审落盘、擅自更换选文策略、删改机械产物、手改 run.json 或继续硬修。"
+        "检索通道整体失败同样停轮报告。其余门禁失败（含覆盖/饱和）一律修复重跑，"
+        "按门禁消息修法执行，豁免走 --declare-gate-exception 机械入口；"
         "若 pipeline-summary 显示深读有失败篇目，如实说明影响。",
         "</workflow_request>",
     ]
@@ -722,7 +795,8 @@ def build_continuation_prompt(
         parallel_clause = "单一成稿由主线程直接撰写润色，再走审计门"
     if agent:
         settle_clause = (
-            "审计门过后按系统提示的落盘契约执行 finalize_run.py --run-dir <运行目录> --kb-root <kb-root>"
+            "审计门过后按系统提示的落盘契约执行 finalize_run.py --run-dir <运行目录>"
+            "（--kb-root 可省，自动从运行目录推断知识库根）"
             "完成机械落盘（不要手改 run.json，也不要手动登记表格或重建快照）；"
             "门禁不过时修复后重跑即可，不要因此停止；"
             "最后输出 [TOPIC:<运行目录相对路径>]。"
@@ -1041,6 +1115,7 @@ class DialogJournal:
 
     def _append(self, record: dict) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        record.setdefault("ts", dt.datetime.now().isoformat(timespec="seconds"))
         with self.path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
 
@@ -1060,7 +1135,9 @@ def journalable_event(event: dict) -> bool:
         return True
     if kind == "status":
         return event.get("stage") == "tool"
-    return kind in ("stage", "awaiting_input", "topic_ready", "topic_error", "session_reset", "error")
+    return kind in (
+        "stage", "brief", "awaiting_input", "topic_ready", "topic_error", "session_reset", "error",
+    )
 
 
 def read_dialog_journal(path: Path) -> list[dict]:

@@ -439,10 +439,12 @@ class WorkflowEndpointTest(ChatServerHarness):
             skills_root=server_module.REPO_ROOT / "skills",
             scripts_root=server_module.REPO_ROOT / "scripts",
             pool_root=server_module.pool_root(self.kb_root),
+            kb_root=self.kb_root,
         )
         self.assertEqual(turn.kwargs["system_prompt"], expected_prompt)
         self.assertNotIn("<skills-root>", turn.kwargs["system_prompt"])
         self.assertNotIn("<pool-root>", turn.kwargs["system_prompt"])
+        self.assertNotIn("<kb-root>", turn.kwargs["system_prompt"])
         # The interactive publisher's mechanical tail is finalize_run.py — the
         # hand-run register/rebuild duo must not reappear in the prompt.
         self.assertIn("finalize_run.py", turn.kwargs["system_prompt"])
@@ -814,7 +816,9 @@ class WorkflowEndpointTest(ChatServerHarness):
         records = server_module.wiki_chat.read_dialog_journal(run_dir / "dialog" / "journal.jsonl")
         # First record is the kickoff user turn; driver stage lines, assistant
         # deltas and the park note are mirrored; spinner/session frames are not.
-        self.assertEqual(records[0], {"kind": "user", "text": "高斯溅射SLAM综述"})
+        self.assertEqual(records[0]["kind"], "user")
+        self.assertEqual(records[0]["text"], "高斯溅射SLAM综述")
+        self.assertIn("ts", records[0])
         event_types = [r["event"]["type"] for r in records if r.get("kind") == "event"]
         self.assertIn(("stage", "retrieval"), {(r["event"]["type"], r["event"].get("stage")) for r in records if r.get("kind") == "event"})
         self.assertIn("delta", event_types)
@@ -844,7 +848,10 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertNotIn("OLD-DIALOG-MARKER", [r.get("text") for r in records])
         # One fresh dialog only: the kickoff user turn (journalled from the
         # topic param), with the appended marker line gone.
-        self.assertEqual([r for r in records if r.get("kind") == "user"], [{"kind": "user", "text": "高斯溅射SLAM综述"}])
+        users = [r for r in records if r.get("kind") == "user"]
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]["text"], "高斯溅射SLAM综述")
+        self.assertIn("ts", users[0])
 
 
 class WikiRootResolutionTest(unittest.TestCase):

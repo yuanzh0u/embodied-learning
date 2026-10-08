@@ -390,13 +390,25 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertNotIn("立即停止本轮回复", prompt)
         self.assertNotIn("等待用户确认", prompt)
         self.assertIn("一气呵成", prompt)
-        # 停轮条件只剩两条（检索整体失败 / 续跑后证据仍不足）；门禁失败是
-        # 修复重跑条件，并且 gate_exceptions 逃生门必须可见（2026-09-29 统一教义）。
+        # 2026-09-30 定案：精读数量不够 = 用户决策点——汇报选定的精读论文列表
+        # 后立即停轮（[STOP:awaiting-user]），等待用户决策；其余门禁失败仍是
+        # 修复重跑；豁免唯一入口是 CLI，不是手改 run.json。
+        self.assertIn("精读数量不够", prompt)
+        self.assertIn("汇报选定的精读论文列表", prompt)
+        self.assertIn("[STOP:awaiting-user]", prompt)
+        self.assertIn("等待用户决策", prompt)
+        self.assertIn("严禁薄审落盘", prompt)
         self.assertIn("检索通道整体失败", prompt)
-        self.assertIn("验收证据仍不足以", prompt)
-        self.assertIn("门禁失败", prompt)
         self.assertIn("修复重跑", prompt)
-        self.assertIn("gate_exceptions", prompt)
+        self.assertIn("--declare-gate-exception", prompt)  # 豁免唯一入口是 CLI，不是手改 run.json
+
+    def test_stop_marker_extraction(self):
+        """[STOP:awaiting-user] 是设计内决策点的终态标记：auto-continue 不得越过。"""
+        self.assertEqual(
+            wiki_chat.extract_stop_marker("汇报完毕。\n[STOP:awaiting-user]\n"),
+            "awaiting-user",
+        )
+        self.assertIsNone(wiki_chat.extract_stop_marker("正常完成 [TOPIC:evidence/run]\n"))
 
     def test_workflow_prompt_settle_runs_finalize(self):
         """The agent publisher's mechanical settle tail is finalize_run.py —
@@ -522,6 +534,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
                 wiki_chat.workflow_system_prompt("agent"),
                 skills_root=skills_root, scripts_root=scripts_root,
                 pool_root=kb_root / "pool",
+                kb_root=kb_root,
             )
             self.assertEqual(system_prompt, expected_system)
             self.assertIn(run_dir.name, user_prompt)
@@ -622,11 +635,11 @@ class WorkflowDriverContractTest(unittest.TestCase):
 
     def test_substitute_prompt_roots_fills_pool(self):
         text = wiki_chat.substitute_prompt_roots(
-            "s=<skills-root> sc=<scripts-root> p=<pool-root>",
+            "s=<skills-root> sc=<scripts-root> p=<pool-root> k=<kb-root>",
             skills_root=Path("/r/skills"), scripts_root=Path("/r/scripts"),
-            pool_root=Path("/kb/pool"),
+            pool_root=Path("/kb/pool"), kb_root=Path("/kb"),
         )
-        self.assertEqual(text, "s=/r/skills sc=/r/scripts p=/kb/pool")
+        self.assertEqual(text, "s=/r/skills sc=/r/scripts p=/kb/pool k=/kb")
         # Absent pool keeps the placeholder literal.
         kept = wiki_chat.substitute_prompt_roots(
             "p=<pool-root>", skills_root=Path("/r/skills"), scripts_root=Path("/r/scripts")
@@ -711,6 +724,25 @@ class WorkflowDriverContractTest(unittest.TestCase):
             ("extract", 3, 48, "2402.10329 全文不满足证据条件（HELD）"),
         )
         self.assertIsNone(wiki_chat.extract_driver_progress("[DRIVER] not progress"))
+
+    def test_extract_driver_brief_parses_stage_title_and_lines(self):
+        payload = json.dumps(
+            {"title": "查询计划 · 19 条", "lines": ["[direct] absolute pose：all:\"absolute pose\""]},
+            ensure_ascii=False,
+        )
+        self.assertEqual(
+            wiki_chat.extract_driver_brief(f"[DRIVER-BRIEF:plan] {payload}"),
+            ("plan", "查询计划 · 19 条", ["[direct] absolute pose：all:\"absolute pose\""]),
+        )
+        self.assertIsNone(wiki_chat.extract_driver_brief("[DRIVER-BRIEF:plan] not-json"))
+        self.assertIsNone(wiki_chat.extract_driver_brief("[DRIVER] plain"))
+
+    def test_journalable_event_keeps_brief(self):
+        # Briefs are the per-stage work product — they must survive a page
+        # reload like any other dialog line.
+        self.assertTrue(wiki_chat.journalable_event({"type": "brief", "title": "t", "lines": []}))
+        self.assertTrue(wiki_chat.journalable_event({"type": "stage", "stage": "plan", "detail": "d"}))
+        self.assertFalse(wiki_chat.journalable_event({"type": "progress", "done": 1}))
 
     def test_registry_stage_maps_to_mining(self):
         # the mining phase opens before the registry stage completes; the
@@ -905,9 +937,13 @@ class DialogJournalTest(unittest.TestCase):
         self.journal.event({"type": "delta", "text": "你好"})
         self.journal.flush_deltas()
         records = self.records()
-        self.assertEqual(records[0], {"kind": "user", "text": "综述主题"})
+        self.assertEqual(records[0]["kind"], "user")
+        self.assertEqual(records[0]["text"], "综述主题")
         self.assertEqual(records[1]["event"]["type"], "stage")
-        self.assertEqual(records[2]["event"], {"type": "delta", "text": "你好"})
+        self.assertEqual(records[2]["event"]["text"], "你好")
+        # Every journal record carries a timestamp (2026-09-30 debugging ask).
+        for record in records:
+            self.assertIn("ts", record)
 
     def test_small_deltas_coalesce_into_one_record(self):
         self.journal.start()

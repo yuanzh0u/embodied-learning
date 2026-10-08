@@ -154,8 +154,9 @@ def check_run_bundle(run_dir: Path) -> list[str]:
                             + (f": {', '.join(still_open)}" if still_open else "")
                             + " — 修法二选一：①续跑 run_review_pipeline.py --run-dir "
                             f"{run_dir} 补检索/深读后重算；②确属不可比的一次性检索时声明豁免——"
-                            'run.json 加 "gate_exceptions": ["saturation"] 并在 notes 写明正当理由'
-                            "（如一次性构建的 registry，批次反映渠道构成而非迭代轮次）。"
+                            "python3 finalize_run.py --run-dir "
+                            f"{run_dir} --declare-gate-exception saturation --reason \"...\" "
+                            "（理由会记入 notes；勿手改 run.json）。"
                             "已声明的豁免："
                             + (", ".join(str(item) for item in declared) if declared else "无")
                         )

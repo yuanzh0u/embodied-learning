@@ -427,6 +427,9 @@ class AuditArticleQualityTests(unittest.TestCase):
             )
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         self.assertIn("long-sentence", completed.stdout)
+        # The warning names the exact sentence so the writer can Edit it
+        # directly — no inline-python sentence hunt.
+        self.assertIn("待修句：当机器人同时面对遮挡", completed.stdout)
 
     def test_ten_body_citations_warn(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

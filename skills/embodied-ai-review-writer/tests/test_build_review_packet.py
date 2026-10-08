@@ -123,6 +123,17 @@ class FigureSurfaceTests(unittest.TestCase):
 
 
 class BuildReviewPacketTests(unittest.TestCase):
+    def test_style_contract_teaches_zhihu_style_gates_up_front(self):
+        """The brief's contract section carries the editorial standards the
+        first draft must meet — including the zhihu sentence-length /
+        acronym-load / body-citation rules whose violations used to be
+        discovered only at audit time (2026-09-30 absolute-pose)."""
+        lines = "\n".join(build_review_packet.render_style_contract())
+        self.assertIn("## 各风格写作契约", lines)
+        self.assertIn("单句不超过 70 个中文字符", lines)
+        self.assertIn("缩写不超过 5 个", lines)
+        self.assertIn("3–12 篇", lines)
+
     def test_skill_docs_describe_default_readable_markdown_and_styles(self) -> None:
         skill_doc = (ROOT / "skills" / "embodied-ai-review-writer" / "SKILL.md").read_text(encoding="utf-8")
 
